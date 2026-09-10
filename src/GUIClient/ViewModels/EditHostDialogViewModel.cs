@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -28,6 +28,10 @@ namespace GUIClient.ViewModels;
 public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<HostDialogResult,HostDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["EditHost"];
+    public string StrIp => Localizer["IP"];
+    public string StrFqdn => Localizer["FQDN"];
+
 
         public string StrTeamResponsible => Localizer["TeamResponsible"];
         public new string StrSave => Localizer["Save"];

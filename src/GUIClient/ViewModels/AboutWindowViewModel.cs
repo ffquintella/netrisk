@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using ClientServices.Interfaces;
 using Model.Configuration;
 using ReactiveUI;
@@ -10,6 +10,8 @@ public class AboutWindowViewModel: ViewModelBase
 {
 
     #region LANGUAGE
+    public string StrUrl => Localizer["URL"] + ":";
+
     public string StrTitle { get; } = "";
     public string StrServer { get; } = "";
     public string StrSystem { get; } = "";

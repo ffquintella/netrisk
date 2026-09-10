@@ -1,0 +1,59 @@
+# UI standard compliance — Track 1 reference item UI-STD-001.
+#
+# `docs/ui-standard.md` is only a standard if something enforces it. This workflow runs the same
+# linter a developer runs locally (`./build.sh LintUi`) and fails the build on **any** violation.
+#
+# Unlike the security gates, there is no baseline to compare against: `src/GUIClient/Views` was
+# brought to zero violations when this gate was added, so the correct threshold is zero. A view
+# that genuinely cannot comply carries an in-markup waiver with a written reason
+# (`<!-- ui-lint-waive R5: … -->`), which the linter itself validates — a waiver with no reason is
+# reported as an R0 violation and still breaks the build.
+#
+# Rules and remediation guidance: docs/ui-standard.md.
+# Per-file evidence: roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md.
+name: ui-compliance
+
+on:
+  push:
+    branches: [main, Updates]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-compliance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-axaml:
+    name: AXAML UI standard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # The Nuke target reads the views off disk and needs no restore of the GUI project, so this
+      # gate runs in well under a minute and can sit on every push.
+      - name: Lint AXAML against the UI standard
+        run: ./build.sh LintUi
+
+      # The rule engine itself is unit-tested (multi-line buttons, waiver handling, each rule in
+      # both directions), and asserts the zero-violation state independently of the Nuke target.
+      # A linter nobody tests is a linter that quietly stops finding things.
+      - name: Test the linter rules
+        run: dotnet test src/Packaging.Tests/Packaging.Tests.csproj
+
+      # The checks the linter structurally cannot make: that every Localizer key resolves in all
+      # three cultures, and that every Classes="…" token is actually defined by a style. Avalonia
+      # ignores an unmatched selector silently, so a classed-but-unstyled control is otherwise
+      # invisible to every gate above.
+      - name: Test localization and style-class references
+        run: dotnet test src/GUIClient.Tests/GUIClient.Tests.csproj

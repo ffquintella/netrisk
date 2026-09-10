@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -25,6 +25,9 @@ namespace GUIClient.ViewModels;
 public class HostsViewModel: ViewModelBase
 {
     #region LANGUAGE
+    public string StrIp => Localizer["IP"] + ":";
+    public string StrFqdn => Localizer["FQDN"] + ":";
+
 
     public string StrHosts { get; } = Localizer["Hosts"];
     public string StrDetails { get; } = Localizer["Details"];

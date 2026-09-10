@@ -1,4 +1,4 @@
-﻿using GUIClient.Tools;
+using GUIClient.Tools;
 using GUIClient.Notifications;
 using System.Threading.Tasks;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -37,6 +37,8 @@ namespace GUIClient.ViewModels
         #endregion
 
         #region LANGUAGE
+        public string StrTitle => Localizer["NetRiskApplication"];
+
 
         public string StrApplicationMn { get; }
         public string StrExitMn { get; }

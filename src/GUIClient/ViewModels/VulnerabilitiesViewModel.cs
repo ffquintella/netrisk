@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -44,6 +44,11 @@ namespace GUIClient.ViewModels;
 public class VulnerabilitiesViewModel: ViewModelBase
 {
     #region LANGUAGE
+    public string StrIp => Localizer["IP"];
+    public string StrExport => Localizer["Export"];
+    public string StrCves => Localizer["CVEs"];
+    public string StrCvss3 => Localizer["CVSS3"];
+
 
     public string StrVulnerabilities { get;  } = Localizer["Vulnerabilities"];
     public string StrReload { get;  } = Localizer["Reload"];

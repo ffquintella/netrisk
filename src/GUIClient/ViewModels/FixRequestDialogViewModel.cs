@@ -17,6 +17,8 @@ public class FixRequestDialogViewModel: ParameterizedDialogViewModelBaseAsync<Fi
 {
     
     #region LANGUAGES
+    public string StrWindowTitle => Localizer["SendEmail"];
+
     public string StrVulnerabilitiesFixRequest { get;  } = Localizer["Vulnerability Fix Request"];
     public string StrCommunicationType { get;  } = Localizer["Communication Type"];
     public string StrAutomatic { get;  } = Localizer["Automatic"];

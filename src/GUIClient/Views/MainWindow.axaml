@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:GUIClient.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -8,7 +8,7 @@
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:MainWindowViewModel" x:Class="GUIClient.Views.MainWindow"
         Opened="LoadCheckAsync"
         Icon="/Assets/NetRisk.ico"
-        Title="NetRisk Application"
+        Title="{Binding StrTitle}"
         Name="MWindow"
         Width="1100" Height="900"
         MinWidth="800" MinHeight="600"
@@ -42,8 +42,12 @@
             <NativeMenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
                 <NativeMenuItem.Menu>
                     <NativeMenu>
+                        <!-- ui-lint-waive R5: debug-only menu behind IsDebug, exempted by
+                             docs/ui-standard.md §3.2; never reachable in a release build -->
                         <NativeMenuItem Header="IRP - Create"
                                         Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                        <!-- ui-lint-waive R5: debug-only menu behind IsDebug, exempted by
+                             docs/ui-standard.md §3.2; never reachable in a release build -->
                         <NativeMenuItem Header="IRP Task - Create"
                                         Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
                     </NativeMenu>
@@ -88,8 +92,12 @@
                                   Command="{Binding OnMenuExitCommand}"/>
                     </MenuItem>
                     <MenuItem Header="{Binding StrDebug}" IsVisible="{Binding IsDebug}">
+                        <!-- ui-lint-waive R5: debug-only menu behind IsDebug, exempted by
+                             docs/ui-standard.md §3.2; never reachable in a release build -->
                         <MenuItem Header="IRP - Create"
                                   Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Create"/>
+                        <!-- ui-lint-waive R5: debug-only menu behind IsDebug, exempted by
+                             docs/ui-standard.md §3.2; never reachable in a release build -->
                         <MenuItem Header="IRP Task - Create"
                                   Command="{Binding BtDebugWindowClicked}" CommandParameter="IRP-Task-Create"/>
                     </MenuItem>

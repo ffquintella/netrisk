@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
@@ -9,6 +9,8 @@ namespace GUIClient.ViewModels;
 
 public class UpgradeViewModel: ViewModelBase
 {
+    public string StrTitle => Localizer["Upgrade"];
+
     private int _progressBarValue = 0;
     public int ProgressBarValue
     {

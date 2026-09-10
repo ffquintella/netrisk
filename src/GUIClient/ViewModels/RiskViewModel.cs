@@ -1,4 +1,4 @@
-﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.Tools;
@@ -46,6 +46,10 @@ public class RiskViewModel: ViewModelBase
     #endregion
     
     #region LANGUAGE-STRINGS
+    public string StrIdLabel => Localizer["Id"] + ": ";
+    public string StrIrp => Localizer["IRP"];
+    public string StrIrpDate => Localizer["IRPDate"] + ":";
+
     public string StrRisk { get; }
     public string StrDetails { get; }
     public string StrSubject { get; }

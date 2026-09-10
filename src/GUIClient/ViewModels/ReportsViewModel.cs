@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using Avalonia.Controls;
@@ -15,6 +15,10 @@ namespace GUIClient.ViewModels;
 public class ReportsViewModel: ViewModelBase
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["Reports"];
+    public string StrManageTemplates => Localizer["ManageTemplates"];
+    public string StrManageSchedules => Localizer["ManageSchedules"];
+
         public string StrReports { get; }
         
     #endregion

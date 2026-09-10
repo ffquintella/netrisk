@@ -5,7 +5,7 @@
         xmlns:vm="using:GUIClient.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:UserInfoViewModel" x:Class="GUIClient.Views.UserInfo"
-        Title="UserInfo"
+        Title="{Binding StrTitle}"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         WindowDecorations="Full"
@@ -62,7 +62,7 @@
                             <TextBlock Text="{Binding Version}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                         
-                        <Button Name="BtLogout"
+                        <Button Classes="type2" Name="BtLogout"
                                 Margin="0 20"
                                 Padding="12 6"
                                 HorizontalAlignment="Left"
@@ -76,7 +76,7 @@
                 <TabItem VerticalContentAlignment="Center" Header="{Binding StrServer}" Margin="10" >
                     <StackPanel Spacing="2">
                         <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="URL:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding StrUrl}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                             <TextBlock Text="{Binding Url}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                     </StackPanel>

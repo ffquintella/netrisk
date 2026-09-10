@@ -8,7 +8,7 @@
         xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:ReportsViewModel" x:Class="GUIClient.Views.ReportsWindow"
-        Title="ReportsWindow">
+        Title="{Binding StrTitle}">
     
     <Design.DataContext>
         <viewModels:ReportsViewModel/>
@@ -38,11 +38,11 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                     
-                    <Button Content="Manage Templates" 
+                    <Button Classes="type2" Content="{Binding StrManageTemplates}"
                             Command="{Binding ManageTemplatesCommand}"
                             HorizontalAlignment="Stretch"
                             Margin="5"/>
-                    <Button Content="Manage Schedules"
+                    <Button Classes="type2" Content="{Binding StrManageSchedules}"
                             Command="{Binding ManageSchedulesCommand}"
                             HorizontalAlignment="Stretch"
                             Margin="5"/>

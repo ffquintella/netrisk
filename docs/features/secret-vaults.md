@@ -15,10 +15,11 @@ writing one, without touching NetRisk.
 
 ## What an operator does
 
-1. **Install the plugin.** `BastionVaultPlugin.dll` goes in `Plugins/Secrets/` under the API (and
-   under the background-job host, which also resolves credentials). The in-tree plugin is installed
-   there automatically by
-   [`InstallSecretVaultPlugins.targets`](../../src/Plugins/InstallSecretVaultPlugins.targets).
+1. **Install the plugin.** `BastionVaultPlugin.dll` and its `.deps.json` go in `Plugins/Secrets/`
+   under the API **and** under the background-job host, which also resolves credentials — a plugin
+   present in only one of them is an integration that works during the day and fails at night. The
+   plugin is built and released from its own repository, [netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration);
+   it is not part of a NetRisk build.
 2. **Enable it** under *Admin → Plugins*. Installing is not enabling: a DLL in the directory
    activates nothing on its own.
 3. **Add a vault connection** under *Admin → Integrations → Secret Vaults*: a name, the plugin, the
@@ -190,12 +191,13 @@ Three rules an implementation must follow:
 
 **Do not copy `Contracts.dll` beside the plugin.** Reference it with `Private="false"` and
 `ExcludeAssets="runtime"`, as
-[`BastionVaultPlugin.csproj`](../../src/Plugins/BastionVaultPlugin/BastionVaultPlugin.csproj) does.
+[`FixtureVaultPlugin.csproj`](../../src/Plugins/FixtureVaultPlugin/FixtureVaultPlugin.csproj) does.
 The host lists the SDK interfaces in `PluginLoader`'s `sharedTypes`, so its copy must be the one that
 loads; a second copy makes the plugin's `INetriskSecretVaultPlugin` a *different type* from the
 host's, `IsAssignableFrom` returns false, and the plugin is **silently ignored** — no exception, no
-log line, no plugin. `SecretVaultPluginLoadingTest` loads the real built plugin off disk specifically
-to prove this has not regressed.
+log line, no plugin. `SecretVaultPluginLoadingTest` loads a real built plugin
+(`src/Plugins/FixtureVaultPlugin` — a vault plugin with no vault, kept in the tree purely as test
+scaffolding) off disk specifically to prove this has not regressed.
 
 The assembly name must end in `Plugin.dll` (that is what discovery matches) and the file goes in a
 subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention for this capability.
@@ -203,7 +205,7 @@ subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention
 ### The BastionVault wire protocol
 
 BastionVault is **HashiCorp-Vault-compatible**. Everything its surface dictates is in one file,
-[`BastionVaultApi.cs`](../../src/Plugins/BastionVaultPlugin/BastionVaultApi.cs):
+[`BastionVaultApi.cs`](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration/blob/main/src/BastionVaultPlugin/BastionVaultApi.cs):
 
 | Purpose | Request | Response |
 |---|---|---|
@@ -241,9 +243,9 @@ grant NetRisk; a `403` on an individual folder is skipped rather than failing th
 token scoped to just the paths NetRisk needs is the *right* configuration and will be denied on its
 siblings.
 
-**If your deployment differs, that one file is the only thing to change**, and
-`BastionVaultPlugin.Tests` pins the mapping — including two assertions written specifically to stop a
-regression to a bearer token or a `?list=true` listing.
+**If your deployment differs, that one file is the only thing to change**, and the plugin's own
+test project pins the mapping — including two assertions written specifically to stop a regression to
+a bearer token or a `?list=true` listing.
 
 ### Machine identity is checked, not sent
 
@@ -278,7 +280,7 @@ mounted and is not treated as a refusal.
 | Layer | File |
 |---|---|
 | SDK contract | [`INetriskSecretVaultPlugin.cs`](../../libs/netrisk-plugin-sdk/Contracts/Secrets/INetriskSecretVaultPlugin.cs), [`SecretVaultTypes.cs`](../../libs/netrisk-plugin-sdk/Contracts/Secrets/SecretVaultTypes.cs), [`PluginHttp.cs`](../../libs/netrisk-plugin-sdk/Contracts/Secrets/PluginHttp.cs) |
-| Plugin | [`BastionVaultSecretPlugin.cs`](../../src/Plugins/BastionVaultPlugin/BastionVaultSecretPlugin.cs), [`BastionVaultApi.cs`](../../src/Plugins/BastionVaultPlugin/BastionVaultApi.cs) |
+| Plugin | Its own repository: [netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration) (`BastionVaultSecretPlugin.cs`, `BastionVaultApi.cs`) |
 | Reference format | [`SecretReference.cs`](../../src/Model/Secrets/SecretReference.cs) |
 | Wire contracts | [`SecretVaultContracts.cs`](../../src/Model/Secrets/SecretVaultContracts.cs) |
 | Entity / schema | [`SecretVaultConnection.cs`](../../src/DAL/Entities/SecretVaultConnection.cs), [`NRDbContext.Secrets.cs`](../../src/DAL/Context/NRDbContext.Secrets.cs), `DB/Structure/84.sql` + `DB/Data/84.sql` |
@@ -286,7 +288,7 @@ mounted and is not treated as a refusal.
 | API | [`SecretVaultsController.cs`](../../src/API/Controllers/SecretVaultsController.cs) |
 | Client | `IIntegrationsService` / `IntegrationsRestService` (the `…SecretVault…` members) |
 | Desktop | [`VaultSecretFieldState.cs`](../../src/GUIClient/Tools/VaultSecretFieldState.cs), [`SecretVaultPickerViewModel.cs`](../../src/GUIClient/ViewModels/Dialogs/SecretVaultPickerViewModel.cs), `SecretVaultPickerDialog.axaml`, the Secret Vaults tab of `IntegrationsView.axaml` |
-| Deployment | [`InstallSecretVaultPlugins.targets`](../../src/Plugins/InstallSecretVaultPlugins.targets) |
+| Test scaffolding | [`FixtureVaultPlugin`](../../src/Plugins/FixtureVaultPlugin) — a vault plugin with no vault, so the loader can be tested against a real assembly |
 
 ## API
 
@@ -314,7 +316,7 @@ All actions are `[PermissionAuthorize("configuration")]`.
 | | `Secrets/ObfuscatedSecretCacheTest.cs` | Absolute expiry, prefix eviction, plaintext not in memory |
 | | `Secrets/SecretVaultServiceInMemoryTest.cs` | Connections, testing, listing, resolution, cache invalidation, delete guard |
 | | `Secrets/SecretResolverTest.cs` | The literal/reference branch, and refusing a malformed reference |
-| | `Secrets/SecretVaultPluginLoadingTest.cs` | The **real** plugin loaded off disk across the load-context boundary |
+| | `Secrets/SecretVaultPluginLoadingTest.cs` | A **real** plugin assembly (`FixtureVaultPlugin`) loaded off disk across the load-context boundary |
 | | `Secrets/SecretVaultRegistrationTest.cs` | The DI graph composes in every host |
 | | `Secrets/PluginCapabilityDiscoveryTest.cs` | A host with no plugins answers "no" rather than throwing |
 | | `Track4/SecretProtectorTest.cs` | A reference is stored in the clear and warns about nothing |
@@ -322,7 +324,6 @@ All actions are `[PermissionAuthorize("configuration")]`.
 | `ClientServices.Tests` | `Services/SecretVaultRestServiceTest.cs` | Every route and status branch; no way to read a value |
 | `GUIClient.Tests` | `Tools/VaultSecretFieldStateTest.cs` | The typed / picked / bound decision |
 | | `Views/IntegrationsVaultBindingTests.cs` | The XAML `CommandParameter` keys match the view-model's |
-| `BastionVaultPlugin.Tests` | `BastionVaultSecretPluginTest.cs` | The wire protocol, and that no message echoes the API key |
 
 ## Not covered
 

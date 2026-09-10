@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reactive;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -11,6 +11,9 @@ namespace GUIClient.ViewModels;
 
 public class UserInfoViewModel: ViewModelBase
 {
+    public string StrTitle => Localizer["UserInfo"];
+    public string StrUrl => Localizer["URL"] + ":";
+
     private AuthenticatedUserInfo _userInfo;
     
     public string StrUserName { get;  }

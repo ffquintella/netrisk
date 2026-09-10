@@ -577,111 +577,36 @@ partial class Build : NukeBuild
         });
     
     Target LintUi => _ => _
-        .Description("Lints AXAML files for UI standard violations (hardcoded colors, named brushes, unclassed buttons)")
+        .Description("Lints AXAML files against docs/ui-standard.md (hard-coded colors, named brushes, unlocalized strings, unclassed buttons)")
         .Executes(() =>
         {
             var viewsDir = RootDirectory / "src" / "GUIClient" / "Views";
-            var axamlFiles = Directory.GetFiles(viewsDir, "*.axaml", SearchOption.AllDirectories);
-            
-            var hexColorRegex = new Regex(@" (?:Background|Foreground)\s*=\s*""#[0-9a-fA-F]{6,8}""", RegexOptions.Compiled);
-            var namedBrushRegex = new Regex(@" (?:Background|Foreground)\s*=\s*""(?:Azure|Green|Red|Blue|Orange)""", RegexOptions.Compiled);
-            var buttonRegex = new Regex(@"<Button\b", RegexOptions.Compiled);
-            var buttonClassRegex = new Regex(@"Classes\s*=\s*""", RegexOptions.Compiled);
-            var hardcodedTextRegex = new Regex(@"<TextBlock\b[^>]*\bText\s*=\s*""([A-Z][a-z]+[^""]*)""", RegexOptions.Compiled);
+            var axamlFiles = Directory
+                .GetFiles(viewsDir, "*.axaml", SearchOption.AllDirectories)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToList();
 
-            var strictlyEnforced = new[] {
-                "CloseDialog.axaml",
-                "ChangePasswordDialog.axaml",
-                "LoginWindow.axaml",
-                "UsersView.axaml",
-                "AssessmentQuestionView.axaml",
-                "VulnerabilitiesView.axaml"
-            };
-
-            int totalViolations = 0;
-            int enforcedViolations = 0;
             Log.Information("=== RUNNING NETRISK UI STANDARDS LINTER ===");
-            
-            foreach (var file in axamlFiles)
-            {
-                var relativePath = Path.GetRelativePath(RootDirectory, file);
-                var fileName = Path.GetFileName(file);
-                var isEnforced = strictlyEnforced.Any(x => string.Equals(x, fileName, StringComparison.OrdinalIgnoreCase));
-                var lines = File.ReadAllLines(file);
-                
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    var line = lines[i];
-                    int lineNumber = i + 1;
-                    
-                    // R1: Hex Colors
-                    var hexMatch = hexColorRegex.Match(line);
-                    if (hexMatch.Success)
-                    {
-                        var msg = $"[R1 Violation] {relativePath}:{lineNumber} - Hardcoded hex color: {hexMatch.Value.Trim()}";
-                        if (isEnforced) {
-                            Log.Error(msg);
-                            enforcedViolations++;
-                        } else {
-                            Log.Warning(msg);
-                        }
-                        totalViolations++;
-                    }
-                    
-                    // R4: Named Brushes
-                    var brushMatch = namedBrushRegex.Match(line);
-                    if (brushMatch.Success)
-                    {
-                        var msg = $"[R4 Violation] {relativePath}:{lineNumber} - Legacy named brush: {brushMatch.Value.Trim()}";
-                        if (isEnforced) {
-                            Log.Error(msg);
-                            enforcedViolations++;
-                        } else {
-                            Log.Warning(msg);
-                        }
-                        totalViolations++;
-                    }
-                    
-                    // R6: Unclassed Buttons
-                    if (buttonRegex.IsMatch(line) && !buttonClassRegex.IsMatch(line))
-                    {
-                        var msg = $"[R6 Violation] {relativePath}:{lineNumber} - Unclassed Button element detected";
-                        if (isEnforced) {
-                            Log.Error(msg);
-                            enforcedViolations++;
-                        } else {
-                            Log.Warning(msg);
-                        }
-                        totalViolations++;
-                    }
 
-                    // R5: Hardcoded English text (excluding dynamic/static bindings)
-                    var textMatch = hardcodedTextRegex.Match(line);
-                    if (textMatch.Success)
-                    {
-                        var textValue = textMatch.Groups[1].Value;
-                        if (textValue != "Binding" && textValue != "TemplateBinding" && !textValue.StartsWith("{"))
-                        {
-                            var msg = $"[R5 Violation] {relativePath}:{lineNumber} - Hardcoded user-facing string: \"{textValue}\"";
-                            if (isEnforced) {
-                                Log.Error(msg);
-                                enforcedViolations++;
-                            } else {
-                                Log.Warning(msg);
-                            }
-                            totalViolations++;
-                        }
-                    }
-                }
-            }
-            
-            Log.Information($"UI Standards Audit completed. Found {totalViolations} total violation(s).");
-            if (enforcedViolations > 0)
+            var violations = UiStandardLinter.Lint(axamlFiles.Select(file =>
+                (Path.GetRelativePath(RootDirectory, file), File.ReadAllText(file))));
+
+            foreach (var violation in violations)
+                Log.Error(violation.ToString());
+
+            Log.Information(
+                "UI Standards Audit: {FileCount} view(s) scanned, {Total} violation(s) ({Breakdown}).",
+                axamlFiles.Count, violations.Count, UiStandardLinter.DescribeCounts(violations));
+
+            if (violations.Count > 0)
             {
-                Assert.Fail($"UI Standards Audit failed with {enforcedViolations} violation(s) in strictly enforced views. Please align these views with the netrisk-visual-theme-standard.");
+                Assert.Fail(
+                    $"UI Standards Audit failed with {violations.Count} violation(s) " +
+                    $"({UiStandardLinter.DescribeCounts(violations)}). Align the views with " +
+                    "docs/ui-standard.md, or add a justified '<!-- ui-lint-waive R<n>: reason -->' comment.");
             }
         });
-    
+
     Target Compile => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)

@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A secret-vault plugin that talks to nothing, built so that ServerServices.Tests can load a real
+    plugin off disk through the real PluginsService.
+
+    It exists because the failure it guards against cannot be reproduced with a substitute: if
+    Contracts.dll is copied beside a plugin, the loader gives it a second copy of the assembly, the
+    plugin's INetriskSecretVaultPlugin becomes a different type from the host's, IsAssignableFrom
+    returns false — and the plugin is silently ignored. No exception, no log line, no plugin. A test
+    that substitutes the plugin proves nothing about that, and a test that references it as an
+    ordinary assembly proves the opposite of what is wanted.
+
+    The real vault plugins live in their own repositories (BastionVault:
+    github.com/ffquintella/netrisk-plugin-bastionvault-integration), so this is deliberately the only
+    plugin in the netrisk tree: it is test scaffolding, not a feature.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13</LangVersion>
+    <IsPackable>false</IsPackable>
+
+    <!--
+      The host discovers plugins by filename: PluginsService only looks at *Plugin.dll. The project
+      name already ends in Plugin, but stating it here means a rename cannot quietly make the
+      assembly undiscoverable — which is one of the things the test asserts.
+    -->
+    <AssemblyName>FixtureVaultPlugin</AssemblyName>
+
+    <!--
+      Required for McMaster.NETCore.Plugins to load this assembly in its own context: it makes the
+      SDK emit a .deps.json listing the plugin's private dependencies, which is what lets the loader
+      resolve them without them being in the host's probing path.
+    -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Private=false / ExcludeAssets=runtime, and this is the important line in the file — the very
+      arrangement the test exists to verify is still in place. Contracts is a *shared* type between
+      host and plugin: PluginsService lists its interfaces in `sharedTypes`, so the host's copy must
+      be the one that is loaded. A real vault plugin must do exactly the same.
+    -->
+    <ProjectReference Include="..\..\..\libs\netrisk-plugin-sdk\Contracts\Contracts.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

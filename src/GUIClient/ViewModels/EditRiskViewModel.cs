@@ -1,4 +1,4 @@
-﻿using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.Validation;
@@ -40,6 +40,8 @@ public class EditRiskViewModel
     : ParameterizedDialogViewModelBaseAsync<RiskDialogResult, RiskDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
+    public string StrIdLabel => Localizer["Id"] + ": ";
+
 
     public string StrRisk { get; }
     public string StrOperation { get; }

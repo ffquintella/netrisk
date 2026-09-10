@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,7 +11,7 @@
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditHostDialogViewModel" x:Class="GUIClient.Views.EditHostDialog"
         Width="900" 
         Height="300"
-        Title="EditHostDialog">
+        Title="{Binding StrTitle}">
     
     <Design.DataContext>
         <viewModels:EditHostDialogViewModel/>
@@ -23,12 +23,12 @@
     <Grid RowDefinitions="Auto,*,Auto">
         <TextBlock Grid.Row="0" Classes="header">Host Edit</TextBlock>
         <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="IP"  Margin="10 10 5 0 "/>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrIp}"  Margin="10 10 5 0 "/>
             <TextBox TabIndex="1" Grid.Row="0" Grid.Column="1" Margin="0 5 0 0" Text="{Binding HostIp}" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrName}"  Margin="10 10 5 0 "/>
             <TextBox TabIndex="2" Grid.Row="0" Grid.Column="3" Margin="0 5 10 0" Text="{Binding HostName}" />
             
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="FQDN"  Margin="10 10 5 0 "/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrFqdn}"  Margin="10 10 5 0 "/>
             <TextBox TabIndex="3" Grid.Row="1" Grid.Column="1" Margin="0 5 10 0" Text="{Binding Fqdn}" />
             
             <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding StrOperatingSystem}"  Margin="10 10 5 0 "/>

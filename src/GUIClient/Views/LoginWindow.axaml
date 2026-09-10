@@ -8,7 +8,7 @@
         Opened="OnOpened"
         xmlns:convertes="clr-namespace:GUIClient.Converters"
         xmlns:vm="using:GUIClient.ViewModels"
-        Title="Login"
+        Title="{Binding StrTitle}"
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         WindowDecorations="Full"
@@ -68,7 +68,7 @@
                     </Grid>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Name="BtSSO" Classes="dialog2"
-                                ToolTip.Tip="SSO"
+                                ToolTip.Tip="{Binding StrSso}"
                                 IsEnabled="{Binding IsAccepted , Mode=TwoWay}"
                                 IsVisible="{Binding AuthenticationMethods,
                                 Converter={StaticResource authenticationMethodsContainConverter},

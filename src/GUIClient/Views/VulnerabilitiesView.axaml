@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -210,7 +210,7 @@
             </StackPanel>
             <!-- Right Buttons -->
             <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Border ToolTip.Tip="Export" Classes="tooltip">
+                <Border ToolTip.Tip="{Binding StrExport}" Classes="tooltip">
                     <Button Classes="toolbar" Command="{Binding ExportCommand}">
                         <material:MaterialIcon Kind="Export"/>
                     </Button>
@@ -281,7 +281,7 @@
                                     <TextBlock Text="{Binding StrName}" Classes="header2"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
                                     FallbackValue=''}" Classes="detailBlock" />
-                                    <TextBlock Text="IP" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrIp}" Classes="header2"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.Ip, 
                                     FallbackValue=''}" Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
@@ -292,7 +292,7 @@
                                     Converter={StaticResource IntStatusToStringConverter},
                                     FallbackValue=''}" Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrDetails}" Classes="header"/>
-                                    <TextBlock Text="CVEs" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrCves}" Classes="header2"/>
                                     <ItemsRepeater  ItemsSource="{Binding CveDetails}" >
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="vulnerability:CVEDetail">
@@ -310,7 +310,7 @@
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
-                                    <TextBlock Text="CVSS-3" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrCvss3}" Classes="header2"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Cvss3BaseScore, 
                                     FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
                                     <TextBlock Text="{Binding StrExploitAvailable}" Classes="header2"/>

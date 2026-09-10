@@ -1,4 +1,4 @@
-﻿using ClientServices.Interfaces;
+using ClientServices.Interfaces;
 using GUIClient.ViewModels.Admin;
 using ReactiveUI;
 
@@ -7,6 +7,8 @@ namespace GUIClient.ViewModels;
 public class AdminViewModel: ViewModelBase
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["Administration"];
+
 
     public string StrAdmin { get; } = Localizer["Administration"];
     public string StrUsers { get; } = Localizer["Users"];

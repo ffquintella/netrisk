@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -162,7 +162,7 @@
                                             <StackPanel Orientation="Horizontal">
                                                 <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
                                                 <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                                <Button Name="btDownload"
+                                                <Button Classes="subButton" Name="btDownload"
                                                         Width="22" Height="22" Padding="0"
                                                         Margin="5 0 0 0"
                                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -172,7 +172,7 @@
                                                         >
                                                     <material:MaterialIcon Kind="Download" Width="14" Height="14"/>
                                                 </Button>
-                                                <Button Name="BtDelete"
+                                                <Button Classes="subButton" Name="BtDelete"
                                                         Width="22" Height="22" Padding="0"
                                                         Margin="5 0 0 0"
                                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -187,7 +187,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </ScrollViewer>
-                            <Button Grid.Column="1" Name="BtAddFile" VerticalAlignment="Top"
+                            <Button Classes="subButton" Grid.Column="1" Name="BtAddFile" VerticalAlignment="Top"
                                     ToolTip.Tip="{Binding StrAddFile}"
                                     Command="{Binding BtFileAddClicked}">
                                 <material:MaterialIcon Kind="Add"/>

@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -189,7 +189,7 @@
                                         <StackPanel Orientation="Horizontal" Margin="0 5 0 0">
                                             <material:MaterialIcon Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}" Width="15" Height="15" />
                                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="5 0 0 0 "/>
-                                            <Button Name="btDownload"
+                                            <Button Classes="subButton" Name="btDownload"
                                                     Width="18" Height="18"
                                                     Margin="5 0 0 0"
                                                     Command="{Binding #EditIncidentWin.DataContext.BtFileDownloadClicked}"
@@ -197,7 +197,7 @@
                                                     >
                                                 <material:MaterialIcon Kind="Download"/>
                                             </Button>
-                                            <Button Name="BtDelete"
+                                            <Button Classes="subButton" Name="BtDelete"
                                                     Width="18" Height="18"
                                                     Margin="5 0 0 0"
                                                     IsVisible="{Binding !#EditIncidentWin.DataContext.IsViewOperation}" 
@@ -211,7 +211,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <Button Name="BtAddFile" Command="{Binding BtFileAddClicked}"
+                                <Button Classes="subButton" Name="BtAddFile" Command="{Binding BtFileAddClicked}"
                                         IsEnabled="{Binding !IsCreateOperation}"
                                         IsVisible="{Binding !IsViewOperation}">
                                     <material:MaterialIcon Kind="Add"/>

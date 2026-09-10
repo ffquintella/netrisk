@@ -1,4 +1,4 @@
-﻿# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -21,6 +21,27 @@ Direct `dotnet build src/netrisk.sln` also works for a plain compile, but packag
 The desktop packaging targets (`PackageWindowsGUI`, `PackageWindowsMSI`, `PackageWindowsMSIX`, `PackageLinuxGUI`, `PackageLinuxFlatpak`, `PackageLinuxSnap`, `PackageMacGUI`, `PackageMacA64GUI`, plus the `PackageWindowsInstallers` / `PackageLinuxInstallers` / `PackageAllInstallers` aggregates and `VerifySignatures`) live in the `build/Build.Signing.cs` and `build/Build.Installers.cs` partials. Installer manifests are reviewed templates under `build/installers/`; the pure logic behind them is `build/NetRisk.Packaging` (tested by `src/Packaging.Tests`), and every installer-visible identifier is declared once in `PackageIdentity` — those GUIDs and identities are **append-only**, since changing one turns an upgrade into a parallel install.
 
 Two rules hold for signing: **no credential lives in the repository** (parameters or `NETRISK_*` environment variables only, `[Secret]`-marked, redacted from logs), and **a missing certificate is not a build failure** — the target warns once and emits an unsigned artifact unless `--require-signing` / `--require-notarization` is passed. Cross-building the signed formats is impossible: WiX/`makeappx`/`signtool` need Windows, `codesign`/`notarytool` need macOS, `flatpak-builder`/`snapcraft` need Linux; the targets skip with one warning off-platform. WiX is pinned to **v5** (`dotnet tool install --global wix --version 5.0.2`) because v6/v7 refuse to build without accepting the OSMF EULA; the target reports the install command rather than installing anything itself. Full operational guide: [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md).
+
+### Desktop UI standard (enforced)
+
+The Avalonia views under `src/GUIClient/Views` are gated against [docs/ui-standard.md](docs/ui-standard.md):
+
+- `./build.sh LintUi` **fails on any violation** — hard-coded `Background`/`Foreground`/`BorderBrush`
+  hex, named status brushes (`Red`, `Green`, …), literal user-facing copy in `Text`/`Content`/`Title`/
+  `Header`/`ToolTip.Tip`/`Watermark`, and `Button` without a style class. `Compile` depends on it, and
+  CI runs it in [.github/workflows/ui-compliance.yml](.github/workflows/ui-compliance.yml).
+- The rules are pure logic in `build/NetRisk.Packaging/UiStandardLinter.cs`, tested by
+  `Packaging.Tests/UiStandardLinterTest` — which also asserts the whole view tree is at zero.
+- Colours go in `Styles/WindowStyles.axaml` as a class, never inline. Strings go in **all three**
+  `Resources/Localization*.resx` and bind via a `Str*` view-model property. Buttons take a class from
+  the §4.1 taxonomy.
+- A view that genuinely cannot comply declares `<!-- ui-lint-waive R5: reason -->` immediately above
+  the element. The reason is mandatory: a bare waiver is reported as R0 and still fails the build.
+- Two things the linter cannot see, so they are separate tests in `GUIClient.Tests`: a
+  `Localizer["Key"]` that resolves in no `.resx` (renders as the key name), and a `Classes="…"` token
+  no style defines (renders unstyled — Avalonia ignores an unmatched selector silently).
+
+Current state and per-file evidence: [roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md](roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md).
 
 ## Database Migrations (EF Core)
 
@@ -97,7 +118,7 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 **Tests are part of the change, not a follow-up.** Any new feature, endpoint, service method or command must land with tests covering its happy path and each error/guard branch it introduces. Any bug fix must land with a regression test that fails before the fix and passes after. If you find a defect you are not fixing, report it explicitly — never weaken or delete an assertion to get a green run. Full rules in [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md).
 
-Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`, `RiskPortal.Tests`, `Plugins/BastionVaultPlugin.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
+Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`, `RiskPortal.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
 
 `API.Tests` registration is convention-based: `API.Tests/DI/ServiceRegistration.cs` auto-registers every static `Create()` factory in namespace `API.Tests.Mock` against the interface it returns, and every concrete controller in the API assembly. Covering a new controller therefore needs no edit to any shared file — write `APITests/<Name>ControllerTest.cs`, inherit `BaseControllerTest`, and pass per-test doubles through `ResolveController<T>(configure)`, whose registrations are applied last and so win. Controllers that read the database directly get `API.Tests/Mock/InMemoryDalService`; give each test class its own database name. Note that EF `Include` on a **required** navigation inner-joins, so seed the principal rows (`User`, `Entity`, `Role`, …) or your seeded rows read back as an empty list.
 

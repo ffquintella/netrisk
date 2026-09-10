@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -99,7 +99,7 @@
                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.Id}" Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrHostName}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="IP:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrIp}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrStatus}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="4" Grid.Column="1" 
@@ -113,7 +113,7 @@
                 <TextBlock Grid.Row="6" Grid.Column="1" 
                            Text="{Binding SelectedHost.TeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"
                            Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="FQDN:" Margin="10 10 0 0 "/>
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrFqdn}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedHost.Fqdn}" Margin="5 10 0 0 "/>
                 <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrMacAddress}" Margin="10 10 0 0 "/>
                 <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedHost.MacAddress}" Margin="5 10 0 0 "/>

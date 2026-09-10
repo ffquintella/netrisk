@@ -21,7 +21,7 @@
     <ProjectReference Include="..\API\API.csproj" />
     <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
     <!--
-      The BastionVault plugin, referenced for build order only.
+      The fixture vault plugin, referenced for build order only.
 
       ReferenceOutputAssembly="false" is essential and not an optimization: the plugin must be loaded
       by PluginsService into its own assembly load context, exactly as it is in production. Linking it
@@ -30,7 +30,7 @@
       arrangement exists to catch (a plugin whose interface is loaded twice fails IsAssignableFrom
       with no error anywhere).
     -->
-    <ProjectReference Include="..\Plugins\BastionVaultPlugin\BastionVaultPlugin.csproj"
+    <ProjectReference Include="..\Plugins\FixtureVaultPlugin\FixtureVaultPlugin.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
@@ -38,14 +38,14 @@
     Stages the built plugin beside the test binaries, where SecretVaultPluginLoadingTest copies it
     into Plugins/Secrets and asks PluginsService to load it.
   -->
-  <Target Name="StageBastionVaultPluginFixture" AfterTargets="Build">
+  <Target Name="StageVaultPluginFixture" AfterTargets="Build">
     <ItemGroup>
-      <BastionVaultPluginFixture
-        Include="$(MSBuildThisFileDirectory)..\Plugins\BastionVaultPlugin\bin\$(Configuration)\$(TargetFramework)\BastionVaultPlugin.dll;$(MSBuildThisFileDirectory)..\Plugins\BastionVaultPlugin\bin\$(Configuration)\$(TargetFramework)\BastionVaultPlugin.deps.json" />
+      <VaultPluginFixture
+        Include="$(MSBuildThisFileDirectory)..\Plugins\FixtureVaultPlugin\bin\$(Configuration)\$(TargetFramework)\FixtureVaultPlugin.dll;$(MSBuildThisFileDirectory)..\Plugins\FixtureVaultPlugin\bin\$(Configuration)\$(TargetFramework)\FixtureVaultPlugin.deps.json" />
     </ItemGroup>
-    <Copy SourceFiles="@(BastionVaultPluginFixture)"
+    <Copy SourceFiles="@(VaultPluginFixture)"
           DestinationFolder="$(OutDir)PluginFixtures"
           SkipUnchangedFiles="true"
-          Condition="Exists('%(BastionVaultPluginFixture.FullPath)')" />
+          Condition="Exists('%(VaultPluginFixture.FullPath)')" />
   </Target>
 </Project>

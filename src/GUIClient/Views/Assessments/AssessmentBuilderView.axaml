@@ -49,13 +49,13 @@
                 <ItemsControl ItemsSource="{Binding Questions}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="assessments:AssessmentQuestionCardViewModel">
-                            <Border BorderBrush="#33888888" BorderThickness="1" CornerRadius="6"
-                                    Padding="10" Margin="0 0 0 2" Background="#08808080">
+                            <Border Classes="card outline" BorderThickness="1" CornerRadius="6"
+                                    Padding="10" Margin="0 0 0 2">
                               <StackPanel>
 
                                 <!-- COLLAPSED SUMMARY -->
                                 <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding !IsEditing}">
-                                    <Border Grid.Column="0" Background="#3370A0FF" CornerRadius="4"
+                                    <Border Grid.Column="0" Classes="badge"
                                             Padding="6 2" VerticalAlignment="Center" Margin="0 0 8 0">
                                         <TextBlock Text="{Binding PageBadge}" FontWeight="Bold" FontSize="11"/>
                                     </Border>
@@ -66,9 +66,9 @@
                                                                    Foreground="Gray" IsVisible="{Binding HasExplanation}"
                                                                    ToolTip.Tip="{Binding #BuilderRoot.DataContext.StrExplanation}"/>
                                             <StackPanel Orientation="Horizontal" Spacing="3" IsVisible="{Binding HasCondition}">
-                                                <avalonia:MaterialIcon Kind="CallSplit" Width="14" Height="14" Foreground="#B7791F"/>
+                                                <avalonia:MaterialIcon Kind="CallSplit" Classes="warning" Width="14" Height="14"/>
                                                 <TextBlock Text="{Binding #BuilderRoot.DataContext.StrShowOnlyIf}"
-                                                           Foreground="#B7791F" FontSize="11"/>
+                                                           Classes="warningText" FontSize="11"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
@@ -111,8 +111,7 @@
                                         <TextBox Grid.Column="0" Margin="0 0 6 0"
                                                  Text="{Binding Explanation, Mode=TwoWay}"
                                                  AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
-                                        <Border Grid.Column="1" BorderBrush="#22888888" BorderThickness="1"
-                                                CornerRadius="4" Padding="6">
+                                        <Border Grid.Column="1" Classes="outline" Padding="6">
                                             <ScrollViewer>
                                                 <controls:MarkdownPresenter Markdown="{Binding Explanation}"/>
                                             </ScrollViewer>
@@ -176,8 +175,7 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <Button HorizontalAlignment="Left" Padding="10 5"
-                                            Background="DarkSlateBlue" Foreground="White" CornerRadius="5"
+                                    <Button Classes="type2" HorizontalAlignment="Left" Padding="10 5"
                                             Command="{Binding AddOptionCommand}">
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <avalonia:MaterialIcon Kind="Plus" Width="16" Height="16"/>

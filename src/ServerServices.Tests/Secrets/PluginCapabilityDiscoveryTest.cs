@@ -51,7 +51,7 @@ public class PluginCapabilityDiscoveryTest : InMemoryServiceTestBase
         // The difference from GetPluginAsync, and the reason the overload exists: "the plugin this
         // connection needs is not installed" is a state to report to an operator, not an exception to
         // propagate out of a sync job.
-        Assert.Null(await _plugins.GetPluginByNameAsync<INetriskSecretVaultPlugin>("BastionVaultPlugin"));
+        Assert.Null(await _plugins.GetPluginByNameAsync<INetriskSecretVaultPlugin>("FixtureVaultPlugin"));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class PluginCapabilityDiscoveryTest : InMemoryServiceTestBase
         await _plugins.LoadPluginsAsync();
 
         Assert.Empty(await _plugins.GetPluginsAsync());
-        Assert.False(await _plugins.PluginExistsAsync("BastionVaultPlugin"));
-        Assert.False(await _plugins.PluginIsEnabledAsync("BastionVaultPlugin"));
+        Assert.False(await _plugins.PluginExistsAsync("FixtureVaultPlugin"));
+        Assert.False(await _plugins.PluginIsEnabledAsync("FixtureVaultPlugin"));
     }
 }

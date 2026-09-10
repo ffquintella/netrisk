@@ -56,7 +56,13 @@ Adding a capability means adding its interface to the SDK submodule and listing 
 loader would give it a second copy of the shared interfaces, the plugin's interface would stop being
 the host's, `IsAssignableFrom` would return false, and the plugin would be silently ignored. Reference
 Contracts with `Private="false"` and `ExcludeAssets="runtime"`, as
-[`BastionVaultPlugin.csproj`](../../src/Plugins/BastionVaultPlugin/BastionVaultPlugin.csproj) does.
+[`FixtureVaultPlugin.csproj`](../../src/Plugins/FixtureVaultPlugin/FixtureVaultPlugin.csproj) does.
+
+Plugins themselves live outside this repository — the BastionVault vault plugin is
+[netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration).
+`src/Plugins/FixtureVaultPlugin` is the one exception, and it is test scaffolding rather than a
+feature: a vault plugin with no vault behind it, so the loader can be tested against a real
+assembly.
 
 ## Capabilities
 
@@ -71,8 +77,8 @@ Contracts with `Private="false"` and `ExcludeAssets="runtime"`, as
 - `API.Tests/APITests/PluginsControllerTest.cs` — the HTTP contract
 - `ServerServices.Tests/Secrets/PluginCapabilityDiscoveryTest.cs` — a host with no plugins answers
   "no" rather than throwing, including when the `Plugins` directory does not exist
-- `ServerServices.Tests/Secrets/SecretVaultPluginLoadingTest.cs` — the real BastionVault plugin loaded
-  off disk, which is what proves the shared-assembly arrangement above still holds
+- `ServerServices.Tests/Secrets/SecretVaultPluginLoadingTest.cs` — `FixtureVaultPlugin` loaded off
+  disk, which is what proves the shared-assembly arrangement above still holds
 
 ## Common Exceptions
 

@@ -1,4 +1,4 @@
-﻿using GUIClient.Interfaces;
+using GUIClient.Interfaces;
 using System.Windows.Input;
 using System;
 using System.Collections.Generic;
@@ -30,6 +30,8 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         private readonly IReportTemplatesService _reportTemplatesService;
 
         #region LANGUAGE
+        public string StrTitle => Localizer["EditReportSchedule"];
+
         public string StrReportTemplate => Localizer["Report Template"];
         public string StrVersion => Localizer["Version"];
         public string StrFrequency => Localizer["Frequency"];

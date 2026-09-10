@@ -1,4 +1,4 @@
-﻿using RxVoid = ReactiveUI.Primitives.RxVoid;
+using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive.Linq;
 using GUIClient.Interfaces;
 using System.Windows.Input;
@@ -21,6 +21,8 @@ namespace GUIClient.ViewModels.Reports;
 public class CreateReportDialogViewModel: ParameterizedDialogViewModelBaseAsync<ReportDialogResult, ReportDialogParameter>, ISaveableDialog
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["CreateReport"];
+
     public string StrCreateReport { get; } = Localizer["CreateReport"];
     public string StrReportType { get; } = Localizer["ReportType"];
     public string StrDetailedEntitiesRisks { get; } = Localizer["DetailedEntitiesRisks"];

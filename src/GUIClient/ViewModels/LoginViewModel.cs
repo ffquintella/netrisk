@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -24,6 +24,9 @@ namespace GUIClient.ViewModels;
 public class LoginViewModel : ViewModelBase
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["Login"];
+    public string StrSso => Localizer["SSO"];
+
     public Window ParentWindow { get; set; }
     public string StrNotAccepted { get; }
     public string StrLogin { get; }

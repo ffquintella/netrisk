@@ -15,6 +15,8 @@ namespace GUIClient.ViewModels;
 public class NotificationsViewModel: ViewModelBase
 {
     #region LANGUAGE
+    public string StrTitle => Localizer["Notifications"];
+
     public string StrNotifications { get; set; } = Localizer["Notifications"];
 
     #endregion

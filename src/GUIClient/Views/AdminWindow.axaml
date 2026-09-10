@@ -8,7 +8,7 @@
         xmlns:admin="clr-namespace:GUIClient.Views.Admin"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AdminViewModel" x:Class="GUIClient.Views.AdminWindow"
-        Title="AdminWindow"
+        Title="{Binding StrTitle}"
         Name="AdmWin">
     
     <Design.DataContext>

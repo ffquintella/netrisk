@@ -13,7 +13,7 @@ using Xunit;
 namespace ServerServices.Tests.Secrets;
 
 /// <summary>
-/// The real BastionVault plugin, loaded off disk by the real <see cref="PluginsService"/>.
+/// The fixture vault plugin, loaded off disk by the real <see cref="PluginsService"/>.
 ///
 /// Every other test in this area substitutes the plugin. This one does not, and it is here for one
 /// specific failure that substitution cannot reach: if <c>Contracts.dll</c> is copied beside the
@@ -21,7 +21,9 @@ namespace ServerServices.Tests.Secrets;
 /// <c>INetriskSecretVaultPlugin</c> becomes a different type from the host's,
 /// <c>IsAssignableFrom</c> returns false — and the plugin is silently ignored. No exception, no log
 /// line, no plugin. The plugin project excludes Contracts from its runtime output precisely to avoid
-/// that, and this test is what proves the exclusion is still in place.
+/// that, and this test is what proves the exclusion is still in place — for the fixture here, and
+/// by construction for the real vault plugins, which live in their own repositories and have to be
+/// built the same way.
 ///
 /// It also covers the plumbing between the two: that the assembly's name ends in <c>Plugin.dll</c> so
 /// discovery sees it, that a directory under <c>Plugins</c> is scanned, and that an unsigned plugin
@@ -31,7 +33,7 @@ namespace ServerServices.Tests.Secrets;
 [TestSubject(typeof(PluginsService))]
 public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
 {
-    private const string PluginName = "BastionVaultPlugin";
+    private const string PluginName = "FixtureVaultPlugin";
 
     private readonly IPluginsService _plugins;
 
@@ -63,8 +65,8 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
         var source = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PluginFixtures");
 
         Assert.True(Directory.Exists(source),
-            "The BastionVault plugin fixture was not staged. See the StageBastionVaultPluginFixture "
-            + "target in ServerServices.Tests.csproj.");
+            "The vault plugin fixture was not staged. See the StageVaultPluginFixture target in "
+            + "ServerServices.Tests.csproj.");
 
         var destination = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins",
             SecretVaultDefaults.PluginDirectory);
@@ -85,7 +87,7 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
         // Not pinned to a literal: this test is about discovery, and a version assertion here only
         // ever fails when somebody legitimately bumps the plugin.
         Assert.NotEmpty(info.Version);
-        Assert.Contains("BastionVault", info.Description);
+        Assert.Contains("secret vault plugin", info.Description);
 
         // Discovered, but off: PluginIsEnabledAsync answers false until an administrator says
         // otherwise, so dropping a DLL into the directory does not by itself activate anything.
@@ -103,7 +105,7 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
         // looking at two different copies of Contracts.dll, and the symptom in production is a plugin
         // that is present in the directory and invisible to the feature.
         Assert.NotNull(plugin);
-        Assert.Equal("bastionvault", plugin.VaultKind);
+        Assert.Equal("fixture", plugin.VaultKind);
         Assert.False(plugin.RequiresMachineId);
     }
 
@@ -150,7 +152,7 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
 /// Serializes the test classes that manipulate the host's <c>Plugins</c> directory.
 ///
 /// <see cref="PluginCapabilityDiscoveryTest"/> deletes it to prove the missing-directory guard;
-/// <see cref="SecretVaultPluginLoadingTest"/> fills it with a real plugin. Run in parallel those two
+/// <see cref="SecretVaultPluginLoadingTest"/> fills it with a real plugin assembly. Run in parallel those two
 /// are a coin flip, and the failure would look like a flaky loader rather than a test-isolation
 /// problem.
 /// </summary>

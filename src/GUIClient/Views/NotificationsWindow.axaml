@@ -10,7 +10,7 @@
         Width="300"
         Height="500"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:NotificationsViewModel" x:Class="GUIClient.Views.NotificationsWindow"
-        Title="NotificationsWindow">
+        Title="{Binding StrTitle}">
     <Design.DataContext>
         <viewModels:NotificationsViewModel/>
     </Design.DataContext>
@@ -36,13 +36,13 @@
                                 <TextBlock Text="{Binding CreatedAt}" Classes="header3"/>
                                 <StackPanel Orientation="Horizontal" >
                                     <TextBlock Text="{Binding Message1}"  TextWrapping="Wrap" Width="200" />
-                                    <Button CornerRadius="25" Margin="5 0 0 0" 
+                                    <Button Classes="subButton" CornerRadius="25" Margin="5 0 0 0" 
                                             Command="{Binding $parent[Window].DataContext.BtReadClicked}"
                                             CommandParameter="{Binding Id}"
                                             IsEnabled="{Binding Status, Converter={StaticResource IntNotEqualConverter}, ConverterParameter=50}">
                                         <avalonia:MaterialIcon Kind="Check" Width="10"/>
                                     </Button>
-                                    <Button CornerRadius="25" Margin="5 0 0 0"
+                                    <Button Classes="subButton" CornerRadius="25" Margin="5 0 0 0"
                                             Command="{Binding $parent[Window].DataContext.BtDeleteClicked}"
                                             CommandParameter="{Binding Id}"
                                             >

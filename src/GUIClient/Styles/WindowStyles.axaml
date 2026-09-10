@@ -1,4 +1,4 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         >
@@ -441,6 +441,36 @@
         <Setter Property="Foreground" Value="#EF4444"/>
     </Style>
     
+    <!-- Inline status copy. Views must not paint their own error/warning colours (UI standard
+         §2.6), so the two severities that appear as running text get a class each. Both reuse
+         tokens already in this file: the validation-summary red and the toast amber. -->
+    <Style Selector="TextBlock.errorText">
+        <Setter Property="Foreground" Value="#ff8a80"/>
+    </Style>
+
+    <Style Selector="TextBlock.warningText">
+        <Setter Property="Foreground" Value="#ff9800"/>
+    </Style>
+
+    <Style Selector="avalonia|MaterialIcon.warning">
+        <Setter Property="Foreground" Value="#ff9800"/>
+    </Style>
+
+    <!-- Hairline container outline — the neutral 1px border used to separate a panel or a list
+         row from its surface without adding an elevation step. Set BorderThickness locally when
+         only one edge is wanted (e.g. "0 0 0 1" for a row divider). -->
+    <Style Selector="Border.outline">
+        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
+    <!-- Small inline count/ordinal pill (assessment page badges), on the brand accent. -->
+    <Style Selector="Border.badge">
+        <Setter Property="Background" Value="#51496b"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
     <!-- Content list — ListBox used as the main content list in a view -->
     <Style Selector="ListBox.content-list">
         <Setter Property="MinHeight" Value="100"/>

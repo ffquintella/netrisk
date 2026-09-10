@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,7 @@
         Width="960" Height="680"
         x:Class="GUIClient.Views.Reports.EditReportTemplateDialog"
         x:DataType="reports:EditReportTemplateDialogViewModel"
-        Title="Edit Report Template">
+        Title="{Binding StrTitle}">
 
     <Design.DataContext>
         <reports:EditReportTemplateDialogViewModel/>
@@ -38,16 +38,16 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        <Button Content="{Binding StrApplyPreset}" Command="{Binding ApplyPresetCommand}"/>
+                        <Button Classes="type2" Content="{Binding StrApplyPreset}" Command="{Binding ApplyPresetCommand}"/>
                     </StackPanel>
 
                     <!-- Sections -->
                     <TextBlock Text="{Binding StrSections}" FontWeight="Bold" Margin="0 6 0 0"/>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Button Content="{Binding StrAddSection}" Command="{Binding AddSectionCommand}"/>
-                        <Button Content="{Binding StrRemove}" Command="{Binding RemoveSectionCommand}"/>
-                        <Button Content="{Binding StrMoveUp}" Command="{Binding MoveSectionUpCommand}"/>
-                        <Button Content="{Binding StrMoveDown}" Command="{Binding MoveSectionDownCommand}"/>
+                        <Button Classes="type2" Content="{Binding StrAddSection}" Command="{Binding AddSectionCommand}"/>
+                        <Button Classes="type3" Content="{Binding StrRemove}" Command="{Binding RemoveSectionCommand}"/>
+                        <Button Classes="type2" Content="{Binding StrMoveUp}" Command="{Binding MoveSectionUpCommand}"/>
+                        <Button Classes="type2" Content="{Binding StrMoveDown}" Command="{Binding MoveSectionDownCommand}"/>
                     </StackPanel>
 
                     <ListBox MaxHeight="160" ItemsSource="{Binding Sections}" SelectedItem="{Binding SelectedSection}">
@@ -96,8 +96,8 @@
 
                     <TextBlock Text="{Binding StrLogo}" Margin="0 6 0 0"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="{Binding StrUploadLogo}" Command="{Binding UploadLogoCommand}"/>
-                        <Button Content="{Binding StrClear}" Command="{Binding ClearLogoCommand}"/>
+                        <Button Classes="type2" Content="{Binding StrUploadLogo}" Command="{Binding UploadLogoCommand}"/>
+                        <Button Classes="type3" Content="{Binding StrClear}" Command="{Binding ClearLogoCommand}"/>
                         <Image Source="{Binding LogoPreview}" MaxHeight="40" MaxWidth="120"/>
                     </StackPanel>
                 </StackPanel>
@@ -106,7 +106,7 @@
             <!-- ============ PREVIEW COLUMN ============ -->
             <Grid Grid.Column="2" RowDefinitions="Auto, *, Auto">
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0 0 0 6">
-                    <Button Content="{Binding StrPreview}" Command="{Binding PreviewCommand}"/>
+                    <Button Classes="type3" Content="{Binding StrPreview}" Command="{Binding PreviewCommand}"/>
                     <TextBlock Text="..." VerticalAlignment="Center" IsVisible="{Binding IsPreviewLoading}"/>
                 </StackPanel>
                 <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Background="White">
@@ -114,16 +114,16 @@
                         <Image Source="{Binding PreviewImage}" Stretch="Uniform"/>
                     </ScrollViewer>
                 </Border>
-                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="Red" Margin="0 4 0 0"
+                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Classes="errorText" Margin="0 4 0 0"
                            IsVisible="{Binding StatusMessage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
             </Grid>
         </Grid>
 
         <!-- ============ ACTIONS ============ -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="10 10 0 0">
-            <Button Content="{Binding StrSaveAsCopy}" Command="{Binding SaveAsCopyCommand}"/>
-            <Button Content="Save" Command="{Binding SaveCommand}"/>
-            <Button Content="Cancel" Command="{Binding CloseCommand}"/>
+            <Button Classes="type2" Content="{Binding StrSaveAsCopy}" Command="{Binding SaveAsCopyCommand}"/>
+            <Button Classes="dialog1" Content="{Binding StrSave}" Command="{Binding SaveCommand}"/>
+            <Button Classes="dialog2" Content="{Binding StrCancel}" Command="{Binding CloseCommand}"/>
         </StackPanel>
     </Grid>
 </Window>

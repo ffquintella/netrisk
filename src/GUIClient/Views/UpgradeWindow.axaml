@@ -6,7 +6,7 @@
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:UpgradeViewModel" x:Class="GUIClient.Views.UpgradeWindow"
         xmlns:vm="using:GUIClient.ViewModels"
         Width="250" Height="100" WindowStartupLocation="CenterScreen"
-        Title="UpgradeWindow">
+        Title="{Binding StrTitle}">
     
     <Design.DataContext>
         <vm:UpgradeViewModel/>

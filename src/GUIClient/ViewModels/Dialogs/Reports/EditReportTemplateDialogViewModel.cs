@@ -1,4 +1,4 @@
-﻿using GUIClient.Interfaces;
+using GUIClient.Interfaces;
 using System.Windows.Input;
 using System;
 using System.Collections.ObjectModel;
@@ -29,6 +29,8 @@ namespace GUIClient.ViewModels.Dialogs.Reports
         private readonly IReportTemplatesService _reportTemplatesService;
 
         #region LANGUAGE
+        public string StrTitle => Localizer["EditReportTemplate"];
+
         public string StrName => Localizer["Name"];
         public string StrDescription => Localizer["Description"];
         public string StrSections => Localizer["Sections"];

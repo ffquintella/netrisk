@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -52,7 +52,7 @@
                                 <!-- RISK DATA -->
                                 <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                             Orientation="Horizontal" IsVisible="{Binding IsCtrlNumVisible}">
-                                        <TextBlock IsVisible="{Binding ShowEditFields}" Text="ID: " Classes="label"/>
+                                        <TextBlock IsVisible="{Binding ShowEditFields}" Text="{Binding StrIdLabel}" Classes="label"/>
                                         <TextBlock IsVisible="{Binding ShowEditFields}" Text="{Binding Risk.Id}" Classes="formData" Margin="0 5 5 0 "/>
                                 </StackPanel>
 

@@ -53,7 +53,7 @@
                             <TextBlock Text="{Binding ServerConfiguration.Description}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="URL:" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                            <TextBlock Text="{Binding StrUrl}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                             <TextBlock Text="{Binding ServerURL}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </StackPanel>
                     </StackPanel>

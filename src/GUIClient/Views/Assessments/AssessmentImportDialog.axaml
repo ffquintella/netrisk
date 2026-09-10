@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,7 +10,7 @@
         CanResize="True"
         Width="600"
         Height="560"
-        Title="Import Assessment Template">
+        Title="{Binding StrTitle}">
 
     <Design.DataContext>
         <assessments:AssessmentImportDialogViewModel/>
@@ -67,21 +67,21 @@
         <ScrollViewer Grid.Row="6" Margin="0 6 0 0">
             <StackPanel Spacing="6">
                 <StackPanel IsVisible="{Binding HasErrors}">
-                    <TextBlock Classes="header2" Text="{Binding StrErrors}" Foreground="#C0392B"/>
+                    <TextBlock Classes="header2" Text="{Binding StrErrors}"/>
                     <ItemsControl ItemsSource="{Binding Errors}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="#C0392B" Margin="4 1"/>
+                                <TextBlock Text="{Binding}" Classes="errorText" TextWrapping="Wrap" Margin="4 1"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
                 <StackPanel IsVisible="{Binding HasWarnings}">
-                    <TextBlock Classes="header2" Text="{Binding StrWarnings}" Foreground="#B7791F"/>
+                    <TextBlock Classes="header2" Text="{Binding StrWarnings}"/>
                     <ItemsControl ItemsSource="{Binding Warnings}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="#B7791F" Margin="4 1"/>
+                                <TextBlock Text="{Binding}" Classes="warningText" TextWrapping="Wrap" Margin="4 1"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

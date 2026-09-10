@@ -12,7 +12,7 @@
         CanResize="True"
         Width="900"
         Height="650"
-        Title="Assessment Run Viewer">
+        Title="{Binding StrTitle}">
 
     <Design.DataContext>
         <assessments:AssessmentRunViewerViewModel/>
@@ -35,14 +35,14 @@
                 <ItemsControl ItemsSource="{Binding Pages}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="assessments:AssessmentRunPageViewModel">
-                            <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            <Button Classes="nav-base" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                     Margin="0 2"
                                     Command="{Binding $parent[ItemsControl].DataContext.GoToPageItemCommand}"
                                     CommandParameter="{Binding}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <avalonia:MaterialIcon Width="16" Height="16"
                                                            Kind="CheckCircle"
-                                                           Foreground="Green"
+                                                           Classes="success"
                                                            IsVisible="{Binding IsComplete}"/>
                                     <avalonia:MaterialIcon Width="16" Height="16"
                                                            Kind="CircleOutline"
@@ -57,7 +57,7 @@
             </DockPanel>
 
             <!-- Main content -->
-            <Border Grid.Column="1" BorderBrush="#33888888" BorderThickness="1" CornerRadius="4" Padding="10">
+            <Border Grid.Column="1" Classes="outline" Padding="10">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Classes="header2" Text="{Binding CurrentPageTitle}"/>
 
@@ -66,7 +66,7 @@
                         <ItemsControl ItemsSource="{Binding CurrentQuestions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="assessments:AssessmentRunQuestionViewModel">
-                                    <Border Margin="0 6" Padding="8" BorderBrush="#22888888"
+                                    <Border Margin="0 6" Padding="8" Classes="outline"
                                             BorderThickness="0 0 0 1">
                                         <StackPanel Spacing="4"
                                                     Margin="{Binding IsNested, Converter={StaticResource BoolToIndentConverter}}">

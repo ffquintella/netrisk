@@ -3039,4 +3039,55 @@
   <data name="VaultSecretFieldHintMSG" xml:space="preserve">
     <value>Leave empty for the secret's whole value. BastionVault secrets usually hold named fields (for example password) — type the one this credential needs.</value>
   </data>
+  <data name="IP" xml:space="preserve">
+      <value>IP</value>
+  </data>
+  <data name="FQDN" xml:space="preserve">
+      <value>FQDN</value>
+  </data>
+  <data name="IRP" xml:space="preserve">
+      <value>IRP</value>
+  </data>
+  <data name="IRPDate" xml:space="preserve">
+      <value>IRP Dt.</value>
+  </data>
+  <data name="URL" xml:space="preserve">
+      <value>URL</value>
+  </data>
+  <data name="SSO" xml:space="preserve">
+      <value>SSO</value>
+  </data>
+  <data name="CVEs" xml:space="preserve">
+      <value>CVEs</value>
+  </data>
+  <data name="CVSS3" xml:space="preserve">
+      <value>CVSS-3</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+      <value>User Information</value>
+  </data>
+  <data name="NetRiskApplication" xml:space="preserve">
+      <value>NetRisk</value>
+  </data>
+  <data name="EditReportSchedule" xml:space="preserve">
+      <value>Edit Report Schedule</value>
+  </data>
+  <data name="EditReportTemplate" xml:space="preserve">
+      <value>Edit Report Template</value>
+  </data>
+  <data name="ManageTemplates" xml:space="preserve">
+      <value>Manage Templates</value>
+  </data>
+  <data name="ManageSchedules" xml:space="preserve">
+      <value>Manage Schedules</value>
+  </data>
+  <data name="VulnerabilityFixChat" xml:space="preserve">
+      <value>Vulnerability Fix Chat</value>
+  </data>
+  <data name="SendEmail" xml:space="preserve">
+      <value>Send Email</value>
+  </data>
+  <data name="EditHost" xml:space="preserve">
+      <value>Edit Host</value>
+  </data>
 </root>

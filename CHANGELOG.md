@@ -16,6 +16,62 @@ This release includes new features and improvements.
 
 
 
+## [2.20.2] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+- **A UI standard gate that runs in CI and a UI section in the PR checklist.** `./build.sh LintUi`
+  now fails on any deviation from [docs/ui-standard.md](docs/ui-standard.md) in
+  `src/GUIClient/Views` — hard-coded colours, named status brushes, unlocalized user-facing strings,
+  unclassed buttons — and runs on every push and pull request. A view that genuinely cannot comply
+  declares an in-markup waiver with a written reason (`<!-- ui-lint-waive R5: … -->`); a waiver with
+  no reason is itself reported and still fails the build.
+
+### Changed
+
+- **The BastionVault plugin now lives in its own repository.** It has moved out of this tree to
+  [netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration)
+  and is built and released from there, so it is no longer part of a NetRisk build. **Operators
+  upgrading:** `BastionVaultPlugin.dll` and its `.deps.json` are no longer produced by this
+  repository's build and are no longer copied into `Plugins/Secrets/` automatically — take them
+  from the plugin repository's own release and install them under **both** the API and the
+  background-job host, since both resolve credentials. A plugin present in only one of them is an
+  integration that works during the day and fails at night. Nothing about the vault integration
+  itself changed: the reference format, the resolver, the cache, the SDK contract and the desktop UI
+  are all as they were, and an already-installed plugin keeps working. What a plugin author must do
+  is unchanged too — a vault plugin is still an assembly ending in `Plugin.dll` that references
+  `Contracts` with `Private="false"`. `src/Plugins/FixtureVaultPlugin` replaces it in the tree as
+  test scaffolding only: a vault plugin with no vault behind it, so the loader's shared-assembly
+  arrangement can still be proved against a real assembly on disk.
+
+- **Window titles are localized instead of showing internal class names.** Twenty windows had a
+  hard-coded title, and most of those titles were the view's class name: the administration window
+  said "AdminWindow", the close-risk dialog said "CloseDialog", the vulnerability chat said
+  "VulnerabilityFixChatDialog", and the main window said "NetRisk Application". They now read their
+  purpose, in the user's language.
+- **Remaining hard-coded labels in the GUI are translated.** Forty-one user-facing strings —
+  the IP/FQDN field labels in the host dialog and host list, the risk ID and IRP labels, the
+  vulnerability grid's IP/CVEs/CVSS-3 headers, its Export tooltip, the SSO button's tooltip, the
+  report dialogs' Save/Cancel buttons and the report window's "Manage Templates"/"Manage Schedules"
+  actions — now come from the resource files, with seventeen new keys added in English and
+  Portuguese.
+- **Buttons across the GUI follow the documented taxonomy.** Forty-seven buttons carried no style
+  class and so rendered in the legacy generic grey: the attachment download/delete/add actions on
+  risks, incidents, mitigations and response plans; the report generate/export toolbars; the
+  vulnerability pager; the report template and schedule dialogs; the assessment page rail; the
+  logout button. Each now uses the class its role calls for, so identical actions look identical
+  from screen to screen.
+- **Status colours in the assessment and report screens come from the theme.** Error and warning
+  text, panel outlines, page badges and the completion tick were painted with literal colour values
+  in the markup; they now use theme classes, so they stay consistent with the rest of the dark
+  theme and change in one place.
+
+### Fixed
+
+
+
 ## [2.20.1] - 2026-09-09
 
 This release includes new features and improvements.
