@@ -65,6 +65,11 @@ public static class IntegrationServiceRegistration
         services.TryAddSingleton<IObfuscatedSecretCache, ObfuscatedSecretCache>();
         services.AddTransient<IPluginHttpClient, PluginHttpClientAdapter>();
 
+        // The factory alongside the adapter, not instead of it: a plugin injected with
+        // IPluginHttpClient still gets the validating seam, while the vault service asks the factory
+        // for one whose TLS behaviour matches the connection it is about to serve.
+        services.TryAddSingleton<IPluginHttpClientFactory, PluginHttpClientFactory>();
+
         // Singletons, both of them, and for the same reason: the endpoint resolver's whole value is
         // the cache it holds, and a transient one would do a DNS lookup plus a health probe per node
         // for every credential a sync job reads. The lookup client underneath keeps DNS answers for

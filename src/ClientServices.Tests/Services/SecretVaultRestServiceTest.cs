@@ -100,6 +100,31 @@ public class SecretVaultRestServiceTest : BaseServiceTest
         Assert.Contains("\"apiKey\":\"bv-key\"", _backend.LastRequest.Body);
     }
 
+    /// <summary>
+    /// The app id and the TLS option are part of the connection, not of the key, so they must survive
+    /// the serialization the request goes through. A field the client silently drops is a setting an
+    /// operator ticks and that never reaches the server.
+    /// </summary>
+    [Fact]
+    public async Task SendsTheAppIdAndTheTlsSettingWithTheConnection()
+    {
+        _backend.OnPost("/SecretVaults", new SecretVaultConnectionView { Id = 7, Name = "Prod vault" },
+            HttpStatusCode.Created);
+
+        var input = new SecretVaultConnectionInput
+        {
+            Name = "Prod vault", PluginName = "BastionVaultPlugin",
+            BaseUrl = "https://vault.example.com",
+            AppId = "netrisk-prod",
+            IgnoreSslErrors = true
+        };
+
+        await _service.CreateSecretVaultConnectionAsync(input, "bv-key");
+
+        Assert.Contains("\"appId\":\"netrisk-prod\"", _backend.LastRequest.Body);
+        Assert.Contains("\"ignoreSslErrors\":true", _backend.LastRequest.Body);
+    }
+
     [Fact]
     public async Task UpdatesWithoutAnApiKeyWhenTheOperatorDidNotTypeOne()
     {

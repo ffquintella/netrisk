@@ -19,6 +19,17 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
     private readonly HttpClient _client;
     private readonly OutboundUrlPolicy _urlPolicy;
 
+    /// <summary>
+    /// The second client, for requests that carry
+    /// <see cref="OutboundHttpRequest.AllowInvalidCertificate"/>.
+    ///
+    /// A separate client and not a per-request callback, because certificate validation is a property
+    /// of the handler and the handler is shared: flipping it per call would relax validation for
+    /// whatever else is in flight on the same connection pool. Created on first use, so an
+    /// installation that never turns the option on never has a client that does not validate.
+    /// </summary>
+    private readonly Lazy<HttpClient> _insecureClient;
+
     public OutboundHttpClient(ILogger logger, Microsoft.Extensions.Configuration.IConfiguration configuration)
         : this(logger, new OutboundUrlPolicy(logger, configuration))
     {
@@ -39,6 +50,26 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
             Timeout = Timeout.InfiniteTimeSpan
         };
         _client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NetRisk", "1.0"));
+
+        _insecureClient = new Lazy<HttpClient>(() =>
+        {
+            var client = new HttpClient(new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+                AllowAutoRedirect = false,
+                SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+                {
+                    RemoteCertificateValidationCallback = (_, _, _, _) => true
+                }
+            })
+            {
+                Timeout = Timeout.InfiniteTimeSpan
+            };
+
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NetRisk", "1.0"));
+
+            return client;
+        });
     }
 
     public async Task<OutboundHttpResponse> SendAsync(OutboundHttpRequest request, CancellationToken ct = default)
@@ -79,7 +110,22 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
                     message.Content?.Headers.TryAddWithoutValidation(name, value);
             }
 
-            using var response = await _client.SendAsync(message, timeout.Token);
+            var client = _client;
+
+            if (request.AllowInvalidCertificate)
+            {
+                // Logged every time, at warning, and naming the host: a connection running without
+                // certificate validation is a security control somebody switched off, and the only
+                // thing that makes that reviewable after the fact is a line in the log.
+                _logger.Warning(
+                    "Sending an outbound {Method} to {Host} WITHOUT TLS certificate validation, because "
+                    + "the calling configuration asked for it",
+                    request.Method, HostOf(request.Url));
+
+                client = _insecureClient.Value;
+            }
+
+            using var response = await client.SendAsync(message, timeout.Token);
 
             var body = await response.Content.ReadAsStringAsync(timeout.Token);
 
@@ -121,5 +167,10 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
     private static string HostOf(string url) =>
         Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : "(unparseable url)";
 
-    public void Dispose() => _client.Dispose();
+    public void Dispose()
+    {
+        _client.Dispose();
+
+        if (_insecureClient.IsValueCreated) _insecureClient.Value.Dispose();
+    }
 }

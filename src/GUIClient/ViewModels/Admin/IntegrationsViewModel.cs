@@ -125,6 +125,11 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrCacheMinutes { get; } = Localizer["CacheMinutes"];
     public string StrSecretCacheHint { get; } = Localizer["SecretCacheHintMSG"];
     public string StrMachineIdRequiredHint { get; } = Localizer["MachineIdRequiredMSG"];
+    public string StrAppId { get; } = Localizer["AppId"];
+    public string StrAppIdHint { get; } = Localizer["AppIdOptionalMSG"];
+    public string StrAppIdRequiredHint { get; } = Localizer["AppIdRequiredMSG"];
+    public string StrIgnoreSslErrors { get; } = Localizer["IgnoreSslErrors"];
+    public string StrIgnoreSslErrorsHint { get; } = Localizer["IgnoreSslErrorsMSG"];
     public string StrVaultBaseUrlHint { get; } = Localizer["VaultBaseUrlHintMSG"];
     public string StrPlugin { get; } = Localizer["Plugin"];
     public string StrLastTest { get; } = Localizer["LastTest"];
@@ -672,6 +677,8 @@ public class IntegrationsViewModel : ViewModelBase
             // are computed rather than stored, and ReactiveUI has no way to know they depend on this.
             this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
             this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
+            this.RaisePropertyChanged(nameof(VaultRequiresAppId));
+            this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
         }
     }
 
@@ -690,6 +697,20 @@ public class IntegrationsViewModel : ViewModelBase
     /// <summary>The machine-ID hint, in the "required" wording when the plugin demands one.</summary>
     public string StrVaultMachineIdHint =>
         VaultRequiresMachineId ? StrMachineIdRequiredHint : StrMachineIdHint;
+
+    /// <summary>
+    /// Whether the selected plugin declares that it authorizes by application identity — BastionVault's
+    /// <c>app_id</c> — and so cannot work without one. Read from the plugin list for the same reason
+    /// as <see cref="VaultRequiresMachineId"/>: it has to be right before the connection exists.
+    /// </summary>
+    public bool VaultRequiresAppId =>
+        VaultPlugins.FirstOrDefault(p =>
+            string.Equals(p.PluginName, VaultDraft.PluginName, StringComparison.Ordinal))
+            ?.RequiresAppId ?? false;
+
+    /// <summary>The app-ID hint, in the "required" wording when the plugin demands one.</summary>
+    public string StrVaultAppIdHint =>
+        VaultRequiresAppId ? StrAppIdRequiredHint : StrAppIdHint;
 
     private string _vaultApiKey = "";
     public string VaultApiKey
@@ -2099,6 +2120,8 @@ public class IntegrationsViewModel : ViewModelBase
         PluginName = "",
         BaseUrl = "",
         MachineId = "",
+        AppId = "",
+        IgnoreSslErrors = false,
         Enabled = true,
         CacheTtlMinutes = SecretVaultDefaults.CacheTtlMinutes
     };
@@ -2120,6 +2143,8 @@ public class IntegrationsViewModel : ViewModelBase
             // before the plugins arrived is stale until this fires.
             this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
             this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
+            this.RaisePropertyChanged(nameof(VaultRequiresAppId));
+            this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
 
             var connections = await Integrations.GetSecretVaultConnectionsAsync();
             VaultConnections.Clear();
@@ -2155,6 +2180,8 @@ public class IntegrationsViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
         this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
         this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
+        this.RaisePropertyChanged(nameof(VaultRequiresAppId));
+        this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
     }
 
     private void LoadVaultEditor(SecretVaultConnectionView? connection)
@@ -2168,6 +2195,8 @@ public class IntegrationsViewModel : ViewModelBase
             PluginName = connection.PluginName,
             BaseUrl = connection.BaseUrl,
             MachineId = connection.MachineId ?? "",
+            AppId = connection.AppId ?? "",
+            IgnoreSslErrors = connection.IgnoreSslErrors,
             Enabled = connection.Enabled,
             CacheTtlMinutes = connection.CacheTtlMinutes
         };
@@ -2178,6 +2207,8 @@ public class IntegrationsViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
         this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
         this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
+        this.RaisePropertyChanged(nameof(VaultRequiresAppId));
+        this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
 
         _ = LoadVaultUsageAsync(connection.Id);
     }

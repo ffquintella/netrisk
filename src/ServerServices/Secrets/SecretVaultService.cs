@@ -25,7 +25,7 @@ public class SecretVaultService(
     ISecretProtector protector,
     IPluginsService pluginsService,
     IObfuscatedSecretCache cache,
-    IPluginHttpClient http,
+    IPluginHttpClientFactory httpFactory,
     IVaultEndpointResolver endpoints)
     : ServiceBase(logger, dalService), ISecretVaultService
 {
@@ -79,7 +79,8 @@ public class SecretVaultService(
                 VaultKind = p.VaultKind,
                 Description = p.PluginDescription,
                 Version = p.PluginVersion,
-                RequiresMachineId = p.RequiresMachineId
+                RequiresMachineId = p.RequiresMachineId,
+                RequiresAppId = p.RequiresAppId
             }).ToList();
         }
         catch (Exception ex)
@@ -145,11 +146,19 @@ public class SecretVaultService(
         // throw away a warm cache on every keystroke-free save.
         var previousBaseUrl = stored.BaseUrl;
         var previousMachineId = stored.MachineId;
+        var previousAppId = stored.AppId;
+        var previousIgnoreSsl = stored.IgnoreSslErrors;
 
         Copy(input, stored);
 
         var addressChanged = !string.Equals(previousBaseUrl, stored.BaseUrl, StringComparison.Ordinal)
-                             || !string.Equals(previousMachineId, stored.MachineId, StringComparison.Ordinal);
+                             || !string.Equals(previousMachineId, stored.MachineId, StringComparison.Ordinal)
+                             // The app id is part of who the vault thinks is calling, so changing it can
+                             // change which secrets answer — and the TLS setting changes whether the
+                             // health probes that pick a node can succeed at all. Both make a cached
+                             // node choice and a cached value stale for the same reason a new address does.
+                             || !string.Equals(previousAppId, stored.AppId, StringComparison.Ordinal)
+                             || previousIgnoreSsl != stored.IgnoreSslErrors;
 
         stored.UpdatedAt = DateTime.UtcNow;
 
@@ -467,10 +476,23 @@ public class SecretVaultService(
                 + $"connection '{connection.Name}' has none. Enter the machine ID the vault issued for "
                 + "this server.");
 
+        if (plugin.RequiresAppId && string.IsNullOrWhiteSpace(connection.AppId))
+            throw new SecretVaultResolutionException(
+                $"The '{plugin.PluginName}' plugin authorizes by application identity, and vault "
+                + $"connection '{connection.Name}' has none. Enter the app ID the vault knows this "
+                + "installation by.");
+
+        if (connection.IgnoreSslErrors)
+            Logger.Warning(
+                "Vault connection {Name} is configured to skip TLS certificate validation. The vault's "
+                + "identity is not being verified on any call made through it",
+                connection.Name);
+
         // The plugin is handed one node, never a cluster name: it was written against a base URL it
         // can concatenate a path onto, and teaching every plugin to do SRV discovery would put the
         // same DNS code — and the same SSRF question — in each of them. See VaultEndpointResolver.
-        var selection = await endpoints.ResolveAsync(connection.Id, connection.BaseUrl, ct);
+        var selection = await endpoints.ResolveAsync(connection.Id, connection.BaseUrl,
+            connection.IgnoreSslErrors, ct);
 
         if (selection.Discovered)
             Logger.Debug("Vault connection {Name} resolved '{Address}' to {Node} of {Count} candidates",
@@ -482,9 +504,10 @@ public class SecretVaultService(
             {
                 BaseUrl = selection.BaseUrl,
                 ApiKey = apiKey,
-                MachineId = string.IsNullOrWhiteSpace(connection.MachineId) ? null : connection.MachineId
+                MachineId = string.IsNullOrWhiteSpace(connection.MachineId) ? null : connection.MachineId,
+                AppId = string.IsNullOrWhiteSpace(connection.AppId) ? null : connection.AppId
             },
-            Http = http
+            Http = httpFactory.Create(connection.IgnoreSslErrors)
         };
 
         return (plugin, context, selection);
@@ -568,6 +591,11 @@ public class SecretVaultService(
             throw new InvalidParameterException(nameof(input.MachineId),
                 $"The '{plugin.PluginName}' plugin binds credentials to a machine identity, so this "
                 + "connection needs the machine ID the vault issued for this server.");
+
+        if (plugin.RequiresAppId && string.IsNullOrWhiteSpace(input.AppId))
+            throw new InvalidParameterException(nameof(input.AppId),
+                $"The '{plugin.PluginName}' plugin authorizes by application identity, so this "
+                + "connection needs the app ID the vault knows this installation by.");
     }
 
     private static void Validate(SecretVaultConnectionInput input)
@@ -594,6 +622,10 @@ public class SecretVaultService(
         if (input.MachineId is { Length: > 255 })
             throw new InvalidParameterException(nameof(input.MachineId),
                 "A machine ID may be at most 255 characters.");
+
+        if (input.AppId is { Length: > 255 })
+            throw new InvalidParameterException(nameof(input.AppId),
+                "An app ID may be at most 255 characters.");
     }
 
     private static void Copy(SecretVaultConnectionInput input, SecretVaultConnection target)
@@ -602,6 +634,8 @@ public class SecretVaultService(
         target.PluginName = input.PluginName.Trim();
         target.BaseUrl = input.BaseUrl.Trim().TrimEnd('/');
         target.MachineId = string.IsNullOrWhiteSpace(input.MachineId) ? null : input.MachineId.Trim();
+        target.AppId = string.IsNullOrWhiteSpace(input.AppId) ? null : input.AppId.Trim();
+        target.IgnoreSslErrors = input.IgnoreSslErrors;
         target.Enabled = input.Enabled;
 
         // Clamped rather than refused: a TTL outside the bounds is a value somebody typed, and
@@ -626,13 +660,16 @@ public class SecretVaultService(
             BaseUrl = connection.BaseUrl,
             HasApiKey = !string.IsNullOrEmpty(connection.EncryptedApiKey),
             MachineId = connection.MachineId,
+            AppId = connection.AppId,
+            IgnoreSslErrors = connection.IgnoreSslErrors,
             Enabled = connection.Enabled,
             CacheTtlMinutes = connection.CacheTtlMinutes,
             LastTestAt = connection.LastTestAt,
             LastTestSucceeded = connection.LastTestSucceeded,
             LastTestMessage = connection.LastTestMessage,
             PluginAvailable = plugin is not null,
-            RequiresMachineId = plugin?.RequiresMachineId ?? false
+            RequiresMachineId = plugin?.RequiresMachineId ?? false,
+            RequiresAppId = plugin?.RequiresAppId ?? false
         };
     }
 }

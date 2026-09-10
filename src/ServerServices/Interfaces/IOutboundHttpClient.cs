@@ -31,6 +31,16 @@ public class OutboundHttpRequest
 
     /// <summary>Per-request timeout. Integrations talk to third parties; a hung call must not hold a job forever.</summary>
     public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Send this one request without validating the server certificate.
+    ///
+    /// Per request rather than per client because the alternative — a process-wide switch — is what
+    /// operators do when the product gives them nothing, and it disables validation for every
+    /// integration at once. Only a caller that has an operator's explicit, recorded decision behind
+    /// it may set this; the SSRF destination policy still applies either way.
+    /// </summary>
+    public bool AllowInvalidCertificate { get; init; }
 }
 
 /// <summary>

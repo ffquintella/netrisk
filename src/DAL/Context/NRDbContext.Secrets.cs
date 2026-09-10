@@ -35,6 +35,9 @@ public partial class NRDbContext
             entity.Property(e => e.BaseUrl).HasColumnName("base_url").HasMaxLength(512);
             entity.Property(e => e.EncryptedApiKey).HasColumnName("encrypted_api_key").HasColumnType("text");
             entity.Property(e => e.MachineId).HasColumnName("machine_id").HasMaxLength(255);
+            entity.Property(e => e.AppId).HasColumnName("app_id").HasMaxLength(255);
+            entity.Property(e => e.IgnoreSslErrors).HasColumnName("ignore_ssl_errors")
+                .HasColumnType("tinyint(1)");
             entity.Property(e => e.Enabled).HasColumnName("enabled").HasColumnType("tinyint(1)");
             entity.Property(e => e.CacheTtlMinutes).HasColumnName("cache_ttl_minutes").HasColumnType("int(11)");
             entity.Property(e => e.LastTestAt).HasColumnName("last_test_at").HasColumnType("datetime");

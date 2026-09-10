@@ -67,7 +67,7 @@ public class VaultEndpointResolver : IVaultEndpointResolver
     public void Invalidate(int connectionId) => _cache.TryRemove(connectionId, out _);
 
     public async Task<VaultEndpointSelection> ResolveAsync(int connectionId, string baseUrl,
-        CancellationToken ct = default)
+        bool allowInvalidCertificate = false, CancellationToken ct = default)
     {
         var address = VaultAddress.Parse(baseUrl);
 
@@ -98,7 +98,7 @@ public class VaultEndpointResolver : IVaultEndpointResolver
                 $"No vault nodes are published for '{address.ServiceName}'. Check the SRV records, or "
                 + "address one node directly with an https:// URL.");
 
-        var (chosen, note) = await ChooseAsync(candidates, ct);
+        var (chosen, note) = await ChooseAsync(candidates, allowInvalidCertificate, ct);
 
         var selection = new VaultEndpointSelection(chosen, candidates, true, note);
 
@@ -168,13 +168,13 @@ public class VaultEndpointResolver : IVaultEndpointResolver
     }
 
     private async Task<(string Chosen, string? Note)> ChooseAsync(List<string> candidates,
-        CancellationToken ct)
+        bool allowInvalidCertificate, CancellationToken ct)
     {
         var failures = new List<string>();
 
         foreach (var candidate in candidates)
         {
-            var verdict = await ProbeAsync(candidate, ct);
+            var verdict = await ProbeAsync(candidate, allowInvalidCertificate, ct);
 
             if (verdict is null)
                 return (candidate, failures.Count == 0
@@ -202,7 +202,8 @@ public class VaultEndpointResolver : IVaultEndpointResolver
     /// standby. All four can serve a read or redirect one. 501 (uninitialised) and 503 (sealed)
     /// cannot, and are exactly the nodes discovery exists to skip.
     /// </summary>
-    private async Task<string?> ProbeAsync(string candidate, CancellationToken ct)
+    private async Task<string?> ProbeAsync(string candidate, bool allowInvalidCertificate,
+        CancellationToken ct)
     {
         try
         {
@@ -210,7 +211,8 @@ public class VaultEndpointResolver : IVaultEndpointResolver
             {
                 Method = "GET",
                 Url = candidate + SecretVaultDefaults.HealthProbePath,
-                Timeout = ProbeTimeout
+                Timeout = ProbeTimeout,
+                AllowInvalidCertificate = allowInvalidCertificate
             }, ct);
 
             if (response.StatusCode is 200 or 429 or 472 or 473) return null;

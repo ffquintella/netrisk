@@ -3030,6 +3030,21 @@
   <data name="MachineId" xml:space="preserve">
     <value>Machine ID</value>
   </data>
+  <data name="AppId" xml:space="preserve">
+    <value>App ID</value>
+  </data>
+  <data name="AppIdOptionalMSG" xml:space="preserve">
+    <value>Optional. The application identity the vault knows this installation by (BastionVault's app_id); required only when the vault authorizes by application.</value>
+  </data>
+  <data name="AppIdRequiredMSG" xml:space="preserve">
+    <value>Required by this plugin. The application identity the vault authorizes this installation as.</value>
+  </data>
+  <data name="IgnoreSslErrors" xml:space="preserve">
+    <value>Ignore SSL errors</value>
+  </data>
+  <data name="IgnoreSslErrorsMSG" xml:space="preserve">
+    <value>Do not validate the vault's TLS certificate. Only for a vault behind a certificate this server does not yet trust — with this on, anything that can answer for the vault's address can read the API key. Installing the vault's CA on this server is the real fix.</value>
+  </data>
   <data name="MachineIdOptionalMSG" xml:space="preserve">
     <value>Optional. The machine identity the vault issued for this server; required only when the vault binds keys to a machine.</value>
   </data>

@@ -33,8 +33,13 @@ public interface IVaultEndpointResolver
     /// <exception cref="Model.Exceptions.SecretVaultResolutionException">
     /// Discovery found no nodes at all, which is not something the caller can work around.
     /// </exception>
+    /// <param name="allowInvalidCertificate">
+    /// Whether the connection is configured to skip TLS certificate validation. Passed down to the
+    /// health probes: a cluster reached over an untrusted certificate would otherwise fail every
+    /// probe and be reported as three dead nodes, which is a diagnosis for a different problem.
+    /// </param>
     Task<VaultEndpointSelection> ResolveAsync(int connectionId, string baseUrl,
-        CancellationToken ct = default);
+        bool allowInvalidCertificate = false, CancellationToken ct = default);
 
     /// <summary>
     /// Forgets the cached choice for a connection. Called when its address changes, so that an

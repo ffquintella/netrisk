@@ -45,7 +45,7 @@ the cache TTL, with no change in NetRisk at all.
 
 ## The two credentials
 
-The connection carries **one API key** and, optionally, **one machine ID**.
+The connection carries **one API key** and, optionally, **one machine ID** and **one app ID**.
 
 For BastionVault the API key is a **vault token** — from `bvault token create`, or from
 `bvault ferrogate token` on an attested host when the server requires machine identity.
@@ -67,6 +67,48 @@ disabled, so a connection can still be prepared before its DLL is deployed.
 The machine ID is stored and returned **in the clear**. It identifies the installation rather than
 authenticating it, it is useless without the API key, and an operator has to be able to read it back
 to compare it against what the vault shows.
+
+The **app ID** is the application identity the vault's policies are written against — BastionVault's
+`app_id`, the same idea as CyberArk's AppID. It follows the machine ID in every respect: optional,
+stored and returned in the clear, passed to the plugin as `SecretVaultCredentials.AppId`, trimmed to
+null when blank so a vault that authorizes by application never receives an empty one
+(`AnAbsentAppIdIsPassedAsNullRatherThanAnEmptyString`), and required at save time when the plugin
+declares `RequiresAppId` (`RefusesToCreateAConnectionWithNoAppIdWhenThePluginRequiresOne`).
+`INetriskSecretVaultPlugin.RequiresAppId` is default-implemented as `false` rather than abstract,
+because it was added after the contract shipped and a plugin compiled against the earlier SDK must
+keep loading.
+
+---
+
+## Ignoring SSL errors
+
+A connection may be marked **Ignore SSL errors**, which turns off TLS certificate validation for that
+connection alone. It exists for the common on-premise case: a vault behind an internal CA the NetRisk
+host does not trust yet, where the connection test fails with an SSL error and the alternative
+operators reach for is disabling validation process-wide.
+
+What it is worth being precise about:
+
+- It is **per connection and per request**, not per process. `OutboundHttpRequest`
+  `AllowInvalidCertificate` selects a second `HttpClient` inside `OutboundHttpClient`, created on
+  first use, so an installation that never turns the option on never has a client that does not
+  validate — and a request that does not carry the flag still validates even right after one that
+  did (`OutboundHttpClientTlsTest.RelaxingValidationOnceDoesNotRelaxItAfterwards`).
+- The **plugin cannot set it**. It is not on `PluginHttpRequest`; the host builds the plugin's HTTP
+  seam per connection through `IPluginHttpClientFactory`, so the decision stays the operator's
+  (`SkipsCertificateValidationWhenTheConnectionAsksFor`, and its default-on counterpart).
+- It covers the **health probes** too, or a cluster behind an untrusted certificate would be reported
+  as a cluster whose nodes are all down (`HealthProbesCarryTheConnectionsCertificateSetting`).
+- The **SSRF destination policy still applies** — this relaxes who the host will believe the vault
+  is, not where it will connect.
+- Every unvalidated request is **logged at warning** with the host, and the setting is returned to
+  clients, so a control somebody switched off is visible to everyone else who opens the screen.
+- Turning it back off takes effect on the **next call**, not the next restart, and it evicts that
+  connection's cached secrets (`ChangingTheTlsSettingEvicts`).
+
+Its effect is observed rather than asserted on the flag: `OutboundHttpClientTlsTest` stands up a real
+TLS listener on loopback with a certificate nothing trusts, and requires the handshake to fail
+without the option and succeed with it.
 
 ---
 
@@ -206,8 +248,9 @@ discarded before anything could read it.
 What actually bounds the exposure is the TTL, and it is **absolute, not sliding**. A sliding window on
 a credential a busy sync job touches every few seconds never expires — which quietly turns a
 15-minute cache into a permanent second copy, and a revoked credential into one NetRisk keeps using.
-Rotating a connection's API key, or changing its base URL or machine ID, evicts everything that
-connection fetched.
+Rotating a connection's API key, or changing its base URL, machine ID, app ID or TLS setting, evicts
+everything that connection fetched — each of those changes either who the vault thinks is asking or
+whether it answers at all.
 
 ---
 

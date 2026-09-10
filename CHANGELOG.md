@@ -16,6 +16,36 @@ This release includes new features and improvements.
 
 
 
+## [2.21.4] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+- **A secret-vault connection can carry an app ID.** BastionVault authorizes by application identity
+  as well as by token, and the connection had nowhere to put it — an installation whose vault
+  policies are written against an `app_id` could not be configured at all. The connection editor now
+  has an *App ID* field beside the machine ID, stored and returned in the clear for the same reason
+  (it names the caller, it does not authenticate it), and passed to the plugin as
+  `SecretVaultCredentials.AppId`. A plugin whose vault always needs one declares `RequiresAppId`, and
+  NetRisk then refuses to save a connection without it — on the form, rather than inside a sync job
+  hours later.
+
+- **A secret-vault connection can skip TLS certificate validation.** An on-premise vault is routinely
+  fronted by an internal CA the NetRisk host does not trust yet, and the connection test failed with
+  an SSL error and no way forward but installing the CA. The connection editor now has an *Ignore SSL
+  errors* checkbox that applies to that connection alone — its secret reads and the health probes
+  that pick a cluster node — so the escape hatch is not the process-wide switch operators reach for
+  otherwise. Off by default and on no existing connection; every unvalidated request is logged at
+  warning with the host, and the setting is returned to clients so the screen shows which connections
+  are running unvalidated. Installing the vault's CA remains the real fix.
+
+### Changed
+
+### Fixed
+
+
+
 ## [2.21.3] - 2026-09-10
 
 This release includes new features and improvements.

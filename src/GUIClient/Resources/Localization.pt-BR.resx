@@ -3096,6 +3096,21 @@
   <data name="MachineId" xml:space="preserve">
     <value>ID da máquina</value>
   </data>
+  <data name="AppId" xml:space="preserve">
+    <value>App ID</value>
+  </data>
+  <data name="AppIdOptionalMSG" xml:space="preserve">
+    <value>Opcional. A identidade de aplicação pela qual o cofre conhece esta instalação (o app_id do BastionVault); obrigatória apenas quando o cofre autoriza por aplicação.</value>
+  </data>
+  <data name="AppIdRequiredMSG" xml:space="preserve">
+    <value>Obrigatória para este plugin. A identidade de aplicação com a qual o cofre autoriza esta instalação.</value>
+  </data>
+  <data name="IgnoreSslErrors" xml:space="preserve">
+    <value>Ignorar erros de SSL</value>
+  </data>
+  <data name="IgnoreSslErrorsMSG" xml:space="preserve">
+    <value>Não validar o certificado TLS do cofre. Use apenas para um cofre com certificado que este servidor ainda não confia — com esta opção ligada, qualquer coisa que responda pelo endereço do cofre pode ler a chave de API. Instalar a CA do cofre neste servidor é a solução real.</value>
+  </data>
   <data name="MachineIdOptionalMSG" xml:space="preserve">
     <value>Opcional. A identidade de máquina que o cofre emitiu para este servidor; obrigatória apenas quando o cofre vincula chaves a uma máquina.</value>
   </data>

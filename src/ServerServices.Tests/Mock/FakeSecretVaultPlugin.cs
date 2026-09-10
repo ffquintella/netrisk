@@ -31,6 +31,17 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
 
     public bool RequiresMachineId { get; set; }
 
+    public bool RequiresAppId { get; set; }
+
+    /// <summary>
+    /// When set, every operation first makes one call through the host's HTTP seam against this URL.
+    ///
+    /// It is how a test observes what the host actually put on the wire for a connection — the TLS
+    /// setting in particular, which is applied by the seam the plugin is handed and is therefore
+    /// invisible from the plugin's own arguments.
+    /// </summary>
+    public string? CallUrl { get; set; }
+
     /// <summary>Secret id → (field → value). A secret with the empty field name is single-valued.</summary>
     public Dictionary<string, Dictionary<string, string>> Secrets { get; } = new(StringComparer.Ordinal);
 
@@ -70,24 +81,30 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
         return this;
     }
 
-    public Task<SecretVaultTestResult> TestConnectionAsync(SecretVaultContext context,
+    public async Task<SecretVaultTestResult> TestConnectionAsync(SecretVaultContext context,
         CancellationToken ct = default)
     {
         TestCalls++;
         LastCredentials = context.Credentials;
 
+        if (CallUrl != null)
+            await context.Http.SendAsync(new PluginHttpRequest { Method = "GET", Url = CallUrl }, ct);
+
         if (ThrowUnexpected != null) throw ThrowUnexpected;
 
-        return Task.FromResult(FailWith is null
+        return FailWith is null
             ? SecretVaultTestResult.Ok($"Reached the fake vault ({Secrets.Count}).", Secrets.Count)
-            : SecretVaultTestResult.Fail(FailWith));
+            : SecretVaultTestResult.Fail(FailWith);
     }
 
-    public Task<IReadOnlyList<VaultSecretDescriptor>> ListSecretsAsync(SecretVaultContext context,
+    public async Task<IReadOnlyList<VaultSecretDescriptor>> ListSecretsAsync(SecretVaultContext context,
         CancellationToken ct = default)
     {
         ListCalls++;
         LastCredentials = context.Credentials;
+
+        if (CallUrl != null)
+            await context.Http.SendAsync(new PluginHttpRequest { Method = "GET", Url = CallUrl }, ct);
 
         if (ThrowUnexpected != null) throw ThrowUnexpected;
         if (FailWith != null) throw new SecretVaultException(FailWith);
@@ -101,14 +118,17 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
             })
             .ToList();
 
-        return Task.FromResult(descriptors);
+        return descriptors;
     }
 
-    public Task<VaultSecretValue> GetSecretAsync(SecretVaultContext context, VaultSecretReference reference,
-        CancellationToken ct = default)
+    public async Task<VaultSecretValue> GetSecretAsync(SecretVaultContext context,
+        VaultSecretReference reference, CancellationToken ct = default)
     {
         GetCalls++;
         LastCredentials = context.Credentials;
+
+        if (CallUrl != null)
+            await context.Http.SendAsync(new PluginHttpRequest { Method = "GET", Url = CallUrl }, ct);
 
         if (ThrowUnexpected != null) throw ThrowUnexpected;
         if (FailWith != null) throw new SecretVaultException(FailWith);
@@ -120,6 +140,6 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
             throw new SecretVaultException(
                 $"Secret '{reference.SecretId}' has no field '{reference.Field}'.");
 
-        return Task.FromResult(new VaultSecretValue { Value = value, MaxCacheAge = MaxCacheAge });
+        return new VaultSecretValue { Value = value, MaxCacheAge = MaxCacheAge };
     }
 }

@@ -20,10 +20,24 @@ namespace ServerServices.Secrets;
 public class PluginHttpClientAdapter : IPluginHttpClient
 {
     private readonly IOutboundHttpClient _outbound;
+    private readonly bool _allowInvalidCertificate;
 
     public PluginHttpClientAdapter(IOutboundHttpClient outbound)
+        : this(outbound, false)
+    {
+    }
+
+    /// <summary>
+    /// Builds an adapter that may skip TLS certificate validation.
+    ///
+    /// The flag lives here rather than on <see cref="PluginHttpRequest"/> on purpose: relaxing
+    /// validation is the host's decision, recorded on one vault connection by an operator, and a
+    /// plugin must not be able to switch it on for itself.
+    /// </summary>
+    public PluginHttpClientAdapter(IOutboundHttpClient outbound, bool allowInvalidCertificate)
     {
         _outbound = outbound;
+        _allowInvalidCertificate = allowInvalidCertificate;
     }
 
     public async Task<PluginHttpResponse> SendAsync(PluginHttpRequest request, CancellationToken ct = default)
@@ -37,7 +51,8 @@ public class PluginHttpClientAdapter : IPluginHttpClient
             Headers = new Dictionary<string, string>(request.Headers),
             Body = request.Body,
             ContentType = request.ContentType,
-            Timeout = request.Timeout
+            Timeout = request.Timeout,
+            AllowInvalidCertificate = _allowInvalidCertificate
         }, ct);
 
         return new PluginHttpResponse

@@ -147,6 +147,18 @@ public class SecretVaultsControllerTest : BaseControllerTest
     }
 
     [Fact]
+    public async Task ReturnsTheAppIdAndTheTlsSettingInTheClear()
+    {
+        var view = Ok(await Controller().Get(MockedSecretVaultService.KnownConnectionId));
+
+        // The app id names the caller rather than authenticating it, same as the machine id. The TLS
+        // setting is returned because a control somebody switched off has to be visible to everyone
+        // else who opens the screen.
+        Assert.Equal("netrisk-prod", view.AppId);
+        Assert.True(view.IgnoreSslErrors);
+    }
+
+    [Fact]
     public async Task AnUnknownConnectionIsA404()
     {
         Assert.IsType<NotFoundObjectResult>((await Controller().Get(999)).Result);

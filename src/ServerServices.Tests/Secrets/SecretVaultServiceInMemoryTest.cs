@@ -64,7 +64,7 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         _endpoints = new VaultEndpointResolver(Log, _dns, FakeOutboundHttpClient);
 
         _svc = new SecretVaultService(Log, GetService<IDalService>(), _protector, _plugins, _cache,
-            new PluginHttpClientAdapter(FakeOutboundHttpClient), _endpoints);
+            new PluginHttpClientFactory(FakeOutboundHttpClient), _endpoints);
     }
 
     /// <summary>
@@ -297,6 +297,110 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Null(_plugin.LastCredentials!.MachineId);
     }
 
+    [Fact]
+    public async Task TestReportsAMissingAppIdWhenThePluginRequiresOne()
+    {
+        var created = await CreateAsync();
+        _plugin.RequiresAppId = true;
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.False(result.Success);
+        Assert.Contains("app id", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, _plugin.TestCalls);
+    }
+
+    [Fact]
+    public async Task PassesTheAppIdThroughWhenTheConnectionHasOne()
+    {
+        var input = Input();
+        input.AppId = "netrisk-prod";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        await _svc.TestConnectionAsync(created.Id);
+
+        Assert.Equal("netrisk-prod", _plugin.LastCredentials!.AppId);
+        Assert.Equal("netrisk-prod", created.AppId);
+    }
+
+    [Fact]
+    public async Task AnAbsentAppIdIsPassedAsNullRatherThanAnEmptyString()
+    {
+        // Same trap as the machine ID: a vault that authorizes by application reads an empty app id
+        // as an unknown application, and refuses in the words it uses for a bad key.
+        var created = await CreateAsync();
+
+        await _svc.TestConnectionAsync(created.Id);
+
+        Assert.Null(_plugin.LastCredentials!.AppId);
+    }
+
+    // --- TLS validation -------------------------------------------------------------------------
+
+    /// <summary>
+    /// The option reaches the wire, and it reaches it through the seam the plugin is handed rather
+    /// than through anything the plugin controls. Asserted on the outbound request because that is
+    /// the only place the setting is observable — the plugin cannot see it, by design.
+    /// </summary>
+    [Fact]
+    public async Task ValidatesTheVaultCertificateUnlessTheConnectionSaysNotTo()
+    {
+        _plugin.CallUrl = "https://vault.example.com/v1/health";
+
+        var created = await CreateAsync();
+
+        await _svc.TestConnectionAsync(created.Id);
+
+        Assert.True(FakeOutboundHttpClient.Requests.Count > 0);
+        Assert.All(FakeOutboundHttpClient.Requests, r => Assert.False(r.AllowInvalidCertificate));
+    }
+
+    [Fact]
+    public async Task SkipsCertificateValidationWhenTheConnectionAsksFor()
+    {
+        _plugin.CallUrl = "https://vault.example.com/v1/health";
+
+        var input = Input();
+        input.IgnoreSslErrors = true;
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        Assert.True(created.IgnoreSslErrors);
+
+        await _svc.TestConnectionAsync(created.Id);
+
+        var request = FakeOutboundHttpClient.Requests[^1];
+        Assert.Equal("https://vault.example.com/v1/health", request.Url);
+        Assert.True(request.AllowInvalidCertificate);
+    }
+
+    /// <summary>
+    /// Turning it off again must take effect on the next call, not on the next restart: an operator
+    /// who installs the vault's CA and unticks the box has fixed the problem, and a seam built once
+    /// and reused would keep sending unvalidated requests.
+    /// </summary>
+    [Fact]
+    public async Task TurningCertificateValidationBackOnTakesEffectImmediately()
+    {
+        _plugin.CallUrl = "https://vault.example.com/v1/health";
+
+        var input = Input();
+        input.IgnoreSslErrors = true;
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+        await _svc.TestConnectionAsync(created.Id);
+
+        var update = Input();
+        update.Id = created.Id;
+        update.IgnoreSslErrors = false;
+
+        await _svc.UpdateConnectionAsync(update, null);
+        await _svc.TestConnectionAsync(created.Id);
+
+        Assert.False(FakeOutboundHttpClient.Requests[^1].AllowInvalidCertificate);
+    }
+
     // --- addresses: one node, or a cluster ------------------------------------------------------
 
     /// <summary>
@@ -459,6 +563,44 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
+    public async Task RefusesToCreateAConnectionWithNoAppIdWhenThePluginRequiresOne()
+    {
+        _plugin.RequiresAppId = true;
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.CreateConnectionAsync(Input(), "bv-api-key"));
+
+        Assert.Equal(nameof(SecretVaultConnectionInput.AppId), ex.ParameterName);
+        Assert.Contains(_plugin.PluginName, ex.Message);
+    }
+
+    [Fact]
+    public async Task AcceptsAConnectionWithAnAppIdWhenThePluginRequiresOne()
+    {
+        _plugin.RequiresAppId = true;
+
+        var input = Input();
+        input.AppId = "netrisk-prod";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        Assert.True(created.RequiresAppId);
+        Assert.Equal("netrisk-prod", created.AppId);
+    }
+
+    [Fact]
+    public async Task RefusesAnAppIdLongerThanTheColumn()
+    {
+        var input = Input();
+        input.AppId = new string('a', 256);
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.CreateConnectionAsync(input, "bv-api-key"));
+
+        Assert.Equal(nameof(SecretVaultConnectionInput.AppId), ex.ParameterName);
+    }
+
+    [Fact]
     public async Task ListsSecretsWithTheirFields()
     {
         var created = await CreateAsync();
@@ -588,6 +730,44 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
 
         // The machine ID is half of what the vault authenticates; a value fetched without it was
         // fetched as a different caller.
+        await _svc.ResolveAsync(reference);
+
+        Assert.Equal(2, _plugin.GetCalls);
+    }
+
+    [Fact]
+    public async Task ChangingTheAppIdEvicts()
+    {
+        var created = await CreateAsync();
+        var reference = SecretReference.Create(created.Id, "tm-key");
+
+        await _svc.ResolveAsync(reference);
+
+        var input = Input();
+        input.Id = created.Id;
+        input.AppId = "netrisk-prod";
+        await _svc.UpdateConnectionAsync(input, null);
+
+        // The app id is part of who the vault thinks is asking, so a value fetched under a different
+        // one was fetched under different policy.
+        await _svc.ResolveAsync(reference);
+
+        Assert.Equal(2, _plugin.GetCalls);
+    }
+
+    [Fact]
+    public async Task ChangingTheTlsSettingEvicts()
+    {
+        var created = await CreateAsync();
+        var reference = SecretReference.Create(created.Id, "tm-key");
+
+        await _svc.ResolveAsync(reference);
+
+        var input = Input();
+        input.Id = created.Id;
+        input.IgnoreSslErrors = true;
+        await _svc.UpdateConnectionAsync(input, null);
+
         await _svc.ResolveAsync(reference);
 
         Assert.Equal(2, _plugin.GetCalls);

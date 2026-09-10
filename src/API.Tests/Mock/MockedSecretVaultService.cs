@@ -158,6 +158,8 @@ public static class MockedSecretVaultService
         BaseUrl = "https://vault.example.com",
         HasApiKey = true,
         MachineId = "machine-42",
+        AppId = "netrisk-prod",
+        IgnoreSslErrors = true,
         Enabled = true,
         CacheTtlMinutes = SecretVaultDefaults.CacheTtlMinutes,
         PluginAvailable = true

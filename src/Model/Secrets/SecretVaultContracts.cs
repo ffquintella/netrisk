@@ -28,6 +28,20 @@ public class SecretVaultConnectionView
     /// </summary>
     public string? MachineId { get; set; }
 
+    /// <summary>
+    /// The application identity the vault knows this installation by (BastionVault's <c>app_id</c>),
+    /// returned in the clear for the same reason as <see cref="MachineId"/>: it names the caller, it
+    /// does not authenticate it.
+    /// </summary>
+    public string? AppId { get; set; }
+
+    /// <summary>
+    /// Whether TLS certificate validation is skipped for this vault. Returned so the grid can show
+    /// that a connection is running unvalidated — a control an operator turned off is one somebody
+    /// else has to be able to see.
+    /// </summary>
+    public bool IgnoreSslErrors { get; set; }
+
     public bool Enabled { get; set; }
 
     /// <summary>Cache lifetime for values resolved through this connection, in minutes.</summary>
@@ -47,6 +61,9 @@ public class SecretVaultConnectionView
 
     /// <summary>Whether the plugin requires <see cref="MachineId"/>. Drives the required marker in the UI.</summary>
     public bool RequiresMachineId { get; set; }
+
+    /// <summary>Whether the plugin requires <see cref="AppId"/>. Drives the required marker in the UI.</summary>
+    public bool RequiresAppId { get; set; }
 }
 
 /// <summary>
@@ -75,6 +92,16 @@ public class SecretVaultConnectionInput
 
     /// <summary>Optional machine identity issued by the vault for this host.</summary>
     public string? MachineId { get; set; }
+
+    /// <summary>Optional application identity the vault authorizes this installation as.</summary>
+    public string? AppId { get; set; }
+
+    /// <summary>
+    /// Skip TLS certificate validation on calls to this vault. Defaults to false, and stays false
+    /// unless an operator sets it: a vault connection carries every other credential in the estate,
+    /// so validation is not something to turn off by omission.
+    /// </summary>
+    public bool IgnoreSslErrors { get; set; }
 
     public bool Enabled { get; set; } = true;
 
@@ -239,6 +266,9 @@ public class SecretVaultPluginInfo
 
     /// <summary>Whether this vault binds credentials to a machine identity and so needs one.</summary>
     public bool RequiresMachineId { get; set; }
+
+    /// <summary>Whether this vault authorizes by application identity and so needs an app id.</summary>
+    public bool RequiresAppId { get; set; }
 }
 
 /// <summary>

@@ -349,4 +349,33 @@ public class VaultEndpointResolverTest
 
         Assert.Equal(2, firsts.Count);
     }
+
+    /// <summary>
+    /// A cluster whose certificate the host does not trust must not read as a cluster whose nodes are
+    /// all down. The probe carries the connection's TLS setting, or discovery reports the wrong fault
+    /// and an operator goes looking for a network problem that is not there.
+    /// </summary>
+    [Fact]
+    public async Task HealthProbesCarryTheConnectionsCertificateSetting()
+    {
+        _dns.With(Service, "node1.example.com", 4200);
+        Health("node1", 200);
+
+        await Resolver().ResolveAsync(1, "vault.example.com", allowInvalidCertificate: true);
+
+        Assert.NotEmpty(_http.Requests);
+        Assert.All(_http.Requests, r => Assert.True(r.AllowInvalidCertificate));
+    }
+
+    [Fact]
+    public async Task HealthProbesValidateCertificatesByDefault()
+    {
+        _dns.With(Service, "node1.example.com", 4200);
+        Health("node1", 200);
+
+        await Resolver().ResolveAsync(1, "vault.example.com");
+
+        Assert.NotEmpty(_http.Requests);
+        Assert.All(_http.Requests, r => Assert.False(r.AllowInvalidCertificate));
+    }
 }

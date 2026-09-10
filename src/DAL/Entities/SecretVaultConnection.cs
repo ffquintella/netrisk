@@ -43,6 +43,31 @@ public class SecretVaultConnection
     /// </summary>
     public string? MachineId { get; set; }
 
+    /// <summary>
+    /// The application identity the vault knows this installation by — BastionVault's <c>app_id</c>.
+    /// Optional; the plugin declares whether its vault requires one.
+    ///
+    /// Not encrypted, for the same reason as <see cref="MachineId"/>: it names the caller, it does
+    /// not authenticate it, and an operator has to be able to read it back to compare it against the
+    /// application the vault's policies are written against.
+    /// </summary>
+    public string? AppId { get; set; }
+
+    /// <summary>
+    /// Skip TLS certificate validation on calls to this vault.
+    ///
+    /// Per connection, and off unless an operator turns it on, because it is a real reduction in
+    /// security on the one channel that carries every credential in the estate: with it on, anything
+    /// that can answer for the vault's address can read the API key out of the request. It exists
+    /// because an on-premise vault is routinely fronted by an internal CA the NetRisk host does not
+    /// trust yet, and the alternative operators reach for otherwise is disabling validation
+    /// process-wide.
+    ///
+    /// Installing the vault's CA on the host stays the right fix; this is the stopgap that does not
+    /// take the rest of the product's outbound calls with it.
+    /// </summary>
+    public bool IgnoreSslErrors { get; set; }
+
     /// <summary>A disabled connection resolves nothing. References to it fail loudly rather than silently.</summary>
     public bool Enabled { get; set; } = true;
 
