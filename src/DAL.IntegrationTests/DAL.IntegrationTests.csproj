@@ -10,11 +10,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.0" />
     <PackageReference Include="NSubstitute" Version="6.2.0" />
     <!-- 4.14.0+ depends on SSH.NET 2026.0.0, which fixes GHSA-q939-rpr3-3284 /
          CVE-2026-48798 (path traversal in ScpClient recursive download). -->
-    <PackageReference Include="Testcontainers.MariaDb" Version="4.14.0" />
+    <PackageReference Include="Testcontainers.MariaDb" Version="4.15.0" />
     <PackageReference Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
