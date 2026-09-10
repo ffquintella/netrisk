@@ -3092,6 +3092,12 @@
   <data name="MachineIdOptionalMSG" xml:space="preserve">
     <value>Optional. The machine identity the vault issued for this server; required only when the vault binds keys to a machine.</value>
   </data>
+  <data name="VaultBaseUrlHintMSG" xml:space="preserve">
+    <value>One node, as a full URL (https://vault.example.com:4200), or a cluster DNS name (vault.example.com) to discover its nodes by SRV record. Write srv+https://_label._tcp.name to use a different SRV label.</value>
+  </data>
+  <data name="MachineIdRequiredMSG" xml:space="preserve">
+    <value>Required. This plugin binds credentials to a machine identity, so the connection cannot be saved without the machine ID the vault issued for this server.</value>
+  </data>
   <data name="CacheMinutes" xml:space="preserve">
     <value>Cache (minutes)</value>
   </data>

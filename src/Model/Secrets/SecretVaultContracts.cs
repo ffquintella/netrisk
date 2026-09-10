@@ -115,6 +115,19 @@ public class SecretVaultTestResultView
     public string Message { get; set; } = string.Empty;
 
     public int? VisibleSecretCount { get; set; }
+
+    /// <summary>
+    /// The node the test actually talked to, for a connection whose address is a cluster name. Empty
+    /// for a direct address, where it would only repeat what the operator typed.
+    ///
+    /// Reported because "the connection works" and "the connection works against the one node of
+    /// three that is up" are different answers, and an operator who cannot see which node answered
+    /// cannot tell a healthy cluster from a cluster that is one outage from silence.
+    /// </summary>
+    public string ResolvedEndpoint { get; set; } = string.Empty;
+
+    /// <summary>How discovery chose that node, when there was anything worth reporting. Null otherwise.</summary>
+    public string? EndpointNote { get; set; }
 }
 
 /// <summary>
@@ -162,6 +175,46 @@ public static class SecretVaultDefaults
 
     /// <summary>The <c>Plugins</c> subdirectory secret-vault plugins are installed into.</summary>
     public const string PluginDirectory = "Secrets";
+
+    /// <summary>
+    /// The DNS SRV label prepended to a bare cluster name, so that <c>vault.example.com</c> is
+    /// looked up as <c>_bvault._tcp.vault.example.com</c>.
+    ///
+    /// BastionVault's own convention, matched deliberately: an operator who has already put a bare
+    /// cluster name in <c>bastionvault::client::server_url</c> should be able to paste the same
+    /// string here and get the same nodes. A vault whose SRV label is different is still reachable —
+    /// the operator writes the owner name out in full with the <c>srv+https://</c> form, which
+    /// bypasses this default entirely.
+    /// </summary>
+    public const string SrvServiceLabel = "_bvault._tcp";
+
+    /// <summary>
+    /// The <c>srv+</c> scheme prefix that marks a base URL as a discovery name rather than a node
+    /// address. Chosen over a boolean column because it keeps the whole address in one field: an
+    /// operator can see what a connection points at without cross-referencing a flag.
+    /// </summary>
+    public const string SrvSchemePrefix = "srv+";
+
+    /// <summary>
+    /// The path probed on each discovered node to decide which one to talk to.
+    ///
+    /// HashiCorp-Vault-compatible, which is what BastionVault is. It is a host-side constant rather
+    /// than something the plugin declares because <c>INetriskSecretVaultPlugin</c> has no health
+    /// hook, and adding one would break every plugin already built against the SDK. A vault that
+    /// does not serve it simply fails every probe, and the resolver then falls back to SRV order —
+    /// which is the behaviour of no discovery scoring at all, not a broken connection.
+    /// </summary>
+    public const string HealthProbePath = "/sys/health";
+
+    /// <summary>Lower and upper bounds on how long a discovered endpoint choice is reused.</summary>
+    public const int MinEndpointCacheSeconds = 5;
+
+    /// <summary>
+    /// Upper bound on the endpoint cache. Five minutes: long enough that a busy resolver is not
+    /// doing a DNS lookup and three health probes per secret, short enough that a node taken out of
+    /// the cluster stops being used without an operator restarting anything.
+    /// </summary>
+    public const int MaxEndpointCacheSeconds = 300;
 }
 
 /// <summary>

@@ -3099,6 +3099,12 @@
   <data name="MachineIdOptionalMSG" xml:space="preserve">
     <value>Opcional. A identidade de máquina que o cofre emitiu para este servidor; obrigatória apenas quando o cofre vincula chaves a uma máquina.</value>
   </data>
+  <data name="VaultBaseUrlHintMSG" xml:space="preserve">
+    <value>Um nó, como URL completa (https://vault.example.com:4200), ou o nome DNS do cluster (vault.example.com) para descobrir os nós por registro SRV. Use srv+https://_rotulo._tcp.nome para outro rótulo SRV.</value>
+  </data>
+  <data name="MachineIdRequiredMSG" xml:space="preserve">
+    <value>Obrigatório. Este plugin vincula credenciais a uma identidade de máquina, portanto a conexão não pode ser salva sem o ID de máquina que o cofre emitiu para este servidor.</value>
+  </data>
   <data name="CacheMinutes" xml:space="preserve">
     <value>Cache (minutos)</value>
   </data>

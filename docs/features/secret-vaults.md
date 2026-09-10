@@ -23,8 +23,9 @@ writing one, without touching NetRisk.
 2. **Enable it** under *Admin → Plugins*. Installing is not enabling: a DLL in the directory
    activates nothing on its own.
 3. **Add a vault connection** under *Admin → Integrations → Secret Vaults*: a name, the plugin, the
-   vault's base URL (including its port, typically `8200`), the **API key — which for BastionVault is
-   a vault token**, sent as `X-Vault-Token` — and optionally the machine ID (see below). Everything
+   vault's address (one node, or a cluster — see *Addressing a cluster* below), the **API key — which
+   for BastionVault is a vault token**, sent as `X-Vault-Token` — and the machine ID, which is
+   optional unless the plugin declares that it is not (see below). Everything
    the connection can reach is whatever that token's policies allow, so NetRisk's access is scoped in
    the vault rather than here. Press *Test* — it introspects the token, reports its policies and how
    many secrets it can see, and checks the machine binding. "Authenticated" and "authenticated and
@@ -55,13 +56,75 @@ The machine ID is the FerroGate identity (a SPIFFE ID) of the host NetRisk runs 
 for every server that has not. Instead the connection test asks the server what it demands and checks
 the token against it — see *Machine identity is checked, not sent* below. A plugin whose vault
 *always* requires one declares `RequiresMachineId => true`, and NetRisk then refuses the connection
-until one is entered instead of sending a request it knows will fail.
+until one is entered instead of sending a request it knows will fail — at **save** time
+(`SecretVaultService.ValidateAgainstPluginAsync`, covered by
+`RefusesToCreateAConnectionWithNoMachineIdWhenThePluginRequiresOne`) as well as at resolution time
+(`OpenAsync`). Save-time is the one that matters: the resolution-time check fires inside a background
+job hours later, and the desktop form switches its machine-ID hint to the required wording as soon as
+such a plugin is selected. The requirement is *not* enforced while the plugin is uninstalled or
+disabled, so a connection can still be prepared before its DLL is deployed.
 
 The machine ID is stored and returned **in the clear**. It identifies the installation rather than
 authenticating it, it is useless without the API key, and an operator has to be able to read it back
 to compare it against what the vault shows.
 
 ---
+
+## Addressing a cluster
+
+A BastionVault HA deployment is three or more nodes, one active and the rest standby, published as
+DNS SRV records. Naming one of them in the connection works right up to the moment that node is the
+one being patched — so the address field takes either, and tells them apart by shape.
+[`VaultAddress`](../../src/ServerServices/Secrets/VaultAddress.cs) is the grammar:
+
+| What you type | What it means |
+|---|---|
+| `https://vault.example.com:4200` | One node. No SRV lookup, no health probe, nothing new. |
+| `vault.example.com` | A cluster. Looked up as `_bvault._tcp.vault.example.com`, over https. |
+| `srv+https://_bv._tcp.vault.example.com` | A cluster whose SRV label is not the default. |
+| `srv+http://vault.example.com` | A cluster over plaintext, default label. |
+
+A bare name is the same thing `bastionvault::client::server_url` accepts, deliberately: an operator
+who already has a cluster name in Hiera should be able to paste the same string here.
+
+Two forms are refused rather than guessed at. A scheme-less `vault.example.com:4200`, because `Uri`
+reads that as a *scheme* named `vault.example.com` — an address that parses as something nobody meant
+is worse than one rejected while the form is still open. And a discovery name carrying a port, because
+the port is what the SRV record is for.
+
+**Discovery happens in the host, not in the plugin.**
+[`VaultEndpointResolver`](../../src/ServerServices/Secrets/VaultEndpointResolver.cs) resolves the
+address and hands the plugin one node's base URL in `SecretVaultCredentials.BaseUrl`; a plugin built
+against the SDK needs no change and cannot tell the difference. That placement is the point — DNS and
+the health probe stay behind `IOutboundHttpClient` and its SSRF policy, and the next vault plugin gets
+cluster support for free rather than reimplementing RFC 2782.
+
+Choosing among the nodes, in order:
+
+1. **RFC 2782 ordering** — priority ascending, then a weighted draw within each priority band. The
+   draw is not decoration: without it every NetRisk in an installation sends every request to
+   whichever node sorts first, which is the opposite of what weights are for.
+2. **A health probe** — `GET {node}/sys/health` on each candidate in order, first healthy one wins.
+   200 (active), 429 (standby), 472 (DR secondary) and 473 (performance standby) all count as
+   healthy; 501 (uninitialised) and 503 (sealed) are the nodes discovery exists to skip. No API key is
+   involved, so discovery writes nothing to the vault's audit log — which a probe that read a secret
+   would.
+3. **Falling back to order** — if every probe fails, the first candidate is used anyway, with a note.
+   A vault that does not serve `/sys/health`, or a network that blocks the probe but not the API, must
+   not become a connection that cannot be used at all.
+
+The choice is cached per connection for the shortest of the records' TTLs, clamped to 5–300 seconds,
+and keyed on the address as well as the connection id — so repointing a connection is a cache miss by
+construction rather than by remembering to evict. Without the cache a sync job reading twenty
+credentials would do twenty DNS lookups and sixty probes.
+
+*Test* reports which node answered, and persists it in the connection's last-test message: "the
+cluster works" and "the one node of three that is up works" are different answers, and an operator who
+cannot see the difference cannot tell a healthy cluster from one outage away from silence.
+
+The SRV lookup needs a real resolver library — `System.Net.Dns` exposes A/AAAA and has no supported
+way to ask for an SRV record — so `DnsClient` is referenced by `ServerServices`, confined to
+[`DnsClientSrvLookup`](../../src/ServerServices/Secrets/DnsClientSrvLookup.cs) behind `IDnsSrvLookup`.
 
 ## How a reference is stored
 
@@ -285,6 +348,7 @@ mounted and is not treated as a refusal.
 | Wire contracts | [`SecretVaultContracts.cs`](../../src/Model/Secrets/SecretVaultContracts.cs) |
 | Entity / schema | [`SecretVaultConnection.cs`](../../src/DAL/Entities/SecretVaultConnection.cs), [`NRDbContext.Secrets.cs`](../../src/DAL/Context/NRDbContext.Secrets.cs), `DB/Structure/84.sql` + `DB/Data/84.sql` |
 | Server | [`SecretVaultService.cs`](../../src/ServerServices/Secrets/SecretVaultService.cs), [`SecretResolver.cs`](../../src/ServerServices/Secrets/SecretResolver.cs), [`ObfuscatedSecretCache.cs`](../../src/ServerServices/Security/ObfuscatedSecretCache.cs), [`PluginHttpClientAdapter.cs`](../../src/ServerServices/Secrets/PluginHttpClientAdapter.cs) |
+| Cluster discovery | [`VaultAddress.cs`](../../src/ServerServices/Secrets/VaultAddress.cs), [`VaultEndpointResolver.cs`](../../src/ServerServices/Secrets/VaultEndpointResolver.cs), [`DnsClientSrvLookup.cs`](../../src/ServerServices/Secrets/DnsClientSrvLookup.cs) |
 | API | [`SecretVaultsController.cs`](../../src/API/Controllers/SecretVaultsController.cs) |
 | Client | `IIntegrationsService` / `IntegrationsRestService` (the `…SecretVault…` members) |
 | Desktop | [`VaultSecretFieldState.cs`](../../src/GUIClient/Tools/VaultSecretFieldState.cs), [`SecretVaultPickerViewModel.cs`](../../src/GUIClient/ViewModels/Dialogs/SecretVaultPickerViewModel.cs), `SecretVaultPickerDialog.axaml`, the Secret Vaults tab of `IntegrationsView.axaml` |
@@ -316,6 +380,8 @@ All actions are `[PermissionAuthorize("configuration")]`.
 | | `Secrets/ObfuscatedSecretCacheTest.cs` | Absolute expiry, prefix eviction, plaintext not in memory |
 | | `Secrets/SecretVaultServiceInMemoryTest.cs` | Connections, testing, listing, resolution, cache invalidation, delete guard |
 | | `Secrets/SecretResolverTest.cs` | The literal/reference branch, and refusing a malformed reference |
+| | `Secrets/VaultAddressTest.cs` | The address grammar: node URL, cluster name, `srv+` form, and what is refused |
+| | `Secrets/VaultEndpointResolverTest.cs` | SRV ordering, skipping a sealed node, the all-unhealthy fallback, cache reuse and invalidation, the weighted draw |
 | | `Secrets/SecretVaultPluginLoadingTest.cs` | A **real** plugin assembly (`FixtureVaultPlugin`) loaded off disk across the load-context boundary |
 | | `Secrets/SecretVaultRegistrationTest.cs` | The DI graph composes in every host |
 | | `Secrets/PluginCapabilityDiscoveryTest.cs` | A host with no plugins answers "no" rather than throwing |

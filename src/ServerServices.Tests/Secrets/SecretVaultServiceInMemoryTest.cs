@@ -44,6 +44,8 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
     private readonly IPluginsService _plugins = Substitute.For<IPluginsService>();
     private readonly ObfuscatedSecretCache _cache = new(Log);
     private readonly ISecretProtector _protector;
+    private readonly FakeDnsSrvLookup _dns = new();
+    private readonly IVaultEndpointResolver _endpoints;
     private readonly ISecretVaultService _svc;
 
     public SecretVaultServiceInMemoryTest()
@@ -55,8 +57,14 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
 
         ArrangePluginInstalled(enabled: true);
 
+        // The real resolver, not a substitute: every connection in this class uses a direct https://
+        // address, which the resolver returns without touching DNS or the network. That keeps the
+        // node-selection path in the same code these tests exercise, so a change that broke a direct
+        // address would fail here rather than only in the discovery tests.
+        _endpoints = new VaultEndpointResolver(Log, _dns, FakeOutboundHttpClient);
+
         _svc = new SecretVaultService(Log, GetService<IDalService>(), _protector, _plugins, _cache,
-            new PluginHttpClientAdapter(FakeOutboundHttpClient));
+            new PluginHttpClientAdapter(FakeOutboundHttpClient), _endpoints);
     }
 
     /// <summary>
@@ -118,7 +126,10 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
     [Theory]
     [InlineData("", "https://vault.example.com")]
     [InlineData("Prod", "")]
-    [InlineData("Prod", "vault.example.com")]     // not absolute
+    // A bare DNS name is no longer malformed — it is the cluster form, discovered by SRV record, and
+    // is covered by RefusesAnAddressThatIsNeitherAUrlNorADnsName below. A scheme-less host:port still
+    // is: Uri reads it as a scheme named "vault.example.com".
+    [InlineData("Prod", "vault.example.com:4200")]
     [InlineData("Prod", "ftp://vault.example.com")]
     [InlineData("Prod", "file:///etc/passwd")]
     public async Task RefusesAMalformedConnection(string name, string baseUrl)
@@ -284,6 +295,167 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         await _svc.TestConnectionAsync(created.Id);
 
         Assert.Null(_plugin.LastCredentials!.MachineId);
+    }
+
+    // --- addresses: one node, or a cluster ------------------------------------------------------
+
+    /// <summary>
+    /// The address field takes a cluster name, and the plugin is handed the node discovery picked —
+    /// never the cluster name. A plugin built against the SDK concatenates a path onto whatever it is
+    /// given, so a cluster name reaching it produces a request to a URL with no scheme.
+    /// </summary>
+    [Fact]
+    public async Task AClusterNameIsResolvedToANodeBeforeThePluginSeesIt()
+    {
+        _dns.With("_bvault._tcp.vault.example.com", "node2.example.com", 4200);
+
+        var input = Input();
+        input.BaseUrl = "vault.example.com";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.True(result.Success);
+        Assert.Equal("https://node2.example.com:4200", _plugin.LastCredentials!.BaseUrl);
+
+        // The connection keeps the cluster name it was given: rewriting it to the node that happened
+        // to answer today would turn an HA connection into a single-node one on the first Test.
+        Assert.Equal("vault.example.com", Read(created.Id).BaseUrl);
+    }
+
+    /// <summary>
+    /// Which node answered reaches the operator, and is persisted on the row — "the cluster works"
+    /// and "one node of three works" are different answers.
+    /// </summary>
+    [Fact]
+    public async Task TestReportsTheNodeItReachedForAClusterAddress()
+    {
+        _dns.With("_bvault._tcp.vault.example.com", "node2.example.com", 4200);
+
+        var input = Input();
+        input.BaseUrl = "vault.example.com";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.Equal("https://node2.example.com:4200", result.ResolvedEndpoint);
+        Assert.Contains("node2.example.com", Read(created.Id).LastTestMessage!);
+    }
+
+    /// <summary>A direct address reports no node, because it would only repeat what was typed.</summary>
+    [Fact]
+    public async Task TestReportsNoNodeForADirectAddress()
+    {
+        var created = await CreateAsync();
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.Equal(string.Empty, result.ResolvedEndpoint);
+        Assert.Null(result.EndpointNote);
+    }
+
+    [Fact]
+    public async Task TestReportsAClusterWithNoSrvRecordsAsAFailure()
+    {
+        var input = Input();
+        input.BaseUrl = "nosuchcluster.example.com";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.False(result.Success);
+        Assert.Contains("_bvault._tcp.nosuchcluster.example.com", result.Message);
+        Assert.Equal(0, _plugin.TestCalls);
+    }
+
+    [Theory]
+    [InlineData("vault.example.com:4200")]
+    [InlineData("ftp://vault.example.com")]
+    [InlineData("srv+https://vault.example.com:4200")]
+    public async Task RefusesAnAddressThatIsNeitherAUrlNorADnsName(string address)
+    {
+        var input = Input();
+        input.BaseUrl = address;
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.CreateConnectionAsync(input, "bv-api-key"));
+
+        Assert.Equal(nameof(SecretVaultConnectionInput.BaseUrl), ex.ParameterName);
+    }
+
+    // --- machine identity, enforced at save time ------------------------------------------------
+
+    /// <summary>
+    /// A plugin that binds credentials to a machine and a connection saved without a machine ID is a
+    /// configuration that can never resolve. Before this, the only check was in <c>OpenAsync</c> —
+    /// which fires inside a background job, hours later, rather than on the form.
+    /// </summary>
+    [Fact]
+    public async Task RefusesToCreateAConnectionWithNoMachineIdWhenThePluginRequiresOne()
+    {
+        _plugin.RequiresMachineId = true;
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.CreateConnectionAsync(Input(), "bv-api-key"));
+
+        Assert.Equal(nameof(SecretVaultConnectionInput.MachineId), ex.ParameterName);
+        Assert.Contains(_plugin.PluginName, ex.Message);
+    }
+
+    [Fact]
+    public async Task RefusesToClearTheMachineIdWhenThePluginRequiresOne()
+    {
+        var input = Input();
+        input.MachineId = "machine-42";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        _plugin.RequiresMachineId = true;
+
+        var update = Input();
+        update.Id = created.Id;
+        update.MachineId = "   ";
+
+        await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.UpdateConnectionAsync(update, null));
+
+        // Refused, not partially applied: the stored machine ID is still there.
+        Assert.Equal("machine-42", Read(created.Id).MachineId);
+    }
+
+    [Fact]
+    public async Task AcceptsAConnectionWithAMachineIdWhenThePluginRequiresOne()
+    {
+        _plugin.RequiresMachineId = true;
+
+        var input = Input();
+        input.MachineId = "machine-42";
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        Assert.True(created.RequiresMachineId);
+        Assert.Equal("machine-42", created.MachineId);
+    }
+
+    /// <summary>
+    /// The requirement is only enforced when the plugin is there to declare it. A connection prepared
+    /// before its DLL is deployed must still be savable, or the only order that works is
+    /// install-then-configure — and the view already reports the plugin as unavailable, so the state
+    /// is visible rather than silent.
+    /// </summary>
+    [Fact]
+    public async Task DoesNotEnforceAMachineIdWhenThePluginIsNotInstalled()
+    {
+        _plugin.RequiresMachineId = true;
+        ArrangePluginInstalled(enabled: false, installed: false);
+
+        var created = await _svc.CreateConnectionAsync(Input(), "bv-api-key");
+
+        Assert.False(created.PluginAvailable);
+        Assert.Null(created.MachineId);
     }
 
     [Fact]

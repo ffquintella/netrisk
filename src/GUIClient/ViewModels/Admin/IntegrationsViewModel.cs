@@ -124,6 +124,8 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrMachineIdHint { get; } = Localizer["MachineIdOptionalMSG"];
     public string StrCacheMinutes { get; } = Localizer["CacheMinutes"];
     public string StrSecretCacheHint { get; } = Localizer["SecretCacheHintMSG"];
+    public string StrMachineIdRequiredHint { get; } = Localizer["MachineIdRequiredMSG"];
+    public string StrVaultBaseUrlHint { get; } = Localizer["VaultBaseUrlHintMSG"];
     public string StrPlugin { get; } = Localizer["Plugin"];
     public string StrLastTest { get; } = Localizer["LastTest"];
     public string StrNoSecretVaultPlugins { get; } = Localizer["NoSecretVaultPluginsMSG"];
@@ -664,8 +666,30 @@ public class IntegrationsViewModel : ViewModelBase
 
             VaultDraft.PluginName = value;
             this.RaisePropertyChanged();
+
+            // The machine-ID hint is a property of the *plugin*, so it changes with this selection and
+            // not with anything else on the form. Raised explicitly because the two properties below
+            // are computed rather than stored, and ReactiveUI has no way to know they depend on this.
+            this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
+            this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
         }
     }
+
+    /// <summary>
+    /// Whether the selected plugin declares that it cannot work without a machine ID.
+    ///
+    /// Read from the plugin list rather than from the connection, because it has to be right for a
+    /// connection that does not exist yet — which is precisely when an operator needs to be told.
+    /// The server enforces the same rule on save; this is so the form says it first.
+    /// </summary>
+    public bool VaultRequiresMachineId =>
+        VaultPlugins.FirstOrDefault(p =>
+            string.Equals(p.PluginName, VaultDraft.PluginName, StringComparison.Ordinal))
+            ?.RequiresMachineId ?? false;
+
+    /// <summary>The machine-ID hint, in the "required" wording when the plugin demands one.</summary>
+    public string StrVaultMachineIdHint =>
+        VaultRequiresMachineId ? StrMachineIdRequiredHint : StrMachineIdHint;
 
     private string _vaultApiKey = "";
     public string VaultApiKey
@@ -2092,6 +2116,11 @@ public class IntegrationsViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
             this.RaisePropertyChanged(nameof(HasNoVaultPlugins));
 
+            // The list the requirement is read from has just been replaced, so a hint rendered
+            // before the plugins arrived is stale until this fires.
+            this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
+            this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
+
             var connections = await Integrations.GetSecretVaultConnectionsAsync();
             VaultConnections.Clear();
             foreach (var connection in connections) VaultConnections.Add(connection);
@@ -2124,6 +2153,8 @@ public class IntegrationsViewModel : ViewModelBase
 
         this.RaisePropertyChanged(nameof(VaultDraft));
         this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
+        this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
+        this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
     }
 
     private void LoadVaultEditor(SecretVaultConnectionView? connection)
@@ -2145,6 +2176,8 @@ public class IntegrationsViewModel : ViewModelBase
 
         this.RaisePropertyChanged(nameof(VaultDraft));
         this.RaisePropertyChanged(nameof(SelectedVaultPluginName));
+        this.RaisePropertyChanged(nameof(VaultRequiresMachineId));
+        this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
 
         _ = LoadVaultUsageAsync(connection.Id);
     }

@@ -1061,8 +1061,13 @@
                                   SelectedValueBinding="{Binding PluginName}"
                                   DisplayMemberBinding="{Binding PluginName}"/>
 
+                        <!-- Accepts a node URL or a cluster name; the hint is not decoration, because
+                             the two forms look alike and only one of them survives a node going
+                             down. See VaultAddress on the server for the grammar. -->
                         <TextBlock Text="{Binding StrBaseUrl}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding VaultDraft.BaseUrl}" MinWidth="240"/>
+                        <TextBlock Text="{Binding StrVaultBaseUrlHint}" Classes="detailBlock"
+                                   TextWrapping="Wrap" MaxWidth="360"/>
 
                         <!-- Write-only, like every other credential box on this screen: blank means
                              "keep the stored key". -->
@@ -1074,8 +1079,11 @@
                              compare it against what the vault shows. -->
                         <TextBlock Text="{Binding StrMachineId}" Classes="header2" Margin="0 8 0 0"/>
                         <TextBox Text="{Binding VaultDraft.MachineId}" MinWidth="240"/>
-                        <TextBlock Text="{Binding StrMachineIdHint}" Classes="detailBlock"
-                                   TextWrapping="Wrap"/>
+                        <!-- One TextBlock whose text switches, rather than two whose visibility does:
+                             a plugin that requires a machine ID and one that does not need the same
+                             sentence in different words, not two sentences one of which is a lie. -->
+                        <TextBlock Text="{Binding StrVaultMachineIdHint}" Classes="detailBlock"
+                                   TextWrapping="Wrap" MaxWidth="360"/>
 
                         <TextBlock Text="{Binding StrCacheMinutes}" Classes="header2" Margin="0 8 0 0"/>
                         <NumericUpDown Value="{Binding VaultDraft.CacheTtlMinutes}" Minimum="1"

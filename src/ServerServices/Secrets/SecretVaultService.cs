@@ -25,7 +25,8 @@ public class SecretVaultService(
     ISecretProtector protector,
     IPluginsService pluginsService,
     IObfuscatedSecretCache cache,
-    IPluginHttpClient http)
+    IPluginHttpClient http,
+    IVaultEndpointResolver endpoints)
     : ServiceBase(logger, dalService), ISecretVaultService
 {
     /// <summary>
@@ -94,6 +95,7 @@ public class SecretVaultService(
         string? apiKey, int? userId = null)
     {
         Validate(input);
+        await ValidateAgainstPluginAsync(input);
 
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidParameterException(nameof(apiKey),
@@ -127,6 +129,7 @@ public class SecretVaultService(
         string? apiKey)
     {
         Validate(input);
+        await ValidateAgainstPluginAsync(input);
 
         await using var db = DalService.GetContext();
 
@@ -157,6 +160,11 @@ public class SecretVaultService(
         // Anything that changes *which* vault answers, or *whether* it answers, invalidates every
         // value cached through this connection. Serving a 15-minute-old secret from a vault whose
         // credential was just rotated is precisely the failure a short TTL is supposed to prevent.
+        // The discovered node is cached separately from the secret values, and for a different
+        // reason, so it needs its own eviction: an operator who repoints a connection at another
+        // cluster and presses Test must not be told about the previous one.
+        if (addressChanged) endpoints.Invalidate(stored.Id);
+
         if (apiKey != null || addressChanged || !stored.Enabled)
         {
             var evicted = cache.RemoveByPrefix(CachePrefix(stored.Id));
@@ -201,14 +209,16 @@ public class SecretVaultService(
 
         try
         {
-            var (plugin, context) = await OpenAsync(stored);
+            var (plugin, context, endpoint) = await OpenAsync(stored);
             var result = await plugin.TestConnectionAsync(context);
 
             view = new SecretVaultTestResultView
             {
                 Success = result.Success,
                 Message = result.Message,
-                VisibleSecretCount = result.VisibleSecretCount
+                VisibleSecretCount = result.VisibleSecretCount,
+                ResolvedEndpoint = endpoint.Discovered ? endpoint.BaseUrl : string.Empty,
+                EndpointNote = endpoint.Note
             };
         }
         catch (Exception ex) when (ex is SecretVaultException or SecretProtectionException
@@ -229,6 +239,16 @@ public class SecretVaultService(
             };
         }
 
+        // Folded into the message rather than only carried in its own field, because the message is
+        // what is persisted on the connection and what the grid shows the next time somebody opens
+        // the screen. A note that only exists in the response to the test call is a note nobody
+        // reads twice.
+        if (!string.IsNullOrEmpty(view.ResolvedEndpoint))
+            view.Message = $"{view.Message} (node {view.ResolvedEndpoint})";
+
+        if (!string.IsNullOrWhiteSpace(view.EndpointNote))
+            view.Message = $"{view.Message} {view.EndpointNote}";
+
         stored.LastTestAt = DateTime.UtcNow;
         stored.LastTestSucceeded = view.Success;
         stored.LastTestMessage = view.Message;
@@ -243,7 +263,7 @@ public class SecretVaultService(
 
         var stored = await LoadAsync(db, connectionId);
 
-        var (plugin, context) = await OpenAsync(stored);
+        var (plugin, context, _) = await OpenAsync(stored);
 
         IReadOnlyList<VaultSecretDescriptor> descriptors;
 
@@ -302,7 +322,7 @@ public class SecretVaultService(
                 $"The vault connection '{stored.Name}' is disabled, so the secret "
                 + $"'{reference.DisplayKey}' cannot be read.", reference.ToString());
 
-        var (plugin, context) = await OpenAsync(stored);
+        var (plugin, context, _) = await OpenAsync(stored, ct);
 
         VaultSecretValue value;
 
@@ -417,8 +437,9 @@ public class SecretVaultService(
     /// Resolves the plugin for a connection and builds the per-call context: credentials decrypted
     /// here and nowhere else, plus the host's HTTP seam.
     /// </summary>
-    private async Task<(INetriskSecretVaultPlugin Plugin, SecretVaultContext Context)> OpenAsync(
-        SecretVaultConnection connection)
+    private async Task<(INetriskSecretVaultPlugin Plugin, SecretVaultContext Context,
+        VaultEndpointSelection Endpoint)> OpenAsync(SecretVaultConnection connection,
+        CancellationToken ct = default)
     {
         var plugin = await pluginsService.GetPluginByNameAsync<INetriskSecretVaultPlugin>(connection.PluginName);
 
@@ -446,18 +467,27 @@ public class SecretVaultService(
                 + $"connection '{connection.Name}' has none. Enter the machine ID the vault issued for "
                 + "this server.");
 
+        // The plugin is handed one node, never a cluster name: it was written against a base URL it
+        // can concatenate a path onto, and teaching every plugin to do SRV discovery would put the
+        // same DNS code — and the same SSRF question — in each of them. See VaultEndpointResolver.
+        var selection = await endpoints.ResolveAsync(connection.Id, connection.BaseUrl, ct);
+
+        if (selection.Discovered)
+            Logger.Debug("Vault connection {Name} resolved '{Address}' to {Node} of {Count} candidates",
+                connection.Name, connection.BaseUrl, selection.BaseUrl, selection.Candidates.Count);
+
         var context = new SecretVaultContext
         {
             Credentials = new SecretVaultCredentials
             {
-                BaseUrl = connection.BaseUrl,
+                BaseUrl = selection.BaseUrl,
                 ApiKey = apiKey,
                 MachineId = string.IsNullOrWhiteSpace(connection.MachineId) ? null : connection.MachineId
             },
             Http = http
         };
 
-        return (plugin, context);
+        return (plugin, context, selection);
     }
 
     private static async Task<SecretVaultConnection> LoadAsync(NRDbContext db, int id) =>
@@ -509,6 +539,37 @@ public class SecretVaultService(
         return count;
     }
 
+    /// <summary>
+    /// The half of validation that needs to know which plugin will service the connection.
+    ///
+    /// Separate from <see cref="Validate"/>, which is static and pure, because this one instantiates
+    /// every loaded plugin by reflection to read its declarations — and because the two fail for
+    /// different reasons: <see cref="Validate"/> rejects a malformed field, this rejects a
+    /// well-formed connection that the chosen plugin cannot use.
+    ///
+    /// It exists because <c>OpenAsync</c>'s machine-ID check fires at *resolution* time, which is
+    /// inside a sync job at 3am. A plugin that declares
+    /// <see cref="INetriskSecretVaultPlugin.RequiresMachineId"/> and a connection saved without one
+    /// is a configuration that can never work, and the place to say so is the form.
+    /// </summary>
+    private async Task ValidateAgainstPluginAsync(SecretVaultConnectionInput input)
+    {
+        var plugins = await GetAvailablePluginsAsync();
+
+        var plugin = plugins.FirstOrDefault(p =>
+            string.Equals(p.PluginName, input.PluginName.Trim(), StringComparison.Ordinal));
+
+        // Not an error. A connection may legitimately be saved while its plugin is uninstalled or
+        // disabled — that is how an operator prepares one before deploying the DLL, and the view
+        // already reports PluginAvailable = false so the state is visible rather than silent.
+        if (plugin is null) return;
+
+        if (plugin.RequiresMachineId && string.IsNullOrWhiteSpace(input.MachineId))
+            throw new InvalidParameterException(nameof(input.MachineId),
+                $"The '{plugin.PluginName}' plugin binds credentials to a machine identity, so this "
+                + "connection needs the machine ID the vault issued for this server.");
+    }
+
     private static void Validate(SecretVaultConnectionInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -524,16 +585,11 @@ public class SecretVaultService(
             throw new InvalidParameterException(nameof(input.PluginName),
                 "A vault connection must name the plugin that services it.");
 
-        if (string.IsNullOrWhiteSpace(input.BaseUrl))
-            throw new InvalidParameterException(nameof(input.BaseUrl), "A vault base URL is required.");
-
-        // Checked here as well as by the outbound policy at call time, because a base URL that is not
-        // an absolute http(s) URL is a typo an administrator can fix while looking at the form —
-        // rather than a sync failure a week later.
-        if (!Uri.TryCreate(input.BaseUrl, UriKind.Absolute, out var uri)
-            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-            throw new InvalidParameterException(nameof(input.BaseUrl),
-                "The vault base URL must be an absolute http:// or https:// URL.");
+        // Parsed here as well as at call time, because an address that does not parse is a typo an
+        // administrator can fix while looking at the form — rather than a sync failure a week later.
+        // VaultAddress accepts a node URL and a cluster name to be discovered by SRV, and its
+        // messages say which forms are legal.
+        VaultAddress.Parse(input.BaseUrl, nameof(input.BaseUrl));
 
         if (input.MachineId is { Length: > 255 })
             throw new InvalidParameterException(nameof(input.MachineId),

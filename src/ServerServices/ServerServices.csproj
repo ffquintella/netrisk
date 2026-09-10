@@ -25,6 +25,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <!-- Track 7 secret vaults: DNS SRV discovery of a vault cluster's nodes. System.Net.Dns exposes
+         A/AAAA only and has no supported way to ask for an SRV record, so the lookup needs a real
+         resolver library. Confined to DnsClientSrvLookup, behind IDnsSrvLookup. -->
+    <PackageReference Include="DnsClient" Version="1.8.0" />
     <PackageReference Include="Mapster" Version="10.0.12" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />

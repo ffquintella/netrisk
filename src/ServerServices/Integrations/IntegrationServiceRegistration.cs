@@ -64,6 +64,13 @@ public static class IntegrationServiceRegistration
 
         services.TryAddSingleton<IObfuscatedSecretCache, ObfuscatedSecretCache>();
         services.AddTransient<IPluginHttpClient, PluginHttpClientAdapter>();
+
+        // Singletons, both of them, and for the same reason: the endpoint resolver's whole value is
+        // the cache it holds, and a transient one would do a DNS lookup plus a health probe per node
+        // for every credential a sync job reads. The lookup client underneath keeps DNS answers for
+        // their TTL, which a transient would also throw away.
+        services.TryAddSingleton<IDnsSrvLookup, DnsClientSrvLookup>();
+        services.TryAddSingleton<IVaultEndpointResolver, VaultEndpointResolver>();
         services.AddTransient<ISecretVaultService, SecretVaultService>();
         services.AddTransient<ISecretResolver, SecretResolver>();
 

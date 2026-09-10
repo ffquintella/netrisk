@@ -16,6 +16,44 @@ This release includes new features and improvements.
 
 
 
+## [2.21.3] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+- **A secret-vault connection can point at a cluster instead of one node.** A BastionVault HA
+  deployment is several nodes published as DNS SRV records, and the connection's address field only
+  accepted an absolute `http(s)` URL — so it had to name one node, and the connection had a single
+  point of failure the vault deployment did not. It now accepts a bare cluster DNS name
+  (`vault.example.com`, looked up as `_bvault._tcp.vault.example.com` — the same string
+  `bastionvault::client::server_url` takes), or `srv+https://_label._tcp.name` for a cluster whose
+  SRV label differs. A full URL still means exactly one node, with no lookup and no probe.
+
+  Discovery runs in the host, not in the plugin: the plugin is handed one node's base URL and needs
+  no change. Nodes are ordered by RFC 2782 — priority, then a weighted draw so that every NetRisk in
+  an installation does not converge on whichever node sorts first — and each is probed at
+  `/sys/health` until one answers, which skips a sealed or uninitialised node without touching the
+  vault's audit log. If every probe fails the first candidate is used anyway with a note, so a vault
+  that does not serve that path is not turned into a connection that cannot be used. The choice is
+  cached per connection for the SRV TTL, clamped to 5–300 seconds. *Test* now reports which node
+  answered and keeps it in the connection's last-test message.
+
+### Changed
+
+- **The Secret Vaults form explains what the address field takes**, and switches its machine-ID hint
+  to the required wording as soon as a plugin that demands one is selected.
+
+### Fixed
+
+- **A vault connection whose plugin requires a machine identity can no longer be saved without one.**
+  The check existed only in the resolution path, so the refusal arrived inside a background job hours
+  later rather than on the form that could have prevented it. It is now enforced on create and
+  update — and not while the plugin is uninstalled or disabled, so a connection can still be prepared
+  before its DLL is deployed.
+
+
+
 ## [2.21.2] - 2026-09-10
 
 This release includes new features and improvements.
