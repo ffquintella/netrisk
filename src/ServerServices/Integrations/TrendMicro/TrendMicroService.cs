@@ -27,7 +27,8 @@ public class TrendMicroService(
     ISecretResolver resolver,
     ITrendMicroClient client,
     IFindingIngestionService ingestion,
-    IFindingLifecycleService lifecycle)
+    IFindingLifecycleService lifecycle,
+    IIntegrationSyncTracker tracker)
     : ServiceBase(logger, dalService), ITrendMicroService
 {
     /// <summary>The importer name Vision One findings are recorded under, and their dedup identity.</summary>
@@ -154,7 +155,9 @@ public class TrendMicroService(
             connection = await LoadAsync(db, connectionId);
         }
 
-        var log = await BeginLogAsync(connection, ct);
+        // await using: a run that escapes without recording an outcome is settled by disposal
+        // rather than left Running until the ledger's reaper horizon — see IntegrationSyncRun.
+        await using var run = await BeginLogAsync(connection, ct);
 
         try
         {
@@ -166,23 +169,60 @@ public class TrendMicroService(
 
             // 4.4.2 — inventory. Runs first because the CVE pass and the risk-score pass both look
             // hosts up by external id, and a device NetRisk has never seen would otherwise be skipped.
+            await run.StepAsync("inventory", $"Requesting the device inventory from {connection.BaseUrl}.",
+                ct: ct);
+
             var devices = await client.GetDevicesAsync(connection, apiKey, ct);
 
+            await run.StepAsync("inventory", "Device inventory received.", devices.Count, ct);
+
             var hostsByExternalId = await SyncInventoryAsync(connection, devices, result, ct);
+
+            await run.StepAsync("inventory",
+                $"{result.HostsCreated} host(s) created, {result.HostsUpdated} updated.", ct: ct);
 
             // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore; the second
             // crawl this used to make went to /v3.0/asrm/highRiskDevices, which does not exist.
             if (connection.SyncRiskScores)
+            {
+                await run.StepAsync("risk-scores", "Rolling device risk scores into the Cyber Risk Index.",
+                    ct: ct);
+
                 await SyncRiskScoresAsync(connection, devices, result, ct);
+
+                await run.StepAsync("risk-scores",
+                    $"{result.PostureRowsWritten} posture row(s) written"
+                    + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".",
+                    ct: ct);
+            }
+            else
+            {
+                await run.StepAsync("risk-scores", "Skipped: the connection does not sync risk scores.",
+                    ct: ct);
+            }
 
             // 4.4.3 — CVEs, including virtual-patch state.
             if (connection.SyncVulnerabilities)
             {
+                await run.StepAsync("cves", "Requesting vulnerable devices.", ct: ct);
+
                 var vulnerabilities = await client.GetVulnerableDevicesAsync(connection, apiKey, ct);
+
+                await run.StepAsync("cves", "Vulnerability records received.", vulnerabilities.Count, ct);
+
                 await IngestVulnerabilitiesAsync(connection, vulnerabilities, devices, result, ct);
+
+                await run.StepAsync("cves",
+                    $"{result.FindingsCreated} finding(s) created, {result.FindingsUpdated} updated, "
+                    + $"{result.VirtualPatchesApplied} closed by virtual patch.", ct: ct);
+            }
+            else
+            {
+                await run.StepAsync("cves", "Skipped: the connection does not sync vulnerabilities.",
+                    ct: ct);
             }
 
-            await CompleteLogAsync(log, connection, result, null);
+            await CompleteLogAsync(run, connection, result, null);
         }
         catch (SecretProtectionException ex)
         {
@@ -192,7 +232,7 @@ public class TrendMicroService(
             Logger.Error(ex, "Vision One sync for connection {Connection} could not read its API key",
                 connection.Name);
 
-            await CompleteLogAsync(log, connection, result, ex.Message);
+            await CompleteLogAsync(run, connection, result, ex.Message);
 
             // Rethrown, unlike every other failure: an undecryptable credential is a state the operator
             // has to fix by re-entering the key, which the controller reports as 409. Swallowing it here
@@ -206,7 +246,7 @@ public class TrendMicroService(
 
             Logger.Error(ex, "Vision One sync for connection {Connection} failed", connection.Name);
 
-            await CompleteLogAsync(log, connection, result, ex.Message);
+            await CompleteLogAsync(run, connection, result, ex.Message);
         }
 
         return result;
@@ -725,25 +765,21 @@ public class TrendMicroService(
     }
 
     /// <summary>
-    /// Claims the connection and writes its Running row, refusing when a run is already in flight —
-    /// see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather than in the
-    /// caller.
+    /// Claims the connection, writes its Running row and announces the start, refusing when a run is
+    /// already in flight — see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather
+    /// than in the caller.
     /// </summary>
-    private async Task<IntegrationSyncLog> BeginLogAsync(TrendMicroConnection connection,
-        CancellationToken ct = default)
-    {
-        await using var db = DalService.GetContext();
+    private Task<IntegrationSyncRun> BeginLogAsync(TrendMicroConnection connection,
+        CancellationToken ct = default) =>
+        tracker.BeginAsync(IntegrationKind.TrendMicroVisionOne, connection.Id, connection.Name,
+            ProviderName, singleFlight: true, ct);
 
-        return await IntegrationSyncLedger.ClaimAsync(db, IntegrationKind.TrendMicroVisionOne,
-            connection.Id, connection.Name, ProviderName, DateTime.UtcNow, ct);
-    }
-
-    private async Task CompleteLogAsync(IntegrationSyncLog log, TrendMicroConnection connection,
+    private async Task CompleteLogAsync(IntegrationSyncRun run, TrendMicroConnection connection,
         PostureSyncResult result, string? error)
     {
         await using var db = DalService.GetContext();
 
-        var stored = await db.IntegrationSyncLogs.FirstOrDefaultAsync(l => l.Id == log.Id);
+        var stored = await db.IntegrationSyncLogs.FirstOrDefaultAsync(l => l.Id == run.LogId);
 
         var status = error != null
             ? IntegrationSyncStatus.Failed
@@ -764,6 +800,13 @@ public class TrendMicroService(
                 + $"{result.VirtualPatchesApplied} closed by virtual patch"
                 + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", 2000);
             stored.ErrorMessage = Truncate(error, 2000);
+
+            // Noted rather than stepped, then drained into the row this method is about to save: the
+            // settle below writes the log row and the connection row in one SaveChanges, and a step
+            // that flushed on its own would be a second write against the row already loaded here.
+            run.Note("finished", $"Run ended {status}." + (error == null ? "" : " " + error));
+
+            stored.ProgressLog = run.DrainInto(stored.ProgressLog);
         }
 
         var storedConnection = await db.TrendMicroConnections.FirstOrDefaultAsync(c => c.Id == connection.Id);
@@ -788,8 +831,13 @@ public class TrendMicroService(
             // sync itself is already over; the ledger row is now inconsistent and the reaper in
             // IntegrationSyncLedger is what settles it.
             Logger.Error(ex, "The Vision One sync for connection {Connection} finished {Status} but its "
-                             + "sync-log row {Log} could not be updated", connection.Name, status, log.Id);
+                             + "sync-log row {Log} could not be updated", connection.Name, status,
+                run.LogId);
         }
+
+        // After the settle, so a GUI woken by the notification reads the finished row and not the
+        // Running one. Idempotent, because both the success branch and each catch reach this method.
+        await run.NotifyFinishedAsync(status, stored?.Summary, error);
     }
 
     private static async Task<TrendMicroConnection> LoadAsync(AuditableContext db, int id) =>

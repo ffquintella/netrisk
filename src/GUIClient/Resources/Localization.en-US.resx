@@ -2499,6 +2499,24 @@
     <data name="CapturedAt" xml:space="preserve">
         <value>Captured at</value>
     </data>
+    <data name="SyncProgressNoneMSG" xml:space="preserve">
+        <value>This run recorded no progress detail.</value>
+    </data>
+    <data name="SyncProgress" xml:space="preserve">
+        <value>Run progress</value>
+    </data>
+    <data name="SyncProgressEmptyMSG" xml:space="preserve">
+        <value>Select a synchronization run to see its progress.</value>
+    </data>
+    <data name="PostureSyncStartedMSG" xml:space="preserve">
+        <value>Vision One synchronization started for {0}. This can take a while — the notification centre records when it finishes.</value>
+    </data>
+    <data name="ScorecardSyncStartedMSG" xml:space="preserve">
+        <value>SecurityScorecard synchronization started for {0}. This can take a while — the notification centre records when it finishes.</value>
+    </data>
+    <data name="IssueSyncStartedMSG" xml:space="preserve">
+        <value>Issue-tracker synchronization started for {0}. This can take a while — the notification centre records when it finishes.</value>
+    </data>
     <data name="SyncLog" xml:space="preserve">
         <value>Synchronization log</value>
     </data>

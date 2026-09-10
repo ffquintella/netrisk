@@ -39,4 +39,19 @@ public class IntegrationSyncLog
 
     /// <summary>Error text, redacted of credentials.</summary>
     public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// The run's progress trail: one <c>[HH:mm:ss] step: message</c> line per step, appended while the
+    /// run is still going.
+    ///
+    /// It lives on this row rather than in a child table because the only question it answers is
+    /// "what was this run doing", and that question is always asked about one run. It is written by
+    /// <c>IntegrationSyncRun</c>, which buffers lines and flushes them in batches — a row rewrite per
+    /// step would put thousands of UPDATEs behind a sync of a few thousand assets.
+    ///
+    /// Capped at <c>IntegrationSyncRun.MaxProgressLength</c>: a run that emits more than that keeps its
+    /// beginning and its end and drops the middle, because the beginning says what it set out to do and
+    /// the end says where it stopped, which is what a diagnosis needs.
+    /// </summary>
+    public string? ProgressLog { get; set; }
 }

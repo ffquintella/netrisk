@@ -58,12 +58,27 @@ public partial class JiraIntegrationService
             return result;
         }
 
+        // Null for a dry run, which stays unrecorded exactly as before: a preview that wrote a
+        // sync-log row would make the log answer "what changed the register" with runs that changed
+        // nothing. `await using` on a null handle is a no-op, so the shape holds either way.
+        await using var run = dryRun
+            ? null
+            : await tracker.BeginAsync(IntegrationKind.JiraAssets, connectionId, connection.Name,
+                "Jira Assets", singleFlight: false);
+
+        await Step("mappings", "Importing the mapped object types.", mappings.Count);
+
         foreach (var mapping in mappings)
         {
             try
             {
+                await Step("mappings", $"{mapping.ObjectTypeName}: reading objects.");
+
                 await ImportMappingAsync(db, connection, token, workspace, mapping, dryRun, userId,
                     result);
+
+                await Step("mappings",
+                    $"{mapping.ObjectTypeName}: {result.Created} created, {result.Updated} updated so far.");
             }
             catch (Exception ex)
             {
@@ -73,6 +88,8 @@ public partial class JiraIntegrationService
                 result.Messages.Add($"{mapping.ObjectTypeName}: {ex.Message}");
                 Logger.Warning(ex, "Importing Assets object type {Type} of connection {Connection} failed",
                     mapping.ObjectTypeName, connectionId);
+
+                await Step("mappings", $"{mapping.ObjectTypeName}: {ex.Message}");
             }
         }
 
@@ -84,7 +101,7 @@ public partial class JiraIntegrationService
             settingsRow.LastAssetsSyncAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
-            await RecordAssetImportAsync(connectionId, connection.Name, result);
+            await RecordAssetImportAsync(run!, result);
         }
 
         Logger.Information(
@@ -94,6 +111,10 @@ public partial class JiraIntegrationService
             result.Updated, result.Deactivated, result.Errors);
 
         return result;
+
+        // Local, so that the dry-run branch above does not have to be threaded through every call.
+        Task Step(string step, string message, int? processed = null) =>
+            run?.StepAsync(step, message, processed) ?? Task.CompletedTask;
     }
 
     private async Task ImportMappingAsync(AuditableContext db, IssueTrackerConnection connection,
@@ -647,36 +668,32 @@ public partial class JiraIntegrationService
             }).ToList();
     }
 
-    private async Task RecordAssetImportAsync(int connectionId, string connectionName,
-        AssetImportResult result)
+    /// <summary>
+    /// Settles the run's row and announces the outcome. Used to insert a whole already-finished row
+    /// after the fact, which is why an import in progress was indistinguishable from no import at all.
+    /// </summary>
+    private async Task RecordAssetImportAsync(IntegrationSyncRun run, AssetImportResult result)
     {
-        await using var db = DalService.GetContext();
+        var status = result.Errors == 0
+            ? IntegrationSyncStatus.Succeeded
+            : result.Created + result.Updated > 0
+                ? IntegrationSyncStatus.PartiallySucceeded
+                : IntegrationSyncStatus.Failed;
 
-        db.IntegrationSyncLogs.Add(new IntegrationSyncLog
+        var summary = Truncate(
+            $"{result.Examined} object(s) examined, {result.Created} created, {result.Updated} "
+            + $"updated, {result.Deactivated} retired."
+            + (result.Messages.Count == 0
+                ? ""
+                : " " + string.Join(" | ", result.Messages.Take(20))), 2000);
+
+        await run.CompleteAsync(status, summary, null, row =>
         {
-            Integration = IntegrationKind.JiraAssets,
-            ConnectionId = connectionId,
-            ConnectionName = connectionName,
-            StartedAt = DateTime.UtcNow,
-            FinishedAt = DateTime.UtcNow,
-            Status = result.Errors == 0
-                ? IntegrationSyncStatus.Succeeded
-                : result.Created + result.Updated > 0
-                    ? IntegrationSyncStatus.PartiallySucceeded
-                    : IntegrationSyncStatus.Failed,
-            CreatedCount = result.Created,
-            UpdatedCount = result.Updated,
-            SkippedCount = result.Unchanged,
-            FailedCount = result.Errors,
-            Summary = Truncate(
-                $"{result.Examined} object(s) examined, {result.Created} created, {result.Updated} "
-                + $"updated, {result.Deactivated} retired."
-                + (result.Messages.Count == 0
-                    ? ""
-                    : " " + string.Join(" | ", result.Messages.Take(20))), 2000)
+            row.CreatedCount = result.Created;
+            row.UpdatedCount = result.Updated;
+            row.SkippedCount = result.Unchanged;
+            row.FailedCount = result.Errors;
         });
-
-        await db.SaveChangesAsync();
     }
 
     /// <summary>

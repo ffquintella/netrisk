@@ -27,7 +27,8 @@ public class SecurityScorecardService(
     ISecretProtector protector,
     ISecretResolver resolver,
     ISecurityScorecardClient client,
-    IFindingIngestionService ingestion)
+    IFindingIngestionService ingestion,
+    IIntegrationSyncTracker tracker)
     : ServiceBase(logger, dalService), ISecurityScorecardService
 {
     /// <summary>Importer name the findings are recorded under, and their dedup identity.</summary>
@@ -154,7 +155,9 @@ public class SecurityScorecardService(
             connection = await LoadAsync(db, connectionId);
         }
 
-        var log = await BeginLogAsync(connection, ct);
+        // await using: a run that escapes without recording an outcome is settled by disposal
+        // rather than left Running until the ledger's reaper horizon — see IntegrationSyncRun.
+        await using var run = await BeginLogAsync(connection, ct);
 
         try
         {
@@ -166,23 +169,57 @@ public class SecurityScorecardService(
             var token = await resolver.ResolveAsync(connection.EncryptedApiToken, ct);
 
             // 4.5.2 — overall score and grade, then the ten factors.
+            await run.StepAsync("posture", $"Requesting the scorecard for {connection.Domain}.", ct: ct);
+
             var company = await client.GetCompanyAsync(connection, token, ct);
             var factors = await client.GetFactorsAsync(connection, token, ct);
 
+            await run.StepAsync("posture", "Scorecard and factors received.", factors.Count, ct);
+
             await SyncPostureAsync(connection, company, factors, result, ct);
+
+            await run.StepAsync("posture",
+                $"{result.PostureRowsWritten} posture row(s) written"
+                + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", ct: ct);
 
             // 4.5.3 — CVEs and active issues, both ingested as findings against the domain asset.
             var issues = new List<SecurityScorecardIssue>();
 
             if (connection.SyncVulnerabilities)
-                issues.AddRange(await client.GetVulnerabilitiesAsync(connection, token, ct));
+            {
+                var cves = await client.GetVulnerabilitiesAsync(connection, token, ct);
+                issues.AddRange(cves);
+                await run.StepAsync("cves", "Vulnerability records received.", cves.Count, ct);
+            }
+            else
+            {
+                await run.StepAsync("cves", "Skipped: the connection does not sync vulnerabilities.",
+                    ct: ct);
+            }
 
             if (connection.SyncIssues)
-                issues.AddRange(await client.GetIssuesAsync(connection, token, ct));
+            {
+                var active = await client.GetIssuesAsync(connection, token, ct);
+                issues.AddRange(active);
+                await run.StepAsync("issues", "Active issues received.", active.Count, ct);
+            }
+            else
+            {
+                await run.StepAsync("issues", "Skipped: the connection does not sync issues.", ct: ct);
+            }
 
-            if (issues.Count > 0) await IngestIssuesAsync(connection, issues, result, ct);
+            if (issues.Count > 0)
+            {
+                await run.StepAsync("ingestion", "Ingesting as findings.", issues.Count, ct);
 
-            await CompleteLogAsync(log, connection, result, null);
+                await IngestIssuesAsync(connection, issues, result, ct);
+
+                await run.StepAsync("ingestion",
+                    $"{result.FindingsCreated} finding(s) created, {result.FindingsUpdated} updated.",
+                    ct: ct);
+            }
+
+            await CompleteLogAsync(run, connection, result, null);
         }
         catch (SecretProtectionException ex)
         {
@@ -192,7 +229,7 @@ public class SecurityScorecardService(
             Logger.Error(ex, "SecurityScorecard sync for connection {Connection} could not read its "
                              + "API token", connection.Name);
 
-            await CompleteLogAsync(log, connection, result, ex.Message);
+            await CompleteLogAsync(run, connection, result, ex.Message);
 
             // Rethrown, unlike every other failure, and for the same reason Vision One rethrows it:
             // an undecryptable credential is a state the operator has to fix by re-entering the
@@ -207,7 +244,7 @@ public class SecurityScorecardService(
 
             Logger.Error(ex, "SecurityScorecard sync for connection {Connection} failed", connection.Name);
 
-            await CompleteLogAsync(log, connection, result, ex.Message);
+            await CompleteLogAsync(run, connection, result, ex.Message);
         }
 
         return result;
@@ -610,25 +647,21 @@ public class SecurityScorecardService(
     }
 
     /// <summary>
-    /// Claims the connection and writes its Running row, refusing when a run is already in flight —
-    /// see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather than in the
-    /// caller.
+    /// Claims the connection, writes its Running row and announces the start, refusing when a run is
+    /// already in flight — see <see cref="IntegrationSyncLedger"/> for why that guard lives here rather
+    /// than in the caller.
     /// </summary>
-    private async Task<IntegrationSyncLog> BeginLogAsync(SecurityScorecardConnection connection,
-        CancellationToken ct = default)
-    {
-        await using var db = DalService.GetContext();
+    private Task<IntegrationSyncRun> BeginLogAsync(SecurityScorecardConnection connection,
+        CancellationToken ct = default) =>
+        tracker.BeginAsync(IntegrationKind.SecurityScorecard, connection.Id, connection.Name,
+            ProviderName, singleFlight: true, ct);
 
-        return await IntegrationSyncLedger.ClaimAsync(db, IntegrationKind.SecurityScorecard,
-            connection.Id, connection.Name, ProviderName, DateTime.UtcNow, ct);
-    }
-
-    private async Task CompleteLogAsync(IntegrationSyncLog log, SecurityScorecardConnection connection,
+    private async Task CompleteLogAsync(IntegrationSyncRun run, SecurityScorecardConnection connection,
         PostureSyncResult result, string? error)
     {
         await using var db = DalService.GetContext();
 
-        var stored = await db.IntegrationSyncLogs.FirstOrDefaultAsync(l => l.Id == log.Id);
+        var stored = await db.IntegrationSyncLogs.FirstOrDefaultAsync(l => l.Id == run.LogId);
 
         var status = error != null
             ? IntegrationSyncStatus.Failed
@@ -648,6 +681,13 @@ public class SecurityScorecardService(
                 + $"{result.FindingsUpdated} updated"
                 + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", 2000);
             stored.ErrorMessage = Truncate(error, 2000);
+
+            // Noted rather than stepped, then drained into the row this method is about to save: the
+            // settle below writes the log row and the connection row in one SaveChanges, and a step
+            // that flushed on its own would be a second write against the row already loaded here.
+            run.Note("finished", $"Run ended {status}." + (error == null ? "" : " " + error));
+
+            stored.ProgressLog = run.DrainInto(stored.ProgressLog);
         }
 
         var storedConnection = await db.SecurityScorecardConnections
@@ -674,8 +714,12 @@ public class SecurityScorecardService(
             // IntegrationSyncLedger is what settles it.
             Logger.Error(ex, "The SecurityScorecard sync for connection {Connection} finished {Status} "
                              + "but its sync-log row {Log} could not be updated",
-                connection.Name, status, log.Id);
+                connection.Name, status, run.LogId);
         }
+
+        // After the settle, so a GUI woken by the notification reads the finished row and not the
+        // Running one. Idempotent, because both the success branch and each catch reach this method.
+        await run.NotifyFinishedAsync(status, stored?.Summary, error);
     }
 
     private static async Task<SecurityScorecardConnection> LoadAsync(AuditableContext db, int id) =>

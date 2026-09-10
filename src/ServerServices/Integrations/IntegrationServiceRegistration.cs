@@ -67,6 +67,18 @@ public static class IntegrationServiceRegistration
         services.AddTransient<ISecretVaultService, SecretVaultService>();
         services.AddTransient<ISecretResolver, SecretResolver>();
 
+        // Sync run tracking: the progress trail and the start/finish notifications, shared by every
+        // integration that syncs. In this file rather than per-host for the reason the file exists —
+        // the notifier is what makes a *scheduled* sync visible in the GUI, so a job host that lacked
+        // it would leave exactly the runs nobody watched unannounced.
+        //
+        // IMessagesService is TryAdd because the API and the job host each register their own; it is
+        // named here at all because the notifier needs it and the console client composes this graph
+        // without it.
+        services.TryAddTransient<IMessagesService, MessagesService>();
+        services.AddTransient<IIntegrationSyncNotifier, IntegrationSyncNotifier>();
+        services.AddTransient<IIntegrationSyncTracker, IntegrationSyncTracker>();
+
         // 4.1 — notification channels, dispatch and subscriptions.
         services.AddTransient<INotificationChannel, EmailNotificationChannel>();
         services.AddTransient<INotificationChannel, SlackNotificationChannel>();

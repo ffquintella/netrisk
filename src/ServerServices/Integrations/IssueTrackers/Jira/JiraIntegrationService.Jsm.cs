@@ -41,6 +41,13 @@ public partial class JiraIntegrationService
 
         var typeFilter = ParseTypeFilter(settings.RequestTypeFilter);
 
+        // singleFlight is false: this mirror could run concurrently with itself before the run tracker
+        // existed, and refusing it now would be a behaviour change dressed up as a progress trail.
+        await using var run = await tracker.BeginAsync(IntegrationKind.JiraServiceManagement,
+            connectionId, connection.Name, "Jira Service Management", singleFlight: false);
+
+        await run.StepAsync("queues", "Reading the selected queues.", queues.Count);
+
         // Deduplicated across queues before any request is fetched. Two queues in a service desk
         // routinely overlap, and mirroring an issue twice in one pass costs two API calls per SLA read
         // to write the same row.
@@ -60,6 +67,9 @@ public partial class JiraIntegrationService
             {
                 result.Errors++;
                 result.Messages.Add($"Queue {queue.QueueName ?? queue.QueueId.ToString()}: {ex.Message}");
+
+                await run.StepAsync("queues",
+                    $"Queue {queue.QueueName ?? queue.QueueId.ToString()}: {ex.Message}");
             }
         }
 
@@ -72,6 +82,8 @@ public partial class JiraIntegrationService
                      .Select(l => l.IssueKey)
                      .ToListAsync())
             keys.Add(linked);
+
+        await run.StepAsync("requests", "Mirroring requests.", keys.Count);
 
         foreach (var key in keys)
         {
@@ -108,15 +120,22 @@ public partial class JiraIntegrationService
                 result.Messages.Add($"{key}: {ex.Message}");
                 Logger.Warning(ex, "Mirroring {Issue} from connection {Connection} failed", key,
                     connectionId);
+
+                await run.StepAsync("requests", $"{key}: {ex.Message}");
             }
         }
+
+        await run.StepAsync("requests",
+            $"{result.RequestsExamined} request(s) examined, {result.RequestsCreated} created, "
+            + $"{result.RequestsUpdated} updated, {result.SlaCyclesRecorded} SLA cycle(s), "
+            + $"{result.Breaches} new breach(es).");
 
         var settingsRow = await db.JiraConnectionSettings.FirstAsync(s => s.ConnectionId == connectionId);
         settingsRow.LastJsmSyncAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
-        await RecordJsmSyncAsync(connectionId, connection.Name, result);
+        await RecordJsmSyncAsync(run, result);
 
         Logger.Information(
             "JSM sync of connection {Connection} by user {User}: {Examined} request(s), "
@@ -349,34 +368,31 @@ public partial class JiraIntegrationService
                 filter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                 StringComparer.OrdinalIgnoreCase);
 
-    private async Task RecordJsmSyncAsync(int connectionId, string connectionName, JsmSyncResult result)
+    /// <summary>
+    /// Settles the run's row and announces the outcome. Used to insert a whole already-finished row
+    /// after the fact, which is why a mirror in progress was indistinguishable from no mirror at all.
+    /// </summary>
+    private async Task RecordJsmSyncAsync(IntegrationSyncRun run, JsmSyncResult result)
     {
-        await using var db = DalService.GetContext();
+        var status = result.Errors == 0
+            ? IntegrationSyncStatus.Succeeded
+            : result.RequestsExamined > 0
+                ? IntegrationSyncStatus.PartiallySucceeded
+                : IntegrationSyncStatus.Failed;
 
-        db.IntegrationSyncLogs.Add(new IntegrationSyncLog
+        var summary = Truncate(
+            $"{result.QueuesExamined} queue(s), {result.RequestsExamined} request(s), "
+            + $"{result.SlaCyclesRecorded} SLA cycle(s), {result.Breaches} new breach(es)."
+            + (result.Messages.Count == 0
+                ? ""
+                : " " + string.Join(" | ", result.Messages.Take(20))), 2000);
+
+        await run.CompleteAsync(status, summary, null, row =>
         {
-            Integration = IntegrationKind.JiraServiceManagement,
-            ConnectionId = connectionId,
-            ConnectionName = connectionName,
-            StartedAt = DateTime.UtcNow,
-            FinishedAt = DateTime.UtcNow,
-            Status = result.Errors == 0
-                ? IntegrationSyncStatus.Succeeded
-                : result.RequestsExamined > 0
-                    ? IntegrationSyncStatus.PartiallySucceeded
-                    : IntegrationSyncStatus.Failed,
-            CreatedCount = result.RequestsCreated,
-            UpdatedCount = result.RequestsUpdated,
-            FailedCount = result.Errors,
-            Summary = Truncate(
-                $"{result.QueuesExamined} queue(s), {result.RequestsExamined} request(s), "
-                + $"{result.SlaCyclesRecorded} SLA cycle(s), {result.Breaches} new breach(es)."
-                + (result.Messages.Count == 0
-                    ? ""
-                    : " " + string.Join(" | ", result.Messages.Take(20))), 2000)
+            row.CreatedCount = result.RequestsCreated;
+            row.UpdatedCount = result.RequestsUpdated;
+            row.FailedCount = result.Errors;
         });
-
-        await db.SaveChangesAsync();
     }
 
     private static JiraServiceRequestView ToView(JiraServiceRequest request) => new()

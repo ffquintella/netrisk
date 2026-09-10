@@ -111,6 +111,7 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrDomain { get; } = Localizer["Domain"];
     public string StrFactorHistory { get; } = Localizer["FactorHistory"];
     public string StrSyncLog { get; } = Localizer["SyncLog"];
+    public string StrSyncProgress { get; } = Localizer["SyncProgress"];
     public string StrTrendMicro { get; } = Localizer["TrendMicroVisionOne"];
 
     // Secret vaults.
@@ -517,6 +518,33 @@ public class IntegrationsViewModel : ViewModelBase
     public ObservableCollection<SecurityScorecardFactor> ScorecardHistory { get; } = new();
 
     public ObservableCollection<IntegrationSyncLog> SyncLog { get; } = new();
+
+    private IntegrationSyncLog? _selectedSyncLog;
+
+    /// <summary>The run whose progress trail the panel below the log is showing.</summary>
+    public IntegrationSyncLog? SelectedSyncLog
+    {
+        get => _selectedSyncLog;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedSyncLog, value);
+            this.RaisePropertyChanged(nameof(SelectedSyncLogProgress));
+        }
+    }
+
+    /// <summary>
+    /// The selected run's progress trail, or the prompt to pick one.
+    ///
+    /// A run that is still going has a trail and no summary, which is the case this panel exists for:
+    /// the log's own columns can only say a sync is Running, and "Running" is the least useful thing to
+    /// know about a sync that has been running for twenty minutes.
+    /// </summary>
+    public string SelectedSyncLogProgress =>
+        SelectedSyncLog == null
+            ? Localizer["SyncProgressEmptyMSG"]
+            : string.IsNullOrWhiteSpace(SelectedSyncLog.ProgressLog)
+                ? Localizer["SyncProgressNoneMSG"]
+                : SelectedSyncLog.ProgressLog!;
 
     private TrendMicroConnectionView? _selectedTrendMicro;
     public TrendMicroConnectionView? SelectedTrendMicro
@@ -1475,6 +1503,8 @@ public class IntegrationsViewModel : ViewModelBase
     {
         if (SelectedIssueTracker == null) return;
 
+        Toasts.Info(string.Format(Localizer["IssueSyncStartedMSG"], SelectedIssueTracker.Name));
+
         await WithBusyAsync(async () =>
         {
             try
@@ -1925,6 +1955,11 @@ public class IntegrationsViewModel : ViewModelBase
     {
         if (SelectedTrendMicro == null) return;
 
+        // Announced before the call, not after. A posture sync is minutes long, and the busy indicator
+        // alone does not say what is busy — the finish toast used to be the first and only sign that a
+        // click had done anything at all.
+        Toasts.Info(string.Format(Localizer["PostureSyncStartedMSG"], SelectedTrendMicro.Name));
+
         await WithBusyAsync(async () =>
         {
             try
@@ -2005,6 +2040,8 @@ public class IntegrationsViewModel : ViewModelBase
     private async Task SyncScorecardAsync()
     {
         if (SelectedScorecard == null) return;
+
+        Toasts.Info(string.Format(Localizer["ScorecardSyncStartedMSG"], SelectedScorecard.Name));
 
         await WithBusyAsync(async () =>
         {

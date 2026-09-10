@@ -700,6 +700,9 @@ public partial class NRDbContext
             entity.Property(e => e.FailedCount).HasColumnName("failed_count").HasColumnType("int(11)");
             entity.Property(e => e.Summary).HasColumnName("summary").HasColumnType("text");
             entity.Property(e => e.ErrorMessage).HasColumnName("error_message").HasColumnType("text");
+            // longtext, not text: `text` caps at 64KB and a progress trail is the one column here that
+            // grows with the size of the tenant rather than with the shape of the schema.
+            entity.Property(e => e.ProgressLog).HasColumnName("progress_log").HasColumnType("longtext");
 
             entity.HasIndex(e => new { e.Integration, e.StartedAt }, "idx_integration_sync_logs_integration_started");
         });

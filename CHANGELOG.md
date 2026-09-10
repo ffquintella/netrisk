@@ -16,6 +16,56 @@ This release includes new features and improvements.
 
 
 
+## [2.21.1] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+- **Integration synchronizations announce their start and finish, and record a step-by-step progress
+  trail.** A Trend Micro Vision One sync is a long-running process and the product had no way to say
+  so: the desktop client showed a busy spinner, the only sign it had finished was a toast the
+  operator had usually walked away from, and a *scheduled* run — the daily job — was invisible
+  entirely. The sync-log row could say `Running`, which is the least useful thing to know about a
+  sync that has been running for twenty minutes.
+
+  Every integration that synchronizes now opens a tracked run: Vision One, SecurityScorecard, the
+  issue-tracker poll, the Jira Service Management mirror and the Jira Assets import. Each one writes
+  an `information` notification to the notification centre when it starts and an
+  `information`/`warning`/`error` one when it ends, carrying the counts or the failure reason. The
+  channel is the existing Jobs message chat, which the client's notification badge already polls, so
+  a scheduled run reaches a GUI that was not watching when it began. Recipients are the enabled
+  administrators, the same audience the SLA digest already falls back to. A manual sync additionally
+  toasts on click rather than only on completion.
+
+  The trail is stored on the run's own sync-log row (new `integration_sync_logs.progress_log`) as one
+  timestamped `step: message` line per step — inventory requested, N devices received, risk scores
+  rolled up, CVEs ingested, steps skipped and *why* they were skipped — and is appended while the run
+  is still going, so it can be read mid-run. Administration → Integrations → Posture providers now
+  shows the selected run's trail under the synchronization log, selectable so a failure can be pasted
+  into a ticket. Lines are buffered and flushed in batches rather than written per step, and the
+  trail is capped at 256 KB keeping its beginning and its end, so it can never be the reason the
+  write that records the run's outcome fails.
+
+### Changed
+
+- **The issue-tracker poll, the Jira Service Management mirror and the Jira Assets import now record
+  a synchronization row when they start rather than after they finish.** All three used to insert a
+  single already-finished row with `started_at` and `finished_at` both set to "now", so a run in
+  progress was indistinguishable from no run at all, and a run that died half-way left no trace. They
+  now claim a `Running` row up front and settle it at the end. None of them takes on the
+  single-flight restriction the two posture integrations have, so concurrency is unchanged. A Jira
+  Assets *dry run* still records nothing, as before.
+
+### Fixed
+
+- **A synchronization interrupted by an unexpected error no longer leaves its row `Running` until the
+  two-hour reaper horizon.** A tracked run settles itself as `Failed` on disposal if it escaped
+  without recording an outcome, which also covers the escape paths the services' own error handling
+  does not see.
+
+
+
 ## [2.21.0] - 2026-09-10
 
 This release includes new features and improvements.

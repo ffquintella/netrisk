@@ -2568,6 +2568,24 @@
     <data name="CapturedAt" xml:space="preserve">
         <value>Capturado em</value>
     </data>
+    <data name="SyncProgressNoneMSG" xml:space="preserve">
+        <value>Esta execução não registrou detalhes de progresso.</value>
+    </data>
+    <data name="SyncProgress" xml:space="preserve">
+        <value>Progresso da execução</value>
+    </data>
+    <data name="SyncProgressEmptyMSG" xml:space="preserve">
+        <value>Selecione uma execução de sincronização para ver seu progresso.</value>
+    </data>
+    <data name="PostureSyncStartedMSG" xml:space="preserve">
+        <value>Sincronização do Vision One iniciada para {0}. Isso pode demorar — a central de notificações registra o término.</value>
+    </data>
+    <data name="ScorecardSyncStartedMSG" xml:space="preserve">
+        <value>Sincronização do SecurityScorecard iniciada para {0}. Isso pode demorar — a central de notificações registra o término.</value>
+    </data>
+    <data name="IssueSyncStartedMSG" xml:space="preserve">
+        <value>Sincronização do rastreador de issues iniciada para {0}. Isso pode demorar — a central de notificações registra o término.</value>
+    </data>
     <data name="SyncLog" xml:space="preserve">
         <value>Registro de sincronização</value>
     </data>

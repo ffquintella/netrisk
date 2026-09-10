@@ -31,7 +31,8 @@ public partial class JiraIntegrationService(
     IIssueTrackerProviderRegistry registry,
     IEntitiesService entities,
     INotificationEventPublisher notifications,
-    Microsoft.Extensions.Configuration.IConfiguration configuration)
+    Microsoft.Extensions.Configuration.IConfiguration configuration,
+    IIntegrationSyncTracker tracker)
     : ServiceBase(logger, dalService), IJiraIntegrationService
 {
     /// <summary>

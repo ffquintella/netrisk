@@ -23,7 +23,8 @@ public class IssueTrackerService(
     IIssueTrackerProviderRegistry registry,
     IFindingLifecycleService lifecycle,
     INotificationEventPublisher notifications,
-    Microsoft.Extensions.Configuration.IConfiguration configuration)
+    Microsoft.Extensions.Configuration.IConfiguration configuration,
+    IIntegrationSyncTracker tracker)
     : ServiceBase(logger, dalService), IIssueTrackerService
 {
     /// <summary>
@@ -450,43 +451,74 @@ public class IssueTrackerService(
             .Where(l => l.ConnectionId == connectionId)
             .ToListAsync();
 
-        foreach (var link in links)
+        // Opened after the credential resolves and before the first provider call, so the run row
+        // covers exactly the part that takes time. singleFlight is false: this poll ran concurrently
+        // with itself before the run tracker existed, and refusing it now would be a behaviour change
+        // dressed up as a progress trail.
+        await using var run = await tracker.BeginAsync(IntegrationKind.IssueTracker, connection.Id,
+            connection.Name, connection.Provider.ToString(), singleFlight: false);
+
+        try
         {
-            result.Examined++;
+            await run.StepAsync("poll", $"Polling {connection.Provider} for linked issues.", links.Count);
 
-            try
+            foreach (var link in links)
             {
-                var issue = await provider.GetIssueAsync(connection, token, link.IssueKey);
+                result.Examined++;
 
-                if (issue == null)
+                try
                 {
-                    // Recorded rather than deleted: a deleted ticket is something the operator should
-                    // see, and unlinking on their behalf loses the evidence that it ever existed.
-                    link.SyncError = "The issue no longer exists in the tracker.";
+                    var issue = await provider.GetIssueAsync(connection, token, link.IssueKey);
+
+                    if (issue == null)
+                    {
+                        // Recorded rather than deleted: a deleted ticket is something the operator should
+                        // see, and unlinking on their behalf loses the evidence that it ever existed.
+                        link.SyncError = "The issue no longer exists in the tracker.";
+                        link.LastSyncAt = DateTime.UtcNow;
+                        result.Errors++;
+
+                        await run.StepAsync("poll", $"{link.IssueKey}: the issue no longer exists.");
+                        continue;
+                    }
+
+                    var applied = await ApplyIssueStateAsync(db, connection, link, issue, userId);
+
+                    if (applied.Changed) result.Changed++;
+                    if (applied.Applied) result.Applied++;
+                    if (applied.Conflict) result.Conflicts++;
+                    if (applied.Message != null) result.Messages.Add(applied.Message);
+
+                    // Only the links that did something get a line. One line per examined link buries
+                    // the handful that mattered under a few thousand that did not.
+                    if (applied.Conflict)
+                        await run.StepAsync("poll", $"{link.IssueKey}: conflict — {applied.Message}");
+                    else if (applied.Applied)
+                        await run.StepAsync("poll", $"{link.IssueKey}: {issue.Status} applied.");
+                }
+                catch (Exception ex)
+                {
+                    link.SyncError = Truncate(ex.Message, 1000);
                     link.LastSyncAt = DateTime.UtcNow;
                     result.Errors++;
-                    continue;
+                    result.Messages.Add($"{link.IssueKey}: {ex.Message}");
+
+                    await run.StepAsync("poll", $"{link.IssueKey}: {ex.Message}");
                 }
-
-                var applied = await ApplyIssueStateAsync(db, connection, link, issue, userId);
-
-                if (applied.Changed) result.Changed++;
-                if (applied.Applied) result.Applied++;
-                if (applied.Conflict) result.Conflicts++;
-                if (applied.Message != null) result.Messages.Add(applied.Message);
             }
-            catch (Exception ex)
-            {
-                link.SyncError = Truncate(ex.Message, 1000);
-                link.LastSyncAt = DateTime.UtcNow;
-                result.Errors++;
-                result.Messages.Add($"{link.IssueKey}: {ex.Message}");
-            }
+
+            await db.SaveChangesAsync();
+
+            await RecordSyncAsync(run, result);
         }
-
-        await db.SaveChangesAsync();
-
-        await RecordSyncAsync(IntegrationKind.IssueTracker, connection.Id, connection.Name, result);
+        catch (Exception ex)
+        {
+            // The per-link failures are caught above, so reaching here means the poll itself broke —
+            // most likely the SaveChanges. Settling the row before rethrowing is what keeps it from
+            // sitting Running until the reaper's two-hour horizon.
+            await run.CompleteAsync(IntegrationSyncStatus.Failed, null, ex.Message);
+            throw;
+        }
 
         return result;
     }
@@ -1020,33 +1052,33 @@ public class IssueTrackerService(
         return host?.HostName ?? host?.Fqdn ?? host?.Ip;
     }
 
-    private async Task RecordSyncAsync(IntegrationKind kind, int connectionId, string connectionName,
-        IssueSyncResult result)
+    /// <summary>
+    /// Settles the run's row and announces the outcome.
+    ///
+    /// This used to insert a whole already-finished row after the fact, which is why a poll in progress
+    /// was indistinguishable from no poll at all — <c>started_at</c> and <c>finished_at</c> were both
+    /// "now", so the sync-log screen could not show a run until it was over and could never show one
+    /// that died half-way.
+    /// </summary>
+    private async Task RecordSyncAsync(IntegrationSyncRun run, IssueSyncResult result)
     {
-        await using var db = DalService.GetContext();
+        var status = result.Errors == 0
+            ? IntegrationSyncStatus.Succeeded
+            : result.Applied > 0 || result.Changed > 0
+                ? IntegrationSyncStatus.PartiallySucceeded
+                : IntegrationSyncStatus.Failed;
 
-        db.IntegrationSyncLogs.Add(new IntegrationSyncLog
+        var summary = Truncate(
+            $"{result.Examined} link(s) examined, {result.Changed} changed, {result.Applied} applied, "
+            + $"{result.Conflicts} conflict(s)."
+            + (result.Messages.Count == 0 ? "" : " " + string.Join(" | ", result.Messages.Take(20))), 2000);
+
+        await run.CompleteAsync(status, summary, null, row =>
         {
-            Integration = kind,
-            ConnectionId = connectionId,
-            ConnectionName = connectionName,
-            StartedAt = DateTime.UtcNow,
-            FinishedAt = DateTime.UtcNow,
-            Status = result.Errors == 0
-                ? IntegrationSyncStatus.Succeeded
-                : result.Applied > 0 || result.Changed > 0
-                    ? IntegrationSyncStatus.PartiallySucceeded
-                    : IntegrationSyncStatus.Failed,
-            UpdatedCount = result.Applied,
-            SkippedCount = result.Examined - result.Changed,
-            FailedCount = result.Errors,
-            Summary = Truncate(
-                $"{result.Examined} link(s) examined, {result.Changed} changed, {result.Applied} applied, "
-                + $"{result.Conflicts} conflict(s)."
-                + (result.Messages.Count == 0 ? "" : " " + string.Join(" | ", result.Messages.Take(20))), 2000)
+            row.UpdatedCount = result.Applied;
+            row.SkippedCount = result.Examined - result.Changed;
+            row.FailedCount = result.Errors;
         });
-
-        await db.SaveChangesAsync();
     }
 
     private IssueTrackerConnectionView ToView(IssueTrackerConnection connection) => new()
