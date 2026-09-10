@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using API.Controllers;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Model.Plugins;
@@ -146,4 +150,102 @@ public class PluginsControllerTest : BaseControllerTest
         Assert.IsType<NotFoundResult>(result);
         _ = _pluginsService.DidNotReceive().SetPluginEnabledStatusAsync("ghostPlugin", Arg.Any<bool>());
     }
+
+    #region UPLOAD
+
+    /// <summary>
+    /// An <see cref="IFormFile"/> over an in-memory buffer. The controller only opens the stream and
+    /// reads the name and length, so this stays a stub rather than a mock of the whole interface.
+    /// </summary>
+    private sealed class InMemoryFormFile(string fileName, byte[] content) : IFormFile
+    {
+        public string ContentType { get; set; } = "application/zip";
+        public string ContentDisposition { get; set; } = string.Empty;
+        public IHeaderDictionary Headers { get; set; } = new HeaderDictionary();
+        public long Length => content.Length;
+        public string Name => "file";
+        public string FileName => fileName;
+
+        public Stream OpenReadStream() => new MemoryStream(content);
+        public void CopyTo(Stream target) => target.Write(content);
+
+        public Task CopyToAsync(Stream target, CancellationToken cancellationToken = default) =>
+            target.WriteAsync(content, cancellationToken).AsTask();
+    }
+
+    [Fact]
+    public async Task TestUploadInstallsThePackage()
+    {
+        _pluginsService.InstallPluginPackageAsync(Arg.Any<Stream>(), "MyVault.Plugin.zip")
+            .Returns(new PluginInstallResult
+            {
+                Success = true,
+                PackageName = "MyVault.Plugin",
+                Message = "Installed MyVault.Plugin.",
+                LoadedPlugins = ["MyVault"]
+            });
+
+        var file = new InMemoryFormFile("MyVault.Plugin.zip", Encoding.UTF8.GetBytes("PK-not-really"));
+
+        var result = await _controller.Upload(file);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<PluginInstallResult>(ok.Value);
+
+        Assert.True(value.Success);
+        Assert.Equal("MyVault.Plugin", value.PackageName);
+        Assert.Equal(["MyVault"], value.LoadedPlugins);
+    }
+
+    [Fact]
+    public async Task TestUploadWithNoFileIsRejectedWithoutTouchingTheService()
+    {
+        var result = await _controller.Upload(null);
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var value = Assert.IsType<PluginInstallResult>(bad.Value);
+
+        Assert.False(value.Success);
+        _ = _pluginsService.DidNotReceive()
+            .InstallPluginPackageAsync(Arg.Any<Stream>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task TestUploadWithAnEmptyFileIsRejectedWithoutTouchingTheService()
+    {
+        var result = await _controller.Upload(new InMemoryFormFile("empty.zip", []));
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        _ = _pluginsService.DidNotReceive()
+            .InstallPluginPackageAsync(Arg.Any<Stream>(), Arg.Any<string>());
+    }
+
+    /// <summary>
+    /// A package the installer refuses comes back as a 400 that still carries the result, because
+    /// its <c>Message</c> ("no *Plugin.dll at the top level") is the only thing that tells the
+    /// operator what to change. A bare status code would throw that away.
+    /// </summary>
+    [Fact]
+    public async Task TestUploadReturnsTheRefusalReason()
+    {
+        _pluginsService.InstallPluginPackageAsync(Arg.Any<Stream>(), "notaplugin.zip")
+            .Returns(new PluginInstallResult
+            {
+                Success = false,
+                PackageName = "notaplugin",
+                Message = "The package has no *Plugin.dll at its top level."
+            });
+
+        var file = new InMemoryFormFile("notaplugin.zip", Encoding.UTF8.GetBytes("junk"));
+
+        var result = await _controller.Upload(file);
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var value = Assert.IsType<PluginInstallResult>(bad.Value);
+
+        Assert.False(value.Success);
+        Assert.Contains("Plugin.dll", value.Message);
+    }
+
+    #endregion
 }

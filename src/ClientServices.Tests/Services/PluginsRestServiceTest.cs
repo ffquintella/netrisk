@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
@@ -18,7 +21,7 @@ using Xunit;
 namespace ClientServices.Tests.Services;
 
 [TestSubject(typeof(PluginsRestService))]
-public class PluginsRestServiceTest : BaseServiceTest
+public class PluginsRestServiceTest : BaseServiceTest, IDisposable
 {
     private readonly StubRestBackend _backend = new();
     private readonly IAuthenticationService _authentication = Substitute.For<IAuthenticationService>();
@@ -185,5 +188,117 @@ public class PluginsRestServiceTest : BaseServiceTest
         _backend.OnTransportFailure(Method.Get, "/Plugins/reload");
 
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.RequestPluginsReloadAsync());
+    }
+
+    // ---------------- UploadPluginAsync ----------------
+
+    private readonly List<string> _tempFiles = [];
+
+    public void Dispose()
+    {
+        foreach (var file in _tempFiles)
+        {
+            try
+            {
+                if (File.Exists(file)) File.Delete(file);
+            }
+            catch (IOException)
+            {
+                // A leaked temp file is not a test failure.
+            }
+        }
+
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>A real file on disk, because RestSharp's AddFile takes a path and reads it.</summary>
+    private string TempPackage(string name)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"nr-pkg-{Guid.NewGuid():N}-{name}");
+        _tempFiles.Add(path);
+
+        using var stream = File.Create(path);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
+        archive.CreateEntry("MyVault.Plugin.dll");
+
+        return path;
+    }
+
+    [Fact]
+    public async Task TestUploadPluginAsync()
+    {
+        _backend.OnPost("/Plugins/upload", new PluginInstallResult
+        {
+            Success = true,
+            PackageName = "MyVault.Plugin",
+            Message = "Installed MyVault.Plugin.",
+            LoadedPlugins = ["MyVault"]
+        });
+
+        var result = await _service.UploadPluginAsync(TempPackage("MyVault.Plugin.zip"));
+
+        Assert.True(result.Success);
+        Assert.Equal("MyVault.Plugin", result.PackageName);
+        Assert.Equal("POST /Plugins/upload", _backend.LastRequest.ToString());
+    }
+
+    /// <summary>
+    /// The server refuses a package with a 400 whose body says why. That message is the whole value
+    /// of the response — it names what the operator has to change — so the service must read the
+    /// body rather than turning the status code into a generic failure.
+    /// </summary>
+    [Fact]
+    public async Task TestUploadPluginAsyncReturnsTheServersRefusalReason()
+    {
+        _backend.OnPost("/Plugins/upload", new PluginInstallResult
+        {
+            Success = false,
+            PackageName = "notaplugin",
+            Message = "The package has no *Plugin.dll at its top level."
+        }, HttpStatusCode.BadRequest);
+
+        var result = await _service.UploadPluginAsync(TempPackage("notaplugin.zip"));
+
+        Assert.False(result.Success);
+        Assert.Contains("Plugin.dll", result.Message);
+    }
+
+    [Fact]
+    public async Task TestUploadPluginAsyncReportsAFailureWithNoBody()
+    {
+        _backend.OnStatus(Method.Post, "/Plugins/upload", HttpStatusCode.InternalServerError);
+
+        var result = await _service.UploadPluginAsync(TempPackage("MyVault.Plugin.zip"));
+
+        Assert.False(result.Success);
+        Assert.False(string.IsNullOrWhiteSpace(result.Message));
+    }
+
+    /// <summary>
+    /// The realistic expired-session case: a plain 401 response. It matters separately from the
+    /// transport-failure one below because this client does not throw on a non-2xx — the token
+    /// discard has to happen on the response path or it does not happen at all.
+    /// </summary>
+    [Fact]
+    public async Task TestUploadPluginAsyncDiscardsTheTokenOnAnUnauthorizedResponse()
+    {
+        _backend.OnStatus(Method.Post, "/Plugins/upload", HttpStatusCode.Unauthorized);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() =>
+            _service.UploadPluginAsync(TempPackage("MyVault.Plugin.zip")));
+
+        _authentication.Received(1).DiscardAuthenticationToken();
+    }
+
+    [Fact]
+    public async Task TestUploadPluginAsyncDiscardsTheTokenOnUnauthorized()
+    {
+        _backend.OnTransportFailure(Method.Post, "/Plugins/upload",
+            new HttpRequestException("unauthorized", null, HttpStatusCode.Unauthorized));
+
+        await Assert.ThrowsAsync<RestComunicationException>(() =>
+            _service.UploadPluginAsync(TempPackage("MyVault.Plugin.zip")));
+
+        _authentication.Received(1).DiscardAuthenticationToken();
     }
 }

@@ -20,6 +20,12 @@
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Text="{Binding StrTitle}" FontSize="24" Margin="10" Classes="header"/>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 3 10 3">
+            <Button Margin=" 0 0 5 0" Classes="detailButton"
+                    IsEnabled="{Binding IsNotUploading}"
+                    ToolTip.Tip="{Binding StrUploadPlugin}"
+                    Command="{Binding UploadPluginCommand}">
+                <avalonia:MaterialIcon Kind="PackageUp"  />
+            </Button>
             <Button Margin=" 0 0 0 0" Classes="detailButton"
                     Command="{Binding ReloadPluginsCommand}">
                 <avalonia:MaterialIcon Kind="Reload"  />

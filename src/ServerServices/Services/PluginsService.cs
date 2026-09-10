@@ -1,11 +1,14 @@
 using Contracts;
 using Contracts.Secrets;
+using System.IO.Compression;
 using McMaster.NETCore.Plugins;
 using Model.Plugins;
 using Model.Services;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Plugins;
 using ServerServices.Security;
+using Tools.Security;
 
 namespace ServerServices.Services;
 
@@ -376,6 +379,187 @@ public class PluginsService: ServiceBase, IPluginsService
         }
 
         return found;
+    }
+
+    /// <summary>
+    /// The host's plugins root — the directory whose subdirectories each hold one plugin.
+    /// </summary>
+    private static string PluginsRoot => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+
+    public async Task<PluginInstallResult> InstallPluginPackageAsync(Stream package, string fileName)
+    {
+        var packageName = PluginPackageInstaller.DerivePackageName(fileName);
+
+        if (packageName is null)
+            return Failure(string.Empty,
+                $"'{fileName}' does not give a usable plugin directory name. Rename the package using " +
+                "letters, digits, dashes and underscores.");
+
+        // The upload is buffered to disk before anything is inspected. ZipArchive needs a seekable
+        // stream, and a request body is not one; buffering also puts a hard ceiling on the upload
+        // before the archive gets a say in how big it claims to be.
+        var tempFile = Path.Combine(Path.GetTempPath(), $"netrisk-plugin-{Guid.NewGuid():N}.zip");
+
+        try
+        {
+            await using (var buffer = File.Create(tempFile))
+            {
+                var copied = await CopyBoundedAsync(package, buffer, PluginPackageInstaller.MaxPackageBytes);
+
+                if (copied is null)
+                    return Failure(packageName,
+                        $"The package is larger than {PluginPackageInstaller.MaxPackageBytes / (1024 * 1024)} MB.");
+
+                if (copied == 0)
+                    return Failure(packageName, "The uploaded file is empty.");
+            }
+
+            using var archive = OpenArchive(tempFile, out var openError);
+
+            if (archive is null)
+                return Failure(packageName, openError!);
+
+            var validation = PluginPackageInstaller.Validate(PluginPackageInstaller.Describe(archive));
+
+            if (!validation.IsValid)
+                return Failure(packageName, validation.Error!);
+
+            var pluginsRoot = PluginsRoot;
+            Directory.CreateDirectory(pluginsRoot);
+
+            var targetDirectory = SafePathTool.CombineWithin(pluginsRoot, packageName);
+            var replaced = Directory.Exists(targetDirectory);
+
+            // A replacement is staged, not overwritten in place: if extraction dies half-way the
+            // installation would otherwise be left with a directory holding half of one version of
+            // the plugin and half of another, which loads and misbehaves rather than failing.
+            var backup = replaced
+                ? Path.Combine(Path.GetTempPath(), $"netrisk-plugin-backup-{Guid.NewGuid():N}")
+                : null;
+
+            if (backup is not null) Directory.Move(targetDirectory, backup);
+
+            List<string> written;
+
+            try
+            {
+                written = PluginPackageInstaller.Extract(archive, validation, targetDirectory);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to extract plugin package {Package}", packageName);
+
+                TryDelete(targetDirectory);
+                if (backup is not null) Directory.Move(backup, targetDirectory);
+
+                return Failure(packageName,
+                    $"The package could not be unpacked: {ex.Message}" +
+                    (backup is not null ? " The previous version was restored." : string.Empty));
+            }
+
+            if (backup is not null) TryDelete(backup);
+
+            var before = _plugins.ToHashSet(StringComparer.Ordinal);
+            await LoadPluginsAsync();
+            var loaded = _plugins.Where(p => !before.Contains(p)).ToList();
+
+            Log.Information(
+                "Plugin package {Package} installed into {Directory} ({Count} files); plugins now loaded: {Loaded}",
+                packageName, targetDirectory, written.Count, string.Join(", ", loaded));
+
+            return new PluginInstallResult
+            {
+                Success = true,
+                PackageName = packageName,
+                ReplacedExisting = replaced,
+                InstalledFiles = written,
+                LoadedPlugins = loaded,
+                Message = loaded.Count > 0
+                    ? $"Installed {packageName}. New plugins are disabled until you switch them on."
+                    : $"Installed {packageName}, but no new plugin was discovered. Check the server log — " +
+                      "the assembly may be refused by the signature policy or may not implement INetriskPlugin."
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            // SafePathTool refusing a segment. Reachable only if DerivePackageName and the validator
+            // disagree with it, but this is the write path and it stays defended.
+            Log.Error(ex, "Refused a plugin package path for {Package}", packageName);
+            return Failure(packageName, "The package resolves to a path this server will not write.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Unexpected failure installing plugin package {Package}", packageName);
+            return Failure(packageName, $"The package could not be installed: {ex.Message}");
+        }
+        finally
+        {
+            TryDeleteFile(tempFile);
+        }
+    }
+
+    private static PluginInstallResult Failure(string packageName, string message)
+    {
+        Log.Warning("Refused plugin package {Package}: {Message}", packageName, message);
+        return new PluginInstallResult { Success = false, PackageName = packageName, Message = message };
+    }
+
+    /// <summary>
+    /// Copies at most <paramref name="limit"/> bytes and returns null when the source has more.
+    /// </summary>
+    private static async Task<long?> CopyBoundedAsync(Stream source, Stream destination, long limit)
+    {
+        var buffer = new byte[81920];
+        long total = 0;
+        int read;
+
+        while ((read = await source.ReadAsync(buffer)) > 0)
+        {
+            total += read;
+            if (total > limit) return null;
+
+            await destination.WriteAsync(buffer.AsMemory(0, read));
+        }
+
+        return total;
+    }
+
+    private static ZipArchive? OpenArchive(string path, out string? error)
+    {
+        try
+        {
+            error = null;
+            return ZipFile.OpenRead(path);
+        }
+        catch (InvalidDataException)
+        {
+            error = "The uploaded file is not a valid zip archive.";
+            return null;
+        }
+    }
+
+    private static void TryDelete(string directory)
+    {
+        try
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not clean up {Directory}: {Message}", directory, ex.Message);
+        }
+    }
+
+    private static void TryDeleteFile(string file)
+    {
+        try
+        {
+            if (File.Exists(file)) File.Delete(file);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not remove the temporary upload {File}: {Message}", file, ex.Message);
+        }
     }
 
     /// <summary>

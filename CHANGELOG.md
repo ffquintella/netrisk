@@ -16,6 +16,38 @@ This release includes new features and improvements.
 
 
 
+## [2.21.0] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+- **Plugin packages can be installed from the administration screen.** Administration → Plugins now
+  has an upload button that takes a `.zip`, unpacks it into the server's `Plugins/<package>/`
+  directory and reloads the plugin surface, so a plugin no longer needs shell access to the API host
+  to install. New endpoint `POST /Plugins/upload` (administrator-only, `IFormFile file`).
+
+  The archive is validated from its table of contents *before* anything is written: an entry that
+  would escape the destination, an archive that expands past 400 MB or carries more than 5000
+  entries, and an upload over 100 MB are all refused with nothing on disk. Three further rejections
+  exist because their alternative is a silent one — a package with no `*Plugin.dll` at its top
+  level, one whose assembly sits a folder deeper than the loader globs, and one that ships
+  `Contracts.dll` would each install cleanly today and then never appear in the plugin list. A
+  replacement is staged through a backup directory and restored if extraction fails part-way, and
+  the server's refusal sentence is what the desktop client shows, because it is the only part of the
+  response that names what to change.
+
+  Uploading a plugin is running code on the server with the API's authority — the same privilege as
+  copying a DLL into the directory by hand, which is what this replaces. It is administrator-only,
+  the plugin still arrives *disabled*, and the signature policy (`plugins_require_signature`) still
+  applies at load time.
+
+### Changed
+
+### Fixed
+
+
+
 ## [2.20.3] - 2026-09-10
 
 This release includes new features and improvements.

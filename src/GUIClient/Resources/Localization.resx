@@ -3149,4 +3149,19 @@
   <data name="EditHost" xml:space="preserve">
       <value>Edit Host</value>
   </data>
+  <data name="UploadPlugin" xml:space="preserve">
+      <value>Upload plugin package</value>
+  </data>
+  <data name="PluginPackages" xml:space="preserve">
+      <value>Plugin packages (*.zip)</value>
+  </data>
+  <data name="SelectPluginPackageMSG" xml:space="preserve">
+      <value>Select the plugin package to upload</value>
+  </data>
+  <data name="PluginInstalledMSG" xml:space="preserve">
+      <value>The plugin package was installed. A new plugin arrives disabled — switch it on below.</value>
+  </data>
+  <data name="ErrorUploadingPluginMSG" xml:space="preserve">
+      <value>The plugin package could not be installed.</value>
+  </data>
 </root>

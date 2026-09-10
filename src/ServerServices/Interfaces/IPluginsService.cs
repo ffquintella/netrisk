@@ -77,4 +77,17 @@ public interface IPluginsService
     /// "which vaults can this installation talk to" for the connection editor.
     /// </summary>
     public Task<List<T>> GetEnabledPluginsAsync<T>() where T : INetriskPlugin;
+
+    /// <summary>
+    /// Installs an uploaded plugin package (a .zip) into the host's <c>Plugins</c> directory and
+    /// reloads, so the plugin becomes available without a redeploy.
+    /// </summary>
+    /// <param name="package">The uploaded archive.</param>
+    /// <param name="fileName">The uploaded file's name; the directory name is derived from it.</param>
+    /// <returns>
+    /// A result rather than an exception for every rejection an operator can act on — a package
+    /// that is not a zip, has no plugin assembly, or carries an unwritable entry name. The newly
+    /// installed plugin still arrives <em>disabled</em>: installing is not switching on.
+    /// </returns>
+    public Task<PluginInstallResult> InstallPluginPackageAsync(Stream package, string fileName);
 }
