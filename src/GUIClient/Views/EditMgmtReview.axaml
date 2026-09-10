@@ -18,9 +18,7 @@
     <Grid ColumnDefinitions="Auto,Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto"
           Margin="0 0 10 10">
         <!-- TITLE -->
-        <Panel Grid.Row="0" Grid.ColumnSpan="5" Classes="EditTitle">
-            <TextBlock Classes="label" Text="{Binding StrTitle, Mode=OneTime}" Margin="5"/>
-        </Panel>
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="5" Classes="header" Text="{Binding StrTitle, Mode=OneTime}"/>
         <!--DATA-->
         <TextBlock Grid.Row="1" Grid.Column="0"  Text="{Binding StrSubmissionDate, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/> 
         <DatePicker TabIndex="1" Grid.Row="1" Grid.Column="1"  Margin="5 5" IsEnabled="False" SelectedDate="{Binding SubmissionDate}" />

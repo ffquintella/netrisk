@@ -23,9 +23,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- TITLE -->
-        <Panel Grid.Row="0" Classes="EditTitle">
-            <TextBlock Classes="label" Text="{Binding RiskSubject}" Margin="5" TextWrapping="Wrap"/>
-        </Panel>
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding RiskSubject}" TextWrapping="Wrap"/>
 
         <!-- 8.2.2 — both scores and the delta, which is the one number that says whether the
              treatment is working. -->

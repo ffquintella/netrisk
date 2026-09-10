@@ -33,21 +33,13 @@ public class StyleClassReferenceTest
     ///
     /// These are **defects, not exemptions** — each one renders an unstyled control today. Nothing
     /// may be added to this list; entries come off it as the screens are fixed.
+    ///
+    /// The list is now empty: <c>EditTitle</c> (EditMgmtReview, EditMitigationWindow,
+    /// RiskGovernanceWindow) and <c>subHeader</c> (VulnerabilityImportWindow) were fixed by
+    /// adopting the documented <c>TextBlock.header</c> band and <c>TextBlock.header3</c>
+    /// respectively, rather than by inventing new classes.
     /// </summary>
-    private static readonly Dictionary<string, string> DanglingWhenWritten = new(StringComparer.Ordinal)
-    {
-        // A `Panel.EditTitle` style has never existed in Styles/*.axaml. The three edit windows
-        // that ask for it get a bare Panel, so their title row has no background band and no
-        // padding — the header reads as loose text rather than a header. Fixing it means deciding
-        // whether these rows should use the documented `TextBlock.header` band (§3.1) instead.
-        ["EditTitle"] = "no Panel.EditTitle style exists; EditMgmtReview, EditMitigationWindow and "
-                      + "RiskGovernanceWindow render an unstyled title row",
-
-        // Likewise `TextBlock.subHeader`. The standard's nearest documented class is `header3`
-        // (§3.1, bold italic, no background), which is probably what was meant.
-        ["subHeader"] = "no TextBlock.subHeader style exists; VulnerabilityImportWindow's warnings "
-                      + "caption renders as plain body text",
-    };
+    private static readonly Dictionary<string, string> DanglingWhenWritten = new(StringComparer.Ordinal);
 
     private static readonly Regex ClassAttribute = new(@"Classes\s*=\s*""(?<classes>[^""{}]*)""",
         RegexOptions.Compiled);

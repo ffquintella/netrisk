@@ -105,30 +105,36 @@ the rule; the honest consequence is two more waivers rather than two fewer findi
 
 No rule was loosened and no assertion was removed to reach zero.
 
-## Defects found while auditing, and not fixed
+## Defects found while auditing, and not fixed — now closed
 
 The linter proves a button *has* a class. It cannot prove the class *exists* — Avalonia silently
 ignores a style selector that matches nothing, so a misspelled or never-written class compiles,
 runs, and renders an unstyled control. Auditing for that found **four dangling class references
-across four views**, all pre-existing:
+across four views**, all pre-existing. **All four are now fixed**, and the allowlist that recorded
+them is empty:
 
-| View | Reference | Effect |
-| --- | --- | --- |
-| `EditMgmtReview.axaml:21` | `Panel Classes="EditTitle"` | No `Panel.EditTitle` style exists anywhere in `Styles/*.axaml`; the title row renders as a bare panel — no band, no padding |
-| `EditMitigationWindow.axaml:36` | `Panel Classes="EditTitle"` | Same |
-| `RiskGovernanceWindow.axaml:26` | `Panel Classes="EditTitle"` | Same |
-| `VulnerabilityImportWindow.axaml:66` | `TextBlock Classes="subHeader"` | No `TextBlock.subHeader` style exists; the warnings caption renders as plain body text instead of a sub-header |
+| View | Reference | Effect | Resolution |
+| --- | --- | --- | --- |
+| `EditMgmtReview.axaml:21` | `Panel Classes="EditTitle"` | No `Panel.EditTitle` style exists anywhere in `Styles/*.axaml`; the title row renders as a bare panel — no band, no padding | Panel replaced by the documented `TextBlock.header` band (§3.1) |
+| `EditMitigationWindow.axaml:36` | `Panel Classes="EditTitle"` | Same | Same |
+| `RiskGovernanceWindow.axaml:26` | `Panel Classes="EditTitle"` | Same | Same, keeping `TextWrapping="Wrap"` for the long risk subject |
+| `VulnerabilityImportWindow.axaml:66` | `TextBlock Classes="subHeader"` | No `TextBlock.subHeader` style exists; the warnings caption renders as plain body text instead of a sub-header | Re-classed to `header3` (§3.1 — bold italic, no background) |
 
-These are **not** fixed here: each needs a design decision (whether the three title rows should
-adopt the documented `TextBlock.header` band from §3.1, and whether `subHeader` was meant to be
-`header3`) rather than a mechanical rename, and that is a change to how four screens look. They
-are recorded instead:
+The decision each needed was whether to *define* the missing classes or to adopt the documented
+ones. Each of the three `EditTitle` panels wrapped exactly one `TextBlock`, and the two comparable
+edit windows — [`EditRiskWindow`](../src/GUIClient/Views/EditRiskWindow.axaml) and
+[`EditIncidentWindow`](../src/GUIClient/Views/EditIncidentWindow.axaml) — already put a plain
+`TextBlock Classes="header"` on row 0, which is exactly what §2.5 prescribes for a full window
+header. So the panels were collapsed into that same one-line form rather than a `Panel.EditTitle`
+style being invented: **no new class and no new hex** were added to `WindowStyles.axaml`. For the
+warnings caption, the surrounding markup is a caption above a monospace warning list inside a
+scroller, which wants an inline heading with no background band — `header3`.
 
-- `GUIClient.Tests/Views/StyleClassReferenceTest` now fails on **any** dangling class reference,
-  with these four on an explicit allowlist that carries a reason each — the same convention as
-  `LocalizationCoverageTest`'s pre-existing list. So the guard is live for all new code, and two
-  further tests fail if an allowlist entry becomes stale (the class gets defined, or stops being
-  referenced) so the list cannot rot.
+- `GUIClient.Tests/Views/StyleClassReferenceTest` fails on **any** dangling class reference. Its
+  allowlist — the same convention as `LocalizationCoverageTest`'s pre-existing list — is now empty,
+  so the guard is unconditional. Two further tests fail if an allowlist entry becomes stale (the
+  class gets defined, or stops being referenced) so the list cannot rot. Reverting the four view
+  edits reproduces the failure, naming all four references.
 
 ## Per-file record
 

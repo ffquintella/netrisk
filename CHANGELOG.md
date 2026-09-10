@@ -16,6 +16,27 @@ This release includes new features and improvements.
 
 
 
+## [2.20.3] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Four desktop windows whose title or caption rendered unstyled.** `EditMgmtReview`,
+  `EditMitigationWindow` and `RiskGovernanceWindow` each asked for a `Panel.EditTitle` style that
+  has never existed, and `VulnerabilityImportWindow`'s warnings caption asked for a
+  `TextBlock.subHeader` that has never existed. Avalonia ignores a selector that matches nothing
+  silently, so the three title rows drew as loose text with no header band and the warnings caption
+  drew as plain body text. The three titles now use the same `TextBlock.header` band as
+  `EditRiskWindow` and `EditIncidentWindow`, and the caption uses `header3` — the documented classes
+  from [docs/ui-standard.md](docs/ui-standard.md) §3.1, so no new style or colour was introduced.
+
+
+
 ## [2.20.2] - 2026-09-10
 
 This release includes new features and improvements.
