@@ -16,6 +16,44 @@ This release includes new features and improvements.
 
 
 
+## [2.21.2] - 2026-09-10
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Trend Micro Vision One imports CVEs again.** A Vision One sync brought in every host and zero
+  findings — 8390 hosts created and `0 finding(s) created` against a tenant of 16,389 devices — and
+  reported success while doing it. The CVE pass was reading `/v3.0/asrm/attackSurfaceDevices`, the
+  asset-inventory endpoint, and looking for a CVE array nested on each device row. That array does
+  not exist: the inventory row carries `cveCount`, a number, and no CVE identities at all. 2.19.6
+  moved the pass there on the belief that `/v3.0/asrm/vulnerableDevices` was not a published
+  endpoint. It is — it is in Vision One's own OpenAPI specification, titled "Get CVEs detected in a
+  device" — and the CVE pass reads it again, with the field names it actually sends: the array is
+  `cveRecords`, the CVE id is `id`, the severity is `eventRiskLevel`.
+
+  Four things follow from reading the real payload. Exploit activity comes from
+  `globalExploitActivityLevel` (Vision One's `high` is the console's "Actively exploited") and
+  `exploitAttemptCount`, so findings stop uniformly claiming no exploit exists. The affected software
+  and its path become the finding's description, because the endpoint supplies none and a bare CVE id
+  gives a triager nothing to act on. CVEs whose `mitigationStatus` is `closed` (the console's
+  "Remediated") or `dismissed` are not imported, since this import is not a full scan and nothing
+  would ever close them; an `accepted` one is imported, because an acceptance in Vision One is not an
+  acceptance in NetRisk. And a virtual patch is now recognised from `mitigationStatus: mitigated`
+  alone — the `protectionRules` array is the rules that *exist* for a CVE, not rules enforced on the
+  device, so inferring a compensating control from it meant a connection with "a virtual patch
+  mitigates the finding" enabled would mitigate findings on unprotected machines.
+
+  The endpoint also needs a different permission from the inventory it sits beside — *Dashboards &
+  Reports → Reports → View*, plus Flex credits allocated to Cyber Risk Exposure Management — so a
+  403 on it now says that instead of repeating the ASRM advice an operator has already followed.
+
+
+
 ## [2.21.1] - 2026-09-10
 
 This release includes new features and improvements.

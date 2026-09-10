@@ -181,8 +181,10 @@ public class TrendMicroService(
             await run.StepAsync("inventory",
                 $"{result.HostsCreated} host(s) created, {result.HostsUpdated} updated.", ct: ct);
 
-            // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore; the second
-            // crawl this used to make went to /v3.0/asrm/highRiskDevices, which does not exist.
+            // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore, so the second
+            // crawl this used to make (/v3.0/asrm/highRiskDevices) is gone. That endpoint does exist,
+            // but it returns only the devices Vision One already considers at risk — reading the
+            // inventory scores every device the tenant has, which is what the Cyber Risk Index needs.
             if (connection.SyncRiskScores)
             {
                 await run.StepAsync("risk-scores", "Rolling device risk scores into the Cyber Risk Index.",
@@ -556,6 +558,9 @@ public class TrendMicroService(
 
             if (vulnerability.EpssScore != null)
                 finding.ToolFields["epss"] = vulnerability.EpssScore.Value.ToString("0.0000");
+
+            if (vulnerability.MitigationStatus != null)
+                finding.ToolFields["mitigationStatus"] = vulnerability.MitigationStatus;
 
             if (vulnerability.VirtualPatchApplied)
             {

@@ -25,8 +25,12 @@ public interface ITrendMicroClient
     /// <summary>
     /// Per-device CVEs including virtual-patch state (4.4.3), all pages.
     ///
-    /// Read from the attack-surface device inventory: Vision One publishes no per-device CVE endpoint
-    /// of its own — <c>/v3.0/asrm/vulnerableDevices</c>, which this used to call, does not exist.
+    /// Read from <c>/v3.0/asrm/vulnerableDevices</c> ("Get CVEs detected in a device"), which is the
+    /// only Vision One endpoint that carries CVE identities per asset. 2.19.6 read them off
+    /// <c>attackSurfaceDevices</c> instead, on the belief that this path did not exist; it does, and
+    /// the inventory rows carry only a <c>cveCount</c>, so that sync reported zero findings on a
+    /// tenant with 16,000 devices. Note the role behind the key needs *Dashboards &amp; Reports →
+    /// Reports → View* for this endpoint, which the inventory endpoint does not require.
     /// </summary>
     Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(TrendMicroConnection connection,
         string? apiKey, CancellationToken ct = default);

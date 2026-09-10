@@ -26,10 +26,30 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     private const string DevicesPath = "/v3.0/asrm/attackSurfaceDevices";
 
     /// <summary>
+    /// The per-device CVE endpoint — "Get CVEs detected in a device" in Vision One's own words.
+    ///
+    /// This is the only Vision One path that carries CVE identities per asset. The inventory endpoint
+    /// above carries <c>cveCount</c> and nothing else, so a sync that reads the inventory for CVEs
+    /// reports zero findings on a tenant with tens of thousands of them — which is exactly what
+    /// happened between 2.19.6 and this fix. Two things differ from the inventory endpoint and both
+    /// bite: the role needs *Dashboards &amp; Reports → Reports → View* rather than (only) the ASRM
+    /// permission, and the tenant needs Flex credits allocated to Cyber Risk Exposure Management.
+    /// </summary>
+    private const string VulnerableDevicesPath = "/v3.0/asrm/vulnerableDevices";
+
+    /// <summary>
     /// Page size for the paged reads. Vision One accepts <c>top</c> only from a fixed set —
     /// 10, 50, 100, 200, 500, 1000 — and 200 balances the page count against the payload size.
     /// </summary>
     private const int PageSize = 200;
+
+    /// <summary>
+    /// Page size for <see cref="VulnerableDevicesPath"/>, whose accepted set stops at 200 — it takes
+    /// 10, 50, 100, 200 and nothing above. Separate from <see cref="PageSize"/> so that raising the
+    /// inventory page size to the 500 or 1000 that endpoint allows cannot silently turn every CVE read
+    /// into a 400.
+    /// </summary>
+    private const int VulnerablePageSize = 200;
 
     /// <summary>
     /// Page size for the connection test. The obvious <c>top=1</c> is not in Vision One's accepted
@@ -76,6 +96,24 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 // Cosmetic.
             }
 
+            // The inventory probe alone would pass for a key that cannot read CVEs, which is the exact
+            // configuration that imports 16,000 hosts and no findings — the two endpoints need
+            // different role permissions. A connection asked to sync vulnerabilities is only healthy
+            // if both answer, so both are probed.
+            if (connection.SyncVulnerabilities)
+            {
+                var cves = await GetAsync(connection, apiKey,
+                    $"{VulnerableDevicesPath}?top={ProbePageSize}&cveDetectionStatus=affected", ct);
+
+                if (!cves.IsSuccess)
+                    return ConnectionTestResult.Fail(
+                        "Vision One accepted the key for the device inventory but not for CVEs, so this "
+                        + "connection would import hosts and no findings. "
+                        + FailureMessage(connection, cves, VulnerableDevicesPath));
+
+                details["CVE access"] = "granted";
+            }
+
             return ConnectionTestResult.Ok(
                 $"Connected to Vision One in region '{connection.Region}'.", details);
         }
@@ -101,14 +139,14 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     public async Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(
         TrendMicroConnection connection, string? apiKey, CancellationToken ct = default)
     {
-        // Reads the device inventory, not a dedicated CVE endpoint: this used to call
-        // /v3.0/asrm/vulnerableDevices, which is not an endpoint Vision One publishes. The CVE array
-        // nested on the device rows is what ParseDeviceVulnerabilities expands.
+        // cveDetectionStatus=affected is the default, but it is stated: the alternative ("any") returns
+        // every discovered device with an empty cveRecords array, which is a full second crawl of the
+        // tenant for rows this method discards.
         var findings = new List<TrendMicroDeviceVulnerability>();
         var devices = 0;
 
         await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"{DevicesPath}?top={PageSize}", ct))
+                           $"{VulnerableDevicesPath}?top={VulnerablePageSize}&cveDetectionStatus=affected", ct))
         {
             devices++;
             findings.AddRange(ParseDeviceVulnerabilities(item));
@@ -267,9 +305,16 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var deviceId = FirstString(item, "id", "agentGuid", "deviceId", "endpointId") ?? string.Empty;
         var deviceName = FirstString(item, "name", "endpointName", "deviceName", "hostname");
 
-        var vulnerabilities = FirstArray(item, "vulnerabilities", "cveList", "cves", "detectedVulnerabilities");
+        // cveRecords is the name on /v3.0/asrm/vulnerableDevices; the rest are shapes earlier previews
+        // of this integration were written against and cost nothing to keep reading.
+        var vulnerabilities = FirstArray(item, "cveRecords", "vulnerabilities", "cveList", "cves",
+            "detectedVulnerabilities");
 
         if (vulnerabilities == null) return results;
+
+        // vulnerableDevices dates the scan, not the individual CVE, so the device's own timestamp is
+        // the only "when was this last seen" the endpoint offers.
+        var deviceLastScanned = FirstString(item, "lastScannedDateTime", "lastDetectDateTime");
 
         foreach (var entry in vulnerabilities.Value.EnumerateArray())
         {
@@ -294,9 +339,24 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             var cve = FirstString(entry, "cveId", "cve", "id", "name");
             if (string.IsNullOrWhiteSpace(cve)) continue;
 
-            var patchRule = FirstString(entry, "virtualPatchRuleId", "ipsRuleId", "ruleId");
+            var status = FirstString(entry, "mitigationStatus", "status");
+
+            // "closed" is Vision One's word for the console's "Remediated", and "dismissed" is a CVE an
+            // analyst discarded. Neither is an open finding, and ingesting one would create a NetRisk
+            // finding nothing ever closes — this import is deliberately not a full scan, so the
+            // lifecycle service will not resolve it. "accepted" is kept on purpose: an acceptance
+            // recorded in Vision One is not an acceptance recorded in NetRisk, and the triager has to
+            // see the CVE to make that decision here.
+            if (IsResolved(status)) continue;
+
+            // protectionRules is, in Vision One's own words, "the list of prevention rules associated
+            // with the CVE" — rules that exist for it, not rules proven to be enforced on this device.
+            // Reading one as a compensating control is how VirtualPatchClosesFinding would mitigate
+            // findings that nothing protects, so the applied state comes from mitigationStatus and the
+            // rule id is only recorded next to it.
+            var patchRule = FirstRuleId(entry);
             var patched = FirstBool(entry, "virtualPatchApplied", "isVirtualPatched", "vulnerabilityProtection")
-                          ?? !string.IsNullOrWhiteSpace(patchRule);
+                          ?? string.Equals(status, "mitigated", StringComparison.OrdinalIgnoreCase);
 
             var finding = new TrendMicroDeviceVulnerability
             {
@@ -304,11 +364,17 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 DeviceName = deviceName,
                 CveId = cve,
                 Title = FirstString(entry, "title", "name", "summary") ?? cve,
-                Description = FirstString(entry, "description", "detail", "summary"),
+                Description = FirstString(entry, "description", "detail", "summary")
+                              ?? DescribeComponents(entry),
                 CvssScore = FirstNumber(entry, "cvssScore", "cvss", "cvssBaseScore", "baseScore"),
-                Severity = FirstString(entry, "severity", "riskLevel", "cvssSeverity"),
+                // eventRiskLevel is the risk level Vision One assigns the event this CVE raised, which
+                // is the closest thing the payload has to a severity; globalExploitActivityLevel is a
+                // last resort because it describes the CVE in the world, not on this device.
+                Severity = FirstString(entry, "severity", "eventRiskLevel", "riskLevel", "cvssSeverity",
+                    "globalExploitActivityLevel"),
                 EpssScore = FirstNumber(entry, "epssScore", "epss", "exploitProbability"),
-                ExploitAvailable = FirstBool(entry, "exploitAvailable", "hasExploit", "exploitStatus") ?? false,
+                ExploitAvailable = ExploitObserved(entry),
+                MitigationStatus = status,
                 VirtualPatchApplied = patched,
                 VirtualPatchRuleId = patchRule
             };
@@ -316,13 +382,109 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             var first = FirstString(entry, "firstDetectedDateTime", "firstDetected", "detectedDateTime");
             if (DateTime.TryParse(first, out var firstParsed)) finding.FirstDetected = firstParsed.ToUniversalTime();
 
-            var last = FirstString(entry, "lastDetectedDateTime", "lastDetected", "updatedDateTime");
+            var last = FirstString(entry, "lastDetectedDateTime", "lastDetected", "updatedDateTime")
+                       ?? deviceLastScanned;
             if (DateTime.TryParse(last, out var lastParsed)) finding.LastDetected = lastParsed.ToUniversalTime();
 
             results.Add(finding);
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Whether a mitigation status means the CVE is no longer an open finding on this device.
+    /// Vision One's <c>closed</c> is the console's "Remediated".
+    /// </summary>
+    private static bool IsResolved(string? status) =>
+        string.Equals(status, "closed", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "dismissed", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The first prevention-rule id on a CVE record.
+    ///
+    /// Vision One calls the array <c>protectionRules</c> on <c>vulnerableDevices</c> and
+    /// <c>preventionRules</c> on the CVE-centric endpoints; both hold <c>{id, product, name}</c>.
+    /// </summary>
+    internal static string? FirstRuleId(JsonElement entry)
+    {
+        var flat = FirstString(entry, "virtualPatchRuleId", "ipsRuleId", "ruleId");
+        if (flat != null) return flat;
+
+        var rules = FirstArray(entry, "protectionRules", "preventionRules");
+
+        if (rules == null) return null;
+
+        foreach (var rule in rules.Value.EnumerateArray())
+        {
+            if (rule.ValueKind == JsonValueKind.String)
+            {
+                var bare = rule.GetString();
+                if (!string.IsNullOrWhiteSpace(bare)) return bare;
+                continue;
+            }
+
+            if (rule.ValueKind != JsonValueKind.Object) continue;
+
+            var id = FirstString(rule, "id", "ruleId");
+            if (id != null) return id;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Whether Vision One has observed this CVE being exploited.
+    ///
+    /// <c>globalExploitActivityLevel</c> is the field that carries it — Vision One documents its
+    /// <c>high</c> as the console's "Actively exploited" — and <c>exploitAttemptCount</c> counts
+    /// attempts seen in this tenant. Either one is exploitation in the wild; a payload with neither
+    /// says nothing, which is not the same as "no exploit exists".
+    /// </summary>
+    internal static bool ExploitObserved(JsonElement entry)
+    {
+        var flag = FirstBool(entry, "exploitAvailable", "hasExploit", "exploitStatus");
+        if (flag != null) return flag.Value;
+
+        if ((FirstNumber(entry, "exploitAttemptCount", "exploitAttemptsCount") ?? 0) > 0) return true;
+
+        return string.Equals(FirstString(entry, "globalExploitActivityLevel"), "high",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The affected software as a sentence, used when Vision One supplies no description — which on
+    /// <c>vulnerableDevices</c> is always, because the endpoint carries no description field at all.
+    /// Without this a Vision One finding reads as a bare CVE id, and the component and its path are
+    /// the part a triager needs in order to act.
+    /// </summary>
+    internal static string? DescribeComponents(JsonElement entry)
+    {
+        var details = FirstArray(entry, "affectedComponentDetails");
+
+        if (details != null)
+        {
+            var described = details.Value.EnumerateArray()
+                .Where(e => e.ValueKind == JsonValueKind.Object)
+                .Select(e => (Name: FirstString(e, "name"), Path: FirstString(e, "filePath")))
+                .Where(c => c.Name != null || c.Path != null)
+                .Select(c => c.Path == null
+                    ? c.Name!
+                    : c.Name == null
+                        ? c.Path
+                        : $"{c.Name} ({c.Path})")
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (described.Count > 0)
+                return "Affected components reported by Vision One: " + string.Join(", ", described) + ".";
+        }
+
+        var names = StringList(entry, "affectedComponents");
+
+        return names.Count == 0
+            ? null
+            : "Affected components reported by Vision One: " + string.Join(", ", names) + ".";
     }
 
     /// <summary>
@@ -521,15 +683,29 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         {
             401 => "Vision One rejected the API key (401). Keys are region-bound — check that this key was "
                    + $"created in the '{connection.Region}' console.{said}",
-            403 => $"Vision One accepted the key but refused {path} (403). The role behind the key needs "
-                   + "read access to Attack Surface Risk Management (Cyber Risk Exposure Management), the "
-                   + "role's data and app objects must include the assets, and the tenant needs the matching "
-                   + $"entitlement.{said}",
+            403 => $"Vision One accepted the key but refused {path} (403). {PermissionHint(path)} The "
+                   + "role's data and app objects must include the assets, and the tenant needs the "
+                   + $"matching entitlement.{said}",
             404 => $"Vision One returned 404 for {path}. Check the region's API base URL.{said}",
             429 => $"Vision One is rate-limiting this key (429). Try again shortly.{said}",
             _ => $"Vision One answered HTTP {response.StatusCode} for {path}.{said}"
         };
     }
+
+    /// <summary>
+    /// The role permission the refused endpoint actually requires.
+    ///
+    /// Not the same for both endpoints, which is a trap worth naming in the message: the ASRM
+    /// permission is enough to list the inventory and is *not* enough to read the CVEs, so an operator
+    /// who granted it and saw hosts import will reasonably assume the key is fine.
+    /// </summary>
+    private static string PermissionHint(string path) =>
+        path.Contains("vulnerableDevices", StringComparison.OrdinalIgnoreCase)
+            ? "The role behind the key needs the \"Dashboards & Reports → Reports → View\" permission "
+              + "(the Attack Surface Risk Management permission alone does not cover this endpoint), and "
+              + "the tenant needs Flex credits allocated to Cyber Risk Exposure Management."
+            : "The role behind the key needs read access to Attack Surface Risk Management (Cyber Risk "
+              + "Exposure Management).";
 
     /// <summary>
     /// Reduces a Vision One error body to one line, or null when the body carries nothing worth saying.

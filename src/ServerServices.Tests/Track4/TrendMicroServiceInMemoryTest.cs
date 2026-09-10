@@ -78,18 +78,23 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         }, "api-key");
 
     /// <summary>
-    /// Stubs the one endpoint the sync reads.
+    /// Stubs the two endpoints the sync reads.
     ///
-    /// The device facts, the CVE lists and the risk scores are still written as three separate fixtures
-    /// because that is how each test wants to state them — but Vision One serves all three on the same
-    /// <c>attackSurfaceDevices</c> row, so they are merged by device id here rather than handed to three
-    /// endpoints. Two of those endpoints (<c>vulnerableDevices</c>, <c>highRiskDevices</c>) never
-    /// existed; stubbing them was what let the client keep calling them.
+    /// Device facts and risk scores are merged onto one <c>attackSurfaceDevices</c> payload, because
+    /// that is where Vision One serves both — <c>latestRiskScore</c> rides on the inventory row, so the
+    /// separate <c>highRiskDevices</c> crawl is gone even though that endpoint does exist. CVEs are a
+    /// different endpoint and get their own rule: <c>vulnerableDevices</c> is the only Vision One path
+    /// that publishes CVE identities per device, and merging its fixture onto the inventory row is
+    /// precisely the mistake that hid this defect — the tests passed against a payload shape Vision One
+    /// never sends.
     /// </summary>
     private void StubApi(string devices, string? vulnerable = null, string? highRisk = null)
     {
         FakeOutboundHttpClient.RuleFor("/asrm/attackSurfaceDevices",
-            MergeByDeviceId(devices, vulnerable, highRisk));
+            MergeByDeviceId(devices, highRisk));
+
+        if (vulnerable != null)
+            FakeOutboundHttpClient.RuleFor("/asrm/vulnerableDevices", vulnerable);
     }
 
     /// <summary>Folds the extra fixtures onto the device rows they describe, keyed by <c>id</c>.</summary>
@@ -479,9 +484,9 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01","ip":["10.0.0.5"]}]}""",
             vulnerable: """
-                {"items":[{"id":"agent-1","name":"db-prod-01","vulnerabilities":[
-                    {"cveId":"CVE-2026-1111","severity":"critical","cvssScore":9.8},
-                    {"cveId":"CVE-2026-2222","severity":"medium","cvssScore":5.4}]}]}
+                {"items":[{"id":"agent-1","name":"db-prod-01","cveRecords":[
+                    {"id":"CVE-2026-1111","severity":"critical","cvssScore":9.8},
+                    {"id":"CVE-2026-2222","severity":"medium","cvssScore":5.4}]}]}
                 """);
 
         var result = await _svc.SyncAsync(view.Id);
@@ -512,7 +517,7 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
             vulnerable: """
-                {"items":[{"id":"agent-1","vulnerabilities":[{"cveId":"CVE-2026-1111","severity":"high"}]}]}
+                {"items":[{"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111","severity":"high"}]}]}
                 """);
 
         await _svc.SyncAsync(view.Id);
@@ -532,8 +537,8 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
             vulnerable: """
-                {"items":[{"id":"agent-1","vulnerabilities":[
-                    {"cveId":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true,
+                {"items":[{"id":"agent-1","cveRecords":[
+                    {"id":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true,
                      "virtualPatchRuleId":"1011234"}]}]}
                 """);
 
@@ -561,8 +566,8 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
             vulnerable: """
-                {"items":[{"id":"agent-1","vulnerabilities":[
-                    {"cveId":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true,
+                {"items":[{"id":"agent-1","cveRecords":[
+                    {"id":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true,
                      "virtualPatchRuleId":"1011234"}]}]}
                 """);
 
@@ -589,8 +594,8 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
             vulnerable: """
-                {"items":[{"id":"agent-1","vulnerabilities":[
-                    {"cveId":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true}]}]}
+                {"items":[{"id":"agent-1","cveRecords":[
+                    {"id":"CVE-2026-1111","severity":"critical","virtualPatchApplied":true}]}]}
                 """);
 
         await _svc.SyncAsync(view.Id);
@@ -621,7 +626,7 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
 
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"x"}]}""",
-            vulnerable: """{"items":[{"id":"agent-1","vulnerabilities":[{"cveId":"CVE-2026-1111"}]}]}""");
+            vulnerable: """{"items":[{"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111"}]}]}""");
 
         await _svc.SyncAsync(view.Id);
 
@@ -709,7 +714,7 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
 
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
-            vulnerable: """{"items":[{"id":"agent-1","vulnerabilities":[{"cveId":"CVE-2026-1111"}]}]}""");
+            vulnerable: """{"items":[{"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111"}]}]}""");
 
         await _svc.SyncAsync(view.Id);
 
@@ -733,7 +738,7 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
 
         StubApi(
             devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
-            vulnerable: """{"items":[{"id":"agent-1","vulnerabilities":[{"cveId":"CVE-2026-1111"}]}]}""");
+            vulnerable: """{"items":[{"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111"}]}]}""");
 
         await _svc.SyncAsync(view.Id);
 

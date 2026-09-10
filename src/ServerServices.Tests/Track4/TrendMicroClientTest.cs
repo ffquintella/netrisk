@@ -117,17 +117,34 @@ public class TrendMicroClientTest
 
     // --- vulnerability parsing --------------------------------------------------------------
 
+    /// <summary>
+    /// The shape <c>/v3.0/asrm/vulnerableDevices</c> actually returns, field for field from Vision
+    /// One's OpenAPI specification.
+    ///
+    /// Nothing here matched before this fix. The array is <c>cveRecords</c>, not <c>vulnerabilities</c>;
+    /// the CVE id is <c>id</c>; the severity is <c>eventRiskLevel</c>; the rule ids are nested under
+    /// <c>protectionRules</c>. 2.19.6 read this data off <c>attackSurfaceDevices</c>, which carries a
+    /// <c>cveCount</c> and no CVEs at all, so a tenant with 16,000 devices imported zero findings.
+    /// </summary>
     [Fact]
-    public void APerDeviceCveListBecomesOneFindingPerCve()
+    public void TheRealVulnerableDevicesPayloadBecomesOneFindingPerCve()
     {
         var findings = TrendMicroClient.ParseDeviceVulnerabilities(Element("""
             {
-              "id": "agent-1",
-              "name": "db-prod-01",
-              "vulnerabilities": [
-                {"cveId":"CVE-2026-1111","severity":"critical","cvssScore":9.8,
-                 "virtualPatchApplied":true,"virtualPatchRuleId":"1011234"},
-                {"cveId":"CVE-2026-2222","severity":"medium","cvssScore":5.4}
+              "id": "9c94bd33-c589-48c4-9431-dace397b0067",
+              "deviceName": "SASE-PC1",
+              "criticality": "high",
+              "ip": ["10.0.0.5"],
+              "lastScannedDateTime": "2026-09-10T06:08:33Z",
+              "cveRecords": [
+                {"id":"CVE-2019-0808","eventRiskLevel":"high","cvssScore":7.8,
+                 "globalExploitActivityLevel":"high","mitigationStatus":"new",
+                 "exploitAttemptCount":12,
+                 "affectedComponentDetails":[{"name":"7-Zip","filePath":"C:\\Program Files\\7-Zip\\"}],
+                 "protectionRules":[{"id":"34777","product":"TP","name":"HTTP: Win32k EoP"}],
+                 "publishedDateTime":"2026-05-21T06:08:33Z"},
+                {"id":"CVE-2026-2222","eventRiskLevel":"medium","cvssScore":5.4,
+                 "mitigationStatus":"inProgress"}
               ]
             }
             """));
@@ -135,13 +152,24 @@ public class TrendMicroClientTest
         Assert.Equal(2, findings.Count);
 
         // One finding per device listing thirty CVEs cannot be triaged or given an SLA.
-        var patched = findings.Single(f => f.CveId == "CVE-2026-1111");
+        var exploited = findings.Single(f => f.CveId == "CVE-2019-0808");
 
-        Assert.True(patched.VirtualPatchApplied);
-        Assert.Equal("1011234", patched.VirtualPatchRuleId);
-        Assert.Equal(9.8, patched.CvssScore);
+        Assert.Equal("9c94bd33-c589-48c4-9431-dace397b0067", exploited.DeviceId);
+        Assert.Equal("SASE-PC1", exploited.DeviceName);
+        Assert.Equal(7.8, exploited.CvssScore);
+        Assert.Equal("high", exploited.Severity);
+        Assert.Equal("new", exploited.MitigationStatus);
+        Assert.True(exploited.ExploitAvailable);
+        Assert.Equal("34777", exploited.VirtualPatchRuleId);
+        // The endpoint dates the scan, not the CVE, so the device timestamp is the only "last seen"
+        // available — and a finding with no last-seen date at all ages wrongly.
+        Assert.Equal(new DateTime(2026, 9, 10, 6, 8, 33, DateTimeKind.Utc), exploited.LastDetected);
+        // vulnerableDevices carries no description field, so the affected software is the description:
+        // without it the finding reads as a bare CVE id and says nothing a triager can act on.
+        Assert.Contains("7-Zip", exploited.Description);
+        Assert.Contains(@"C:\Program Files\7-Zip\", exploited.Description);
 
-        Assert.False(findings.Single(f => f.CveId == "CVE-2026-2222").VirtualPatchApplied);
+        Assert.Equal("medium", findings.Single(f => f.CveId == "CVE-2026-2222").Severity);
     }
 
     [Fact]
@@ -155,14 +183,84 @@ public class TrendMicroClientTest
         Assert.All(findings, f => Assert.Equal("agent-1", f.DeviceId));
     }
 
+    /// <summary>
+    /// A prevention rule existing for a CVE is not a virtual patch enforced on the device.
+    ///
+    /// Vision One documents <c>protectionRules</c> as "the list of prevention rules associated with
+    /// the CVE" — the catalogue, not the deployment. Inferring an applied patch from it means that with
+    /// <c>VirtualPatchClosesFinding</c> on, every CVE Trend Micro happens to ship an IPS rule for gets
+    /// mitigated in NetRisk while the device sits unprotected. The applied state is
+    /// <c>mitigationStatus</c>, and only that.
+    /// </summary>
     [Fact]
-    public void AVirtualPatchIsInferredFromTheRuleIdWhenNoFlagIsPresent()
+    public void AProtectionRuleAloneIsNotAVirtualPatch()
     {
         var finding = TrendMicroClient.ParseDeviceVulnerabilities(Element("""
-            {"id":"a","vulnerabilities":[{"cveId":"CVE-2026-5555","ipsRuleId":"1009999"}]}
+            {"id":"a","cveRecords":[{"id":"CVE-2026-5555","mitigationStatus":"new",
+                                     "protectionRules":[{"id":"1009999","product":"TP"}]}]}
+            """)).Single();
+
+        Assert.False(finding.VirtualPatchApplied);
+        // Still recorded: which rule would cover it is useful, it just is not evidence that it does.
+        Assert.Equal("1009999", finding.VirtualPatchRuleId);
+    }
+
+    [Fact]
+    public void AMitigatedCveIsReportedAsVirtuallyPatched()
+    {
+        var finding = TrendMicroClient.ParseDeviceVulnerabilities(Element("""
+            {"id":"a","cveRecords":[{"id":"CVE-2026-5555","mitigationStatus":"mitigated",
+                                     "protectionRules":[{"id":"1009999"}]}]}
             """)).Single();
 
         Assert.True(finding.VirtualPatchApplied);
+        Assert.Equal("1009999", finding.VirtualPatchRuleId);
+    }
+
+    /// <summary>
+    /// <c>closed</c> is the console's "Remediated" and <c>dismissed</c> is a CVE an analyst discarded.
+    /// Importing either would create a NetRisk finding nothing ever closes, because this import is
+    /// deliberately not a full scan and so the lifecycle service never resolves it.
+    /// </summary>
+    [Theory]
+    [InlineData("closed")]
+    [InlineData("dismissed")]
+    public void ARemediatedOrDismissedCveIsNotImported(string status)
+    {
+        Assert.Empty(TrendMicroClient.ParseDeviceVulnerabilities(Element(
+            $$"""{"id":"a","cveRecords":[{"id":"CVE-2026-5555","mitigationStatus":"{{status}}"}]}""")));
+    }
+
+    /// <summary>
+    /// An acceptance recorded in Vision One is not an acceptance recorded in NetRisk, which has its own
+    /// approval workflow — so the CVE still becomes a finding, carrying Trend's opinion with it.
+    /// </summary>
+    [Fact]
+    public void ACveAcceptedInVisionOneIsStillImported()
+    {
+        var finding = TrendMicroClient.ParseDeviceVulnerabilities(Element("""
+            {"id":"a","cveRecords":[{"id":"CVE-2026-5555","mitigationStatus":"accepted"}]}
+            """)).Single();
+
+        Assert.Equal("accepted", finding.MitigationStatus);
+    }
+
+    /// <summary>
+    /// Vision One has no exploit-available boolean. <c>globalExploitActivityLevel: high</c> is what the
+    /// console shows as "Actively exploited", and <c>exploitAttemptCount</c> counts attempts seen in
+    /// this tenant; reading neither leaves every Vision One finding claiming no exploit exists.
+    /// </summary>
+    [Theory]
+    [InlineData("""{"id":"C","globalExploitActivityLevel":"high"}""", true)]
+    [InlineData("""{"id":"C","exploitAttemptCount":3}""", true)]
+    [InlineData("""{"id":"C","globalExploitActivityLevel":"low"}""", false)]
+    [InlineData("""{"id":"C","exploitAvailable":false,"exploitAttemptCount":3}""", false)]
+    public void ExploitActivityIsReadFromTheFieldsVisionOneActuallySends(string record, bool expected)
+    {
+        var finding = TrendMicroClient.ParseDeviceVulnerabilities(
+            Element($$"""{"id":"a","cveRecords":[{{record}}]}""")).Single();
+
+        Assert.Equal(expected, finding.ExploitAvailable);
     }
 
     [Fact]
@@ -360,7 +458,74 @@ public class TrendMicroClientTest
                 .GetVulnerableDevicesAsync(Connection(), "key"));
 
         Assert.Contains("NotEntitled", vulnerabilities.Message);
-        Assert.Contains("/v3.0/asrm/attackSurfaceDevices", vulnerabilities.Message);
+        Assert.Contains("/v3.0/asrm/vulnerableDevices", vulnerabilities.Message);
+        // The permission this endpoint needs is not the one the inventory needs, and saying "grant the
+        // ASRM permission" to an operator who granted it and watched hosts import is a dead end.
+        Assert.Contains("Dashboards & Reports", vulnerabilities.Message);
+        Assert.Contains("Flex credits", vulnerabilities.Message);
+    }
+
+    /// <summary>
+    /// A connection that syncs CVEs is only healthy if the CVE endpoint answers too.
+    ///
+    /// The two endpoints need different role permissions, so a key with the ASRM permission and not
+    /// the Reports one passes an inventory-only probe and then imports every host and no findings —
+    /// success on the Test Connection button, silence for 48 minutes, `0 finding(s) created`. That is
+    /// the failure this integration actually shipped, and the test button said the connection was fine
+    /// throughout.
+    /// </summary>
+    [Fact]
+    public async Task TheConnectionTestFailsWhenTheKeyCannotReadCves()
+    {
+        var http = new FakeOutboundHttpClient()
+            .RuleFor("/asrm/vulnerableDevices", """{"error":{"code":"AccessDenied"}}""", 403)
+            .RuleFor("/asrm/attackSurfaceDevices", """{"items":[],"totalCount":42}""");
+
+        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+
+        Assert.False(result.Success);
+        Assert.Contains("hosts and no findings", result.Message);
+        Assert.Contains("Dashboards & Reports", result.Message);
+    }
+
+    [Fact]
+    public async Task TheConnectionTestSkipsTheCveProbeWhenCvesAreNotSynced()
+    {
+        var connection = Connection();
+        connection.SyncVulnerabilities = false;
+
+        var http = new FakeOutboundHttpClient()
+            .RuleFor("/asrm/vulnerableDevices", "{}", 403)
+            .RuleFor("/asrm/attackSurfaceDevices", """{"items":[],"totalCount":42}""");
+
+        var result = await new TrendMicroClient(Log, http).TestAsync(connection, "key");
+
+        Assert.True(result.Success);
+        Assert.DoesNotContain(http.Requests, r => r.Url.Contains("vulnerableDevices"));
+    }
+
+    /// <summary>
+    /// The CVE pass must not read the inventory endpoint. This is the defect itself: the inventory row
+    /// carries <c>cveCount</c> and no CVE identities, so pointing the CVE pass at it produced a sync
+    /// that reported "0 finding(s) created" against a tenant full of them, indefinitely and silently.
+    /// </summary>
+    [Fact]
+    public async Task TheCveReadGoesToVulnerableDevicesAndNotTheInventory()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
+
+        await new TrendMicroClient(Log, http).GetVulnerableDevicesAsync(Connection(), "key");
+
+        var url = Assert.Single(http.Requests).Url;
+
+        Assert.Contains("/v3.0/asrm/vulnerableDevices", url);
+        Assert.DoesNotContain("attackSurfaceDevices", url);
+        // Devices with no detected CVEs are a second full crawl of the tenant for rows that are thrown
+        // away; "affected" is the default but stating it is what stops that being a silent regression.
+        Assert.Contains("cveDetectionStatus=affected", url);
+        // vulnerableDevices accepts top only from 10, 50, 100, 200 — 500 and 1000 are a 400 here even
+        // though the inventory endpoint takes them.
+        Assert.Contains("top=200", url);
     }
 
     /// <summary>
@@ -410,11 +575,14 @@ public class TrendMicroClientTest
     }
 
     /// <summary>
-    /// Every path this client reads must be one Vision One publishes. Two of them were not: the risk
-    /// score pass called <c>/v3.0/asrm/highRiskDevices</c> and the CVE pass called
-    /// <c>/v3.0/asrm/vulnerableDevices</c>, neither of which exists in Trend's own API client. Both
-    /// answered 403 on a tenant whose ASRM permission was already denied, so nothing distinguished them
-    /// from the real endpoint until the permission question was settled.
+    /// Every path this client reads must be one Vision One publishes — checked against the paths in
+    /// Vision One's own OpenAPI specification (Automation Center → API Reference → v3.0, "Download
+    /// OpenAPI specification"), which is the authority this list was previously guessed at instead of.
+    ///
+    /// <c>/v3.0/asrm/vulnerableDevices</c> is on that list. 2.19.6 removed the call to it on the
+    /// strength of Trend's <c>vision-one-mcp-server</c>, whose ASRM coverage is a subset of the API —
+    /// and replaced it with a read of <c>attackSurfaceDevices</c>, which publishes no CVEs. An
+    /// allowlist assembled from anything other than the specification is how that happened.
     /// </summary>
     [Fact]
     public async Task EveryReadGoesToAPublishedAsrmEndpoint()
@@ -422,7 +590,8 @@ public class TrendMicroClientTest
         string[] published =
         [
             "/v3.0/asrm/attackSurfaceDevices",
-            "/v3.0/asrm/attackSurfaceDevices/update"
+            "/v3.0/asrm/attackSurfaceDevices/update",
+            "/v3.0/asrm/vulnerableDevices"
         ];
 
         var http = new FakeOutboundHttpClient();

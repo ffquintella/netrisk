@@ -137,6 +137,15 @@ public class TrendMicroDeviceVulnerability
     public bool ExploitAvailable { get; set; }
 
     /// <summary>
+    /// Vision One's mitigation status for this CVE on this device: <c>new</c>, <c>inProgress</c>,
+    /// <c>accepted</c> or <c>mitigated</c>. Recorded on the finding so a triager can see that Trend
+    /// already has an opinion about it. <c>closed</c> (the console's "Remediated") and
+    /// <c>dismissed</c> never reach here — the client drops those rather than importing a finding
+    /// nothing would close.
+    /// </summary>
+    public string? MitigationStatus { get; set; }
+
+    /// <summary>
     /// True when a Trend Micro virtual patch (IPS rule) already covers this CVE on this device.
     ///
     /// The interesting field of the whole integration: a virtual patch is a real compensating control,
