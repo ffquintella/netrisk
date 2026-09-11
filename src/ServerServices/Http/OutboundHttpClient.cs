@@ -155,13 +155,49 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
         }
         catch (Exception ex)
         {
+            var reason = Describe(ex);
+
             // The host, not the URL: a webhook URL is itself a credential, and logging it turns the
             // application log into a place where Slack tokens live.
             _logger.Warning("Outbound {Method} to {Host} failed: {Message}",
-                request.Method, HostOf(request.Url), ex.Message);
+                request.Method, HostOf(request.Url), reason);
 
-            return new OutboundHttpResponse { StatusCode = 0, TransportError = ex.Message };
+            return new OutboundHttpResponse { StatusCode = 0, TransportError = reason };
         }
+    }
+
+    /// <summary>
+    /// The whole message chain, not just the outermost message.
+    ///
+    /// A failed TLS handshake arrives as <c>HttpRequestException("The SSL connection could not be
+    /// established, see inner exception.")</c>, and the sentence that names the actual cause — an
+    /// untrusted root, a hostname mismatch, an expired certificate — exists only on the inner
+    /// exception. That text is what an operator reads back out of a vault connection's <c>Last
+    /// test</c> field, so dropping it leaves them with a failure that literally refers them to
+    /// something they cannot see.
+    ///
+    /// Bounded at four links and de-duplicated, because a wrapped exception chain often repeats the
+    /// same sentence, and this string is stored in a column.
+    /// </summary>
+    private static string Describe(Exception ex)
+    {
+        var parts = new List<string>();
+
+        for (Exception? current = ex; current is not null && parts.Count < 4; current = current.InnerException)
+        {
+            var message = current.Message.Trim();
+
+            // The phrase is a pointer to the next link, which is about to be appended; keeping it
+            // would read as a dead end in the middle of the chain.
+            if (current.InnerException is not null)
+                message = message.Replace(", see inner exception.", ":", StringComparison.Ordinal);
+
+            if (message.Length == 0 || parts.Contains(message, StringComparer.Ordinal)) continue;
+
+            parts.Add(message);
+        }
+
+        return parts.Count == 0 ? ex.GetType().Name : string.Join(" ", parts);
     }
 
     private static string HostOf(string url) =>

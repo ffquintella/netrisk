@@ -33,14 +33,19 @@ public class PermissionAuthorizationHandler: AuthorizationHandler<PermissionRequ
             _logger.LogDebug("User is admin so no permission is required");
             context.Succeed(requirement);
         }
+
         if (hasPermission)
         {
-            _logger.LogDebug("User has te required permission: {Permission}", requirement.Permission);
+            _logger.LogDebug("User has the required permission: {Permission}", requirement.Permission);
             context.Succeed(requirement);
         }
-        else
+        else if (!hasAdminRole)
         {
-            _logger.LogInformation("Use has not the required permission: {Permission}", requirement.Permission);
+            // Only when the request is actually being denied. The admin branch above already
+            // succeeded the requirement, and logging a denial for it at Information filled the log
+            // with lines that contradicted the request that came back 200.
+            _logger.LogInformation("User has not the required permission: {Permission}",
+                requirement.Permission);
         }
 
         return ;

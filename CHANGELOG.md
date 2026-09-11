@@ -16,6 +16,30 @@ This release includes new features and improvements.
 
 
 
+## [2.21.5] - 2026-09-11
+
+This release includes fixes to diagnosability.
+
+### Fixed
+
+- **A failed outbound TLS handshake now says what was wrong with the certificate.** The reason came
+  from the outermost exception only, so every certificate problem in the product reported "The SSL
+  connection could not be established, see inner exception." — a message whose one piece of
+  information is a reference to something the operator cannot see. A secret-vault connection test,
+  whose whole output is that sentence in its *Last test* field, now names the actual cause (an
+  untrusted root, a hostname mismatch, an expired certificate), as do the per-node health-probe
+  results behind a cluster address and every other integration that goes through the outbound HTTP
+  client.
+
+- **The API no longer logs a permission denial for a request it allowed.** An admin satisfies every
+  permission requirement through the admin branch, but the denial line was logged whenever the
+  specific permission claim was absent — so an admin session produced a stream of `User has not the
+  required permission: configuration` at Information level next to the 200s those same requests
+  returned, which is the kind of log line that sends somebody chasing an authorization bug that does
+  not exist. (Also fixes the `Use`/`te` typos in those two messages.)
+
+
+
 ## [2.21.4] - 2026-09-10
 
 This release includes new features and improvements.

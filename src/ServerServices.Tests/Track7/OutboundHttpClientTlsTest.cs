@@ -78,6 +78,34 @@ public class OutboundHttpClientTlsTest
     }
 
     /// <summary>
+    /// The reported reason has to name the certificate problem, not refer the reader to an exception
+    /// they cannot see.
+    ///
+    /// Observed against a real handshake because the useless sentence is produced by
+    /// <c>HttpClient</c>, not by this code: a vault connection whose <c>Last test</c> read "The SSL
+    /// connection could not be established, see inner exception." told the operator nothing about the
+    /// untrusted internal CA that was actually the cause.
+    /// </summary>
+    [Fact]
+    public async Task NamesTheCertificateProblemRatherThanReferringToAnInnerException()
+    {
+        using var server = new SelfSignedTlsServer();
+
+        using var client = Client();
+
+        var response = await client.SendAsync(new OutboundHttpRequest
+        {
+            Method = "GET",
+            Url = server.Url,
+            Timeout = TimeSpan.FromSeconds(10)
+        });
+
+        Assert.Equal(0, response.StatusCode);
+        Assert.DoesNotContain("see inner exception", response.TransportError!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("certificate", response.TransportError!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// The two clients are separate instances, so relaxing validation for one request must not relax
     /// it for the next one on the same <see cref="OutboundHttpClient"/>. This is the failure mode a
     /// per-request validation callback on one shared handler would have.
