@@ -230,8 +230,15 @@ public static class SecretVaultDefaults
     /// hook, and adding one would break every plugin already built against the SDK. A vault that
     /// does not serve it simply fails every probe, and the resolver then falls back to SRV order —
     /// which is the behaviour of no discovery scoring at all, not a broken connection.
+    ///
+    /// <b>The <c>/v1</c> prefix is part of the path and not optional.</b> Every route on a
+    /// Vault-compatible server lives under the API version, health included; without it the probe
+    /// gets a flat 404 from every node, the resolver concludes the whole cluster is unhealthy and
+    /// falls back to SRV order — which is a weighted <em>shuffle</em>, so the node actually used is
+    /// then random rather than chosen. That failure is silent in exactly the way health scoring
+    /// exists to prevent: it reads as "no node is healthy" when every node is.
     /// </summary>
-    public const string HealthProbePath = "/sys/health";
+    public const string HealthProbePath = "/v1/sys/health";
 
     /// <summary>Lower and upper bounds on how long a discovered endpoint choice is reused.</summary>
     public const int MinEndpointCacheSeconds = 5;

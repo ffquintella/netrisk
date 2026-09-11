@@ -378,4 +378,50 @@ public class VaultEndpointResolverTest
         Assert.NotEmpty(_http.Requests);
         Assert.All(_http.Requests, r => Assert.False(r.AllowInvalidCertificate));
     }
+
+    /// <summary>
+    /// The probe must ask for <c>/v1/sys/health</c>, the whole path.
+    ///
+    /// Regression: the constant was <c>/sys/health</c>, without the API version every route on a
+    /// Vault-compatible server lives under. Against a real BastionVault cluster that is a 404 from
+    /// every node, so the resolver reported "No vault node passed its health check" for two nodes
+    /// that were both answering normally, and then picked one at random out of the SRV shuffle.
+    ///
+    /// The other tests here match the probe by host substring, which is precisely why none of them
+    /// saw it — the URL's path was never asserted on by anything.
+    /// </summary>
+    [Fact]
+    public async Task TheHealthProbeAsksForTheVersionedVaultHealthPath()
+    {
+        _dns.With(Service, "node1.example.com", 4200);
+        Health("node1", 200);
+
+        await Resolver().ResolveAsync(1, "vault.example.com");
+
+        var probe = Assert.Single(_http.Requests);
+        Assert.Equal("https://node1.example.com:4200/v1/sys/health", probe.Url);
+    }
+
+    /// <summary>
+    /// A standby answers 429 and a performance standby 473; both serve reads, so both are healthy.
+    ///
+    /// Paired with the test above because together they are the whole of what went wrong in
+    /// production: the path was wrong, so the one node that would have scored 200 and the one that
+    /// would have scored 429 both scored 404 instead and the accept-list never got to matter.
+    /// </summary>
+    [Theory]
+    [InlineData(200)]
+    [InlineData(429)]
+    [InlineData(472)]
+    [InlineData(473)]
+    public async Task ANodeServingTheVersionedPathIsHealthyOnEveryServingStatus(int status)
+    {
+        _dns.With(Service, "node1.example.com", 4200);
+        Health("node1", status);
+
+        var selection = await Resolver().ResolveAsync(1, "vault.example.com");
+
+        Assert.Equal("https://node1.example.com:4200", selection.BaseUrl);
+        Assert.Null(selection.Note);
+    }
 }

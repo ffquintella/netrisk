@@ -14,6 +14,16 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **Vault cluster discovery no longer reports every healthy node as unhealthy.** The health probe
+  asked for `/sys/health` instead of `/v1/sys/health`, and on a Vault-compatible server every route
+  lives under the API version — so each node answered 404, the resolver concluded the whole cluster
+  had failed its health check, and it fell back to SRV order. That order is a weighted *shuffle*,
+  so the node actually used was then random: an operator pointed at a three-node cluster got
+  "No vault node passed its health check" for three nodes that were all answering normally, and a
+  connection that could land on a sealed node as easily as the active one. Health scoring now works
+  as documented, and a standby (429), DR secondary (472) and performance standby (473) are all
+  recognised as serving nodes.
+
 
 
 ## [2.21.5] - 2026-09-11
