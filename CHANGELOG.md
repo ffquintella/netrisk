@@ -14,6 +14,14 @@ This release includes new features and improvements.
 
 ### Fixed
 
+
+
+## [2.21.6] - 2026-09-11
+
+This release includes a fix to vault cluster discovery.
+
+### Fixed
+
 - **Vault cluster discovery no longer reports every healthy node as unhealthy.** The health probe
   asked for `/sys/health` instead of `/v1/sys/health`, and on a Vault-compatible server every route
   lives under the API version — so each node answered 404, the resolver concluded the whole cluster
