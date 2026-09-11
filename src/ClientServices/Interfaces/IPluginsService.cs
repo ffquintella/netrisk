@@ -21,4 +21,14 @@ public interface IPluginsService
     /// leave the operator with nothing to fix.
     /// </returns>
     public Task<PluginInstallResult> UploadPluginAsync(string filePath);
+
+    /// <summary>
+    /// Asks the server to remove an installed plugin.
+    /// </summary>
+    /// <returns>
+    /// The server's verdict, with its own message. A success whose <c>RemovalPending</c> is true
+    /// means the plugin is disabled and delisted but its files wait for a server restart, which the
+    /// operator needs to be told rather than left to discover.
+    /// </returns>
+    public Task<PluginUninstallResult> UninstallPluginAsync(string pluginName);
 }

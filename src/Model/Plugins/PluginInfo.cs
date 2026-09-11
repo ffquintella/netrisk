@@ -8,4 +8,12 @@ public class PluginInfo
     
     public bool IsEnabled { get; set; } = false;
 
+    /// <summary>
+    /// The directory under the host's <c>Plugins/</c> that this plugin was loaded from.
+    ///
+    /// Carried to the client because it is the only thing that distinguishes two installations of
+    /// the same plugin, and because removing one is removing a directory rather than a name.
+    /// </summary>
+    public string PackageName { get; set; } = String.Empty;
+
 }

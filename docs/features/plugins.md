@@ -33,13 +33,30 @@ Extensibility layer built on the external [`netrisk-plugin-sdk`](../../libs/netr
 | GET | `/plugins/{pluginName}/Enabled` | Enabled state |
 | POST | `/plugins/{pluginName}/Enabled` | Toggle enabled |
 | POST | `/plugins/upload` | Install a plugin package (admin only) — see below |
+| DELETE | `/plugins/{pluginName}` | Remove an installed plugin (admin only) — see below |
 
 ## Installing a plugin package
 
 Administration → Plugins has an upload button that sends a `.zip` to `POST /plugins/upload`. The
 server unpacks it into `Plugins/<package>/` beside the API binary and reloads, so no redeploy and no
-shell access to the host is needed. The package directory name comes from the uploaded file name,
-sanitised to one safe path segment.
+shell access to the host is needed. Set `NETRISK_PLUGINS_PATH` to put that root somewhere else — a
+mounted volume in a container — and leave it unset for the default.
+
+**The package directory is named after the plugin assembly, not the uploaded file.** A package
+carrying `BastionVaultPlugin.dll` installs into `Plugins/BastionVaultPlugin/` whether it arrived as
+`BastionVaultPlugin-1.2.0.zip` or `BastionVaultPlugin-1.2.1.zip`, so a new release lands *on* the
+previous one. Naming it after the file is what let one plugin be installed twice: release packages
+are named for their version, each landed in its own directory, `GetPluginsDlls` globbed both, and
+administration listed the same plugin at two versions with two independent enabled switches — with
+no defined answer to which of them a capability lookup resolved. An installation that already
+accumulated those directories is cleaned up the next time the plugin is installed: every other
+directory carrying the same plugin assembly is removed, and reported in
+`PluginInstallResult.RemovedDirectories`. A package with two different `*Plugin.dll` files at its top
+level has no single identity, so it falls back to the file-derived name.
+
+The list itself collapses a duplicate as a second line of defence, since a plugin directory can also
+arrive by hand: `PluginListing.CollapseVersions` shows one row per plugin name, the highest version,
+and logs a warning naming the directories.
 
 `ServerServices/Plugins/PluginPackageInstaller` decides everything from the archive's **table of
 contents, before a byte is written** — so a rejection never has to clean up after itself, and the
@@ -64,6 +81,25 @@ authority, so uploading one is running code on the server — exactly as privile
 into the directory by hand, which is what this replaces. The endpoint is administrator-only, an
 installed plugin arrives **disabled**, and the `plugins_require_signature` policy still applies at
 load time.
+
+## Removing a plugin
+
+Administration → Plugins has a delete button per row, which sends `DELETE /plugins/{pluginName}`.
+The server switches the plugin off, deletes **every** directory whose assemblies provide it, and
+reloads.
+
+The order is deliberate: disabling comes first, so a delete that cannot finish can never leave an
+enabled plugin the operator believes is gone. And it cannot always finish — **a loaded plugin
+assembly stays locked by the host process**, and nothing in .NET reliably unloads one while
+instances may still be referenced. When the files cannot be deleted the directory gets a
+`.netrisk-uninstalled` marker; the loader skips a marked directory and sweeps what it can on every
+load pass, deleting the marker and the directory itself only once nothing else is left inside. The
+response says which happened through `PluginUninstallResult.RemovalPending`, and the desktop client
+shows it: either "the plugin was removed", or "its files are still in use and will be deleted when
+the server next restarts". Either way the plugin is disabled and off the list immediately.
+
+The sweep must never delete the marker before the assembly — that was a bug during development, and
+its symptom is the deleted plugin reappearing on the load pass after the next one.
 
 ## Client
 
@@ -104,6 +140,8 @@ assembly.
 
 - Runtime DLL discovery and load
 - Package upload and install from the administration screen, without shell access to the API host
+- Install of a new version over the installed one, rather than beside it
+- Delete from the administration screen, including a duplicate installation
 - Per-plugin enable/disable without redeploy
 - Generic typed plugin resolution (`GetPluginAsync<T>`)
 - Consumers guard calls with `IsFaceIDPluginEnabled`-style checks and throw `PluginDisabledException` when a dependent feature is disabled
@@ -120,8 +158,17 @@ assembly.
   weighted towards the rejections: zip slip, absolute paths, zip bomb, entry count, and each of the
   silent-failure cases in the table above. Extraction is checked separately against a *forged*
   validation, because the write path defends itself rather than trusting the validator
+- `ServerServices.Tests/Plugins/PluginInstallationLifecycleTest.cs` — the real service against a real
+  plugin on disk, in its own plugins root: a duplicate installation is listed once, a release package
+  installs under the plugin name, a second release replaces the first, installing clears the
+  directories left by the old naming, a delete removes every directory providing the plugin and
+  disables it, and a deleted plugin does not come back on the next reload
+- `ServerServices.Tests/Plugins/PluginListingTest.cs` — one row per plugin name at the highest
+  version, with the version ordering numeric (1.2.10 is newer than 1.2.9) and plugin names compared
+  ordinally, because `Plugin_<name>_Enabled` is read with the plugin's own spelling
 - `ClientServices.Tests/Services/PluginsRestServiceTest.cs` — including that a 400 refusal reaches
-  the caller with its message, and that a 401 discards the token on a client that does not throw
+  the caller with its message, that `RemovalPending` survives the round trip, and that a 401 discards
+  the token on a client that does not throw
 
 ## Common Exceptions
 

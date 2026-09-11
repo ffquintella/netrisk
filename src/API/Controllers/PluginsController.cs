@@ -119,6 +119,49 @@ public class PluginsController(
         return Ok(result);
     }
 
+    /// <summary>
+    /// Removes an installed plugin and the directory it was installed from.
+    /// </summary>
+    /// <remarks>
+    /// Administrator-only, and deliberately the same privilege as the upload it undoes: it deletes a
+    /// directory under the server's plugins root. A plugin whose assembly the process still holds
+    /// open cannot be deleted immediately; it is disabled and marked, the response says so through
+    /// <c>RemovalPending</c>, and the files go on the next start.
+    /// </remarks>
+    [Authorize(Policy = "RequireAdminOnly")]
+    [HttpDelete]
+    [Route("{pluginName}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PluginUninstallResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(PluginUninstallResult))]
+    public async Task<ActionResult<PluginUninstallResult>> Uninstall(string pluginName)
+    {
+        var user = GetUser();
+
+        if (!await PluginsService.PluginExistsAsync(pluginName))
+        {
+            Logger.Warning("User:{UserValue} tried to remove plugin {Plugin}, which is not installed",
+                user.Value, pluginName);
+            return NotFound();
+        }
+
+        Logger.Information("User:{UserValue} is removing plugin {Plugin}", user.Value, pluginName);
+
+        var result = await PluginsService.UninstallPluginAsync(pluginName);
+
+        if (!result.Success)
+        {
+            Logger.Warning("Removing plugin {Plugin} for user:{UserValue} failed: {Message}",
+                pluginName, user.Value, result.Message);
+            return BadRequest(result);
+        }
+
+        Logger.Information("User:{UserValue} removed plugin {Plugin} (removal pending: {Pending})",
+            user.Value, pluginName, result.RemovalPending);
+
+        return Ok(result);
+    }
+
     [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("enable/{pluginName}")]

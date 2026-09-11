@@ -85,6 +85,127 @@ public class PluginPackageInstallerTest : IDisposable
 
     #endregion
 
+    #region INSTALL IDENTITY
+
+    /// <summary>
+    /// The directory a package installs into is named after its plugin assembly, not after the
+    /// uploaded file.
+    ///
+    /// This is the reported defect: releases are named for their version, so
+    /// BastionVaultPlugin-1.2.0.zip and BastionVaultPlugin-1.2.1.zip installed into two directories,
+    /// the loader globbed both, and the same plugin appeared twice in administration with two
+    /// independent enabled switches. Deriving the directory from the assembly makes the second
+    /// upload land on the first.
+    /// </summary>
+    [Fact]
+    public void TestInstallDirectoryIsNamedAfterThePluginAssembly()
+    {
+        var v120 = PluginPackageInstaller.Validate(Entries(
+            ("BastionVaultPlugin-1.2.0/BastionVaultPlugin.dll", 2048),
+            ("BastionVaultPlugin-1.2.0/BastionVaultPlugin.deps.json", 256)));
+
+        var v121 = PluginPackageInstaller.Validate(Entries(
+            ("BastionVaultPlugin.dll", 2048),
+            ("BastionVaultPlugin.deps.json", 256)));
+
+        Assert.Equal("BastionVaultPlugin", PluginPackageInstaller.DeriveInstallDirectoryName(v120));
+        Assert.Equal("BastionVaultPlugin", PluginPackageInstaller.DeriveInstallDirectoryName(v121));
+    }
+
+    /// <summary>
+    /// Two plugin assemblies in one package give no single identity to install under, so the caller
+    /// is told to fall back to the file name rather than being handed one of them arbitrarily.
+    /// </summary>
+    [Fact]
+    public void TestInstallDirectoryIsUndecidedWhenAPackageCarriesTwoPluginAssemblies()
+    {
+        var validation = PluginPackageInstaller.Validate(Entries(
+            ("OnePlugin.dll", 1024),
+            ("AnotherPlugin.dll", 1024)));
+
+        Assert.True(validation.IsValid);
+        Assert.Null(PluginPackageInstaller.DeriveInstallDirectoryName(validation));
+    }
+
+    [Fact]
+    public void TestInstallDirectoryIsUndecidedForAnInvalidPackage()
+    {
+        Assert.Null(PluginPackageInstaller.DeriveInstallDirectoryName(
+            PluginPackageValidation.Invalid("nope")));
+    }
+
+    [Fact]
+    public void TestPluginAssemblyNamesReadsOnlyTheTopLevel()
+    {
+        var names = PluginPackageInstaller.PluginAssemblyNames(
+        [
+            "BastionVaultPlugin.dll",
+            "BastionVaultPlugin.deps.json",
+            "runtimes/win-x64/native/SomethingPlugin.dll"
+        ]);
+
+        Assert.Equal(["BastionVaultPlugin.dll"], names);
+    }
+
+    /// <summary>
+    /// Every earlier directory holding the same assembly is superseded, not just one of them: an
+    /// installation that accumulated 1.2.0 and 1.2.1 has to come out clean on the next upload.
+    /// </summary>
+    [Fact]
+    public void TestFindSupersededDirectoriesReturnsEveryEarlierInstallation()
+    {
+        var superseded = PluginPackageInstaller.FindSupersededDirectories(
+            "BastionVaultPlugin",
+            ["BastionVaultPlugin.dll"],
+            [
+                ("BastionVaultPlugin", ["BastionVaultPlugin.dll"]),
+                ("BastionVaultPlugin-1.2.0", ["BastionVaultPlugin.dll"]),
+                ("BastionVaultPlugin-1.2.1", ["BastionVaultPlugin.dll"]),
+                ("FaceIdPlugin", ["FaceIdPlugin.dll"])
+            ]);
+
+        Assert.Equal(2, superseded.Count);
+        Assert.Contains("BastionVaultPlugin-1.2.0", superseded);
+        Assert.Contains("BastionVaultPlugin-1.2.1", superseded);
+    }
+
+    /// <summary>
+    /// The target directory is never reported: it is being replaced in place, and deleting it as a
+    /// superseded copy would remove what was just installed.
+    /// </summary>
+    [Fact]
+    public void TestFindSupersededDirectoriesNeverIncludesTheTarget()
+    {
+        var superseded = PluginPackageInstaller.FindSupersededDirectories(
+            "BastionVaultPlugin",
+            ["BastionVaultPlugin.dll"],
+            [("bastionvaultplugin", ["BastionVaultPlugin.dll"])]);
+
+        Assert.Empty(superseded);
+    }
+
+    [Fact]
+    public void TestFindSupersededDirectoriesLeavesOtherPluginsAlone()
+    {
+        var superseded = PluginPackageInstaller.FindSupersededDirectories(
+            "BastionVaultPlugin",
+            ["BastionVaultPlugin.dll"],
+            [("FaceIdPlugin", ["FaceIdPlugin.dll"]), ("Empty", [])]);
+
+        Assert.Empty(superseded);
+    }
+
+    [Fact]
+    public void TestFindSupersededDirectoriesFindsNothingWithoutAnAssemblyToMatch()
+    {
+        var superseded = PluginPackageInstaller.FindSupersededDirectories(
+            "Whatever", [], [("BastionVaultPlugin", ["BastionVaultPlugin.dll"])]);
+
+        Assert.Empty(superseded);
+    }
+
+    #endregion
+
     #region VALIDATION
 
     [Fact]

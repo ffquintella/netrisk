@@ -3210,4 +3210,19 @@
   <data name="ErrorUploadingPluginMSG" xml:space="preserve">
       <value>Não foi possível instalar o pacote de plugin.</value>
   </data>
+  <data name="Package" xml:space="preserve">
+      <value>Pacote</value>
+  </data>
+  <data name="DeletePlugin" xml:space="preserve">
+      <value>Excluir plugin</value>
+  </data>
+  <data name="DeletePluginConfirmMSG" xml:space="preserve">
+      <value>Excluir o plugin {0} ({1})? Os arquivos serão removidos do servidor e ele deixará de estar disponível. O que estiver configurado para usá-lo, como uma conexão de cofre de segredos, deixará de funcionar.</value>
+  </data>
+  <data name="PluginDeletedMSG" xml:space="preserve">
+      <value>O plugin foi removido.</value>
+  </data>
+  <data name="ErrorDeletingPluginMSG" xml:space="preserve">
+      <value>Não foi possível remover o plugin.</value>
+  </data>
 </root>

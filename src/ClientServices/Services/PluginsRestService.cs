@@ -127,6 +127,56 @@ public class PluginsRestService(
         }
     }
 
+    public async Task<PluginUninstallResult> UninstallPluginAsync(string pluginName)
+    {
+        // Same client shape as the upload, and for the same reason: the server answers a refusal
+        // with a PluginUninstallResult whose message is the only thing that tells the operator what
+        // to do about it, and the default client would raise before that body was read. Mutating,
+        // because a delete that answers 5xx may already have removed the directory.
+        using var client = MutatingClient(reportErrorResponses: true);
+
+        var request = new RestRequest($"/Plugins/{Uri.EscapeDataString(pluginName)}");
+
+        try
+        {
+            var response = await client.ExecuteAsync<PluginUninstallResult>(request, Method.Delete);
+
+            if (response.Data != null) return response.Data;
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return new PluginUninstallResult
+                {
+                    Success = false,
+                    PluginName = pluginName,
+                    Message = $"The server does not have a plugin named {pluginName} installed."
+                };
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                (response.ErrorException as HttpRequestException)?.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+                throw new RestComunicationException("Error removing plugin",
+                    new HttpRequestException("Unauthorized", null, HttpStatusCode.Unauthorized));
+            }
+
+            var detail = FirstNonEmpty(response.ErrorMessage, response.Content,
+                $"The server answered {(int)response.StatusCode} {response.StatusCode}.");
+
+            Logger.Error("Error removing plugin {Plugin}: {Message}", pluginName, detail);
+
+            return new PluginUninstallResult { Success = false, PluginName = pluginName, Message = detail };
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                authenticationService.DiscardAuthenticationToken();
+            }
+            Logger.Error("Error removing plugin message: {Message}", ex.Message);
+            throw new RestComunicationException("Error removing plugin", ex);
+        }
+    }
+
     /// <summary>
     /// The first candidate that is not null, empty or whitespace.
     /// </summary>

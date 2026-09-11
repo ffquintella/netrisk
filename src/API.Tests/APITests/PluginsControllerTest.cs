@@ -248,4 +248,88 @@ public class PluginsControllerTest : BaseControllerTest
     }
 
     #endregion
+
+    // ---------------- DELETE ----------------
+
+    [Fact]
+    public async Task TestUninstallRemovesThePlugin()
+    {
+        _pluginsService.UninstallPluginAsync("enabledPlugin")
+            .Returns(new PluginUninstallResult
+            {
+                Success = true,
+                PluginName = "enabledPlugin",
+                PackageName = "EnabledPlugin",
+                Message = "Plugin enabledPlugin was removed."
+            });
+
+        var result = await _controller.Uninstall("enabledPlugin");
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<PluginUninstallResult>(ok.Value);
+
+        Assert.True(value.Success);
+        Assert.False(value.RemovalPending);
+        Assert.Equal("EnabledPlugin", value.PackageName);
+    }
+
+    /// <summary>
+    /// A removal whose files are still locked by the server process is a success with
+    /// <c>RemovalPending</c> set, not a failure: the plugin is off and delisted, and only the files
+    /// wait for a restart. Reporting it as an error would have operators re-running a delete that
+    /// already worked.
+    /// </summary>
+    [Fact]
+    public async Task TestUninstallReportsAPendingFileRemovalAsASuccess()
+    {
+        _pluginsService.UninstallPluginAsync("enabledPlugin")
+            .Returns(new PluginUninstallResult
+            {
+                Success = true,
+                PluginName = "enabledPlugin",
+                RemovalPending = true,
+                Message = "Its files are still in use by the server."
+            });
+
+        var result = await _controller.Uninstall("enabledPlugin");
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<PluginUninstallResult>(ok.Value);
+
+        Assert.True(value.Success);
+        Assert.True(value.RemovalPending);
+    }
+
+    [Fact]
+    public async Task TestUninstallOfAnUnknownPluginIsNotFoundAndTouchesNothing()
+    {
+        var result = await _controller.Uninstall("ghostPlugin");
+
+        Assert.IsType<NotFoundResult>(result.Result);
+        _ = _pluginsService.DidNotReceive().UninstallPluginAsync(Arg.Any<string>());
+    }
+
+    /// <summary>
+    /// A refused removal keeps its reason, for the same reason a refused upload does: "check the
+    /// server's permissions on its Plugins directory" is the whole content of the response.
+    /// </summary>
+    [Fact]
+    public async Task TestUninstallReturnsTheRefusalReason()
+    {
+        _pluginsService.UninstallPluginAsync("disabledPlugin")
+            .Returns(new PluginUninstallResult
+            {
+                Success = false,
+                PluginName = "disabledPlugin",
+                Message = "The directory could neither be deleted nor marked for removal."
+            });
+
+        var result = await _controller.Uninstall("disabledPlugin");
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var value = Assert.IsType<PluginUninstallResult>(bad.Value);
+
+        Assert.False(value.Success);
+        Assert.Contains("could neither be deleted", value.Message);
+    }
 }

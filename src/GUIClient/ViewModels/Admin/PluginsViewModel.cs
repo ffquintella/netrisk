@@ -27,6 +27,8 @@ public class PluginsViewModel: ViewModelBase
     public string StrUploadPlugin { get;  } = Localizer["UploadPlugin"];
     public string StrSelectPluginPackage { get;  } = Localizer["SelectPluginPackageMSG"];
     public string StrPluginPackages { get;  } = Localizer["PluginPackages"];
+    public string StrPackage { get;  } = Localizer["Package"];
+    public string StrDeletePlugin { get;  } = Localizer["DeletePlugin"];
     #endregion
     
     #region PROPERTIES
@@ -53,6 +55,21 @@ public class PluginsViewModel: ViewModelBase
 
     public bool IsNotUploading => !IsUploading;
 
+    private bool _isDeleting;
+
+    /// <summary>
+    /// Drives the delete buttons' enabled state. A removal deletes a directory and reloads every
+    /// plugin in the API process, so two of them running over each other is worth preventing here as
+    /// well as on the server.
+    /// </summary>
+    public bool IsDeleting
+    {
+        get => _isDeleting;
+        set => this.RaiseAndSetIfChanged(ref _isDeleting, value);
+    }
+
+    public bool IsNotDeleting => !IsDeleting;
+
     #endregion
 
     #region SERVICES
@@ -74,6 +91,9 @@ public class PluginsViewModel: ViewModelBase
 
         this.WhenAnyValue(x => x.IsUploading)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(IsNotUploading)));
+
+        this.WhenAnyValue(x => x.IsDeleting)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(IsNotDeleting)));
     }
     #endregion
     
@@ -172,6 +192,61 @@ public class PluginsViewModel: ViewModelBase
         finally
         {
             IsUploading = false;
+        }
+    }
+
+    /// <summary>
+    /// Removes one plugin from the server, after confirmation.
+    /// </summary>
+    /// <remarks>
+    /// The confirmation names the plugin and its version because the row is the only place the
+    /// operator sees which installation they are deleting, and the server's own message is shown
+    /// afterwards: a removal whose files are still locked by the API process succeeds but leaves them
+    /// on disk until the next restart, and that is not something to hide behind "Deleted".
+    /// </remarks>
+    public async Task DeletePluginAsync(PluginInfo plugin)
+    {
+        if (IsDeleting) return;
+
+        var confirm = await Dispatcher.UIThread.InvokeAsync(() => MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Warning"],
+                ContentMessage = string.Format(Localizer["DeletePluginConfirmMSG"], plugin.Name, plugin.Version),
+                Icon = Icon.Warning,
+                ButtonDefinitions = ButtonEnum.YesNo
+            })
+            .ShowAsync());
+
+        if (confirm != ButtonResult.Yes) return;
+
+        IsDeleting = true;
+
+        try
+        {
+            var result = await PluginsService.UninstallPluginAsync(plugin.Name);
+
+            await LoadPluginsAsync();
+
+            if (!result.Success)
+            {
+                await ShowMessageAsync(Localizer["Error"],
+                    Localizer["ErrorDeletingPluginMSG"] + "\n\n" + result.Message, Icon.Error);
+                return;
+            }
+
+            await ShowMessageAsync(Localizer["Information"],
+                Localizer["PluginDeletedMSG"] + "\n\n" + result.Message, Icon.Info);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting plugin: {Message}", ex.Message);
+            await ShowMessageAsync(Localizer["Error"],
+                Localizer["ErrorDeletingPluginMSG"] + "\n\n" + ex.Message, Icon.Error);
+        }
+        finally
+        {
+            IsDeleting = false;
         }
     }
 

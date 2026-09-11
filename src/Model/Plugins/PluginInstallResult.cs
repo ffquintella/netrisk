@@ -23,6 +23,16 @@ public class PluginInstallResult
     /// <summary>The plugin names the host discovered after reloading. Empty when the reload found none.</summary>
     public List<string> LoadedPlugins { get; set; } = new();
 
-    /// <summary>Whether the package replaced an installation of the same name.</summary>
+    /// <summary>Whether the package replaced an installation of the same plugin.</summary>
     public bool ReplacedExisting { get; set; }
+
+    /// <summary>
+    /// Directories under <c>Plugins/</c> that held an earlier installation of the same plugin and
+    /// were removed by this install.
+    ///
+    /// Normally empty. It is non-empty on an installation that predates naming the plugin directory
+    /// after the plugin assembly, where each uploaded release landed in its own directory and the
+    /// same plugin appeared once per release in the administration list.
+    /// </summary>
+    public List<string> RemovedDirectories { get; set; } = new();
 }

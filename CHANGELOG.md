@@ -16,6 +16,36 @@ This release includes new features and improvements.
 
 
 
+## [2.21.7] - 2026-09-11
+
+This release fixes duplicate plugin installations and adds plugin removal.
+
+### Added
+
+- **A plugin can be deleted from Administration → Plugins.** Each row has a delete button; it
+  switches the plugin off, removes the directory it was installed from, and reloads. A plugin whose
+  files the server still has open — which is the normal case on Windows, where a loaded assembly is
+  locked for the life of the process — is disabled and taken off the list immediately, and its files
+  are deleted the next time the server starts. The message says which of the two happened rather
+  than reporting both as "deleted".
+- `NETRISK_PLUGINS_PATH` moves the plugins root off the application directory, for a host that
+  mounts plugins as a volume.
+
+### Changed
+
+### Fixed
+
+- **Installing a new version of a plugin replaces the old one instead of listing both.** The install
+  directory was named after the uploaded file, and release packages are named for their version, so
+  `BastionVaultPlugin-1.2.0.zip` and `BastionVaultPlugin-1.2.1.zip` installed side by side: the
+  plugin appeared twice in Administration → Plugins, at two versions, each row with its own enabled
+  switch, and which copy a feature actually resolved was undefined. The directory is now named after
+  the plugin assembly, so a new release lands on the installed one; installing a plugin also removes
+  the leftover directories from the old naming, and the list shows one row per plugin — the newest
+  version — even if a duplicate directory arrives some other way.
+
+
+
 ## [2.21.6] - 2026-09-11
 
 This release includes a fix to vault cluster discovery.

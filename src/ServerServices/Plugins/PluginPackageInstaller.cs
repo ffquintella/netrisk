@@ -94,6 +94,83 @@ public static class PluginPackageInstaller
     }
 
     /// <summary>
+    /// The file name a directory is marked with when its plugin was removed but its assembly was
+    /// still locked by the host process. The loader skips such a directory and tries to delete it.
+    /// </summary>
+    public const string UninstalledMarkerFile = ".netrisk-uninstalled";
+
+    /// <summary>
+    /// The directory name a validated package installs under: the base name of its plugin assembly.
+    ///
+    /// <para><b>Why not the uploaded file name.</b> It used to be, and that is what let one plugin
+    /// appear twice. Packages are named for their release â€” <c>BastionVaultPlugin-1.2.0.zip</c>,
+    /// then <c>BastionVaultPlugin-1.2.1.zip</c> â€” so a file-derived name gave each version its own
+    /// directory, the loader globbed both, and the administration list showed the same plugin at two
+    /// versions with independent enabled switches. The assembly name is the plugin's identity as far
+    /// as the loader is concerned, so deriving the directory from it makes an upload of a new version
+    /// land on top of the old one, which is what "install" has always claimed to do.</para>
+    ///
+    /// Returns null when the package carries more than one top-level plugin assembly (no single
+    /// identity to install under) or when the name does not survive sanitisation; the caller then
+    /// falls back to <see cref="DerivePackageName"/>.
+    /// </summary>
+    public static string? DeriveInstallDirectoryName(PluginPackageValidation validation)
+    {
+        if (!validation.IsValid) return null;
+
+        var assemblies = PluginAssemblyNames(validation.Files);
+
+        if (assemblies.Count != 1) return null;
+
+        var name = Path.GetFileNameWithoutExtension(assemblies[0]);
+
+        return SafePathTool.IsSafeSegment(name) ? name : null;
+    }
+
+    /// <summary>
+    /// The top-level <c>*Plugin.dll</c> entries among <paramref name="files"/> (paths relative to the
+    /// plugin directory, as <see cref="PluginPackageValidation.Files"/> holds them).
+    /// </summary>
+    public static List<string> PluginAssemblyNames(IEnumerable<string> files) =>
+        files
+            .Where(f => !f.Contains('/') && f.EndsWith(PluginAssemblySuffix, StringComparison.OrdinalIgnoreCase))
+            .Select(f => f)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>
+    /// The already-installed directories that hold the same plugin assembly as the one being
+    /// installed into <paramref name="targetDirectory"/>, and so are superseded by it.
+    /// </summary>
+    /// <param name="targetDirectory">The directory leaf the new package installs into.</param>
+    /// <param name="assemblyNames">The plugin assembly file names the new package carries.</param>
+    /// <param name="installed">
+    /// Every existing plugin directory leaf with the plugin assembly file names found at its top
+    /// level.
+    /// </param>
+    /// <remarks>
+    /// This exists to clear the duplicates a file-name-derived directory already created on
+    /// installations upgrading to <see cref="DeriveInstallDirectoryName"/>: uploading 1.2.2 has to
+    /// take out both <c>…-1.2.0</c> and <c>…-1.2.1</c>, not just replace one of them. Pure logic so
+    /// the "which directories" decision is testable without a plugins tree; the caller does the
+    /// deleting.
+    /// </remarks>
+    public static List<string> FindSupersededDirectories(
+        string targetDirectory,
+        IReadOnlyCollection<string> assemblyNames,
+        IEnumerable<(string Directory, IReadOnlyCollection<string> Assemblies)> installed)
+    {
+        if (assemblyNames.Count == 0) return [];
+
+        return installed
+            .Where(i => !string.Equals(i.Directory, targetDirectory, StringComparison.OrdinalIgnoreCase))
+            .Where(i => i.Assemblies.Any(a => assemblyNames.Contains(a, StringComparer.OrdinalIgnoreCase)))
+            .Select(i => i.Directory)
+            .ToList();
+    }
+
+    /// <summary>
     /// Decides whether the archive described by <paramref name="entries"/> may be extracted.
     /// Never touches the filesystem.
     /// </summary>

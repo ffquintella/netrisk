@@ -17,7 +17,7 @@ public class PluginsService: ServiceBase, IPluginsService
 
     private List<string> _plugins = new List<string>();
     private List<string> _pluginsDirs = new List<string>();
-    private List<PluginLoader> _pluginLoaders = new List<PluginLoader>();
+    private List<LoadedPluginAssembly> _pluginLoaders = new List<LoadedPluginAssembly>();
     private bool _initialized = false;
     private ISettingsService SettingsService { get; }
 
@@ -34,6 +34,15 @@ public class PluginsService: ServiceBase, IPluginsService
     public const string TrustedPublishersSetting = "plugins_trusted_publishers";
 
     private readonly PluginSignatureVerifier _signatureVerifier;
+
+    /// <summary>
+    /// A loaded plugin assembly together with the directory it came from.
+    ///
+    /// The directory is carried rather than re-derived because it is the unit of installation and of
+    /// removal: a plugin is a directory under <c>Plugins/</c>, and both "which installation is this
+    /// row" and "what does deleting this plugin delete" are unanswerable from a loader alone.
+    /// </summary>
+    private sealed record LoadedPluginAssembly(PluginLoader Loader, string Directory);
 
     public PluginsService(ILogger logger, IDalService dalService, ISettingsService settingsService) : base(logger, dalService)
     {
@@ -84,6 +93,22 @@ public class PluginsService: ServiceBase, IPluginsService
         
             if (Directory.Exists(pluginPath))
             {
+                // A directory whose plugin was uninstalled while its assembly was still locked by
+                // this process is skipped and swept: the plugin has to disappear from the list on
+                // the uninstall, and the files can only go once nothing holds them, which in
+                // practice is the next start.
+                if (File.Exists(Path.Combine(pluginPath, PluginPackageInstaller.UninstalledMarkerFile)))
+                {
+                    SweepUninstalled(pluginPath);
+
+                    if (Directory.Exists(pluginPath))
+                        Log.Information(
+                            "Skipping plugin directory {Path}: it is marked uninstalled and its files " +
+                            "are still in use. They will be removed on a later start.", pluginPath);
+
+                    continue;
+                }
+
                 var dirPaths = Directory.GetFiles(pluginPath, "*Plugin.dll");
 
                 foreach (var dirPath in dirPaths)
@@ -111,7 +136,7 @@ public class PluginsService: ServiceBase, IPluginsService
     
     private string[] GetPluginsDirs()
     {
-        var pluginPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+        var pluginPath = PluginsRoot;
 
         // A host with no Plugins directory has no plugins; it does not have a broken installation.
         // Without this guard Directory.GetDirectories throws, LoadPluginsAsync fails, and every
@@ -172,7 +197,7 @@ public class PluginsService: ServiceBase, IPluginsService
         var (requireSignature, trustedPublishers) = await ReadSignaturePolicyAsync();
 
         var pDlls = GetPluginsDlls();
-        _pluginLoaders = new List<PluginLoader>();
+        _pluginLoaders = new List<LoadedPluginAssembly>();
         _pluginsDirs = new List<string>();
         _plugins = new List<string>();
 
@@ -219,7 +244,8 @@ public class PluginsService: ServiceBase, IPluginsService
                     // message that says why.
                     typeof(INetriskSecretVaultPlugin), typeof(IPluginHttpClient)
                 });
-                _pluginLoaders.Add(pluginLoader);
+                _pluginLoaders.Add(new LoadedPluginAssembly(pluginLoader,
+                    Path.GetDirectoryName(pDll.Path) ?? string.Empty));
 
                 var pluginTypes = pluginLoader.LoadDefaultAssembly()
                     .GetTypes()
@@ -228,8 +254,12 @@ public class PluginsService: ServiceBase, IPluginsService
                 foreach (var pluginType in pluginTypes)
                 {
                     var plugin = (INetriskPlugin)Activator.CreateInstance(pluginType)! as INetriskPlugin;
-                
-                    _plugins.Add(plugin.PluginName);
+
+                    // A name is recorded once even when two directories hold the same plugin: the
+                    // list is asked "does this plugin exist", and answering it twice served no
+                    // caller while making every duplicate installation look like two plugins.
+                    if (!_plugins.Contains(plugin.PluginName)) _plugins.Add(plugin.PluginName);
+
                     Log.Information($"Plugin {plugin.PluginName} loaded");
                 }  
 
@@ -284,9 +314,9 @@ public class PluginsService: ServiceBase, IPluginsService
         
         if(!IsInitialized()) await LoadPluginsAsync();
 
-        foreach (var pluginLoader in _pluginLoaders)
+        foreach (var loaded in _pluginLoaders)
         {
-            var pluginTypes = pluginLoader.LoadDefaultAssembly()
+            var pluginTypes = loaded.Loader.LoadDefaultAssembly()
                 .GetTypes()
                 .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t));
 
@@ -300,7 +330,8 @@ public class PluginsService: ServiceBase, IPluginsService
                     Name = netriskPlugin.PluginName,
                     Description = netriskPlugin.PluginDescription,
                     Version = netriskPlugin.PluginVersion,
-                    IsEnabled = await PluginIsEnabledAsync(netriskPlugin.PluginName)
+                    IsEnabled = await PluginIsEnabledAsync(netriskPlugin.PluginName),
+                    PackageName = new DirectoryInfo(loaded.Directory).Name
                 };
                 
                 pluginInfos.Add(pluginInfo);
@@ -308,7 +339,7 @@ public class PluginsService: ServiceBase, IPluginsService
             }  
         }
 
-        return pluginInfos;
+        return PluginListing.CollapseVersions(pluginInfos);
     }
 
     public async Task<T> GetPluginAsync<T>(string pluginName) where T: INetriskPlugin
@@ -319,7 +350,7 @@ public class PluginsService: ServiceBase, IPluginsService
 
         //if (typeof(T).Name != pluginName) throw new Exception($"Plugin Name must match the return type not found");
 
-        foreach (var pluginLoader in _pluginLoaders)
+        foreach (var pluginLoader in _pluginLoaders.Select(l => l.Loader))
         {
             var pluginTypes = pluginLoader.LoadDefaultAssembly()
                 .GetTypes()
@@ -342,7 +373,7 @@ public class PluginsService: ServiceBase, IPluginsService
     {
         if (!IsInitialized()) await LoadPluginsAsync();
 
-        foreach (var pluginLoader in _pluginLoaders)
+        foreach (var pluginLoader in _pluginLoaders.Select(l => l.Loader))
         {
             foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
             {
@@ -367,7 +398,7 @@ public class PluginsService: ServiceBase, IPluginsService
 
         var found = new List<T>();
 
-        foreach (var pluginLoader in _pluginLoaders)
+        foreach (var pluginLoader in _pluginLoaders.Select(l => l.Loader))
         {
             foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
             {
@@ -382,13 +413,37 @@ public class PluginsService: ServiceBase, IPluginsService
     }
 
     /// <summary>
+    /// Overrides the plugins root. Set it to keep plugins outside the deployed application
+    /// directory -- a mounted volume in a container, a path a test owns -- and leave it unset for
+    /// the default, which is <c>Plugins</c> beside the host's binaries.
+    /// </summary>
+    public const string PluginsPathEnvironmentVariable = "NETRISK_PLUGINS_PATH";
+
+    /// <summary>
     /// The host's plugins root — the directory whose subdirectories each hold one plugin.
     /// </summary>
-    private static string PluginsRoot => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+    /// <remarks>
+    /// Read on every access rather than cached, because the value it answers has to be able to
+    /// change between load passes: that is what lets a test give each case its own root, and a
+    /// loaded plugin assembly stays locked by this process for its lifetime, so reusing one root
+    /// across cases cannot be cleaned up between them.
+    /// </remarks>
+    private static string PluginsRoot
+    {
+        get
+        {
+            var configured = Environment.GetEnvironmentVariable(PluginsPathEnvironmentVariable);
+
+            return string.IsNullOrWhiteSpace(configured)
+                ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins")
+                : configured;
+        }
+    }
 
     public async Task<PluginInstallResult> InstallPluginPackageAsync(Stream package, string fileName)
     {
-        var packageName = PluginPackageInstaller.DerivePackageName(fileName);
+        var fallbackName = PluginPackageInstaller.DerivePackageName(fileName);
+        var packageName = fallbackName;
 
         if (packageName is null)
             return Failure(string.Empty,
@@ -424,11 +479,23 @@ public class PluginsService: ServiceBase, IPluginsService
             if (!validation.IsValid)
                 return Failure(packageName, validation.Error!);
 
+            // The directory is named after the plugin assembly, not the uploaded file: a package
+            // named for its release (BastionVaultPlugin-1.2.1.zip) would otherwise install beside
+            // the previous release rather than over it, and the loader would find both.
+            packageName = PluginPackageInstaller.DeriveInstallDirectoryName(validation) ?? fallbackName!;
+
             var pluginsRoot = PluginsRoot;
             Directory.CreateDirectory(pluginsRoot);
 
             var targetDirectory = SafePathTool.CombineWithin(pluginsRoot, packageName);
             var replaced = Directory.Exists(targetDirectory);
+
+            // Installations that predate the naming rule above already hold one directory per
+            // release, so replacing the target alone would leave the older ones loading. They are
+            // removed here rather than merely hidden: two copies of one plugin have two independent
+            // enabled switches, and which of them a capability lookup resolves is not defined.
+            var superseded = SupersededDirectories(pluginsRoot, packageName,
+                PluginPackageInstaller.PluginAssemblyNames(validation.Files));
 
             // A replacement is staged, not overwritten in place: if extraction dies half-way the
             // installation would otherwise be left with a directory holding half of one version of
@@ -459,9 +526,30 @@ public class PluginsService: ServiceBase, IPluginsService
 
             if (backup is not null) TryDelete(backup);
 
-            var before = _plugins.ToHashSet(StringComparer.Ordinal);
+            var removedDirectories = new List<string>();
+
+            foreach (var directory in superseded)
+            {
+                TryDelete(directory);
+
+                if (Directory.Exists(directory))
+                {
+                    MarkUninstalled(directory);
+                    Log.Warning(
+                        "Superseded plugin directory {Directory} could not be deleted; it is marked " +
+                        "uninstalled and will be removed on a later start.", directory);
+                }
+
+                removedDirectories.Add(new DirectoryInfo(directory).Name);
+            }
+
             await LoadPluginsAsync();
-            var loaded = _plugins.Where(p => !before.Contains(p)).ToList();
+
+            // The plugins this package provides, not the ones that are new to the process. A new
+            // version of an installed plugin adds no name, so a diff of the loaded set reported a
+            // successful upgrade as "no new plugin was discovered" and told the operator to go and
+            // read the log.
+            var loaded = PluginNamesInDirectory(targetDirectory);
 
             Log.Information(
                 "Plugin package {Package} installed into {Directory} ({Count} files); plugins now loaded: {Loaded}",
@@ -471,13 +559,11 @@ public class PluginsService: ServiceBase, IPluginsService
             {
                 Success = true,
                 PackageName = packageName,
-                ReplacedExisting = replaced,
+                ReplacedExisting = replaced || removedDirectories.Count > 0,
                 InstalledFiles = written,
                 LoadedPlugins = loaded,
-                Message = loaded.Count > 0
-                    ? $"Installed {packageName}. New plugins are disabled until you switch them on."
-                    : $"Installed {packageName}, but no new plugin was discovered. Check the server log — " +
-                      "the assembly may be refused by the signature policy or may not implement INetriskPlugin."
+                RemovedDirectories = removedDirectories,
+                Message = DescribeInstall(packageName, replaced, loaded, removedDirectories)
             };
         }
         catch (ArgumentException ex)
@@ -496,6 +582,269 @@ public class PluginsService: ServiceBase, IPluginsService
         {
             TryDeleteFile(tempFile);
         }
+    }
+
+    /// <summary>
+    /// The plugin names the loaded assemblies in <paramref name="directory"/> provide. Used after a
+    /// reload to say what an installation actually produced.
+    /// </summary>
+    private List<string> PluginNamesInDirectory(string directory)
+    {
+        var names = new List<string>();
+
+        foreach (var loaded in _pluginLoaders)
+        {
+            if (!SameDirectory(loaded.Directory, directory)) continue;
+
+            foreach (var pluginType in LoadableTypes(loaded.Loader)
+                         .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t)))
+            {
+                if (Activator.CreateInstance(pluginType) is not INetriskPlugin plugin) continue;
+                if (!names.Contains(plugin.PluginName)) names.Add(plugin.PluginName);
+            }
+        }
+
+        return names;
+    }
+
+    private static bool SameDirectory(string? left, string? right)
+    {
+        if (string.IsNullOrEmpty(left) || string.IsNullOrEmpty(right)) return false;
+
+        return string.Equals(
+            Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar),
+            Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// What to tell the operator about a completed installation.
+    /// </summary>
+    private static string DescribeInstall(string packageName, bool replaced, List<string> loaded,
+        List<string> removedDirectories)
+    {
+        if (loaded.Count == 0)
+            return $"Installed {packageName}, but no plugin was discovered in it. Check the server log: " +
+                   "the assembly may be refused by the signature policy or may not implement INetriskPlugin.";
+
+        var what = string.Join(", ", loaded);
+
+        var message = replaced || removedDirectories.Count > 0
+            ? $"Updated {what} from {packageName}. Its enabled setting was kept."
+            : $"Installed {what} from {packageName}. A new plugin is disabled until you switch it on.";
+
+        if (removedDirectories.Count > 0)
+            message += $" Replaced earlier installation(s): {string.Join(", ", removedDirectories)}.";
+
+        return message;
+    }
+
+    /// <summary>
+    /// The plugin directories under <paramref name="pluginsRoot"/>, other than
+    /// <paramref name="targetDirectory"/>, that carry one of <paramref name="assemblyNames"/> and are
+    /// therefore an older installation of the same plugin.
+    /// </summary>
+    private static List<string> SupersededDirectories(string pluginsRoot, string targetDirectory,
+        IReadOnlyCollection<string> assemblyNames)
+    {
+        try
+        {
+            var installed = Directory.GetDirectories(pluginsRoot)
+                .Select(d => (Directory: new DirectoryInfo(d).Name,
+                    Assemblies: (IReadOnlyCollection<string>)Directory
+                        .GetFiles(d, "*" + PluginPackageInstaller.PluginAssemblySuffix)
+                        .Select(Path.GetFileName)
+                        .Where(f => f is not null)
+                        .Select(f => f!)
+                        .ToList()))
+                .ToList();
+
+            return PluginPackageInstaller
+                .FindSupersededDirectories(targetDirectory, assemblyNames, installed)
+                .Select(d => Path.Combine(pluginsRoot, d))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            // Failing to enumerate the plugins root must not fail the install: the target directory
+            // is still replaced correctly, and the worst case is a duplicate that was already there.
+            Log.Warning("Could not look for superseded plugin directories in {Root}: {Message}",
+                pluginsRoot, ex.Message);
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Removes as much of an uninstalled plugin directory as the operating system allows, and the
+    /// directory itself once nothing is left in it.
+    /// </summary>
+    /// <remarks>
+    /// The marker is deleted last, and only together with the directory. A plain recursive delete
+    /// will not do: it removes the files it can reach before it hits the locked assembly, and the
+    /// marker is one of them -- so the pass after that saw a directory with a plugin assembly in it
+    /// and no marker, and loaded the plugin the operator had deleted straight back.
+    /// </remarks>
+    private static void SweepUninstalled(string directory)
+    {
+        var marker = Path.Combine(directory, PluginPackageInstaller.UninstalledMarkerFile);
+
+        foreach (var file in SafeEnumerate(directory, Directory.GetFiles))
+        {
+            if (string.Equals(file, marker, StringComparison.OrdinalIgnoreCase)) continue;
+
+            try
+            {
+                File.Delete(file);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Uninstalled plugin file {File} is still in use: {Message}", file, ex.Message);
+            }
+        }
+
+        foreach (var child in SafeEnumerate(directory, Directory.GetDirectories))
+            TryDelete(child);
+
+        var remaining = SafeEnumerate(directory, Directory.GetFileSystemEntries)
+            .Where(e => !string.Equals(e, marker, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (remaining.Count > 0) return;
+
+        try
+        {
+            File.Delete(marker);
+            Directory.Delete(directory);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not remove the uninstalled plugin directory {Directory}: {Message}",
+                directory, ex.Message);
+        }
+    }
+
+    private static string[] SafeEnumerate(string directory, Func<string, string[]> enumerate)
+    {
+        try
+        {
+            return enumerate(directory);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning("Could not read {Directory}: {Message}", directory, ex.Message);
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Marks a directory whose files could not be deleted, so the next load pass skips it and tries
+    /// again. Best effort: a marker that cannot be written leaves the directory loading, which the
+    /// caller reports.
+    /// </summary>
+    private static bool MarkUninstalled(string directory)
+    {
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, PluginPackageInstaller.UninstalledMarkerFile),
+                $"Uninstalled at {DateTime.UtcNow:O}. NetRisk deletes this directory on a start when " +
+                "nothing holds its files.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not mark {Directory} as uninstalled", directory);
+            return false;
+        }
+    }
+
+    public async Task<PluginUninstallResult> UninstallPluginAsync(string pluginName)
+    {
+        if (!IsInitialized()) await LoadPluginsAsync();
+
+        var directories = DirectoriesProviding(pluginName);
+
+        if (directories.Count == 0)
+            return new PluginUninstallResult
+            {
+                Success = false,
+                PluginName = pluginName,
+                Message = $"Plugin {pluginName} is not installed."
+            };
+
+        // Switched off first, and before anything is deleted. A plugin whose files are still locked
+        // stays loaded in this process until it restarts, so the setting is what actually stops it
+        // being used in the meantime; doing it first also means a failed delete cannot leave an
+        // enabled plugin the operator believes is gone.
+        await SetPluginEnabledStatusAsync(pluginName, false);
+
+        var pending = false;
+
+        foreach (var directory in directories)
+        {
+            TryDelete(directory);
+
+            if (!Directory.Exists(directory)) continue;
+
+            if (!MarkUninstalled(directory))
+                return new PluginUninstallResult
+                {
+                    Success = false,
+                    PluginName = pluginName,
+                    PackageName = new DirectoryInfo(directory).Name,
+                    Message = $"Plugin {pluginName} was disabled, but {directory} could neither be " +
+                              "deleted nor marked for removal. Check the server's permissions on its " +
+                              "Plugins directory."
+                };
+
+            pending = true;
+        }
+
+        var packageNames = directories.Select(d => new DirectoryInfo(d).Name).ToList();
+
+        await LoadPluginsAsync();
+
+        Log.Information("Plugin {Name} uninstalled from {Directories} (removal pending: {Pending})",
+            pluginName, string.Join(", ", packageNames), pending);
+
+        return new PluginUninstallResult
+        {
+            Success = true,
+            PluginName = pluginName,
+            PackageName = string.Join(", ", packageNames),
+            RemovalPending = pending,
+            Message = pending
+                ? $"Plugin {pluginName} was disabled and removed from the list. Its files are still in " +
+                  "use by the server and will be deleted when it next restarts."
+                : $"Plugin {pluginName} was removed."
+        };
+    }
+
+    /// <summary>
+    /// Every loaded directory whose assemblies provide <paramref name="pluginName"/> (plural,
+    /// because a duplicate installation is exactly the state this has to be able to clean up).
+    /// </summary>
+    private List<string> DirectoriesProviding(string pluginName)
+    {
+        var directories = new List<string>();
+
+        foreach (var loaded in _pluginLoaders)
+        {
+            if (string.IsNullOrEmpty(loaded.Directory)) continue;
+
+            foreach (var pluginType in LoadableTypes(loaded.Loader)
+                         .Where(t => typeof(INetriskPlugin).IsAssignableFrom(t)))
+            {
+                if (Activator.CreateInstance(pluginType) is not INetriskPlugin plugin) continue;
+                if (!string.Equals(plugin.PluginName, pluginName, StringComparison.Ordinal)) continue;
+
+                if (!directories.Contains(loaded.Directory, StringComparer.OrdinalIgnoreCase))
+                    directories.Add(loaded.Directory);
+
+                break;
+            }
+        }
+
+        return directories;
     }
 
     private static PluginInstallResult Failure(string packageName, string message)

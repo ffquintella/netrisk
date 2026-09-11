@@ -43,6 +43,14 @@
                                     Header="{Binding StrVersion}" 
                                     Binding="{Binding Version}"/>
                 
+                <DataGridTemplateColumn Header="{Binding StrPackage}" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="plugins:PluginInfo">
+                            <TextBlock Margin="5 0 5 0" VerticalAlignment="Center" Text="{Binding PackageName}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTemplateColumn Header="{Binding StrEnabled}" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate DataType="plugins:PluginInfo">
@@ -50,6 +58,20 @@
                                 <ToggleSwitch Margin="5" OnContent="" OffContent="" IsChecked="{Binding IsEnabled }"
                                               PropertyChanged="PluginSwitch_OnPropertyChanged"
                                               />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{Binding StrDeletePlugin}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="plugins:PluginInfo">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Margin="5" Classes="detailButton"
+                                        ToolTip.Tip="{Binding $parent[DataGrid].((dvm:PluginsViewModel)DataContext).StrDeletePlugin}"
+                                        Click="DeletePlugin_OnClick">
+                                    <avalonia:MaterialIcon Kind="Delete"/>
+                                </Button>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

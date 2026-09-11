@@ -301,4 +301,106 @@ public class PluginsRestServiceTest : BaseServiceTest, IDisposable
 
         _authentication.Received(1).DiscardAuthenticationToken();
     }
+
+    // ---------------- UninstallPluginAsync ----------------
+
+    [Fact]
+    public async Task TestUninstallPluginAsync()
+    {
+        _backend.OnDelete("/Plugins/Nessus", new PluginUninstallResult
+        {
+            Success = true,
+            PluginName = "Nessus",
+            PackageName = "NessusPlugin",
+            Message = "Plugin Nessus was removed."
+        });
+
+        var result = await _service.UninstallPluginAsync("Nessus");
+
+        Assert.True(result.Success);
+        Assert.False(result.RemovalPending);
+        Assert.Equal("NessusPlugin", result.PackageName);
+        Assert.Equal("DELETE /Plugins/Nessus", _backend.LastRequest.ToString());
+    }
+
+    /// <summary>
+    /// The pending-removal flag has to survive the round trip: it is the difference between "the
+    /// plugin is gone" and "the plugin is gone and the server needs a restart to drop its files",
+    /// and the desktop client says which of the two happened.
+    /// </summary>
+    [Fact]
+    public async Task TestUninstallPluginAsyncCarriesThePendingRemovalFlag()
+    {
+        _backend.OnDelete("/Plugins/Nessus", new PluginUninstallResult
+        {
+            Success = true,
+            PluginName = "Nessus",
+            RemovalPending = true,
+            Message = "Its files are still in use by the server."
+        });
+
+        var result = await _service.UninstallPluginAsync("Nessus");
+
+        Assert.True(result.Success);
+        Assert.True(result.RemovalPending);
+        Assert.Contains("still in use", result.Message);
+    }
+
+    [Fact]
+    public async Task TestUninstallPluginAsyncReturnsTheServersRefusalReason()
+    {
+        _backend.OnDelete("/Plugins/Nessus", new PluginUninstallResult
+        {
+            Success = false,
+            PluginName = "Nessus",
+            Message = "The directory could neither be deleted nor marked for removal."
+        }, HttpStatusCode.BadRequest);
+
+        var result = await _service.UninstallPluginAsync("Nessus");
+
+        Assert.False(result.Success);
+        Assert.Contains("could neither be deleted", result.Message);
+    }
+
+    /// <summary>
+    /// A 404 has no body to read, so the service has to produce the sentence itself rather than
+    /// handing the caller a success-shaped default.
+    /// </summary>
+    [Fact]
+    public async Task TestUninstallPluginAsyncReportsAPluginTheServerDoesNotHave()
+    {
+        _backend.OnStatus(Method.Delete, "/Plugins/Ghost", HttpStatusCode.NotFound);
+
+        var result = await _service.UninstallPluginAsync("Ghost");
+
+        Assert.False(result.Success);
+        Assert.Equal("Ghost", result.PluginName);
+        Assert.Contains("Ghost", result.Message);
+    }
+
+    [Fact]
+    public async Task TestUninstallPluginAsyncDiscardsTheTokenOnAnExpiredSession()
+    {
+        _backend.OnStatus(Method.Delete, "/Plugins/Nessus", HttpStatusCode.Unauthorized);
+
+        await Assert.ThrowsAsync<RestComunicationException>(
+            () => _service.UninstallPluginAsync("Nessus"));
+
+        _authentication.Received().DiscardAuthenticationToken();
+    }
+
+    /// <summary>A plugin name with a space in it must not break the route.</summary>
+    [Fact]
+    public async Task TestUninstallPluginAsyncEscapesThePluginName()
+    {
+        _backend.OnDelete("/Plugins/My%20Plugin", new PluginUninstallResult
+        {
+            Success = true,
+            PluginName = "My Plugin"
+        });
+
+        var result = await _service.UninstallPluginAsync("My Plugin");
+
+        Assert.True(result.Success);
+    }
 }

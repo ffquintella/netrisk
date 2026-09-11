@@ -90,4 +90,16 @@ public interface IPluginsService
     /// installed plugin still arrives <em>disabled</em>: installing is not switching on.
     /// </returns>
     public Task<PluginInstallResult> InstallPluginPackageAsync(Stream package, string fileName);
+
+    /// <summary>
+    /// Removes an installed plugin: switches it off, deletes the directory it was loaded from, and
+    /// reloads.
+    /// </summary>
+    /// <remarks>
+    /// A result rather than an exception, like the install. Two outcomes are both successes and the
+    /// caller has to be able to tell them apart: the files are gone, or the files are still locked by
+    /// this process and will be deleted on the next start (<c>RemovalPending</c>). In both cases the
+    /// plugin is disabled and no longer listed.
+    /// </remarks>
+    public Task<PluginUninstallResult> UninstallPluginAsync(string pluginName);
 }
