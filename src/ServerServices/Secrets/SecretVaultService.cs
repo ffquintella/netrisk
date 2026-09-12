@@ -470,6 +470,19 @@ public class SecretVaultService(
                 $"Vault connection '{connection.Name}' has no API key stored. Re-enter it on the "
                 + "connection.");
 
+        // A vault connection's own key is the one credential in the product that cannot be a vault
+        // reference: resolving it would need a connection to the vault, which is what this key is
+        // for. The check is here rather than left to the plugin because ISecretProtector.Unprotect
+        // hands a reference back verbatim by design -- so without it the literal string
+        // "vault:v1:3:secret/..." is sent as the vault token, and the vault answers 403 "Permission
+        // denied", which is indistinguishable from an expired token and sends the operator looking
+        // in the wrong place.
+        if (SecretReference.IsReference(apiKey))
+            throw new SecretVaultResolutionException(
+                $"The API key of vault connection '{connection.Name}' is stored as a vault reference, "
+                + "which cannot work: reading it would require this very connection. Re-enter the key "
+                + "itself on the connection.");
+
         if (plugin.RequiresMachineId && string.IsNullOrWhiteSpace(connection.MachineId))
             throw new SecretVaultResolutionException(
                 $"The '{plugin.PluginName}' plugin binds credentials to a machine identity, and vault "

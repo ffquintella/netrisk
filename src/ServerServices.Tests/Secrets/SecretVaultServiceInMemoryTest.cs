@@ -217,6 +217,44 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Contains("fake vault", stored.LastTestMessage!);
     }
 
+    /// <summary>
+    /// A vault connection whose own API key is stored as a vault reference is refused with a message
+    /// that says so.
+    /// </summary>
+    /// <remarks>
+    /// <para>The one credential in the product that cannot be vault-backed, because resolving it
+    /// would require the connection it belongs to. <c>ISecretProtector.Unprotect</c> hands a
+    /// reference back verbatim by design, so without this guard the literal
+    /// <c>vault:v1:1:secret/…</c> string is sent as the vault token and the vault answers 403
+    /// "Permission denied" — the same answer it gives an expired token, which is how this cost an
+    /// afternoon of looking at BastionVault policies.</para>
+    ///
+    /// <para>Reachable because <c>CountReferencesAsync</c> counts <c>EncryptedApiKey</c> on this very
+    /// table: the schema treats a vault connection's key as a field that may hold a reference.</para>
+    /// </remarks>
+    [Fact]
+    public async Task TestRefusesAnApiKeyThatIsItselfAVaultReference()
+    {
+        var created = await CreateAsync();
+
+        // Written the way a mis-set field would be: a reference stored where the key belongs.
+        using (var db = GetService<IDalService>().GetContext())
+        {
+            var row = db.SecretVaultConnections.Single(c => c.Id == created.Id);
+            row.EncryptedApiKey = SecretReference.Prefix + created.Id + ":secret/netrisk/vault-key#token";
+            db.SaveChanges();
+        }
+
+        var result = await _svc.TestConnectionAsync(created.Id);
+
+        Assert.False(result.Success);
+        Assert.Contains("vault reference", result.Message);
+        Assert.Contains("Re-enter the key", result.Message);
+
+        // And the plugin is never reached, so nothing is sent to the vault.
+        Assert.Equal(0, _plugin.TestCalls);
+    }
+
     [Fact]
     public async Task TestReportsAPluginThatThrewAsAFailureRatherThanPropagating()
     {

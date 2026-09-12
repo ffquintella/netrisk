@@ -8,9 +8,9 @@
     plain `dotnet run` reports the real version.
   -->
   <PropertyGroup>
-    <Version>2.21.8</Version>
-    <AssemblyVersion>2.21.8</AssemblyVersion>
-    <FileVersion>2.21.8</FileVersion>
+    <Version>2.21.9</Version>
+    <AssemblyVersion>2.21.9</AssemblyVersion>
+    <FileVersion>2.21.9</FileVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!--

@@ -16,6 +16,23 @@ This release includes new features and improvements.
 
 
 
+## [2.21.9] - 2026-09-12
+
+This release fixes a vault connection key that is itself a vault reference.
+
+### Fixed
+
+- **A vault connection whose own API key is stored as a vault reference is now refused with a
+  message that says so.** It is the one credential in the product that cannot be vault-backed,
+  because resolving it would need the very connection it belongs to — but `CountReferencesAsync`
+  counts `EncryptedApiKey` on that table, so the state is reachable, and
+  `ISecretProtector.Unprotect` hands a reference back verbatim by design. The result was that the
+  literal `vault:v1:…` string was sent as the vault token: BastionVault answered 403 "Permission
+  denied", which is exactly what it answers an expired token, and the operator went looking at vault
+  policies for a problem that was in the connection's own key field.
+
+
+
 ## [2.21.8] - 2026-09-12
 
 This release fixes which copy of a duplicated plugin serves a request.
