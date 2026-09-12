@@ -16,6 +16,25 @@ This release includes new features and improvements.
 
 
 
+## [2.21.8] - 2026-09-12
+
+This release fixes which copy of a duplicated plugin serves a request.
+
+### Fixed
+
+- **A plugin installed twice no longer serves requests from the older copy.** Listing collapsed
+  duplicates in 2.21.7, but the capability lookups behind them did not: `GetEnabledPluginsAsync`
+  returned one entry per *directory*, and `GetPluginByNameAsync` returned whichever the filesystem
+  enumerated first. On a host carrying BastionVaultPlugin 1.2.0 and 1.2.1 that meant every
+  credential resolved through 1.2.0 while Administration → Plugins showed 1.2.1 enabled — and
+  because both rows share one `Plugin_<name>_Enabled` setting, the per-row switches could not
+  express which copy was in use. The visible symptom was a vault connection test reporting
+  "BastionVault denied this token (HTTP 403)" without the vault's own explanation of why, since
+  quoting that explanation is exactly what 1.2.1 added. The newest version now serves, and a
+  duplicated plugin is offered once.
+
+
+
 ## [2.21.7] - 2026-09-11
 
 This release fixes duplicate plugin installations and adds plugin removal.

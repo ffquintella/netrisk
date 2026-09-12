@@ -58,6 +58,14 @@ The list itself collapses a duplicate as a second line of defence, since a plugi
 arrive by hand: `PluginListing.CollapseVersions` shows one row per plugin name, the highest version,
 and logs a warning naming the directories.
 
+**Which copy serves is a separate question from which copy is listed**, and both have to be answered
+or the screen disagrees with the behaviour. `GetEnabledPluginsAsync` and `GetPluginByNameAsync` route
+through `PluginListing.PreferNewestPerName`, so a duplicated plugin is offered once and the newest
+version is the one that resolves a credential. Before that they took whichever loader came first —
+directory enumeration order — so a host with BastionVaultPlugin 1.2.0 beside 1.2.1 resolved through
+1.2.0 while administration showed 1.2.1 enabled. Note that the enabled switch cannot distinguish
+them either: both rows read the same `Plugin_<name>_Enabled` setting.
+
 `ServerServices/Plugins/PluginPackageInstaller` decides everything from the archive's **table of
 contents, before a byte is written** — so a rejection never has to clean up after itself, and the
 rules are testable without a filesystem:

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Model.Plugins;
 using ServerServices.Plugins;
@@ -82,6 +83,72 @@ public class PluginListingTest
 
         Assert.Equal(2, listed.Count);
     }
+
+    #region WHICH COPY SERVES
+
+    private sealed record Candidate(string Name, string Version, string Directory);
+
+    private static List<Candidate> Select(params Candidate[] candidates) =>
+        PluginListing.PreferNewestPerName(candidates, c => c.Name, c => c.Version);
+
+    /// <summary>
+    /// The incident this was written for. A host with BastionVaultPlugin 1.2.0 and 1.2.1 side by
+    /// side resolved credentials through whichever directory the filesystem enumerated first, which
+    /// was 1.2.0 — so a vault test reported a denied token without the vault's own explanation,
+    /// because quoting that explanation is exactly what 1.2.1 added.
+    /// </summary>
+    [Fact]
+    public void TestTheNewestCopyServesRegardlessOfEnumerationOrder()
+    {
+        var oldFirst = Select(
+            new Candidate("BastionVaultPlugin", "1.2.0", "BastionVaultPlugin-1.2.0"),
+            new Candidate("BastionVaultPlugin", "1.2.1", "BastionVaultPlugin-1.2.1"));
+
+        var newFirst = Select(
+            new Candidate("BastionVaultPlugin", "1.2.1", "BastionVaultPlugin-1.2.1"),
+            new Candidate("BastionVaultPlugin", "1.2.0", "BastionVaultPlugin-1.2.0"));
+
+        Assert.Equal("1.2.1", Assert.Single(oldFirst).Version);
+        Assert.Equal("1.2.1", Assert.Single(newFirst).Version);
+    }
+
+    [Fact]
+    public void TestEveryDistinctPluginIsKeptInFirstSeenOrder()
+    {
+        var selected = Select(
+            new Candidate("FaceIdPlugin", "1.0.1", "a"),
+            new Candidate("BastionVaultPlugin", "1.2.0", "b"),
+            new Candidate("BastionVaultPlugin", "1.2.1", "c"));
+
+        Assert.Equal(["FaceIdPlugin", "BastionVaultPlugin"], selected.Select(c => c.Name));
+    }
+
+    /// <summary>
+    /// Two directories at the same version keep the first. Not arbitrary: the alternative is a
+    /// selection that changes with directory enumeration order, which is the property this whole
+    /// function exists to remove.
+    /// </summary>
+    [Fact]
+    public void TestATieKeepsTheIncumbent()
+    {
+        var selected = Select(
+            new Candidate("Plugin", "1.0.0", "first"),
+            new Candidate("Plugin", "1.0.0", "second"));
+
+        Assert.Equal("first", Assert.Single(selected).Directory);
+    }
+
+    [Fact]
+    public void TestNamesDifferingOnlyInCaseAreNotMerged()
+    {
+        var selected = Select(
+            new Candidate("MyPlugin", "1.0.0", "a"),
+            new Candidate("myplugin", "2.0.0", "b"));
+
+        Assert.Equal(2, selected.Count);
+    }
+
+    #endregion
 
     [Fact]
     public void TestAnEmptyListStaysEmpty()

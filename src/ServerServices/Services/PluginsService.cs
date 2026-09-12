@@ -373,40 +373,62 @@ public class PluginsService: ServiceBase, IPluginsService
     {
         if (!IsInitialized()) await LoadPluginsAsync();
 
-        foreach (var pluginLoader in _pluginLoaders.Select(l => l.Loader))
+        // The name is matched, not assumed. GetPluginAsync<T> checks that *some* plugin with the
+        // requested name exists and then returns the first instance assignable to T from any loader,
+        // which on an installation with two plugins of the same capability silently returns the
+        // wrong one. A vault connection names the plugin that services it precisely so that cannot
+        // happen, so this overload has to honour it.
+        //
+        // Matching the name is not sufficient on its own, because the same name can be on disk
+        // twice. Of those, the newest version serves: see PluginListing.PreferNewestPerName.
+        var matches = Candidates<T>()
+            .Where(c => string.Equals(c.Plugin.PluginName, pluginName, StringComparison.Ordinal))
+            .ToList();
+
+        return PluginListing
+            .PreferNewestPerName(matches, c => c.Plugin.PluginName, c => c.Plugin.PluginVersion)
+            .Select(c => c.Plugin)
+            .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Every instantiable plugin implementing <typeparamref name="T"/>, in loader order, with the
+    /// directory each came from.
+    /// </summary>
+    private List<(T Plugin, string Directory)> Candidates<T>() where T : INetriskPlugin
+    {
+        var candidates = new List<(T, string)>();
+
+        foreach (var loaded in _pluginLoaders)
         {
-            foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
+            foreach (var pluginType in LoadableTypes(loaded.Loader).Where(t => typeof(T).IsAssignableFrom(t)))
             {
                 if (Activator.CreateInstance(pluginType) is not T candidate) continue;
 
-                // The name is matched, not assumed. GetPluginAsync<T> checks that *some* plugin with
-                // the requested name exists and then returns the first instance assignable to T from
-                // any loader, which on an installation with two plugins of the same capability
-                // silently returns the wrong one. A vault connection names the plugin that services
-                // it precisely so that cannot happen, so this overload has to honour it.
-                if (string.Equals(candidate.PluginName, pluginName, StringComparison.Ordinal))
-                    return candidate;
+                candidates.Add((candidate, loaded.Directory));
             }
         }
 
-        return default;
+        return candidates;
     }
 
     public async Task<List<T>> GetEnabledPluginsAsync<T>() where T : INetriskPlugin
     {
         if (!IsInitialized()) await LoadPluginsAsync();
 
+        // One entry per plugin name, newest version. A plugin installed twice used to be offered
+        // twice here — two rows in the vault connection editor for one plugin, and no way for the
+        // caller to tell which of them a later lookup would resolve to.
+        var candidates = PluginListing.PreferNewestPerName(
+            Candidates<T>(), c => c.Plugin.PluginName, c => c.Plugin.PluginVersion);
+
         var found = new List<T>();
 
-        foreach (var pluginLoader in _pluginLoaders.Select(l => l.Loader))
+        foreach (var candidate in candidates)
         {
-            foreach (var pluginType in LoadableTypes(pluginLoader).Where(t => typeof(T).IsAssignableFrom(t)))
-            {
-                if (Activator.CreateInstance(pluginType) is not T candidate) continue;
-                if (!await PluginIsEnabledAsync(candidate.PluginName)) continue;
+            if (!await PluginIsEnabledAsync(candidate.Plugin.PluginName)) continue;
 
-                found.Add(candidate);
-            }
+            found.Add(candidate.Plugin);
         }
 
         return found;

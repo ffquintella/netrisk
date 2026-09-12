@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Contracts.Secrets;
 using JetBrains.Annotations;
 using ServerServices.Interfaces;
 using ServerServices.Plugins;
@@ -242,6 +243,49 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         {
             Discard(package);
         }
+    }
+
+    /// <summary>
+    /// A plugin installed twice is offered once.
+    /// </summary>
+    /// <remarks>
+    /// Before this, every capability lookup walked the loaders and took what it found: the vault
+    /// connection editor listed the same plugin twice, and — worse, because it is silent — the copy
+    /// that actually served a credential was whichever directory the filesystem enumerated first.
+    /// Both rows share one <c>Plugin_&lt;name&gt;_Enabled</c> setting, so the administration screen
+    /// could show the newer copy enabled while the older one did the work.
+    /// </remarks>
+    [Fact]
+    public async Task ADuplicateInstallationIsOfferedOnceWhenEnabled()
+    {
+        InstallByHand("FixtureVaultPlugin-1.0.0");
+        InstallByHand("FixtureVaultPlugin-1.0.1");
+
+        var settings = GetService<ISettingsService>();
+        await settings.SetConfigurationKeyValueAsync("Plugin_" + PluginName + "_Enabled", "true");
+
+        await _plugins.LoadPluginsAsync();
+
+        var enabled = await _plugins.GetEnabledPluginsAsync<INetriskSecretVaultPlugin>();
+
+        Assert.Single(enabled.Where(p => p.PluginName == PluginName));
+    }
+
+    /// <summary>
+    /// Looking a duplicated plugin up by name returns exactly one instance, and never fails.
+    /// </summary>
+    [Fact]
+    public async Task ADuplicatedPluginStillResolvesByName()
+    {
+        InstallByHand("FixtureVaultPlugin-1.0.0");
+        InstallByHand("FixtureVaultPlugin-1.0.1");
+
+        await _plugins.LoadPluginsAsync();
+
+        var plugin = await _plugins.GetPluginByNameAsync<INetriskSecretVaultPlugin>(PluginName);
+
+        Assert.NotNull(plugin);
+        Assert.Equal(PluginName, plugin.PluginName);
     }
 
     [Fact]
