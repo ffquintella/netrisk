@@ -16,8 +16,8 @@
     <PackageReference Include="System.Reactive" Version="7.0.0" />
     <!-- Lets the configuration-layering test build the same provider stack the client
          does, so the installer-written netrisk.ini overlay is proved rather than assumed. -->
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.12" />
   </ItemGroup>
   <ItemGroup>
     <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that
