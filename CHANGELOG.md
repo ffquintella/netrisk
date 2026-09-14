@@ -16,6 +16,35 @@ This release includes new features and improvements.
 
 
 
+## [2.21.11] - 2026-09-14
+
+This release updates dependencies across the solution and changes how the REST client retries.
+
+### Added
+
+### Changed
+
+- **The REST client now retries according to its injected policy alone.** The
+  `libs/reliable-rest-client-wrapper` submodule moves to 0.1.2, which removes an inner
+  11-attempt loop that the configured Polly policy was wrapping. The two multiplied, so a
+  call against an unreachable API retried far more often — and for far longer — than the
+  policy asked for. Effective retry counts drop accordingly.
+- Avalonia and ReactiveUI move to 12.1.2 and 24.2.0 (the `avalonia` group, 8 packages).
+- `Microsoft.Extensions.*` move to 10.0.12 (the `microsoft-extensions` group, 11 packages),
+  and Entity Framework Core to 10.0.12 (the `entity-framework` group, 5 packages). These two
+  go together: EF 10.0.12 requires `Microsoft.Extensions.*` 10.0.12 transitively, and with
+  the 10.0.11 pins still in place a restore fails outright on NU1605.
+- `System.Security.Cryptography.Xml` and `System.Drawing.Common` move to 10.0.12,
+  `Microsoft.ML.OnnxRuntime` to 1.30.0, `Tmds.DBus.Protocol` to 0.95.1, and
+  `Spectre.Console.Cli.Extensions.DependencyInjection` to 0.29.0.
+- Build and test tooling: `Microsoft.Build.Tasks.Core` and `Microsoft.Build.Utilities.Core`
+  to 18.10.1; `xunit.v3` to 4.0.1, `Microsoft.Testing.Extensions.CodeCoverage` to 18.11.2 and
+  `Testcontainers.MariaDb` to 4.15.0.
+
+### Fixed
+
+
+
 ## [2.21.10] - 2026-09-14
 
 This release fixes the secret scan reporting the per-plugin test projects.
