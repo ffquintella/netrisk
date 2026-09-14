@@ -25,8 +25,8 @@
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->
     <PackageReference Include="Microsoft.Build" Version="18.9.6" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.9.6" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.9.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.10.1" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.10.1" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
     <PackageReference Include="Tools.InnoSetup" Version="7.1.0" />
     <!-- Explicit overrides for vulnerable transitive packages.
