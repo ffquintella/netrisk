@@ -89,9 +89,12 @@ paths = [
   '''^src/WebSite/Certificates/localhost\.(cer|key|pfx)$''',
   '''^src/WebSite/Certificates/stubidp\.sustainsys\.com\.cer$''',
 
-  # Test fixtures: keys and tokens generated for a single test run.
-  '''^src/[A-Za-z.]+\.Tests/.*$''',
-  '''^src/DAL\.IntegrationTests/.*$''',
+  # Test fixtures: keys and tokens generated for a single test run. The optional directory segment
+  # is what covers the per-plugin test projects (src/Plugins/<Name>Plugin.Tests) — without it the
+  # fake vault responses in BastionVaultSecretPluginTest.cs ("password": "p4ss") were reported as
+  # certificate passwords.
+  '''^src/([A-Za-z.]+/)?[A-Za-z.]+\.Tests/.*$''',
+  '''^src/([A-Za-z.]+/)?[A-Za-z.]+\.IntegrationTests/.*$''',
 
   # Documentation that quotes credential *shapes* so a reader recognises one.
   '''^docs/security/.*\.md$''',

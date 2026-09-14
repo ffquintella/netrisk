@@ -16,6 +16,20 @@ This release includes new features and improvements.
 
 
 
+## [2.21.10] - 2026-09-14
+
+This release fixes the secret scan reporting the per-plugin test projects.
+
+### Fixed
+
+- **The secret scan no longer reports the per-plugin test projects.** The gitleaks allowlist matched
+  `src/<Name>.Tests/` only, so the fake vault responses in
+  `src/Plugins/BastionVaultPlugin.Tests/BastionVaultSecretPluginTest.cs` — a `"password": "p4ss"`
+  field in a stubbed HTTP body — were reported four times as certificate passwords and failed the
+  scheduled `security` workflow. The path patterns now allow one intermediate directory segment, so
+  a test project under `src/Plugins/` is covered like every other one.
+
+
 ## [2.21.9] - 2026-09-12
 
 This release fixes a vault connection key that is itself a vault reference.
