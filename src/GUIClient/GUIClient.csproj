@@ -40,18 +40,18 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
     <PackageReference Include="Mapster" Version="10.0.12" />
-    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia" Version="12.1.2" />
     <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
     <!-- Transitive pin: addresses GHSA-xrw6-gwf8-vvr9 in Tmds.DBus.Protocol (pulled via Avalonia on Linux) -->
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.95.0" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="12.1.2" />
     <!--Condition below is needed to remove InProcess.DevTools package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="InProcess.DevTools" Version="12.0.2" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
     <PackageReference Include="ClosedXML" Version="0.105.1" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.2" />
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
     <PackageReference Include="FlashCap" Version="1.11.37" />
     <PackageReference Include="FlashCap.Core" Version="1.100.0" />
@@ -64,7 +64,7 @@
     <!-- The optional netrisk.ini administrator overlay that the installers write. -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.11" />
     <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
-    <PackageReference Include="ReactiveUI" Version="24.1.0" />
+    <PackageReference Include="ReactiveUI" Version="24.2.0" />
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.1" />
     <PackageReference Include="Splat" Version="21.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
