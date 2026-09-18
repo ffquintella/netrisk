@@ -224,6 +224,10 @@ A metodologia dedica uma seção às particularidades de IES. O que o NetRisk of
 
 Ordenadas por quanto destravam da metodologia, não por esforço.
 
+> **Estas lacunas são o escopo do [Track 9](../roadmap/TRACK_9_MIGR_TI_IA.md)**, agrupadas por
+> dependência em 12 etapas. Cada etapa é precedida por uma especificação completa e mesclada, e
+> nenhuma é entregue sem os testes que a especificação planejou.
+
 1. **Cadeia de ligação objetivo → processo → serviço → dado → ativo.** Um risco precisa poder apontar
    objetivo estratégico, processo, serviço de TI e dado — hoje aponta uma entidade. Destrava o
    princípio nº 1, o grupo Identificação do registro e a métrica de cobertura de processos críticos.

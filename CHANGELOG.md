@@ -20,6 +20,18 @@ This release includes new features and improvements.
   the structural gaps are the objective→process→service→data→asset chain, the eleven mandatory
   scenario flags that Gate A depends on, BIA fields (MTPD/RTO/RPO), KRIs, KEV/EPSS/ATT&CK as
   first-class prioritization signals, a third-party register, and an AI model inventory.
+- **Track 9 — MIGR-TI/IA Methodology Alignment** is on the roadmap as a planned track:
+  [ROADMAP.md](ROADMAP.md) plus detailed specifications in
+  [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md). Twelve stages in five
+  phases, scoped by the coverage analysis and ordered by dependency. Two gates apply to every stage
+  and are the substance of the plan: **no implementation before a merged, eleven-section
+  specification** (whose sections include the data model under the Track 6 conventions, the schema
+  path, the `[Authorize]` attribute of every action, and a per-layer test plan naming the cases),
+  and **nothing delivered without tests** — happy path plus every guard branch, a regression test
+  that fails on the pre-fix code, schema idempotence and replay, negative authorization cases, and
+  the edge cases the methodology itself names. A specification template and the per-stage directory
+  are in [docs/roadmap/track9/](docs/roadmap/track9/). The coverage analysis is the track's
+  acceptance criterion, re-run against the code rather than written once.
 
 ### Changed
 

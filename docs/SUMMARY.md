@@ -24,6 +24,9 @@
 * [📦 Track 5 — Native Packaging & Release Engineering](roadmap/TRACK_5_PACKAGING.md)
 * [🔐 Track 7 — Security Review & Hardening](roadmap/TRACK_7_SECURITY.md)
 * [⚖️ Track 8 — Risk Governance & Approval Workflows](roadmap/TRACK_8_RISK_GOVERNANCE.md)
+* [📐 Track 9 — MIGR-TI/IA Methodology Alignment](roadmap/TRACK_9_MIGR_TI_IA.md)
+  * [Especificações das etapas](roadmap/track9/README.md)
+    * [Modelo de especificação](roadmap/track9/_TEMPLATE.md)
 
 ## Methodology
 
