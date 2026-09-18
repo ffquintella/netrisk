@@ -10,6 +10,17 @@ This release includes new features and improvements.
 
 ### Added
 
+- **The MIGR-TI/IA reference methodology is now part of the documentation**, under
+  [docs/methodology/](docs/methodology/): the source report is versioned alongside the code, with a
+  structured Markdown summary of its seven phases, ten principles, four gates and risk-register
+  model. Alongside it, a phase-by-phase **coverage analysis** of what NetRisk instruments today —
+  each row naming the entity, service, endpoint or test that backs it, and marked absent where no
+  code can be named. The strongest alignment is the governance spine (expiring formal acceptance,
+  inherent vs. residual, segregation of duties, appetite, field-level audit trail, FAIR/Monte Carlo);
+  the structural gaps are the objective→process→service→data→asset chain, the eleven mandatory
+  scenario flags that Gate A depends on, BIA fields (MTPD/RTO/RPO), KRIs, KEV/EPSS/ATT&CK as
+  first-class prioritization signals, a third-party register, and an AI model inventory.
+
 ### Changed
 
 ### Fixed

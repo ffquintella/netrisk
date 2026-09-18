@@ -4,6 +4,10 @@ This directory contains per-feature documentation for NetRisk. Each file describ
 
 These are placeholder stubs — contributions welcome.
 
+> Para uma leitura transversal — quais destas áreas cobrem quais atividades da metodologia de
+> referência MIGR-TI/IA — ver
+> [docs/methodology/migr-ti-ia-coverage.md](../methodology/migr-ti-ia-coverage.md).
+
 ## Index
 
 - [Risk Management](risk-management.md)

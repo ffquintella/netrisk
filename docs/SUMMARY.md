@@ -25,6 +25,12 @@
 * [🔐 Track 7 — Security Review & Hardening](roadmap/TRACK_7_SECURITY.md)
 * [⚖️ Track 8 — Risk Governance & Approval Workflows](roadmap/TRACK_8_RISK_GOVERNANCE.md)
 
+## Methodology
+
+* [📐 MIGR-TI/IA — metodologia de referência](methodology/README.md)
+  * [Sumário da metodologia](methodology/migr-ti-ia.md)
+  * [Aderência do NetRisk à MIGR-TI/IA](methodology/migr-ti-ia-coverage.md)
+
 ## Features
 
 * [🔎 Scanner importers and finding ingestion](features/scanner-importers.md)
