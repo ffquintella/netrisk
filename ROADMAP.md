@@ -4,11 +4,15 @@ This document tracks the strategic direction and planned features for NetRisk. T
 
 For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 
-> **Status: every track on this roadmap is delivered as of 2.17.0** — 8 tracks, 37 milestones, 137
-> line items. The tracks below are kept as the record of what was built and why; each item states
-> what shipped, and where the delivered behaviour differs from the original specification the item
-> says so rather than simply claiming the box. New capability areas should be added as Track 9 and
-> beyond rather than reopening a completed track.
+> **Status: Tracks 1–8 are delivered as of 2.17.0** — 8 tracks, 37 milestones, 137 line items. Those
+> tracks are kept as the record of what was built and why; each item states what shipped, and where
+> the delivered behaviour differs from the original specification the item says so rather than
+> simply claiming the box.
+>
+> **Track 9 is planned, not started.** It is the first track added after the 1–8 sweep and it does
+> not reopen any of them. Its items are unticked and stay unticked until each stage's specification
+> is merged and its tests are green — see the two gates in
+> [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md).
 >
 > Two categories of work deliberately remain outside these ticks:
 > - **Accepted security risks and informational findings** — three of the 34 findings from the
@@ -45,6 +49,7 @@ For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
 │   Track 6: Database Uniformization & Schema Health   ✓                  │
 │   Track 7: Security Review & Hardening   ✓                              │
 │   Track 8: Risk Governance & Approval Workflows (Acceptance/Portal)   ✓ │
+│   Track 9: MIGR-TI/IA Methodology Alignment   ◻ planned                 │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -397,10 +402,189 @@ The Avalonia desktop changes are **compile- and lint-verified only** — the GUI
 
 ---
 
+### Track 9: MIGR-TI/IA Methodology Alignment
+
+This track aligns NetRisk with the **MIGR-TI/IA** reference methodology — the integrated,
+process-oriented IT risk-management methodology for enterprises and universities, documented in
+[docs/methodology/](docs/methodology/). It is scoped by a phase-by-phase coverage analysis of the
+2.21.11 codebase ([docs/methodology/migr-ti-ia-coverage.md](docs/methodology/migr-ti-ia-coverage.md)),
+which confronted each activity of the methodology with the code and the schema rather than with the
+product documentation. The twelve stages below are the fifteen prioritized gaps from § 12 of that
+analysis, grouped by dependency. Full specifications and the per-stage edge cases live in
+[docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md).
+
+**Status: planned.** Nothing is started. This track does **not** reopen Track 8 — it builds on what
+Track 8 delivered (expiring formal acceptance with a residual snapshot, inherent vs. residual,
+enforced state machine, segregation of duties, appetite gating, the field-level audit trail,
+FAIR/Monte Carlo) and adds what the methodology requires and the system does not instrument.
+
+> **Two gates apply to every stage, without exception. They are the substance of this plan, not a
+> preamble.**
+>
+> **Gate 1 — Specification.** Each stage begins with a **complete, reviewed specification**, merged
+> as its own document under `docs/roadmap/track9/9.N-<slug>.md` **before the first implementation
+> commit**. No item below may be ticked, and no implementation PR may be opened, until that
+> specification is merged. A specification is complete only with all eleven required sections: gap
+> and phase · current state **naming the entity, service, endpoint or test** · target state and
+> negative scope · data model under the Track 6 conventions · schema path (EF migration **and**
+> numbered `Structure`/`Data` SQL) · API contract with the `[Authorize]`/`[PermissionAuthorize]`
+> attribute of every action · client and GUI surface with localization keys and style classes · the
+> **test plan, per layer, naming the cases** · verifiable acceptance criteria · the effect on the
+> coverage analysis, including which lines stay partial and why · risks, deviations and deliberate
+> decisions. A section that does not apply is declared as such with a reason — never omitted,
+> because an absent section is indistinguishable from a forgotten one. A merged specification changes
+> by dated amendment, not by a contradicting commit.
+>
+> **Gate 2 — Tests.** Tests are part of the change, not a follow-up
+> ([src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md)). No item is ticked without the
+> tests its specification planned: the happy path **and every guard or error branch introduced**;
+> a regression test that **fails on the pre-fix code** for every defect; schema idempotence and
+> replay for every numbered script; negative authorization cases for every new endpoint; pure
+> statistical and economic calculations in `Tools.Tests`, seeded and deterministic. No assertion is
+> weakened or deleted to get a green run — a defect found and not fixed is reported explicitly.
+> Beyond the minimum, each stage writes the edge cases the methodology itself names; the stage
+> specifications list theirs.
+>
+> The reason both gates are stated this firmly: this repository has three times shipped a control
+> documented as working that was not, and its sharpest defects — the T-7 warning that never fired,
+> the quantitative band mapped from the median, the setting that had been deleted fifty db_versions
+> earlier — surfaced only because someone specified the expected behaviour and wrote the test.
+
+**Phase I — Register foundation.** Nothing else anchors without these two: the gates need flags, the
+flags need a structured scenario, and critical-process coverage needs the chain.
+
+#### Stage 9.1: The linkage chain — objective → process → IT service → data → asset (Planned)
+*Make the methodology's linkage chain navigable, so a risk traces to a strategic objective and not only to one generic entity.* — Spec: [§ 9.1](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-91--cadeia-de-ligação-objetivo--processo--serviço--dado--ativo) · Closes gap 1
+*   [ ] Specification merged (eleven sections, test plan reviewed) — **precedes all items below**
+*   [ ] Strategic objective as a first-class entity, rather than free text on `businessProcess.objective`
+*   [ ] `itService` type in the entity schema (technical owner, processes served) — there is no service catalogue today
+*   [ ] Risk links to each link of the chain, every link optional but queryable; `risks.entity_id` keeps working for legacy risks during coexistence
+*   [ ] Critical-process coverage metric (Phase 7) computable, counting processes **marked critical** rather than all
+*   [ ] Tests: chain with a missing middle link never hides the risk from a query; coexistence of the legacy single link
+
+#### Stage 9.2: Structured scenario, record discrimination and evidence confidence (Planned)
+*Four separate scenario fields plus a confidence level, so the Phase 2 quality rules become machine-verifiable.* — Spec: [§ 9.2](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-92--cenário-estruturado-discriminação-de-registros-e-confiança-da-evidência) · Closes gap 2
+*   [ ] Specification merged
+*   [ ] Cause/threat · vulnerability/condition · central event · consequences as separate fields (today: `Subject`, `Assessment`, `Notes` free text)
+*   [ ] Evidence confidence level — confirmed / indicative / hypothesis
+*   [ ] Standalone hypothesis records (`PendingRisk` exists but only ever originates from an assessment answer)
+*   [ ] Near miss distinguished from incident
+*   [ ] Duplicate-risk detection on the (central event, consequence) pair — as a **warning**, not a block
+*   [ ] **Deliberately out of scope:** back-filling the four fields from existing free text. Legacy risks keep them null and the coverage analysis measures how many are filled; decomposing text nobody wrote with that intent would produce wrong scenarios that look right
+*   [ ] Tests: legacy risk with all four fields null stays editable, listable and scorable
+
+**Phase II — Decision signals.**
+
+#### Stage 9.3: BIA — MTPD/MAO, RTO, RPO and cascading dependencies (Planned)
+*The continuity fields that flag 4, Gate A and the restoration metric all depend on, and that exist nowhere today.* — Spec: [§ 9.3](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-93--bia-mtpdmao-rto-rpo-e-dependências-em-cascata) · Closes gap 4
+*   [ ] Specification merged
+*   [ ] MTPD/MAO, RTO and RPO declared on the process and the IT service; process criticality
+*   [ ] Dependencies with cascading effect
+*   [ ] Restoration-test records, comparable against the declared RTO/RPO
+*   [ ] Tests: a declared RTO with no restoration test reads as **unverified**, not as met — otherwise the metric measures the intention; a cyclic dependency does not recurse forever; a process with no BIA is neither zero nor infinite RTO but absent
+
+#### Stage 9.4: Exploitation signals — CISA KEV, first-class EPSS and MITRE ATT&CK (Planned)
+*The Phase 3 prioritization signals. EPSS reaches NetRisk today only via Vision One, into a free-key bag.* — Spec: [§ 9.4](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-94--sinais-de-exploração-cisa-kev-epss-de-primeira-classe-e-mitre-attck) · Closes gap 6
+*   [ ] Specification merged
+*   [ ] EPSS promoted from `ToolFields["epss"]` to a column on `vulnerabilities`, with its own synchronization rather than only the Vision One path
+*   [ ] CISA KEV catalogue synchronized, with the listing date and the deadline (Track 3 cites the 14-day KEV benchmark and nothing consults the catalogue)
+*   [ ] MITRE ATT&CK techniques associable to the finding and to the risk scenario
+*   [ ] Prioritization combining the signals Phase 3 lists, with CVSS as an **input**
+*   [ ] Outbound synchronization through `IOutboundHttpClient` — the SSRF policy applies
+*   [ ] **Out of scope, stated so the stage does not appear to close Phase 3:** exposure (internal/perimeter/external), required privileges and blast radius depend on topology modelling and stay ❌ in the coverage analysis
+*   [ ] Tests: an unavailable or malformed catalogue does not silently de-list an item that was KEV; two EPSS sources for one CVE converge by a declared rule, not by write order; synchronization is idempotent and does not rewrite unchanged rows
+
+#### Stage 9.5: The eleven mandatory flags and Gate A (Planned)
+*Gate A is non-discretionary in the methodology and not implementable in NetRisk, because none of the flags exist as queryable fields.* — Spec: [§ 9.5](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-95--as-11-flags-obrigatórias-e-o-portão-a) · Closes gap 3 · Depends on 9.3 and 9.4
+*   [ ] Specification merged, declaring the origin of each of the eleven flags (derived from KEV/EPSS, from the BIA, from data classification, or declared by the assessor)
+*   [ ] The eleven flags as queryable fields
+*   [ ] Gate A refusing to discard a risk carrying a non-discretionary flag, with immediate notified escalation
+*   [ ] An "act immediately" decision distinct from high severity
+*   [ ] "Top Risks" executive list carrying trend, confidence and next decision
+*   [ ] Tests: a derived flag that loses its basis reverts **with an audit-trail entry**, not silently; a true non-discretionary flag refuses acceptance even where appetite would allow it — **Gate A precedes Gate B, and the ordering is the test**; any Gate A break-glass persists a written reason and exports it, like the segregation override
+
+**Phase III — Economics and the tail.**
+
+#### Stage 9.6: Treatment economics — monetary cost, Gates C and D, the full option set (Planned)
+*Gate C has every ingredient and no calculation, because `MitigationCost` is an ordinal label table.* — Spec: [§ 9.6](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-96--economia-do-tratamento-custo-monetário-portões-c-e-d-tratamento-completo) · Closes gaps 7, 10 and part of 13
+*   [ ] Specification merged
+*   [ ] Monetary control cost alongside the ordinal scale (the scale stays, for installations that do not estimate in currency)
+*   [ ] Gate C: `E[L before] − E[L after] > total cost`, recording Gordon–Loeb explicitly as an economic reference and **not** as a fixed 37 % rule
+*   [ ] Gate D: portfolio selection under budget, people, dependencies and deadline
+*   [ ] Avoid and transfer/share as treatment types (only reduce and accept exist today)
+*   [ ] Completion evidence and acceptance criterion on `MitigationTask` (it has owner, due date and status and neither of these)
+*   [ ] Target risk level in the register
+*   [ ] Tests: a mitigation with no monetary cost enters Gate C as **not assessable**, not as zero, and that shows; marginal benefit uses the **mean** ALE, for the same reason the band mapping does; Gate D **preserves tail and systemic risks even at moderate E[L]** — the rule a naive optimizer violates first
+
+#### Stage 9.7: Tail statistics and portfolio — P95, CVaR, aggregation and correlation (Planned)
+*The Monte Carlo engine is good and reproducible; the tail statistic appetite compares against, and the portfolio sum Phase 7 asks for, are missing.* — Spec: [§ 9.7](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-97--estatística-de-cauda-e-portfólio-p95-cvar-agregação-e-correlação) · Closes gap 9
+*   [ ] Specification merged
+*   [ ] P95 and CVaR computed and stored (P90 is the maximum today); confidence intervals reported
+*   [ ] Loss magnitude decomposable into response, recovery, productivity, revenue, liability, fine and reputation
+*   [ ] Portfolio aggregation with declared correlation between scenarios — each risk is simulated in isolation today, so "aggregate exposure above appetite (E[L] and P95)" is not computable
+*   [ ] Appetite comparable against P95/CVaR, as Gate B provides for
+*   [ ] Tests: CVaR of a low-frequency scenario is **not** zero because most iterations are zero — the test that separates the right implementation from the obvious one; a portfolio sum at zero correlation is not the sum of individual P95s, and the specification declares which statistic is additive; a fixed seed reproduces the aggregate, not only the individual result
+
+**Phase IV — Monitoring and the cycle.**
+
+#### Stage 9.8: KRIs, mandatory reassessment triggers and the methodology's metrics (Planned)
+*There is no KRI in the system — no indicator, no threshold, no trigger. It is the widest-reaching gap in Phase 7.* — Spec: [§ 9.8](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-98--kris-gatilhos-obrigatórios-de-reavaliação-e-métricas-da-metodologia) · Closes gap 5
+*   [ ] Specification merged, listing which metrics this stage delivers and which arrive with their own stage
+*   [ ] KRI as a first-class record: definition, source, tolerance threshold, history
+*   [ ] The six mandatory reassessment triggers of Phase 7 — architecture change, new supplier or migration, incident or near miss, new regulation, new AI model, KRI over tolerance
+*   [ ] Gate B by indicator, not only by score
+*   [ ] Metrics panel for the methodology's own performance measures
+*   [ ] Tests: a KRI with no recent reading reads as **stale**, not as within tolerance — false comfort is the characteristic indicator-panel defect; the reassessment trigger is idempotent (a KRI breached for thirty days does not open thirty reassessments); the relative ordering against the existing 06:15 → 07:30 → 08:00 jobs is preserved and tested
+
+#### Stage 9.9: Archival with triggers, backtesting, the risk committee and the third line (Planned)
+*Close the decision cycle: an archive that can reopen, a cut calibrated against what actually happened, and the Phase 0 roles that are missing.* — Spec: [§ 9.9](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-99--arquivamento-com-gatilho-backtesting-comitê-e-terceira-linha) · Closes gaps 13 (part), 14 and 15
+*   [ ] Specification merged
+*   [ ] "Archived" state with justification, a **condition-based** reopening trigger and quarterly review (only the temporal acceptance-expiry trigger exists today)
+*   [ ] Backtesting of incidents and near misses against the register — "unforeseen incidents" and "false negatives" are not computable today
+*   [ ] Risk committee as a collegiate approver, alongside the individual authorizing manager
+*   [ ] Third-line (audit) read-only assurance role — the auditor consumes the evidence pack, not the system
+*   [ ] Tests: a condition trigger fires once and records, rather than reopening repeatedly; backtesting does not count as foreseen a scenario registered **after** the incident — the date is the test; the third-line role reads and cannot write, review or accept, proved by negative cases like the Track 8 segregation rules
+
+**Phase V — Missing domains.**
+
+#### Stage 9.10: Third-party register — HECVAT, SBOM, concentration and exit plan (Planned)
+*The only discovery front with no instrument at all, and the methodology treats it as central in both enterprises and universities.* — Spec: [§ 9.10](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-910--registro-de-terceiros-hecvat-sbom-concentração-e-exit-plan) · Closes gap 8
+*   [ ] Specification merged
+*   [ ] Third party as a first-class record — a supplier can only be a generic `organization`/`organizationUnit` today
+*   [ ] HECVAT assessment; SBOM of the supplied component; sub-processors; data location; contracted SLA and RTO/RPO; right to audit; exit plan and portability
+*   [ ] Concentration measured by supplier, cloud and identity
+*   [ ] Linked to the IT service of 9.1 and the data record of 9.11
+*   [ ] Tests: concentration counts a supplier **once per dependent critical process**, not once per asset, or the metric measures inventory; a partially answered HECVAT scores as incomplete, not compliant; deleting a supplier in use is refused — extending the reference registry `SecretVaultService.CountReferencesAsync` already maintains rather than duplicating it
+
+#### Stage 9.11: LGPD data catalogue — legal basis, purpose, retention, location and DPIA (Planned)
+*Classification exists; compliance is not demonstrable, and flags 2 and 5 have nothing to derive from.* — Spec: [§ 9.11](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-911--catálogo-de-dados-lgpd-base-legal-finalidade-retenção-localização-e-dpia) · Closes gap 11
+*   [ ] Specification merged
+*   [ ] Legal basis and purpose, retention, location, international transfer, personal- and sensitive-data marking, lineage on `organizationData`
+*   [ ] DPIA as an artifact linked to the data record and the process
+*   [ ] Legal and contractual requirements back on the risk register, linked to the catalogue instead of free text (the orphan `regulation` column was dropped in Track 6 phase 6b)
+*   [ ] Tests: sensitive personal data with no declared legal basis **is a finding** and shows as one rather than compliant by omission; expired retention signals and deletes nothing — erasing a data subject's data is the controller's decision, not a job's side effect; removing the sensitive marking removes flag 5 with an audit-trail entry
+
+#### Stage 9.12: AI governance — model inventory, flag 11 and model metrics (Planned)
+*Phase 6's **prohibitions already hold by construction**, because every approval requires a `User`. The gap is the inventory and the assurance, not the authority control.* — Spec: [§ 9.12](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-912--governança-de-ia-inventário-de-modelos-flag-11-e-métricas-de-modelo) · Closes gap 12
+*   [ ] Specification merged
+*   [ ] Model inventory as a first-class record — purpose, data, vendor, version — with assurance proportional to risk
+*   [ ] Risks of the AI component itself in the **same** register, with flag 11 derived from the inventory
+*   [ ] Model metrics: accuracy, recall, calibration, drift and **human override rate**
+*   [ ] **Out of scope, deliberately: adding AI to the risk workflow.** The methodology requires the governance instrument to exist *before* the use; the reverse order is how compliance debt accumulates. Any AI feature becomes its own track that presupposes this one
+*   [ ] Tests: explicit negative tests that the prohibitions still hold **after** this stage — no path lets a non-user accept residual risk, approve an exception or close a material finding — so the by-construction guarantee is not lost to a later refactor; a model with no recorded evaluation is not treated as evaluated; the human override rate requires overrides to be recordable, with author and reason
+
+**Track completion.** The track is done when the coverage analysis is **re-run** and the lines each
+specification declared in its section 10 read ✅ — and those that stay 🟡 or ❌ are named with the
+reason, as they are today. The coverage analysis is the track's acceptance criterion, which is why it
+lives in [docs/methodology/](docs/methodology/): it is measured against the code, repeatedly, rather
+than written once.
+
+---
+
 ## 🔮 Ideas & Future Explorations
 
 The following concepts are under consideration and are not yet committed to any active milestone track:
 
 - **Mobile Companion App:** Lightweight iOS and Android viewer for executive incident tracking and risk sign-off.
 - **Real-Time Collaboration:** Synchronized document editing for Incident Response Plans and joint risk assessments.
-- **AI-Assisted Risk Scoring:** Large Language Model integrations to automatically analyze vulnerabilities, correlate threat intelligence, and propose mitigation strategies.
+- **AI-Assisted Risk Scoring:** Large Language Model integrations to automatically analyze vulnerabilities, correlate threat intelligence, and propose mitigation strategies. **Precondition:** Track 9 stage 9.12 (AI governance — model inventory, flag 11, model metrics). The MIGR-TI/IA methodology requires the governance instrument to exist before the use, and requires explicit sources, a declared confidence level and mandatory human review of every AI result used in a decision.

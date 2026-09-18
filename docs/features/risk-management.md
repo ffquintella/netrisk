@@ -2,6 +2,10 @@
 
 Central feature of NetRisk. Tracks organizational risks through their full lifecycle — identification, scoring, mitigation, management review, and closure — and links them to vulnerabilities, entities, incident response plans, and file attachments.
 
+> Aderência desta área à metodologia de referência MIGR-TI/IA — o que está instrumentado, o que está
+> parcial e o que não existe — em
+> [docs/methodology/migr-ti-ia-coverage.md](../methodology/migr-ti-ia-coverage.md).
+
 > The governance layer on top of this — formal expiring acceptance, inherent versus residual scoring,
 > the enforced state machine and segregation of duties, risk appetite, the field-level audit trail,
 > the auditor evidence pack and the business review portal — is documented separately in
