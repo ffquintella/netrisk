@@ -41,7 +41,7 @@
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <PackageReference Include="umapx" Version="8.0.0.4" />
     <PackageReference Include="UOX.Saml2.Authentication" Version="4.2.0" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
