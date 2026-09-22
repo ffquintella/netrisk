@@ -1,0 +1,287 @@
+# Migrating the BastionVault plugin onto `BastionVault.IntegrationSdk`
+
+A design for replacing the hand-written BastionVault wire protocol in
+[netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration)
+with the vendor's own .NET client, `BastionVault.IntegrationSdk`.
+
+This is a design, not a record of work done. Nothing here has been implemented. It is written
+against `BastionVault.IntegrationSdk` **0.19.0** and plugin version **1.2.0**; a later SDK release
+may move the surface it depends on.
+
+Companion reading: [External secret vaults (BastionVault)](secret-vaults.md) — the feature this
+plugin serves, and the host-side contract it must keep honouring.
+
+---
+
+## 1. What exists today
+
+**The plugin** is 779 lines across two files, in its own repository:
+
+| File | Lines | What it holds |
+|---|---:|---|
+| `src/BastionVaultPlugin/BastionVaultApi.cs` | 284 | The wire protocol: routes, the `X-Vault-Token` header, the `LIST` verb, envelope/keys/fields/token-info parsing, and the operator-facing failure text |
+| `src/BastionVaultPlugin/BastionVaultSecretPlugin.cs` | 495 | The three contract operations: connection test, tree walk, secret read |
+| `tests/BastionVaultPlugin.Tests/` | — | 33 tests against `FakePluginHttpClient`; no network |
+
+**The SDK** is `net10.0`, has **zero external package dependencies**, and builds with
+`TreatWarningsAsErrors`. The surface this migration needs:
+
+- `BastionVaultClient` → `.Auth.Token`, `.Auth.Ferrogate`, `.Sys`, `.Kv` (`.V1`, `.V2`,
+  `DetectVersionAsync`, `ReadManyAsync`), `.Logical`
+- `ITransport` — the transport injection point, with `TransportRequest` / `TransportResponse`
+- `BastionVaultException` — one error type carrying `Code` (`BV-*`), `Hint`, `ServerMessage`,
+  `ServerErrors`, `StatusCode`, `RetryAfter`, `Retryable`
+- `EnvironmentSource` — `Process` (the default) and `None`
+
+**NetRisk itself speaks no BastionVault.** The host resolves an address to a single node
+([`VaultEndpointResolver`](../../src/ServerServices/Secrets/VaultEndpointResolver.cs)) and hands the
+plugin that node plus an `IPluginHttpClient`
+([`SecretVaultService.OpenAsync`](../../src/ServerServices/Secrets/SecretVaultService.cs)). Every
+line of protocol lives in the plugin.
+
+One consequence worth stating plainly: **the `uox-bastionvault` NuGet source added to this
+repository's `nuget.config` is not required by this migration.** The consumer is the plugin
+repository. The source only becomes load-bearing here if §7's optional second phase is ever taken.
+
+---
+
+## 2. Why do this at all
+
+Not for line count — the plugin will not get much shorter. Three reasons, in order of weight.
+
+### 2.1 The plugin does not support KV v2, and says something misleading when it meets one
+
+This is demonstrable from the code rather than inferred.
+
+`BastionVaultApi.ParseFields` takes the envelope's `data` object and treats each key as a field of
+the secret. On a **`kv-v2`** mount a read answers `data: { data: { … }, metadata: { … } }`. The
+plugin therefore sees a secret with two fields named `data` and `metadata`, and
+`BastionVaultSecretPlugin.SelectValue` reports:
+
+> BastionVault secret '…' holds several fields (data, metadata) and no field was selected.
+> Re-select it and name the field to use.
+
+A perfectly valid credential becomes an error message that sends the operator to re-select a field
+that was never the problem. The same mismatch breaks enumeration: the walk lists `secret/`
+directly, while a v2 mount keeps its keys under `secret/metadata/`.
+
+Neither case is covered by the existing tests — the words `v2` and `metadata` do not appear in
+`BastionVaultSecretPluginTest.cs`.
+
+The SDK closes both: `Kv.DetectVersionAsync(mount)` reads the mount type (through a per-client
+cached `sys/mounts`, so twenty mounts cost one request), `Kv.V2.ListAsync` composes the `metadata/`
+group, and `Kv.V2.ReadSecretAsync` unwraps `data.data`.
+
+### 2.2 The version of a secret is currently thrown away
+
+`GetSecretAsync` returns `VaultSecretValue.Version = null` unconditionally, because a v1 read
+carries no version. `KvV2Secret.Metadata.Version` supplies one — which is what makes a rotation
+visible in NetRisk's log, the reason the field exists on the contract.
+
+### 2.3 The tree walk is unpaced
+
+The walk issues one `LIST` per folder up to `MaxSecrets = 2000`, against a server the SDK documents
+as banning at 200 requests in 10 seconds. Opening the secret picker against a large estate is a
+sustained burst today. The SDK's client-side rate gate paces it, and `Kv.ReadManyAsync` collapses
+many reads into one request where a caller needs several secrets.
+
+Underneath all three: the wire details in `BastionVaultApi` were, by its own header comment,
+*"verified against the server source rather than the reference documentation"*. That is careful
+work, and it is also a copy of the server's behaviour maintained by hand in a second repository.
+The SDK is the vendor's copy, tested against captured fixtures.
+
+---
+
+## 3. The load-bearing piece: an `ITransport` over `IPluginHttpClient`
+
+Everything else depends on this.
+
+The plugin **must not** use the SDK's own `HttpClientTransport`. NetRisk's rule is that all plugin
+egress goes through [`IOutboundHttpClient`](../../src/ServerServices/Interfaces/IOutboundHttpClient.cs), which is where
+the SSRF destination policy is applied — without it, a `BaseUrl` an operator pasted in reaches
+whatever it names, including `169.254.169.254`. That is the entire reason
+[`PluginHttpClientAdapter`](../../src/ServerServices/Secrets/PluginHttpClientAdapter.cs) exists.
+
+The SDK provides the seam: `BastionVaultClientOptions.Transport` takes any `ITransport`. New file
+in the plugin, roughly 120 lines:
+
+```csharp
+internal sealed class PluginHttpTransport(IPluginHttpClient http) : ITransport
+{
+    public bool SupportsCustomVerbs => true;
+
+    public async Task<TransportResponse> SendAsync(TransportRequest request, CancellationToken ct = default)
+    {
+        // TransportRequest.Uri/Headers/Body(bytes) -> PluginHttpRequest(url/headers/body string)
+        // PluginHttpResponse.StatusCode == 0      -> throw BastionVaultException(BV-TRANSPORT-001, …)
+    }
+}
+```
+
+Four constraints on it, none negotiable:
+
+1. **Transport failures must surface as `BastionVaultException` carrying
+   `BV-TRANSPORT-001/002/003/005`**, never as a raw exception — that is how the SDK's retry
+   classifier reads them. Writable from outside: the `BastionVaultException` constructor and the
+   `ErrorCodes` constants are public.
+2. **`SupportsCustomVerbs` must be `true`, and truthfully so.** The SDK fails construction with
+   `BV-CONFIG-009` if a transport declares otherwise, because the server has no `?list=true`
+   fallback. It is true here: `OutboundHttpClient` builds `new HttpMethod(request.Method)`, so
+   `LIST` passes through — as it already does today.
+3. **Body conversion is UTF-8 both ways.** `PluginHttpResponse.Body` is a `string?` while
+   `TransportResponse.Body` is bytes. Acceptable because no operation this plugin uses is binary;
+   `Sys.BackupAsync` would be, and is not used. Worth a comment at the conversion, not silence.
+4. **`MaxResponseBytes` degrades.** The SDK requires the transport to abort an oversized response
+   *while reading*; the host seam buffers first and exposes no hook, so the adapter can only audit
+   after the fact. This is a guarantee that is genuinely weakened by the migration. Record it in the
+   code and in `secret-vaults.md`, do not paper over it.
+
+---
+
+## 4. Client construction: four settings that must be explicit
+
+```csharp
+new BastionVaultClient(new BastionVaultClientOptions
+{
+    Address           = context.Credentials.BaseUrl,
+    Token             = context.Credentials.ApiKey,
+    Transport         = new PluginHttpTransport(context.Http),
+    ClusterDiscovery  = false,   // (1)
+    AllowInsecureHttp = true,    // (2)
+    RetryPolicy       = /* few attempts */, Timeout = /* short */,   // (3)
+}, EnvironmentSource.None);      // (4)
+```
+
+**(4) is the dangerous default.** `new BastionVaultClient(options)` reads the **process
+environment** for every unset setting, and the process is the NetRisk API or background-job host. A
+`VAULT_TOKEN` or `VAULT_ADDR` in that environment would silently override the connection an
+operator configured — a credential source nobody chose and nothing displays.
+`EnvironmentSource.None` is the SDK's own environment-free construction (CFG-005) and is the only
+correct choice for a plugin.
+
+**(1) `ClusterDiscovery = false`.** The host already did SRV discovery, health-scored the
+candidates and cached the selection per connection; it hands the plugin one node. Letting the SDK
+rediscover duplicates the DNS work, bypasses the host's cache — and, more seriously, the SDK's
+`DnsSrvResolver` resolves outside `IPluginHttpClient`, which means outside the destination policy.
+
+**(2) `AllowInsecureHttp = true`.** The SDK refuses a non-loopback `http://` address at
+construction. Whether plain HTTP or an unverified certificate is acceptable is a decision the host
+already owns (the connection's `IgnoreSslErrors`, plus the outbound policy). A second judge here
+turns a working internal deployment into a configuration error with an unfamiliar code.
+
+**(3) Retry and timeout must be reconciled, not stacked.** `IOutboundHttpClient` has its own
+timeout; the SDK adds a retry policy on top. Left at defaults that is N × 30 s hanging in front of
+a credential read. Map `TransportRequest.Timeout` onto `PluginHttpRequest.Timeout` in the adapter
+and keep the SDK's policy short.
+
+---
+
+## 5. Operation by operation
+
+| Today | After | Note |
+|---|---|---|
+| `GET auth/token/lookup-self` + `ParseTokenInfo` | `client.Auth.Token.LookupSelfAsync()` | `TokenInfo.Meta["spiffe_id"]` stays the proof of machine binding |
+| `GET auth/ferrogate/requirement` + `MachineRequirement` + swallowed 404 | `client.Auth.Ferrogate.RequirementAsync()` / `IsMachineIdentityRequiredAsync()` | The SDK's `FerrogateRequirement` is field-for-field identical (`RequireMachineIdentity`, `ExpectedAudience`, `TrustDomain`, `MiaEnvironment`). The deliberate swallow becomes `catch (BastionVaultException)` on code |
+| `GET sys/mounts` + `ParseSecretMounts` | `client.Sys.ListMountsAsync()` + the existing filter | The filter is **NetRisk policy, not protocol** — keep it |
+| `LIST <folder>` + `ParseKeys` | `Kv.V1.ListAsync` / `Kv.V2.ListAsync`, chosen by `DetectVersionAsync` | Fixes §2.1 enumeration |
+| `GET <path>` + `ParseFields` | `Kv.V1.ReadAsync` / `Kv.V2.ReadSecretAsync` | Fixes §2.1 read, supplies §2.2 version |
+| `DescribeFailure(status, body, transportError)` | map `BastionVaultException` → NetRisk message | See below |
+
+### What must survive the rewrite
+
+This is where the regression risk concentrates. None of the following is protocol knowledge the SDK
+can replace:
+
+- **`DescribeFailure`'s operator-facing text.** *"BastionVault is sealed (HTTP 503). It must be
+  unsealed before it can serve secrets."* and *"A list operation needs the LIST verb; a proxy in
+  front of the vault may be dropping it."* are written for a NetRisk administrator. The SDK's `Hint`
+  is good but generic and speaks the SDK's idiom. What disappears is the *parsing*; the judgement
+  about wording stays, as a `BastionVaultException` → message function of comparable size.
+- **The redaction rule inside it.** Echo `ServerMessage` / `ServerErrors` only; never an arbitrary
+  response body. The original reason has not changed: an arbitrary body may contain anything,
+  including a reflected credential.
+- **The walk.** `MaxSecrets = 2000`, `MaxDepth = 10`, a 403 skipping one folder rather than
+  aborting the enumeration, and the fallback to the conventional `secret/` mount when `sys/mounts`
+  answers 403. The SDK has no recursive enumeration; it supplies the per-level `ListAsync`.
+- **`SelectValue` in full.** "A requested field that is missing is an error, never a fallback" is a
+  NetRisk security rule, not a vault behaviour.
+- **The path guard** (`..`, trailing `/`) and its message. The SDK has `RequireSafePrefix`, but the
+  text the operator needs is the plugin's.
+
+Expected shape afterwards: `BastionVaultApi.cs` falls from 284 lines to roughly 80 (error mapping
+and the mount filter); `BastionVaultSecretPlugin.cs` stays about the same size, with parsing
+replaced by typed calls. **The gain is not fewer lines — it is trading a hand-maintained copy of
+someone else's protocol for the vendor's, which is tested against captured fixtures.**
+
+---
+
+## 6. Tests
+
+The change is large and lands with proof, per
+[src/AI_TESTING_INSTRUCTIONS.md](../../src/AI_TESTING_INSTRUCTIONS.md).
+
+- **The 33 existing tests stay unedited.** They stub `IPluginHttpClient`, which remains the
+  injection point — now one layer below, behind `PluginHttpTransport`. Them passing untouched *is*
+  the non-regression evidence. Any test that does need editing needs an individual reason; a bulk
+  adjustment to get green would be exactly the weakening the testing rules forbid.
+- **New regression tests for KV v2** — a `kv-v2` mount, a read answering `data.data`, asserting the
+  right value comes out, and an enumeration finding keys under `metadata/`. These fail on today's
+  code and pass after, which is the standard this repository holds fixes to.
+- **`PluginHttpTransport` tests** — `StatusCode == 0` becomes `BV-TRANSPORT-001`; a `LIST` reaches
+  the seam intact; the `X-Vault-Token` header is set; **the token never appears in an exception
+  message or a log line**.
+- **An environment-isolation test** — with `VAULT_ADDR` set in the test process, the client still
+  uses the connection's `BaseUrl`. This is the guard on §4(4), and without it that setting is a
+  comment.
+
+---
+
+## 7. Optional second phase: the host (recommended *not* to do)
+
+[`VaultEndpointResolver`](../../src/ServerServices/Secrets/VaultEndpointResolver.cs) (237 lines),
+[`VaultAddress`](../../src/ServerServices/Secrets/VaultAddress.cs) (189) and
+`DnsClientSrvLookup` (68) do host-side what the SDK's section 13 does: RFC 2782 ordering, health
+probing, a TTL-bounded cache.
+
+Leave them. They are tested, they are where the destination policy is enforced, and the SDK's DNS
+path runs outside the host's HTTP seam — adopting it would hand the SDK the destination decision.
+If it is ever revisited it is a security decision in its own right, not a by-product of this
+migration.
+
+---
+
+## 8. Risks
+
+| Risk | Weight |
+|---|---|
+| `MaxResponseBytes` cannot be enforced mid-read through the host seam (§3.4) | Low — no large response is used, but an SDK guarantee is genuinely lost |
+| SDK 0.19.0 is pre-1.0 and **declares no conformance level**; its public surface may move | Medium — pin an exact version, never a range |
+| SDK retry stacked on the host's timeout (§4.3) | Medium, and a configuration error rather than a design one — covered by a timing test |
+| The SDK DLL loads inside the plugin's `McMaster` load context | Low — zero transitive dependencies, so no version conflict with the host |
+| `secret-vaults.md` § *The BastionVault wire protocol* becomes partly wrong | Certain — updating it is part of the work, not a follow-up |
+
+---
+
+## 9. Staging
+
+Each stage ends with the suite green; none leaves the plugin unusable.
+
+| Stage | Work | Rough size |
+|---|---|---|
+| 1 | `PluginHttpTransport` + client factory + adapter tests. No operation touched | ½ day |
+| 2 | Migrate `TestConnectionAsync` (lookup-self, FerroGate) — smallest surface, identical SDK types | ½ day |
+| 3 | Migrate read and enumeration with `DetectVersionAsync`, plus the KV v2 regression tests | 1–2 days |
+| 4 | Reduce `BastionVaultApi.cs` to error mapping; bump to 1.3.0; `make pack`; update `secret-vaults.md` | ½ day |
+
+---
+
+## 10. Key files
+
+| Path | Repository |
+|---|---|
+| `src/BastionVaultPlugin/BastionVaultApi.cs` | netrisk-plugin-bastionvault-integration |
+| `src/BastionVaultPlugin/BastionVaultSecretPlugin.cs` | netrisk-plugin-bastionvault-integration |
+| `tests/BastionVaultPlugin.Tests/` | netrisk-plugin-bastionvault-integration |
+| [`Contracts/Secrets/INetriskSecretVaultPlugin.cs`](../../libs/netrisk-plugin-sdk/Contracts/Secrets/INetriskSecretVaultPlugin.cs) | netrisk-plugin-sdk |
+| [`ServerServices/Secrets/PluginHttpClientAdapter.cs`](../../src/ServerServices/Secrets/PluginHttpClientAdapter.cs) | netrisk |
+| [`ServerServices/Secrets/SecretVaultService.cs`](../../src/ServerServices/Secrets/SecretVaultService.cs) | netrisk |

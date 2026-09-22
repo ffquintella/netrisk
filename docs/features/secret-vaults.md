@@ -310,6 +310,13 @@ subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention
 
 ### The BastionVault wire protocol
 
+> **Planned change.** This hand-written protocol is slated to be replaced by the vendor's own
+> `BastionVault.IntegrationSdk` client. The routes below are the **KV v1** shapes, and that is the
+> current limitation: a `kv-v2` mount nests the payload under `data.data`, which this protocol does
+> not unwrap, so a v2 secret reads back as two fields named `data` and `metadata`. Nothing has been
+> implemented yet; the design is
+> [bastionvault-integration-sdk-migration.md](bastionvault-integration-sdk-migration.md).
+
 BastionVault is **HashiCorp-Vault-compatible**. Everything its surface dictates is in one file,
 [`BastionVaultApi.cs`](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration/blob/main/src/BastionVaultPlugin/BastionVaultApi.cs):
 
