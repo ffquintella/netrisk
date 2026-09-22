@@ -26,5 +26,6 @@ These are placeholder stubs — contributions welcome.
 - [Jira Service Management & Assets](jira-service-management.md)
 - [Posture integrations: Trend Micro Vision One and SecurityScorecard](posture-integrations.md)
 - [External secret vaults (BastionVault)](secret-vaults.md)
+  - [Planned: moving the BastionVault plugin onto `BastionVault.IntegrationSdk`](bastionvault-integration-sdk-migration.md)
 - [Reports](reports.md)
 - [Plugins](plugins.md)
