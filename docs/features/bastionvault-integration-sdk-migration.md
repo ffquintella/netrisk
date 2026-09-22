@@ -152,6 +152,11 @@ new BastionVaultClient(new BastionVaultClientOptions
 }, EnvironmentSource.None);      // (4)
 ```
 
+The sketch deliberately forwards neither `MachineId` nor `AppId`. `MachineId` is *checked*, never
+sent — see
+[secret-vaults.md § Machine identity is checked, not sent](secret-vaults.md#machine-identity-is-checked-not-sent).
+`AppId` is §5.3, and the answer there is not "add a line here".
+
 **(4) is the dangerous default.** `new BastionVaultClient(options)` reads the **process
 environment** for every unset setting, and the process is the NetRisk API or background-job host. A
 `VAULT_TOKEN` or `VAULT_ADDR` in that environment would silently override the connection an
@@ -183,11 +188,41 @@ and keep the SDK's policy short.
 | `GET auth/token/lookup-self` + `ParseTokenInfo` | `client.Auth.Token.LookupSelfAsync()` | `TokenInfo.Meta["spiffe_id"]` stays the proof of machine binding |
 | `GET auth/ferrogate/requirement` + `MachineRequirement` + swallowed 404 | `client.Auth.Ferrogate.RequirementAsync()` / `IsMachineIdentityRequiredAsync()` | The SDK's `FerrogateRequirement` is field-for-field identical (`RequireMachineIdentity`, `ExpectedAudience`, `TrustDomain`, `MiaEnvironment`). The deliberate swallow becomes `catch (BastionVaultException)` on code |
 | `GET sys/mounts` + `ParseSecretMounts` | `client.Sys.ListMountsAsync()` + the existing filter | The filter is **NetRisk policy, not protocol** — keep it |
-| `LIST <folder>` + `ParseKeys` | `Kv.V1.ListAsync` / `Kv.V2.ListAsync`, chosen by `DetectVersionAsync` | Fixes §2.1 enumeration |
+| `LIST <folder>` + `ParseKeys` | `Kv.V1.ListAsync` / `Kv.V2.ListAsync`, chosen by the ladder in §5.1 | Fixes §2.1 enumeration |
 | `GET <path>` + `ParseFields` | `Kv.V1.ReadAsync` / `Kv.V2.ReadSecretAsync` | Fixes §2.1 read, supplies §2.2 version |
 | `DescribeFailure(status, body, transportError)` | map `BastionVaultException` → NetRisk message | See below |
 
-### What must survive the rewrite
+### 5.1 Choosing v1 or v2 without `sys/mounts`
+
+`Kv.DetectVersionAsync(mount)` is built on `Sys.MountTypeOfAsync`, which is built on
+`Sys.ListMountsAsync` — that is, on **`sys/mounts`**, the one request the 403 fallback below exists
+to avoid. A token scoped to `secret/netrisk/*` and nothing else is a *good* configuration, and it
+is precisely the token for which detection would re-issue the forbidden request and abort the
+enumeration the fallback was meant to rescue. Worse, `MountTypeOfAsync` caches only on success, so
+the denial repeats on every call rather than once.
+
+So version detection is a ladder, not a call, and it runs **once per mount** with the verdict held
+for the duration of the walk:
+
+1. `Kv.DetectVersionAsync(mount)`. Authoritative whenever `sys/mounts` is readable, and free after
+   the first mount — the mount-table cache is per client, so twenty mounts cost one request.
+2. On a denial, probe with `Kv.V2.ReadConfigAsync(mount)`. `{mount}/config` exists only on a v2
+   mount; a non-null answer is v2, and the SDK already returns `null` for the 404-with-empty-body
+   case rather than throwing.
+3. On a denial there too — a token may hold `read` on `secret/data/netrisk/*` and nothing on
+   `secret/config` — attempt `Kv.V2.ListAsync("", mount)`. Keys back means v2.
+4. Otherwise treat the mount as v1, which is what the plugin assumes unconditionally today. The
+   fallback is the current behaviour, so the worst case of the ladder is no worse than the status
+   quo.
+
+Steps 2–4 only ever run on the least-privilege path. A token that can read the mount table never
+pays for them.
+
+**This needs its own regression test**, and it is the one most likely to be skipped: a token that
+can read secrets but **cannot** read `sys/mounts`, asserted on both a v1 and a v2 mount, and
+asserted to issue `sys/mounts` at most once rather than once per folder.
+
+### 5.2 What must survive the rewrite
 
 This is where the regression risk concentrates. None of the following is protocol knowledge the SDK
 can replace:
@@ -213,6 +248,34 @@ and the mount filter); `BastionVaultSecretPlugin.cs` stays about the same size, 
 replaced by typed calls. **The gain is not fewer lines — it is trading a hand-maintained copy of
 someone else's protocol for the vendor's, which is tested against captured fixtures.**
 
+### 5.3 What happens to `AppId`
+
+[`SecretVaultService.OpenAsync`](../../src/ServerServices/Secrets/SecretVaultService.cs) puts the
+connection's stored application identity into `SecretVaultCredentials.AppId`, and the host refuses
+to save a connection without one when the plugin declares `RequiresAppId`. **The BastionVault
+plugin sends it nowhere, and cannot**: its pinned `netrisk-plugin-sdk` submodule predates both
+members — `SecretVaultCredentials` there has no `AppId` property and `INetriskSecretVaultPlugin` has
+no `RequiresAppId`. An App ID typed into a BastionVault connection today is encrypted, stored,
+counted by the reference registry, and silently dropped at call time.
+
+That is a pre-existing gap, not one this migration introduces, and no BastionVault connection can
+be relying on `app_id` authorization through this plugin — the identity has never been on the wire.
+But the migration is the moment it stops being invisible, so it is decided here rather than left
+out of the sketch in §4:
+
+- **Bump the `sdk/` submodule** to a revision that carries `AppId` and `RequiresAppId`. Required
+  regardless, so the plugin compiles against the contract the host actually passes.
+- **Then choose, explicitly.** Either keep `RequiresAppId => false` and **document in
+  `secret-vaults.md` that BastionVault ignores the field**, so an operator stops filling in a box
+  that does nothing — or wire the SDK's AppRole login, `Auth.AppId.LoginAsync(roleId, secretId)`.
+  The second is not a one-line mapping and must not be improvised: AppRole needs a **role id and a
+  secret id**, while the NetRisk contract offers one `ApiKey` plus one `AppId`, and deciding which
+  is which changes what an operator must paste into the connection. It is a contract question for
+  the host, not a detail of this migration.
+
+The first option is the default this design recommends, because it is truthful about today's
+behaviour and costs nothing. The second is a feature, and should be scoped as one.
+
 ---
 
 ## 6. Tests
@@ -233,6 +296,10 @@ The change is large and lands with proof, per
 - **An environment-isolation test** — with `VAULT_ADDR` set in the test process, the client still
   uses the connection's `BaseUrl`. This is the guard on §4(4), and without it that setting is a
   comment.
+- **A least-privilege detection test** — a token that reads secrets but is denied `sys/mounts`,
+  on a v1 mount and on a v2 mount, asserting the §5.1 ladder resolves both and issues
+  `sys/mounts` at most once. Without it the 403 fallback and version detection can silently
+  contradict each other, which is the failure mode §5.1 exists to prevent.
 
 ---
 
@@ -258,6 +325,8 @@ migration.
 | SDK 0.19.0 is pre-1.0 and **declares no conformance level**; its public surface may move | Medium — pin an exact version, never a range |
 | SDK retry stacked on the host's timeout (§4.3) | Medium, and a configuration error rather than a design one — covered by a timing test |
 | The SDK DLL loads inside the plugin's `McMaster` load context | Low — zero transitive dependencies, so no version conflict with the host |
+| Version detection collides with the least-privilege `sys/mounts` fallback (§5.1) | **Medium — the likeliest way to ship a regression**, because the naive `DetectVersionAsync` call looks correct and breaks exactly the token configuration the fallback was written for |
+| The `sdk/` submodule pin predates `AppId` / `RequiresAppId` (§5.3) | Low for this migration, but it must be bumped before the plugin compiles against the contract the host passes |
 | `secret-vaults.md` § *The BastionVault wire protocol* becomes partly wrong | Certain — updating it is part of the work, not a follow-up |
 
 ---
@@ -270,8 +339,8 @@ Each stage ends with the suite green; none leaves the plugin unusable.
 |---|---|---|
 | 1 | `PluginHttpTransport` + client factory + adapter tests. No operation touched | ½ day |
 | 2 | Migrate `TestConnectionAsync` (lookup-self, FerroGate) — smallest surface, identical SDK types | ½ day |
-| 3 | Migrate read and enumeration with `DetectVersionAsync`, plus the KV v2 regression tests | 1–2 days |
-| 4 | Reduce `BastionVaultApi.cs` to error mapping; bump to 1.3.0; `make pack`; update `secret-vaults.md` | ½ day |
+| 3 | Migrate read and enumeration with the §5.1 detection ladder, plus the KV v2 and least-privilege regression tests | 1–2 days |
+| 4 | Bump the `sdk/` submodule and settle `AppId` (§5.3); reduce `BastionVaultApi.cs` to error mapping; bump to 1.3.0; `make pack`; update `secret-vaults.md` | ½ day |
 
 ---
 
