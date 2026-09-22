@@ -131,10 +131,20 @@ Four constraints on it, none negotiable:
 3. **Body conversion is UTF-8 both ways.** `PluginHttpResponse.Body` is a `string?` while
    `TransportResponse.Body` is bytes. Acceptable because no operation this plugin uses is binary;
    `Sys.BackupAsync` would be, and is not used. Worth a comment at the conversion, not silence.
-4. **`MaxResponseBytes` degrades.** The SDK requires the transport to abort an oversized response
-   *while reading*; the host seam buffers first and exposes no hook, so the adapter can only audit
-   after the fact. This is a guarantee that is genuinely weakened by the migration. Record it in the
-   code and in `secret-vaults.md`, do not paper over it.
+4. **`MaxResponseBytes` cannot be honoured, and that is a prerequisite rather than a footnote.**
+   The SDK requires the transport to abort an oversized response *while reading* (TRN-033). The host
+   seam cannot: [`OutboundHttpClient`](../../src/ServerServices/Http/OutboundHttpClient.cs) calls
+   `ReadAsStringAsync` with no `HttpCompletionOption.ResponseHeadersRead` and no cap, so the entire
+   body is already in memory before any adapter code runs. Checking the length afterwards is not a
+   mitigation — the allocation has happened.
+
+   **This is a pre-existing host defect, not one the migration introduces**: every plugin HTTP call
+   today, for every plugin, buffers an unbounded response from a remote the operator configured. But
+   the migration is what turns it from an unnoticed gap into a broken SDK guarantee, so the bounded
+   read is booked as **stage 0** in §9: give `OutboundHttpRequest` a maximum response size, read
+   through a length-limited stream, and fail the request when it is exceeded. Until that lands, the
+   adapter must pass a `TransportResponse` it cannot vouch for, and the honest thing is to say so in
+   `secret-vaults.md` rather than to record an audit note and move on.
 
 ---
 
@@ -321,7 +331,7 @@ migration.
 
 | Risk | Weight |
 |---|---|
-| `MaxResponseBytes` cannot be enforced mid-read through the host seam (§3.4) | Low — no large response is used, but an SDK guarantee is genuinely lost |
+| `MaxResponseBytes` cannot be enforced mid-read through the host seam (§3.4) | **High until stage 0 lands.** `OutboundHttpClient` buffers the whole body with `ReadAsStringAsync`, so an oversized vault or list response is an unbounded allocation in the API host — and that is true of every plugin call today, not just BastionVault's |
 | SDK 0.19.0 is pre-1.0 and **declares no conformance level**; its public surface may move | Medium — pin an exact version, never a range |
 | SDK retry stacked on the host's timeout (§4.3) | Medium, and a configuration error rather than a design one — covered by a timing test |
 | The SDK DLL loads inside the plugin's `McMaster` load context | Low — zero transitive dependencies, so no version conflict with the host |
@@ -337,6 +347,7 @@ Each stage ends with the suite green; none leaves the plugin unusable.
 
 | Stage | Work | Rough size |
 |---|---|---|
+| **0** | **In `netrisk`, not the plugin:** bound the response read in `OutboundHttpClient` — a max-size field on `OutboundHttpRequest`, a length-limited read, a clear failure past the cap, and a test that a response over the cap is rejected rather than buffered. Prerequisite for §3.4; fixes an existing unbounded-allocation path for **all** plugin egress | ½–1 day |
 | 1 | `PluginHttpTransport` + client factory + adapter tests. No operation touched | ½ day |
 | 2 | Migrate `TestConnectionAsync` (lookup-self, FerroGate) — smallest surface, identical SDK types | ½ day |
 | 3 | Migrate read and enumeration with the §5.1 detection ladder, plus the KV v2 and least-privilege regression tests | 1–2 days |
