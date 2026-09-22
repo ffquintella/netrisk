@@ -37,7 +37,15 @@ This release includes new features and improvements.
 
 ### Fixed
 
-
+- **Outbound HTTP responses are now bounded.** Every outbound call the server makes — notification
+  channels, issue trackers, Vision One, SecurityScorecard, identity-provider discovery and all
+  secret-vault plugin traffic — went through a single path that buffered the entire response body
+  into memory before any caller could look at it, with no size limit. An oversized or hostile
+  answer from an operator-configured remote was therefore an unbounded allocation in the API and
+  background-job hosts. Responses are now read through a length-limited stream and abandoned as
+  soon as they pass the cap (16 MiB by default, per request), and a declared `Content-Length` over
+  the cap is refused before the body is read at all. An oversized response is reported the same way
+  an unreachable host already was, so integrations need no change.
 
 ## [2.21.11] - 2026-09-14
 

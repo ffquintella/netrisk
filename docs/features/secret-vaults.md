@@ -291,7 +291,11 @@ Three rules an implementation must follow:
 2. **Use `context.Http`, never your own `HttpClient`.** That is the only path subject to the host's
    SSRF policy (`OutboundUrlPolicy`) and timeouts, and the only one a test can fake. An operator can
    paste any base URL into a connection; going through the host is what stops that becoming a request
-   to the cloud metadata endpoint.
+   to the cloud metadata endpoint. The host also bounds how much of the vault's answer it will hold:
+   a response body over `OutboundHttpRequest.MaxResponseBytes` (16 MiB by default) is abandoned
+   mid-read and arrives as a transport failure — status 0 with `TransportError` set — rather than as
+   an unbounded allocation in the API host. The cap is not on `PluginHttpRequest`, for the same
+   reason `AllowInvalidCertificate` is not: a plugin must not be able to raise the host's ceiling.
 3. **Never log or return a credential.** `SecretVaultTestResult.Message` and
    `SecretVaultException.Message` both reach an operator's screen and NetRisk's log.
 

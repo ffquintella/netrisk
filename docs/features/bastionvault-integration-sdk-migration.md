@@ -131,20 +131,33 @@ Four constraints on it, none negotiable:
 3. **Body conversion is UTF-8 both ways.** `PluginHttpResponse.Body` is a `string?` while
    `TransportResponse.Body` is bytes. Acceptable because no operation this plugin uses is binary;
    `Sys.BackupAsync` would be, and is not used. Worth a comment at the conversion, not silence.
-4. **`MaxResponseBytes` cannot be honoured, and that is a prerequisite rather than a footnote.**
+4. **`MaxResponseBytes` is honoured by the host, at the host's own number — stage 0, done.**
    The SDK requires the transport to abort an oversized response *while reading* (TRN-033). The host
-   seam cannot: [`OutboundHttpClient`](../../src/ServerServices/Http/OutboundHttpClient.cs) calls
-   `ReadAsStringAsync` with no `HttpCompletionOption.ResponseHeadersRead` and no cap, so the entire
-   body is already in memory before any adapter code runs. Checking the length afterwards is not a
-   mitigation — the allocation has happened.
+   seam now does: [`OutboundHttpClient`](../../src/ServerServices/Http/OutboundHttpClient.cs) sends
+   with `HttpCompletionOption.ResponseHeadersRead` and reads through a length-limited loop, so a
+   body past `OutboundHttpRequest.MaxResponseBytes` is abandoned mid-read rather than measured after
+   the allocation. A `Content-Length` already over the cap is refused before the body is touched at
+   all. Either way the caller sees the ordinary transport-failure shape — status 0 with
+   `TransportError` — which is what `PluginHttpTransport` already maps.
 
-   **This is a pre-existing host defect, not one the migration introduces**: every plugin HTTP call
-   today, for every plugin, buffers an unbounded response from a remote the operator configured. But
-   the migration is what turns it from an unnoticed gap into a broken SDK guarantee, so the bounded
-   read is booked as **stage 0** in §9: give `OutboundHttpRequest` a maximum response size, read
-   through a length-limited stream, and fail the request when it is exceeded. Until that lands, the
-   adapter must pass a `TransportResponse` it cannot vouch for, and the honest thing is to say so in
-   `secret-vaults.md` rather than to record an audit note and move on.
+   Previously this was a pre-existing host defect that affected **every** plugin HTTP call, not just
+   BastionVault's: `ReadAsStringAsync` with no cap buffered whatever an operator-configured remote
+   chose to send. Fixed in `netrisk` ahead of the migration.
+
+   **The cap is the host's, not the SDK's.** The default is 16 MiB
+   (`OutboundHttpRequest.DefaultMaxResponseBytes`) — roughly an order of magnitude above the largest
+   real response through this seam, and deliberately far below the SDK's own 128 MiB default, which
+   is sized for a `Sys.BackupAsync` snapshot this plugin does not read. `MaxResponseBytes` was
+   **not** added to `PluginHttpRequest`, on the same reasoning that keeps `AllowInvalidCertificate`
+   off it: a plugin that could raise its own ceiling could restore the unbounded allocation. So a
+   `BastionVaultClientOptions.MaxResponseBytes` above 16 MiB is silently the host's number instead —
+   the transport must not pretend otherwise, and the honest adapter behaviour is to let the host's
+   refusal surface as the transport error it is.
+
+   Evidence: `ServerServices.Tests/Track7/OutboundHttpResponseSizeTest` — an undeclared 64 MiB body
+   against a 64 KiB cap is rejected with the server having written a small fraction of it, a
+   `Content-Length` over the cap fails before the body is read, and a body at or under the cap is
+   returned unchanged.
 
 ---
 
@@ -331,7 +344,7 @@ migration.
 
 | Risk | Weight |
 |---|---|
-| `MaxResponseBytes` cannot be enforced mid-read through the host seam (§3.4) | **High until stage 0 lands.** `OutboundHttpClient` buffers the whole body with `ReadAsStringAsync`, so an oversized vault or list response is an unbounded allocation in the API host — and that is true of every plugin call today, not just BastionVault's |
+| The SDK's `MaxResponseBytes` is capped by the host's, which a plugin cannot raise (§3.4) | **Low — stage 0 landed.** `OutboundHttpClient` now reads through a length-limited stream with a 16 MiB default, so an oversized vault or list response is refused mid-read rather than allocated. What remains is the mismatch: an SDK caller asking for more than 16 MiB gets 16 MiB, and no operation this plugin uses comes close |
 | SDK 0.19.0 is pre-1.0 and **declares no conformance level**; its public surface may move | Medium — pin an exact version, never a range |
 | SDK retry stacked on the host's timeout (§4.3) | Medium, and a configuration error rather than a design one — covered by a timing test |
 | The SDK DLL loads inside the plugin's `McMaster` load context | Low — zero transitive dependencies, so no version conflict with the host |
@@ -347,7 +360,7 @@ Each stage ends with the suite green; none leaves the plugin unusable.
 
 | Stage | Work | Rough size |
 |---|---|---|
-| **0** | **In `netrisk`, not the plugin:** bound the response read in `OutboundHttpClient` — a max-size field on `OutboundHttpRequest`, a length-limited read, a clear failure past the cap, and a test that a response over the cap is rejected rather than buffered. Prerequisite for §3.4; fixes an existing unbounded-allocation path for **all** plugin egress | ½–1 day |
+| **0** ✅ | **In `netrisk`, not the plugin:** bound the response read in `OutboundHttpClient` — `OutboundHttpRequest.MaxResponseBytes` (16 MiB default), `HttpCompletionOption.ResponseHeadersRead`, a length-limited read, early refusal of an oversized `Content-Length`, and `Track7/OutboundHttpResponseSizeTest`. **Done** — prerequisite for §3.4 cleared; closed an existing unbounded-allocation path for **all** plugin egress | done |
 | 1 | `PluginHttpTransport` + client factory + adapter tests. No operation touched | ½ day |
 | 2 | Migrate `TestConnectionAsync` (lookup-self, FerroGate) — smallest surface, identical SDK types | ½ day |
 | 3 | Migrate read and enumeration with the §5.1 detection ladder, plus the KV v2 and least-privilege regression tests | 1–2 days |

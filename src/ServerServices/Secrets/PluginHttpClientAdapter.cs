@@ -53,6 +53,13 @@ public class PluginHttpClientAdapter : IPluginHttpClient
             ContentType = request.ContentType,
             Timeout = request.Timeout,
             AllowInvalidCertificate = _allowInvalidCertificate
+
+            // MaxResponseBytes is deliberately left at the host default and is deliberately absent
+            // from PluginHttpRequest, for the same reason AllowInvalidCertificate is: how much of a
+            // remote's answer the host is willing to hold in memory is the host's decision, and a
+            // plugin that could raise its own cap could restore exactly the unbounded allocation the
+            // cap exists to prevent. If a plugin ever genuinely needs a different ceiling, it is a
+            // vault-connection setting an operator records, not a field on a request.
         }, ct);
 
         return new PluginHttpResponse

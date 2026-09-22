@@ -33,6 +33,43 @@ public class OutboundHttpRequest
     public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    /// The default response cap: 16 MiB.
+    ///
+    /// Chosen against what actually comes back through this seam, which is JSON from a paged
+    /// third-party API — a Jira issue page, a Vision One vulnerability page, a SecurityScorecard
+    /// issue list, an OIDC discovery document, a vault secret. The largest of those is low
+    /// single-digit MiB, so 16 MiB is roughly an order of magnitude of headroom and no legitimate
+    /// integration will ever meet it. It is deliberately far below the 128 MiB a general-purpose
+    /// vault SDK defaults to: that budget is sized for a backup snapshot, and nothing here reads
+    /// one. The number is also a UTF-16 string in the end, so the real ceiling per in-flight
+    /// request is about double it, and a background-job host runs several at once.
+    /// </summary>
+    public const long DefaultMaxResponseBytes = 16L * 1024 * 1024;
+
+    private readonly long _maxResponseBytes = DefaultMaxResponseBytes;
+
+    /// <summary>
+    /// Largest response body this request will read, in bytes.
+    ///
+    /// Enforced while reading rather than after: a check on the finished string is not a limit, it
+    /// is a report that the allocation already happened. The destination of an outbound call is
+    /// operator-configured and the SSRF policy bounds *where* it goes, not how much it sends back,
+    /// so without this a misconfigured — or hostile — remote is an unbounded allocation in the API
+    /// and background-job hosts. A response past the cap is reported the same way an unreachable
+    /// host is: status 0 with <see cref="OutboundHttpResponse.TransportError"/> set.
+    ///
+    /// Must be positive.
+    /// </summary>
+    public long MaxResponseBytes
+    {
+        get => _maxResponseBytes;
+        init => _maxResponseBytes = value > 0
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(value), value,
+                "The maximum response size must be positive.");
+    }
+
+    /// <summary>
     /// Send this one request without validating the server certificate.
     ///
     /// Per request rather than per client because the alternative — a process-wide switch — is what

@@ -125,9 +125,14 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
                 client = _insecureClient.Value;
             }
 
-            using var response = await client.SendAsync(message, timeout.Token);
+            // ResponseHeadersRead, not the default: the default completes only once the whole body is
+            // buffered inside HttpClient, which puts the allocation out of reach before any code here
+            // can refuse it. With headers-only completion the body is still a stream we control, and
+            // MaxResponseBytes can be enforced while reading instead of reported afterwards.
+            using var response = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead,
+                timeout.Token);
 
-            var body = await response.Content.ReadAsStringAsync(timeout.Token);
+            var body = await ReadBoundedAsync(response, request.MaxResponseBytes, timeout.Token);
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var (name, values) in response.Headers)
@@ -153,6 +158,13 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
                 TransportError = $"The request timed out after {request.Timeout.TotalSeconds:0}s."
             };
         }
+        catch (ResponseTooLargeException ex)
+        {
+            _logger.Warning("Outbound {Method} to {Host} returned more than the {Limit} byte cap; the read was abandoned",
+                request.Method, HostOf(request.Url), request.MaxResponseBytes);
+
+            return new OutboundHttpResponse { StatusCode = 0, TransportError = ex.Message };
+        }
         catch (Exception ex)
         {
             var reason = Describe(ex);
@@ -165,6 +177,75 @@ public class OutboundHttpClient : IOutboundHttpClient, IDisposable
             return new OutboundHttpResponse { StatusCode = 0, TransportError = reason };
         }
     }
+
+    /// <summary>
+    /// Reads the response body, giving up as soon as more than <paramref name="maxBytes"/> have
+    /// arrived.
+    ///
+    /// Two checks, because they fail at different moments. A <c>Content-Length</c> already over the
+    /// cap is refused before a single byte of body is pulled off the socket — the cheapest possible
+    /// rejection, and the common case for an honest remote that simply has more data than NetRisk
+    /// will take. A remote that lies about the length, sends none at all, or streams chunked is
+    /// caught by the running total instead, which never lets the buffer grow past the cap plus one
+    /// read.
+    ///
+    /// The charset is honoured rather than assumed UTF-8, because <c>ReadAsStringAsync</c> did that
+    /// and replacing it with something that mangles a Latin-1 issue title would be a regression
+    /// dressed up as a security fix.
+    /// </summary>
+    private static async Task<string> ReadBoundedAsync(HttpResponseMessage response, long maxBytes,
+        CancellationToken ct)
+    {
+        if (response.Content.Headers.ContentLength is { } declared && declared > maxBytes)
+            throw new ResponseTooLargeException(declared, maxBytes);
+
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+
+        // Not pre-sized from Content-Length: a remote that declares a length just under the cap
+        // would otherwise get the whole allocation up front for free, without sending anything.
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+
+        while (true)
+        {
+            var read = await stream.ReadAsync(chunk, ct);
+            if (read == 0) break;
+
+            if (buffer.Length + read > maxBytes) throw new ResponseTooLargeException(null, maxBytes);
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return EncodingOf(response).GetString(buffer.GetBuffer(), 0, (int)buffer.Length);
+    }
+
+    private static Encoding EncodingOf(HttpResponseMessage response)
+    {
+        var charset = response.Content.Headers.ContentType?.CharSet?.Trim().Trim('"');
+
+        if (string.IsNullOrEmpty(charset)) return Encoding.UTF8;
+
+        try
+        {
+            return Encoding.GetEncoding(charset);
+        }
+        catch (ArgumentException)
+        {
+            // A charset no encoding provider knows is the remote's problem; UTF-8 is what the
+            // previous implementation would have landed on anyway.
+            return Encoding.UTF8;
+        }
+    }
+
+    /// <summary>
+    /// Raised when a response exceeds <see cref="OutboundHttpRequest.MaxResponseBytes"/>. Private,
+    /// and converted to a transport error before it leaves <see cref="SendAsync"/> — callers handle
+    /// one failure shape, not two.
+    /// </summary>
+    private sealed class ResponseTooLargeException(long? declared, long limit)
+        : Exception(declared is { } bytes
+            ? $"The response declared {bytes} bytes, over the {limit} byte limit for this request."
+            : $"The response exceeded the {limit} byte limit for this request.");
 
     /// <summary>
     /// The whole message chain, not just the outermost message.
