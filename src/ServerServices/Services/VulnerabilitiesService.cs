@@ -4,9 +4,8 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
+using ServerServices.Filtering;
 using ServerServices.Interfaces;
-using Sieve.Models;
-using Sieve.Services;
 using Tools.Helpers;
 
 namespace ServerServices.Services;
@@ -14,11 +13,11 @@ namespace ServerServices.Services;
 public class VulnerabilitiesService(
     ILogger logger,
     IDalService dalService,
-    ISieveProcessor sieveProcessor)
+    IEntityFilterMapperProvider filterMappers)
     : ServiceBase(logger, dalService), IVulnerabilitiesService
 {
 
-    private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
+    private IEntityFilterMapperProvider FilterMappers { get; } = filterMappers;
 
     public List<Vulnerability> GetAll()
     {
@@ -30,29 +29,20 @@ public class VulnerabilitiesService(
         return vulnerabilities;
     }
 
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount, bool includeFixRequests = false)
+    public List<Vulnerability> GetFiltred(ListQuery query, out int totalCount, bool includeFixRequests = false)
     {
         using var dbContext = DalService.GetContext();
 
         var vul = dbContext.Vulnerabilities;
 
         IQueryable<Vulnerability> result;
-        
+
         if(includeFixRequests) result = vul.Include(v => v.Risks).Include(v => v.FixRequests).AsNoTracking();
         else result = vul.Include(v => v.Risks).AsNoTracking();
-        
-        //var result = dbContext.Vulnerabilities
-        //    .Include(vul => vul.Risks).Include(vul => vul.FixRequests).AsNoTracking();
-        
-        //if(includeFixRequests) result = result.Include(vul => vul.FixRequests);
-        
-        //result = result.AsNoTracking(); // Makes read-only queries faster
-         
-        var vulnerabilities = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
-        totalCount = vulnerabilities.Count();
-        
-        result = SieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
-        return result.ToList();
+
+        var (rows, total) = result.ApplyListQuery(query, FilterMappers.For<Vulnerability>());
+        totalCount = total;
+        return rows;
     }
 
     public Vulnerability GetById(int vulnerabilityId, bool includeDetails = false)

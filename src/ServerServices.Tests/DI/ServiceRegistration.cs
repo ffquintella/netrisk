@@ -11,12 +11,11 @@ using Serilog;
 using Serilog.Extensions.Logging;
 using ServerServices.Governance;
 using ServerServices.Integrations;
+using ServerServices.Filtering;
 using ServerServices.Interfaces;
 using ServerServices.Security;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
-using Sieve.Models;
-using Sieve.Services;
 using HostsService = ServerServices.Services.HostsService;
 using ILogger = Serilog.ILogger;
 
@@ -54,9 +53,9 @@ public class ServiceRegistration
         services.AddTransient<IEmailService, EmailMock>();
         services.AddTransient<IFilesService, FilesServiceMock>();
         services.AddTransient<IEntitiesService, EntitiesService>();
-        services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+        services.AddScoped<IEntityFilterMapperProvider, ApplicationEntityFilterMapperProvider>();
         services.AddSingleton(MockConfiguration.Create());
-        services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));
+        services.AddSingleton<ILocalizationService>(new LocalizationService(factory, typeof(ApplicationEntityFilterMapperProvider).Assembly));
 
         // Track 4 (Integrations): the domain services now raise notification events, so the graph has
         // to resolve here too. The outbound HTTP client is a fake and the protector uses a fixed root
@@ -70,14 +69,6 @@ public class ServiceRegistration
         services.AddTrack8Governance();
         
         
-        services.Configure<SieveOptions>((sieveOptions =>
-        {
-            sieveOptions.DefaultPageSize = 100;
-            sieveOptions.MaxPageSize = 1000;
-            sieveOptions.ThrowExceptions = true;
-            sieveOptions.CaseSensitive = false;
-            sieveOptions.IgnoreNullsOnNotEqual = true;
-        }));
         
         
         // Registrar AutoMapper usando os perfis do assembly principal e outros perfis relevantes

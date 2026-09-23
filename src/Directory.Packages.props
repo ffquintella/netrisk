@@ -90,7 +90,6 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Spectre" Version="0.6.0" />
-    <PackageVersion Include="Sieve" Version="2.5.5" />
     <PackageVersion Include="SkiaDrawing" Version="1.0.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="SkiaSharp.HarfBuzz" Version="3.119.4" />

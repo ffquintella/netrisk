@@ -1170,7 +1170,7 @@ public partial class NRDbContext : DbContext
                 .UseCollation("utf8mb4_unicode_ci");
 
             entity.HasIndex(e => e.TeamId, "fk_host_team");
-            // Track 6 Phase 4: Sieve sorts/filters Host on status + registration_date (ApplicationSieveProcessor),
+            // Track 6 Phase 4: Sieve sorts/filters Host on status + registration_date (ApplicationEntityFilterMapperProvider),
             // previously unindexed.
             entity.HasIndex(e => e.Status, "idx_hosts_status");
             entity.HasIndex(e => e.RegistrationDate, "idx_hosts_registration_date");
@@ -3595,7 +3595,7 @@ public partial class NRDbContext : DbContext
             entity.HasIndex(e => e.Technology, "idx_technology");
 
             entity.HasIndex(e => e.Title, "idx_title").HasAnnotation("MySql:FullTextIndex", true);
-            // Track 6 Phase 4: Sieve sorts/filters Vulnerability on first/last detection (ApplicationSieveProcessor),
+            // Track 6 Phase 4: Sieve sorts/filters Vulnerability on first/last detection (ApplicationEntityFilterMapperProvider),
             // previously unindexed (status & host_id already indexed above).
             entity.HasIndex(e => e.FirstDetection, "idx_vulnerabilities_first_detection");
             entity.HasIndex(e => e.LastDetection, "idx_vulnerabilities_last_detection");

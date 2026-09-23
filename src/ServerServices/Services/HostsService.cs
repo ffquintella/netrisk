@@ -6,17 +6,16 @@ using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
-using Sieve.Models;
-using Sieve.Services;
 
+using ServerServices.Filtering;
 namespace ServerServices.Services;
 
 public class HostsService: ServiceBase, IHostsService
 {
-    private ISieveProcessor SieveProcessor { get; }
-    public HostsService(ILogger logger, ISieveProcessor sieveProcessor, IDalService dalService) : base(logger, dalService)
+    private IEntityFilterMapperProvider FilterMappers { get; }
+    public HostsService(ILogger logger, IEntityFilterMapperProvider filterMappers, IDalService dalService) : base(logger, dalService)
     {
-        SieveProcessor = sieveProcessor;
+        FilterMappers = filterMappers;
     }
 
     public async Task<bool> HostExistsAsync(string hostIp)
@@ -40,18 +39,15 @@ public class HostsService: ServiceBase, IHostsService
         return hosts;
     }
     
-    public async Task<Tuple<List<Host>,int>> GetFiltredAsync(SieveModel sieveModel)
+    public async Task<Tuple<List<Host>,int>> GetFiltredAsync(ListQuery query)
     {
         await using var dbContext = DalService.GetContext();
-        
+
         var result = dbContext.Hosts.AsNoTracking(); // Makes read-only queries faster
-         
-        var hosts = SieveProcessor.Apply(sieveModel, result, applyPagination: false);
-        var totalCount = hosts.Count();
-        
-        result = SieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
-        
-        return new Tuple<List<Host>, int>(result.ToList(), totalCount);
+
+        var (rows, totalCount) = result.ApplyListQuery(query, FilterMappers.For<Host>());
+
+        return new Tuple<List<Host>, int>(rows, totalCount);
     }
     
     public Host GetById(int hostId)

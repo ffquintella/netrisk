@@ -9,9 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServerServices.Interfaces;
 using ServerServices.Services;
-using Sieve.Models;
-using Sieve.Services;
 using ILogger = Serilog.ILogger;
+
+using Gridify;
+using ServerServices.Filtering;
 
 namespace API.Controllers;
 
@@ -20,7 +21,7 @@ namespace API.Controllers;
 [Route("[controller]")]
 public class ExportController(
     IExportService exportService,
-    ISieveProcessor sieveProcessor,
+    IEntityFilterMapperProvider filterMappers,
     IDalService dalService,
     ILogger logger,
     IHttpContextAccessor httpContextAccessor,
@@ -28,7 +29,7 @@ public class ExportController(
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IExportService ExportService { get; } = exportService;
-    private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
+    private IEntityFilterMapperProvider FilterMappers { get; } = filterMappers;
     private IDalService DalService { get; } = dalService;
 
     [HttpGet]
@@ -36,7 +37,7 @@ public class ExportController(
     public async Task<IActionResult> Export(
         [FromRoute] string format, 
         [FromQuery] string entityType, 
-        [FromQuery] SieveModel sieveModel, 
+        [FromQuery] ListQuery listQuery, 
         [FromQuery] string reportTitle = "Export")
     {
         var user = GetUser();
@@ -58,28 +59,28 @@ public class ExportController(
             {
                 case "risk":
                     var risksQuery = dbContext.Risks.AsNoTracking().AsQueryable();
-                    var filteredRisks = SieveProcessor.Apply(sieveModel, risksQuery, applyPagination: false);
+                    var filteredRisks = risksQuery.ApplyListFilter(listQuery, FilterMappers.For<Risk>());
                     var risks = await filteredRisks.ToListAsync();
                     fileContents = await ExportService.ExportAsync(risks, exportFormat, reportTitle);
                     break;
 
                 case "vulnerability":
                     var vulnsQuery = dbContext.Vulnerabilities.AsNoTracking().AsQueryable();
-                    var filteredVulns = SieveProcessor.Apply(sieveModel, vulnsQuery, applyPagination: false);
+                    var filteredVulns = vulnsQuery.ApplyListFilter(listQuery, FilterMappers.For<Vulnerability>());
                     var vulns = await filteredVulns.ToListAsync();
                     fileContents = await ExportService.ExportAsync(vulns, exportFormat, reportTitle);
                     break;
 
                 case "host":
                     var hostsQuery = dbContext.Hosts.AsNoTracking().AsQueryable();
-                    var filteredHosts = SieveProcessor.Apply(sieveModel, hostsQuery, applyPagination: false);
+                    var filteredHosts = hostsQuery.ApplyListFilter(listQuery, FilterMappers.For<DAL.Entities.Host>());
                     var hosts = await filteredHosts.ToListAsync();
                     fileContents = await ExportService.ExportAsync(hosts, exportFormat, reportTitle);
                     break;
 
                 case "incident":
                     var incidentsQuery = dbContext.Incidents.AsNoTracking().AsQueryable();
-                    var filteredIncidents = SieveProcessor.Apply(sieveModel, incidentsQuery, applyPagination: false);
+                    var filteredIncidents = incidentsQuery.ApplyListFilter(listQuery, FilterMappers.For<Incident>());
                     var incidents = await filteredIncidents.ToListAsync();
                     fileContents = await ExportService.ExportAsync(incidents, exportFormat, reportTitle);
                     break;

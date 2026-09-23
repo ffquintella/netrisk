@@ -6,9 +6,10 @@ using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 using Host = DAL.Entities.Host;
-using Sieve.Exceptions;
 using Mapster;
-using Sieve.Models;
+
+using Gridify;
+using ServerServices.Filtering;
 
 namespace API.Controllers;
 
@@ -55,7 +56,7 @@ public class HostsController: ApiBaseController
     [Route("Filtered")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<Vulnerability>>> GetFiltered([FromQuery] SieveModel sieveModel, [FromQuery] string culture = "en-US")
+    public async Task<ActionResult<List<Vulnerability>>> GetFiltered([FromQuery] ListQuery listQuery, [FromQuery] string culture = "en-US")
     {
 
         SetLocalization(culture);
@@ -63,18 +64,20 @@ public class HostsController: ApiBaseController
 
         try
         {
-            var data = await HostsService.GetFiltredAsync(sieveModel);
+            var data = await HostsService.GetFiltredAsync(listQuery);
             Response.Headers.Append("X-Total-Count", data.Item2.ToString());
 
             Logger.Information("User:{User} listed hosts with filters", user.Value);
             return Ok(data.Item1);
         }
-        catch (SieveMethodNotFoundException ex)
+        catch (GridifyMapperException ex)
         {
             Logger.Warning("Invalid filter: {Message}", ex.Message);
             return this.StatusCode(409, ex.Message);
         }
-        catch (SieveException ex)
+        catch (Exception ex) when (ex is GridifyFilteringException
+                                   or GridifyOrderingException
+                                   or GridifyQueryException)
         {
             Logger.Warning("Filter error while listing hosts with filters: {Message}", ex.Message);
             return this.StatusCode(StatusCodes.Status400BadRequest, ex.Message);

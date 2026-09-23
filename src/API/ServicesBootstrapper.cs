@@ -12,11 +12,10 @@ using ServerServices.Findings;
 using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
 using ServerServices.Governance;
+using ServerServices.Filtering;
 using ServerServices.Integrations;
 using SharedServices.Interfaces;
 using SharedServices.Services;
-using Sieve.Models;
-using Sieve.Services;
 using Mapster;
 
 namespace API;
@@ -107,7 +106,7 @@ public static class ServicesBootstrapper
 
         services.AddSingleton<ILanguageManager>(_ => new LanguageManager(langConf));
         
-        services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+        services.AddScoped<IEntityFilterMapperProvider, ApplicationEntityFilterMapperProvider>();
         
         services.AddTransient<IEmailService, EmailService>();
         services.AddTransient<IConfigurationsService, ConfigurationsService>();
@@ -167,13 +166,7 @@ public static class ServicesBootstrapper
     private static void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
 
-        services.Configure<SieveOptions>((sieveOptions =>
-        {
-            sieveOptions.DefaultPageSize = 100;
-            sieveOptions.MaxPageSize = 1000;
-            sieveOptions.ThrowExceptions = true;
-            sieveOptions.CaseSensitive = false;
-            sieveOptions.IgnoreNullsOnNotEqual = true;
-        }));
+        // Paging bounds moved to ServerServices.Filtering.FilterBounds — Gridify has no
+        // options bag, so the clamp lives beside the code that applies it.
     }
 }

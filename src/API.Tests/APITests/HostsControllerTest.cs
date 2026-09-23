@@ -13,11 +13,13 @@ using Model.DTO;
 using Model.Exceptions;
 using NSubstitute;
 using ServerServices.Interfaces;
-using Sieve.Exceptions;
-using Sieve.Models;
 using Xunit;
 using Host = DAL.Entities.Host;
 using HostsServiceEntity = DAL.Entities.HostsService;
+
+using ServerServices.Filtering;
+
+using Gridify;
 
 namespace API.Tests.APITests;
 
@@ -109,10 +111,10 @@ public class HostsControllerTest : BaseControllerTest
     [Fact]
     public async Task TestGetFiltered()
     {
-        _hostsService.GetFiltredAsync(Arg.Any<SieveModel>())
+        _hostsService.GetFiltredAsync(Arg.Any<ListQuery>())
             .Returns(Task.FromResult(new Tuple<List<Host>, int>(new List<Host> { SampleHost(1) }, 7)));
 
-        var result = await _controller.GetFiltered(new SieveModel());
+        var result = await _controller.GetFiltered(new ListQuery());
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         var hosts = Assert.IsType<List<Host>>(ok.Value);
@@ -124,23 +126,23 @@ public class HostsControllerTest : BaseControllerTest
     public async Task TestGetFilteredInvalidFilterReturnsConflict()
     {
         var (controller, service) = NewController();
-        service.GetFiltredAsync(Arg.Any<SieveModel>())
-            .Returns<Task<Tuple<List<Host>, int>>>(_ => throw new SieveMethodNotFoundException("BadMethod", "method not found"));
+        service.GetFiltredAsync(Arg.Any<ListQuery>())
+            .Returns<Task<Tuple<List<Host>, int>>>(_ => throw new GridifyMapperException("mapping 'BadMethod' not found"));
 
-        var result = await controller.GetFiltered(new SieveModel());
+        var result = await controller.GetFiltered(new ListQuery());
 
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(409, status.StatusCode);
     }
 
     [Fact]
-    public async Task TestGetFilteredSieveErrorReturnsBadRequest()
+    public async Task TestGetFilteredFilterErrorReturnsBadRequest()
     {
         var (controller, service) = NewController();
-        service.GetFiltredAsync(Arg.Any<SieveModel>())
-            .Returns<Task<Tuple<List<Host>, int>>>(_ => throw new SieveException("filter error"));
+        service.GetFiltredAsync(Arg.Any<ListQuery>())
+            .Returns<Task<Tuple<List<Host>, int>>>(_ => throw new GridifyFilteringException("filter error"));
 
-        var result = await controller.GetFiltered(new SieveModel());
+        var result = await controller.GetFiltered(new ListQuery());
 
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(StatusCodes.Status400BadRequest, status.StatusCode);
@@ -150,10 +152,10 @@ public class HostsControllerTest : BaseControllerTest
     public async Task TestGetFilteredInternalError()
     {
         var (controller, service) = NewController();
-        service.GetFiltredAsync(Arg.Any<SieveModel>())
+        service.GetFiltredAsync(Arg.Any<ListQuery>())
             .Returns<Task<Tuple<List<Host>, int>>>(_ => throw new Exception("boom"));
 
-        var result = await controller.GetFiltered(new SieveModel());
+        var result = await controller.GetFiltered(new ListQuery());
 
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
@@ -163,7 +165,7 @@ public class HostsControllerTest : BaseControllerTest
     public async Task TestGetFilteredInvalidCultureThrows()
     {
         await Assert.ThrowsAsync<BadRequestException>(
-            () => _controller.GetFiltered(new SieveModel(), "zz-ZZ"));
+            () => _controller.GetFiltered(new ListQuery(), "zz-ZZ"));
     }
 
     #endregion

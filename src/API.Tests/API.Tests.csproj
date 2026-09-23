@@ -17,8 +17,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Gridify" />
     <PackageReference Include="NSubstitute" />
-    <PackageReference Include="Sieve" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
   <ItemGroup>

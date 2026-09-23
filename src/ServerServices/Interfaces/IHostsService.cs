@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using DAL.Entities;
-using Sieve.Models;
 
+using ServerServices.Filtering;
 namespace ServerServices.Interfaces;
 
 public interface IHostsService
@@ -26,7 +26,7 @@ public interface IHostsService
     /// <param name="sieveModel"></param>
     /// <param name="totalCount"></param>
     /// <returns></returns>
-    public Task<Tuple<List<Host>,int>> GetFiltredAsync(SieveModel sieveModel);
+    public Task<Tuple<List<Host>,int>> GetFiltredAsync(ListQuery query);
 
     /// <summary>
     ///  Get host by id

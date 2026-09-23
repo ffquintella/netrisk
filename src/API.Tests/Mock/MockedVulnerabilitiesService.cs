@@ -6,7 +6,6 @@ using DAL.Enums;
 using Model.Exceptions;
 using NSubstitute;
 using ServerServices.Interfaces;
-using Sieve.Models;
 
 namespace API.Tests.Mock;
 

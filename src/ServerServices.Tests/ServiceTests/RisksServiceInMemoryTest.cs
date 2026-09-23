@@ -8,8 +8,9 @@ using Model;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace ServerServices.Tests.ServiceTests;
 
@@ -405,7 +406,7 @@ public class RisksServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Risks.Add(risk);
         });
 
-        var (count, list) = await _svc.GetFilteredVulnerabilitiesAsync(1, new SieveModel());
+        var (count, list) = await _svc.GetFilteredVulnerabilitiesAsync(1, new ListQuery());
 
         Assert.Equal(1, count);
         Assert.Single(list);

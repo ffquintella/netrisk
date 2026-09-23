@@ -12,6 +12,21 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **Filtering, sorting and paging moved from Sieve to Gridify.** Sieve has had no release since
+  2021 and 61 open issues; it sat under every paged list endpoint. Gridify is released weekly and
+  has thirteen times the adoption. The HTTP contract is unchanged — `?filters=&sorts=&page=&pageSize=`
+  still bind, now onto `ServerServices.Filtering.ListQuery` instead of `SieveModel`.
+  Users type filter expressions into the findings screen and the client persists them per user, so
+  those strings outlive the parser: `SieveSyntaxTranslator` rewrites Sieve syntax into Gridify's
+  (`==`→`=`, `@=`→`=*`, case-insensitive variants gain `/i`, and `field==a|b|c` expands to a
+  parenthesised OR), which keeps saved and hard-coded filters working. `ApplicationSieveProcessor`
+  became `ApplicationEntityFilterMapperProvider`, still scoped and still building localized column
+  names per request. `SieveOptions` became `FilterBounds` (Gridify has no options bag), preserving
+  the 100/1000 default and maximum page size. Sieve's two commented-out custom-method classes went
+  with it. 36 new tests: 26 on the translator, and 10 driving real Sieve expressions through the
+  production service, mapper and query provider — including the parenthesisation, which without it
+  turns `id==1|2,os==linux` into the wrong rows silently.
+
 - **`RazorLight` is documented as the transitive pin it always was.** It was flagged for removal on
   the grounds that it had zero usages in C# and that `FluentEmail.Razor` had subsumed it. Removing
   it proved the opposite: `FluentEmail.Razor 3.0.2` *depends on* `RazorLight 2.0.0-rc.3`, a 2019

@@ -13,16 +13,15 @@ using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Governance;
 using DAL.Enums;
-using Sieve.Models;
-using Sieve.Services;
 using Tools.Helpers;
 
+using ServerServices.Filtering;
 namespace ServerServices.Services;
 
 public class RisksService(
     IDalService dalService,
     IRolesService rolesService,
-    ISieveProcessor sieveProcessor,
+    IEntityFilterMapperProvider filterMappers,
     IUsersService usersService,
     INotificationEventPublisher notifications,
     IRiskWorkflowService workflow)
@@ -30,7 +29,7 @@ public class RisksService(
 {
 
     
-    private ISieveProcessor SieveProcessor { get; } = sieveProcessor;
+    private IEntityFilterMapperProvider FilterMappers { get; } = filterMappers;
 
     /// <summary>
     /// Gets the risks associated to a user
@@ -398,18 +397,15 @@ public class RisksService(
         return risk.Vulnerabilities.Where(v=> !closedStatus.Contains(v.Status)).ToList(); 
     }
 
-    public async Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, SieveModel filter)
+    public async Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, ListQuery filter)
     {
         await using var dbContext = dalService.GetContext();
 
         var vul = dbContext.Vulnerabilities.Include(v=> v.Risks).Where(v => v.Risks.Any(r => r.Id == riskId)).AsNoTracking();
-         
-        var vulnerabilities = SieveProcessor.Apply(filter, vul, applyPagination: false);
-        var totalCount = vulnerabilities.Count();
-        
-        vulnerabilities = SieveProcessor.Apply(filter, vul); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
-        var list = await vulnerabilities.ToListAsync();
-        return new Tuple<int, List<Vulnerability>>(totalCount, list);
+
+        var (list, totalCount) = vul.ApplyListQuery(filter, FilterMappers.For<Vulnerability>());
+
+        return await Task.FromResult(new Tuple<int, List<Vulnerability>>(totalCount, list));
     }
 
     public async Task<IncidentResponsePlan?> GetIncidentResponsePlanAsync(int riskId)

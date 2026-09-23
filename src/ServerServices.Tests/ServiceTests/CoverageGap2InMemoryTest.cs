@@ -6,8 +6,9 @@ using DAL.Entities;
 using Model.Entities;
 using Model.Exceptions;
 using ServerServices.Interfaces;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace ServerServices.Tests.ServiceTests;
 
@@ -53,7 +54,7 @@ public class VulnerabilitiesGap2InMemoryTest : InMemoryServiceTestBase
             ctx.Vulnerabilities.Add(NewVuln(2));
         });
 
-        var list = _svc.GetFiltred(new SieveModel(), out var total, includeFixRequests: false);
+        var list = _svc.GetFiltred(new ListQuery(), out var total, includeFixRequests: false);
 
         Assert.Equal(2, total);
         Assert.Equal(2, list.Count);

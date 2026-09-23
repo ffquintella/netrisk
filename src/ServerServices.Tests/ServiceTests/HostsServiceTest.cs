@@ -3,8 +3,9 @@ using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
 using ServerServices.Services;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace ServerServices.Tests.ServiceTests;
 
@@ -28,13 +29,13 @@ public class HostsServiceTest: BaseServiceTest
         // Act
         // Call the method you're testing.
         
-        var result1 = await _hostsService.GetFiltredAsync(new SieveModel()
+        var result1 = await _hostsService.GetFiltredAsync(new ListQuery()
         {
             Page = 1,
             PageSize = 10,
         });
 
-        var result2 = await _hostsService.GetFiltredAsync(new SieveModel()
+        var result2 = await _hostsService.GetFiltredAsync(new ListQuery()
         {
             Page = 1,
             PageSize = 10,

@@ -7,8 +7,9 @@ using JetBrains.Annotations;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace ServerServices.Tests.ServiceTests;
 
@@ -116,7 +117,7 @@ public class VulnerabilitiesServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Vulnerabilities.Add(NewVuln(2));
         });
 
-        var list = _svc.GetFiltred(new SieveModel(), out var total, includeFixRequests: true);
+        var list = _svc.GetFiltred(new ListQuery(), out var total, includeFixRequests: true);
 
         Assert.Equal(2, total);
         Assert.Equal(2, list.Count);

@@ -1,6 +1,6 @@
 ﻿using DAL.Entities;
-using Sieve.Models;
 
+using ServerServices.Filtering;
 namespace ServerServices.Interfaces;
 
 public interface IVulnerabilitiesService
@@ -18,7 +18,7 @@ public interface IVulnerabilitiesService
     /// <param name="totalCount"></param>
     /// <param name="includeFixRequests"></param>
     /// <returns></returns>
-    public List<Vulnerability> GetFiltred(SieveModel sieveModel, out int totalCount, bool includeFixRequests = false);
+    public List<Vulnerability> GetFiltred(ListQuery query, out int totalCount, bool includeFixRequests = false);
     
     /// <summary>
     /// Get vulnerability by id

@@ -15,9 +15,11 @@ using Model.Jobs;
 using NSubstitute;
 using ServerServices.Interfaces;
 using ServerServices.Interfaces.Importers;
-using Sieve.Exceptions;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
+
+using Gridify;
 
 namespace API.Tests.APITests;
 
@@ -237,7 +239,7 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         });
 
         var controller = Build(service);
-        var result = controller.GetFiltered(new SieveModel());
+        var result = controller.GetFiltered(new ListQuery());
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Single(Assert.IsType<List<Vulnerability>>(ok.Value));
@@ -254,7 +256,7 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
             return new List<Vulnerability>();
         });
 
-        var result = Build(service).GetFiltered(new SieveModel(), "en-US", true);
+        var result = Build(service).GetFiltered(new ListQuery(), "en-US", true);
 
         Assert.IsType<OkObjectResult>(result.Result);
         Assert.Empty(Assert.IsType<List<Vulnerability>>(Assert.IsType<OkObjectResult>(result.Result).Value));
@@ -263,30 +265,30 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
     [Fact]
     public void TestGetFilteredWithInvalidCultureThrows()
     {
-        Assert.Throws<BadRequestException>(() => _controller.GetFiltered(new SieveModel(), "zz-ZZ"));
+        Assert.Throws<BadRequestException>(() => _controller.GetFiltered(new ListQuery(), "zz-ZZ"));
     }
 
     [Fact]
-    public void TestGetFilteredReturnsConflictOnUnknownSieveMethod()
+    public void TestGetFilteredReturnsConflictOnUnmappedProperty()
     {
         var service = Substitute.For<IVulnerabilitiesService>();
         service.GetFiltred(null, out _, false)
-            .ReturnsForAnyArgs<List<Vulnerability>>(_ => throw new SieveMethodNotFoundException("nope", "no method"));
+            .ReturnsForAnyArgs<List<Vulnerability>>(_ => throw new GridifyMapperException("mapping 'nope' not found"));
 
-        var result = Build(service).GetFiltered(new SieveModel());
+        var result = Build(service).GetFiltered(new ListQuery());
 
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(409, status.StatusCode.GetValueOrDefault());
     }
 
     [Fact]
-    public void TestGetFilteredReturnsBadRequestOnSieveException()
+    public void TestGetFilteredReturnsBadRequestOnFilterException()
     {
         var service = Substitute.For<IVulnerabilitiesService>();
         service.GetFiltred(null, out _, false)
-            .ReturnsForAnyArgs<List<Vulnerability>>(_ => throw new SieveException("bad filter"));
+            .ReturnsForAnyArgs<List<Vulnerability>>(_ => throw new GridifyFilteringException("bad filter"));
 
-        var result = Build(service).GetFiltered(new SieveModel());
+        var result = Build(service).GetFiltered(new ListQuery());
 
         var status = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(StatusCodes.Status400BadRequest, status.StatusCode.GetValueOrDefault());
@@ -299,7 +301,7 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         service.GetFiltred(null, out _, false)
             .ReturnsForAnyArgs<List<Vulnerability>>(_ => throw new Exception("boom"));
 
-        var result = Build(service).GetFiltered(new SieveModel());
+        var result = Build(service).GetFiltered(new ListQuery());
 
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);

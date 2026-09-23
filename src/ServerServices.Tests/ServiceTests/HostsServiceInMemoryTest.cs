@@ -6,10 +6,11 @@ using DAL.Entities;
 using JetBrains.Annotations;
 using Model.Exceptions;
 using ServerServices.Interfaces;
-using Sieve.Models;
 using Xunit;
 using HostsService = ServerServices.Services.HostsService;
 using HostServiceEntity = DAL.Entities.HostsService;
+
+using ServerServices.Filtering;
 
 namespace ServerServices.Tests.ServiceTests;
 
@@ -116,7 +117,7 @@ public class HostsServiceInMemoryTest : InMemoryServiceTestBase
             ctx.Hosts.Add(NewHost(2, "b"));
         });
 
-        var (hosts, total) = await _svc.GetFiltredAsync(new SieveModel());
+        var (hosts, total) = await _svc.GetFiltredAsync(new ListQuery());
 
         Assert.Equal(2, total);
         Assert.Equal(2, hosts.Count);

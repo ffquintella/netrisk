@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using DAL.Entities;
-using Sieve.Models;
 
+using ServerServices.Filtering;
 namespace ServerServices.Interfaces;
 
 public interface IRisksService
@@ -344,7 +344,7 @@ public interface IRisksService
     /// <param name="riskId"></param>
     /// <param name="filter"></param>
     /// <returns></returns>
-    public Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, SieveModel filter);
+    public Task<Tuple<int, List<Vulnerability>>> GetFilteredVulnerabilitiesAsync(int riskId, ListQuery filter);
 
     /// <summary>
     /// Gets the list of Incident Response Plans

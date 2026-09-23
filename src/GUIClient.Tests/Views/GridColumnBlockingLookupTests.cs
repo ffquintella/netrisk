@@ -122,7 +122,7 @@ public class GridColumnBlockingLookupTests
         Assert.Contains("UsersService.GetAllAsync()", source, StringComparison.Ordinal);
         Assert.Contains("EntitiesService.GetAllAsync(\"application\", true)", source, StringComparison.Ordinal);
 
-        // Hosts: a single Sieve-filtered call naming exactly the ids on the page.
+        // Hosts: a single filtered call naming exactly the ids on the page.
         Assert.Contains("\"id==\" + string.Join(\"|\", hostIds)", source, StringComparison.Ordinal);
 
         // And nothing per row: the per-id endpoints must not be reachable from the grid's columns.

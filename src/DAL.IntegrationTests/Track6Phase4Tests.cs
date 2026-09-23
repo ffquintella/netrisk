@@ -15,7 +15,7 @@ namespace DAL.IntegrationTests;
 /// End-to-end Track 6 Phase 4 (indexing + BLOB-to-text) against the real schema on MariaDB: builds through
 /// Phase 3 (1..69), seeds multi-byte UTF-8 into each text-bearing BLOB column, applies Phase 4 through the
 /// actual service + shipped manifest/SQL, and verifies the columns are now varchar/TEXT with content that
-/// reads back byte-identical, the Sieve-justified hot-path indexes exist (and appear in EXPLAIN possible_keys),
+/// reads back byte-identical, the filter-justified hot-path indexes exist (and appear in EXPLAIN possible_keys),
 /// and the redundant UNIQUE id index on framework_control_tests is gone. db_version -> 70, Success logged.
 /// </summary>
 [Collection("mariadb")]

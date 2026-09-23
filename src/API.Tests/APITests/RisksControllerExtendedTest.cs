@@ -14,8 +14,9 @@ using Model.Exceptions;
 using Model.Risks;
 using NSubstitute;
 using ServerServices.Interfaces;
-using Sieve.Models;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace API.Tests.APITests;
 
@@ -166,11 +167,11 @@ public class RisksControllerExtendedTest : BaseControllerTest
         _risksService.GetVulnerabilitiesAsync(998, false)
             .Returns<Task<List<Vulnerability>>>(_ => throw new Exception("boom"));
 
-        _risksService.GetFilteredVulnerabilitiesAsync(1, Arg.Any<SieveModel>())
+        _risksService.GetFilteredVulnerabilitiesAsync(1, Arg.Any<ListQuery>())
             .Returns(new Tuple<int, List<Vulnerability>>(2, NewVulnerabilities()));
-        _risksService.GetFilteredVulnerabilitiesAsync(999, Arg.Any<SieveModel>())
+        _risksService.GetFilteredVulnerabilitiesAsync(999, Arg.Any<ListQuery>())
             .Returns<Task<Tuple<int, List<Vulnerability>>>>(_ => throw new DataNotFoundException("risk", "999"));
-        _risksService.GetFilteredVulnerabilitiesAsync(998, Arg.Any<SieveModel>())
+        _risksService.GetFilteredVulnerabilitiesAsync(998, Arg.Any<ListQuery>())
             .Returns<Task<Tuple<int, List<Vulnerability>>>>(_ => throw new Exception("boom"));
 
         // ---- incident response plan -----------------------------------------------------------
@@ -672,7 +673,7 @@ public class RisksControllerExtendedTest : BaseControllerTest
     [Fact]
     public async Task TestGetFilteredVulnerabilities()
     {
-        var result = await _controller.GetFilteredVulnerabilities(1, new SieveModel());
+        var result = await _controller.GetFilteredVulnerabilities(1, new ListQuery());
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         var vulnerabilities = Assert.IsType<List<Vulnerability>>(ok.Value);
@@ -683,14 +684,14 @@ public class RisksControllerExtendedTest : BaseControllerTest
     [Fact]
     public async Task TestGetFilteredVulnerabilitiesNotFound()
     {
-        var result = await _controller.GetFilteredVulnerabilities(999, new SieveModel());
+        var result = await _controller.GetFilteredVulnerabilities(999, new ListQuery());
         Assert.IsType<NotFoundResult>(result.Result);
     }
 
     [Fact]
     public async Task TestGetFilteredVulnerabilitiesInternalError()
     {
-        var result = await _controller.GetFilteredVulnerabilities(998, new SieveModel());
+        var result = await _controller.GetFilteredVulnerabilities(998, new ListQuery());
         AssertStatusCode(500, result.Result);
     }
 

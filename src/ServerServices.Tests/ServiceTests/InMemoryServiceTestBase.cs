@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
+using ServerServices.Filtering;
 using ServerServices.Interfaces;
 using ServerServices.Findings;
 using ServerServices.Importers;
@@ -14,8 +15,6 @@ using ServerServices.Governance;
 using ServerServices.Integrations;
 using ServerServices.Services;
 using ServerServices.Tests.Mock;
-using Sieve.Models;
-using Sieve.Services;
 using ILogger = Serilog.ILogger;
 
 namespace ServerServices.Tests.ServiceTests;
@@ -62,9 +61,9 @@ public abstract class InMemoryServiceTestBase
         services.AddSingleton<ILogger>(logger);
         services.AddSingleton<IDalService>(_dalService);
         services.AddSingleton(MockConfiguration.Create());
-        services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+        services.AddScoped<IEntityFilterMapperProvider, ApplicationEntityFilterMapperProvider>();
         services.AddSingleton<ILocalizationService>(
-            new LocalizationService(factory, typeof(ApplicationSieveProcessor).Assembly));
+            new LocalizationService(factory, typeof(ApplicationEntityFilterMapperProvider).Assembly));
 
         // Mocks for I/O-bound collaborators.
         services.AddTransient<IEmailService, EmailMock>();
@@ -132,14 +131,6 @@ public abstract class InMemoryServiceTestBase
         services.AddSingleton<ISecretProtector>(
             new ServerServices.Security.SecretProtector(logger, "netrisk-test-root-secret"));
 
-        services.Configure<SieveOptions>(sieveOptions =>
-        {
-            sieveOptions.DefaultPageSize = 100;
-            sieveOptions.MaxPageSize = 1000;
-            sieveOptions.ThrowExceptions = true;
-            sieveOptions.CaseSensitive = false;
-            sieveOptions.IgnoreNullsOnNotEqual = true;
-        });
 
         ServiceProvider = services.BuildServiceProvider();
     }

@@ -10,8 +10,10 @@ using Model.DTO;
 using Model.Exceptions;
 using Model.Risks;
 using ServerServices.Interfaces;
-using Sieve.Models;
 using ILogger = Serilog.ILogger;
+
+using Gridify;
+using ServerServices.Filtering;
 
 namespace API.Controllers;
 
@@ -521,7 +523,7 @@ public class RisksController : ApiBaseController
     [Route("{id}/Vulnerabilities/Filtered")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Vulnerability>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<List<Vulnerability>>> GetFilteredVulnerabilities(int id, [FromQuery] SieveModel filter)
+    public async Task<ActionResult<List<Vulnerability>>> GetFilteredVulnerabilities(int id, [FromQuery] ListQuery filter)
     {
 
         var user = await GetUserAsync();

@@ -12,16 +12,16 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
-using Sieve.Models;
-using Sieve.Services;
 using Xunit;
+
+using ServerServices.Filtering;
 
 namespace API.Tests.APITests;
 
 /// <summary>
 /// The export endpoint pulls its rows straight from the context and hands them to
 /// <see cref="IExportService"/>, so it runs here over the in-memory provider with the real
-/// <see cref="ApplicationSieveProcessor"/> and a substituted export service.
+/// <see cref="ApplicationEntityFilterMapperProvider"/> and a substituted export service.
 /// </summary>
 [TestSubject(typeof(ExportController))]
 public class ExportControllerTest : BaseControllerTest
@@ -108,24 +108,16 @@ public class ExportControllerTest : BaseControllerTest
         {
             s.AddSingleton<IDalService>(_dal);
             s.AddSingleton(_exportService);
-            s.Configure<SieveOptions>(options =>
-            {
-                options.DefaultPageSize = 100;
-                options.MaxPageSize = 1000;
-                options.CaseSensitive = false;
-                // A filter the mapper does not know must not break an export.
-                options.ThrowExceptions = false;
-            });
             s.AddSingleton<ILocalizationService>(sp =>
-                new LocalizationService(sp.GetRequiredService<ILoggerFactory>(), typeof(ApplicationSieveProcessor).Assembly));
-            s.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+                new LocalizationService(sp.GetRequiredService<ILoggerFactory>(), typeof(ApplicationEntityFilterMapperProvider).Assembly));
+            s.AddScoped<IEntityFilterMapperProvider, ApplicationEntityFilterMapperProvider>();
         });
     }
 
     [Fact]
     public async Task TestExportRisksReturnsTheGeneratedFile()
     {
-        var result = await _controller.Export("csv", "risk", new SieveModel());
+        var result = await _controller.Export("csv", "risk", new ListQuery());
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal(RiskBytes, file.FileContents);
@@ -139,7 +131,7 @@ public class ExportControllerTest : BaseControllerTest
     [Fact]
     public async Task TestExportVulnerabilities()
     {
-        var result = await _controller.Export("xlsx", "vulnerability", new SieveModel { Sorts = "Id" }, "Vulns");
+        var result = await _controller.Export("xlsx", "vulnerability", new ListQuery { Sorts = "Id" }, "Vulns");
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal(VulnerabilityBytes, file.FileContents);
@@ -153,7 +145,7 @@ public class ExportControllerTest : BaseControllerTest
     [Fact]
     public async Task TestExportHosts()
     {
-        var result = await _controller.Export("pdf", "host", new SieveModel(), "Hosts");
+        var result = await _controller.Export("pdf", "host", new ListQuery(), "Hosts");
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal(HostBytes, file.FileContents);
@@ -167,7 +159,7 @@ public class ExportControllerTest : BaseControllerTest
     [Fact]
     public async Task TestExportIncidents()
     {
-        var result = await _controller.Export("Csv", "Incident", new SieveModel(), "Incidents");
+        var result = await _controller.Export("Csv", "Incident", new ListQuery(), "Incidents");
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal(IncidentBytes, file.FileContents);
@@ -182,7 +174,7 @@ public class ExportControllerTest : BaseControllerTest
     [Fact]
     public async Task TestExportSanitizesQuotesInTheReportTitle()
     {
-        var result = await _controller.Export("csv", "risk", new SieveModel(), "My \"report\"");
+        var result = await _controller.Export("csv", "risk", new ListQuery(), "My \"report\"");
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal("My 'report'.csv", file.FileDownloadName);
@@ -194,7 +186,7 @@ public class ExportControllerTest : BaseControllerTest
     [InlineData("json")]
     public async Task TestExportRejectsAnUnsupportedFormat(string format)
     {
-        var result = await _controller.Export(format, "risk", new SieveModel());
+        var result = await _controller.Export(format, "risk", new ListQuery());
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal($"Unsupported format: {format}", (string)badRequest.Value);
@@ -203,7 +195,7 @@ public class ExportControllerTest : BaseControllerTest
     [Fact]
     public async Task TestExportRejectsAnUnsupportedEntityType()
     {
-        var result = await _controller.Export("csv", "banana", new SieveModel());
+        var result = await _controller.Export("csv", "banana", new ListQuery());
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("Unsupported entity type for export: banana", (string)badRequest.Value);
@@ -216,7 +208,7 @@ public class ExportControllerTest : BaseControllerTest
             .ExportAsync(Arg.Any<IEnumerable<Risk>>(), Arg.Any<ExportFormat>(), Arg.Any<string>())
             .Throws(new InvalidOperationException("boom"));
 
-        var result = await _controller.Export("csv", "risk", new SieveModel());
+        var result = await _controller.Export("csv", "risk", new ListQuery());
 
         var objectResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, objectResult.StatusCode);
