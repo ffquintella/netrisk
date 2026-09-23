@@ -38,53 +38,53 @@
     <Reference Include="Microsoft.Extensions.Localization" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
-    <PackageReference Include="Mapster" Version="10.0.12" />
-    <PackageReference Include="Avalonia" Version="12.1.2" />
-    <PackageReference Include="MessageBox.Avalonia" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" />
+    <PackageReference Include="Mapster" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="MessageBox.Avalonia" />
     <!-- Transitive pin: addresses GHSA-xrw6-gwf8-vvr9 in Tmds.DBus.Protocol (pulled via Avalonia on Linux) -->
-    <PackageReference Include="Tmds.DBus.Protocol" Version="0.95.1" />
+    <PackageReference Include="Tmds.DBus.Protocol" />
     <!-- Unification pin: LiveChartsCore.SkiaSharpView asks for SkiaSharp.HarfBuzz 2.88.9 while
          Avalonia.Skia forces SkiaSharp 3.119.4, and NuGet has nothing to unify the bridge against.
          Moves with SkiaSharp; it is not a ceiling. Guarded by SkiaHarfBuzzUnificationTest. -->
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" />
     <!-- SkiaSharp.HarfBuzz 3.119.4 raises managed HarfBuzzSharp to 8.3.1.5 but names no native
          assets, so Avalonia.HarfBuzz's 8.3.1.3 would stay on Linux — managed .5 calling native .3
          on a shipped target. macOS and Win32 already resolve to .5 on their own. -->
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="12.1.2" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" />
     <!--Condition below is needed to remove InProcess.DevTools package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="InProcess.DevTools" Version="12.0.2" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
-    <PackageReference Include="ClosedXML" Version="0.105.1" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="12.1.2" />
-    <PackageReference Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
-    <PackageReference Include="FlashCap" Version="1.11.37" />
-    <PackageReference Include="FlashCap.Core" Version="1.100.0" />
-    <PackageReference Include="LiveChartsCore" Version="2.1.0-dev-798" />
-    <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
-    <PackageReference Include="livechartscore.skiasharpview.avalonia" Version="2.1.0-dev-798" />
-    <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.3.13" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="InProcess.DevTools" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="ClosedXML" />
+    <PackageReference Include="Avalonia.Themes.Simple" />
+    <PackageReference Include="Deadpikle.AvaloniaProgressRing" />
+    <PackageReference Include="FlashCap" />
+    <PackageReference Include="FlashCap.Core" />
+    <PackageReference Include="LiveChartsCore" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" />
+    <PackageReference Include="Material.Icons.Avalonia" />
+    <PackageReference Include="Microsoft.AspNetCore.Localization" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <!-- The optional netrisk.ini administrator overlay that the installers write. -->
-    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.12" />
-    <PackageReference Include="OpenFaceONNX" Version="4.0.8" />
-    <PackageReference Include="ReactiveUI" Version="24.2.0" />
-    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.2" />
-    <PackageReference Include="Splat" Version="21.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" />
+    <PackageReference Include="OpenFaceONNX" />
+    <PackageReference Include="ReactiveUI" />
+    <PackageReference Include="ReactiveUI.Avalonia" />
+    <PackageReference Include="Splat" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="System.Drawing.Common" />
     <!-- ReactiveUI 24 ships its own Rx primitives (RxVoid / ReactiveUI.Primitives) and no longer
          brings System.Reactive or DynamicData transitively. Both are still used directly here:
          System.Reactive for Observable/Subject/Throttle, DynamicData for its Kernel extension
          methods (IndexOf, AddRange). So both are now explicit rather than incidental. -->
-    <PackageReference Include="DynamicData" Version="9.4.33" />
-    <PackageReference Include="System.Reactive" Version="7.0.0" />
+    <PackageReference Include="DynamicData" />
+    <PackageReference Include="System.Reactive" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Views\MainWindow.axaml.cs">

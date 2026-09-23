@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--
+    Central Package Management for everything under src/. A project names a package; this file
+    names its version. Two versions of one package across the solution is now a build error
+    rather than a silent NuGet unification to the highest.
+    Note the scope: libs/ sits beside src/, so the vendored submodules keep their own inline
+    versions — their source belongs to another repository and is gated separately.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Avalonia" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Themes.Simple" Version="12.1.2" />
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
+    <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
+    <PackageVersion Include="DeviceId" Version="6.11.0" />
+    <PackageVersion Include="DnsClient" Version="1.8.0" />
+    <PackageVersion Include="DynamicData" Version="9.4.33" />
+    <PackageVersion Include="Fido2" Version="4.0.1" />
+    <PackageVersion Include="FlashCap" Version="1.11.37" />
+    <PackageVersion Include="FlashCap.Core" Version="1.100.0" />
+    <PackageVersion Include="FluentEmail.Razor" Version="3.0.2" />
+    <PackageVersion Include="FluentEmail.Smtp" Version="3.0.2" />
+    <PackageVersion Include="Hangfire" Version="1.8.25" />
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.25" />
+    <PackageVersion Include="Hangfire.InMemory" Version="1.0.0" />
+    <PackageVersion Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.5" />
+    <PackageVersion Include="InProcess.DevTools" Version="12.0.2" />
+    <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
+    <PackageVersion Include="LiteDB" Version="5.0.21" />
+    <PackageVersion Include="LiveChartsCore" Version="2.1.0-dev-798" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
+    <PackageVersion Include="Mapster" Version="10.0.12" />
+    <PackageVersion Include="Material.Icons.Avalonia" Version="3.0.2" />
+    <PackageVersion Include="McMaster.NETCore.Plugins" Version="2.0.0" />
+    <PackageVersion Include="MessageBox.Avalonia" Version="12.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Localization" Version="2.3.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.22.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.30.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
+    <PackageVersion Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
+    <PackageVersion Include="MySqlBackup.NET.MySqlConnector" Version="2.7.1" />
+    <PackageVersion Include="MySqlConnector" Version="2.6.2" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="OpenFaceONNX" Version="4.0.8" />
+    <PackageVersion Include="PDFsharp" Version="6.2.4" />
+    <PackageVersion Include="PDFsharp-MigraDoc" Version="6.2.4" />
+    <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+    <PackageVersion Include="QuestPDF" Version="2026.8.0" />
+    <PackageVersion Include="RazorLight" Version="2.3.1" />
+    <PackageVersion Include="ReactiveUI" Version="24.2.0" />
+    <PackageVersion Include="ReactiveUI.Avalonia" Version="12.1.2" />
+    <PackageVersion Include="RestSharp" Version="114.0.0" />
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Spectre" Version="0.6.0" />
+    <PackageVersion Include="Sieve" Version="2.5.5" />
+    <PackageVersion Include="SkiaDrawing" Version="1.0.1" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
+    <PackageVersion Include="Spectre.Console" Version="0.57.2" />
+    <PackageVersion Include="Spectre.Console.Cli" Version="0.55.0" />
+    <PackageVersion Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.29.0" />
+    <PackageVersion Include="Splat" Version="21.0.0" />
+    <PackageVersion Include="System.Drawing.Common" Version="10.0.12" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageVersion Include="System.Reactive" Version="7.0.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <PackageVersion Include="Testcontainers.MariaDb" Version="4.15.0" />
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.95.1" />
+    <PackageVersion Include="umapx" Version="8.0.0.4" />
+    <PackageVersion Include="UOX.Saml2.Authentication" Version="4.2.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+</Project>

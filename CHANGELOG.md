@@ -90,6 +90,22 @@ This release includes new features and improvements.
   resolved. With those packages gone the warning has no source, and the full solution builds with
   it un-suppressed — restoring a real restore-warning signal across all 36 projects.
 
+- **Package versions are now managed centrally**, in
+  [src/Directory.Packages.props](src/Directory.Packages.props): a project names a package, that
+  file names its version. Restating a version per project is what let two `LiveChartsCore` builds
+  resolve at once — `Model` and `ClientServices` declared 2.0.5 while `GUIClient` declared the
+  `2.1.0-dev-798` prerelease it needs for Avalonia 12, and NuGet silently unified everything up to
+  the prerelease without anyone declaring it. That unification is now written down. Across 28
+  projects and 95 packages it was the *only* conflict, and resolving it is the only change to any
+  resolved graph: every other package in every project restores to byte-identical versions before
+  and after. `ClientServices`' `LiveChartsCore` reference went entirely — the one LiveCharts type
+  it touches is the base of `Model.Statistics.LabeledPoints`, which arrives through the project
+  reference. Package-id casing was normalised at the same time (`livechartscore` →
+  `LiveChartsCore`), since two spellings is how the duplicate stayed invisible. Scope is `src/`
+  only: `libs/` sits beside it, so the vendored submodules keep their inline versions and their
+  separate bump gate. Guarded by `ServerServices.Tests/Security/CentralPackageManagementTest` —
+  central management is on, no project declares a version inline, every reference has a central
+  version, and no id is declared twice.
 - **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
   `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of
   Pomelo published on nuget.org that tracks each EF Core release more closely than Pomelo's own

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xunit;
 
 namespace GUIClient.Tests.Dependencies;
@@ -22,7 +23,7 @@ public class SkiaHarfBuzzUnificationTest
     private static readonly string[] SkiaFamily = ["SkiaSharp", "SkiaSharp.HarfBuzz"];
 
     private static readonly Regex PackageReference = new(
-        @"<PackageReference\s+[^>]*Include\s*=\s*""(?<id>[^""]+)""[^>]*Version\s*=\s*""(?<version>[^""]+)""",
+        @"<PackageReference\s+[^>]*Include\s*=\s*""(?<id>[^""]+)""",
         RegexOptions.Compiled);
 
     /// <summary>
@@ -31,9 +32,9 @@ public class SkiaHarfBuzzUnificationTest
     [Fact]
     public void GuiClient_pins_SkiaSharp_HarfBuzz_explicitly()
     {
-        var declared = DeclaredPackages(Path.Combine(SrcRoot(), "GUIClient", "GUIClient.csproj"));
+        var declared = DeclaredPackageIds(Path.Combine(SrcRoot(), "GUIClient", "GUIClient.csproj"));
 
-        Assert.True(declared.ContainsKey("SkiaSharp.HarfBuzz"),
+        Assert.True(declared.Contains("SkiaSharp.HarfBuzz"),
             "GUIClient must pin SkiaSharp.HarfBuzz explicitly. Without the pin, NuGet resolves the "
             + "2.88.9 that LiveChartsCore.SkiaSharpView asks for, against the SkiaSharp 3.x that "
             + "Avalonia.Skia forces — a TypeLoadException the moment a chart shapes text.");
@@ -41,29 +42,26 @@ public class SkiaHarfBuzzUnificationTest
 
     /// <summary>
     /// The pin is only worth having if it names the version the rest of the solution resolved.
+    /// Under central package management that means one Skia-family version in the props file.
     /// </summary>
     [Fact]
     public void Skia_family_versions_agree_across_the_solution()
     {
         var versions = new SortedDictionary<string, List<string>>(StringComparer.Ordinal);
 
-        foreach (var project in Directory.EnumerateFiles(SrcRoot(), "*.csproj", SearchOption.AllDirectories))
+        foreach (var (id, version) in CentralVersions())
         {
-            foreach (var (id, version) in DeclaredPackages(project))
-            {
-                if (!IsSkiaFamily(id)) continue;
+            if (!IsSkiaFamily(id)) continue;
 
-                (versions.TryGetValue(version, out var users) ? users : versions[version] = [])
-                    .Add(Path.GetFileName(project));
-            }
+            (versions.TryGetValue(version, out var users) ? users : versions[version] = []).Add(id);
         }
 
         Assert.True(versions.Count > 0,
-            $"No SkiaSharp-family PackageReference found under {SrcRoot()}. The scan is looking in "
-            + "the wrong place — fix the test, do not delete the assertion.");
+            "No SkiaSharp-family PackageVersion found in src/Directory.Packages.props. The scan is "
+            + "looking in the wrong place — fix the test, do not delete the assertion.");
 
         Assert.True(versions.Count == 1,
-            "The SkiaSharp family must be on a single version across src/. Found:"
+            "The SkiaSharp family must be on a single version. Found:"
             + Environment.NewLine
             + string.Join(Environment.NewLine,
                 versions.Select(v => $"  {v.Key} — {string.Join(", ", v.Value.Distinct())}")));
@@ -152,16 +150,22 @@ public class SkiaHarfBuzzUnificationTest
 
     private static int Major(string version) => int.Parse(version.Split('.', '-')[0]);
 
-    private static Dictionary<string, string> DeclaredPackages(string projectFile)
+    private static HashSet<string> DeclaredPackageIds(string projectFile) =>
+        PackageReference.Matches(File.ReadAllText(projectFile))
+            .Select(m => m.Groups["id"].Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Package id → version, from the solution's central package manifest.</summary>
+    private static Dictionary<string, string> CentralVersions()
     {
-        var declared = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var props = XDocument.Load(Path.Combine(SrcRoot(), "Directory.Packages.props"));
 
-        foreach (Match match in PackageReference.Matches(File.ReadAllText(projectFile)))
-        {
-            declared[match.Groups["id"].Value] = match.Groups["version"].Value;
-        }
-
-        return declared;
+        return props.Descendants()
+            .Where(e => e.Name.LocalName == "PackageVersion")
+            .ToDictionary(
+                e => e.Attribute("Include")!.Value,
+                e => e.Attribute("Version")!.Value,
+                StringComparer.OrdinalIgnoreCase);
     }
 
     private static string SrcRoot([CallerFilePath] string thisFile = "") =>

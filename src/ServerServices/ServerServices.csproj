@@ -24,33 +24,33 @@
     <ProjectReference Include="..\SyncContracts\SyncContracts.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="ClosedXML" />
     <!-- Track 7 secret vaults: DNS SRV discovery of a vault cluster's nodes. System.Net.Dns exposes
          A/AAAA only and has no supported way to ask for an SRV record, so the lookup needs a real
          resolver library. Confined to DnsClientSrvLookup, behind IDnsSrvLookup. -->
-    <PackageReference Include="DnsClient" Version="1.8.0" />
-    <PackageReference Include="Mapster" Version="10.0.12" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
-    <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
-    <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
-    <PackageReference Include="McMaster.NETCore.Plugins" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="10.0.12" />
+    <PackageReference Include="DnsClient" />
+    <PackageReference Include="Mapster" />
+    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="FluentEmail.Razor" />
+    <PackageReference Include="FluentEmail.Smtp" />
+    <PackageReference Include="McMaster.NETCore.Plugins" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <!-- Track 4.3.1: OIDC discovery-document retrieval and JWKS-backed id_token validation. -->
-    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.22.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <!-- Track 4.3.1: XML-DSIG verification of SAML 2.0 assertions. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <!-- Track 4.3.3: FIDO2/WebAuthn registration and assertion ceremonies. -->
-    <PackageReference Include="Fido2" Version="4.0.1" />
-    <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.7.1" />
-    <PackageReference Include="PDFsharp" Version="6.2.4" />
-    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
-    <PackageReference Include="QuestPDF" Version="2026.8.0" />
-    <PackageReference Include="RazorLight" Version="2.3.1" />
-    <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Sieve" Version="2.5.5" />
-    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+    <PackageReference Include="Fido2" />
+    <PackageReference Include="MySqlBackup.NET.MySqlConnector" />
+    <PackageReference Include="PDFsharp" />
+    <PackageReference Include="PDFsharp-MigraDoc" />
+    <PackageReference Include="QuestPDF" />
+    <PackageReference Include="RazorLight" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Sieve" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="EmailTemplates\UserCreated-br.cshtml">

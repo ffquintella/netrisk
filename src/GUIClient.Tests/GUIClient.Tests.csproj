@@ -9,15 +9,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
-    <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" />
-    <PackageReference Include="xunit.v3" Version="4.0.1" />
-    <PackageReference Include="ReactiveUI" Version="24.2.0" />
-    <PackageReference Include="System.Reactive" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="ReactiveUI" />
+    <PackageReference Include="System.Reactive" />
     <!-- Lets the configuration-layering test build the same provider stack the client
          does, so the installer-written netrisk.ini overlay is proved rather than assumed. -->
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Ini" />
   </ItemGroup>
   <ItemGroup>
     <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that

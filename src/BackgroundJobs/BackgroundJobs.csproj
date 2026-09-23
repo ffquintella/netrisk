@@ -17,17 +17,17 @@
     <InternalsVisibleTo Include="BackgroundJobs.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire" Version="1.8.25" />
-    <PackageReference Include="Hangfire.InMemory" Version="1.0.0" />
-    <PackageReference Include="MySqlBackup.NET.MySqlConnector" Version="2.7.1" />
-    <PackageReference Include="MySqlConnector" Version="2.6.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Serilog.Sinks.Spectre" Version="0.6.0" />
-    <PackageReference Include="Spectre.Console" Version="0.57.2" />
+    <PackageReference Include="Hangfire" />
+    <PackageReference Include="Hangfire.InMemory" />
+    <PackageReference Include="MySqlBackup.NET.MySqlConnector" />
+    <PackageReference Include="MySqlConnector" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Spectre" />
+    <PackageReference Include="Spectre.Console" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DAL\DAL.csproj" />
