@@ -23,11 +23,13 @@ writing one, without touching NetRisk.
 2. **Enable it** under *Admin → Plugins*. Installing is not enabling: a DLL in the directory
    activates nothing on its own.
 3. **Add a vault connection** under *Admin → Integrations → Secret Vaults*: a name, the plugin, the
-   vault's address (one node, or a cluster — see *Addressing a cluster* below), the **API key — which
-   for BastionVault is a vault token**, sent as `X-Vault-Token` — and the machine ID, which is
+   vault's address (one node, or a cluster — see *Addressing a cluster* below), the **API key —
+   which for BastionVault is a vault token, or an AppRole `secret_id` when the app ID is filled
+   in** (see *The API key is a token or a secret id* below) — and the machine ID, which is
    optional unless the plugin declares that it is not (see below). Everything
-   the connection can reach is whatever that token's policies allow, so NetRisk's access is scoped in
-   the vault rather than here. Press *Test* — it introspects the token, reports its policies and how
+   the connection can reach is whatever the resulting token's policies allow, so NetRisk's access
+   is scoped in the vault rather than here.
+   Press *Test* — it introspects the token, reports its policies and how
    many secrets it can see, and checks the machine binding. "Authenticated" and "authenticated and
    useful" are different answers and it distinguishes them.
 4. **Bind a credential field.** Every secret box on the Integrations screen grows a key icon beside
@@ -48,7 +50,9 @@ the cache TTL, with no change in NetRisk at all.
 The connection carries **one API key** and, optionally, **one machine ID** and **one app ID**.
 
 For BastionVault the API key is a **vault token** — from `bvault token create`, or from
-`bvault ferrogate token` on an attested host when the server requires machine identity.
+`bvault ferrogate token` on an attested host when the server requires machine identity — **unless the
+connection also carries an app ID**, in which case it is an AppRole `secret_id` and the plugin mints
+its own token from it. See *The API key is a token or a secret id* below.
 
 The machine ID is the FerroGate identity (a SPIFFE ID) of the host NetRisk runs on, and it is
 **optional**: BastionVault only refuses non-machine-bound sessions when an administrator has turned
@@ -77,6 +81,48 @@ declares `RequiresAppId` (`RefusesToCreateAConnectionWithNoAppIdWhenThePluginReq
 `INetriskSecretVaultPlugin.RequiresAppId` is default-implemented as `false` rather than abstract,
 because it was added after the contract shipped and a plugin compiled against the earlier SDK must
 keep loading.
+
+### The API key is a token or a secret id
+
+**Which one depends on whether the connection carries an app ID**, and the BastionVault plugin
+decides it that way from v1.4.0 (`BastionVaultConnection.Open`):
+
+| App ID | The API key is | What the plugin does with it |
+|---|---|---|
+| blank | a client token | sends it in the vault's token header as-is |
+| set | an AppRole `secret_id` | `POST auth/approle/login` with `role_id` = the app ID, then uses the `client_token` that comes back |
+
+This exists because **a BastionVault app credential is not a token**. Pasting a freshly minted app
+secret into the API key box of a token-mode connection sends it in the token header, and the vault
+records `(unauthenticated) … reason=invalid-token` — which reads exactly like an expired token, and
+sends the operator to re-mint a credential that was never wrong. That is a real incident, not a
+hypothetical: it is why the mode was written.
+
+Neither mode is the "real" one, so `RequiresAppId` stays `false`. Declaring the field mandatory would
+invalidate every connection made before app-id support existed, and every one whose operator holds a
+token rather than a role.
+
+Three consequences worth knowing:
+
+- **The login is lazy and single-flighted**, so one vault operation costs one login however many
+  requests it makes — which matters against a server that rate limits at 200 requests in 10 seconds.
+  The plugin is still stateless: nothing is cached *between* operations, so a connection used twice
+  logs in twice. That is the price of the contract, and it is one request.
+- **The connection test says which credential answered** — "Authenticated by app-id login as role …"
+  or "Authenticated with the token supplied as the API key". Leaving the app ID blank is silently a
+  different mode rather than an error, so the test result is where an operator confirms the mode they
+  meant is the mode they got.
+- **The machine gate is what most often blocks app-id mode.** BastionVault's
+  `auth/approle/config.require_machine` defaults to **on**, and NetRisk cannot attest a machine (see
+  *Machine identity is checked, not sent*). So an app-id login against a default-configured role is
+  refused, and the plugin's message gives both remedies: an administrator sets
+  `bypass_machine_binding = true` on the role (normally paired with `bound_source_ips`), or the
+  connection goes back to token mode with a machine-bound token as its API key.
+
+**A rejected login must not echo the credential back.** The plugin scrubs the connection's API key out
+of every message it produces, thrown or returned, because a login posts the secret in a *request
+body* and a rejection quotes it — and a connection test's message is *stored* as `LastTestMessage`,
+so an echoed credential would be a credential sitting in the database in the clear.
 
 ---
 
@@ -314,27 +360,32 @@ subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention
 
 ### The BastionVault wire protocol
 
-> **Planned change.** This hand-written protocol is slated to be replaced by the vendor's own
-> `BastionVault.IntegrationSdk` client. The routes below are the **KV v1** shapes, and that is the
-> current limitation: a `kv-v2` mount nests the payload under `data.data`, which this protocol does
-> not unwrap, so a v2 secret reads back as two fields named `data` and `metadata`. Nothing has been
-> implemented yet; the design is
+> **The protocol is no longer NetRisk's.** The plugin speaks BastionVault through the vendor's own
+> `BastionVault.IntegrationSdk`, so routes, verbs, the token header, the KV v1/v2 layouts and the
+> error taxonomy are the server team's to keep correct. The table below is what the plugin's own
+> tests still pin, because a package bump that moved any of it would break every installation at
+> once while every unit test passed. The migration design is
 > [bastionvault-integration-sdk-migration.md](bastionvault-integration-sdk-migration.md).
 
-BastionVault is **HashiCorp-Vault-compatible**. Everything its surface dictates is in one file,
-[`BastionVaultApi.cs`](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration/blob/main/src/BastionVaultPlugin/BastionVaultApi.cs):
+BastionVault is **HashiCorp-Vault-compatible**. What the plugin depends on:
 
 | Purpose | Request | Response |
 |---|---|---|
+| Mint a token (app-id mode only) | `POST /v1/auth/approle/login` `{"role_id":…,"secret_id":…}` | `{"auth":{"client_token":…,"lease_duration":n,…}}` |
 | Validate the token | `GET /v1/auth/token/lookup-self` | `{"data":{"policies":[…],"meta":{…}}}` |
 | Machine-identity policy | `GET /v1/auth/ferrogate/requirement` (unauthenticated) | `{"data":{"require_machine_identity":bool,…}}` |
 | Mount table | `GET /v1/sys/mounts` | `{"data":{"secret/":{"type":"kv"},…}}` |
 | List one level | `LIST /v1/{mount}{path}` | `{"data":{"keys":["db","prod/"]}}` |
 | Read a secret | `GET /v1/{mount}{path}` | `{"data":{"username":…,"password":…},"lease_duration":n}` |
 
-with `X-Vault-Token: {token}` on every authenticated request. Failures are
-`{"errors":["…"]}`; `503` means the vault is **sealed**, which is the one failure whose remedy has
-nothing to do with NetRisk's configuration.
+with the vault's token header on every authenticated request — the SDK sends BastionVault's native
+`X-BastionVault-Token`, and the Vault-compatible `X-Vault-Token` the plugin used to send is still
+accepted, so the change was invisible to installations. The login is the one route that carries no
+token, because it is how a token is obtained. Failures are `{"errors":["…"]}` or the scalar
+`{"error":"…"}`; `503` means the vault is **sealed**, which is the one failure whose remedy has
+nothing to do with NetRisk's configuration. A **rejected login is an HTTP 200** carrying
+`data.error`, not an error status — BastionVault's login-response contract, and the reason a naive
+reading of that response would call a refusal a success.
 
 Four details were taken from the server source rather than from `docs/api.md`, because they differ:
 

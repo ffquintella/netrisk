@@ -299,6 +299,26 @@ out of the sketch in §4:
 The first option is the default this design recommends, because it is truthful about today's
 behaviour and costs nothing. The second is a feature, and should be scoped as one.
 
+> **Decided: the second option, shipped in plugin v1.4.0.** The recommendation above was overtaken
+> by an incident. A BastionVault app secret was pasted into the API key box of a real connection and
+> sent verbatim as the token header; the vault's audit log recorded `(unauthenticated) …
+> reason=invalid-token`, which is indistinguishable from an expired token, and the App ID sitting on
+> the same connection was — exactly as this section predicted — encrypted, stored, and dropped at
+> call time. Documenting that the field does nothing would not have prevented it, because the
+> operator's expectation was the reasonable one: an app credential is exchanged for a token.
+>
+> The contract question this section flags was answered **app id → `role_id`, API key →
+> `secret_id`**, on the grounds that the API key box is already write-only and encrypted at rest
+> while the App ID box is plain readable text — which is exactly the sensitivity of the two values.
+> The mode is selected per connection by whether the app id is present, so `RequiresAppId` stays
+> `false` and no existing connection changes behaviour. The submodule was bumped to `3db5811`, the
+> revision the host already pins.
+>
+> One thing this section did not anticipate: posting the credential in a *request body* makes a
+> reflected-credential leak realistic, because a login rejection quotes what it was sent. The
+> plugin now scrubs the API key out of every message it emits. See
+> [secret-vaults.md § The API key is a token or a secret id](secret-vaults.md#the-api-key-is-a-token-or-a-secret-id).
+
 ---
 
 ## 6. Tests

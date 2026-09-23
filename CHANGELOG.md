@@ -10,9 +10,28 @@ This release includes new features and improvements.
 
 ### Added
 
+- A BastionVault secret-vault connection can now authenticate by **app-id (AppRole) login** instead
+  of with a pre-minted token. Filling in the connection's **App ID** makes the API key an AppRole
+  `secret_id`: the plugin posts `auth/approle/login` with the App ID as the `role_id` and uses the
+  token the vault returns. Leaving the App ID blank keeps the previous behaviour, where the API key
+  is itself the client token, so no existing connection changes. The connection test now states
+  which of the two answered. Requires BastionVault plugin **v1.4.0**; see
+  [docs/features/secret-vaults.md](docs/features/secret-vaults.md#the-api-key-is-a-token-or-a-secret-id).
+
 ### Changed
 
 ### Fixed
+
+- The App ID on a BastionVault vault connection is no longer silently ignored. It was encrypted,
+  stored and counted by the reference registry, but the plugin's pinned contract predated the field
+  and dropped it at call time, so a connection configured for application authorization sent no
+  application identity at all.
+- A BastionVault failure message no longer echoes the connection's API key back to the operator when
+  the vault reflects the credential in its own error text. The message reaches an administrator's
+  screen *and* is stored on the connection as its last-test result, so a reflected credential was a
+  credential at rest in the clear. Fixed in the plugin (v1.4.0); it affected token-mode connections
+  too, and became materially more likely with app-id login, which sends the credential in a request
+  body.
 
 
 

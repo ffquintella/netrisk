@@ -3034,7 +3034,7 @@
     <value>App ID</value>
   </data>
   <data name="AppIdOptionalMSG" xml:space="preserve">
-    <value>Optional. The application identity the vault knows this installation by (BastionVault's app_id); required only when the vault authorizes by application.</value>
+    <value>Optional, and it changes what the API key means. Left blank, the API key is a vault token. Filled in, it is BastionVault's app_id (the AppRole role id) and the API key is that role's secret id, which NetRisk exchanges for a token on every operation.</value>
   </data>
   <data name="AppIdRequiredMSG" xml:space="preserve">
     <value>Required by this plugin. The application identity the vault authorizes this installation as.</value>

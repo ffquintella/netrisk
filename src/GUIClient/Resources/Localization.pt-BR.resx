@@ -3100,7 +3100,7 @@
     <value>App ID</value>
   </data>
   <data name="AppIdOptionalMSG" xml:space="preserve">
-    <value>Opcional. A identidade de aplicação pela qual o cofre conhece esta instalação (o app_id do BastionVault); obrigatória apenas quando o cofre autoriza por aplicação.</value>
+    <value>Opcional, e altera o significado da chave de API. Em branco, a chave de API é um token do cofre. Preenchido, é o app_id do BastionVault (o role id do AppRole) e a chave de API passa a ser o secret id desse papel, que o NetRisk troca por um token em cada operação.</value>
   </data>
   <data name="AppIdRequiredMSG" xml:space="preserve">
     <value>Obrigatória para este plugin. A identidade de aplicação com a qual o cofre autoriza esta instalação.</value>
