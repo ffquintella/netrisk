@@ -67,7 +67,7 @@ logger = new LoggerConfiguration()
     .MinimumLevel.ControlledBy(defaultLoggingLevel)
     .MinimumLevel.Override("Microsoft", defaultLoggingLevel)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", defaultLoggingLevel)
-    .MinimumLevel.Override("Pomelo.EntityFrameworkCore", defaultLoggingLevel)
+    .MinimumLevel.Override("Microting.EntityFrameworkCore.MySql", defaultLoggingLevel)
     .WriteTo.Console()
     .WriteTo.File(logFile, fileSizeLimitBytes: 1000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
     .CreateLogger();

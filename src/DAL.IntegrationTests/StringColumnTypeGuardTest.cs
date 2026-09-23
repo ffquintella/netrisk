@@ -8,8 +8,8 @@ using Xunit;
 namespace DAL.IntegrationTests;
 
 /// <summary>
-/// Guards the model against the one property shape that makes EF Core 10 + Pomelo fail to build a
-/// relational model at all.
+/// Guards the model against the one property shape that makes EF Core 10 + the Microting MySQL
+/// provider fail to build a relational model at all.
 ///
 /// A <see cref="string"/> property whose store type is <c>char(n)</c> is a string, and a string is an
 /// <c>IEnumerable&lt;char&gt;</c>. EF Core 10's <c>ElementMappingConvention</c> therefore treats it as
@@ -24,7 +24,7 @@ namespace DAL.IntegrationTests;
 /// snapshot is regenerated — so the failure appears one <c>migrationAdd.sh</c> later, in a file nobody
 /// hand-edited. These tests fail immediately instead, naming the property.
 ///
-/// <c>Guid</c> columns are unaffected and deliberately not flagged: Pomelo maps them to <c>char(36)</c>
+/// <c>Guid</c> columns are unaffected and deliberately not flagged: the provider maps them to <c>char(36)</c>
 /// too, but a <c>Guid</c> is not a collection of anything.
 /// </summary>
 public class StringColumnTypeGuardTest

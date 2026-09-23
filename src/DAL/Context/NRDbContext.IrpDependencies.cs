@@ -40,7 +40,7 @@ public partial class NRDbContext
             //
             // Only the reference navigations are modelled — no inverse collections on the task.
             // Nothing needs them (the scheduler queries this set by task id), and declaring them
-            // makes the model snapshot one that EF Core 10 + Pomelo cannot build a relational
+            // makes the model snapshot one that EF Core 10 + the Microting MySQL provider cannot build a relational
             // model from, which breaks the schema-consistency guard.
             entity.HasOne(e => e.Task)
                 .WithMany()

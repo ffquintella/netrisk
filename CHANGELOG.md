@@ -35,6 +35,22 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
+  `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of
+  Pomelo published on nuget.org that tracks each EF Core release more closely than Pomelo's own
+  cadence — this repo already runs EF Core 10.0.12, which the new package pins exactly. The public
+  API (`UseMySql`, `ServerVersion`, …) is unchanged; only internal namespaces and the assembly name
+  moved from `Pomelo.*` to `Microting.EntityFrameworkCore.MySql`, so the Serilog category override
+  in [src/API/LoggingBootstrapper.cs](src/API/LoggingBootstrapper.cs) and
+  [src/BackgroundJobs/Program.cs](src/BackgroundJobs/Program.cs) was updated to match, and the
+  now-unused `Pomelo.EntityFrameworkCore.MySql*` package-source-mapping pattern was dropped from
+  both `nuget.config` files. Verified with a full solution build and every non-integration test
+  project green, including the EF model-build guards (`Track6RelationshipModelTests`,
+  `StringColumnTypeGuardTest`, `SchemaUpgradeIdempotenceTest`/`SchemaUpgradeTableReferencesTest`)
+  that exercise the provider's relational model construction. **Not verified in this change:** the
+  Testcontainers-backed `DAL.IntegrationTests` suite against a real MariaDB instance — no Docker
+  daemon was available in this environment, so that pass is still outstanding before release.
+
 ### Fixed
 
 - **Outbound HTTP responses are now bounded.** Every outbound call the server makes — notification

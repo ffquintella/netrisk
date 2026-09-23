@@ -102,7 +102,7 @@ public static class LoggingBootstrapper
             .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", microsoftLoggingLevel)
             .MinimumLevel.Override("API.Security.BasicAuthenticationHandler", microsoftLoggingLevel)
             .MinimumLevel.Override("Microsoft.EntityFrameworkCore", mSLevelSwitch)
-            .MinimumLevel.Override("Pomelo.EntityFrameworkCore", mSLevelSwitch)
+            .MinimumLevel.Override("Microting.EntityFrameworkCore.MySql", mSLevelSwitch)
             .WriteTo.Console(theme: AnsiConsoleTheme.Code)
             .WriteTo.File(logFile, fileSizeLimitBytes: 10000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)
             .CreateLogger();

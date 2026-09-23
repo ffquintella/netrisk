@@ -11,7 +11,7 @@ namespace DAL.Migrations
     /// the blocked-task override record.
     ///
     /// Hand-authored rather than tool-generated: the installed dotnet-ef (10.0.11) regenerates the
-    /// model snapshot in a form this EF Core + Pomelo combination cannot build a relational model
+    /// model snapshot in a form this EF Core + Microting MySQL provider combination cannot build a relational model
     /// from, which trips SchemaConsistencyTests on any migration — including an empty one — so the
     /// snapshot is edited in the committed style instead. The runtime upgrade path is
     /// DB/Structure/76.sql, verified end to end against MariaDB by Phase7IrpDependenciesTests.

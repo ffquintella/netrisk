@@ -10,7 +10,7 @@ namespace ServerServices.Tests.ServiceTests;
 
 /// <summary>
 /// DB-free assertions over the EF model metadata for the Track 6.3 relationships. Builds the NRDbContext model
-/// with the real (Pomelo MySQL) provider — no connection is opened — and verifies each new correlation FK is a
+/// with the real (Microting MySQL) provider — no connection is opened — and verifies each new correlation FK is a
 /// HasOne relationship to <c>user</c> with <see cref="DeleteBehavior.SetNull"/> over a nullable FK column, and
 /// that the incident&lt;-&gt;IRP join entity is represented exactly once.
 /// </summary>
