@@ -123,6 +123,13 @@ This release includes new features and improvements.
   and ReactiveUI `>= 19.4.1` — an older lineage. 12.1.2 is the build aligned with Avalonia 12.1.x
   and ReactiveUI 24.2.0, which is what this solution uses.
   `SkiaSharp` 4.152.1 remains blocked by Avalonia 12.1.x pinning 3.119.4.
+- **`Fido2` 4.0.1 → 4.1.0**, taken on its own rather than in the sweep above because it is the
+  WebAuthn stack. 4.1 deprecates `Fido2Configuration.ServerDomain` and `ServerName` in favour of
+  `RPID` and `RPName`, which match the spec's vocabulary and which the next major removes;
+  [WebAuthnService](src/ServerServices/Auth/WebAuthnService.cs) now uses the new names, so the
+  upgrade lands with no deprecation warnings rather than deferring them. No behavioural change —
+  the properties are renames. `WebAuthnServiceInMemoryTest` (27 cases) and the Track 4 controller
+  tests (86) pass unchanged.
 - **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
   `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of
   Pomelo published on nuget.org that tracks each EF Core release more closely than Pomelo's own

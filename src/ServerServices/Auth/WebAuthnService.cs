@@ -72,8 +72,10 @@ public class WebAuthnService : ServiceBase, IWebAuthnService
 
         _fido2 = new Fido2(new Fido2Configuration
         {
-            ServerDomain = _relyingPartyId,
-            ServerName = Setting(configuration, "authentication:webauthn:relyingPartyName") ?? "NetRisk",
+            // Fido2 4.1 renamed these to match the spec's vocabulary; ServerDomain / ServerName
+            // are obsolete and go away in the next major.
+            RPID = _relyingPartyId,
+            RPName = Setting(configuration, "authentication:webauthn:relyingPartyName") ?? "NetRisk",
             Origins = origins,
             // Two minutes of wall clock for a human to touch a key. The spec's default is 60 seconds,
             // which is short for someone fetching a YubiKey from a drawer.
