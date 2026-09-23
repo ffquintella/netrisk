@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Contracts.Secrets;
 using JetBrains.Annotations;
@@ -37,6 +38,9 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 {
     private const string PluginName = "FixtureVaultPlugin";
     private const string AssemblyName = "FixtureVaultPlugin.dll";
+
+    /// <summary>The version the built fixture reports from its <c>PluginVersion</c> property.</summary>
+    private const string FixtureVersion = "1.0.0";
 
     private readonly IPluginsService _plugins;
 
@@ -132,6 +136,119 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         Directory.Exists(directory) &&
         !File.Exists(Path.Combine(directory, PluginPackageInstaller.UninstalledMarkerFile));
 
+
+    /// <summary>
+    /// A package of the fixture plugin that reports <paramref name="version"/> instead of
+    /// <see cref="FixtureVersion"/>.
+    /// </summary>
+    /// <remarks>
+    /// The version is patched into the built assembly's bytes rather than built from a second
+    /// source project. <c>PluginVersion</c> is a string literal, literals live in the metadata's
+    /// user-string heap as UTF-16, and a replacement of the same length leaves every offset around
+    /// it untouched — so the result is the one thing this test needs and cannot otherwise get
+    /// cheaply: two packages of one plugin that differ only in the version they report.
+    /// </remarks>
+    private string BuildPackageReporting(string version)
+    {
+        Assert.Equal(FixtureVersion.Length, version.Length);
+
+        var path = Path.Combine(Path.GetTempPath(), $"nr-pkg-{Guid.NewGuid():N}-{version}.zip");
+
+        using var stream = File.Create(path);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
+
+        foreach (var file in Directory.GetFiles(_fixtureSource))
+        {
+            var bytes = File.ReadAllBytes(file);
+
+            if (file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                bytes = ReportVersion(bytes, version);
+
+            var entry = archive.CreateEntry(Path.GetFileName(file));
+            using var target = entry.Open();
+            target.Write(bytes);
+        }
+
+        return path;
+    }
+
+    /// <summary>Rewrites every UTF-16 <see cref="FixtureVersion"/> literal in an assembly image.</summary>
+    private static byte[] ReportVersion(byte[] assembly, string version)
+    {
+        var from = Encoding.Unicode.GetBytes(FixtureVersion);
+        var to = Encoding.Unicode.GetBytes(version);
+
+        var patched = 0;
+
+        for (var i = 0; i <= assembly.Length - from.Length; i++)
+        {
+            var match = true;
+
+            for (var j = 0; j < from.Length && match; j++)
+                match = assembly[i + j] == from[j];
+
+            if (!match) continue;
+
+            Array.Copy(to, 0, assembly, i, to.Length);
+            patched++;
+        }
+
+        Assert.True(patched > 0,
+            $"The fixture assembly carries no '{FixtureVersion}' literal to patch. Has "
+            + "FixtureVaultPlugin.PluginVersion changed?");
+
+        return assembly;
+    }
+
+    /// <summary>
+    /// The reported defect, end to end: uploading a new version of an installed plugin and being
+    /// told it was updated, while the list goes on showing the version before it.
+    /// </summary>
+    /// <remarks>
+    /// <para>The cause was not the installation — the new assembly really was extracted — but the
+    /// reload. CoreCLR caches a loaded assembly image by file path, so pointing a fresh
+    /// <c>AssemblyLoadContext</c> at a path this process has already loaded returns the assembly
+    /// already loaded there, whatever the file now holds. Installing over the previous directory
+    /// therefore could not take effect before a restart, and the operator's evidence was a version
+    /// column that disagreed with the success message.</para>
+    ///
+    /// <para>This fails on the pre-fix code, which installed every version of a plugin into one
+    /// directory named after its assembly: the second assertion reads the old version.</para>
+    /// </remarks>
+    [Fact]
+    public async Task InstallingANewVersionListsTheNewVersionWithoutARestart()
+    {
+        var first = BuildPackageReporting(FixtureVersion);
+        var second = BuildPackageReporting("1.9.9");
+
+        try
+        {
+            await using (var stream = File.OpenRead(first))
+                Assert.True((await _plugins.InstallPluginPackageAsync(stream, "FixtureVaultPlugin.zip"))
+                    .Success);
+
+            Assert.Equal(FixtureVersion, (await _plugins.GetPluginsAsync())
+                .Single(p => p.Name == PluginName).Version);
+
+            await using (var stream = File.OpenRead(second))
+            {
+                var result = await _plugins.InstallPluginPackageAsync(stream, "FixtureVaultPlugin.zip");
+
+                Assert.True(result.Success, result.Message);
+                Assert.True(result.ReplacedExisting);
+            }
+
+            var row = Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+
+            Assert.Equal("1.9.9", row.Version);
+        }
+        finally
+        {
+            Discard(first);
+            Discard(second);
+        }
+    }
+
     /// <summary>
     /// The regression for the screenshot: one plugin, two directories, one row.
     /// </summary>
@@ -150,8 +267,8 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
     }
 
     /// <summary>
-    /// A package named for its release installs under the plugin's own name, so the next release
-    /// lands on it instead of beside it.
+    /// A package named for its release installs under the plugin's own name plus an install stamp,
+    /// whatever the uploaded file was called.
     /// </summary>
     [Fact]
     public async Task AReleasePackageInstallsUnderThePluginName()
@@ -164,10 +281,10 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
             var result = await _plugins.InstallPluginPackageAsync(stream, Path.GetFileName(package));
 
             Assert.True(result.Success, result.Message);
-            Assert.Equal(PluginName, result.PackageName);
+            Assert.StartsWith(PluginName + PluginPackageInstaller.InstallStampSeparator,
+                result.PackageName);
             Assert.Contains(PluginName, result.LoadedPlugins);
-            Assert.True(Directory.Exists(Path.Combine(_pluginsRoot, PluginName)));
-            Assert.True(File.Exists(Path.Combine(_pluginsRoot, PluginName, AssemblyName)));
+            Assert.True(File.Exists(Path.Combine(_pluginsRoot, result.PackageName, AssemblyName)));
         }
         finally
         {
@@ -186,9 +303,15 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 
         try
         {
+            string firstDirectory;
+
             await using (var stream = File.OpenRead(first))
-                Assert.True((await _plugins.InstallPluginPackageAsync(stream, "FixtureVaultPlugin-1.0.0.zip"))
-                    .Success);
+            {
+                var result = await _plugins.InstallPluginPackageAsync(stream, "FixtureVaultPlugin-1.0.0.zip");
+
+                Assert.True(result.Success, result.Message);
+                firstDirectory = result.PackageName;
+            }
 
             await using (var stream = File.OpenRead(second))
             {
@@ -196,10 +319,14 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 
                 Assert.True(result.Success, result.Message);
                 Assert.True(result.ReplacedExisting);
-                Assert.Equal(PluginName, result.PackageName);
+
+                // A directory this process has already loaded from would serve the old assembly
+                // however the new one is written, so the replacement gets its own.
+                Assert.NotEqual(firstDirectory, result.PackageName);
+                Assert.Contains(firstDirectory, result.RemovedDirectories);
             }
 
-            Assert.Single(Directory.GetDirectories(_pluginsRoot));
+            Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, firstDirectory)));
             Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
         }
         finally
@@ -422,7 +549,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
             var left = Directory.GetDirectories(_pluginsRoot);
 
             Assert.DoesNotContain(left, PluginPackageInstaller.IsStagingDirectory);
-            Assert.Equal(Path.Combine(_pluginsRoot, PluginName), Assert.Single(left));
+            Assert.Equal(Path.Combine(_pluginsRoot, result.PackageName), Assert.Single(left));
             Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
         }
         finally

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Compression;
 using Tools.Security;
 
@@ -135,15 +136,18 @@ public static class PluginPackageInstaller
     }
 
     /// <summary>
-    /// The directory name a validated package installs under: the base name of its plugin assembly.
+    /// The base name a validated package installs under: the base name of its plugin assembly. The
+    /// directory actually written is this name plus an install stamp — see
+    /// <see cref="UniqueInstallDirectoryName"/>.
     ///
     /// <para><b>Why not the uploaded file name.</b> It used to be, and that is what let one plugin
     /// appear twice. Packages are named for their release — <c>BastionVaultPlugin-1.2.0.zip</c>,
     /// then <c>BastionVaultPlugin-1.2.1.zip</c> — so a file-derived name gave each version its own
-    /// directory, the loader globbed both, and the administration list showed the same plugin at two
-    /// versions with independent enabled switches. The assembly name is the plugin's identity as far
-    /// as the loader is concerned, so deriving the directory from it makes an upload of a new version
-    /// land on top of the old one, which is what "install" has always claimed to do.</para>
+    /// directory with no relation to the plugin inside it, the loader globbed both, and the
+    /// administration list showed the same plugin at two versions with independent enabled switches.
+    /// The assembly name is the plugin's identity as far as the loader is concerned, so deriving the
+    /// base from it is what lets <see cref="FindSupersededDirectories"/> recognise an earlier
+    /// installation of the same plugin and remove it.</para>
     ///
     /// Returns null when the package carries more than one top-level plugin assembly (no single
     /// identity to install under) or when the name does not survive sanitisation; the caller then
@@ -160,6 +164,64 @@ public static class PluginPackageInstaller
         var name = Path.GetFileNameWithoutExtension(assemblies[0]);
 
         return SafePathTool.IsSafeSegment(name) ? name : null;
+    }
+
+    /// <summary>The character that separates a plugin's base name from its install stamp.</summary>
+    public const char InstallStampSeparator = '.';
+
+    /// <summary>The longest directory name <see cref="SafePathTool.IsSafeSegment"/> accepts.</summary>
+    private const int MaxInstallDirectoryNameLength = 128;
+
+    /// <summary>
+    /// The directory one installation writes into: <c>&lt;base name&gt;.&lt;stamp&gt;</c>, never a
+    /// directory this host has written or loaded before.
+    /// </summary>
+    /// <remarks>
+    /// <para><b>Why a new directory for every install, when the plugin is the same plugin.</b>
+    /// Because .NET will not read a replaced assembly from a path it has already loaded. CoreCLR
+    /// caches the mapped image by file path, so a fresh <c>AssemblyLoadContext</c> pointed at that
+    /// path hands back the assembly that is already loaded — even after the file underneath it
+    /// has been deleted and rewritten. Installing over a directory therefore extracted the new
+    /// version correctly, reloaded, and went on serving the old one: the reported symptom was
+    /// uploading BastionVaultPlugin 1.3.0, being told the plugin was updated, and reading 1.2.2 in
+    /// the list until the API process was restarted. A path the process has never loaded has
+    /// nothing cached, so the new version takes effect on the upload.</para>
+    ///
+    /// <para>The earlier installation is not left behind: the caller removes it through
+    /// <see cref="FindSupersededDirectories"/>, which matches on the plugin assembly a directory
+    /// holds rather than on the directory's name. That is what keeps one plugin to one row, which
+    /// is the property the assembly-derived naming existed to protect.</para>
+    ///
+    /// <para><paramref name="isTaken"/> has to answer for every directory the host has used in this
+    /// process, not only the ones still on disk. A deleted directory keeps its image cached for as
+    /// long as the process lives, so reusing its name would bring the defect back on the third
+    /// install rather than the second.</para>
+    /// </remarks>
+    /// <param name="baseName">The plugin's base name, from <see cref="DeriveInstallDirectoryName"/>.</param>
+    /// <param name="stampUtc">When the installation is happening. This is what the stamp records.</param>
+    /// <param name="isTaken">Whether a candidate directory name is already used.</param>
+    /// <exception cref="ArgumentException"><paramref name="baseName"/> is not a usable segment.</exception>
+    public static string UniqueInstallDirectoryName(string baseName, DateTime stampUtc,
+        Func<string, bool> isTaken)
+    {
+        if (!SafePathTool.IsSafeSegment(baseName))
+            throw new ArgumentException($"'{baseName}' is not a valid plugin directory name.",
+                nameof(baseName));
+
+        // The stamp and its widest disambiguator have to fit within the segment limit, so a long
+        // base name is trimmed rather than the install being refused.
+        var stamp = stampUtc.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+        var room = MaxInstallDirectoryNameLength - stamp.Length - 6;
+        var trimmed = baseName.Length > room ? baseName[..room] : baseName;
+
+        var candidate = trimmed + InstallStampSeparator + stamp;
+
+        // Two installs of one plugin within the same second, or a stamp already spent because the
+        // host's clock moved back.
+        for (var attempt = 2; isTaken(candidate); attempt++)
+            candidate = $"{trimmed}{InstallStampSeparator}{stamp}_{attempt}";
+
+        return candidate;
     }
 
     /// <summary>

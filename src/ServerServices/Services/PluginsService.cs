@@ -19,6 +19,15 @@ public class PluginsService: ServiceBase, IPluginsService
     private List<string> _pluginsDirs = new List<string>();
     private List<LoadedPluginAssembly> _pluginLoaders = new List<LoadedPluginAssembly>();
     private bool _initialized = false;
+
+    /// <summary>
+    /// Every plugin directory name this process has loaded from, whether or not it is still on
+    /// disk. An installation never writes into one of them again: CoreCLR caches a loaded assembly
+    /// image by path, so a directory that once held a plugin would serve that same plugin's old
+    /// code even after being deleted and rewritten. See
+    /// <see cref="PluginPackageInstaller.UniqueInstallDirectoryName"/>.
+    /// </summary>
+    private readonly HashSet<string> _directoriesEverLoaded = new(StringComparer.OrdinalIgnoreCase);
     private ISettingsService SettingsService { get; }
 
     /// <summary>
@@ -249,8 +258,9 @@ public class PluginsService: ServiceBase, IPluginsService
                     // message that says why.
                     typeof(INetriskSecretVaultPlugin), typeof(IPluginHttpClient)
                 });
-                _pluginLoaders.Add(new LoadedPluginAssembly(pluginLoader,
-                    Path.GetDirectoryName(pDll.Path) ?? string.Empty));
+                var loadedFrom = Path.GetDirectoryName(pDll.Path) ?? string.Empty;
+                _pluginLoaders.Add(new LoadedPluginAssembly(pluginLoader, loadedFrom));
+                _directoriesEverLoaded.Add(new DirectoryInfo(loadedFrom).Name);
 
                 var pluginTypes = pluginLoader.LoadDefaultAssembly()
                     .GetTypes()
@@ -507,19 +517,30 @@ public class PluginsService: ServiceBase, IPluginsService
                 return Failure(packageName, validation.Error!);
 
             // The directory is named after the plugin assembly, not the uploaded file: a package
-            // named for its release (BastionVaultPlugin-1.2.1.zip) would otherwise install beside
-            // the previous release rather than over it, and the loader would find both.
-            packageName = PluginPackageInstaller.DeriveInstallDirectoryName(validation) ?? fallbackName!;
+            // named for its release (BastionVaultPlugin-1.2.1.zip) would otherwise install under a
+            // name that says nothing about the plugin inside it, and the earlier installation
+            // could not be recognised and removed.
+            var baseName = PluginPackageInstaller.DeriveInstallDirectoryName(validation) ?? fallbackName!;
 
             var pluginsRoot = PluginsRoot;
             Directory.CreateDirectory(pluginsRoot);
 
+            // ...and it carries an install stamp, so every upload lands on a path this process has
+            // never loaded. Installing over the previous directory does not work: the runtime
+            // caches a loaded assembly image by path and hands the old one back on the reload, so
+            // the upload reported success and the list kept showing the version before it until
+            // the host was restarted. The previous directory is removed below rather than reused.
+            packageName = PluginPackageInstaller.UniqueInstallDirectoryName(
+                baseName, DateTime.UtcNow,
+                candidate => _directoriesEverLoaded.Contains(candidate) ||
+                             Directory.Exists(Path.Combine(pluginsRoot, candidate)));
+
             var targetDirectory = SafePathTool.CombineWithin(pluginsRoot, packageName);
             var replaced = Directory.Exists(targetDirectory);
 
-            // Installations that predate the naming rule above already hold one directory per
-            // release, so replacing the target alone would leave the older ones loading. They are
-            // removed here rather than merely hidden: two copies of one plugin have two independent
+            // Every earlier installation of this same plugin assembly, under whatever name it
+            // was given. This is the whole of the replacement now that the target is always a new
+            // directory, and it is not optional: two copies of one plugin have two independent
             // enabled switches, and which of them a capability lookup resolves is not defined.
             var superseded = SupersededDirectories(pluginsRoot, packageName,
                 PluginPackageInstaller.PluginAssemblyNames(validation.Files));

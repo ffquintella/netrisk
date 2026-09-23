@@ -42,17 +42,33 @@ server unpacks it into `Plugins/<package>/` beside the API binary and reloads, s
 shell access to the host is needed. Set `NETRISK_PLUGINS_PATH` to put that root somewhere else — a
 mounted volume in a container — and leave it unset for the default.
 
-**The package directory is named after the plugin assembly, not the uploaded file.** A package
-carrying `BastionVaultPlugin.dll` installs into `Plugins/BastionVaultPlugin/` whether it arrived as
-`BastionVaultPlugin-1.2.0.zip` or `BastionVaultPlugin-1.2.1.zip`, so a new release lands *on* the
-previous one. Naming it after the file is what let one plugin be installed twice: release packages
-are named for their version, each landed in its own directory, `GetPluginsDlls` globbed both, and
-administration listed the same plugin at two versions with two independent enabled switches — with
-no defined answer to which of them a capability lookup resolved. An installation that already
-accumulated those directories is cleaned up the next time the plugin is installed: every other
-directory carrying the same plugin assembly is removed, and reported in
-`PluginInstallResult.RemovedDirectories`. A package with two different `*Plugin.dll` files at its top
-level has no single identity, so it falls back to the file-derived name.
+**The package directory is named after the plugin assembly, not the uploaded file — plus an install
+stamp.** A package carrying `BastionVaultPlugin.dll` installs into
+`Plugins/BastionVaultPlugin.<yyyyMMddHHmmss>/` whether it arrived as `BastionVaultPlugin-1.2.0.zip`
+or `BastionVaultPlugin-1.2.1.zip`. Naming it after the *file* is what let one plugin be installed
+twice: release packages are named for their version, each landed in a directory with no relation to
+the plugin inside it, `GetPluginsDlls` globbed both, and administration listed the same plugin at
+two versions with two independent enabled switches — with no defined answer to which of them a
+capability lookup resolved. Deriving the base from the assembly is what makes an earlier
+installation *recognisable*: every other directory carrying the same plugin assembly is removed when
+the plugin is installed again, and reported in `PluginInstallResult.RemovedDirectories`. A package
+with two different `*Plugin.dll` files at its top level has no single identity, so it falls back to
+the file-derived name.
+
+**Why the stamp, when the old directory is deleted anyway.** Because .NET will not read a replaced
+assembly from a path it has already loaded: CoreCLR caches the mapped image by file path, so a fresh
+`AssemblyLoadContext` pointed at that path hands back the assembly that is already loaded there —
+even after the file underneath it has been deleted and rewritten. Installing over the previous
+directory therefore extracted the new version, reloaded, reported success, and went on serving the
+old code: uploading BastionVaultPlugin 1.3.0 over 1.2.2 was answered with "the plugin was updated"
+and a list that still read 1.2.2, and only a restart of the API fixed it.
+`PluginPackageInstaller.UniqueInstallDirectoryName` gives each installation a path this process has
+never loaded, so the upload takes effect on the upload. Its "already used" test spans the process,
+not the disk: `PluginsService` remembers every directory it has loaded from, because a deleted
+directory's image stays cached for as long as the host lives, and reusing its name would bring the
+defect back one install later. `PluginInstallationLifecycleTest.InstallingANewVersionListsTheNewVersionWithoutARestart`
+is the regression — it installs two packages of one plugin that differ only in the version they
+report, and reads the version back off the list.
 
 The list itself collapses a duplicate as a second line of defence, since a plugin directory can also
 arrive by hand: `PluginListing.CollapseVersions` shows one row per plugin name, the highest version,
@@ -78,7 +94,7 @@ rules are testable without a filesystem:
 | A `*Plugin.dll` one folder deeper than the top level | Same reason — the archive's single wrapping folder *is* stripped, a second one is not |
 | A package shipping `Contracts.dll` | A second copy of the shared interfaces makes `IsAssignableFrom` false and the host ignores the plugin with no error (see the capability section above) |
 
-A package that replaces an existing installation of the same name is staged: the old directory is
+A package that lands on an existing directory of the same name is staged: the old directory is
 moved aside first and restored if extraction dies part-way, so an interrupted install cannot leave
 half of one version beside half of another. **The staged copy goes beside the directory it stages,
 not into the temp directory** — `.netrisk-staging-<token>` inside the plugins root. Staging is a
@@ -87,7 +103,10 @@ different one from the application directory: staging there made every upgrade u
 `EXDEV`, which the administration screen reported as "Invalid cross-device link". Because the
 staging directory therefore sits where the loader looks, both the loader and the superseded-
 directory scan skip that prefix — it carries a plugin assembly and would otherwise load as a second
-copy of the same plugin. A staging directory left behind by a host killed mid-install is cleared
+copy of the same plugin. Since the install stamp gives each installation its own directory, staging
+now only comes into play if a stamped name is somehow already on disk; it is kept because that is
+the one path where a half-extracted directory could otherwise be left loading. A staging directory
+left behind by a host killed mid-install is cleared
 when the next install starts, not on a load pass, so the previous version stays recoverable on disk
 in that window. Every rejection comes back as a `PluginInstallResult`
 with `Success = false` and a sentence the desktop client shows verbatim — the server's message names

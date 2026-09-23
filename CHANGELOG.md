@@ -16,6 +16,28 @@ This release includes new features and improvements.
 
 
 
+## [2.21.15] - 2026-09-23
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+- Plugin packages now install into a directory carrying an install stamp
+  (`Plugins/<PluginAssembly>.<yyyyMMddHHmmss>/`). The previous installation of the same plugin is
+  still removed, so the administration list keeps one row per plugin; the Package column now shows
+  the stamped directory name.
+
+### Fixed
+
+- Uploading a new version of an already-installed plugin reported success but left the previous
+  version running and listed until the API was restarted, because .NET serves an assembly from a
+  path it has already loaded regardless of what the file now holds. Each installation now lands on a
+  path the host has never loaded, so the new version takes effect on the upload.
+
+
+
 ## [2.21.14] - 2026-09-23
 
 This release includes new features and improvements.

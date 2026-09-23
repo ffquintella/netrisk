@@ -94,8 +94,8 @@ public class PluginPackageInstallerTest : IDisposable
     /// This is the reported defect: releases are named for their version, so
     /// BastionVaultPlugin-1.2.0.zip and BastionVaultPlugin-1.2.1.zip installed into two directories,
     /// the loader globbed both, and the same plugin appeared twice in administration with two
-    /// independent enabled switches. Deriving the directory from the assembly makes the second
-    /// upload land on the first.
+    /// independent enabled switches. Deriving the name from the assembly is what lets the second
+    /// upload recognise the first as the same plugin and remove it.
     /// </summary>
     [Fact]
     public void TestInstallDirectoryIsNamedAfterThePluginAssembly()
@@ -110,6 +110,74 @@ public class PluginPackageInstallerTest : IDisposable
 
         Assert.Equal("BastionVaultPlugin", PluginPackageInstaller.DeriveInstallDirectoryName(v120));
         Assert.Equal("BastionVaultPlugin", PluginPackageInstaller.DeriveInstallDirectoryName(v121));
+    }
+
+    /// <summary>
+    /// Two installs of one plugin never write into the same directory.
+    /// </summary>
+    /// <remarks>
+    /// This is the whole point of the stamp, and it is not cosmetic: .NET reads a replaced
+    /// assembly from a path it has already loaded as the assembly it loaded there before, so an
+    /// upgrade installed over its predecessor kept serving the predecessor until the host
+    /// restarted.
+    /// </remarks>
+    [Fact]
+    public void TestEveryInstallGetsItsOwnDirectory()
+    {
+        var at = new DateTime(2026, 9, 23, 14, 21, 0, DateTimeKind.Utc);
+
+        var first = PluginPackageInstaller.UniqueInstallDirectoryName(
+            "BastionVaultPlugin", at, _ => false);
+
+        Assert.Equal("BastionVaultPlugin.20260923142100", first);
+
+        var second = PluginPackageInstaller.UniqueInstallDirectoryName(
+            "BastionVaultPlugin", at, name => name == first);
+
+        Assert.NotEqual(first, second);
+        Assert.StartsWith("BastionVaultPlugin.", second);
+    }
+
+    /// <summary>
+    /// A name is skipped because the host has used it, not because it is still on disk: a deleted
+    /// directory's assembly stays cached in the process for as long as the process lives.
+    /// </summary>
+    [Fact]
+    public void TestAnInstallDirectoryIsNeverReusedWhileTheHostLives()
+    {
+        var at = new DateTime(2026, 9, 23, 14, 21, 0, DateTimeKind.Utc);
+
+        var used = new HashSet<string>
+        {
+            "BastionVaultPlugin.20260923142100",
+            "BastionVaultPlugin.20260923142100_2",
+            "BastionVaultPlugin.20260923142100_3"
+        };
+
+        var name = PluginPackageInstaller.UniqueInstallDirectoryName(
+            "BastionVaultPlugin", at, used.Contains);
+
+        Assert.DoesNotContain(name, used);
+    }
+
+    /// <summary>
+    /// The stamp cannot push the directory name past what the path allowlist accepts, so a very
+    /// long assembly name is trimmed rather than made uninstallable.
+    /// </summary>
+    [Fact]
+    public void TestAVeryLongPluginNameStillGivesAUsableDirectory()
+    {
+        var name = PluginPackageInstaller.UniqueInstallDirectoryName(
+            new string('p', 128), new DateTime(2026, 9, 23, 14, 21, 0, DateTimeKind.Utc), _ => false);
+
+        Assert.True(Tools.Security.SafePathTool.IsSafeSegment(name), name);
+    }
+
+    [Fact]
+    public void TestAnUnusableBaseNameIsRefusedRatherThanSanitised()
+    {
+        Assert.Throws<ArgumentException>(() => PluginPackageInstaller.UniqueInstallDirectoryName(
+            "../escape", DateTime.UtcNow, _ => false));
     }
 
     /// <summary>
