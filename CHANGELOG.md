@@ -12,6 +12,17 @@ This release includes new features and improvements.
 
 ### Changed
 
+- **`RazorLight` is documented as the transitive pin it always was.** It was flagged for removal on
+  the grounds that it had zero usages in C# and that `FluentEmail.Razor` had subsumed it. Removing
+  it proved the opposite: `FluentEmail.Razor 3.0.2` *depends on* `RazorLight 2.0.0-rc.3`, a 2019
+  release candidate, and RazorLight is the engine its `UsingTemplateFromFile` actually runs on. The
+  direct reference with no call sites was the only thing raising email rendering to the 2.3.1
+  stable; deleting it silently downgraded every server project onto the prerelease. The reference
+  is restored with that reason recorded beside it, and
+  `ServerServices.Tests/Security/NoPrereleaseDependenciesTest` now fails if any server project
+  resolves an unapproved prerelease — by name for RazorLight, and generally for anything else, with
+  an allowlist that requires a reason. Both assertions fail on the removal.
+
 ### Fixed
 
 

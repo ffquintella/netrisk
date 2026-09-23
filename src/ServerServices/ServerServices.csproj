@@ -32,6 +32,11 @@
     <PackageReference Include="Mapster" />
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="FluentEmail.Razor" />
+    <!-- Transitive pin, not a stray reference. FluentEmail.Razor 3.0.2 depends on
+         RazorLight 2.0.0-rc.3 — a 2019 release candidate — and RazorLight is the engine its
+         UsingTemplateFromFile actually runs on. This raises it to the 2.3.1 stable. Dropping it
+         downgrades email rendering onto the prerelease. Guarded by NoPrereleaseDependenciesTest. -->
+    <PackageReference Include="RazorLight" />
     <PackageReference Include="FluentEmail.Smtp" />
     <PackageReference Include="McMaster.NETCore.Plugins" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
@@ -47,7 +52,6 @@
     <PackageReference Include="PDFsharp" />
     <PackageReference Include="PDFsharp-MigraDoc" />
     <PackageReference Include="QuestPDF" />
-    <PackageReference Include="RazorLight" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Sieve" />
     <PackageReference Include="YamlDotNet" />
