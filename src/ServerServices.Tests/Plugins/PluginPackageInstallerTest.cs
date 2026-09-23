@@ -425,4 +425,55 @@ public class PluginPackageInstallerTest : IDisposable
     }
 
     #endregion
+
+    #region Staging
+
+    /// <summary>
+    /// The regression for "The package could not be installed: Invalid cross-device link".
+    ///
+    /// <para>Installing over an existing plugin stages the previous version aside with a rename, and
+    /// a rename is only defined within one filesystem. The staging directory used to be created
+    /// under the system temp directory, which on a Linux host is a different filesystem from the
+    /// application directory, so the rename failed with <c>EXDEV</c> and every upgrade upload was
+    /// refused. The property that fixes it is the one asserted here: the staging directory is a
+    /// sibling of the directory it stages, whatever the temp directory happens to be.</para>
+    /// </summary>
+    [Fact]
+    public void TestStagingDirectoryIsASiblingOfThePluginItStages()
+    {
+        // A deployment root, not this test's own directory: the point of the assertion is that the
+        // staging directory follows the plugins root wherever that is, and the test's directory
+        // happens to live under the temp path this used to resolve to.
+        var root = Path.Combine(Path.DirectorySeparatorChar + "opt", "netrisk", "Plugins");
+
+        var staging = PluginPackageInstaller.StagingDirectory(root, "abc123");
+
+        Assert.Equal(root, Path.GetDirectoryName(staging));
+        Assert.DoesNotContain(Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar), staging);
+    }
+
+    [Fact]
+    public void TestStagingDirectoryIsRecognisedAsOne()
+    {
+        var root = Path.Combine(_dir, "Plugins");
+
+        Assert.True(PluginPackageInstaller.IsStagingDirectory(
+            PluginPackageInstaller.StagingDirectory(root, "abc123")));
+        Assert.True(PluginPackageInstaller.IsStagingDirectory(
+            PluginPackageInstaller.StagingDirectory(root, "abc123") + Path.DirectorySeparatorChar));
+    }
+
+    [Theory]
+    [InlineData("BastionVaultPlugin")]
+    [InlineData("netrisk-staging")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void TestAPluginDirectoryIsNotAStagingDirectory(string? name)
+    {
+        var path = name is null or "" ? name : Path.Combine(_dir, name);
+
+        Assert.False(PluginPackageInstaller.IsStagingDirectory(path));
+    }
+
+    #endregion
 }

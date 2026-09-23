@@ -80,7 +80,16 @@ rules are testable without a filesystem:
 
 A package that replaces an existing installation of the same name is staged: the old directory is
 moved aside first and restored if extraction dies part-way, so an interrupted install cannot leave
-half of one version beside half of another. Every rejection comes back as a `PluginInstallResult`
+half of one version beside half of another. **The staged copy goes beside the directory it stages,
+not into the temp directory** — `.netrisk-staging-<token>` inside the plugins root. Staging is a
+rename, a rename is only defined within one filesystem, and on a Linux host the temp directory is a
+different one from the application directory: staging there made every upgrade upload fail with
+`EXDEV`, which the administration screen reported as "Invalid cross-device link". Because the
+staging directory therefore sits where the loader looks, both the loader and the superseded-
+directory scan skip that prefix — it carries a plugin assembly and would otherwise load as a second
+copy of the same plugin. A staging directory left behind by a host killed mid-install is cleared
+when the next install starts, not on a load pass, so the previous version stays recoverable on disk
+in that window. Every rejection comes back as a `PluginInstallResult`
 with `Success = false` and a sentence the desktop client shows verbatim — the server's message names
 what to change, and a house error string would leave the operator with nothing to act on.
 
@@ -169,8 +178,9 @@ assembly.
 - `ServerServices.Tests/Plugins/PluginInstallationLifecycleTest.cs` — the real service against a real
   plugin on disk, in its own plugins root: a duplicate installation is listed once, a release package
   installs under the plugin name, a second release replaces the first, installing clears the
-  directories left by the old naming, a delete removes every directory providing the plugin and
-  disables it, and a deleted plugin does not come back on the next reload
+  directories left by the old naming, a staging directory is not loaded as a plugin and is cleared
+  by the next install, a delete removes every directory providing the plugin and disables it, and a
+  deleted plugin does not come back on the next reload
 - `ServerServices.Tests/Plugins/PluginListingTest.cs` — one row per plugin name at the highest
   version, with the version ordering numeric (1.2.10 is newer than 1.2.9) and plugin names compared
   ordinally, because `Plugin_<name>_Enabled` is read with the plugin's own spelling

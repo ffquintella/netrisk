@@ -100,6 +100,41 @@ public static class PluginPackageInstaller
     public const string UninstalledMarkerFile = ".netrisk-uninstalled";
 
     /// <summary>
+    /// The prefix the directory carries that holds the previous version of a plugin while the new
+    /// one is being extracted. A directory with this prefix is not a plugin: the loader skips it and
+    /// the superseded-directory scan ignores it.
+    /// </summary>
+    public const string StagingDirectoryPrefix = ".netrisk-staging-";
+
+    /// <summary>
+    /// Where the previous version of a plugin is staged while the replacement is extracted.
+    ///
+    /// <para><b>Why inside the plugins root.</b> It used to be under the system temp directory, and
+    /// on a Linux host that is a different filesystem from the application directory: the
+    /// <c>Directory.Move</c> that stages the replacement then fails with <c>EXDEV</c> — "Invalid
+    /// cross-device link" — and every upload over an already-installed plugin was refused with that
+    /// message. A rename is only defined within one filesystem, so the staging directory has to be a
+    /// sibling of the directory it is staging.</para>
+    /// </summary>
+    /// <param name="pluginsRoot">The directory whose subdirectories each hold one plugin.</param>
+    /// <param name="token">A value unique to this installation attempt.</param>
+    public static string StagingDirectory(string pluginsRoot, string token) =>
+        Path.Combine(pluginsRoot, StagingDirectoryPrefix + token);
+
+    /// <summary>
+    /// Whether <paramref name="path"/> names a staging directory — the leaf carries
+    /// <see cref="StagingDirectoryPrefix"/>.
+    /// </summary>
+    public static bool IsStagingDirectory(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return false;
+
+        var leaf = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
+        return leaf.StartsWith(StagingDirectoryPrefix, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// The directory name a validated package installs under: the base name of its plugin assembly.
     ///
     /// <para><b>Why not the uploaded file name.</b> It used to be, and that is what let one plugin

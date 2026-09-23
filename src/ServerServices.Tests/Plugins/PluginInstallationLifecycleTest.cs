@@ -380,4 +380,54 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         Assert.False(result.Success);
         Assert.Contains("not installed", result.Message);
     }
+
+    /// <summary>
+    /// The previous version of a plugin is staged inside the plugins root — a rename cannot cross a
+    /// filesystem, and on a Linux host the temp directory is a different one — so the staging
+    /// directory sits where the loader looks. It must not be loaded: it holds a plugin assembly, and
+    /// loading it would put the same plugin on the list twice.
+    /// </summary>
+    [Fact]
+    public async Task AStagingDirectoryIsNotLoadedAsAPlugin()
+    {
+        InstallByHand(PluginPackageInstaller.StagingDirectoryPrefix + "deadbeef");
+
+        await _plugins.LoadPluginsAsync();
+
+        Assert.Empty((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        Assert.False(await _plugins.PluginExistsAsync(PluginName));
+    }
+
+    /// <summary>
+    /// A staging directory left behind by a host that died mid-install is cleared by the next
+    /// install, rather than accumulating one per attempt.
+    /// </summary>
+    [Fact]
+    public async Task InstallingClearsAStagingDirectoryLeftByAnUnfinishedInstall()
+    {
+        InstallByHand(PluginName);
+        InstallByHand(PluginPackageInstaller.StagingDirectoryPrefix + "deadbeef");
+
+        await _plugins.LoadPluginsAsync();
+
+        var package = BuildPackage("FixtureVaultPlugin-1.0.1.zip");
+
+        try
+        {
+            await using var stream = File.OpenRead(package);
+            var result = await _plugins.InstallPluginPackageAsync(stream, "FixtureVaultPlugin-1.0.1.zip");
+
+            Assert.True(result.Success, result.Message);
+
+            var left = Directory.GetDirectories(_pluginsRoot);
+
+            Assert.DoesNotContain(left, PluginPackageInstaller.IsStagingDirectory);
+            Assert.Equal(Path.Combine(_pluginsRoot, PluginName), Assert.Single(left));
+            Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        }
+        finally
+        {
+            Discard(package);
+        }
+    }
 }

@@ -16,6 +16,29 @@ This release includes new features and improvements.
 
 
 
+## [2.21.14] - 2026-09-23
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- **Uploading a plugin over an already-installed one failed with "Invalid cross-device link".** To
+  replace a plugin the installer renames the installed directory aside before extracting the new
+  version, so a half-written directory is never left loading — but it staged that copy under the
+  system temp directory, and on a Linux host `/tmp` is a different filesystem from the application
+  directory. A rename across filesystems is `EXDEV`, which the administration screen reported
+  verbatim, and every upgrade upload was refused (a first-time install of a plugin was unaffected).
+  The staging directory is now a sibling of the directory it stages, named
+  `.netrisk-staging-<token>`; the loader and the superseded-directory scan skip that prefix, so the
+  staged copy is never loaded as a second instance of the plugin, and a staging directory left by a
+  host that died mid-install is cleared when the next install starts.
+
+
+
 ## [2.21.13] - 2026-09-23
 
 This release includes new features and improvements.

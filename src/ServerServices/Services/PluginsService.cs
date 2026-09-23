@@ -149,7 +149,12 @@ public class PluginsService: ServiceBase, IPluginsService
             return [];
         }
 
-        return Directory.GetDirectories(pluginPath);
+        // A staging directory is the previous version of a plugin held aside while its replacement
+        // is extracted, so it carries a plugin assembly and would otherwise load as a second copy
+        // of the same plugin.
+        return Directory.GetDirectories(pluginPath)
+            .Where(d => !PluginPackageInstaller.IsStagingDirectory(d))
+            .ToArray();
     }
 
     public async Task<bool> PluginExistsAsync(string pluginName)
@@ -522,8 +527,15 @@ public class PluginsService: ServiceBase, IPluginsService
             // A replacement is staged, not overwritten in place: if extraction dies half-way the
             // installation would otherwise be left with a directory holding half of one version of
             // the plugin and half of another, which loads and misbehaves rather than failing.
+            // Staged beside the target rather than under the temp directory: the staging step is a
+            // rename, and a rename only works within one filesystem. On a Linux host the temp
+            // directory is a different one from the application directory, so every upload over an
+            // already-installed plugin failed with "Invalid cross-device link" (EXDEV). See
+            // PluginPackageInstaller.StagingDirectory.
+            ClearStagingDirectories(pluginsRoot);
+
             var backup = replaced
-                ? Path.Combine(Path.GetTempPath(), $"netrisk-plugin-backup-{Guid.NewGuid():N}")
+                ? PluginPackageInstaller.StagingDirectory(pluginsRoot, Guid.NewGuid().ToString("N"))
                 : null;
 
             if (backup is not null) Directory.Move(targetDirectory, backup);
@@ -662,6 +674,25 @@ public class PluginsService: ServiceBase, IPluginsService
     }
 
     /// <summary>
+    /// Removes staging directories left in <paramref name="pluginsRoot"/> by an installation that
+    /// did not finish — a host killed between staging the previous version and extracting the new
+    /// one. They are cleared when the next installation starts rather than on a load pass, so a
+    /// host that dies in that window still has the previous version on disk to recover by hand.
+    /// </summary>
+    private static void ClearStagingDirectories(string pluginsRoot)
+    {
+        foreach (var directory in SafeEnumerate(pluginsRoot, Directory.GetDirectories))
+        {
+            if (!PluginPackageInstaller.IsStagingDirectory(directory)) continue;
+
+            Log.Warning("Removing plugin staging directory {Directory} left by an unfinished install",
+                directory);
+
+            TryDelete(directory);
+        }
+    }
+
+    /// <summary>
     /// The plugin directories under <paramref name="pluginsRoot"/>, other than
     /// <paramref name="targetDirectory"/>, that carry one of <paramref name="assemblyNames"/> and are
     /// therefore an older installation of the same plugin.
@@ -672,6 +703,7 @@ public class PluginsService: ServiceBase, IPluginsService
         try
         {
             var installed = Directory.GetDirectories(pluginsRoot)
+                .Where(d => !PluginPackageInstaller.IsStagingDirectory(d))
                 .Select(d => (Directory: new DirectoryInfo(d).Name,
                     Assemblies: (IReadOnlyCollection<string>)Directory
                         .GetFiles(d, "*" + PluginPackageInstaller.PluginAssemblySuffix)
