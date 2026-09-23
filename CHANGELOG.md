@@ -10,6 +10,18 @@ This release includes new features and improvements.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+
+## [2.21.12] - 2026-09-23
+
+This release includes new features and improvements.
+
+### Added
+
 - **The MIGR-TI/IA reference methodology is now part of the documentation**, under
   [docs/methodology/](docs/methodology/): the source report is versioned alongside the code, with a
   structured Markdown summary of its seven phases, ten principles, four gates and risk-register
