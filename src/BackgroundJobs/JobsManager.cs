@@ -8,7 +8,6 @@ using BackgroundJobs.Jobs.Governance;
 using BackgroundJobs.Jobs.Integrations;
 using BackgroundJobs.Jobs.Sync;
 using Hangfire;
-using Hangfire.MemoryStorage;
 using Microsoft.Extensions.DependencyInjection;
 using ServerServices.Interfaces;
 

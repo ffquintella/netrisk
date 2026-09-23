@@ -33,7 +33,62 @@ This release includes new features and improvements.
   are in [docs/roadmap/track9/](docs/roadmap/track9/). The coverage analysis is the track's
   acceptance criterion, re-run against the code rather than written once.
 
+### Fixed
+
+- **The desktop client's charting stack loaded a text-shaping bridge two majors behind the
+  SkiaSharp it called into.** `LiveChartsCore.SkiaSharpView 2.1.0-dev-798` asks for
+  `SkiaSharp.HarfBuzz 2.88.9`, while `Avalonia.Skia` / `Avalonia.HarfBuzz` 12.1.2 force
+  `SkiaSharp 3.119.4` and `HarfBuzzSharp 8.3.1.3`. NuGet unified the latter two upward and left
+  `SkiaSharp.HarfBuzz` alone, because nothing else in the graph asked for a newer one — so the
+  assembly that actually loaded was compiled against a SkiaSharp and a HarfBuzzSharp that were
+  each a major gone, and any chart reaching text shaping bound to types that no longer exist.
+  A `TypeLoadException` invisible at compile time and invisible to the suite, which renders no
+  charts headlessly. [GUIClient.csproj](src/GUIClient/GUIClient.csproj) now pins
+  `SkiaSharp.HarfBuzz` to the resolved `SkiaSharp`, and — because that pin raises managed
+  `HarfBuzzSharp` to 8.3.1.5 while naming no native assets — pins
+  `HarfBuzzSharp.NativeAssets.Linux` to match, so a shipped Linux client does not P/Invoke a
+  different build than the managed side expects. macOS and Win32 already resolved to .5 on their
+  own. Guarded by `GUIClient.Tests/Dependencies/SkiaHarfBuzzUnificationTest`, which asserts the
+  pin exists, that the Skia family is on one version across `src/`, and that the *resolved* graph
+  agrees — the last of which is what will catch the drift again when Avalonia adopts SkiaSharp 4.
+  Both halves fail on the pre-fix tree.
+- **The website's jQuery UI datepicker never loaded, and its one script file threw on every page.**
+  [_Layout.cshtml](src/WebSite/Views/Shared/_Layout.cshtml) pulled three stylesheets from
+  `~/Content/themes/base` and two scripts from `~/Scripts` — the classic ASP.NET convention, which
+  ASP.NET Core does not serve, and neither directory exists under `wwwroot`. Five 404s per page.
+  [site.js](src/WebSite/wwwroot/js/site.js) then guarded its `datepicker()` call with
+  `if (!Modernizr.inputtypes.date)`, and Modernizr is not loaded either, so the file raised
+  `ReferenceError` before reaching the call. The one consumer,
+  [DoReport.cshtml](src/WebSite/Views/FixReport/DoReport.cshtml), already uses `type="date"` and
+  gets the native picker. Removed the tags, the dead `site.js` body, and the two content-only
+  NuGet packages (`jQuery` 3.7.1 and `jQuery.UI.Widgets.Datepicker` 1.8.9 — the latter a 2011
+  release) that delivered none of it: the served jQuery is the copy checked into
+  `wwwroot/lib/jquery`. Guarded by `WebSite.Tests/Views/StaticAssetReferenceTest`, which fails on
+  all five pre-fix references.
+
 ### Changed
+
+- **`ConsoleClient` and `BackgroundJobs` no longer ship Moq.** Both hosts built their background
+  principal with `new Mock<IHttpContextAccessor>()`, putting Moq and Castle.Core's dynamic proxy
+  generator into two service binaries — against this repository's own NSubstitute convention, and
+  avoidable attack surface in a process that runs unattended. Replaced by
+  [BackgroundServiceHttpContextAccessor](src/ServerServices/Security/BackgroundServiceHttpContextAccessor.cs),
+  a real implementation in `ServerServices` shared by both. The principal is unchanged — same Sid,
+  same name, same authentication type — so audit rows read identically across the change. Covered
+  by `ServerServices.Tests/Security/BackgroundServiceHttpContextAccessorTest`, which asserts each
+  property `DalService.GetUserId` reads in order, and by `TestOnlyPackageInventoryTest`, which
+  fails if any shipping project references a mocking or test framework again.
+- **Removed two unused Hangfire storage providers.** `BackgroundJobs` referenced
+  `Hangfire.LiteDB 0.4.1` (published October 2021, unmaintained) and `Hangfire.MemoryStorage`
+  alongside the `Hangfire.InMemory` it actually uses; both alternatives had been commented out in
+  `ConfigureHangFire` for as long as `InMemoryStorage` has been live. Removed the packages, the
+  dead `using` lines in `Program.cs` and `JobsManager.cs`, and the `catch (LiteException)` recovery
+  path that deleted `hangfire.db` — a file the in-memory backend never writes.
+- **Dropped the solution-wide `NU1608` suppression.** It existed in
+  [src/Directory.Build.props](src/Directory.Build.props) solely to silence the resolved-version
+  mismatch between the legacy `jQuery.UI.Core 1.8.9` dependency range and the jQuery the website
+  resolved. With those packages gone the warning has no source, and the full solution builds with
+  it un-suppressed — restoring a real restore-warning signal across all 36 projects.
 
 - **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
   `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of

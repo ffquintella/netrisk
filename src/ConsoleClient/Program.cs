@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
@@ -21,6 +20,7 @@ using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
 using ServerServices.Governance;
 using ServerServices.Integrations;
+using ServerServices.Security;
 using ServerServices.Services;
 using Spectre.Console.Cli;
 using Spectre.Console.Cli.Extensions.DependencyInjection;
@@ -94,19 +94,7 @@ public class Program
                 services.AddSingleton(Log.Logger);
                 services.AddSingleton<IConfiguration>(configuration);
                 
-                var httpAccessor = new Mock<IHttpContextAccessor>();
-                var httpContext = new DefaultHttpContext();
-
-                httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Sid, "1"),
-                    new Claim(ClaimTypes.Name, "BackgroundServices"),
-                }, "mock"));
-
-                httpAccessor.SetupGet(acessor => acessor.HttpContext)
-                    .Returns(httpContext);
-
-                services.AddSingleton<IHttpContextAccessor>(provider => httpAccessor.Object);
+                services.AddSingleton<IHttpContextAccessor, BackgroundServiceHttpContextAccessor>();
                 
                 services.AddSingleton<IDalService, DalService>();
                 services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
@@ -147,7 +135,7 @@ public class Program
 
                 // AutoMapper profiles removed; replaced by Mapster or direct Adapt usage
 
-                var dalService = new DalService(configuration, new Mock<IHttpContextAccessor>().Object);
+                var dalService = new DalService(configuration, new BackgroundServiceHttpContextAccessor());
 
                 services.AddDbContext<NRDbContext>(options =>
                 {

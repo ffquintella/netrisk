@@ -14,18 +14,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <!--
-      NU1608: the legacy jQuery.UI.Core 1.8.9 package declares jQuery (>= 1.4.4 && < 1.6.0)
-      but the WebSite project resolves jQuery 3.7.1. That pairing is deliberate, so the
-      resolved-version mismatch is expected. Suppress the benign restore warning
-      solution-wide.
-
-      Note: this suppression previously also covered Pomelo.EntityFrameworkCore.MySql
-      pinning EF Core Relational to 9.x. That no longer applies - DAL now uses Pomelo
-      10.0.0-rtm.1, which allows [10.0.0, 10.0.999] and so accepts the EF Core 10.0.x
-      the solution resolves. jQuery.UI is the only remaining source of NU1608.
-    -->
-    <NoWarn>$(NoWarn);NU1608</NoWarn>
-    <!--
       xUnit1051: the xunit v3 analyzers advise passing TestContext.Current.CancellationToken to
       every call that accepts a CancellationToken. That is sound advice but it is a test-wide
       refactor (83 call sites) rather than part of the v2 -> v3 upgrade, and leaving it unsuppressed

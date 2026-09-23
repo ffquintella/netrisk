@@ -7,17 +7,13 @@ using BackgroundJobs.Jobs.Calculation;
 using BackgroundJobs.Jobs.Cleanup;
 using Hangfire;
 using Hangfire.InMemory;
-using Hangfire.LiteDB;
-using Hangfire.MemoryStorage;
-using LiteDB;
-using LiteDB.Engine;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Serilog;
+using ServerServices.Security;
 using ServerServices.Services;
 using ServerServices.Interfaces;
 using ServerServices.Findings;
@@ -38,19 +34,7 @@ public static class ConfigurationManager
         services.AddSingleton<IConfiguration>(config);
 
         
-        var httpAccessor = new Mock<IHttpContextAccessor>();
-        var httpContext = new DefaultHttpContext();
-        
-        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-        {
-            new Claim(ClaimTypes.Sid, "1"),
-            new Claim(ClaimTypes.Name, "BackgroundServices"),
-        }, "mock"));
-
-        httpAccessor.SetupGet(acessor => acessor.HttpContext)
-            .Returns(httpContext);
-
-        services.AddScoped<IHttpContextAccessor>(provider => httpAccessor.Object);
+        services.AddScoped<IHttpContextAccessor, BackgroundServiceHttpContextAccessor>();
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
         services.AddScoped<IFaceIDService, FaceIDService>();
         services.AddScoped<IPluginsService, PluginsService>();
@@ -143,10 +127,6 @@ public static class ConfigurationManager
         GlobalConfiguration.Configuration
             .UseActivator(new HangfireActivator(sp));
 
-        //JobStorage storage = new MemoryStorage(new MemoryStorageOptions());
-        //JobStorage storage = new LiteDbStorage("hangfire.db");
-        
-        
         JobStorage storage = new InMemoryStorage(new InMemoryStorageOptions
         {
             MaxExpirationTime = TimeSpan.FromHours(25), // Default value, we can also set it to `null` to disable.
@@ -163,18 +143,6 @@ public static class ConfigurationManager
         try
         {
             StartHangFire(serverOptions, storage, sp);
-
-        }catch (LiteException ex)
-        {
-            if (ex.Message.Contains("empty page must be defined as empty type"))
-            {
-                File.Delete("hangfire.db");
-                StartHangFire(serverOptions, storage, sp);
-            }
-            else
-            {
-                throw;
-            }
         }
         catch (Exception ex)
         {

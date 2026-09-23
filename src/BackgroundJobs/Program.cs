@@ -7,7 +7,6 @@ using BackgroundJobs.Jobs.Calculation;
 using Hangfire;
 using Hangfire.Logging;
 using Hangfire.Logging.LogProviders;
-using Hangfire.MemoryStorage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
