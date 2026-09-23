@@ -53,6 +53,7 @@
     <PackageReference Include="PDFsharp-MigraDoc" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="Serilog" />
+    <PackageReference Include="Gridify" />
     <PackageReference Include="Sieve" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>

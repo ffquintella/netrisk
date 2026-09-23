@@ -35,6 +35,7 @@
     <PackageVersion Include="FlashCap.Core" Version="1.100.0" />
     <PackageVersion Include="FluentEmail.Razor" Version="3.0.2" />
     <PackageVersion Include="FluentEmail.Smtp" Version="3.0.2" />
+    <PackageVersion Include="Gridify" Version="2.20.0" />
     <PackageVersion Include="Hangfire" Version="1.8.25" />
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageVersion Include="Hangfire.InMemory" Version="1.0.0" />

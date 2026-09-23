@@ -14,6 +14,7 @@
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Gridify" />
     <PackageReference Include="Sieve" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
