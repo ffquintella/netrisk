@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using DAL.Entities;
 using Gridify;
+using Microsoft.Extensions.Localization;
 using ServerServices.Filtering;
 using ServerServices.Interfaces;
 using Host = DAL.Entities.Host;
@@ -8,8 +10,10 @@ namespace API;
 
 /// <summary>
 /// The filterable/sortable surface of the list endpoints, replacing ApplicationEntityFilterMapperProvider.
-/// External names are localized, so this is registered scoped and rebuilt per request — a
-/// pt-BR caller filters on <c>título</c> where an en-US caller filters on <c>title</c>.
+/// Every column is reachable under two names: the invariant one (the resx key, which is also the
+/// English spelling) and, where a translation exists, the localized one — so a pt-BR caller can
+/// filter on <c>nome</c> while a program keeps using <c>hostname</c> in every culture. Registered
+/// scoped and rebuilt per request, because the localized half depends on the request's culture.
 /// </summary>
 public class ApplicationEntityFilterMapperProvider(ILocalizationService localization)
     : IEntityFilterMapperProvider
@@ -30,33 +34,57 @@ public class ApplicationEntityFilterMapperProvider(ILocalizationService localiza
         return new GridifyMapper<T>();
     }
 
-    private static IGridifyMapper<Vulnerability> VulnerabilityMapper(
-        Microsoft.Extensions.Localization.IStringLocalizer localizer) =>
-        new GridifyMapper<Vulnerability>()
-            .AddMap(localizer["title"], v => v.Title)
-            .AddMap("id", v => v.Id)
-            .AddMap(localizer["Score"], v => v.Score)
-            .AddMap(localizer["impact"], v => v.Severity)
-            .AddMap(localizer["status"], v => v.Status)
-            .AddMap(localizer["first_detection"], v => v.FirstDetection)
-            .AddMap(localizer["last_detection"], v => v.LastDetection)
-            .AddMap(localizer["detections"], v => v.DetectionCount)
-            .AddMap(localizer["analyst"], v => v.AnalystId)
-            .AddMap(localizer["host"], v => v.HostId)
-            .AddMap(localizer["application"], v => v.EntityId)
-            .AddMap(localizer["source"], v => v.ImportSource)
-            .AddMap(localizer["technology"], v => v.Technology)
-            .AddMap(localizer["hostname"], v => v.Host!.HostName);
+    private static IGridifyMapper<Vulnerability> VulnerabilityMapper(IStringLocalizer localizer) =>
+        Build<Vulnerability>(localizer,
+            ("title", v => v.Title),
+            ("id", v => v.Id),
+            ("Score", v => v.Score),
+            ("impact", v => v.Severity),
+            ("status", v => v.Status),
+            ("first_detection", v => v.FirstDetection),
+            ("last_detection", v => v.LastDetection),
+            ("detections", v => v.DetectionCount),
+            ("analyst", v => v.AnalystId),
+            ("host", v => v.HostId),
+            ("application", v => v.EntityId),
+            ("source", v => v.ImportSource),
+            ("technology", v => v.Technology),
+            ("hostname", v => v.Host!.HostName));
 
-    private static IGridifyMapper<Host> HostMapper(
-        Microsoft.Extensions.Localization.IStringLocalizer localizer) =>
-        new GridifyMapper<Host>()
-            .AddMap(localizer["hostname"], h => h.HostName)
-            .AddMap("id", h => h.Id)
-            .AddMap(localizer["status"], h => h.Status)
-            .AddMap("fqdn", h => h.Fqdn)
-            .AddMap("ip", h => h.Ip)
-            .AddMap("os", h => h.Os)
-            .AddMap("teamId", h => h.TeamId)
-            .AddMap(localizer["RegistrationDate"], h => h.RegistrationDate);
+    private static IGridifyMapper<Host> HostMapper(IStringLocalizer localizer) =>
+        Build<Host>(localizer,
+            ("hostname", h => h.HostName),
+            ("id", h => h.Id),
+            ("status", h => h.Status),
+            ("fqdn", h => h.Fqdn),
+            ("ip", h => h.Ip),
+            ("os", h => h.Os),
+            ("teamId", h => h.TeamId),
+            ("RegistrationDate", h => h.RegistrationDate));
+
+    /// <summary>
+    /// Builds a mapper where each column answers to both its invariant name and its translation.
+    /// Localized names go in first so that a translation which happens to collide with another
+    /// column's invariant name loses to it: the machine-facing contract is the one that has to
+    /// keep meaning the same thing in every culture. Gridify matches names case-insensitively, so
+    /// a client sending <c>hostName</c> reaches the <c>hostname</c> map.
+    /// </summary>
+    private static IGridifyMapper<T> Build<T>(
+        IStringLocalizer localizer,
+        params (string Name, Expression<Func<T, object?>> Selector)[] columns)
+    {
+        var mapper = new GridifyMapper<T>();
+
+        foreach (var (name, selector) in columns)
+        {
+            var localized = localizer[name].Value;
+            if (!string.Equals(localized, name, StringComparison.OrdinalIgnoreCase))
+                mapper.AddMap(localized, selector);
+        }
+
+        foreach (var (name, selector) in columns)
+            mapper.AddMap(name, selector);
+
+        return mapper;
+    }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Entities;
@@ -122,6 +123,80 @@ public class HostFilteringEndToEndTest : InMemoryServiceTestBase
 
         Assert.True(rows.Count <= FilterBounds.MaxPageSize);
     }
+
+    /// <summary>
+    /// Runs <paramref name="body"/> with the UI culture forced, since the mapper's external names
+    /// are resolved per request against <see cref="CultureInfo.CurrentUICulture"/>.
+    /// </summary>
+    private static async Task InCulture(string culture, Func<Task> body)
+    {
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = new CultureInfo(culture);
+        try
+        {
+            await body();
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    /// <summary>
+    /// Regression: the desktop client hard-codes <c>hostName@=</c>, and the mapper used to know
+    /// only the localized name, so on a pt-BR machine the host search box raised
+    /// GridifyMapperException -> HTTP 409 and silently returned nothing. Every column now answers
+    /// to its invariant name in every culture. See CHANGELOG.md, [NEXT].
+    /// </summary>
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    public async Task Invariant_column_name_filters_in_any_culture(string culture) =>
+        await InCulture(culture, async () =>
+        {
+            var ids = (await Ids("hostname@=web")).OrderBy(i => i).ToArray();
+            Assert.Equal(new[] { 1, 2 }, ids);
+        });
+
+    /// <summary>The literal the GUI actually sends — same name, the casing of a C# property.</summary>
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    public async Task The_clients_hard_coded_host_name_filter_works_in_any_culture(string culture) =>
+        await InCulture(culture, async () =>
+        {
+            var ids = (await Ids("hostName@=web")).OrderBy(i => i).ToArray();
+            Assert.Equal(new[] { 1, 2 }, ids);
+        });
+
+    /// <summary>
+    /// The invariant aliases are additive: a human typing the translated name still gets rows.
+    /// The expected name is read from the localizer under the same culture, so the test asserts
+    /// the wiring rather than a particular translation.
+    /// </summary>
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    public async Task Localized_column_name_still_filters(string culture) =>
+        await InCulture(culture, async () =>
+        {
+            var ids = (await Ids($"{Name("hostname")}@=web")).OrderBy(i => i).ToArray();
+            Assert.Equal(new[] { 1, 2 }, ids);
+        });
+
+    /// <summary>
+    /// Sorting reads the same map, so the invariant name has to be accepted there too — the
+    /// export endpoint and the GUI's column headers both send bare property names.
+    /// </summary>
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    public async Task Invariant_column_name_sorts_in_any_culture(string culture) =>
+        await InCulture(culture, async () =>
+        {
+            var ids = await Ids(sorts: "-hostname");
+            Assert.Equal(new[] { 2, 1, 3 }, ids);
+        });
 
     /// <summary>
     /// The whitelist is the reason the mapper exists. A property that is not mapped must be

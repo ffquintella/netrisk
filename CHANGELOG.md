@@ -12,6 +12,35 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.21.13] - 2026-09-23
+
+This release includes new features and improvements.
+
+### Added
+
+### Fixed
+
+- **The host search box returned nothing on a non-English machine.** Every filterable column was
+  registered under its *localized* name only, so the mapper for a pt-BR caller knew `nome` and not
+  `hostname`; the desktop client hard-codes `hostName@=` (and `RisksRestService` hard-codes
+  `status==…`), which the mapper rejected — `GridifyMapperException` → HTTP 409, and a search box
+  that silently found nothing. Pre-existing: Sieve failed identically with
+  `SieveMethodNotFoundException`. `ApplicationEntityFilterMapperProvider` now registers each column
+  under both names — the invariant one (the resx key, which is also the English spelling) and the
+  translation where one exists — so programs get a stable contract in every culture and humans keep
+  typing their own language. `id`, `os`, `ip`, `fqdn` and `teamId` were already invariant literals,
+  so the surface is now consistent. Localized names are registered first and invariant ones second,
+  so a translation that collides with another column's invariant name loses to it. Eight new cases
+  in `ServerServices.Tests/Filtering/HostFilteringEndToEndTest` cover filtering and sorting by the
+  invariant name, the client's exact literal, and the localized name, each under `pt-BR` and
+  `en-US`; the three `pt-BR` ones fail on the pre-fix mapper.
+
+### Changed
+
 - **Filtering, sorting and paging moved from Sieve to Gridify.** Sieve has had no release since
   2021 and 61 open issues; it sat under every paged list endpoint. Gridify is released weekly and
   has thirteen times the adoption. The HTTP contract is unchanged — `?filters=&sorts=&page=&pageSize=`
