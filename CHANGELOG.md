@@ -106,6 +106,23 @@ This release includes new features and improvements.
   separate bump gate. Guarded by `ServerServices.Tests/Security/CentralPackageManagementTest` —
   central management is on, no project declares a version inline, every reference has a central
   version, and no id is declared twice.
+- **Dependency sweep (patch/minor only).** Avalonia and its Desktop / Skia / Markup.Xaml.Loader /
+  Themes.Fluent / Themes.Simple packages 12.1.2 → 12.1.3, `Mapster` 10.0.12 → 10.0.13, `QuestPDF`
+  2026.8.0 → 2026.9.0, and `System.IdentityModel.Tokens.Jwt` with
+  `Microsoft.IdentityModel.Protocols.OpenIdConnect` 8.22.0 → 8.23.0 (bumped together — they must
+  stay in lockstep). `Avalonia.Controls.DataGrid` stays at 12.1.2, which is its latest.
+  Three proposed bumps were rejected with reasons recorded where the version lives, so the next
+  Dependabot pull request for each can be closed rather than re-investigated:
+  `FlashCap` 1.12.0, because `FlashCap*` is source-mapped in [nuget.config](nuget.config) to the
+  `uox-netrisk` feed, which carries only 1.11.37 — nuget.org is never consulted for it;
+  `Microsoft.Build` 18.10.1, because it has no `net10.0` asset for this consumer and restores the
+  .NET Framework build instead, taking the Nuke project from zero NU1701 warnings to eight — so
+  the apparent version split against `Microsoft.Build.Tasks.Core` / `.Utilities.Core` 18.10.1 is
+  deliberate, and is now commented as such in [build/build.csproj](build/build.csproj);
+  and `ReactiveUI.Avalonia` 14.7.1, which despite the higher number targets Avalonia `>= 11.0.0`
+  and ReactiveUI `>= 19.4.1` — an older lineage. 12.1.2 is the build aligned with Avalonia 12.1.x
+  and ReactiveUI 24.2.0, which is what this solution uses.
+  `SkiaSharp` 4.152.1 remains blocked by Avalonia 12.1.x pinning 3.119.4.
 - **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
   `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of
   Pomelo published on nuget.org that tracks each EF Core release more closely than Pomelo's own

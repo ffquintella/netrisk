@@ -24,6 +24,9 @@
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->
+    <!-- Held at 18.9.6 deliberately, and NOT aligned with the two 18.10.1 packages below.
+         18.10.1 has no net10.0 asset for this consumer: it restores the .NETFramework build and
+         raises eight NU1701s. Verified by bumping it and counting (0 at 18.9.6, 8 at 18.10.1). -->
     <PackageReference Include="Microsoft.Build" Version="18.9.6" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.10.1" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.10.1" ExcludeAssets="runtime" />
