@@ -12,6 +12,18 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.22.1] - 2026-09-24
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
 - The vulnerability register's grid now bands its rows — a 4% wash on every other row, under the
   selection highlight rather than over it — so a wide row stays readable across the screen.
 
