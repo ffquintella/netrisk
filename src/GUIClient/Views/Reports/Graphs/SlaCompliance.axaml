@@ -13,24 +13,28 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
-            <TextBlock Classes="header" Text="{Binding StrSlaCompliance}"/>
-            <TextBlock Classes="header" Margin="10 0 0 0" Text="{Binding Summary}"/>
-        </StackPanel>
+        <!-- The title is a full-width band and the headline a `header2` sub-band, so this
+             quadrant lines up with the other three on the dashboard; a centred StackPanel of two
+             chips floated both of them in the middle of the cell. -->
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrSlaCompliance}" TextAlignment="Center"/>
 
-        <!-- A table rather than a chart: "how many criticals are overdue" is a number, and four
-             numbers read faster than four bars. -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}" IsReadOnly="True" MinHeight="150">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrSeverity}"
-                                    Binding="{Binding SeverityName}"/>
-                <DataGridTextColumn Header="Open" Binding="{Binding Total}"/>
-                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrWithinSla}"
-                                    Binding="{Binding WithinSla}"/>
-                <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrBreached}"
-                                    Binding="{Binding Breached}"/>
-                <DataGridTextColumn Header="%" Binding="{Binding Compliance}"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" Classes="Graph">
+            <TextBlock Grid.Row="0" Classes="header2" Text="{Binding Summary}" TextAlignment="Center"/>
+
+            <!-- A table rather than a chart: "how many criticals are overdue" is a number, and four
+                 numbers read faster than four bars. -->
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Rows}" IsReadOnly="True" MinHeight="150">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrSeverity}"
+                                        Binding="{Binding SeverityName}"/>
+                    <DataGridTextColumn Header="Open" Binding="{Binding Total}"/>
+                    <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrWithinSla}"
+                                        Binding="{Binding WithinSla}"/>
+                    <DataGridTextColumn Header="{Binding #SlaComplianceUc.DataContext.StrBreached}"
+                                        Binding="{Binding Breached}"/>
+                    <DataGridTextColumn Header="%" Binding="{Binding Compliance}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
     </Grid>
 </UserControl>

@@ -19,22 +19,26 @@
     
     <Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="*" Margin="5">
         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrWelcome}" Margin="6 0" />
-        <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions=" *, *" RowDefinitions=" * , *" >
+        <!-- The four quadrants share one shell: a full-width `header` band on row 0 and the
+             content on a `Graph` surface on row 1, with the same 3px gutter. Anything that inserts
+             its own margin or floats its title breaks the alignment across the 2x2. -->
+        <Grid Grid.Row="1" Grid.Column="0" ColumnDefinitions="*, *" RowDefinitions="*, *" >
             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,*" Margin="3" >
                 <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRisksOverTime}" TextAlignment="Center"/>
-                <lvc:CartesianChart Grid.Row="1"
-                                    Series="{Binding RisksOverTime}" 
-                                    XAxes="{Binding RisksOverTimeXAxis, Mode=OneWay}"
-                                    ZoomMode="X"
-                                    MinWidth="400"
-                                    MinHeight="270"/>
+                <Grid Grid.Row="1" Classes="Graph">
+                    <lvc:CartesianChart Series="{Binding RisksOverTime}"
+                                        XAxes="{Binding RisksOverTimeXAxis, Mode=OneWay}"
+                                        ZoomMode="X"
+                                        MinWidth="400"
+                                        MinHeight="270"/>
+                </Grid>
             </Grid>
             <graphs:VulnerabilitiesStats Grid.Row="0" Grid.Column="1" Margin="3" DataContext="{Binding VulnerabilitiesStatsViewModel}" />
             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="Auto,*"  Margin="3" IsEnabled="True">
                 <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrRiskPanel}" TextAlignment="Center"/>
-                <graphs:RisksStats Grid.Row="1" Margin="3" DataContext="{Binding RisksStatsViewModel}" />
+                <graphs:RisksStats Grid.Row="1" DataContext="{Binding RisksStatsViewModel}" />
             </Grid>
-            <!-- Track 3 milestone 3.4.2 — SLA compliance by severity. -->
+            <!-- Track 3 milestone 3.4.2 - SLA compliance by severity. -->
             <graphs:SlaCompliance Grid.Row="1" Grid.Column="1" Margin="3"
                                   DataContext="{Binding SlaComplianceViewModel}" />
         </Grid>

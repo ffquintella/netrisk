@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         The NetRisk token layer. This is the only file in the desktop client that decides what a
@@ -113,6 +113,36 @@
     <StaticResource x:Key="ToolTipBackground" ResourceKey="NrSurfacePanel2" />
     <StaticResource x:Key="ToolTipForeground" ResourceKey="NrTextPrimary" />
     <StaticResource x:Key="ToolTipBorderBrush" ResourceKey="NrBorderSubtle" />
+
+    <!-- ===== Fluent compatibility (vendored TreeDataGrid) ================================== -->
+
+    <!--
+        libs/TreeDataGrid.Avalonia ships one theme, Themes/Fluent.axaml, and App.axaml includes it
+        because there is no Semi equivalent for the control. Its brushes are built with
+        {StaticResource System*Color} — keys that FluentTheme defined and Semi.Avalonia does not, so
+        after the Semi switch the first lookup that reached that dictionary threw
+        KeyNotFoundException('SystemListLowColor') out of a layout pass and took the process with
+        it. The crash was not on a TreeDataGrid screen: the dictionary is built the first time *any*
+        unresolved DynamicResource walks the application's styles, which is why the risk view died.
+
+        These four are the whole set the vendored theme asks for (asserted by
+        GUIClient.Tests/Views/VendoredThemeResourceTests). They are literal because StaticResource
+        is resolved when the dictionary is built and cannot be aliased to a Semi key that only
+        exists once the theme's own styles are loaded; the values are chosen against §2 rather than
+        copied from Fluent.
+    -->
+
+    <!-- Grid lines: seen, not noticed — white at low alpha reads correctly on every surface step. -->
+    <Color x:Key="SystemListLowColor">#26FFFFFF</Color>
+
+    <!-- Header text, and its pointer-over background at 0.1 alpha. NrTextPrimary's endpoint. -->
+    <Color x:Key="SystemBaseHighColor">#FFFFFFFF</Color>
+
+    <!-- Header pressed background: one elevation step up from the header itself. -->
+    <Color x:Key="SystemBaseMediumLowColor">#FF4F5159</Color>
+
+    <!-- Selected cell, drawn at 0.4 alpha. The brand purple, same value as NrAccentPrimary. -->
+    <Color x:Key="SystemAccentColor">#FF51496B</Color>
 
     <!-- ===== Gantt ramp ====================================================================== -->
 

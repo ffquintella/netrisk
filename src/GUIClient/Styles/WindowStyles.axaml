@@ -510,10 +510,26 @@
     </Style>
 
     <!-- Toolbar action button — icon button in a view's action bar -->
+    <!--
+        Square, like every other icon-only class. The blanket rule at the top of this file zeroes
+        Padding/MinWidth for Button.toolbar, so whatever width the button has must be declared here:
+        with only Height set it collapsed to the glyph's own width and the icons read as cramped
+        rectangles. All 32 call sites are icon-only, so a fixed Width is a size, not a cap.
+    -->
     <Style Selector="Button.toolbar">
+        <Setter Property="Width" Value="30"/>
         <Setter Property="Height" Value="30"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Top"/>
         <Setter Property="Margin" Value="5 0 0 0"/>
+    </Style>
+
+    <!-- Sized explicitly for the same reason as Button.filterButton: Padding is 0, so the glyph
+         would otherwise fill the button edge to edge. -->
+    <Style Selector="Button.toolbar > avalonia|MaterialIcon">
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
     </Style>
     
     <Style Selector="Button.type2">

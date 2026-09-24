@@ -14,6 +14,24 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- Restored the vulnerability register's toolbar and its collapsible details pane under Semi.
+  `Button.toolbar` opted out of the theme's button metrics without declaring a width, so its
+  buttons collapsed to the width of their glyph and rendered as cramped rectangles. The same
+  missing width left a few pixels free inside the collapsed details pane, which a `CompactInline`
+  SplitView still lays out — the details then rendered one character per line down the window. The
+  pane's content is now collapsed while the pane is closed.
+
+- Aligned the four dashboard panels. Each quadrant now uses the same shell — a full-width title
+  band over a `Graph` surface with one 3px gutter — so their edges line up. The SLA compliance
+  panel floated its title and headline as two centred chips instead of a band, and the Risk Panel
+  inset its content by an extra 3px against the panel beside it.
+
+- Fixed the desktop client crashing with `KeyNotFoundException: Static resource 'SystemListLowColor'
+  not found` while opening a screen after the Semi.Avalonia switch. The vendored TreeDataGrid ships
+  only a Fluent theme, and it builds its brushes from `System*Color` keys that `FluentTheme` defined
+  and Semi does not; because Avalonia builds a style's resources lazily, the miss surfaced as an
+  unhandled exception in a layout pass on an unrelated view. The four keys are now defined in the
+  client's token sheet.
 
 
 ## [2.22.0] - 2026-09-24

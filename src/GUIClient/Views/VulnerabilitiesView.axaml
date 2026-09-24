@@ -258,7 +258,14 @@
                             <material:MaterialIcon Kind="Details" RenderTransform="{Binding DetailRotation}"/>
                         </Button>
                     </Border>
-                    <ScrollViewer Grid.Column="1">
+                    <!--
+                        The pane is CompactInline: closed, it is still laid out, at
+                        CompactPaneLength. Whatever the toggle button does not use is handed to this
+                        column, and the details then render into that few-pixel sliver one character
+                        per line down the window. Collapsing the content is what actually makes the
+                        pane closed.
+                    -->
+                    <ScrollViewer Grid.Column="1" IsVisible="{Binding IsDetailsPanelOpen}">
                         <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto,Auto">
                             <Border Grid.Column="1" Grid.Row="1" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
