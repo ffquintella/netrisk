@@ -115,8 +115,7 @@
             </Grid>
             
             <!-- IX-4 toast host: floats over the content area, never over the modal dim overlay. -->
-            <views:NotificationHost Grid.Row="1" ZIndex="900"
-                                    DataContext="{Binding NotificationService}"/>
+            <views:NotificationHost Grid.Row="1" ZIndex="900"/>
 
             <Grid Name="OverlayGridCtrl" Grid.Row="1" />
 

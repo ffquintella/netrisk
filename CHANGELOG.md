@@ -16,6 +16,24 @@ This release includes new features and improvements.
 
 
 
+## [2.21.17] - 2026-09-24
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- Transient notifications (the toasts that confirm a save, a connection test, …) now appear on the
+  window that raised them. They were all rendered by a single host owned by the main window, so
+  feedback for an action taken in the Administration window — or in any dialog — was drawn behind
+  it, where the user could not see it. Every window now has its own toast stack and the notification
+  goes to the window in front.
+
+
+
 ## [2.21.16] - 2026-09-24
 
 This release includes new features and improvements.

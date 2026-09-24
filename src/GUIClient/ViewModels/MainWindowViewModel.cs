@@ -1,5 +1,4 @@
 using GUIClient.Tools;
-using GUIClient.Notifications;
 using System.Threading.Tasks;
 using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -285,9 +284,6 @@ namespace GUIClient.ViewModels
 
 
         private IDialogService _dialogService => GetService<IDialogService>();
-
-        /// <summary>Bound by the shell's toast host (IX-4).</summary>
-        public NotificationService NotificationService { get; } = GetService<NotificationService>();
 
         public void NavigateTo(AvaliableViews view)
         {

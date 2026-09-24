@@ -5,14 +5,15 @@
              xmlns:notifications="clr-namespace:GUIClient.Notifications"
              xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              mc:Ignorable="d"
-             x:DataType="notifications:NotificationService"
              x:Class="GUIClient.Views.NotificationHost"
-             IsHitTestVisible="False"
-             VerticalAlignment="Bottom" HorizontalAlignment="Right"
-             Margin="0 0 20 20">
+             IsHitTestVisible="False">
 
     <!-- IX-4: routine successes surface here instead of in a modal box the user must dismiss. -->
-    <ItemsControl ItemsSource="{Binding Notifications}">
+    <!-- The host itself stretches over the window (in a Grid cell, or over the overlay layer of a
+         window that gets one attached in code); the stack is placed inside it. -->
+    <ItemsControl Name="ToastsCtrl"
+                  VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                  Margin="0 0 20 20">
         <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="notifications:AppNotification">
                 <Border Classes="toast" Classes.success="{Binding IsSuccess}"

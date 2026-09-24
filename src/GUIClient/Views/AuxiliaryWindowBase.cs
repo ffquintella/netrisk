@@ -51,5 +51,8 @@ public class AuxiliaryWindowBase : Window
         Opened -= OnOpenedInternal;
 
         if (PersistGeometry) WindowGeometryPersistence.Attach(this);
+
+        // Toasts raised from this window belong on this window, not behind it on the shell.
+        WindowToastHost.Attach(this);
     }
 }

@@ -50,6 +50,9 @@
          precisely so it can be tested here: sending a reference where a literal was meant, or the
          other way round, is a failure a person only sees as somebody else's 401. -->
     <Compile Include="..\GUIClient\Tools\VaultSecretFieldState.cs" LinkBase="Tools" />
+    <!-- Which window a toast lands on. Deliberately Avalonia-free so the rule that keeps
+         Administration's feedback out of the main window can be tested here. -->
+    <Compile Include="..\GUIClient\Notifications\NotificationRouting.cs" LinkBase="Notifications" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>

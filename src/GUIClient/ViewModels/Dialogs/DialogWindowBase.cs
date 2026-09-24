@@ -57,6 +57,9 @@ public class DialogWindowBase<TResult> : Window
         ApplySizeContract();
         CenterDialog();
 
+        // A dialog's own toasts belong on the dialog, not behind it on the shell.
+        Views.WindowToastHost.Attach(this);
+
         OnOpened();
     }
 
