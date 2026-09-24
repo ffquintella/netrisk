@@ -42,6 +42,12 @@
     <SolidColorBrush x:Key="NrSurfaceGraph" Color="{DynamicResource SemiBackground2Color}" />
     <SolidColorBrush x:Key="NrSurfaceSplitter" Color="{DynamicResource SemiBackground3Color}" />
 
+    <!-- Row banding for a long data grid. A white wash at 4% rather than an elevation step: the
+         band has to survive on top of whatever surface the grid sits on, and it must read as the
+         same row texture under the selection highlight, which is drawn over it. Anything stronger
+         stripes the screen instead of grouping it. -->
+    <SolidColorBrush x:Key="NrSurfaceRowAlternate" Color="#0AFFFFFF" />
+
     <!-- The blocking overlay. Semi's SemiColorOverlayBackground is Background0 at 0.6; NetRisk's
          scrim is darker than the darkest surface on purpose, so it is spelled out. -->
     <SolidColorBrush x:Key="NrSurfaceScrim" Color="#090909" />

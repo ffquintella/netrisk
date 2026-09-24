@@ -19,9 +19,20 @@ public partial class VulnerabilitiesView : UserControl
     private FlatTreeDataGridSource<Vulnerability>? _source;
     private bool _syncingSelection;
 
+    /// <summary>The banding class defined in Styles/WindowStyles.axaml. Named here because no
+    /// <c>Classes="…"</c> attribute references it, so nothing in the view tree keeps the two
+    /// spellings in step — <c>VulnerabilitiesGridBandingTests</c> does.</summary>
+    private const string AlternateRowClass = "alternate";
+
     public VulnerabilitiesView()
     {
         InitializeComponent();
+
+        // Row banding. RowPrepared fires every time a row is realized — including when a
+        // recycled row is reused at a different index — and is the only hook that knows the
+        // index a row is about to show, so the class is toggled rather than set: a row that
+        // moves from odd to even has to lose it again.
+        VulnerabilitiesTreeGrid.RowPrepared += OnRowPrepared;
 
         // Owned here rather than bound from MainWindow, matching every other content view.
         // The order matters: OnDataContextChanged builds the TreeDataGrid source, so the named
@@ -154,6 +165,11 @@ public partial class VulnerabilitiesView : UserControl
         VulnerabilitiesTreeGrid.Source = _source;
 
         SyncSelectionToGrid();
+    }
+
+    private static void OnRowPrepared(object? sender, TreeDataGridRowEventArgs e)
+    {
+        e.Row.Classes.Set(AlternateRowClass, e.RowIndex % 2 == 1);
     }
 
     private void OnRowSelectionChanged(object? sender, TreeSelectionModelSelectionChangedEventArgs<Vulnerability> e)

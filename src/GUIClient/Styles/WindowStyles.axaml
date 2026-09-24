@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         >
@@ -622,6 +622,20 @@
     </Style>
     <Style Selector="Grid.Graph">
         <Setter Property="Background" Value="{DynamicResource NrSurfaceGraph}" />
+    </Style>
+
+    <!--
+        Row banding for the TreeDataGrid registers. Applied from code-behind rather than by a
+        selector: TreeDataGridRow.RowIndex is a plain CLR property, not a styled one, and the rows
+        are virtualized and recycled, so neither a binding nor :nth-child can say "odd row". The
+        view subscribes to TreeDataGrid.RowPrepared, which fires with the row's new index every
+        time one is realized, and toggles this class there.
+
+        The row's Background sits under the cells presenter, which is what the selection highlight
+        paints, so a banded row still highlights correctly.
+    -->
+    <Style Selector="TreeDataGridRow.alternate">
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceRowAlternate}" />
     </Style>
 
     
