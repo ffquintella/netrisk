@@ -12,11 +12,11 @@
 # is make skipping it a deliberate act rather than an oversight.
 #
 # That requirement alone is not enough, and this repository has the scar to prove it. Dependabot #81
-# proposed moving libs/Aura.UI *backwards* — the fork's default branch sat ten commits behind the
+# proposed moving the since-removed libs/Aura.UI *backwards* — its default branch sat ten commits behind the
 # `avalonia12` tip NetRisk pins, so the "bump" reverted the Avalonia 12 / .NET 10 port. The body
 # named the submodule and both SHAs, so the substring check passed; the solution compiled clean with
 # zero warnings, every unit test passed, and the desktop client died at startup with a
-# MissingMethodException from Aura.UI's theme. A prose instruction to "confirm the new commit is not
+# MissingMethodException from that submodule's theme. A prose instruction to "confirm the new commit is not
 # a rewind" is not a control. So the direction of the move is now checked mechanically: if the new
 # commit is an ancestor of the old one, the pointer is going backwards and the gate fails, whatever
 # the description says.

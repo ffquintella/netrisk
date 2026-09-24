@@ -11,8 +11,13 @@ New views MUST follow this standard. Existing views that deviate SHOULD be migra
 ### 1.1 Theme
 
 - **Theme variant:** `Dark` only. Set once in [`App.axaml`](../src/GUIClient/App.axaml) via `RequestedThemeVariant="Dark"`. Do not override per-window.
-- **Base theme:** Avalonia `FluentTheme` + `Aura.UI.FluentTheme` + `MaterialIconStyles`.
-- **Style load order** (do not change): `Icons → DarkStyles → WindowStyles → ComponentStyles → FluentTheme → DataGrid Fluent → Aura.UI`.
+- **Base theme:** Avalonia `FluentTheme` + `MaterialIconStyles`.
+- **Style load order** (do not change): `DarkStyles → WindowStyles → ComponentStyles → Icons → FluentTheme → DataGrid Fluent → TreeDataGrid Fluent`.
+- **Controls Avalonia does not ship** (`GroupBox`, `Badge`, `MultiSelect`) come from
+  [`AvaloniaExtraControls`](../src/AvaloniaExtraControls), whose assembly maps them onto the default
+  `avaloniaui` xmlns so views use them without a prefix. They came from the `Aura.UI` submodule until
+  it was removed; their templates carry no colours, so this standard's tokens still decide how they
+  look.
 
 ### 1.2 Iconography
 

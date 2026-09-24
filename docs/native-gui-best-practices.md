@@ -118,7 +118,7 @@ NetRisk's desktop GUI (`GUIClient`) is a modern cross-platform application built
 
 *   **Framework:** **Avalonia 12.0.1** (a modern, high-performance, canvas-rendering cross-platform UI framework for .NET).
 *   **Architecture Pattern:** **Model-View-ViewModel (MVVM)** driven by **ReactiveUI**.
-*   **Styling & Custom Controls:** Uses custom styles (`WindowStyles.axaml`, `DarkStyles.axaml`, `ComponentStyles.axaml`) and wraps custom controls inside the `AvaloniaExtraControls` project and the `Aura.UI` submodule.
+*   **Styling & Custom Controls:** Uses custom styles (`WindowStyles.axaml`, `DarkStyles.axaml`, `ComponentStyles.axaml`) and wraps custom controls inside the `AvaloniaExtraControls` project.
 *   **Localization:** Traditional resource-driven translation (`Localization.en-US.resx` and `Localization.pt-BR.resx`).
 
 ---

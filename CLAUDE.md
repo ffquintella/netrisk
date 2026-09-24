@@ -167,7 +167,7 @@ The solution is `src/netrisk.sln`. Logical layering, bottom-up:
 - **`Tools`** — cross-cutting helpers (networking, globalization, math, etc.).
 - **`Plugins`** — extension points built on the external `netrisk-plugin-sdk` submodule (in `libs/`).
 
-External submodules live under `libs/` (e.g. `NessusParser`, `Aura.UI`, `netrisk-plugin-sdk`, `reliable-rest-client-wrapper`).
+External submodules live under `libs/` (`NessusParser`, `netrisk-plugin-sdk`, `reliable-rest-client-wrapper`, `TreeDataGrid.Avalonia`).
 
 ### Request flow (typical)
 

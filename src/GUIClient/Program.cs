@@ -1,4 +1,3 @@
-﻿using Aura.UI.FluentTheme;
 using Avalonia;
 using ReactiveUI.Avalonia;
 using System;
@@ -97,8 +96,7 @@ namespace GUIClient
                 // Without a handler here, any exception escaping a ReactiveCommand is rethrown on
                 // the dispatcher and aborts the process. See ReactiveErrorHandler.
                 .UseReactiveUI(reactiveUi => reactiveUi.WithExceptionHandler(ReactiveErrorHandler.CreateObserver()))
-                .UseSkia()
-                .UseAuraUIFluentTheme();
+                .UseSkia();
         }
     }
 }

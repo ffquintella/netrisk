@@ -12,6 +12,15 @@ This release includes new features and improvements.
 
 ### Changed
 
+- The desktop client no longer depends on the `Aura.UI` submodule. It supplied exactly two controls —
+  `Badge` (the unread count on the notification bell) and `GroupBox` (ten containers across three
+  incident windows) — and it supplied them invisibly, by mapping its controls onto the default
+  Avalonia xmlns, so views wrote `<Badge>` and `<GroupBox>` with no prefix and a text search for
+  "Aura" over the view tree found nothing. Both controls now live in `AvaloniaExtraControls`, which
+  keeps the same prefix-free mapping: no view changed. Their templates hold no colours of their own,
+  so `Styles/WindowStyles.axaml` still decides what they look like. One vendored submodule fewer to
+  review on every bump.
+
 ### Fixed
 
 

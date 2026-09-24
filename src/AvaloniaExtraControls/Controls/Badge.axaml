@@ -1,0 +1,43 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:AvaloniaExtraControls.Controls">
+    <Design.PreviewWith>
+        <Border Padding="30">
+            <controls:Badge BadgeContent="3" BorderBrush="OrangeRed">
+                <Button Content="Inbox"/>
+            </controls:Badge>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|Badge">
+        <Setter Property="BorderBrush" Value="#CC3300"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="FontSize" Value="9"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                    <Border Name="PART_BadgeBorder"
+                            IsVisible="{TemplateBinding IsBadgeVisible}"
+                            Background="{TemplateBinding BorderBrush}"
+                            CornerRadius="7"
+                            MinWidth="14"
+                            Height="14"
+                            Padding="4,0"
+                            ClipToBounds="False"
+                            HorizontalAlignment="{TemplateBinding BadgeHorizontalAlignment}"
+                            VerticalAlignment="{TemplateBinding BadgeVerticalAlignment}">
+                        <ContentPresenter Name="PART_BadgePresenter"
+                                          Content="{TemplateBinding BadgeContent}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          FontSize="{TemplateBinding FontSize}"
+                                          HorizontalContentAlignment="Center"
+                                          VerticalContentAlignment="Center"/>
+                    </Border>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

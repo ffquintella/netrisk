@@ -8,6 +8,8 @@
 
     <!-- Add Styles Here -->
     <StyleInclude Source="avares://AvaloniaExtraControls/MultiSelect/MultiSelect.axaml"/>
+    <StyleInclude Source="avares://AvaloniaExtraControls/Controls/GroupBox.axaml"/>
+    <StyleInclude Source="avares://AvaloniaExtraControls/Controls/Badge.axaml"/>
     
     <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml"/>
 

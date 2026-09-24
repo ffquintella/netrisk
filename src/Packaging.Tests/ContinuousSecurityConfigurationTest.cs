@@ -536,9 +536,10 @@ public class ContinuousSecurityConfigurationTest
     ///
     /// Dependabot's gitsubmodule updater follows the remote's <em>default</em> branch when
     /// <c>.gitmodules</c> names none, and it cannot tell that the pinned commit is ahead of that
-    /// branch — it just proposes moving the pointer to the branch tip. For libs/Aura.UI, whose fork
-    /// keeps the Avalonia 12 / .NET 10 port on <c>avalonia12</c> while <c>master</c> sits ten commits
-    /// behind, that produced a pull request (#81) proposing to revert the port. It compiled with zero
+    /// branch — it just proposes moving the pointer to the branch tip. For the since-removed
+    /// libs/Aura.UI, whose fork kept the Avalonia 12 / .NET 10 port on <c>avalonia12</c> while
+    /// <c>master</c> sat ten commits behind, that produced a pull request (#81) proposing to revert
+    /// the port. It compiled with zero
     /// warnings, passed every unit test, and crashed the desktop client on startup.
     ///
     /// So an entry without a branch is not a style problem, it is a live rewind proposal waiting to
@@ -558,19 +559,12 @@ public class ContinuousSecurityConfigurationTest
             "default branch and may propose a rewind:\n  " + string.Join("\n  ", missing));
     }
 
-    /// <summary>
-    /// libs/Aura.UI tracks <c>avalonia12</c> specifically. Pinned separately from the test above
-    /// because this is the one whose default branch is known to be behind, and a well-meaning
-    /// "tidy up to master" would silently reintroduce the #81 rewind.
-    /// </summary>
-    [Fact]
-    public void AuraUiTracksTheAvaloniaTwelveBranch()
-    {
-        var declared = ParseGitmodules();
-
-        Assert.True(declared.TryGetValue("libs/Aura.UI", out var branch), "libs/Aura.UI is not declared");
-        Assert.Equal("avalonia12", branch);
-    }
+    // AuraUiTracksTheAvaloniaTwelveBranch used to sit here, pinning that submodule to `avalonia12`
+    // because its default branch was known to be behind. libs/Aura.UI has since been removed — its
+    // two controls (Badge, GroupBox) are in src/AvaloniaExtraControls now — so the assertion had no
+    // subject left. What it protected is still covered: EverySubmoduleDeclaresTheBranchItTracks above
+    // holds for the four that remain, and GUIClient.Tests' VendoredControlOwnershipTests fails if a
+    // build input reaches for Aura.UI again.
 
     /// <summary>
     /// The provenance gate rejects a bump by direction, not only by what the description says.

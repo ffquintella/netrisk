@@ -3,7 +3,7 @@
 > Track 7 milestone 7.2.3 · First issued 2026-08-26
 > Companion gates: [`.github/dependabot.yml`](../../.github/dependabot.yml), [`.github/workflows/security.yml`](../../.github/workflows/security.yml), [`scripts/security/scan-dependencies.sh`](../../scripts/security/scan-dependencies.sh), [`scripts/security/check-submodule-bump.sh`](../../scripts/security/check-submodule-bump.sh)
 
-NetRisk ships self-contained binaries. Everything inside them — NuGet packages, five vendored git
+NetRisk ships self-contained binaries. Everything inside them — NuGet packages, four vendored git
 submodules, and the packages those pull in transitively — is code NetRisk is responsible for even
 though it did not write it. This document says how that code gets in, how it gets updated, and who
 answers for each piece.
@@ -62,23 +62,21 @@ anyone can make to this repository.
 
 | Submodule | Upstream | Tracked branch | Attack surface it sits on | Owner |
 |---|---|---|---|---|
-| `NessusParser` | `github.com/ffquintella/NessusParser` | `master` | **Parses untrusted scan files** — the highest-risk of the five (threat-model boundary TB4) | Maintainer |
+| `NessusParser` | `github.com/ffquintella/NessusParser` | `master` | **Parses untrusted scan files** — the highest-risk of the four (threat-model boundary TB4) | Maintainer |
 | `netrisk-plugin-sdk` | `github.com/ffquintella/netrisk-plugin-sdk` | `main` | Defines the plugin contract; a change here changes what a plugin may do (TB5) | Maintainer |
 | `reliable-rest-client-wrapper` | `github.com/ffquintella/reliable-rest-client-wrapper` | `master` | Every outbound HTTP call from the desktop client, including TLS options (TB1) | Maintainer |
-| `Aura.UI` | `github.com/ffquintella/Aura.UI` | **`avalonia12`** | Desktop controls; no network, no parsing | Maintainer |
 | `TreeDataGrid.Avalonia` | `github.com/ffquintella/TreeDataGrid.Avalonia` | `master` | Desktop controls; no network, no parsing | Maintainer |
 
 The tracked branch is declared in `.gitmodules` for every entry, and that column is load-bearing
 rather than informational. Dependabot follows the remote's *default* branch when `.gitmodules` names
 none, and it has no notion of the pinned commit being ahead of that branch — it simply proposes the
-branch tip. `Aura.UI` is the case in point: the fork keeps the Avalonia 12 / .NET 10 port on
-`avalonia12`, its default branch was `master` — ten commits behind — and
-[#81](https://github.com/ffquintella/netrisk/pull/81) duly proposed reverting the port. The fork's
-default branch has since been moved to `avalonia12` too, but the declaration here is what holds:
-a default branch is a setting in somebody else's repository, and this table is not allowed to depend
-on one. See §2's review procedure for why nothing else caught it.
+branch tip. The now-removed `Aura.UI` submodule is the case in point: the fork kept the Avalonia 12 /
+.NET 10 port on `avalonia12`, its default branch was `master` — ten commits behind — and
+[#81](https://github.com/ffquintella/netrisk/pull/81) duly proposed reverting the port. The lesson
+outlived the submodule: a default branch is a setting in somebody else's repository, and this table
+is not allowed to depend on one. See §2's review procedure for why nothing else caught it.
 
-The first three are **security-relevant**; the last two are presentation. That distinction drives the
+The first three are **security-relevant**; the last is presentation. That distinction drives the
 review depth below. Note that `TreeDataGrid.Avalonia` is not named in the Track 7 spec — it was added
 after the spec was written, which is itself an argument for deriving this table from `.gitmodules`
 rather than from prose.
@@ -90,8 +88,9 @@ Required for every submodule pointer change, and enforced by the `submodule-revi
 1. **Read the upstream diff.** `git -C libs/<name> log --oneline <old>..<new>` and
    `git -C libs/<name> diff <old>..<new>`.
 2. **Confirm the pointer moves forwards, on the branch `.gitmodules` names.** Not the default
-   branch — for `Aura.UI` the default branch is behind what NetRisk pins, so "is it on the default
-   branch?" is the wrong question and answering it yes is the failure. The check is
+   branch — the `Aura.UI` incident above happened because its default branch sat behind what NetRisk
+   pinned, so "is it on the default branch?" is the wrong question and answering it yes is the
+   failure. The check is
    `git -C libs/<name> merge-base --is-ancestor <new> <old>`: if that succeeds, the new commit is an
    *ancestor* of the pinned one and the bump is a rewind. Also confirm it is not a force-push over a
    SHA this repository previously pinned — a rewritten upstream history is the signal that something
