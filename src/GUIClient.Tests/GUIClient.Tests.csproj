@@ -24,6 +24,9 @@
          reads Model.Secrets.SecretReference; referencing Model brings in the shared contracts without
          bringing in Avalonia, which is the constraint this project exists under. -->
     <ProjectReference Include="..\Model\Model.csproj" />
+    <!-- DAL, for the integration_sync_logs entity and the integration enums the sync-log feed below
+         is written in terms of. EF Core is headless; Avalonia is what this project must not pull. -->
+    <ProjectReference Include="..\DAL\DAL.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
@@ -45,6 +48,9 @@
     <!-- The findings grid's id -> label maps: pure collection logic, and what replaced the
          per-cell blocking REST call in the Fix team / Host columns. -->
     <Compile Include="..\GUIClient\Tools\RowLabelCache.cs" LinkBase="Tools" />
+    <!-- How the posture sync log is assembled, including the placeholder row that makes a run the
+         operator just started appear immediately instead of only after it ends. -->
+    <Compile Include="..\GUIClient\Tools\IntegrationSyncLogFeed.cs" LinkBase="Tools" />
     <!-- Whether a credential field is typed in or comes from the vault. The three-way decision is
          deliberately free of Avalonia (it raises INotifyPropertyChanged from System.ComponentModel)
          precisely so it can be tested here: sending a reference where a literal was meant, or the

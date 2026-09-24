@@ -1861,15 +1861,68 @@ public class IntegrationsViewModel : ViewModelBase
             var trendMicro = await Integrations.GetTrendMicroLogAsync(25);
             var scorecard = await Integrations.GetSecurityScorecardLogAsync(25);
 
-            SyncLog.Clear();
+            // Interleaved by start time so the log reads as one history rather than two lists, with
+            // the run this client just started included until the server's own row for it arrives.
+            var rows = IntegrationSyncLogFeed.Merge(trendMicro, scorecard, _pendingSyncLog);
 
-            // Interleaved by start time so the log reads as one history rather than two lists.
-            foreach (var entry in trendMicro.Concat(scorecard).OrderByDescending(l => l.StartedAt))
-                SyncLog.Add(entry);
+            var selected = SelectedSyncLog;
+
+            SyncLog.Clear();
+            foreach (var entry in rows) SyncLog.Add(entry);
+
+            // Clearing the collection clears the grid's selection, and every row here is a fresh
+            // instance, so the selected run has to be found again by identity or the progress panel
+            // empties itself on every poll.
+            SelectedSyncLog = IntegrationSyncLogFeed.Reselect(rows, selected);
         }
         catch (Exception ex)
         {
             Logger.Error("Could not load the integration sync log: {Message}", ex.Message);
+        }
+    }
+
+    /// <summary>How often the log is re-read while a synchronization this client started is running.</summary>
+    private static readonly TimeSpan SyncLogPollInterval = TimeSpan.FromSeconds(5);
+
+    /// <summary>The Running row shown for this client's own run before the server's copy is read.</summary>
+    private IntegrationSyncLog? _pendingSyncLog;
+
+    /// <summary>
+    /// Runs a posture synchronization with the log following it live.
+    ///
+    /// A sync is a single request that returns when the run is over, so the log used to stand still
+    /// for the whole run and the operator had to press Refresh to discover anything had started. The
+    /// placeholder goes in before the request, and the log is re-read every
+    /// <see cref="SyncLogPollInterval"/> while the request is outstanding — which also makes the run's
+    /// progress trail advance in the panel below it instead of appearing all at once at the end.
+    /// </summary>
+    private async Task SyncWithLiveLogAsync(IntegrationKind integration, int connectionId,
+        string? connectionName, Func<Task> sync)
+    {
+        _pendingSyncLog = IntegrationSyncLogFeed.Pending(integration, connectionId, connectionName,
+            DateTime.UtcNow);
+
+        SyncLog.Insert(0, _pendingSyncLog);
+        SelectedSyncLog = _pendingSyncLog;
+
+        try
+        {
+            var run = sync();
+
+            while (!run.IsCompleted)
+            {
+                // WhenAny rather than a delay between polls: the loop must not hold the caller for a
+                // whole interval after a sync that finished in a second.
+                var first = await Task.WhenAny(run, Task.Delay(SyncLogPollInterval));
+                if (first != run) await LoadSyncLogAsync();
+            }
+
+            // Observes the run's exception, which WhenAny swallows.
+            await run;
+        }
+        finally
+        {
+            _pendingSyncLog = null;
         }
     }
 
@@ -2022,15 +2075,21 @@ public class IntegrationsViewModel : ViewModelBase
         // click had done anything at all.
         Toasts.Info(string.Format(Localizer["PostureSyncStartedMSG"], SelectedTrendMicro.Name));
 
+        var connection = SelectedTrendMicro;
+
         await WithBusyAsync(async () =>
         {
             try
             {
-                var result = await Integrations.SyncTrendMicroConnectionAsync(SelectedTrendMicro.Id);
+                await SyncWithLiveLogAsync(IntegrationKind.TrendMicroVisionOne, connection.Id,
+                    connection.Name, async () =>
+                    {
+                        var result = await Integrations.SyncTrendMicroConnectionAsync(connection.Id);
 
-                Toasts.Info(string.Format(Localizer["PostureSyncFinishedMSG"],
-                    result.HostsCreated, result.HostsUpdated, result.FindingsCreated,
-                    result.FindingsUpdated));
+                        Toasts.Info(string.Format(Localizer["PostureSyncFinishedMSG"],
+                            result.HostsCreated, result.HostsUpdated, result.FindingsCreated,
+                            result.FindingsUpdated));
+                    });
 
                 await LoadPostureProvidersAsync();
             }
@@ -2038,6 +2097,10 @@ public class IntegrationsViewModel : ViewModelBase
             {
                 Logger.Error("Could not synchronize the Vision One connection: {Message}", ex.Message);
                 Toasts.Error(ex.Message);
+
+                // The placeholder is not an outcome: the server's row is, and a refused or failed run
+                // has one. Without this the log keeps saying Running until the next manual refresh.
+                await LoadSyncLogAsync();
             }
         });
     }
@@ -2105,17 +2168,24 @@ public class IntegrationsViewModel : ViewModelBase
 
         Toasts.Info(string.Format(Localizer["ScorecardSyncStartedMSG"], SelectedScorecard.Name));
 
+        var connection = SelectedScorecard;
+
         await WithBusyAsync(async () =>
         {
             try
             {
-                var result = await Integrations.SyncSecurityScorecardConnectionAsync(SelectedScorecard.Id);
+                await SyncWithLiveLogAsync(IntegrationKind.SecurityScorecard, connection.Id,
+                    connection.Name, async () =>
+                    {
+                        var result =
+                            await Integrations.SyncSecurityScorecardConnectionAsync(connection.Id);
 
-                Toasts.Info(string.Format(Localizer["ScorecardSyncFinishedMSG"],
-                    result.PostureRowsWritten, result.FindingsCreated,
-                    result.CyberRiskIndex?.ToString("0.0") ?? "—"));
+                        Toasts.Info(string.Format(Localizer["ScorecardSyncFinishedMSG"],
+                            result.PostureRowsWritten, result.FindingsCreated,
+                            result.CyberRiskIndex?.ToString("0.0") ?? "—"));
+                    });
 
-                await LoadScorecardHistoryAsync(SelectedScorecard.Id);
+                await LoadScorecardHistoryAsync(connection.Id);
                 await LoadPostureProvidersAsync();
             }
             catch (Exception ex)
@@ -2123,6 +2193,9 @@ public class IntegrationsViewModel : ViewModelBase
                 Logger.Error("Could not synchronize the SecurityScorecard connection: {Message}",
                     ex.Message);
                 Toasts.Error(ex.Message);
+
+                // See the Vision One sync: the placeholder must give way to the server's outcome.
+                await LoadSyncLogAsync();
             }
         });
     }

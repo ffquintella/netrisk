@@ -14,6 +14,25 @@ This release includes new features and improvements.
 
 ### Fixed
 
+
+
+## [2.21.18] - 2026-09-24
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- A posture synchronization now appears in the Administration → Posture providers **Synchronization
+  log** as soon as it starts, marked Running, instead of only after it finished or failed. The server
+  had always written the Running row at the start of the run, but the client only re-read the log
+  when the (minutes-long) sync call returned, so the only way to see a run in flight was to press
+  Refresh by hand. The log — and with it the run's progress trail — now refreshes every five seconds
+  while the run is going.
+
 - The Secret Vaults tab in Administration now uses the width of the window. Its detail column was a
   star column holding a fixed-width form, so widening the window only added blank space beside the
   form instead of giving the vault list room to breathe.
