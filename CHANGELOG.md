@@ -10,6 +10,18 @@ This release includes new features and improvements.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+
+## [2.21.16] - 2026-09-24
+
+This release includes new features and improvements.
+
+### Added
+
 - A BastionVault secret-vault connection can now authenticate by **app-id (AppRole) login** instead
   of with a pre-minted token. Filling in the connection's **App ID** makes the API key an AppRole
   `secret_id`: the plugin posts `auth/approle/login` with the App ID as the `role_id` and uses the
@@ -19,6 +31,17 @@ This release includes new features and improvements.
   [docs/features/secret-vaults.md](docs/features/secret-vaults.md#the-api-key-is-a-token-or-a-secret-id).
 
 ### Changed
+
+- **Every settings screen is readable again.** Field help used to render as black text on a light
+  grey slab, which in a dark window made each explanation louder than the field it explained, and
+  field labels were full-width purple bars. Across the admin screens — all seven Integrations tabs,
+  Jira, System configuration, API tokens, Governance, Findings, the risk-governance window and the
+  vault picker — help is now quiet grey text with no background, labels are plain text, and long
+  forms are grouped into cards with a single right edge. On Secret Vaults, *Ignore SSL errors* is
+  called out as a caution rather than treated as one setting among equals, and the connection test
+  gets a pass/fail icon. The vulnerability detail panel shows record values as values instead of
+  grey slabs. Full rationale and the rules new screens must follow:
+  [roadmap/SETTINGS_FORM_ROLLOUT.md](roadmap/SETTINGS_FORM_ROLLOUT.md).
 
 ### Fixed
 

@@ -55,8 +55,7 @@
                  expiry, and nothing that reopened the risk when it lapsed. -->
             <TabItem Header="{Binding StrAcceptances}">
                 <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="5">
-                    <TextBlock Grid.Row="0" Text="{Binding AppetiteExplanation}" Classes="detailBlock"
-                               TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="0" Text="{Binding AppetiteExplanation}" Classes="notice"/>
 
                     <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" Margin="0 10 0 0"
                           IsVisible="{Binding IsAccepted}">
@@ -235,8 +234,8 @@
 
                         <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4"
                                     Margin="0 12 0 0" IsVisible="{Binding HasQuantitative}">
-                            <TextBlock Text="{Binding StrAnnualisedLossExposure}" Classes="header2"/>
-                            <TextBlock Classes="detailBlock" TextWrapping="Wrap">
+                            <TextBlock Text="{Binding StrAnnualisedLossExposure}" Classes="fieldLabel"/>
+                            <TextBlock Classes="notice" Margin="0">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="P10 {0:N0} · P50 {1:N0} · P90 {2:N0} · mean {3:N0} → {4} ({5:0.0})">
                                         <Binding Path="Quantitative.InherentP10"/>

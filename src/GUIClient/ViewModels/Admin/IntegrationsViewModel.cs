@@ -653,8 +653,25 @@ public class IntegrationsViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedVault, value);
             LoadVaultEditor(value);
+
+            // Both are computed from the selection, so ReactiveUI cannot infer the dependency.
+            this.RaisePropertyChanged(nameof(VaultTestPassed));
+            this.RaisePropertyChanged(nameof(VaultTestFailed));
         }
     }
+
+    /// <summary>
+    /// Whether the selected connection's last test succeeded.
+    ///
+    /// Split into two booleans rather than bound straight to the nullable
+    /// <c>LastTestSucceeded</c> because the third state — never tested — has to render as
+    /// *neither* icon, and a nullable bound to <c>IsVisible</c> through a negation would
+    /// show the failure icon for a connection nobody has tested yet.
+    /// </summary>
+    public bool VaultTestPassed => SelectedVault?.LastTestSucceeded == true;
+
+    /// <summary>Whether the selected connection's last test ran and failed.</summary>
+    public bool VaultTestFailed => SelectedVault?.LastTestSucceeded == false;
 
     public SecretVaultConnectionInput VaultDraft { get; private set; } = NewVault();
 

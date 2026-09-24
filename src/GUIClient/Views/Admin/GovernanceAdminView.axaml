@@ -27,11 +27,11 @@
             <TabItem Header="{Binding StrRiskAppetite}">
                 <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
                     <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                               Text="{Binding StrNoAppetiteConfiguredMsg}" Classes="detailBlock"
-                               TextWrapping="Wrap" IsVisible="{Binding !AppetiteConfigured}"/>
+                               Text="{Binding StrNoAppetiteConfiguredMsg}" Classes="notice"
+                               IsVisible="{Binding !AppetiteConfigured}"/>
 
                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0 10 10 0">
-                        <TextBlock Text="{Binding StrEntity}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrEntity}" Classes="fieldLabel"/>
                         <ComboBox MinWidth="220" ItemsSource="{Binding Entities}"
                                   SelectedValue="{Binding SelectedAppetiteEntityId}"
                                   SelectedValueBinding="{Binding Id}"
@@ -43,17 +43,17 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
-                        <TextBlock Text="{Binding StrMaxAcceptableResidual}" Classes="header2"
+                        <TextBlock Text="{Binding StrMaxAcceptableResidual}" Classes="fieldLabel"
                                    Margin="0 10 0 0"/>
                         <NumericUpDown Value="{Binding MaxAcceptableResidual}" Minimum="0" Maximum="10"
                                        Increment="0.5" FormatString="0.0" MinWidth="140"/>
 
-                        <TextBlock Text="{Binding StrDualApprovalThreshold}" Classes="header2"
+                        <TextBlock Text="{Binding StrDualApprovalThreshold}" Classes="fieldLabel"
                                    Margin="0 10 0 0"/>
                         <NumericUpDown Value="{Binding DualApprovalThreshold}" Minimum="0" Maximum="10"
                                        Increment="0.5" FormatString="0.0" MinWidth="140"/>
 
-                        <TextBlock Text="{Binding StrNotes}" Classes="header2" Margin="0 10 0 0"/>
+                        <TextBlock Text="{Binding StrNotes}" Classes="fieldLabel" Margin="0 10 0 0"/>
                         <TextBox Text="{Binding AppetiteNotes}" AcceptsReturn="True" MinHeight="60"/>
 
                         <StackPanel Orientation="Horizontal" Margin="0 10 0 0">
@@ -111,8 +111,7 @@
                  dead. This is the screen that drains it. -->
             <TabItem Header="{Binding StrPendingRisks}">
                 <Grid RowDefinitions="Auto,*,Auto" Margin="10">
-                    <TextBlock Grid.Row="0" Text="{Binding StrPendingRisksMsg}" Classes="detailBlock"
-                               TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="0" Text="{Binding StrPendingRisksMsg}" Classes="hint"/>
 
                     <DataGrid Grid.Row="1" Margin="0 10" ItemsSource="{Binding PendingRisks}"
                               SelectedItem="{Binding SelectedPendingRisk}"
@@ -156,8 +155,7 @@
                  access. -->
             <TabItem Header="{Binding StrReviewers}">
                 <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
-                    <TextBlock Grid.Row="0" Text="{Binding StrReviewersMsg}" Classes="detailBlock"
-                               TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="0" Text="{Binding StrReviewersMsg}" Classes="hint"/>
 
                     <ComboBox Grid.Row="1" Margin="0 10" MinWidth="260"
                               ItemsSource="{Binding Entities}" SelectedItem="{Binding SelectedEntity}">
@@ -211,8 +209,7 @@
                  never repaired from here: a legacy status is the record of how the risk got there. -->
             <TabItem Header="{Binding StrWorkflowViolations}">
                 <Grid RowDefinitions="Auto,*" Margin="10">
-                    <TextBlock Grid.Row="0" Text="{Binding StrWorkflowViolationsMsg}"
-                               Classes="detailBlock" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="0" Text="{Binding StrWorkflowViolationsMsg}" Classes="hint"/>
 
                     <DataGrid Grid.Row="1" Margin="0 10 0 0" ItemsSource="{Binding Violations}"
                               IsReadOnly="True" CanUserSortColumns="True">

@@ -131,13 +131,13 @@
                     </CheckBox>
 
                     <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrDeployment}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrDeployment}" Classes="fieldLabel"/>
                         <ComboBox MinWidth="150" ItemsSource="{Binding Deployments}"
                                   SelectedItem="{Binding Settings.Deployment}"/>
                     </StackPanel>
 
                     <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrServiceDesk}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrServiceDesk}" Classes="fieldLabel"/>
                         <StackPanel Orientation="Horizontal">
                             <ComboBox MinWidth="230" ItemsSource="{Binding ServiceDesks}"
                                       SelectedValue="{Binding Settings.ServiceDeskId}"
@@ -152,7 +152,7 @@
                     </StackPanel>
 
                     <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrRequestType}" Classes="fieldLabel"/>
                         <TextBox Text="{Binding Settings.RequestTypeFilter}" MinWidth="180"
                                  PlaceholderText="10001,10002"/>
                     </StackPanel>
@@ -284,7 +284,7 @@
                     </CheckBox>
 
                     <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrAssetsWorkspace}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrAssetsWorkspace}" Classes="fieldLabel"/>
                         <!-- Read-only: the workspace id is discovered from the site. A typed one
                              produces 404s from api.atlassian.com that read as bad credentials. -->
                         <TextBox Text="{Binding Settings.AssetsWorkspaceId}" MinWidth="260"
@@ -292,7 +292,7 @@
                     </StackPanel>
 
                     <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrAssetsSchema}" Classes="header2"/>
+                        <TextBlock Text="{Binding StrAssetsSchema}" Classes="fieldLabel"/>
                         <StackPanel Orientation="Horizontal">
                             <ComboBox MinWidth="220" ItemsSource="{Binding AssetSchemas}"
                                       SelectedValue="{Binding Settings.AssetsSchemaId}"

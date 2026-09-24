@@ -155,10 +155,103 @@
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
     
-    <Style Selector="TextBlock.detailBlock">
-        <Setter Property="Margin" Value="0 0 0 2"/>
-        <Setter Property="Foreground" Value="Black"/>
-        <Setter Property="Background" Value="DarkGray"/>
+    <!-- ==================================================================================
+         SETTINGS-FORM VOCABULARY (ui-standard §6.2)
+
+         A settings pane is the same triplet repeated: label, control, explanation. It used
+         to render the label as a full-bleed #5252aa band and the explanation as a
+         black-on-DarkGray slab (`detailBlock`, now deleted), which made the two supporting
+         elements the two loudest things on the screen and left the control — the only part
+         the operator edits — as the quietest. These classes invert that: nothing but the
+         control carries a filled surface.
+
+         Every colour below is an existing token. `hint`/`sectionCaption` reuse #9a9a9a from
+         `metric_detail`, `fieldLabel` reuses text/secondary #bbbbbb, `formCard` reuses the
+         `card` surface, and the severity icons reuse the `toast` severity hexes, so §2.6's
+         "no new hex within ΔE 5" is satisfied by construction.
+         ================================================================================== -->
+
+    <!-- Label for one field. Replaces `header2` on individual fields; `header2` keeps its
+         documented job (§2.4 semantic/info-bg) as a band over a whole section. -->
+    <Style Selector="TextBlock.fieldLabel">
+        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Margin" Value="0 0 0 3"/>
+    </Style>
+
+    <!-- Caption naming a `formCard`. Quieter than the labels inside it on purpose: it is a
+         grouping aid, not a field. -->
+    <Style Selector="TextBlock.sectionCaption">
+        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Margin" Value="0 0 0 10"/>
+    </Style>
+
+    <!-- Explanation under a field. No background — help must not outrank the field. -->
+    <Style Selector="TextBlock.hint">
+        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Margin" Value="0 4 0 0"/>
+    </Style>
+
+    <!-- Text that reports state rather than explaining a field ("this secret is shown
+         once", a connection-test result). Body weight because missing it has a cost; still
+         no filled surface. A record's value in a read-only panel is `formData`, not this. -->
+    <Style Selector="TextBlock.notice">
+        <Setter Property="Foreground" Value="#F0F0F0"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Margin" Value="0 4 0 0"/>
+    </Style>
+
+    <!-- Groups a run of related fields so a long settings column reads as three blocks
+         rather than eleven rows. Same surface as `card`; different margin, because a form
+         card stacks vertically and a dashboard card sits in a grid. -->
+    <Style Selector="Border.formCard">
+        <Setter Property="Background" Value="#303030"/>
+        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="0 0 0 10"/>
+    </Style>
+
+    <!-- A `formCard` holding a setting that weakens a control rather than configuring one.
+         One BorderBrush colours all four sides, so this reads as an outlined card with a
+         heavier left edge, not a stripe — hence it keeps the card corner radius. -->
+    <Style Selector="Border.formCard.caution">
+        <Setter Property="BorderBrush" Value="#ff9800"/>
+        <Setter Property="BorderThickness" Value="3 1 1 1"/>
+    </Style>
+
+    <!-- §2.6 forbids encoding status in text colour, so severity rides on an icon's shape
+         and these give that icon the matching `toast` hue. Bare class selectors: the icon
+         is a MaterialIcon, which this file cannot name without importing its namespace
+         into every consumer. -->
+    <Style Selector="avalonia|MaterialIcon.cautionIcon">
+        <Setter Property="Foreground" Value="#ff9800"/>
+    </Style>
+
+    <Style Selector="avalonia|MaterialIcon.successIcon">
+        <Setter Property="Foreground" Value="#4caf50"/>
+    </Style>
+
+    <Style Selector="avalonia|MaterialIcon.errorIcon">
+        <Setter Property="Foreground" Value="#f44336"/>
+    </Style>
+
+    <!-- Input inside a `formCard`. Stretching to the card is what gives a settings column a
+         single right edge; before this, labels stretched while boxes sat at MinWidth=240
+         and hints at MaxWidth=360, so every row ended somewhere different. -->
+    <Style Selector="Border.formCard TextBox">
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+
+    <Style Selector="Border.formCard ComboBox">
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
     
     <!-- Inline validation summary shown above a dialog's action row (IX-4): the rules that

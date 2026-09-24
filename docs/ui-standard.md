@@ -634,6 +634,37 @@ Standards:
 - Combo-boxes use an explicit `ItemTemplate` with a `TextBlock` bound to the display property.
 - Date fields: `DatePicker` for date-only, `NumericUpDown` for integers.
 
+#### 6.2.1 Settings panes — the card vocabulary
+
+A settings pane is the same triplet repeated: label, control, explanation. Only the control carries
+a filled surface; the label and the explanation must not outrank it. Full history and the rejected
+alternatives: [`roadmap/SETTINGS_FORM_ROLLOUT.md`](../roadmap/SETTINGS_FORM_ROLLOUT.md).
+
+| Class | Use |
+|---|---|
+| `Border.formCard` | Groups a run of related fields. Three to five per pane, not eleven loose rows. |
+| `TextBlock.sectionCaption` | Names a `formCard`. Quieter than the labels inside it. |
+| `TextBlock.fieldLabel` | Label for **one** field. Never `header2` — that is a band over a whole section. |
+| `TextBlock.hint` | Help under a field. No background. |
+| `TextBlock.notice` | A statement about **state** ("shown once", a test result, a pending change). |
+| `TextBlock.formData` | A record's **value** in a read-only detail panel. |
+| `Border.formCard.caution` | A setting that *weakens* a control rather than configuring one — an orange outline with a heavier left edge. Pair with a `MaterialIcon.cautionIcon`; §2.6 forbids carrying severity in text colour alone. |
+
+Three rules that are not obvious and have each caused a real defect:
+
+1. **An input inside a `formCard` may not sit in a horizontal `StackPanel`.** The card stretches its
+   inputs, and a horizontal `StackPanel` measures a stretched child with infinite width — the box
+   grows without bound and wrapped text beside it never wraps. Use `Grid ColumnDefinitions="*,Auto"`.
+   Enforced by `GUIClient.Tests` `NoFormCardPutsAnInputInAHorizontalStackPanel`.
+2. **Size the card column with an explicit `Width` plus `HorizontalAlignment="Left"`.** `MaxWidth`
+   with `Left` sizes the panel to its content, so a card of short inputs collapses to a sliver;
+   `MaxWidth` with `Stretch` centres it in the column.
+3. **An icon style selector must name `MaterialIcon`.** A bare `.class` selector has no target type
+   and compiled XAML fails with `AVLN2200`.
+
+`TextBlock.detailBlock` is **retired** — it painted black on `DarkGray`. Re-adding it fails
+`GUIClient.Tests`.
+
 ### 6.3 Feedback
 
 - **Loading:** overlay an `AvaloniaProgressRing:ProgressRing` centered over the content grid, `IsActive="{Binding Loading}"`, `ZIndex="1000"`, 100×100, `Foreground="CornflowerBlue"`.

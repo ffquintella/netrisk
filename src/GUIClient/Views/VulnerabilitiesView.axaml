@@ -264,35 +264,35 @@
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
-                                    FallbackValue=''}" Classes="detailBlock" />
+                                    FallbackValue=''}" Classes="formData" />
                                     <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
-                                    FallbackValue=''}" Classes="detailBlock" />
+                                    FallbackValue=''}" Classes="formData" />
                                     <TextBlock Text="{Binding StrSolution}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Solution,
-                                    FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
+                                    FallbackValue=''}" TextWrapping="Wrap" Classes="formData" />
                                     <TextBlock Text="{Binding StrDescription}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Description, 
-                                    FallbackValue=''}" TextWrapping="Wrap" Classes="detailBlock" />
+                                    FallbackValue=''}" TextWrapping="Wrap" Classes="formData" />
                                     <TextBlock Text="{Binding StrComments}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Comments, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
                                     <TextBlock Text="{Binding StrHost}" Classes="header"/>
-                                    <TextBlock Text="{Binding StrName}" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrName}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.HostName, 
-                                    FallbackValue=''}" Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrIp}" Classes="header2"/>
+                                    FallbackValue=''}" Classes="formData" />
+                                    <TextBlock Text="{Binding StrIp}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.Ip, 
-                                    FallbackValue=''}" Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrTeamResponsible}" Classes="header2"/>
+                                    FallbackValue=''}" Classes="formData" />
+                                    <TextBlock Text="{Binding StrTeamResponsible}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.Team.Name, 
-                                    FallbackValue=''}" Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrStatus}" Classes="header2"/>
+                                    FallbackValue=''}" Classes="formData" />
+                                    <TextBlock Text="{Binding StrStatus}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityHost.Status, 
                                     Converter={StaticResource IntStatusToStringConverter},
-                                    FallbackValue=''}" Classes="detailBlock" />
+                                    FallbackValue=''}" Classes="formData" />
                                     <TextBlock Text="{Binding StrDetails}" Classes="header"/>
-                                    <TextBlock Text="{Binding StrCves}" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrCves}" Classes="fieldLabel"/>
                                     <ItemsRepeater  ItemsSource="{Binding CveDetails}" >
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="vulnerability:CVEDetail">
@@ -310,27 +310,27 @@
                                             </DataTemplate>
                                         </ItemsRepeater.ItemTemplate>
                                     </ItemsRepeater>
-                                    <TextBlock Text="{Binding StrCvss3}" Classes="header2"/>
+                                    <TextBlock Text="{Binding StrCvss3}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Cvss3BaseScore, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrExploitAvailable}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrExploitAvailable}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ExploitAvaliable, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrThreatIntensity}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrThreatIntensity}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ThreatIntensity, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrThreatRecency}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrThreatRecency}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ThreatRecency, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrThreatSources}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrThreatSources}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.ThreatSources, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrVulnerabilityPublicationDate}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrVulnerabilityPublicationDate}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.VulnerabilityPublicationDate, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
-                                    <TextBlock Text="{Binding StrPatchPublicationDate}" Classes="header2"/>
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
+                                    <TextBlock Text="{Binding StrPatchPublicationDate}" Classes="fieldLabel"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.PatchPublicationDate, 
-                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="detailBlock" />
+                                    FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
                                 </StackPanel>
                             </Border>
                             <!-- RISKS -->
@@ -354,12 +354,12 @@
                                                                 <TextBlock Classes="riskHeader">) </TextBlock>
                                                             </StackPanel>
                                                         </Border>
-                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSubject}"/>
-                                                        <TextBlock Text="{Binding Risk.Subject}"  Classes="detailBlock"/>
-                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrCategory}"/>
-                                                        <TextBlock Text="{Binding Risk.CategoryNavigation.Name}"  Classes="detailBlock"/>
-                                                        <TextBlock Classes="header2" Text="{Binding #VulnerabilitiesUc.DataContext.StrSource}"/>
-                                                        <TextBlock Text="{Binding Risk.SourceNavigation.Name}"  Classes="detailBlock"/>
+                                                        <TextBlock Classes="fieldLabel" Text="{Binding #VulnerabilitiesUc.DataContext.StrSubject}"/>
+                                                        <TextBlock Text="{Binding Risk.Subject}"  Classes="formData"/>
+                                                        <TextBlock Classes="fieldLabel" Text="{Binding #VulnerabilitiesUc.DataContext.StrCategory}"/>
+                                                        <TextBlock Text="{Binding Risk.CategoryNavigation.Name}"  Classes="formData"/>
+                                                        <TextBlock Classes="fieldLabel" Text="{Binding #VulnerabilitiesUc.DataContext.StrSource}"/>
+                                                        <TextBlock Text="{Binding Risk.SourceNavigation.Name}"  Classes="formData"/>
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>
@@ -385,8 +385,8 @@
                                                                            Margin="5 0 0 0 "/>
                                                             </StackPanel>
                                                         </Border>
-                                                        <TextBlock Classes="header2" Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
-                                                        <TextBlock Text="{Binding Message}"  Classes="detailBlock"/>
+                                                        <TextBlock Classes="fieldLabel" Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
+                                                        <TextBlock Text="{Binding Message}"  Classes="formData"/>
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>
@@ -425,10 +425,10 @@
                                                             <TextBlock Classes="riskHeader" Margin="5 0 0 0"
                                                                        Text="{Binding ToStatus}"/>
                                                         </StackPanel>
-                                                        <TextBlock Classes="header2"
+                                                        <TextBlock Classes="fieldLabel"
                                                                    Text="{Binding UserId, Converter={StaticResource UserIdToUserNameConverter}}"/>
-                                                        <TextBlock Text="{Binding Source}" Classes="detailBlock"/>
-                                                        <TextBlock Text="{Binding Justification}" Classes="detailBlock"
+                                                        <TextBlock Text="{Binding Source}" Classes="formData"/>
+                                                        <TextBlock Text="{Binding Justification}" Classes="formData"
                                                                    TextWrapping="Wrap"/>
                                                     </StackPanel>
                                                 </Border>

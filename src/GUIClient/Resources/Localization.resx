@@ -3218,4 +3218,25 @@
   <data name="ErrorDeletingPluginMSG" xml:space="preserve">
       <value>The plugin could not be removed.</value>
   </data>
+  <data name="FormSectionConnection" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="FormSectionAuthentication" xml:space="preserve">
+    <value>Authentication</value>
+  </data>
+  <data name="FormSectionBehaviour" xml:space="preserve">
+    <value>Behaviour</value>
+  </data>
+  <data name="FormSectionSync" xml:space="preserve">
+    <value>Synchronization</value>
+  </data>
+  <data name="FormSectionMapping" xml:space="preserve">
+    <value>Mapping</value>
+  </data>
+  <data name="FormSectionGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="FormSectionTemplates" xml:space="preserve">
+    <value>Templates</value>
+  </data>
 </root>

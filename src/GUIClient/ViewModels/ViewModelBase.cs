@@ -200,6 +200,16 @@ namespace GUIClient.ViewModels
         public string StrAvailable => Localizer["Available"];
         public string StrSelected => Localizer["Selected"];
         public string StrFaceId => "Face ID";
+
+        // Captions for the formCard sections a settings pane is built from. Shared here rather
+        // than per view model because every settings screen groups the same few kinds of field.
+        public string StrFormSectionConnection => Localizer["FormSectionConnection"];
+        public string StrFormSectionAuthentication => Localizer["FormSectionAuthentication"];
+        public string StrFormSectionBehaviour => Localizer["FormSectionBehaviour"];
+        public string StrFormSectionSync => Localizer["FormSectionSync"];
+        public string StrFormSectionMapping => Localizer["FormSectionMapping"];
+        public string StrFormSectionGeneral => Localizer["FormSectionGeneral"];
+        public string StrFormSectionTemplates => Localizer["FormSectionTemplates"];
         
         private ILogger _logger;
         public ILogger Logger
