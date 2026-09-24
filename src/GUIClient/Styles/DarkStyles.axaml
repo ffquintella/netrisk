@@ -27,14 +27,10 @@
         <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
     </Style>
     
-    <Style Selector="ToolTip > TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
-        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
-    </Style>
-    
-    <Style Selector="ToolTip > Panel">
-        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
-    </Style>
+    <!-- The tooltip's colours are set by overriding Semi's ToolTipBackground / ToolTipForeground
+         in Styles/Tokens.axaml, not here. The selectors that used to live at this spot matched
+         Fluent's tooltip template (a direct TextBlock or Panel child) and match nothing in Semi's,
+         so they were silently doing nothing — which is how the light tooltip got through. -->
     
     
 </Styles>

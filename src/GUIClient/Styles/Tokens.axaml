@@ -94,6 +94,21 @@
     <SolidColorBrush x:Key="NrStatusErrorText" Color="{DynamicResource SemiRed3Color}" />
     <SolidColorBrush x:Key="NrStatusInfo" Color="{DynamicResource SemiBlue5Color}" />
 
+    <!-- ===== Semi overrides ================================================================= -->
+
+    <!--
+        Semi Design inverts the tooltip: its *dark* theme draws one light (ToolTipBackground =
+        SemiColorTertiaryActive, foreground SemiColorBlack). NetRisk §2.2 puts tooltips on
+        surface/panel-2 with light text, and a white card flashing over a dark window is the wrong
+        kind of attention for a hint. Overriding Semi's own keys here, rather than styling the
+        control, is what survives a Semi upgrade changing its tooltip template.
+
+        Application.Resources is searched before a theme's resources, which is why this wins.
+    -->
+    <StaticResource x:Key="ToolTipBackground" ResourceKey="NrSurfacePanel2" />
+    <StaticResource x:Key="ToolTipForeground" ResourceKey="NrTextPrimary" />
+    <StaticResource x:Key="ToolTipBorderBrush" ResourceKey="NrBorderSubtle" />
+
     <!-- ===== Gantt ramp ====================================================================== -->
 
     <!-- Exception 3: these four sit side by side in one chart, so they are picked against each

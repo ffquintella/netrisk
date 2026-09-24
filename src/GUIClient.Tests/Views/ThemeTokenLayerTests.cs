@@ -115,6 +115,57 @@ public class ThemeTokenLayerTests
             string.Join("\n  ", unused));
     }
 
+    /// <summary>
+    /// A button class that fixes its own Width or Height also opts out of the base theme's button
+    /// metrics.
+    ///
+    /// Semi's Button control theme sets <c>Padding="12 0"</c> and
+    /// <c>MinHeight="{SemiHeightControlDefault}"</c>. On a labelled button that is correct. On a
+    /// 25x25 icon button the padding leaves roughly one pixel of content box, and the MinHeight
+    /// quietly wins over the declared Height — which is how the risk status filter shipped as four
+    /// empty purple circles for the length of one prototype. Nothing about it fails to compile, and
+    /// nothing about it fails a colour check, because no colour is wrong.
+    ///
+    /// So: declare a size, declare the padding too. The reset selector near the top of
+    /// WindowStyles.axaml is where classes opt out.
+    /// </summary>
+    [Fact]
+    public void EveryFixedSizeButtonClassOptsOutOfTheThemeMetrics()
+    {
+        var sheet = File.ReadAllText(Path.Combine(GuiClientSourceRoot(), "Styles", "WindowStyles.axaml"));
+
+        // The one style whose selector lists several classes and zeroes Padding/MinHeight for them.
+        var resetSelector = Regex.Matches(sheet, @"<Style Selector=""(?<selector>Button[^""]*)"">(?<body>.*?)</Style>", RegexOptions.Singleline)
+            .Where(style => style.Groups["body"].Value.Contains(@"Property=""MinHeight"" Value=""0"""))
+            .Select(style => style.Groups["selector"].Value)
+            .FirstOrDefault();
+
+        Assert.NotNull(resetSelector);
+
+        var exempt = Regex.Matches(resetSelector, @"Button\.(?<class>[\w-]+)")
+            .Select(match => match.Groups["class"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var unguarded = new SortedSet<string>(StringComparer.Ordinal);
+
+        foreach (Match style in Regex.Matches(sheet, @"<Style Selector=""Button\.(?<class>[\w-]+)"">(?<body>.*?)</Style>", RegexOptions.Singleline))
+        {
+            var body = style.Groups["body"].Value;
+            var cssClass = style.Groups["class"].Value;
+
+            var fixesSize = body.Contains(@"Property=""Width""") || body.Contains(@"Property=""Height""");
+            var setsOwnPadding = body.Contains(@"Property=""Padding""");
+
+            if (fixesSize && !setsOwnPadding && !exempt.Contains(cssClass))
+                unguarded.Add(cssClass);
+        }
+
+        Assert.True(unguarded.Count == 0,
+            "These button classes fix their own size but inherit the base theme's padding and " +
+            "MinHeight, which will crop or resize their content. Add them to the reset selector in " +
+            "WindowStyles.axaml, or give them an explicit Padding:\n  " + string.Join("\n  ", unguarded));
+    }
+
     private static string TokenSheet() => Path.Combine(GuiClientSourceRoot(), "Styles", "Tokens.axaml");
 
     private static string GuiClientSourceRoot()

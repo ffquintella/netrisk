@@ -13,6 +13,24 @@
         <Setter Property="ToolTip.ShowDelay" Value="1000"/>
     </Style>
     
+    <!--
+        Fixed-size icon buttons opt out of Semi's button metrics.
+
+        Semi's Button control theme sets Padding="12 0" and MinHeight="{SemiHeightControlDefault}".
+        Both are right for a labelled button and wrong for a square icon button: at 25x25 the padding
+        leaves about a pixel for the glyph — which is exactly how the status filter rendered as four
+        empty purple circles — and MinHeight silently overrides a declared Height. Every class listed
+        here declares its own Width/Height, so it declares its own padding too.
+
+        This sits above the per-class styles on purpose: a later style wins in Avalonia, so
+        Button.nav-base can still ask for Padding="6" and get it.
+    -->
+    <Style Selector="Button.filterButton, Button.subButton, Button.detailButton, Button.navigation, Button.toolbar, Button.nav-base, Button.operation">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="MinWidth" Value="0"/>
+    </Style>
+
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource NrSurfaceBase}"/>
         <Setter Property="MinWidth" Value="320"/>
@@ -388,7 +406,16 @@
         <Setter Property="CornerRadius" Value="15"/>
         <Setter Property="Width" Value="25"/>
         <Setter Property="Height" Value="25"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
+    </Style>
+
+    <!-- Sized explicitly, like Button.subButton below. Without this the icon takes its own default
+         size and the 25px circle decides how much of it you see. -->
+    <Style Selector="Button.filterButton > avalonia|MaterialIcon">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
     </Style>
     
     <Style Selector="Button.dialog1">
