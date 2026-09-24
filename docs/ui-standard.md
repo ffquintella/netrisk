@@ -11,8 +11,19 @@ New views MUST follow this standard. Existing views that deviate SHOULD be migra
 ### 1.1 Theme
 
 - **Theme variant:** `Dark` only. Set once in [`App.axaml`](../src/GUIClient/App.axaml) via `RequestedThemeVariant="Dark"`. Do not override per-window.
-- **Base theme:** Avalonia `FluentTheme` + `MaterialIconStyles`.
-- **Style load order** (do not change): `DarkStyles → WindowStyles → ComponentStyles → Icons → FluentTheme → DataGrid Fluent → TreeDataGrid Fluent`.
+- **Base theme:** [Semi.Avalonia](https://github.com/irihitech/Semi.Avalonia) (`SemiTheme` +
+  `DataGridSemiTheme`) + `MaterialIconStyles`. Semi is an Avalonia port of ByteDance's Semi Design, an
+  enterprise/console design language — chosen over Avalonia's stock `FluentTheme` because its defaults
+  for density, field height, focus and disabled states suit a data-dense risk tool, and over SukiUI
+  because Semi tracks Avalonia release-for-release while SukiUI's 12.1 support is nightly-only.
+- **Version lockstep is real.** `Semi.Avalonia 12.1.0.1` pins `Avalonia 12.1.0` exactly, so Avalonia
+  cannot move past a line Semi has not shipped for. That is the standing cost of this choice.
+- **Style load order** (do not change): `SemiTheme → DataGridSemiTheme → TreeDataGrid Fluent → Icons →
+  DarkStyles → WindowStyles → ComponentStyles`. The base theme goes **first** and NetRisk's sheets
+  last, so a local style wins. (Pre-Semi the order was inverted and worked only by accident: Fluent
+  set those properties through control themes, which lose to styles regardless of order.)
+- **TreeDataGrid keeps the Fluent theme.** `Semi.Avalonia.TreeDataGrid` has no 12.1 build yet — its
+  newest is 12.0.0 — and NetRisk consumes a forked TreeDataGrid from `libs/` anyway.
 - **Controls Avalonia does not ship** (`GroupBox`, `Badge`, `MultiSelect`) come from
   [`AvaloniaExtraControls`](../src/AvaloniaExtraControls), whose assembly maps them onto the default
   `avaloniaui` xmlns so views use them without a prefix. They came from the `Aura.UI` submodule until
@@ -60,7 +71,28 @@ New views MUST follow this standard. Existing views that deviate SHOULD be migra
 
 ## 2. Color Palette
 
-All colors are defined or used in [`WindowStyles.axaml`](../src/GUIClient/Styles/WindowStyles.axaml) and [`DarkStyles.axaml`](../src/GUIClient/Styles/DarkStyles.axaml). **Do not introduce new hard-coded colors in views** — add a style class and reference it.
+**Exactly one file decides what a colour is: [`Tokens.axaml`](../src/GUIClient/Styles/Tokens.axaml).**
+Every other sheet — [`WindowStyles.axaml`](../src/GUIClient/Styles/WindowStyles.axaml),
+[`DarkStyles.axaml`](../src/GUIClient/Styles/DarkStyles.axaml),
+[`ComponentStyles.axaml`](../src/GUIClient/Styles/ComponentStyles.axaml) — names a token with
+`{DynamicResource Nr…}` and never a value. Views name neither. That is what makes a base-theme change
+a one-file edit instead of a ninety-three-view edit, and it is enforced:
+
+- `./build.sh LintUi` fails on a literal colour in a **view**;
+- `GUIClient.Tests/Views/ThemeTokenLayerTests` fails on a literal colour in a **style sheet**, on a
+  token that is referenced but not defined (Avalonia resolves `DynamicResource` at runtime and
+  silently leaves the property at its default, so a typo renders wrong rather than failing), and on a
+  token that is defined and never used.
+
+Most tokens are aliases over Semi's dark palette. The hex values in the tables below are what the
+token now resolves to through Semi, not a literal anybody typed; where the two differed the Semi
+value won, because its scale is internally consistent and the hand-picked one was not. Three
+deliberate exceptions keep an explicit value, each commented in `Tokens.axaml`: the **brand purple**
+(`#51496b` — Semi's primary is a blue, and adopting it would change what NetRisk looks like rather
+than how consistently it looks like itself), **text drawn on a light surface**, and the **Gantt bar
+ramp**, whose four colours are picked against each other rather than against the palette.
+
+**Do not introduce new hard-coded colors in views** — add a style class and reference a token.
 
 ### 2.1 Elevation model
 

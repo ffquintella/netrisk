@@ -59,6 +59,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="Avalonia.Themes.Simple" />
+    <PackageReference Include="Semi.Avalonia" />
+    <PackageReference Include="Semi.Avalonia.DataGrid" />
     <PackageReference Include="Deadpikle.AvaloniaProgressRing" />
     <PackageReference Include="FlashCap" />
     <PackageReference Include="FlashCap.Core" />

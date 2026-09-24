@@ -1,0 +1,106 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        The NetRisk token layer. This is the only file in the desktop client that decides what a
+        colour *is*; WindowStyles, DarkStyles and ComponentStyles only say which token a control
+        uses, and views (enforced by ./build.sh LintUi) say neither.
+
+        Most tokens are aliases over Semi.Avalonia's dark palette, which is why the theme can be
+        swapped by editing this file rather than ninety-three views. Semi's SemiColorBackground0..4
+        is an elevation scale in the same sense as docs/ui-standard.md §2.1, and its values land
+        within a few points of the ones NetRisk had chosen by hand (#16161A..#4F5159 against
+        #181918..#4f4f52), so the mapping is a rename rather than a redesign.
+
+        Three deliberate exceptions, each marked below:
+          - the brand purple, which is NetRisk's and not Semi's;
+          - text drawn on a light surface, which has no Semi equivalent because Semi's dark palette
+            assumes a dark surface underneath;
+          - the Gantt bar ramp, which encodes task state and is tuned for adjacency on one screen.
+    -->
+
+    <!-- ===== Surfaces (docs/ui-standard.md §2.2) ============================================ -->
+
+    <!-- Level 0 and the abyss both collapse onto Semi's darkest step. Semi has five levels where
+         NetRisk described six; this is the pair that merges, and GroupBox.type3 is the only thing
+         that used the sixth. -->
+    <SolidColorBrush x:Key="NrSurfaceDeep" Color="{DynamicResource SemiBackground0Color}" />
+    <SolidColorBrush x:Key="NrSurfaceAbyss" Color="{DynamicResource SemiBackground0Color}" />
+
+    <!-- Level 1: window default. -->
+    <SolidColorBrush x:Key="NrSurfaceBase" Color="{DynamicResource SemiBackground1Color}" />
+
+    <!-- Level 2 and 3: nested panels. -->
+    <SolidColorBrush x:Key="NrSurfacePanel1" Color="{DynamicResource SemiBackground1Color}" />
+    <SolidColorBrush x:Key="NrSurfacePanel2" Color="{DynamicResource SemiBackground2Color}" />
+
+    <!-- Level 4: chrome that should catch the eye — the tab strip and the status bar. -->
+    <SolidColorBrush x:Key="NrSurfaceTab" Color="{DynamicResource SemiBackground4Color}" />
+    <SolidColorBrush x:Key="NrSurfaceStatus" Color="{DynamicResource SemiBackground4Color}" />
+
+    <SolidColorBrush x:Key="NrSurfaceFooterBar" Color="{DynamicResource SemiBackground0Color}" />
+    <SolidColorBrush x:Key="NrSurfaceOverlay" Color="{DynamicResource SemiBackground2Color}" />
+    <SolidColorBrush x:Key="NrSurfaceGraph" Color="{DynamicResource SemiBackground2Color}" />
+    <SolidColorBrush x:Key="NrSurfaceSplitter" Color="{DynamicResource SemiBackground3Color}" />
+
+    <!-- The blocking overlay. Semi's SemiColorOverlayBackground is Background0 at 0.6; NetRisk's
+         scrim is darker than the darkest surface on purpose, so it is spelled out. -->
+    <SolidColorBrush x:Key="NrSurfaceScrim" Color="#090909" />
+
+    <SolidColorBrush x:Key="NrBorderSubtle" Color="{DynamicResource SemiGrey2Color}" />
+
+    <!-- ===== Text (docs/ui-standard.md §2.3) ================================================= -->
+
+    <SolidColorBrush x:Key="NrTextPrimary" Color="{DynamicResource SemiGrey9Color}" />
+    <SolidColorBrush x:Key="NrTextSecondary" Color="{DynamicResource SemiGrey9Color}" Opacity="0.8" />
+    <SolidColorBrush x:Key="NrTextTertiary" Color="{DynamicResource SemiGrey9Color}" Opacity="0.65" />
+    <SolidColorBrush x:Key="NrTextMuted" Color="{DynamicResource SemiGrey9Color}" Opacity="0.6" />
+
+    <!-- Exception 2: drawn on a light background (the risk header band, the status bar), so it
+         cannot be an alias of a palette built for dark surfaces. -->
+    <SolidColorBrush x:Key="NrTextOnLight" Color="#090909" />
+    <SolidColorBrush x:Key="NrTextOnLightStrong" Color="#050505" />
+
+    <!-- ===== Accents (docs/ui-standard.md §2.4) ============================================== -->
+
+    <!-- Exception 1: the brand purple. Semi's primary is a blue; adopting it would change what
+         NetRisk looks like rather than how consistently it looks like itself. -->
+    <SolidColorBrush x:Key="NrAccentPrimary" Color="#51496b" />
+    <SolidColorBrush x:Key="NrAccentPrimaryHover" Color="#615881" />
+    <SolidColorBrush x:Key="NrAccentNeutral" Color="{DynamicResource SemiBackground3Color}" />
+    <SolidColorBrush x:Key="NrAccentNeutralBase" Color="{DynamicResource SemiBackground4Color}" />
+    <SolidColorBrush x:Key="NrAccentDetail" Color="#152e2e" />
+    <SolidColorBrush x:Key="NrAccentSlate" Color="{DynamicResource SemiViolet5Color}" />
+    <SolidColorBrush x:Key="NrAccentCyan" Color="{DynamicResource SemiCyan5Color}" />
+    <SolidColorBrush x:Key="NrAccentSubButton" Color="{DynamicResource SemiIndigo5Color}" />
+
+    <!-- Text on an accent-filled control. Always the light end, never the palette's text tiers,
+         which are tuned for a surface rather than for a saturated fill. -->
+    <SolidColorBrush x:Key="NrTextOnAccent" Color="{DynamicResource SemiWhiteColor}" />
+
+    <!-- Button.link used the named colour Blue, which is #0000FF: on a #232429 surface that is
+         roughly 2:1 and fails WCAG AA outright. Semi's link colour is built for a dark surface. -->
+    <SolidColorBrush x:Key="NrLink" Color="{DynamicResource SemiBlue5Color}" />
+
+    <SolidColorBrush x:Key="NrSemanticInfoBg" Color="#5252aa" />
+    <SolidColorBrush x:Key="NrSemanticHeaderBg" Color="{DynamicResource SemiBackground2Color}" />
+    <SolidColorBrush x:Key="NrSemanticWarning" Color="#880000" />
+    <SolidColorBrush x:Key="NrSemanticWarningStrong" Color="#aa0000" />
+
+    <!-- ===== Status ========================================================================== -->
+
+    <SolidColorBrush x:Key="NrStatusSuccess" Color="{DynamicResource SemiGreen5Color}" />
+    <SolidColorBrush x:Key="NrStatusWarning" Color="{DynamicResource SemiOrange5Color}" />
+    <SolidColorBrush x:Key="NrStatusError" Color="{DynamicResource SemiRed5Color}" />
+    <SolidColorBrush x:Key="NrStatusErrorText" Color="{DynamicResource SemiRed3Color}" />
+    <SolidColorBrush x:Key="NrStatusInfo" Color="{DynamicResource SemiBlue5Color}" />
+
+    <!-- ===== Gantt ramp ====================================================================== -->
+
+    <!-- Exception 3: these four sit side by side in one chart, so they are picked against each
+         other rather than against the palette. -->
+    <SolidColorBrush x:Key="NrGanttBar" Color="#4a6a8a" />
+    <SolidColorBrush x:Key="NrGanttBarCritical" Color="#b5651d" />
+    <SolidColorBrush x:Key="NrGanttBarOverdue" Color="#a33c3c" />
+    <SolidColorBrush x:Key="NrGanttBarBlocked" Color="#6a6a6a" />
+    <SolidColorBrush x:Key="NrGanttToday" Color="#c8c8c8" />
+</ResourceDictionary>

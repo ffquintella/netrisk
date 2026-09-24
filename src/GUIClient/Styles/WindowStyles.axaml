@@ -14,37 +14,37 @@
     </Style>
     
     <Style Selector="Window">
-        <Setter Property="Background" Value="#282928"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceBase}"/>
         <Setter Property="MinWidth" Value="320"/>
         <Setter Property="MinHeight" Value="180"/>
     </Style>
     
     <Style Selector="Window.dark">
-        <Setter Property="Background" Value="#181918"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceDeep}"/>
     </Style>
     
         
     <Style Selector="GroupBox.type1">
-        <Setter Property="Background" Value="#2b2b2b"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel1}"/>
     </Style>
     
     <Style Selector="GroupBox.type2">
-        <Setter Property="Background" Value="#303030"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
     </Style>
     
     <Style Selector="GroupBox.type3">
-        <Setter Property="Background" Value="#151519"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceAbyss}"/>
     </Style>
 
     
     <Style Selector="TabControl">
-        <Setter Property="Background" Value="#282928"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceBase}"/>
         <!--Setter Property="Height" Value="20"/-->
         <!--Setter Property="" Value="0 0 0"/-->
     </Style>
 
     <Style Selector="TabControl WrapPanel">
-        <Setter Property="Background" Value="#4f4f52"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceTab}"/>
         <!--Setter Property="Height" Value="60"/-->
     </Style>
 
@@ -52,69 +52,69 @@
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Height" Value="15"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Background" Value="#4f4f52"/>
-        <Setter Property="Foreground" Value="#F0F0F0"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceTab}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
     </Style>
 
     <Style Selector="Grid#OverlayGridCtrl">
         <Setter Property="ZIndex" Value="-1" />
-        <Setter Property="Background" Value="#090909" />
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceScrim}" />
         <Setter Property="Opacity" Value="0.5" />
     </Style>
     
     <Style Selector="GridSplitter.horizontalSplitter">
-        <Setter Property="Background" Value="#393939" />
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceSplitter}" />
         <Setter Property="ResizeDirection" Value="Columns" />
     </Style>
     
     <!-- TextBlock -->
     <Style Selector="TextBlock.warning">
         <Setter Property="Margin" Value="30 5 0 0"/>
-        <Setter Property="Foreground" Value="#bbbbbb"/>
-        <Setter Property="Background" Value="#880000"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="Background" Value="{DynamicResource NrSemanticWarning}"/>
     </Style>
     
     <Style Selector="TextBlock.warning2">
         <Setter Property="Margin" Value="5 2 0 0"/>
-        <Setter Property="Foreground" Value="#bbbbbb"/>
-        <Setter Property="Background" Value="#aa0000"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="Background" Value="{DynamicResource NrSemanticWarningStrong}"/>
     </Style>
     
     <Style Selector="TextBlock.header">
         <Setter Property="Margin" Value="0 0 0 0"/>
-        <Setter Property="Foreground" Value="#bbbbbb"/>
-        <Setter Property="Background" Value="#222222"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="Background" Value="{DynamicResource NrSemanticHeaderBg}"/>
         <Setter Property="TextAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="Padding" Value="2"/>
     </Style>
     
     <Style Selector="TextBlock.header2">
-        <Setter Property="Foreground" Value="#bbbbbb"/>
-        <Setter Property="Background" Value="#5252aa"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="Background" Value="{DynamicResource NrSemanticInfoBg}"/>
         <Setter Property="Padding" Value="2"/>
     </Style>
     
     <Style Selector="TextBlock.header3">
-        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
         <Setter Property="FontStyle" Value="Italic"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="Padding" Value="2"/>
-        <!--Setter Property="Background" Value="#5252aa"/-->
+        <!--Setter Property="Background" Value="{DynamicResource NrSemanticInfoBg}"/-->
     </Style>
     
     <Style Selector="TextBlock.riskHeader">
-        <Setter Property="Foreground" Value="#090909"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnLight}"/>
     </Style>
     
     <Style Selector="TextBlock.statusBar">
-        <Setter Property="Foreground" Value="#050505"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnLightStrong}"/>
 
     </Style>
    
     <Style Selector="TextBlock.header_detail">
         <Setter Property="Margin" Value="0 5 0 0"/>
-        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
     </Style>
     
     <Style Selector="TextBlock.label">
@@ -174,7 +174,7 @@
     <!-- Label for one field. Replaces `header2` on individual fields; `header2` keeps its
          documented job (§2.4 semantic/info-bg) as a band over a whole section. -->
     <Style Selector="TextBlock.fieldLabel">
-        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Margin" Value="0 0 0 3"/>
@@ -183,7 +183,7 @@
     <!-- Caption naming a `formCard`. Quieter than the labels inside it on purpose: it is a
          grouping aid, not a field. -->
     <Style Selector="TextBlock.sectionCaption">
-        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextMuted}"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Margin" Value="0 0 0 10"/>
@@ -191,7 +191,7 @@
 
     <!-- Explanation under a field. No background — help must not outrank the field. -->
     <Style Selector="TextBlock.hint">
-        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextMuted}"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Margin" Value="0 4 0 0"/>
@@ -201,7 +201,7 @@
          once", a connection-test result). Body weight because missing it has a cost; still
          no filled surface. A record's value in a read-only panel is `formData`, not this. -->
     <Style Selector="TextBlock.notice">
-        <Setter Property="Foreground" Value="#F0F0F0"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Margin" Value="0 4 0 0"/>
@@ -211,8 +211,8 @@
          rather than eleven rows. Same surface as `card`; different margin, because a form
          card stacks vertically and a dashboard card sits in a grid. -->
     <Style Selector="Border.formCard">
-        <Setter Property="Background" Value="#303030"/>
-        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="12"/>
@@ -223,7 +223,7 @@
          One BorderBrush colours all four sides, so this reads as an outlined card with a
          heavier left edge, not a stripe — hence it keeps the card corner radius. -->
     <Style Selector="Border.formCard.caution">
-        <Setter Property="BorderBrush" Value="#ff9800"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusWarning}"/>
         <Setter Property="BorderThickness" Value="3 1 1 1"/>
     </Style>
 
@@ -232,15 +232,15 @@
          is a MaterialIcon, which this file cannot name without importing its namespace
          into every consumer. -->
     <Style Selector="avalonia|MaterialIcon.cautionIcon">
-        <Setter Property="Foreground" Value="#ff9800"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusWarning}"/>
     </Style>
 
     <Style Selector="avalonia|MaterialIcon.successIcon">
-        <Setter Property="Foreground" Value="#4caf50"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusSuccess}"/>
     </Style>
 
     <Style Selector="avalonia|MaterialIcon.errorIcon">
-        <Setter Property="Foreground" Value="#f44336"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusError}"/>
     </Style>
 
     <!-- Input inside a `formCard`. Stretching to the card is what gives a settings column a
@@ -257,7 +257,7 @@
     <!-- Inline validation summary shown above a dialog's action row (IX-4): the rules that
          gate Save also state, in the window, what is still missing. -->
     <Style Selector="TextBlock.validationSummary">
-        <Setter Property="Foreground" Value="#ff8a80"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusErrorText}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Margin" Value="10 5 10 0"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -268,8 +268,8 @@
     <!-- Master Dashboard (Track 2 milestone 2.3.3) posture cards. Colours live here, not in the
          view, so the views stay class-driven per the UI standard. -->
     <Style Selector="Border.card">
-        <Setter Property="Background" Value="#303030"/>
-        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="12"/>
@@ -278,7 +278,7 @@
 
     <!-- The organisation-wide totals card, accented with the primary action colour. -->
     <Style Selector="Border.card.totals">
-        <Setter Property="BorderBrush" Value="#51496b"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrAccentPrimary}"/>
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
@@ -292,20 +292,20 @@
     <!-- Caption above a metric. -->
     <Style Selector="TextBlock.metric_label">
         <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#bbbbbb"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
     </Style>
 
     <!-- Severity breakdown line under a metric. -->
     <Style Selector="TextBlock.metric_detail">
         <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextMuted}"/>
         <Setter Property="Margin" Value="0 2 0 0"/>
     </Style>
 
     <!-- Incident-response Gantt bars (Track 2 milestone 2.4.3). State is encoded by class so the
          view stays free of colour literals. -->
     <Style Selector="Border.gantt_bar">
-        <Setter Property="Background" Value="#4a6a8a"/>
+        <Setter Property="Background" Value="{DynamicResource NrGanttBar}"/>
         <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Height" Value="14"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -313,36 +313,36 @@
 
     <!-- On the critical path: no slack, so it is drawn in the alert-adjacent accent. -->
     <Style Selector="Border.gantt_bar.critical">
-        <Setter Property="Background" Value="#b5651d"/>
+        <Setter Property="Background" Value="{DynamicResource NrGanttBarCritical}"/>
     </Style>
 
     <!-- Past its computed end while still open. -->
     <Style Selector="Border.gantt_bar.overdue">
-        <Setter Property="Background" Value="#a33c3c"/>
+        <Setter Property="Background" Value="{DynamicResource NrGanttBarOverdue}"/>
     </Style>
 
     <!-- Waiting on an incomplete predecessor. -->
     <Style Selector="Border.gantt_bar.blocked">
-        <Setter Property="Background" Value="#6a6a6a"/>
+        <Setter Property="Background" Value="{DynamicResource NrGanttBarBlocked}"/>
     </Style>
 
     <!-- The "now" line across the timeline. -->
     <Style Selector="Border.gantt_today">
-        <Setter Property="Background" Value="#c8c8c8"/>
+        <Setter Property="Background" Value="{DynamicResource NrGanttToday}"/>
         <Setter Property="Width" Value="1"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
 
     <!-- Timeline lane the bars sit in. -->
     <Style Selector="Border.gantt_lane">
-        <Setter Property="Background" Value="#2b2b2b"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel1}"/>
         <Setter Property="CornerRadius" Value="2"/>
         <Setter Property="Height" Value="18"/>
     </Style>
 
     <Style Selector="Border.toast">
-        <Setter Property="Background" Value="#323232"/>
-        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceOverlay}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1 1 1 3"/>
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="12 8"/>
@@ -351,32 +351,32 @@
     </Style>
 
     <Style Selector="Border.toast.success">
-        <Setter Property="BorderBrush" Value="#4caf50"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusSuccess}"/>
     </Style>
 
     <Style Selector="Border.toast.info">
-        <Setter Property="BorderBrush" Value="#2196f3"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusInfo}"/>
     </Style>
 
     <Style Selector="Border.toast.warning">
-        <Setter Property="BorderBrush" Value="#ff9800"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusWarning}"/>
     </Style>
 
     <Style Selector="Border.toast.error">
-        <Setter Property="BorderBrush" Value="#f44336"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusError}"/>
     </Style>
 
     <!-- Secondary line of a two-line list item (manager windows, pickers). -->
     <Style Selector="TextBlock.listSubtitle">
         <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#9a9a9a"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextMuted}"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
     </Style>
 
     <Style Selector="TextBlock.footer">
         <Setter Property="Margin" Value="0 0 0 0"/>
-        <Setter Property="Foreground" Value="#ababab"/>
-        <Setter Property="Background" Value="#323232"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextTertiary}"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceOverlay}"/>
         <Setter Property="TextAlignment" Value="Right"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="Padding" Value="2"/>
@@ -388,17 +388,17 @@
         <Setter Property="CornerRadius" Value="15"/>
         <Setter Property="Width" Value="25"/>
         <Setter Property="Height" Value="25"/>
-        <Setter Property="Background" Value="#51496b"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
     </Style>
     
     <Style Selector="Button.dialog1">
-        <Setter Property="Background" Value="#51496b"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnAccent}"/>
     </Style>
     
     <Style Selector="Button.dialog2">
-        <Setter Property="Background" Value="#606060"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentNeutral}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnAccent}"/>
     </Style>
     
     <Style Selector="Button.subButton">
@@ -409,7 +409,7 @@
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="CornerRadius" Value="5" />
-        <Setter Property="Background" Value="DarkSlateBlue"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentSubButton}"/>
     </Style>
 
     <Style Selector="Button.subButton > avalonia|MaterialIcon">
@@ -424,7 +424,7 @@
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="CornerRadius" Value="5" />
-        <Setter Property="Background" Value="#152e2e"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentDetail}"/>
     </Style>
 
     <Style Selector="Button.detailButton > avalonia|MaterialIcon">
@@ -437,7 +437,7 @@
              buttons carrying a text label grow to fit their content. -->
         <Setter Property="MinWidth" Value="25"/>
         <Setter Property="MinHeight" Value="25"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnAccent}"/>
     </Style>
     
     <Style Selector="Button.navigation">
@@ -446,8 +446,8 @@
         <Setter Property="Padding" Value="0"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Background" Value="#51496b"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnAccent}"/>
     </Style>
 
     <Style Selector="Button.navigation > avalonia|MaterialIcon">
@@ -461,7 +461,7 @@
         <Setter Property="Padding" Value="6"/>
         <Setter Property="Margin" Value="2 0"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Foreground" Value="WhiteSmoke"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextOnAccent}"/>
     </Style>
 
     <!-- Navigation bar — icon-only action buttons -->
@@ -488,20 +488,20 @@
     </Style>
     
     <Style Selector="Button.type2">
-        <Setter Property="Background" Value="SlateBlue"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentSlate}"/>
     </Style>
     
     <Style Selector="Button.type3">
-        <Setter Property="Background" Value="DarkCyan"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentCyan}"/>
     </Style>
     
     <Style Selector="Border.footer">
-        <Setter Property="Background" Value="#202020"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceFooterBar}"/>
         <Setter Property="BorderThickness" Value="0"/>
     </Style>
     
     <Style Selector="Button.link">
-        <Setter Property="Foreground" Value="Blue" />
+        <Setter Property="Foreground" Value="{DynamicResource NrLink}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="BorderThickness" Value="0" />
@@ -511,7 +511,7 @@
                 <ContentPresenter Content="{TemplateBinding Content}">
                     <ContentPresenter.Styles>
                         <Style Selector="TextBlock">
-                            <Setter Property="Foreground" Value="Blue"/>
+                            <Setter Property="Foreground" Value="{DynamicResource NrLink}"/>
                             <Setter Property="FontSize" Value="{TemplateBinding FontSize}"/>
                             <Setter Property="TextDecorations" Value="Underline"/>
                         </Style>
@@ -527,40 +527,40 @@
     </Style>
     
     <Style Selector="avalonia|MaterialIcon.success">
-        <Setter Property="Foreground" Value="#22C55E"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusSuccess}"/>
     </Style>
     
     <Style Selector="avalonia|MaterialIcon.danger">
-        <Setter Property="Foreground" Value="#EF4444"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusError}"/>
     </Style>
     
     <!-- Inline status copy. Views must not paint their own error/warning colours (UI standard
          §2.6), so the two severities that appear as running text get a class each. Both reuse
          tokens already in this file: the validation-summary red and the toast amber. -->
     <Style Selector="TextBlock.errorText">
-        <Setter Property="Foreground" Value="#ff8a80"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusErrorText}"/>
     </Style>
 
     <Style Selector="TextBlock.warningText">
-        <Setter Property="Foreground" Value="#ff9800"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusWarning}"/>
     </Style>
 
     <Style Selector="avalonia|MaterialIcon.warning">
-        <Setter Property="Foreground" Value="#ff9800"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusWarning}"/>
     </Style>
 
     <!-- Hairline container outline — the neutral 1px border used to separate a panel or a list
          row from its surface without adding an elevation step. Set BorderThickness locally when
          only one edge is wanted (e.g. "0 0 0 1" for a row divider). -->
     <Style Selector="Border.outline">
-        <Setter Property="BorderBrush" Value="#4a4a4a"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="4"/>
     </Style>
 
     <!-- Small inline count/ordinal pill (assessment page badges), on the brand accent. -->
     <Style Selector="Border.badge">
-        <Setter Property="Background" Value="#51496b"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
         <Setter Property="CornerRadius" Value="4"/>
     </Style>
 
@@ -573,10 +573,10 @@
 
     <!-- GRIDS -->
     <Style Selector="Grid.statusBar">
-        <Setter Property="Background" Value="#5b5b5b" />
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceStatus}" />
     </Style>
     <Style Selector="Grid.Graph">
-        <Setter Property="Background" Value="#2e2d2d" />
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceGraph}" />
     </Style>
 
     

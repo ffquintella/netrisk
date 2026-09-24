@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:GUIClient"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:semi="https://irihi.tech/semi"
              x:Class="GUIClient.App"
              RequestedThemeVariant="Dark">
     
@@ -9,21 +10,29 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- The only file that decides what a colour is. Merged before the styles below so
+                     every {DynamicResource Nr*} in them resolves. -->
+                <ResourceInclude Source="avares://GUIClient/Styles/Tokens.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
+        <!-- Base theme first, then NetRisk's layers on top: a style that loses to the theme is a
+             style that does nothing. This is the reverse of the pre-Semi order, where FluentTheme
+             was loaded last and the local sheets won only because Fluent set those properties
+             through control themes rather than through styles. -->
+        <semi:SemiTheme />
+        <semi:DataGridSemiTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
+
+        <materialIcons:MaterialIconStyles />
 
         <StyleInclude Source="avares://GUIClient/Styles/DarkStyles.axaml" />
         <StyleInclude Source="avares://GUIClient/Styles/WindowStyles.axaml" />
         <StyleInclude Source="avares://GUIClient/Styles/ComponentStyles.axaml" />
-        
-        <materialIcons:MaterialIconStyles />
-        
-        
-        <FluentTheme />
-        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
-        <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
-        
-        
-        
-        
     </Application.Styles>
 </Application>

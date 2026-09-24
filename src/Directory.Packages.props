@@ -20,6 +20,11 @@
     <PackageVersion Include="Avalonia.Skia" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.3" />
     <PackageVersion Include="Avalonia.Themes.Simple" Version="12.1.3" />
+    <!-- Semi.Avalonia tracks Avalonia release-for-release; 12.1.0.1 is the build for the 12.1
+         line. It pins Avalonia 12.1.0 exactly, so it is a ceiling on how far ahead of a Semi
+         release this repository can take Avalonia — see docs/ui-standard.md §1.1. -->
+    <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
+    <PackageVersion Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />

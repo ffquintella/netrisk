@@ -12,6 +12,19 @@ This release includes new features and improvements.
 
 ### Changed
 
+- The desktop client's look is now based on **Semi.Avalonia** instead of Avalonia's stock
+  `FluentTheme`. Semi is an enterprise/console design language, so its defaults for table density,
+  field height, focus and disabled states suit a risk tool better than Fluent's Windows-desktop
+  defaults — and a light theme becomes a later toggle rather than a second hand-built palette.
+  NetRisk's own identity is preserved: the brand purple, the text tiers drawn on light surfaces and
+  the Gantt ramp keep their own values.
+
+  No view changed. Colour now lives in a single new file, `Styles/Tokens.axaml`, and the three style
+  sheets reference tokens instead of values, which is what made a base-theme swap a one-file edit.
+  One visible fix falls out of it: `Button.link` was drawn in the named colour `Blue` (`#0000FF`),
+  about 2:1 against the window background and below WCAG AA; it now uses Semi's link colour, which is
+  built for a dark surface.
+
 - The desktop client no longer depends on the `Aura.UI` submodule. It supplied exactly two controls —
   `Badge` (the unread count on the notification bell) and `GroupBox` (ten containers across three
   incident windows) — and it supplied them invisibly, by mapping its controls onto the default
