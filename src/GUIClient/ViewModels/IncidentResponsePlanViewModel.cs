@@ -86,12 +86,6 @@ public class IncidentResponsePlanViewModel
 
 #endregion
     
-    #region FIELDS
-    private readonly Thickness _editAlignMargin = new Thickness(0, 10, 5, 0);
-    private readonly Thickness _readAlignMargin = new Thickness(0, 10, 5, 0);
-    private readonly Thickness _viewAlignMargin = new Thickness(0, 0, 5, 0);
-    #endregion
-    
     #region PROPERTIES
     
     private bool _canSave;
@@ -525,16 +519,6 @@ public class IncidentResponsePlanViewModel
         }
     }
 
-    public Thickness AlignMargin
-    {
-        get
-        {
-            if (IsEditOperation) return _editAlignMargin;
-            if (IsViewOperation) return _viewAlignMargin;
-            return _readAlignMargin;
-        }   
-    }
-    
     private AuthenticatedUserInfo? _userInfo;
     
     public AuthenticatedUserInfo? UserInfo

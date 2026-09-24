@@ -17,6 +17,13 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- Realigned the Incident Response Plan window. Its label/value grid drove alignment from a
+  view-model `Margin` and from row-spanning phantom rows, so labels sat above or below the values
+  they name; labels are now vertically centred against their field in a grid with real row and
+  column spacing. In view mode the approver/reviewer/exerciser/tester value fields rendered even
+  when the plan had no such record, leaving four empty rows of dead space between the life-cycle
+  row and the metadata row — each now appears only when its own life-cycle flag is set.
+
 - Restored the vulnerability register's toolbar and its collapsible details pane under Semi.
   `Button.toolbar` opted out of the theme's button metrics without declaring a width, so its
   buttons collapsed to the width of their glyph and rendered as cramped rectangles. The same

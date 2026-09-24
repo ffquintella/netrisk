@@ -21,6 +21,7 @@
     <Window.Resources>
         <converters:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
         <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
+        <converters:MultiBoolAndConverter x:Key="MultiBoolAndConverter"/>
     </Window.Resources>
 
     
@@ -43,76 +44,120 @@
             <GroupBox Grid.Row="2" Grid.Column="0" Classes="type1" Header="{Binding StrPlan}">
                 <Grid RowDefinitions="Auto, *">
                     <!-- INFO -->
-                    <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="5">
-                        
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" IsVisible="{Binding IsEditOrViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" Margin="{Binding AlignMargin}"/>
+                    <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*"
+                          RowSpacing="6" ColumnSpacing="10">
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="#:" VerticalAlignment="Center" IsVisible="{Binding IsEditOrViewOperation}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IncidentResponsePlan.Id}" VerticalAlignment="Center" IsVisible="{Binding IsEditOrViewOperation}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrName}" VerticalAlignment="Center"/>
                         <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Description}" IsVisible="{Binding IsViewOperation}" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrComments}" Margin="{Binding AlignMargin}"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" Grid.RowSpan="2" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Notes}" IsVisible="{Binding IsViewOperation}" TextWrapping="WrapWithOverflow" Margin="{Binding AlignMargin}"/>
-                        
-                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrLifeCicleStatus}" Margin="{Binding AlignMargin}"/>
-                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
-                            <CheckBox Content="{Binding StrHasBeenApproved}" IsChecked="{Binding HasBeenApproved}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanApprove}" />
-                            <CheckBox Content="{Binding StrHasBeenReviewed}" IsChecked="{Binding HasBeenReviewed}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanReview}"/>
-                            <CheckBox Content="{Binding StrHasBeenExercised}" IsChecked="{Binding HasBeenExercised}" Margin=" 0 0 10 0 " IsEnabled="{Binding CanExercise}"/>
-                            <CheckBox Content="{Binding StrHasBeenTested}" IsChecked="{Binding HasBeenTested}"  Margin=" 0 0 10 0 " IsEnabled="{Binding CanTest}"/>
-                        </StackPanel>
-                        
-                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenApproved}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenApproved}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenApproved}" Margin=" 0 0 10 0 "/> 
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenExercised}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenExercised}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenExercised}" Margin=" 0 0 10 0 "/>
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenTested}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenTested}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenTested}" Margin=" 0 0 10 0 "/>
-                            <material:MaterialIcon Kind="Check" IsVisible="{Binding HasBeenReviewed}" Margin=" 0 0 4 0 "/> <material:MaterialIcon Kind="Close" IsVisible="{Binding !HasBeenReviewed}" Margin=" 0 0 4 0 "/> <TextBlock Text="{Binding StrHasBeenReviewed}" Margin=" 0 0 10 0 "/>
-                        </StackPanel> 
-                        
-                        <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="5" RowSpacing="5" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-                            
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrApprover}" Margin="{Binding AlignMargin}" IsVisible="{Binding HasBeenApproved}"/>
-                            <AutoCompleteBox Grid.Row="0" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowApproverTextBox}"
-                                             FilterMode="StartsWith" 
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsViewOperation}"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Height="80" AcceptsReturn="True" Text="{Binding Description}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Description}" VerticalAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsViewOperation}"/>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Height="80" AcceptsReturn="True" Text="{Binding Notes}" IsVisible="{Binding IsCreateOrEditOperation}"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Notes}" VerticalAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsViewOperation}"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrLifeCicleStatus}" VerticalAlignment="Center"/>
+                        <WrapPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding !IsViewOperation}">
+                            <CheckBox Content="{Binding StrHasBeenApproved}" IsChecked="{Binding HasBeenApproved}" Margin="0 0 10 0" IsEnabled="{Binding CanApprove}" />
+                            <CheckBox Content="{Binding StrHasBeenReviewed}" IsChecked="{Binding HasBeenReviewed}" Margin="0 0 10 0" IsEnabled="{Binding CanReview}"/>
+                            <CheckBox Content="{Binding StrHasBeenExercised}" IsChecked="{Binding HasBeenExercised}" Margin="0 0 10 0" IsEnabled="{Binding CanExercise}"/>
+                            <CheckBox Content="{Binding StrHasBeenTested}" IsChecked="{Binding HasBeenTested}" Margin="0 0 10 0" IsEnabled="{Binding CanTest}"/>
+                        </WrapPanel>
+
+                        <WrapPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsViewOperation}">
+                            <StackPanel Orientation="Horizontal" Margin="0 0 12 0" VerticalAlignment="Center">
+                                <material:MaterialIcon Kind="Check" VerticalAlignment="Center" IsVisible="{Binding HasBeenApproved}"/>
+                                <material:MaterialIcon Kind="Close" VerticalAlignment="Center" IsVisible="{Binding !HasBeenApproved}"/>
+                                <TextBlock Text="{Binding StrHasBeenApproved}" VerticalAlignment="Center" Margin="4 0 0 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0 0 12 0" VerticalAlignment="Center">
+                                <material:MaterialIcon Kind="Check" VerticalAlignment="Center" IsVisible="{Binding HasBeenExercised}"/>
+                                <material:MaterialIcon Kind="Close" VerticalAlignment="Center" IsVisible="{Binding !HasBeenExercised}"/>
+                                <TextBlock Text="{Binding StrHasBeenExercised}" VerticalAlignment="Center" Margin="4 0 0 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0 0 12 0" VerticalAlignment="Center">
+                                <material:MaterialIcon Kind="Check" VerticalAlignment="Center" IsVisible="{Binding HasBeenTested}"/>
+                                <material:MaterialIcon Kind="Close" VerticalAlignment="Center" IsVisible="{Binding !HasBeenTested}"/>
+                                <TextBlock Text="{Binding StrHasBeenTested}" VerticalAlignment="Center" Margin="4 0 0 0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <material:MaterialIcon Kind="Check" VerticalAlignment="Center" IsVisible="{Binding HasBeenReviewed}"/>
+                                <material:MaterialIcon Kind="Close" VerticalAlignment="Center" IsVisible="{Binding !HasBeenReviewed}"/>
+                                <TextBlock Text="{Binding StrHasBeenReviewed}" VerticalAlignment="Center" Margin="4 0 0 0"/>
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <Grid Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="10"
+                              RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrApprover}" VerticalAlignment="Center" Margin="0 0 0 6" IsVisible="{Binding HasBeenApproved}"/>
+                            <AutoCompleteBox Grid.Row="0" Grid.Column="1" Margin="0 0 0 6" IsVisible="{Binding ShowApproverTextBox}"
+                                             FilterMode="StartsWith"
                                              SelectedItem="{Binding SelectedApprover}"
                                              ItemsSource="{Binding PeopleEntities}" />
-                            <TextBlock Grid.Row="0" Grid.Column="1"  Text="{Binding SelectedApprover}" IsVisible="{Binding IsViewOperation}"/>
-                            
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReviewer}" Margin="{Binding AlignMargin}" IsVisible="{Binding HasBeenReviewed}"/>
-                            <AutoCompleteBox Grid.Row="1" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowReviewerTextBox}"
-                                             FilterMode="StartsWith" 
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedApprover}" VerticalAlignment="Center" Margin="0 0 0 6">
+                                <TextBlock.IsVisible>
+                                    <MultiBinding Converter="{StaticResource MultiBoolAndConverter}">
+                                        <Binding Path="IsViewOperation"/>
+                                        <Binding Path="HasBeenApproved"/>
+                                    </MultiBinding>
+                                </TextBlock.IsVisible>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReviewer}" VerticalAlignment="Center" Margin="0 0 0 6" IsVisible="{Binding HasBeenReviewed}"/>
+                            <AutoCompleteBox Grid.Row="1" Grid.Column="1" Margin="0 0 0 6" IsVisible="{Binding ShowReviewerTextBox}"
+                                             FilterMode="StartsWith"
                                              SelectedItem="{Binding SelectedReviewer}"
                                              ItemsSource="{Binding PeopleEntities}" />
-                            <TextBlock Grid.Row="1" Grid.Column="1"  Text="{Binding SelectedReviewer}" IsVisible="{Binding IsViewOperation}"/>
-                            
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrExerciser}" Margin="{Binding AlignMargin}" IsVisible="{Binding HasBeenExercised}"/>
-                            <AutoCompleteBox Grid.Row="2" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowExerciserTextBox}"
-                                              FilterMode="StartsWith" 
-                                              SelectedItem="{Binding SelectedExerciser}"
-                                              ItemsSource="{Binding PeopleEntities}" />
-                            <TextBlock Grid.Row="2" Grid.Column="1"  Text="{Binding SelectedExerciser}" IsVisible="{Binding IsViewOperation}"/>
-                            
-                            
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrTester}" Margin="{Binding AlignMargin}" IsVisible="{Binding HasBeenTested}"/>
-                            <AutoCompleteBox Grid.Row="3" Grid.Column="1" Margin="5 0 0 0" IsVisible="{Binding ShowTesterTextBox}"
-                                             FilterMode="StartsWith" 
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedReviewer}" VerticalAlignment="Center" Margin="0 0 0 6">
+                                <TextBlock.IsVisible>
+                                    <MultiBinding Converter="{StaticResource MultiBoolAndConverter}">
+                                        <Binding Path="IsViewOperation"/>
+                                        <Binding Path="HasBeenReviewed"/>
+                                    </MultiBinding>
+                                </TextBlock.IsVisible>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrExerciser}" VerticalAlignment="Center" Margin="0 0 0 6" IsVisible="{Binding HasBeenExercised}"/>
+                            <AutoCompleteBox Grid.Row="2" Grid.Column="1" Margin="0 0 0 6" IsVisible="{Binding ShowExerciserTextBox}"
+                                             FilterMode="StartsWith"
+                                             SelectedItem="{Binding SelectedExerciser}"
+                                             ItemsSource="{Binding PeopleEntities}" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedExerciser}" VerticalAlignment="Center" Margin="0 0 0 6">
+                                <TextBlock.IsVisible>
+                                    <MultiBinding Converter="{StaticResource MultiBoolAndConverter}">
+                                        <Binding Path="IsViewOperation"/>
+                                        <Binding Path="HasBeenExercised"/>
+                                    </MultiBinding>
+                                </TextBlock.IsVisible>
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrTester}" VerticalAlignment="Center" IsVisible="{Binding HasBeenTested}"/>
+                            <AutoCompleteBox Grid.Row="3" Grid.Column="1" IsVisible="{Binding ShowTesterTextBox}"
+                                             FilterMode="StartsWith"
                                              SelectedItem="{Binding SelectedTester}"
                                              ItemsSource="{Binding PeopleEntities}" />
-                            <TextBlock Grid.Row="3" Grid.Column="1"  Text="{Binding SelectedTester}" IsVisible="{Binding IsViewOperation}"/>
-                            
-                            
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedTester}" VerticalAlignment="Center">
+                                <TextBlock.IsVisible>
+                                    <MultiBinding Converter="{StaticResource MultiBoolAndConverter}">
+                                        <Binding Path="IsViewOperation"/>
+                                        <Binding Path="HasBeenTested"/>
+                                    </MultiBinding>
+                                </TextBlock.IsVisible>
+                            </TextBlock>
+
                         </Grid>
-                        
-                        <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrMetadata}" Margin="{Binding AlignMargin}"/>
-                        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal">
-                            <TextBlock Text="{Binding StrCreationDate, Mode=OneTime}" Margin="0 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding CreationDate, Converter={StaticResource DateToFormatedStringConverter}}"/>
-                            <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0 " Classes="label-nm"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}"/>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrMetadata}" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding StrCreationDate, Mode=OneTime}" Margin="0 0 5 0" Classes="label-nm" VerticalAlignment="Center"/><TextBlock Text="{Binding CreationDate, Converter={StaticResource DateToFormatedStringConverter}}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding StrLastUpdate, Mode=OneTime}" Margin="10 0 5 0" Classes="label-nm" VerticalAlignment="Center"/><TextBlock Text="{Binding LastUpdate, Converter={StaticResource DateToFormatedStringConverter}}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
