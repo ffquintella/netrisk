@@ -12,6 +12,18 @@ This release includes new features and improvements.
 
 ### Changed
 
+### Fixed
+
+
+
+## [2.22.0] - 2026-09-24
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
 - The desktop client's look is now based on **Semi.Avalonia** instead of Avalonia's stock
   `FluentTheme`. Semi is an enterprise/console design language, so its defaults for table density,
   field height, focus and disabled states suit a risk tool better than Fluent's Windows-desktop
@@ -36,7 +48,25 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- **The tab strips across the desktop client showed only a sliver of their labels.** A global
+  `TabItem` style hard-coded `Height="15"`, which fit the old theme's near-zero header padding and
+  clips under Semi's. The tab now sizes to its content (`MinHeight="0"` keeps Semi's own 40px floor
+  from making the strip taller than the rest of the app), so "Questions", "Assessments Runs" and
+  every other tab header render in full.
 
+- **The multi-select control read as two lists of text floating on the window**, and its transfer
+  arrows were clipped to a sliver — its 30px middle column is narrower than a themed button's own
+  minimum width. Each pane is now a framed box on the shared elevation scale, the arrows have room,
+  and the control's standalone palette is bound back to the NetRisk tokens (a library control cannot
+  see them on its own). This adds one token, `NrBorderStrong`, for a frame that has to be seen
+  rather than felt.
+
+- **Trend Micro Vision One synchronization failed on large tenants** with "the response declared
+  41787890 bytes, over the 16777216 byte limit for this request", importing nothing. Vision One's
+  vulnerable-device endpoint nests every CVE record under its device, so a page of 200 devices is
+  a large slice of the tenant's whole CVE surface — well past the 16 MiB cap the outbound HTTP seam
+  applies to a third-party JSON page. The CVE pass now reads 50 devices per page, and the two paged
+  ASRM reads raise their own response cap above the default.
 
 ## [2.21.18] - 2026-09-24
 

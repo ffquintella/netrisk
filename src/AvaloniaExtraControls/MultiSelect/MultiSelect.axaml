@@ -3,73 +3,125 @@
         xmlns:models="clr-namespace:AvaloniaExtraControls.Models"
         xmlns:controls="using:AvaloniaExtraControls.MultiSelect">
     <Design.PreviewWith>
-        <controls:MultiSelect />
+        <controls:MultiSelect Height="250" Width="600"/>
     </Design.PreviewWith>
 
     <Style Selector="controls|MultiSelect">
         <!-- Set Defaults -->
-        <Setter Property="Background" Value="DimGray"/>
+        <Setter Property="Background" Value="#2A2A30"/>
         <Setter Property="Foreground" Value="WhiteSmoke"/>
+        <Setter Property="BorderBrush" Value="#5A5A6A"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="HeaderBackground" Value="#222222"/>
         <Setter Property="AvailableHeaderBackground" Value="#444466"/>
         <Setter Property="SelectedHeaderBackground" Value="#555577"/>
         <Setter Property="Title" Value="Multi Select"/>
         <Setter Property="ShowFilter" Value="True"/>
-        
+
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid ColumnDefinitions="*, 30 , *" RowDefinitions="Auto,Auto,Auto, *" Name="MsMainGrid">
-                    <Panel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Background="{TemplateBinding HeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=Title}"  Margin="5 2 0 2" />
-                    </Panel>
-                    <Panel Grid.Row="1" Grid.Column="0"  Background="{TemplateBinding AvailableHeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=StrAvailable}"  Margin="5 2 0 2" />
-                    </Panel>
-                    <Panel Grid.Row="1" Grid.Column="2"  Background="{TemplateBinding SelectedHeaderBackground}">
-                        <TextBlock Text="{TemplateBinding Property=StrSelected}"  Margin="5 2 0 2" />
-                    </Panel>
+                <!-- Each list sits in its own framed column so the two panes read as boxes rather
+                     than as text floating on the window. The middle column is sized for the
+                     transfer buttons: 30px was narrower than a themed button's own minimum, so the
+                     arrows were clipped to a sliver. -->
+                <Grid ColumnDefinitions="*, 52, *" RowDefinitions="Auto, *" Name="MsMainGrid">
+
+                    <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                            Background="{TemplateBinding HeaderBackground}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                        <TextBlock Text="{TemplateBinding Property=Title}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   Margin="8 4"/>
+                    </Border>
+
                     <!-- LEFT -->
-                    <TextBox Grid.Row="2" Grid.Column="0" IsVisible="{TemplateBinding ShowFilter}" Text="{Binding LeftFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
-                    <ListBox Grid.Row="3" Grid.Column="0" MinHeight="50" Name="MsLstAvailable"
-                             ItemsSource="{Binding ListedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             SelectionMode="Multiple"
-                             >
-                        <ListBox.ItemTemplate>
-                            <DataTemplate DataType="models:SelectEntity">
-                                <TextBlock Text="{Binding Label}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Border Grid.Row="1" Grid.Column="0" Margin="0 4 0 0"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            ClipToBounds="True">
+                        <Grid RowDefinitions="Auto, Auto, *">
+                            <Border Grid.Row="0" Background="{TemplateBinding AvailableHeaderBackground}">
+                                <TextBlock Text="{TemplateBinding Property=StrAvailable}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           Margin="8 4"/>
+                            </Border>
+                            <TextBox Grid.Row="1" Margin="6 6 6 0" MinHeight="0"
+                                     IsVisible="{TemplateBinding ShowFilter}"
+                                     Text="{Binding LeftFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                            <ListBox Grid.Row="2" MinHeight="50" Name="MsLstAvailable"
+                                     Margin="2" Background="Transparent"
+                                     ItemsSource="{Binding ListedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                     SelectedItems="{Binding SelectedAvailableItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                     SelectionMode="Multiple">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="models:SelectEntity">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
                     <!-- BUTTONS -->
-                    <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Center">
-                        <Button Name="MsBtMoveRight" 
-                            Command="{TemplateBinding BtMoveRightClicked}"
-                            CommandParameter="{Binding #MsMainGrid}">
-                            <TextBlock Text="→" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        </Button>
-                        <Button Command="{TemplateBinding BtMoveLeftClicked}"
+                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="8"
+                                VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- Padding/MinHeight are reset explicitly: a themed Button keeps its own
+                             metrics otherwise and swallows the glyph at this size. -->
+                        <Button Name="MsBtMoveRight" Width="34" Height="30"
+                                Padding="0" MinWidth="0" MinHeight="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Command="{TemplateBinding BtMoveRightClicked}"
                                 CommandParameter="{Binding #MsMainGrid}">
-                            <TextBlock Text="←" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="&#x25B6;" FontSize="14"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button Name="MsBtMoveLeft" Width="34" Height="30"
+                                Padding="0" MinWidth="0" MinHeight="0"
+                                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                                Command="{TemplateBinding BtMoveLeftClicked}"
+                                CommandParameter="{Binding #MsMainGrid}">
+                            <TextBlock Text="&#x25C0;" FontSize="14"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
                     </StackPanel>
+
                     <!-- RIGHT -->
-                    <TextBox Grid.Row="2" Grid.Column="2" IsVisible="{TemplateBinding ShowFilter}" Text="{Binding RightFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
-                    <ListBox Grid.Row="3" Grid.Column="2" MinHeight="50" Name="MsLstSelected"
-                             ItemsSource="{Binding ListedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                             SelectionMode="Multiple"
-                             >
-                        <ListBox.ItemTemplate>
-                            <DataTemplate DataType="models:SelectEntity">
-                                <TextBlock Text="{Binding Label}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Border Grid.Row="1" Grid.Column="2" Margin="0 4 0 0"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            ClipToBounds="True">
+                        <Grid RowDefinitions="Auto, Auto, *">
+                            <Border Grid.Row="0" Background="{TemplateBinding SelectedHeaderBackground}">
+                                <TextBlock Text="{TemplateBinding Property=StrSelected}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           Margin="8 4"/>
+                            </Border>
+                            <TextBox Grid.Row="1" Margin="6 6 6 0" MinHeight="0"
+                                     IsVisible="{TemplateBinding ShowFilter}"
+                                     Text="{Binding RightFilter, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                            <ListBox Grid.Row="2" MinHeight="50" Name="MsLstSelected"
+                                     Margin="2" Background="Transparent"
+                                     ItemsSource="{Binding ListedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                     SelectedItems="{Binding SelectedSelectedItems, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                     SelectionMode="Multiple">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="models:SelectEntity">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
                 </Grid>
             </ControlTemplate>
         </Setter>
     </Style>
 </Styles>
-
-

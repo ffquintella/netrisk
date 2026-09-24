@@ -48,6 +48,11 @@
 
     <SolidColorBrush x:Key="NrBorderSubtle" Color="{DynamicResource SemiGrey2Color}" />
 
+    <!-- A frame that has to be seen rather than felt: the divider between a control and the
+         surface it sits on, where NrBorderSubtle disappears (the multi-select panes read as text
+         floating on the window before this existed). -->
+    <SolidColorBrush x:Key="NrBorderStrong" Color="{DynamicResource SemiGrey4Color}" />
+
     <!-- ===== Text (docs/ui-standard.md §2.3) ================================================= -->
 
     <SolidColorBrush x:Key="NrTextPrimary" Color="{DynamicResource SemiGrey9Color}" />

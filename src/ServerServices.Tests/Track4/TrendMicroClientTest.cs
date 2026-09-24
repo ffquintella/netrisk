@@ -8,6 +8,7 @@ using Model.Exceptions;
 using Model.Integrations;
 using Serilog;
 using ServerServices.Integrations.TrendMicro;
+using ServerServices.Interfaces;
 using ServerServices.Tests.Mock;
 using Xunit;
 
@@ -524,8 +525,56 @@ public class TrendMicroClientTest
         // away; "affected" is the default but stating it is what stops that being a silent regression.
         Assert.Contains("cveDetectionStatus=affected", url);
         // vulnerableDevices accepts top only from 10, 50, 100, 200 — 500 and 1000 are a 400 here even
-        // though the inventory endpoint takes them.
-        Assert.Contains("top=200", url);
+        // though the inventory endpoint takes them. 50 rather than the 200 it allows, because each row
+        // nests the device's whole CVE list: see TheCvePageIsSmallEnoughAndTheCapHighEnoughToRead.
+        Assert.Contains("top=50", url);
+        Assert.DoesNotContain("top=200", url);
+    }
+
+    /// <summary>
+    /// The regression behind "synchronization failed: … the response declared 41787890 bytes, over the
+    /// 16777216 byte limit for this request". A real tenant answered <c>vulnerableDevices?top=200</c>
+    /// with a 41.8 MB page — the CVE records are nested under each device, so the page is the tenant's
+    /// whole CVE surface in 200-device slices — and the outbound response cap refused it before the
+    /// body was read, failing the entire sync with nothing imported.
+    ///
+    /// Both halves are asserted because either alone still fails: a smaller page brings the *observed*
+    /// payload under the default cap but one device's CVE list has no documented ceiling, and a raised
+    /// cap alone leaves the sync allocating 40 MB strings per page.
+    /// </summary>
+    [Fact]
+    public async Task TheCvePageIsSmallEnoughAndTheCapHighEnoughToRead()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
+
+        await new TrendMicroClient(Log, http).GetVulnerableDevicesAsync(Connection(), "key");
+
+        var request = Assert.Single(http.Requests);
+
+        // A quarter of the rows the failing page carried.
+        Assert.Contains("top=50", request.Url);
+
+        // 41,787,890 bytes is the page that failed; the cap must clear it with room, not sit just above.
+        Assert.True(request.MaxResponseBytes > 41_787_890L * 2,
+            $"the CVE page cap was {request.MaxResponseBytes} bytes, which leaves no headroom over the "
+            + "41,787,890-byte page a real tenant returned");
+        Assert.True(request.MaxResponseBytes > OutboundHttpRequest.DefaultMaxResponseBytes,
+            "the CVE read must raise the cap above the seam default, which is sized for ordinary JSON pages");
+    }
+
+    /// <summary>
+    /// The inventory crawl pages through the same helper, so it gets the same cap. Stated rather than
+    /// left to the shared code path: a future split of the two enumerations must not silently drop it.
+    /// </summary>
+    [Fact]
+    public async Task TheInventoryReadCarriesTheSameRaisedCap()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
+
+        await new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key");
+
+        Assert.True(Assert.Single(http.Requests).MaxResponseBytes
+                    > OutboundHttpRequest.DefaultMaxResponseBytes);
     }
 
     /// <summary>

@@ -68,8 +68,10 @@
 
     <Style Selector="TabItem">
         <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Height" Value="15"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="12 6"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Background" Value="{DynamicResource NrSurfaceTab}"/>
         <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
     </Style>

@@ -1,5 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:multiSelect="clr-namespace:AvaloniaExtraControls.MultiSelect;assembly=AvaloniaExtraControls">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -13,5 +14,19 @@
     
     <StyleInclude Source="avares://AvaloniaProgressRing/Styles/ProgressRing.xaml"/>
 
-    
+    <!--
+        MultiSelect ships its own standalone palette (it is a library control and cannot see the
+        NetRisk tokens). This binds it back to the token layer so the two panes sit on the same
+        elevation scale as every other framed control, and so the frame is actually visible.
+        The template itself lives in AvaloniaExtraControls/MultiSelect/MultiSelect.axaml.
+    -->
+    <Style Selector="multiSelect|MultiSelect">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="HeaderBackground" Value="{DynamicResource NrSurfaceTab}"/>
+        <Setter Property="AvailableHeaderBackground" Value="{DynamicResource NrAccentPrimary}"/>
+        <Setter Property="SelectedHeaderBackground" Value="{DynamicResource NrAccentPrimaryHover}"/>
+    </Style>
+
 </Styles>

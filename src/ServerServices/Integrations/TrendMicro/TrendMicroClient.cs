@@ -48,8 +48,26 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// 10, 50, 100, 200 and nothing above. Separate from <see cref="PageSize"/> so that raising the
     /// inventory page size to the 500 or 1000 that endpoint allows cannot silently turn every CVE read
     /// into a 400.
+    ///
+    /// 50 rather than the 200 the endpoint allows, because this endpoint nests every CVE record under
+    /// its device: a real tenant answered <c>top=200</c> with a 41,787,890-byte page — around 209 KB
+    /// per device — which the outbound response cap refused, failing the whole sync. A quarter of the
+    /// rows is a quarter of the page, and the extra round trips are cheap next to a sync that cannot
+    /// complete. The cap is raised too (<see cref="PagedResponseBytes"/>); page size alone is not a
+    /// bound, since one device's CVE list has no documented ceiling.
     /// </summary>
-    private const int VulnerablePageSize = 200;
+    private const int VulnerablePageSize = 50;
+
+    /// <summary>
+    /// Response cap for the paged ASRM reads, above the 16 MiB default.
+    ///
+    /// The default is sized for "a page of JSON from a third-party API" and Vision One's vulnerable-device
+    /// pages are an order of magnitude past that, because each row carries the device's full CVE list
+    /// rather than a count. The number is chosen to keep a page that is several times larger than the
+    /// worst one observed readable while still bounding a misconfigured or hostile remote — the reason
+    /// the cap exists at all — and it applies only to these two endpoints, not to the seam's default.
+    /// </summary>
+    private const long PagedResponseBytes = 96L * 1024 * 1024;
 
     /// <summary>
     /// Page size for the connection test. The obvious <c>top=1</c> is not in Vision One's accepted
@@ -213,7 +231,8 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 Method = "GET",
                 Url = url,
                 Headers = { ["Authorization"] = "Bearer " + apiKey },
-                Timeout = TimeSpan.FromSeconds(60)
+                Timeout = TimeSpan.FromSeconds(60),
+                MaxResponseBytes = PagedResponseBytes
             }, ct);
 
             if (!response.IsSuccess)
