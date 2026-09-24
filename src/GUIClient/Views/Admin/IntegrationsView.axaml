@@ -1159,7 +1159,11 @@
              API key, which optional machine ID) and what it shows is metadata.
              ===================================================================================== -->
         <TabItem Header="{Binding StrSecretVaults}">
-            <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" Margin="10">
+            <!-- The detail column is `Auto`, not `*`: the form panel is a fixed width (§6.2
+                 rule 2 — a left-aligned card column collapses to a sliver without one), so a star
+                 column would reserve half the window for it and leave the extra width blank
+                 instead of giving it to the list. -->
+            <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto" Margin="10">
 
                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
                     <TextBlock Text="{Binding StrSecretVaults}" Classes="header2"
@@ -1230,7 +1234,7 @@
                 </ScrollViewer>
 
                 <ScrollViewer Grid.Row="2" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="420" HorizontalAlignment="Left">
+                    <StackPanel Width="460" HorizontalAlignment="Left">
 
                         <Border Classes="formCard">
                             <StackPanel>

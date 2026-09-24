@@ -14,6 +14,10 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- The Secret Vaults tab in Administration now uses the width of the window. Its detail column was a
+  star column holding a fixed-width form, so widening the window only added blank space beside the
+  form instead of giving the vault list room to breathe.
+
 
 
 ## [2.21.17] - 2026-09-24
