@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using API;
 using Mapster;
 using DAL.Entities;
@@ -11,6 +12,7 @@ using Serilog;
 using Serilog.Extensions.Logging;
 using ServerServices.Governance;
 using ServerServices.Integrations;
+using ServerServices.Integrations.TrendMicro;
 using ServerServices.Filtering;
 using ServerServices.Interfaces;
 using ServerServices.Security;
@@ -63,6 +65,15 @@ public class ServiceRegistration
         services.AddSingleton<IOutboundHttpClient>(new Mock.FakeOutboundHttpClient());
         services.AddSingleton<ISecretProtector>(new SecretProtector(logger, "netrisk-test-root-secret"));
         services.AddTrack4Integrations(includeOutboundHttp: false);
+
+        // Vision One retries a transient page failure three times with a real back-off between the
+        // attempts. Registered again here with the sleep removed, because a service test that stubs a
+        // 500 must assert the failure, not spend twenty-five seconds waiting for it.
+        services.AddTransient<ITrendMicroClient>(sp => new TrendMicroClient(
+            sp.GetRequiredService<ILogger>(), sp.GetRequiredService<IOutboundHttpClient>())
+        {
+            DelayAsync = (_, _) => Task.CompletedTask
+        });
 
         // Track 8 (Risk governance). Registered as the hosts do, so a test exercises the same
         // enforcement graph the API and the job host resolve.

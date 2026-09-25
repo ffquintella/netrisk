@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using API;
 using DAL.Context;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
 using ServerServices.Filtering;
+using ServerServices.Integrations.TrendMicro;
 using ServerServices.Interfaces;
 using ServerServices.Findings;
 using ServerServices.Importers;
@@ -120,6 +122,15 @@ public abstract class InMemoryServiceTestBase
         // host even if a provider is invoked by accident.
         services.AddSingleton<IOutboundHttpClient>(FakeOutboundHttpClient);
         services.AddTrack4Integrations(includeOutboundHttp: false);
+
+        // And one more: Vision One retries a transient page failure three times with a real back-off
+        // between the attempts. A service test that stubs a 500 asserts the failure; it must not spend
+        // twenty-five seconds sleeping on the way to it.
+        services.AddTransient<ITrendMicroClient>(sp => new TrendMicroClient(
+            sp.GetRequiredService<ILogger>(), sp.GetRequiredService<IOutboundHttpClient>())
+        {
+            DelayAsync = (_, _) => Task.CompletedTask
+        });
 
         // Track 8 (Risk governance). Registered as the hosts do, so a test exercises the same
         // enforcement graph the API and the job host resolve.

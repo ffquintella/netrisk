@@ -88,6 +88,47 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// </summary>
     private const int MaxPages = 500;
 
+    /// <summary>
+    /// How many times one Vision One request is attempted before the sync gives up on it.
+    ///
+    /// Three, and only for the failures where trying again can plausibly work — a timeout, a 429, a
+    /// 5xx, a connection that never landed. A 401 or a 403 is a configuration problem and retrying it
+    /// only delays the operator finding out, so <see cref="OutboundHttpResponse.IsRetryable"/> decides.
+    /// The crawls this protects are long (a tenant of 17,000 devices is hundreds of pages), which makes
+    /// a single transient failure near the end expensive: it used to discard the whole run.
+    /// </summary>
+    private const int MaxAttempts = 3;
+
+    /// <summary>
+    /// Waits before the second and third attempts, used when the remote did not ask for a specific
+    /// back-off of its own. Short enough not to stall a sync, long enough to outlast the blip.
+    /// </summary>
+    private static readonly TimeSpan[] Backoff =
+        [TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(20)];
+
+    /// <summary>
+    /// Ceiling on an honoured <c>Retry-After</c>. Vision One's rate limiter has answered with minutes,
+    /// and a sync job that sleeps for an hour holds the connection's single-flight lock the whole time.
+    /// </summary>
+    private static readonly TimeSpan MaxBackoff = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// Base per-request timeout for the paged reads.
+    ///
+    /// Each retry gets this again on top (60s, then 120s, then 180s). A vulnerable-devices page is tens
+    /// of megabytes on a large tenant, and the observed failure was exactly this: the first attempt ran
+    /// out of time on a page Vision One was still sending. Growing the budget per attempt fixes the slow
+    /// page without giving every healthy page an unbounded one.
+    /// </summary>
+    private static readonly TimeSpan PageTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// The sleep between attempts. A hook rather than a bare <c>Task.Delay</c> so the retry tests run in
+    /// microseconds instead of half a minute; nothing outside the tests replaces it.
+    /// </summary>
+    internal Func<TimeSpan, CancellationToken, Task> DelayAsync { get; init; } =
+        (delay, ct) => Task.Delay(delay, ct);
+
     public async Task<ConnectionTestResult> TestAsync(TrendMicroConnection connection, string? apiKey,
         CancellationToken ct = default)
     {
@@ -140,12 +181,12 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     }
 
     public async Task<List<TrendMicroDevice>> GetDevicesAsync(TrendMicroConnection connection, string? apiKey,
-        CancellationToken ct = default)
+        Func<string, Task>? progress = null, CancellationToken ct = default)
     {
         var devices = new List<TrendMicroDevice>();
 
         await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"{DevicesPath}?top={PageSize}", ct))
+                           $"{DevicesPath}?top={PageSize}", progress, ct))
         {
             var device = ParseDevice(item);
             if (device != null) devices.Add(device);
@@ -155,7 +196,8 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     }
 
     public async Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(
-        TrendMicroConnection connection, string? apiKey, CancellationToken ct = default)
+        TrendMicroConnection connection, string? apiKey, Func<string, Task>? progress = null,
+        CancellationToken ct = default)
     {
         // cveDetectionStatus=affected is the default, but it is stated: the alternative ("any") returns
         // every discovered device with an empty cveRecords array, which is a full second crawl of the
@@ -164,7 +206,8 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var devices = 0;
 
         await foreach (var item in EnumerateAsync(connection, apiKey,
-                           $"{VulnerableDevicesPath}?top={VulnerablePageSize}&cveDetectionStatus=affected", ct))
+                           $"{VulnerableDevicesPath}?top={VulnerablePageSize}&cveDetectionStatus=affected",
+                           progress, ct))
         {
             devices++;
             findings.AddRange(ParseDeviceVulnerabilities(item));
@@ -195,18 +238,20 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             }
         });
 
-        var response = await http.SendAsync(new OutboundHttpRequest
-        {
-            Method = "POST",
-            Url = connection.BaseUrl.TrimEnd('/') + DevicesPath + "/update",
-            Body = payload,
-            Headers = { ["Authorization"] = "Bearer " + apiKey }
-        }, ct);
+        var (response, attempts) = await SendWithRetryAsync(
+            _ => new OutboundHttpRequest
+            {
+                Method = "POST",
+                Url = connection.BaseUrl.TrimEnd('/') + DevicesPath + "/update",
+                Body = payload,
+                Headers = { ["Authorization"] = "Bearer " + apiKey }
+            },
+            connection, "the device write-back", null, ct);
 
         if (response.IsSuccess) return true;
 
         logger.Warning("Vision One refused an update for device {Device}: {Reason}",
-            deviceId, FailureMessage(connection, response, DevicesPath + "/update"));
+            deviceId, FailureMessage(connection, response, DevicesPath + "/update", attempts));
 
         return false;
     }
@@ -219,25 +264,34 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// re-reads page one forever.
     /// </summary>
     private async IAsyncEnumerable<JsonElement> EnumerateAsync(TrendMicroConnection connection, string? apiKey,
-        string firstPath, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+        string firstPath, Func<string, Task>? progress,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
     {
         var url = connection.BaseUrl.TrimEnd('/') + firstPath;
         var page = 0;
 
         while (url != null && page++ < MaxPages)
         {
-            var response = await http.SendAsync(new OutboundHttpRequest
-            {
-                Method = "GET",
-                Url = url,
-                Headers = { ["Authorization"] = "Bearer " + apiKey },
-                Timeout = TimeSpan.FromSeconds(60),
-                MaxResponseBytes = PagedResponseBytes
-            }, ct);
+            var currentPage = page;
+            var currentUrl = url;
+
+            var (response, attempts) = await SendWithRetryAsync(
+                attempt => new OutboundHttpRequest
+                {
+                    Method = "GET",
+                    Url = currentUrl,
+                    Headers = { ["Authorization"] = "Bearer " + apiKey },
+                    // More time on each retry: the failure this exists for is a page Vision One was
+                    // still sending when the first budget ran out.
+                    Timeout = PageTimeout * attempt,
+                    MaxResponseBytes = PagedResponseBytes
+                },
+                connection, $"page {currentPage} of {Path(currentUrl)}", progress, ct);
 
             if (!response.IsSuccess)
                 throw new IntegrationRequestException("Trend Micro Vision One",
-                    FailureMessage(connection, response, Path(url)));
+                    $"Reading page {currentPage} of {Path(currentUrl)} failed. "
+                    + FailureMessage(connection, response, Path(currentUrl), attempts));
 
             JsonDocument document;
 
@@ -537,6 +591,14 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         return (int)Math.Clamp(Math.Round(raw), 1, 5);
     }
 
+    /// <summary>
+    /// The one-shot read behind the connection test.
+    ///
+    /// Deliberately not retried, unlike the sync's paged reads: an operator is watching a spinner, and
+    /// answering "could not be reached — timed out" after twenty-five seconds of invisible back-off is
+    /// worse than answering it after one attempt. They can press the button again; a nightly sync
+    /// cannot.
+    /// </summary>
     private Task<OutboundHttpResponse> GetAsync(TrendMicroConnection connection, string? apiKey, string path,
         CancellationToken ct) =>
         http.SendAsync(new OutboundHttpRequest
@@ -545,6 +607,117 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             Url = connection.BaseUrl.TrimEnd('/') + path,
             Headers = { ["Authorization"] = "Bearer " + apiKey }
         }, ct);
+
+    /// <summary>
+    /// Sends one Vision One request, trying again up to <see cref="MaxAttempts"/> times while the
+    /// failure is one that trying again can fix.
+    ///
+    /// Retrying here, at the single request, rather than at the sync: a crawl of a large tenant is
+    /// hundreds of pages and tens of minutes, and restarting the whole run because page 212 timed out
+    /// throws away everything already read — which is the failure in the field, a run that reached the
+    /// CVE step after an hour and ended "Vision One could not be reached: the request timed out".
+    ///
+    /// What is *not* retried matters as much: <see cref="OutboundHttpResponse.IsRetryable"/> is false
+    /// for 401/403/404/400, so a bad key or a missing permission still fails on the first answer with
+    /// the diagnosis <see cref="FailureMessage"/> builds, instead of being repeated three times.
+    /// </summary>
+    /// <param name="build">Builds the request for a given attempt number (1-based), so the timeout can grow.</param>
+    /// <param name="what">What is being read, for the log and the progress trail — e.g. "page 12 of /v3.0/…".</param>
+    /// <param name="progress">Optional sink for the run's progress trail; a retry an operator cannot see reads as a hang.</param>
+    /// <returns>The last response, and how many attempts it took to get it.</returns>
+    private async Task<(OutboundHttpResponse Response, int Attempts)> SendWithRetryAsync(
+        Func<int, OutboundHttpRequest> build, TrendMicroConnection connection, string what,
+        Func<string, Task>? progress, CancellationToken ct)
+    {
+        OutboundHttpResponse response = null!;
+
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            response = await http.SendAsync(build(attempt), ct);
+
+            if (response.IsSuccess || !response.IsRetryable || attempt == MaxAttempts)
+                return (response, attempt);
+
+            // The operator's cancellation is not a transient failure.
+            ct.ThrowIfCancellationRequested();
+
+            var wait = Wait(response, attempt);
+            var cause = ShortCause(response);
+
+            logger.Warning(
+                "Vision One {What} for connection {Connection} failed on attempt {Attempt} of {Max} "
+                + "({Cause}); retrying in {Seconds}s",
+                what, connection.Name, attempt, MaxAttempts, cause, wait.TotalSeconds);
+
+            if (progress != null)
+                await progress($"{what}: attempt {attempt} of {MaxAttempts} failed ({cause}); "
+                               + $"retrying in {wait.TotalSeconds:0}s.");
+
+            await DelayAsync(wait, ct);
+        }
+
+        return (response, MaxAttempts);
+    }
+
+    /// <summary>
+    /// How long to wait before the next attempt: the remote's own <c>Retry-After</c> when it sent one
+    /// — honouring it is the difference between a rate limit that clears and one that keeps being
+    /// re-triggered — and a fixed back-off otherwise, bounded by <see cref="MaxBackoff"/>.
+    /// </summary>
+    private static TimeSpan Wait(OutboundHttpResponse response, int attempt)
+    {
+        var requested = response.RetryAfter;
+
+        var wait = requested is { } asked && asked > TimeSpan.Zero
+            ? asked
+            : Backoff[Math.Min(attempt - 1, Backoff.Length - 1)];
+
+        return wait > MaxBackoff ? MaxBackoff : wait;
+    }
+
+    /// <summary>
+    /// One phrase naming why an attempt failed, for the log line and the progress trail. The full
+    /// diagnosis is <see cref="FailureMessage"/>'s job; this is what fits on a line an operator scans.
+    /// </summary>
+    internal static string ShortCause(OutboundHttpResponse response) =>
+        response.StatusCode == 0
+            ? TransportCause(response.TransportError)
+            : $"HTTP {response.StatusCode}";
+
+    /// <summary>
+    /// Classifies a transport failure — status 0 — into the cause an operator can act on.
+    ///
+    /// "Vision One could not be reached" is true of a timeout, a DNS failure, a proxy refusing the
+    /// connection, a TLS interception and a page larger than the response cap, and those have five
+    /// different fixes. The seam already carries the underlying sentence; this names the class of
+    /// problem in front of it so the sync log says what to do rather than only what happened.
+    /// </summary>
+    internal static string TransportCause(string? transportError)
+    {
+        var text = transportError ?? string.Empty;
+
+        bool Has(string fragment) => text.Contains(fragment, StringComparison.OrdinalIgnoreCase);
+
+        if (Has("timed out") || Has("timeout"))
+            return "timed out — Vision One was still answering when the request budget ran out";
+
+        if (Has("byte limit") || Has("over the"))
+            return "the page was larger than the response limit";
+
+        if (Has("no such host") || Has("name or service not known") || Has("name resolution"))
+            return "the region's host name did not resolve";
+
+        if (Has("ssl") || Has("certificate") || Has("tls"))
+            return "the TLS handshake failed — check for an intercepting proxy";
+
+        if (Has("refused") || Has("unreachable") || Has("forcibly closed") || Has("reset"))
+            return "the connection was refused or dropped";
+
+        if (Has("blocked") || Has("not allowed") || Has("policy"))
+            return "the destination was refused by the outbound policy";
+
+        return string.IsNullOrWhiteSpace(text) ? "no answer" : text;
+    }
 
     // --- tolerant JSON readers --------------------------------------------------------------
 
@@ -690,13 +863,18 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// the only one with no diagnosis in it.
     /// </summary>
     internal static string FailureMessage(TrendMicroConnection connection, OutboundHttpResponse response,
-        string path)
+        string path, int attempts = 1)
     {
+        // Named, not implied: a message that reads the same after one attempt and after three hides
+        // whether the failure is a blip that outlasted the retries or a standing configuration problem.
+        var tried = attempts > 1 ? $" Tried {attempts} times." : string.Empty;
+
         if (response.StatusCode == 0)
-            return $"Vision One could not be reached: {response.TransportError}";
+            return $"Vision One could not be reached — {TransportCause(response.TransportError)}. "
+                   + $"({response.TransportError}){tried}";
 
         var detail = DescribeError(response.Body);
-        var said = detail == null ? string.Empty : $" Vision One said: {detail}";
+        var said = (detail == null ? string.Empty : $" Vision One said: {detail}") + tried;
 
         return response.StatusCode switch
         {
@@ -809,6 +987,12 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     private static string Shorten(string text) =>
         text.Length <= MaxErrorDetail ? text : text[..MaxErrorDetail] + "…";
 
+    /// <summary>
+    /// The path part of a URL, for a message. The query is dropped on a relative path too: it carries
+    /// Vision One's opaque paging token, which is long, useless to an operator and not worth logging.
+    /// </summary>
     private static string Path(string url) =>
-        Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : url;
+        Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            ? uri.AbsolutePath
+            : url.Split('?')[0];
 }

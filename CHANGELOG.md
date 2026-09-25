@@ -16,6 +16,34 @@ This release includes new features and improvements.
 
 
 
+## [2.22.3] - 2026-09-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- A Trend Micro Vision One synchronization no longer fails outright when a single request does not
+  answer. Each page of the device-inventory and CVE crawls is now attempted up to three times, with
+  a growing request budget (60s, 120s, 180s) and a back-off between attempts that honours Vision
+  One's own `Retry-After` header (capped at two minutes). Only failures that trying again can fix
+  are retried — a rejected key or a missing role permission still fails on the first answer, so a
+  configuration problem is not hidden behind three attempts. The retry re-reads the page that
+  failed rather than restarting the crawl, so an hour of completed inventory work is no longer
+  discarded because the first CVE request timed out.
+- A failed Vision One request now says *why* it failed. "Vision One could not be reached" covered a
+  timeout, a host name that did not resolve, a refused connection, a failed TLS handshake and a page
+  larger than the response limit — five different fixes behind one sentence — so the sync log now
+  names the class of problem, which page of which endpoint died, and how many attempts it took.
+  Retries are written to the run's progress trail as they happen, so a sync that is backing off no
+  longer looks like one that has hung. The Test Connection button is unchanged and still answers on
+  the first attempt — an operator watching a spinner wants the diagnosis, not a silent back-off.
+
+
+
 ## [2.22.2] - 2026-09-25
 
 This release includes new features and improvements.

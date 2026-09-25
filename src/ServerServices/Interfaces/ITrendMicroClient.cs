@@ -18,9 +18,16 @@ public interface ITrendMicroClient
     Task<ConnectionTestResult> TestAsync(TrendMicroConnection connection, string? apiKey,
         CancellationToken ct = default);
 
-    /// <summary>The attack-surface device inventory (4.4.2), all pages.</summary>
+    /// <summary>
+    /// The attack-surface device inventory (4.4.2), all pages.
+    /// </summary>
+    /// <param name="progress">
+    /// Optional sink for the sync run's progress trail, called when a page has to be retried. A crawl
+    /// that silently retries for two minutes is indistinguishable from a hung one in the progress panel,
+    /// which is the only place an operator watches a running sync.
+    /// </param>
     Task<List<TrendMicroDevice>> GetDevicesAsync(TrendMicroConnection connection, string? apiKey,
-        CancellationToken ct = default);
+        Func<string, Task>? progress = null, CancellationToken ct = default);
 
     /// <summary>
     /// Per-device CVEs including virtual-patch state (4.4.3), all pages.
@@ -33,7 +40,7 @@ public interface ITrendMicroClient
     /// Reports → View* for this endpoint, which the inventory endpoint does not require.
     /// </summary>
     Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(TrendMicroConnection connection,
-        string? apiKey, CancellationToken ct = default);
+        string? apiKey, Func<string, Task>? progress = null, CancellationToken ct = default);
 
     /// <summary>
     /// Writes asset criticality or an exemption note back to Vision One (4.4.4). Returns false rather

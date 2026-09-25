@@ -172,7 +172,8 @@ public class TrendMicroService(
             await run.StepAsync("inventory", $"Requesting the device inventory from {connection.BaseUrl}.",
                 ct: ct);
 
-            var devices = await client.GetDevicesAsync(connection, apiKey, ct);
+            var devices = await client.GetDevicesAsync(connection, apiKey,
+                message => run.StepAsync("inventory", message, ct: ct), ct);
 
             await run.StepAsync("inventory", "Device inventory received.", devices.Count, ct);
 
@@ -208,7 +209,8 @@ public class TrendMicroService(
             {
                 await run.StepAsync("cves", "Requesting vulnerable devices.", ct: ct);
 
-                var vulnerabilities = await client.GetVulnerableDevicesAsync(connection, apiKey, ct);
+                var vulnerabilities = await client.GetVulnerableDevicesAsync(connection, apiKey,
+                    message => run.StepAsync("cves", message, ct: ct), ct);
 
                 await run.StepAsync("cves", "Vulnerability records received.", vulnerabilities.Count, ct);
 

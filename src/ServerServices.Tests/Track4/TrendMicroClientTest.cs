@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DAL.Entities;
@@ -34,6 +36,15 @@ public class TrendMicroClientTest
     };
 
     private static JsonElement Element(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
+    /// <summary>
+    /// The client under test, with the retry back-off removed.
+    ///
+    /// Every failing request is now attempted three times with seconds between them, which is the point
+    /// of the change — and would make this file take a minute to run if the sleep were real.
+    /// </summary>
+    private static TrendMicroClient Client(FakeOutboundHttpClient http) =>
+        new(Log, http) { DelayAsync = (_, _) => Task.CompletedTask };
 
     // --- device parsing ---------------------------------------------------------------------
 
@@ -282,7 +293,7 @@ public class TrendMicroClientTest
                 """)
             .EnqueueJson("""{"items":[{"id":"a2","name":"two"}]}""");
 
-        var client = new TrendMicroClient(Log, http);
+        var client = Client(http);
 
         var devices = await client.GetDevicesAsync(Connection(), "key");
 
@@ -297,7 +308,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
 
-        await new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key");
+        await Client(http).GetDevicesAsync(Connection(), "key");
 
         Assert.Equal("Bearer key", http.Requests[0].Headers["Authorization"]);
         Assert.StartsWith("https://api.eu.xdr.trendmicro.com/v3.0/asrm/", http.Requests[0].Url);
@@ -306,10 +317,12 @@ public class TrendMicroClientTest
     [Fact]
     public async Task AFailedPageIsAnIntegrationFailureNotASilentEmptyResult()
     {
-        var http = new FakeOutboundHttpClient().EnqueueFailure(500);
+        // Three, because a 500 is retried: the run only fails once trying again has stopped helping.
+        var http = new FakeOutboundHttpClient()
+            .EnqueueFailure(500).EnqueueFailure(500).EnqueueFailure(500);
 
         var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
 
         Assert.Equal("Trend Micro Vision One", thrown.Provider);
     }
@@ -320,7 +333,7 @@ public class TrendMicroClientTest
         var http = new FakeOutboundHttpClient().EnqueueJson("<html>gateway</html>");
 
         var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
 
         Assert.Contains("not JSON", thrown.Message);
     }
@@ -332,7 +345,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[],"totalCount":42}""");
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        var result = await Client(http).TestAsync(Connection(), "key");
 
         Assert.True(result.Success);
         Assert.Equal("42", result.Details["Devices visible"]);
@@ -345,7 +358,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient();
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), null);
+        var result = await Client(http).TestAsync(Connection(), null);
 
         Assert.False(result.Success);
         Assert.Empty(http.Requests);
@@ -356,7 +369,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueFailure(401);
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        var result = await Client(http).TestAsync(Connection(), "key");
 
         Assert.False(result.Success);
         Assert.Contains("'eu'", result.Message);
@@ -367,7 +380,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueFailure(403);
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        var result = await Client(http).TestAsync(Connection(), "key");
 
         Assert.Contains("Attack Surface Risk Management", result.Message);
     }
@@ -377,7 +390,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueTransportError("Name or service not known");
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        var result = await Client(http).TestAsync(Connection(), "key");
 
         Assert.False(result.Success);
         Assert.Contains("Name or service not known", result.Message);
@@ -390,7 +403,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("{}");
 
-        var updated = await new TrendMicroClient(Log, http).UpdateDeviceAsync(Connection(), "key",
+        var updated = await Client(http).UpdateDeviceAsync(Connection(), "key",
             "agent-1", 5, "Accepted in NetRisk");
 
         Assert.True(updated);
@@ -407,7 +420,7 @@ public class TrendMicroClientTest
         var http = new FakeOutboundHttpClient().EnqueueFailure(403);
 
         // A refused write-back must not fail the sync that triggered it.
-        Assert.False(await new TrendMicroClient(Log, http)
+        Assert.False(await Client(http)
             .UpdateDeviceAsync(Connection(), "key", "agent-1", null, null));
     }
 
@@ -427,7 +440,7 @@ public class TrendMicroClientTest
             """);
 
         var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
 
         Assert.Contains("AccessDenied", thrown.Message);
         Assert.Contains("does not have permission", thrown.Message);
@@ -442,7 +455,7 @@ public class TrendMicroClientTest
         var http = new FakeOutboundHttpClient().EnqueueFailure(403);
 
         var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
 
         Assert.Contains("Attack Surface Risk Management", thrown.Message);
         Assert.Contains("data and app objects", thrown.Message);
@@ -455,7 +468,7 @@ public class TrendMicroClientTest
         var body = """{"error":{"code":"NotEntitled","message":"CREM is not enabled for this tenant."}}""";
 
         var vulnerabilities = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+            () => Client(new FakeOutboundHttpClient().EnqueueFailure(403, body))
                 .GetVulnerableDevicesAsync(Connection(), "key"));
 
         Assert.Contains("NotEntitled", vulnerabilities.Message);
@@ -482,7 +495,7 @@ public class TrendMicroClientTest
             .RuleFor("/asrm/vulnerableDevices", """{"error":{"code":"AccessDenied"}}""", 403)
             .RuleFor("/asrm/attackSurfaceDevices", """{"items":[],"totalCount":42}""");
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        var result = await Client(http).TestAsync(Connection(), "key");
 
         Assert.False(result.Success);
         Assert.Contains("hosts and no findings", result.Message);
@@ -499,7 +512,7 @@ public class TrendMicroClientTest
             .RuleFor("/asrm/vulnerableDevices", "{}", 403)
             .RuleFor("/asrm/attackSurfaceDevices", """{"items":[],"totalCount":42}""");
 
-        var result = await new TrendMicroClient(Log, http).TestAsync(connection, "key");
+        var result = await Client(http).TestAsync(connection, "key");
 
         Assert.True(result.Success);
         Assert.DoesNotContain(http.Requests, r => r.Url.Contains("vulnerableDevices"));
@@ -515,7 +528,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
 
-        await new TrendMicroClient(Log, http).GetVulnerableDevicesAsync(Connection(), "key");
+        await Client(http).GetVulnerableDevicesAsync(Connection(), "key");
 
         var url = Assert.Single(http.Requests).Url;
 
@@ -547,7 +560,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
 
-        await new TrendMicroClient(Log, http).GetVulnerableDevicesAsync(Connection(), "key");
+        await Client(http).GetVulnerableDevicesAsync(Connection(), "key");
 
         var request = Assert.Single(http.Requests);
 
@@ -571,7 +584,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[]}""");
 
-        await new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key");
+        await Client(http).GetDevicesAsync(Connection(), "key");
 
         Assert.True(Assert.Single(http.Requests).MaxResponseBytes
                     > OutboundHttpRequest.DefaultMaxResponseBytes);
@@ -614,7 +627,7 @@ public class TrendMicroClientTest
     {
         var http = new FakeOutboundHttpClient().EnqueueJson("""{"items":[],"totalCount":0}""");
 
-        await new TrendMicroClient(Log, http).TestAsync(Connection(), "key");
+        await Client(http).TestAsync(Connection(), "key");
 
         var url = http.Requests[0].Url;
 
@@ -644,7 +657,7 @@ public class TrendMicroClientTest
         ];
 
         var http = new FakeOutboundHttpClient();
-        var client = new TrendMicroClient(Log, http);
+        var client = Client(http);
 
         await client.TestAsync(Connection(), "key");
         await client.GetDevicesAsync(Connection(), "key");
@@ -665,16 +678,19 @@ public class TrendMicroClientTest
     {
         var body = """{"error":{"code":"AccessDenied","message":"No permission."}}""";
 
-        var test = await new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+        var test = await Client(new FakeOutboundHttpClient().EnqueueFailure(403, body))
             .TestAsync(Connection(), "key");
 
         var sync = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, new FakeOutboundHttpClient().EnqueueFailure(403, body))
+            () => Client(new FakeOutboundHttpClient().EnqueueFailure(403, body))
                 .GetDevicesAsync(Connection(), "key"));
 
         Assert.False(test.Success);
         Assert.Contains("AccessDenied", test.Message);
-        Assert.Equal(test.Message, sync.Message);
+        // The same diagnosis, and the paged read says which page died in front of it — an operator
+        // reading the sync log should not get a thinner explanation than one pressing Test.
+        Assert.EndsWith(test.Message, sync.Message);
+        Assert.StartsWith("Reading page 1 of /v3.0/asrm/attackSurfaceDevices", sync.Message);
     }
 
     [Fact]
@@ -769,14 +785,218 @@ public class TrendMicroClientTest
     [Fact]
     public async Task A429StillSaysToRetryAndCarriesTheBody()
     {
+        var body = """{"error":{"code":"TooManyRequests","message":"slow down"}}""";
+
         var http = new FakeOutboundHttpClient()
-            .EnqueueFailure(429, """{"error":{"code":"TooManyRequests","message":"slow down"}}""");
+            .EnqueueFailure(429, body).EnqueueFailure(429, body).EnqueueFailure(429, body);
 
         var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
-            () => new TrendMicroClient(Log, http).GetDevicesAsync(Connection(), "key"));
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
 
         Assert.Contains("rate-limiting", thrown.Message);
         Assert.Contains("TooManyRequests", thrown.Message);
+    }
+
+
+    // --- resilience -------------------------------------------------------------------------
+    //
+    // A crawl of a large tenant is hundreds of pages and tens of minutes. Before this, one page that
+    // timed out ended the whole run — the observed failure was an hour of inventory and risk-score work
+    // discarded because the first CVE request did not answer inside 60 seconds.
+
+    [Fact]
+    public async Task ATimedOutPageIsRetriedAndTheCrawlContinues()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueTransportError("The request timed out after 60s.")
+            .EnqueueJson("""{"items":[{"id":"a1","name":"one"}]}""");
+
+        var devices = await Client(http).GetDevicesAsync(Connection(), "key");
+
+        Assert.Single(devices);
+        Assert.Equal(2, http.Requests.Count);
+    }
+
+    [Fact]
+    public async Task EachRetryOfAPageGetsALongerTimeout()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueTransportError("The request timed out after 60s.")
+            .EnqueueTransportError("The request timed out after 120s.")
+            .EnqueueJson("""{"items":[]}""");
+
+        await Client(http).GetDevicesAsync(Connection(), "key");
+
+        // The failure this protects against is a page Vision One was still sending, so trying again
+        // with the same budget would simply fail again at the same point.
+        Assert.Equal(TimeSpan.FromSeconds(60), http.Requests[0].Timeout);
+        Assert.Equal(TimeSpan.FromSeconds(120), http.Requests[1].Timeout);
+        Assert.Equal(TimeSpan.FromSeconds(180), http.Requests[2].Timeout);
+    }
+
+    [Fact]
+    public async Task RetriesStopAtThreeAttemptsAndTheFailureSaysSo()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueTransportError("The request timed out after 60s.")
+            .EnqueueTransportError("The request timed out after 120s.")
+            .EnqueueTransportError("The request timed out after 180s.");
+
+        var thrown = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => Client(http).GetVulnerableDevicesAsync(Connection(), "key"));
+
+        Assert.Equal(3, http.Requests.Count);
+        Assert.Contains("Tried 3 times", thrown.Message);
+        // Which request died, not just that one did.
+        Assert.Contains("page 1", thrown.Message);
+        Assert.Contains("/v3.0/asrm/vulnerableDevices", thrown.Message);
+        // And the class of problem, which is what an operator can act on.
+        Assert.Contains("timed out", thrown.Message);
+    }
+
+    [Fact]
+    public async Task AConfigurationFailureIsNotRetried()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(403);
+
+        await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => Client(http).GetDevicesAsync(Connection(), "key"));
+
+        // Repeating a 403 three times only delays the operator finding out what is wrong.
+        Assert.Single(http.Requests);
+    }
+
+    [Fact]
+    public async Task RetryingResumesTheCrawlRatherThanRestartingIt()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueJson("""
+                {"items":[{"id":"a1"}],
+                 "nextLink":"https://api.eu.xdr.trendmicro.com/v3.0/asrm/attackSurfaceDevices?token=abc"}
+                """)
+            .EnqueueFailure(503)
+            .EnqueueJson("""{"items":[{"id":"a2"}]}""");
+
+        var devices = await Client(http).GetDevicesAsync(Connection(), "key");
+
+        Assert.Equal(2, devices.Count);
+        // The retry re-reads the page that failed, not page one: restarting a crawl on a transient
+        // failure is how a large tenant never finishes a sync.
+        Assert.Contains("token=abc", http.Requests[1].Url);
+        Assert.Contains("token=abc", http.Requests[2].Url);
+    }
+
+    [Fact]
+    public async Task ARetryIsAnnouncedOnTheRunsProgressTrail()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueFailure(503)
+            .EnqueueJson("""{"items":[]}""");
+
+        var lines = new List<string>();
+
+        await Client(http).GetDevicesAsync(Connection(), "key", message =>
+        {
+            lines.Add(message);
+            return Task.CompletedTask;
+        });
+
+        // A sync that silently retries for two minutes is indistinguishable from a hung one in the
+        // progress panel, which is the only place an operator watches a running sync.
+        var line = Assert.Single(lines);
+        Assert.Contains("attempt 1 of 3", line);
+        Assert.Contains("HTTP 503", line);
+    }
+
+    [Fact]
+    public async Task ARateLimitWaitsForTheBackOffTheProviderAsksFor()
+    {
+        var waits = new List<TimeSpan>();
+
+        var http = new FakeOutboundHttpClient()
+            .EnqueueFailure(429, retryAfter: "7")
+            .EnqueueJson("""{"items":[]}""");
+
+        var client = new TrendMicroClient(Log, http)
+        {
+            DelayAsync = (delay, _) =>
+            {
+                waits.Add(delay);
+                return Task.CompletedTask;
+            }
+        };
+
+        await client.GetDevicesAsync(Connection(), "key");
+
+        // Honouring it is the difference between a rate limit that clears and one that keeps being
+        // re-triggered.
+        Assert.Equal(TimeSpan.FromSeconds(7), Assert.Single(waits));
+    }
+
+    [Fact]
+    public async Task AnAbsurdRetryAfterIsCappedSoASyncCannotSleepForAnHour()
+    {
+        var waits = new List<TimeSpan>();
+
+        var http = new FakeOutboundHttpClient()
+            .EnqueueFailure(429, retryAfter: "3600")
+            .EnqueueJson("""{"items":[]}""");
+
+        var client = new TrendMicroClient(Log, http)
+        {
+            DelayAsync = (delay, _) =>
+            {
+                waits.Add(delay);
+                return Task.CompletedTask;
+            }
+        };
+
+        await client.GetDevicesAsync(Connection(), "key");
+
+        // The run holds the connection's single-flight lock while it sleeps.
+        Assert.Equal(TimeSpan.FromMinutes(2), Assert.Single(waits));
+    }
+
+    [Theory]
+    [InlineData("The request timed out after 60s.", "timed out")]
+    [InlineData("No such host is known.", "did not resolve")]
+    [InlineData("The SSL connection could not be established: certificate expired",
+        "TLS handshake failed")]
+    [InlineData("Connection refused", "refused or dropped")]
+    [InlineData("The response exceeded the 100663296 byte limit for this request.",
+        "larger than the response limit")]
+    public void ATransportFailureIsClassifiedIntoACauseAnOperatorCanAct0n(string error, string expected)
+    {
+        // "Vision One could not be reached" is true of all five and each has a different fix.
+        Assert.Contains(expected, TrendMicroClient.TransportCause(error));
+    }
+
+    [Fact]
+    public async Task ACancelledSyncIsNotRetried()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(503);
+
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => Client(http).GetDevicesAsync(Connection(), "key", null, cancellation.Token));
+
+        // The operator's cancellation is not a transient failure.
+        Assert.Single(http.Requests);
+    }
+
+    [Fact]
+    public async Task TheConnectionTestAnswersOnTheFirstAttempt()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueTransportError("Connection refused");
+
+        var result = await Client(http).TestAsync(Connection(), "key");
+
+        Assert.False(result.Success);
+        // An operator is watching a spinner: answering after twenty-five seconds of invisible back-off
+        // is worse than answering after one attempt, and they can press the button again.
+        Assert.Single(http.Requests);
     }
 
     // --- regions ----------------------------------------------------------------------------
