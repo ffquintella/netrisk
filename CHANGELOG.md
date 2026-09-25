@@ -12,6 +12,10 @@ This release includes new features and improvements.
 
 ### Changed
 
+- The Administration window's integration tabs now use the full width of the window: the detail form
+  beside each list stretches with its column instead of staying pinned at 460px, so a maximised
+  window no longer leaves the right half empty.
+
 ### Fixed
 
 

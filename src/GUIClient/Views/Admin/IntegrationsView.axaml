@@ -49,7 +49,7 @@
                 </DataGrid>
 
                 <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
 
                         <Border Classes="formCard">
                             <StackPanel>
@@ -304,7 +304,7 @@
                 </DataGrid>
 
                 <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
 
                         <Border Classes="formCard">
                             <StackPanel>
@@ -681,7 +681,7 @@
                 </DataGrid>
 
                 <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
 
                         <Border Classes="formCard">
                             <StackPanel>
@@ -880,7 +880,7 @@
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1" Grid.Column="0" Margin="0 10 10 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
                         <DataGrid ItemsSource="{Binding TrendMicroConnections}"
                                   SelectedItem="{Binding SelectedTrendMicro}"
                                   IsReadOnly="True" MinHeight="110" Margin="0 0 0 10">
@@ -999,7 +999,7 @@
                 </ScrollViewer>
 
                 <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
                         <DataGrid ItemsSource="{Binding ScorecardConnections}"
                                   SelectedItem="{Binding SelectedScorecard}"
                                   IsReadOnly="True" MinHeight="110" Margin="0 0 0 10">
@@ -1234,7 +1234,7 @@
                 </ScrollViewer>
 
                 <ScrollViewer Grid.Row="2" Grid.Column="1" Margin="0 10 0 0">
-                    <StackPanel Width="460" HorizontalAlignment="Left">
+                    <StackPanel MinWidth="460" HorizontalAlignment="Stretch">
 
                         <Border Classes="formCard">
                             <StackPanel>
