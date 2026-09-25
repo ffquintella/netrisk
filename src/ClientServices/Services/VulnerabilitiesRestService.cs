@@ -465,7 +465,9 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
     {
         using var client = RestService.GetClient();
         
-        var request = new RestRequest($"/Vulnerabilities/{id}/Status");
+        // /WorkflowStatus, not /Status: the latter is the Track 3 finding lifecycle, and while both
+        // were mapped to the same template every call to either returned 500 (AmbiguousMatchException).
+        var request = new RestRequest($"/Vulnerabilities/{id}/WorkflowStatus");
         request.AddJsonBody(status.ToString());
        
         try
@@ -475,7 +477,7 @@ public partial class VulnerabilitiesRestService: RestServiceBase, IVulnerabiliti
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error updating vulnerability status ");
-                throw new InvalidHttpRequestException("Error updating vulnerability status", $"/Vulnerabilities/{id}", "PUT");
+                throw new InvalidHttpRequestException("Error updating vulnerability status", $"/Vulnerabilities/{id}/WorkflowStatus", "PUT");
             }
             
             

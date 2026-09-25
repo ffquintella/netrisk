@@ -526,26 +526,26 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }
 
-    // ---------------- GetStatus ----------------
+    // ---------------- GetWorkflowStatus ----------------
 
     [Fact]
-    public void TestGetStatus()
+    public void TestGetWorkflowStatus()
     {
-        var result = _controller.GetStatus(OkId);
+        var result = _controller.GetWorkflowStatus(OkId);
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Equal((ushort)Model.IntStatus.Open, Assert.IsType<ushort>(ok.Value));
     }
 
     [Fact]
-    public void TestGetStatusNotFound()
+    public void TestGetWorkflowStatusNotFound()
     {
-        Assert.IsType<NotFoundResult>(_controller.GetStatus(NotFoundId).Result);
+        Assert.IsType<NotFoundResult>(_controller.GetWorkflowStatus(NotFoundId).Result);
     }
 
     [Fact]
-    public void TestGetStatusReturnsServerErrorOnException()
+    public void TestGetWorkflowStatusReturnsServerErrorOnException()
     {
-        var status = Assert.IsType<StatusCodeResult>(_controller.GetStatus(ErrorId).Result);
+        var status = Assert.IsType<StatusCodeResult>(_controller.GetWorkflowStatus(ErrorId).Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }
 
@@ -597,25 +597,25 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }
 
-    // ---------------- UpdateStatus ----------------
+    // ---------------- UpdateWorkflowStatus ----------------
 
     [Fact]
-    public void TestUpdateStatus()
+    public void TestUpdateWorkflowStatus()
     {
-        Assert.IsType<OkResult>(_controller.UpdateStatus(OkId, 4).Result);
+        Assert.IsType<OkResult>(_controller.UpdateWorkflowStatus(OkId, 4).Result);
         _vulnerabilitiesService.Received(1).UpdateStatus(OkId, 4);
     }
 
     [Fact]
-    public void TestUpdateStatusNotFound()
+    public void TestUpdateWorkflowStatusNotFound()
     {
-        Assert.IsType<NotFoundResult>(_controller.UpdateStatus(NotFoundId, 4).Result);
+        Assert.IsType<NotFoundResult>(_controller.UpdateWorkflowStatus(NotFoundId, 4).Result);
     }
 
     [Fact]
-    public void TestUpdateStatusReturnsServerErrorOnException()
+    public void TestUpdateWorkflowStatusReturnsServerErrorOnException()
     {
-        var status = Assert.IsType<StatusCodeResult>(_controller.UpdateStatus(ErrorId, 4).Result);
+        var status = Assert.IsType<StatusCodeResult>(_controller.UpdateWorkflowStatus(ErrorId, 4).Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }
 

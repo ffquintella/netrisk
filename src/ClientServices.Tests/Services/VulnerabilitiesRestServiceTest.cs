@@ -558,11 +558,11 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
     [Fact]
     public async Task TestUpdateStatusAsyncPutsTheStatusAsARawJsonValue()
     {
-        _backend.On(Method.Put, "/Vulnerabilities/61/Status", "", HttpStatusCode.OK);
+        _backend.On(Method.Put, "/Vulnerabilities/61/WorkflowStatus", "", HttpStatusCode.OK);
 
         await _service.UpdateStatusAsync(61, 4);
 
-        Assert.Equal("PUT /Vulnerabilities/61/Status", _backend.LastRequest.ToString());
+        Assert.Equal("PUT /Vulnerabilities/61/WorkflowStatus", _backend.LastRequest.ToString());
         // AddJsonBody with a string sends it verbatim rather than re-serializing it.
         Assert.Equal("4", _backend.LastRequest.Body);
     }
@@ -570,7 +570,7 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
     [Fact]
     public async Task TestUpdateStatusAsyncThrowsOnAnUnexpectedSuccessStatus()
     {
-        _backend.OnStatus(Method.Put, "/Vulnerabilities/62/Status", HttpStatusCode.NoContent);
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/62/WorkflowStatus", HttpStatusCode.NoContent);
 
         await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.UpdateStatusAsync(62, 1));
     }
@@ -578,7 +578,7 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
     [Fact]
     public async Task TestUpdateStatusAsyncWrapsAServerError()
     {
-        _backend.OnStatus(Method.Put, "/Vulnerabilities/63/Status", HttpStatusCode.InternalServerError);
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/63/WorkflowStatus", HttpStatusCode.InternalServerError);
 
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.UpdateStatusAsync(63, 1));
     }
@@ -586,18 +586,18 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
     [Fact]
     public void TestUpdateStatusRunsTheAsyncCallSynchronously()
     {
-        _backend.On(Method.Put, "/Vulnerabilities/64/Status", "", HttpStatusCode.OK);
+        _backend.On(Method.Put, "/Vulnerabilities/64/WorkflowStatus", "", HttpStatusCode.OK);
 
         _service.UpdateStatus(64, 9);
 
-        Assert.Equal("PUT /Vulnerabilities/64/Status", _backend.LastRequest.ToString());
+        Assert.Equal("PUT /Vulnerabilities/64/WorkflowStatus", _backend.LastRequest.ToString());
         Assert.Equal("9", _backend.LastRequest.Body);
     }
 
     [Fact]
     public void TestUpdateStatusPropagatesTheWrappedServerError()
     {
-        _backend.OnStatus(Method.Put, "/Vulnerabilities/65/Status", HttpStatusCode.InternalServerError);
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/65/WorkflowStatus", HttpStatusCode.InternalServerError);
 
         Assert.Throws<RestComunicationException>(() => _service.UpdateStatus(65, 1));
     }

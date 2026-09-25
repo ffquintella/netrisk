@@ -369,11 +369,13 @@ public partial class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    // The register's own workflow column (Model.IntStatus), which is not the Track 3 finding
+    // lifecycle served by {id}/status - see UpdateWorkflowStatus below for why the route differs.
     [HttpGet]
-    [Route("{id}/Status")]
+    [Route("{id}/WorkflowStatus")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<RiskScoring> GetStatus(int id)
+    public ActionResult<RiskScoring> GetWorkflowStatus(int id)
     {
         var user = GetUser();
         try
@@ -449,11 +451,23 @@ public partial class VulnerabilitiesController: ApiBaseController
         }
     }
     
+    /// <summary>
+    /// Sets the register's workflow status - the <c>vulnerabilities.status</c> column, whose values
+    /// are <c>Model.IntStatus</c> (Prioritized, AwaitingFix, Rejected, Fixed ...), which is what the
+    /// desktop register's status buttons drive.
+    ///
+    /// The route is <c>{id}/WorkflowStatus</c> rather than <c>{id}/Status</c> because Track 3 added
+    /// <see cref="UpdateLifecycleStatus"/> on <c>PUT {id}/status</c>. Route templates are matched
+    /// case-insensitively, so the two were indistinguishable to endpoint routing: every call to
+    /// either died with an AmbiguousMatchException before reaching a controller, which reached the
+    /// client as a bare 500. They stay two endpoints because they write two different columns with
+    /// two different value sets - see DAL.Enums.FindingStatus for why those are deliberately apart.
+    /// </summary>
     [HttpPut]
-    [Route("{id}/Status")]
+    [Route("{id}/WorkflowStatus")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<RiskScoring> UpdateStatus(int id, [FromBody] ushort status)
+    public ActionResult<RiskScoring> UpdateWorkflowStatus(int id, [FromBody] ushort status)
     {
         var user = GetUser();
         try

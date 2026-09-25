@@ -18,6 +18,15 @@ This release includes new features and improvements.
 
 ### Fixed
 
+- Fixed every vulnerability status change failing with "Error updating vulnerability". Track 3's
+  finding-lifecycle endpoint (`PUT Vulnerabilities/{id}/status`) and the register's own workflow
+  status endpoint (`PUT Vulnerabilities/{id}/Status`) were mapped to the same route template, which
+  routing matches case-insensitively, so both endpoints died with an `AmbiguousMatchException`
+  before reaching a controller and the client saw a bare HTTP 500. The register's endpoints moved to
+  `Vulnerabilities/{id}/WorkflowStatus` (`GET` and `PUT`); the two remain separate because they write
+  different columns with different value sets. **API change:** a client calling
+  `GET`/`PUT Vulnerabilities/{id}/Status` for the `IntStatus` workflow column must use the new path —
+  though, being ambiguous, neither could have worked.
 
 
 ## [2.22.1] - 2026-09-24
