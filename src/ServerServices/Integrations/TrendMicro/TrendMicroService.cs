@@ -315,18 +315,137 @@ public class TrendMicroService(
     }
 
     /// <summary>
+    /// How many devices are applied before the context is flushed.
+    ///
+    /// Not one, which is what this used to do. A <c>SaveChanges</c> per device on a tenant of 17,900
+    /// devices is 17,900 round trips *and* 17,900 change-tracker sweeps over an ever-growing set of
+    /// tracked hosts, which is quadratic and was the larger half of a 52-minute inventory pass. 500 is
+    /// large enough that the round trips stop mattering and small enough that one failed batch costs a
+    /// bounded amount of re-work.
+    /// </summary>
+    private const int InventoryChunkSize = 500;
+
+    /// <summary>
     /// Upserts the device inventory onto NetRisk hosts (4.4.2).
     ///
     /// The match order is the deduplication the milestone calls for, strongest identity first: the
     /// provider's own external id, then MAC, then hostname/FQDN, then IP. IP is last on purpose — DHCP
     /// makes it the weakest of the four, and matching on it first merges two machines that happened to
     /// share a lease.
+    ///
+    /// The matching is done against one in-memory read of <c>hosts</c> rather than a query per
+    /// candidate. Four of those five columns — <c>external_id</c>, <c>mac_address</c>, <c>fqdn</c>,
+    /// <c>host_name</c>, <c>ip</c> — carry no index, so the old shape was up to five full scans per
+    /// device: on the tenant this was fixed for, 17,934 devices against an 18,000-row table, which is
+    /// on the order of a billion row comparisons and took 52 minutes for a pass that created 32 hosts.
+    /// One read of the table is a single scan, and the dictionaries below answer the same five
+    /// questions in constant time.
     /// </summary>
     private async Task<Dictionary<string, int>> SyncInventoryAsync(TrendMicroConnection connection,
         List<TrendMicroDevice> devices, PostureSyncResult result, CancellationToken ct)
     {
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
+        var db = DalService.GetContext();
+
+        try
+        {
+            var index = await HostMatchIndex.LoadAsync(db, ct);
+
+            var remaining = 0;
+
+            foreach (var chunk in devices.Chunk(InventoryChunkSize))
+            {
+                // Counted per chunk and only added to the result once the chunk is committed: a batch
+                // that fails is re-applied one device at a time below, and counting it here as well
+                // would report every host in it twice.
+                var applied = new List<(TrendMicroDevice Device, Host Host, bool Created)>();
+
+                foreach (var device in chunk)
+                {
+                    try
+                    {
+                        var host = index.Match(device);
+                        var created = host == null;
+
+                        if (host == null)
+                        {
+                            host = NewHost(connection, device);
+                            db.Hosts.Add(host);
+
+                            // Into the index before the chunk is saved, so a second device carrying the
+                            // same MAC in the same batch claims this host instead of creating a twin —
+                            // which is what the per-device save used to give for free.
+                            index.Add(host);
+                        }
+                        else
+                        {
+                            ApplyToExistingHost(host, device);
+                        }
+
+                        applied.Add((device, host, created));
+                    }
+                    catch (Exception ex)
+                    {
+                        RecordDeviceError(result, device, ex);
+                    }
+                }
+
+                try
+                {
+                    await db.SaveChangesAsync(ct);
+                }
+                catch (Exception ex)
+                {
+                    // The context now holds a batch that will not commit, so every later chunk would
+                    // fail on the same rows. It is abandoned, and the rest of the inventory — this
+                    // chunk included, since nothing in it was written — falls back to the one-device-
+                    // at-a-time path, which is slow but isolates the row that is actually bad.
+                    Logger.Warning(ex,
+                        "A batch of {Count} Vision One device(s) for connection {Connection} could not "
+                        + "be saved; falling back to one device at a time", applied.Count, connection.Name);
+
+                    result.Messages.Add(
+                        $"A batch of {applied.Count} device(s) failed to save ({ex.Message}); "
+                        + "the remaining devices were applied one at a time.");
+
+                    await db.DisposeAsync();
+                    db = null!;
+
+                    await SyncInventoryDeviceByDeviceAsync(connection,
+                        devices.Skip(remaining).ToList(), map, result, ct);
+
+                    return map;
+                }
+
+                foreach (var (device, host, created) in applied)
+                {
+                    map[device.Id] = host.Id;
+
+                    if (created) result.HostsCreated++;
+                    else result.HostsUpdated++;
+                }
+
+                remaining += chunk.Length;
+            }
+        }
+        finally
+        {
+            if (db != null) await db.DisposeAsync();
+        }
+
+        return map;
+    }
+
+    /// <summary>
+    /// The original one-device-at-a-time upsert, kept as the recovery path for a batch that would not
+    /// commit. Every lookup is a query and every device is its own transaction, which is exactly what
+    /// makes it able to report the single device that is at fault and carry on.
+    /// </summary>
+    private async Task SyncInventoryDeviceByDeviceAsync(TrendMicroConnection connection,
+        List<TrendMicroDevice> devices, Dictionary<string, int> map, PostureSyncResult result,
+        CancellationToken ct)
+    {
         await using var db = DalService.GetContext();
 
         foreach (var device in devices)
@@ -337,50 +456,13 @@ public class TrendMicroService(
 
                 if (host == null)
                 {
-                    host = new Host
-                    {
-                        HostName = device.Name ?? device.Fqdn ?? device.PrimaryIp ?? device.Id,
-                        Fqdn = device.Fqdn,
-                        Ip = device.PrimaryIp,
-                        MacAddress = device.PrimaryMac,
-                        Os = device.OperatingSystem,
-                        OsVersion = device.OsVersion,
-                        Source = ProviderName,
-                        Status = 1,
-                        RegistrationDate = DateTime.UtcNow,
-                        EntityId = connection.EntityId,
-                        ExternalId = device.Id,
-                        ExternalProvider = ProviderName,
-                        Criticality = device.Criticality
-                    };
-
+                    host = NewHost(connection, device);
                     db.Hosts.Add(host);
                     result.HostsCreated++;
                 }
                 else
                 {
-                    // Claiming an existing host: the external id is written so the next sync matches on
-                    // it directly rather than re-deriving the match from MAC or hostname.
-                    host.ExternalId = device.Id;
-                    host.ExternalProvider = ProviderName;
-
-                    // Only filled in where NetRisk has nothing. A hostname a person typed is better
-                    // data than one an agent guessed, and overwriting it every night is how an
-                    // integration becomes something people turn off.
-                    host.HostName ??= device.Name;
-                    host.Fqdn ??= device.Fqdn;
-                    host.Ip ??= device.PrimaryIp;
-                    host.MacAddress ??= device.PrimaryMac;
-                    host.Os ??= device.OperatingSystem;
-                    host.OsVersion = device.OsVersion ?? host.OsVersion;
-
-                    // Criticality is the provider's to own: it is the asset classification the customer
-                    // configured in Vision One, which is more current than a NetRisk value nobody
-                    // maintains.
-                    if (device.Criticality != null) host.Criticality = device.Criticality;
-
-                    host.LastVerificationDate = DateTime.UtcNow;
-
+                    ApplyToExistingHost(host, device);
                     result.HostsUpdated++;
                 }
 
@@ -390,15 +472,15 @@ public class TrendMicroService(
             }
             catch (Exception ex)
             {
-                result.Errors++;
-                result.Messages.Add($"Device {device.Id}: {ex.Message}");
-                Logger.Warning("Could not sync Vision One device {Device}: {Message}", device.Id, ex.Message);
+                RecordDeviceError(result, device, ex);
             }
         }
-
-        return map;
     }
 
+    /// <summary>
+    /// The per-device form of the match, one query per identity. Only the recovery path uses it now;
+    /// the normal pass answers the same five questions from <see cref="HostMatchIndex"/>.
+    /// </summary>
     private static async Task<Host?> MatchHostAsync(AuditableContext db, TrendMicroConnection connection,
         TrendMicroDevice device, CancellationToken ct)
     {
@@ -431,6 +513,116 @@ public class TrendMicroService(
         return host;
     }
 
+    private static Host NewHost(TrendMicroConnection connection, TrendMicroDevice device) => new()
+    {
+        HostName = device.Name ?? device.Fqdn ?? device.PrimaryIp ?? device.Id,
+        Fqdn = device.Fqdn,
+        Ip = device.PrimaryIp,
+        MacAddress = device.PrimaryMac,
+        Os = device.OperatingSystem,
+        OsVersion = device.OsVersion,
+        Source = ProviderName,
+        Status = 1,
+        RegistrationDate = DateTime.UtcNow,
+        EntityId = connection.EntityId,
+        ExternalId = device.Id,
+        ExternalProvider = ProviderName,
+        Criticality = device.Criticality
+    };
+
+    private static void ApplyToExistingHost(Host host, TrendMicroDevice device)
+    {
+        // Claiming an existing host: the external id is written so the next sync matches on it directly
+        // rather than re-deriving the match from MAC or hostname.
+        host.ExternalId = device.Id;
+        host.ExternalProvider = ProviderName;
+
+        // Only filled in where NetRisk has nothing. A hostname a person typed is better data than one
+        // an agent guessed, and overwriting it every night is how an integration becomes something
+        // people turn off.
+        host.HostName ??= device.Name;
+        host.Fqdn ??= device.Fqdn;
+        host.Ip ??= device.PrimaryIp;
+        host.MacAddress ??= device.PrimaryMac;
+        host.Os ??= device.OperatingSystem;
+        host.OsVersion = device.OsVersion ?? host.OsVersion;
+
+        // Criticality is the provider's to own: it is the asset classification the customer configured
+        // in Vision One, which is more current than a NetRisk value nobody maintains.
+        if (device.Criticality != null) host.Criticality = device.Criticality;
+
+        host.LastVerificationDate = DateTime.UtcNow;
+    }
+
+    private void RecordDeviceError(PostureSyncResult result, TrendMicroDevice device, Exception ex)
+    {
+        result.Errors++;
+        result.Messages.Add($"Device {device.Id}: {ex.Message}");
+        Logger.Warning("Could not sync Vision One device {Device}: {Message}", device.Id, ex.Message);
+    }
+
+    /// <summary>
+    /// One read of <c>hosts</c>, indexed the five ways <see cref="MatchHostAsync"/> queries it.
+    ///
+    /// Case-insensitive on purpose: the database compares these columns under a case-insensitive
+    /// collation, and a plain .NET dictionary would not — so matching in memory with ordinal keys would
+    /// quietly create a second host for a device whose hostname came back in a different case.
+    /// </summary>
+    private sealed class HostMatchIndex
+    {
+        private readonly Dictionary<string, Host> _byExternalId = New();
+        private readonly Dictionary<string, Host> _byMac = New();
+        private readonly Dictionary<string, Host> _byFqdn = New();
+        private readonly Dictionary<string, Host> _byName = New();
+        private readonly Dictionary<string, Host> _byIp = New();
+
+        private static Dictionary<string, Host> New() => new(StringComparer.OrdinalIgnoreCase);
+
+        public static async Task<HostMatchIndex> LoadAsync(AuditableContext db, CancellationToken ct)
+        {
+            var index = new HostMatchIndex();
+
+            // Ordered by id, and every key kept at its first holder: the queries this replaces were
+            // FirstOrDefault against an unordered table, which MariaDB answers in primary-key order for
+            // a scan. Two hosts sharing a MAC therefore resolve to the same one as before.
+            foreach (var host in await db.Hosts.OrderBy(h => h.Id).ToListAsync(ct))
+                index.Add(host);
+
+            return index;
+        }
+
+        public void Add(Host host)
+        {
+            if (host.ExternalProvider == ProviderName && !string.IsNullOrWhiteSpace(host.ExternalId))
+                _byExternalId.TryAdd(host.ExternalId, host);
+
+            if (!string.IsNullOrWhiteSpace(host.MacAddress)) _byMac.TryAdd(host.MacAddress, host);
+            if (!string.IsNullOrWhiteSpace(host.Fqdn)) _byFqdn.TryAdd(host.Fqdn, host);
+            if (!string.IsNullOrWhiteSpace(host.HostName)) _byName.TryAdd(host.HostName, host);
+            if (!string.IsNullOrWhiteSpace(host.Ip)) _byIp.TryAdd(host.Ip, host);
+        }
+
+        /// <summary>Strongest identity first, in the same order <see cref="MatchHostAsync"/> asks.</summary>
+        public Host? Match(TrendMicroDevice device)
+        {
+            if (_byExternalId.TryGetValue(device.Id, out var host)) return host;
+
+            if (!string.IsNullOrWhiteSpace(device.PrimaryMac)
+                && _byMac.TryGetValue(device.PrimaryMac, out host)) return host;
+
+            if (!string.IsNullOrWhiteSpace(device.Fqdn)
+                && _byFqdn.TryGetValue(device.Fqdn, out host)) return host;
+
+            if (!string.IsNullOrWhiteSpace(device.Name)
+                && _byName.TryGetValue(device.Name, out host)) return host;
+
+            if (!string.IsNullOrWhiteSpace(device.PrimaryIp)
+                && _byIp.TryGetValue(device.PrimaryIp, out host)) return host;
+
+            return null;
+        }
+    }
+
     /// <summary>
     /// Writes device risk scores and rolls them into the entity's Cyber Risk Index (4.4.4).
     ///
@@ -453,12 +645,20 @@ public class TrendMicroService(
 
         await using var db = DalService.GetContext();
 
+        // One read of this provider's hosts rather than a query per scored device. external_id carries
+        // no index, so each of those queries was a full scan of hosts — 9,340 of them on the tenant
+        // this was measured against, for a pass that writes one column on each row it finds.
+        var byExternalId = new Dictionary<string, Host>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var known in await db.Hosts
+                     .Where(h => h.ExternalProvider == ProviderName && h.ExternalId != null)
+                     .OrderBy(h => h.Id)
+                     .ToListAsync(ct))
+            byExternalId.TryAdd(known.ExternalId!, known);
+
         foreach (var (externalId, device) in scores)
         {
-            var host = await db.Hosts.FirstOrDefaultAsync(
-                h => h.ExternalProvider == ProviderName && h.ExternalId == externalId, ct);
-
-            if (host == null) continue;
+            if (!byExternalId.TryGetValue(externalId, out var host)) continue;
 
             host.RiskScore = device.RiskScore;
             host.RiskScoreSource = ProviderName;

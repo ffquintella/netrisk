@@ -167,6 +167,13 @@ public abstract class InMemoryServiceTestBase
     protected AuditableContext OpenContext() => _dalService.GetContext();
 
     /// <summary>
+    /// How many <c>SaveChanges</c> this test's database has completed. For asserting that a service
+    /// writes in batches rather than once per item — a shape no assertion about the resulting rows
+    /// can distinguish.
+    /// </summary>
+    protected int SaveChangesCount => _dalService.SaveChangesCount;
+
+    /// <summary>
     /// Narrows every context the services open to <paramref name="entityIds"/>, standing in for a
     /// user whose claims carry those entity assignments (Track 2 milestone 2.3.2).
     /// </summary>

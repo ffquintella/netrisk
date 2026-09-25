@@ -16,6 +16,29 @@ This release includes new features and improvements.
 
 
 
+## [2.22.4] - 2026-09-25
+
+This release includes new features and improvements.
+
+### Added
+
+### Changed
+
+### Fixed
+
+- A Trend Micro Vision One inventory pass no longer takes the better part of an hour. It matched each
+  device against `hosts` with up to five queries and then saved it in its own transaction; none of
+  `external_id`, `mac_address`, `fqdn`, `host_name` or `ip` carries an index, so a tenant of 17,934
+  devices meant roughly 90,000 full table scans plus 17,934 change-tracker sweeps that grow with every
+  device already applied — 52 minutes to create 32 hosts and update the rest. The pass now matches
+  against a single read of the table and writes in batches of 500, and the risk-score pass reads the
+  provider's hosts once instead of querying per device. Matching is unchanged — external id, then MAC,
+  then FQDN, then hostname, then IP, and two devices in one batch that share an identity still claim
+  the same host — and a batch that will not commit falls back to the old one-device-at-a-time path, so
+  a single bad row is still reported as itself instead of losing the pass.
+
+
+
 ## [2.22.3] - 2026-09-25
 
 This release includes new features and improvements.

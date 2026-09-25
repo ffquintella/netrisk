@@ -1,6 +1,8 @@
 using System;
 using DAL.Context;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using ServerServices.Services;
 
 namespace ServerServices.Tests.Mock;
@@ -14,6 +16,12 @@ namespace ServerServices.Tests.Mock;
 public class InMemoryDalService : IDalService
 {
     private readonly DbContextOptions<NRDbContext> _options;
+
+    private int _saveChanges;
+
+    /// <summary>How many <c>SaveChanges</c> have completed against this database, across all contexts.</summary>
+    public int SaveChangesCount => Volatile.Read(ref _saveChanges);
+
     public string DatabaseName { get; }
 
     public InMemoryDalService(string databaseName)
@@ -22,6 +30,12 @@ public class InMemoryDalService : IDalService
         _options = new DbContextOptionsBuilder<NRDbContext>()
             .UseInMemoryDatabase(databaseName)
             .EnableSensitiveDataLogging()
+            // Counted, not printed. A service that writes a row per item instead of a batch is a
+            // performance defect no assertion about the resulting data can see — the Vision One
+            // inventory pass saved once per device and took 52 minutes on a real tenant — so the one
+            // event that exposes it is made observable to the tests that care.
+            .LogTo(_ => Interlocked.Increment(ref _saveChanges),
+                new[] { CoreEventId.SaveChangesCompleted })
             .Options;
     }
 

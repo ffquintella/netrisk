@@ -402,6 +402,103 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal("agent-1", host.ExternalId);
     }
 
+    // --- inventory batching ---------------------------------------------------------------
+    //
+    // The inventory pass used to run five queries and one SaveChanges per device. None of
+    // external_id, mac_address, fqdn, host_name or ip carries an index, so a tenant of 17,934 devices
+    // against an 18,000-row hosts table was on the order of a billion row comparisons plus a
+    // quadratic change-tracker sweep: 52 minutes to create 32 hosts. It now matches against one
+    // in-memory read and saves in batches, and these hold the behaviour that shape has to preserve.
+
+    [Fact]
+    public async Task TwoDevicesInOneBatchSharingAnIdentityClaimTheSameHost()
+    {
+        var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
+
+        // The per-device save used to give this for free: the host created for the first device was
+        // committed before the second was matched. Batching has to keep it, or a duplicate MAC in one
+        // page creates a twin host.
+        StubApi("""
+            {"items":[{"id":"agent-1","name":"db-prod-01","mac":["00:11:22:33:44:55"]},
+                      {"id":"agent-2","name":"db-prod-01-again","mac":["00:11:22:33:44:55"]}]}
+            """);
+
+        var result = await _svc.SyncAsync(view.Id);
+
+        Assert.Equal(1, result.HostsCreated);
+        Assert.Equal(1, result.HostsUpdated);
+
+        await using var db = OpenContext();
+        Assert.Single(db.Hosts);
+    }
+
+    [Fact]
+    public async Task AnInventoryLargerThanOneBatchIsFullyApplied()
+    {
+        var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
+
+        // Past the 500-device chunk, so the map the CVE and risk-score passes key off has to survive
+        // more than one flush — every device's host id is assigned by a different SaveChanges.
+        var items = string.Join(",", Enumerable.Range(1, 1201)
+            .Select(i => $$"""{"id":"agent-{{i}}","name":"host-{{i}}"}"""));
+
+        StubApi($$"""{"items":[{{items}}]}""");
+
+        var result = await _svc.SyncAsync(view.Id);
+
+        Assert.Equal(1201, result.HostsCreated);
+        Assert.Equal(0, result.Errors);
+
+        await using var db = OpenContext();
+        Assert.Equal(1201, db.Hosts.Count());
+        Assert.Equal(1201, db.Hosts.Count(h => h.ExternalId != null));
+    }
+
+    [Fact]
+    public async Task TheInventoryIsWrittenInBatchesRatherThanOncePerDevice()
+    {
+        var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
+
+        var items = string.Join(",", Enumerable.Range(1, 1201)
+            .Select(i => $$"""{"id":"agent-{{i}}","name":"host-{{i}}"}"""));
+
+        StubApi($$"""{"items":[{{items}}]}""");
+
+        var before = SaveChangesCount;
+
+        await _svc.SyncAsync(view.Id);
+
+        // Three chunks of 500, plus the sync log and connection rows. Before this it was one save per
+        // device — 1,201 round trips, each preceded by a change-tracker sweep over every host saved so
+        // far, which is quadratic and was most of a 52-minute pass on a real tenant.
+        Assert.InRange(SaveChangesCount - before, 1, 20);
+    }
+
+    [Fact]
+    public async Task AHostIsMatchedWithoutRegardToCase()
+    {
+        Seed(ctx => ctx.Hosts.Add(new Host
+        {
+            Id = 1, HostName = "DB-PROD-01", Source = "manual", RegistrationDate = Now,
+            Status = 1, EntityId = 7
+        }));
+
+        var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
+
+        StubApi("""{"items":[{"id":"agent-1","name":"db-prod-01"}]}""");
+
+        var result = await _svc.SyncAsync(view.Id);
+
+        // The queries this replaced were answered by MariaDB under a case-insensitive collation, so an
+        // ordinal in-memory match would quietly create a second host for a name that came back in a
+        // different case.
+        Assert.Equal(0, result.HostsCreated);
+        Assert.Equal(1, result.HostsUpdated);
+
+        await using var db = OpenContext();
+        Assert.Single(db.Hosts);
+    }
+
     [Fact]
     public async Task CriticalityIsOwnedByTheProviderAndDoesOverwrite()
     {
