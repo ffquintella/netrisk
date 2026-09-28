@@ -1,2741 +1,833 @@
-# Change Log
-All notable changes to this project will be documented in this file.
+---
+ptf: 1
+project: netrisk
+---
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).
+# Changelog
 
-## [NEXT] - Unreleased
+All notable changes to NetRisk are documented here. Format: [Keep a Changelog](http://keepachangelog.com/)
+1.1.0 with the Postponed/Abandoned extensions described in
+[TRACKING-FORMAT.md](https://github.com/felipe/project-tracker/blob/main/TRACKING-FORMAT.md). Versions
+follow [SemVer](http://semver.org/).
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
-### Fixed
-
-
+## [Unreleased]
 
 ## [2.22.6] - 2026-09-28
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Jira Server / Data Center** is now its own issue-tracker provider, alongside Jira Cloud. Pick
-  *Jira Data Center* in the provider list, give the instance root as the base URL — including a
-  context path such as `/jira` — and leave the **authentication user empty** with a Personal Access
-  Token as the credential. A named user still means username + password basic auth, for the instances
-  that allow it. Status mappings can be loaded from a Data Center project's workflow the same way as
-  from Cloud; Service Management and Assets remain Cloud-only, because Data Center serves Insight
-  from a different API with a different object model.
-  Until now the only Jira option spoke Cloud's REST v3 and sent the credential as basic auth, and a
-  Data Center instance answers that with a **403 on a perfectly valid credential** — it authenticates
-  the request and then refuses the route, which reads as a missing project permission. The connection
-  test now says which of the two it is, and names the two things that actually cause it: a PAT sent as
-  a basic-auth password, and the CAPTCHA challenge Jira puts on an account after the failed logins
-  that follow, which answers 403 even once the credential is right.
-
-### Changed
-
-### Fixed
-
-
+- Add Jira Server/Data Center as a separate issue-tracker provider authenticating via Personal Access Token (T79)
 
 ## [2.22.5] - 2026-09-28
 
-This release includes new features and improvements.
-
 ### Added
-
-- An hourly background sweep settles integration synchronization runs whose process stopped before it
-  could record an outcome. The rule for what counts as abandoned — still `Running` two hours after it
-  started — is the one that already existed; what is new is that something runs it on a clock. Until
-  now it ran only when somebody started another sync of the same provider, which is the one thing a
-  dead process cannot cause: a Vision One run killed mid-import read as live work on the Posture
-  providers screen for three days, and refused every retry of that connection for the same three days.
-  Each settled run is announced to administrators and says how long it had been stuck, and the reason
-  is appended to its progress trail rather than replacing the last line the dead run managed to write.
-- Imports now report progress while they persist. A finding-import job's progress bar moves through
-  the second half of the run instead of jumping from 50% to 100%, and a Vision One synchronization
-  writes a trail line per percent through the CVE and virtual-patch passes, each carrying the running
-  created/updated/skipped counts.
+- Sweep and settle integration sync runs abandoned mid-process on an hourly clock instead of only on the next manual sync (T71, T75)
+- Report vulnerability-import and Vision One synchronization progress incrementally instead of jumping from 50% to 100%
 
 ### Changed
-
-- Stored credentials are now encrypted under a dedicated master key held in the most protected place
-  the host offers, instead of a key derived from the JWT signing token. On Linux the key is sealed to
-  a TPM 2.0 when `/dev/tpmrm0` and `tpm2-tools` are present; on macOS it is a keychain item, which is
-  Secure Enclave-protected on Apple silicon; on Windows it is wrapped with DPAPI at machine scope.
-  Where none of those is available it falls back to an owner-only (0600) file at
-  `<AppData>/NRServer/secrets/master.key`, and a deployment with nowhere durable to write can supply
-  the key as `NETRISK_SECRET_MASTER_KEY` instead. Existing credentials keep working: the old
-  derivation remains as a decrypt-only fallback and any save re-encrypts under the new key. Two
-  consequences worth knowing before a host rebuild: rotating or deleting the JWT signing key no
-  longer destroys every stored credential, and the hardware-backed stores are deliberately not
-  portable to another machine — see §3.7 of `docs/security/SECRETS.md`.
+- Encrypt stored credentials under a dedicated master key held in the host's most protected store (TPM/keychain/DPAPI/owner-only file) instead of one derived from the JWT signing token (T113, S22)
 
 ### Fixed
-
-- A large vulnerability import no longer runs indefinitely. The ingestion pipeline put every finding
-  of an import through one long-lived `DbContext` and saved after each insert, so each save swept a
-  change tracker holding everything ingested so far — quadratic, and invisible at the few thousand
-  findings a scanner file contains. A Vision One tenant reporting 563,310 of them never finished:
-  three days in, the run had recorded no progress past the line before the import started. Findings
-  are now persisted in batches of 500 on a context per batch, the deduplication strategy chain is
-  resolved once per import rather than once per finding (resolving it enumerates and loads every
-  enabled plugin), the SLA policy table is read once instead of per finding from two separate places,
-  and the existing-finding lookup is one batched query instead of up to two per finding. Behaviour is
-  unchanged: every candidate key is still tried in chain order, `import_hash` is still consulted for
-  the legacy strategy, duplicates within and across batches still group rather than duplicate, and a
-  batch the database rejects is retried one finding at a time so a single bad row is still reported as
-  itself instead of losing its 499 neighbours.
-- The Vision One virtual-patch pass and the importer's auto-close pass had the same shape of problem
-  and are fixed with it: the first ran one query per patched record, the second built an `IN` list
-  holding every finding the import had touched, which a large scan turns into a statement the server
-  refuses rather than a filter.
-
-
+- Persist large vulnerability imports in batches of 500 on a context per batch instead of one long-lived change-tracked context (T45, T46)
+- Batch the Vision One virtual-patch and importer auto-close passes instead of one query per record (T72)
 
 ## [2.22.4] - 2026-09-25
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- A Trend Micro Vision One inventory pass no longer takes the better part of an hour. It matched each
-  device against `hosts` with up to five queries and then saved it in its own transaction; none of
-  `external_id`, `mac_address`, `fqdn`, `host_name` or `ip` carries an index, so a tenant of 17,934
-  devices meant roughly 90,000 full table scans plus 17,934 change-tracker sweeps that grow with every
-  device already applied — 52 minutes to create 32 hosts and update the rest. The pass now matches
-  against a single read of the table and writes in batches of 500, and the risk-score pass reads the
-  provider's hosts once instead of querying per device. Matching is unchanged — external id, then MAC,
-  then FQDN, then hostname, then IP, and two devices in one batch that share an identity still claim
-  the same host — and a batch that will not commit falls back to the old one-device-at-a-time path, so
-  a single bad row is still reported as itself instead of losing the pass.
-
-
+- Match and batch-write the Vision One inventory sync against a single table read instead of up to five queries per device (T72)
 
 ## [2.22.3] - 2026-09-25
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- A Trend Micro Vision One synchronization no longer fails outright when a single request does not
-  answer. Each page of the device-inventory and CVE crawls is now attempted up to three times, with
-  a growing request budget (60s, 120s, 180s) and a back-off between attempts that honours Vision
-  One's own `Retry-After` header (capped at two minutes). Only failures that trying again can fix
-  are retried — a rejected key or a missing role permission still fails on the first answer, so a
-  configuration problem is not hidden behind three attempts. The retry re-reads the page that
-  failed rather than restarting the crawl, so an hour of completed inventory work is no longer
-  discarded because the first CVE request timed out.
-- A failed Vision One request now says *why* it failed. "Vision One could not be reached" covered a
-  timeout, a host name that did not resolve, a refused connection, a failed TLS handshake and a page
-  larger than the response limit — five different fixes behind one sentence — so the sync log now
-  names the class of problem, which page of which endpoint died, and how many attempts it took.
-  Retries are written to the run's progress trail as they happen, so a sync that is backing off no
-  longer looks like one that has hung. The Test Connection button is unchanged and still answers on
-  the first attempt — an operator watching a spinner wants the diagnosis, not a silent back-off.
-
-
+- Retry a failed Vision One page up to three times with backoff honouring `Retry-After` instead of failing the whole sync (T71, T72)
+- Report the specific class of Vision One connection failure instead of a generic "could not be reached" message (T71)
 
 ## [2.22.2] - 2026-09-25
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- The Administration window's integration tabs now use the full width of the window: the detail form
-  beside each list stretches with its column instead of staying pinned at 460px, so a maximised
-  window no longer leaves the right half empty.
+- Stretch the Administration window's integration detail form to the column's width instead of a fixed 460px
 
 ### Fixed
-
-- Fixed every vulnerability status change failing with "Error updating vulnerability". Track 3's
-  finding-lifecycle endpoint (`PUT Vulnerabilities/{id}/status`) and the register's own workflow
-  status endpoint (`PUT Vulnerabilities/{id}/Status`) were mapped to the same route template, which
-  routing matches case-insensitively, so both endpoints died with an `AmbiguousMatchException`
-  before reaching a controller and the client saw a bare HTTP 500. The register's endpoints moved to
-  `Vulnerabilities/{id}/WorkflowStatus` (`GET` and `PUT`); the two remain separate because they write
-  different columns with different value sets. **API change:** a client calling
-  `GET`/`PUT Vulnerabilities/{id}/Status` for the `IntStatus` workflow column must use the new path —
-  though, being ambiguous, neither could have worked.
-
+- Move the register's workflow-status endpoint to `WorkflowStatus` to resolve a route collision with the Track 3 finding-lifecycle status endpoint (T48)
 
 ## [2.22.1] - 2026-09-24
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- The vulnerability register's grid now bands its rows — a 4% wash on every other row, under the
-  selection highlight rather than over it — so a wide row stays readable across the screen.
+- Band the vulnerability register grid's rows with a 4% wash under the selection highlight
 
 ### Fixed
-
-- Realigned the Incident Response Plan window. Its label/value grid drove alignment from a
-  view-model `Margin` and from row-spanning phantom rows, so labels sat above or below the values
-  they name; labels are now vertically centred against their field in a grid with real row and
-  column spacing. In view mode the approver/reviewer/exerciser/tester value fields rendered even
-  when the plan had no such record, leaving four empty rows of dead space between the life-cycle
-  row and the metadata row — each now appears only when its own life-cycle flag is set.
-
-- Restored the vulnerability register's toolbar and its collapsible details pane under Semi.
-  `Button.toolbar` opted out of the theme's button metrics without declaring a width, so its
-  buttons collapsed to the width of their glyph and rendered as cramped rectangles. The same
-  missing width left a few pixels free inside the collapsed details pane, which a `CompactInline`
-  SplitView still lays out — the details then rendered one character per line down the window. The
-  pane's content is now collapsed while the pane is closed.
-
-- Aligned the four dashboard panels. Each quadrant now uses the same shell — a full-width title
-  band over a `Graph` surface with one 3px gutter — so their edges line up. The SLA compliance
-  panel floated its title and headline as two centred chips instead of a band, and the Risk Panel
-  inset its content by an extra 3px against the panel beside it.
-
-- Fixed the desktop client crashing with `KeyNotFoundException: Static resource 'SystemListLowColor'
-  not found` while opening a screen after the Semi.Avalonia switch. The vendored TreeDataGrid ships
-  only a Fluent theme, and it builds its brushes from `System*Color` keys that `FluentTheme` defined
-  and Semi does not; because Avalonia builds a style's resources lazily, the miss surfaced as an
-  unhandled exception in a layout pass on an unrelated view. The four keys are now defined in the
-  client's token sheet.
-
+- Realign the Incident Response Plan window's label/value grid and hide empty life-cycle fields (T41, T42)
+- Restore the vulnerability register's toolbar and collapsible details pane under the Semi theme
+- Align the four dashboard panels on one title-band/graph-surface shell
+- Fix a crash from a missing `SystemListLowColor` static resource after the Semi.Avalonia switch
 
 ## [2.22.0] - 2026-09-24
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- The desktop client's look is now based on **Semi.Avalonia** instead of Avalonia's stock
-  `FluentTheme`. Semi is an enterprise/console design language, so its defaults for table density,
-  field height, focus and disabled states suit a risk tool better than Fluent's Windows-desktop
-  defaults — and a light theme becomes a later toggle rather than a second hand-built palette.
-  NetRisk's own identity is preserved: the brand purple, the text tiers drawn on light surfaces and
-  the Gantt ramp keep their own values.
-
-  No view changed. Colour now lives in a single new file, `Styles/Tokens.axaml`, and the three style
-  sheets reference tokens instead of values, which is what made a base-theme swap a one-file edit.
-  One visible fix falls out of it: `Button.link` was drawn in the named colour `Blue` (`#0000FF`),
-  about 2:1 against the window background and below WCAG AA; it now uses Semi's link colour, which is
-  built for a dark surface.
-
-- The desktop client no longer depends on the `Aura.UI` submodule. It supplied exactly two controls —
-  `Badge` (the unread count on the notification bell) and `GroupBox` (ten containers across three
-  incident windows) — and it supplied them invisibly, by mapping its controls onto the default
-  Avalonia xmlns, so views wrote `<Badge>` and `<GroupBox>` with no prefix and a text search for
-  "Aura" over the view tree found nothing. Both controls now live in `AvaloniaExtraControls`, which
-  keeps the same prefix-free mapping: no view changed. Their templates hold no colours of their own,
-  so `Styles/WindowStyles.axaml` still decides what they look like. One vendored submodule fewer to
-  review on every bump.
+- Rebase the desktop client's theme on Semi.Avalonia instead of Avalonia's stock FluentTheme, via a single token file
+- Drop the Aura.UI submodule; move Badge and GroupBox into AvaloniaExtraControls
 
 ### Fixed
-
-- **The tab strips across the desktop client showed only a sliver of their labels.** A global
-  `TabItem` style hard-coded `Height="15"`, which fit the old theme's near-zero header padding and
-  clips under Semi's. The tab now sizes to its content (`MinHeight="0"` keeps Semi's own 40px floor
-  from making the strip taller than the rest of the app), so "Questions", "Assessments Runs" and
-  every other tab header render in full.
-
-- **The multi-select control read as two lists of text floating on the window**, and its transfer
-  arrows were clipped to a sliver — its 30px middle column is narrower than a themed button's own
-  minimum width. Each pane is now a framed box on the shared elevation scale, the arrows have room,
-  and the control's standalone palette is bound back to the NetRisk tokens (a library control cannot
-  see them on its own). This adds one token, `NrBorderStrong`, for a frame that has to be seen
-  rather than felt.
-
-- **Trend Micro Vision One synchronization failed on large tenants** with "the response declared
-  41787890 bytes, over the 16777216 byte limit for this request", importing nothing. Vision One's
-  vulnerable-device endpoint nests every CVE record under its device, so a page of 200 devices is
-  a large slice of the tenant's whole CVE surface — well past the 16 MiB cap the outbound HTTP seam
-  applies to a third-party JSON page. The CVE pass now reads 50 devices per page, and the two paged
-  ASRM reads raise their own response cap above the default.
+- Size tab headers to their content instead of a hard-coded 15px height that clipped labels under Semi
+- Fix the multi-select control's cramped panes and clipped transfer arrows
+- Page the Vision One CVE endpoint at 50 devices instead of 200 to stay under the outbound 16 MiB response cap (T72, T73)
 
 ## [2.21.18] - 2026-09-24
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- A posture synchronization now appears in the Administration → Posture providers **Synchronization
-  log** as soon as it starts, marked Running, instead of only after it finished or failed. The server
-  had always written the Running row at the start of the run, but the client only re-read the log
-  when the (minutes-long) sync call returned, so the only way to see a run in flight was to press
-  Refresh by hand. The log — and with it the run's progress trail — now refreshes every five seconds
-  while the run is going.
-
-- The Secret Vaults tab in Administration now uses the width of the window. Its detail column was a
-  star column holding a fixed-width form, so widening the window only added blank space beside the
-  form instead of giving the vault list room to breathe.
-
-
+- Show a posture sync as Running in the Synchronization log as soon as it starts, refreshing every 5 seconds (T71, T75)
+- Stretch the Secret Vaults admin tab to the window's width
 
 ## [2.21.17] - 2026-09-24
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- Transient notifications (the toasts that confirm a save, a connection test, …) now appear on the
-  window that raised them. They were all rendered by a single host owned by the main window, so
-  feedback for an action taken in the Administration window — or in any dialog — was drawn behind
-  it, where the user could not see it. Every window now has its own toast stack and the notification
-  goes to the window in front.
-
-
+- Give every window its own toast stack so notifications from dialogs are no longer drawn behind the main window (T24)
 
 ## [2.21.16] - 2026-09-24
 
-This release includes new features and improvements.
-
 ### Added
-
-- A BastionVault secret-vault connection can now authenticate by **app-id (AppRole) login** instead
-  of with a pre-minted token. Filling in the connection's **App ID** makes the API key an AppRole
-  `secret_id`: the plugin posts `auth/approle/login` with the App ID as the `role_id` and uses the
-  token the vault returns. Leaving the App ID blank keeps the previous behaviour, where the API key
-  is itself the client token, so no existing connection changes. The connection test now states
-  which of the two answered. Requires BastionVault plugin **v1.4.0**; see
-  [docs/features/secret-vaults.md](docs/features/secret-vaults.md#the-api-key-is-a-token-or-a-secret-id).
+- Support BastionVault AppRole (app-id) login as an alternative to a pre-minted vault token (S36)
 
 ### Changed
-
-- **Every settings screen is readable again.** Field help used to render as black text on a light
-  grey slab, which in a dark window made each explanation louder than the field it explained, and
-  field labels were full-width purple bars. Across the admin screens — all seven Integrations tabs,
-  Jira, System configuration, API tokens, Governance, Findings, the risk-governance window and the
-  vault picker — help is now quiet grey text with no background, labels are plain text, and long
-  forms are grouped into cards with a single right edge. On Secret Vaults, *Ignore SSL errors* is
-  called out as a caution rather than treated as one setting among equals, and the connection test
-  gets a pass/fail icon. The vulnerability detail panel shows record values as values instead of
-  grey slabs. Full rationale and the rules new screens must follow:
-  [roadmap/SETTINGS_FORM_ROLLOUT.md](roadmap/SETTINGS_FORM_ROLLOUT.md).
+- Rework every settings screen's field help, labels and card grouping for readability (S37)
 
 ### Fixed
-
-- The App ID on a BastionVault vault connection is no longer silently ignored. It was encrypted,
-  stored and counted by the reference registry, but the plugin's pinned contract predated the field
-  and dropped it at call time, so a connection configured for application authorization sent no
-  application identity at all.
-- A BastionVault failure message no longer echoes the connection's API key back to the operator when
-  the vault reflects the credential in its own error text. The message reaches an administrator's
-  screen *and* is stored on the connection as its last-test result, so a reflected credential was a
-  credential at rest in the clear. Fixed in the plugin (v1.4.0); it affected token-mode connections
-  too, and became materially more likely with app-id login, which sends the credential in a request
-  body.
-
-
+- Stop dropping the App ID field at credential-resolution time for BastionVault connections
+- Stop echoing a reflected API key back into a BastionVault connection's stored failure message
 
 ## [2.21.15] - 2026-09-23
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- Plugin packages now install into a directory carrying an install stamp
-  (`Plugins/<PluginAssembly>.<yyyyMMddHHmmss>/`). The previous installation of the same plugin is
-  still removed, so the administration list keeps one row per plugin; the Package column now shows
-  the stamped directory name.
+- Install plugin packages into a timestamp-stamped directory, removing the previous installation
 
 ### Fixed
-
-- Uploading a new version of an already-installed plugin reported success but left the previous
-  version running and listed until the API was restarted, because .NET serves an assembly from a
-  path it has already loaded regardless of what the file now holds. Each installation now lands on a
-  path the host has never loaded, so the new version takes effect on the upload.
-
-
+- Load a newly uploaded plugin version instead of continuing to serve the previously loaded assembly
 
 ## [2.21.14] - 2026-09-23
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Uploading a plugin over an already-installed one failed with "Invalid cross-device link".** To
-  replace a plugin the installer renames the installed directory aside before extracting the new
-  version, so a half-written directory is never left loading — but it staged that copy under the
-  system temp directory, and on a Linux host `/tmp` is a different filesystem from the application
-  directory. A rename across filesystems is `EXDEV`, which the administration screen reported
-  verbatim, and every upgrade upload was refused (a first-time install of a plugin was unaffected).
-  The staging directory is now a sibling of the directory it stages, named
-  `.netrisk-staging-<token>`; the loader and the superseded-directory scan skip that prefix, so the
-  staged copy is never loaded as a second instance of the plugin, and a staging directory left by a
-  host that died mid-install is cleared when the next install starts.
-
-
+- Stage plugin upgrade installs beside the target directory instead of under system temp, fixing a cross-filesystem rename failure on Linux
 
 ## [2.21.13] - 2026-09-23
 
-This release includes new features and improvements.
-
-### Added
-
-### Fixed
-
-- **The host search box returned nothing on a non-English machine.** Every filterable column was
-  registered under its *localized* name only, so the mapper for a pt-BR caller knew `nome` and not
-  `hostname`; the desktop client hard-codes `hostName@=` (and `RisksRestService` hard-codes
-  `status==…`), which the mapper rejected — `GridifyMapperException` → HTTP 409, and a search box
-  that silently found nothing. Pre-existing: Sieve failed identically with
-  `SieveMethodNotFoundException`. `ApplicationEntityFilterMapperProvider` now registers each column
-  under both names — the invariant one (the resx key, which is also the English spelling) and the
-  translation where one exists — so programs get a stable contract in every culture and humans keep
-  typing their own language. `id`, `os`, `ip`, `fqdn` and `teamId` were already invariant literals,
-  so the surface is now consistent. Localized names are registered first and invariant ones second,
-  so a translation that collides with another column's invariant name loses to it. Eight new cases
-  in `ServerServices.Tests/Filtering/HostFilteringEndToEndTest` cover filtering and sorting by the
-  invariant name, the client's exact literal, and the localized name, each under `pt-BR` and
-  `en-US`; the three `pt-BR` ones fail on the pre-fix mapper.
-
 ### Changed
-
-- **Filtering, sorting and paging moved from Sieve to Gridify.** Sieve has had no release since
-  2021 and 61 open issues; it sat under every paged list endpoint. Gridify is released weekly and
-  has thirteen times the adoption. The HTTP contract is unchanged — `?filters=&sorts=&page=&pageSize=`
-  still bind, now onto `ServerServices.Filtering.ListQuery` instead of `SieveModel`.
-  Users type filter expressions into the findings screen and the client persists them per user, so
-  those strings outlive the parser: `SieveSyntaxTranslator` rewrites Sieve syntax into Gridify's
-  (`==`→`=`, `@=`→`=*`, case-insensitive variants gain `/i`, and `field==a|b|c` expands to a
-  parenthesised OR), which keeps saved and hard-coded filters working. `ApplicationSieveProcessor`
-  became `ApplicationEntityFilterMapperProvider`, still scoped and still building localized column
-  names per request. `SieveOptions` became `FilterBounds` (Gridify has no options bag), preserving
-  the 100/1000 default and maximum page size. Sieve's two commented-out custom-method classes went
-  with it. 36 new tests: 26 on the translator, and 10 driving real Sieve expressions through the
-  production service, mapper and query provider — including the parenthesisation, which without it
-  turns `id==1|2,os==linux` into the wrong rows silently.
-
-- **`RazorLight` is documented as the transitive pin it always was.** It was flagged for removal on
-  the grounds that it had zero usages in C# and that `FluentEmail.Razor` had subsumed it. Removing
-  it proved the opposite: `FluentEmail.Razor 3.0.2` *depends on* `RazorLight 2.0.0-rc.3`, a 2019
-  release candidate, and RazorLight is the engine its `UsingTemplateFromFile` actually runs on. The
-  direct reference with no call sites was the only thing raising email rendering to the 2.3.1
-  stable; deleting it silently downgraded every server project onto the prerelease. The reference
-  is restored with that reason recorded beside it, and
-  `ServerServices.Tests/Security/NoPrereleaseDependenciesTest` now fails if any server project
-  resolves an unapproved prerelease — by name for RazorLight, and generally for anything else, with
-  an allowlist that requires a reason. Both assertions fail on the removal.
+- Replace Sieve with Gridify for filtering, sorting and paging, translating existing Sieve syntax for compatibility
+- Restore the direct `RazorLight` reference that pins FluentEmail's rendering engine to a stable release
 
 ### Fixed
-
-
+- Register filterable host columns under both their localized and invariant names so search works in every locale
 
 ## [2.21.12] - 2026-09-23
 
-This release includes new features and improvements.
-
 ### Added
-
-- **The MIGR-TI/IA reference methodology is now part of the documentation**, under
-  [docs/methodology/](docs/methodology/): the source report is versioned alongside the code, with a
-  structured Markdown summary of its seven phases, ten principles, four gates and risk-register
-  model. Alongside it, a phase-by-phase **coverage analysis** of what NetRisk instruments today —
-  each row naming the entity, service, endpoint or test that backs it, and marked absent where no
-  code can be named. The strongest alignment is the governance spine (expiring formal acceptance,
-  inherent vs. residual, segregation of duties, appetite, field-level audit trail, FAIR/Monte Carlo);
-  the structural gaps are the objective→process→service→data→asset chain, the eleven mandatory
-  scenario flags that Gate A depends on, BIA fields (MTPD/RTO/RPO), KRIs, KEV/EPSS/ATT&CK as
-  first-class prioritization signals, a third-party register, and an AI model inventory.
-- **Track 9 — MIGR-TI/IA Methodology Alignment** is on the roadmap as a planned track:
-  [ROADMAP.md](ROADMAP.md) plus detailed specifications in
-  [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md). Twelve stages in five
-  phases, scoped by the coverage analysis and ordered by dependency. Two gates apply to every stage
-  and are the substance of the plan: **no implementation before a merged, eleven-section
-  specification** (whose sections include the data model under the Track 6 conventions, the schema
-  path, the `[Authorize]` attribute of every action, and a per-layer test plan naming the cases),
-  and **nothing delivered without tests** — happy path plus every guard branch, a regression test
-  that fails on the pre-fix code, schema idempotence and replay, negative authorization cases, and
-  the edge cases the methodology itself names. A specification template and the per-stage directory
-  are in [docs/roadmap/track9/](docs/roadmap/track9/). The coverage analysis is the track's
-  acceptance criterion, re-run against the code rather than written once.
-
-### Fixed
-
-- **The desktop client's charting stack loaded a text-shaping bridge two majors behind the
-  SkiaSharp it called into.** `LiveChartsCore.SkiaSharpView 2.1.0-dev-798` asks for
-  `SkiaSharp.HarfBuzz 2.88.9`, while `Avalonia.Skia` / `Avalonia.HarfBuzz` 12.1.2 force
-  `SkiaSharp 3.119.4` and `HarfBuzzSharp 8.3.1.3`. NuGet unified the latter two upward and left
-  `SkiaSharp.HarfBuzz` alone, because nothing else in the graph asked for a newer one — so the
-  assembly that actually loaded was compiled against a SkiaSharp and a HarfBuzzSharp that were
-  each a major gone, and any chart reaching text shaping bound to types that no longer exist.
-  A `TypeLoadException` invisible at compile time and invisible to the suite, which renders no
-  charts headlessly. [GUIClient.csproj](src/GUIClient/GUIClient.csproj) now pins
-  `SkiaSharp.HarfBuzz` to the resolved `SkiaSharp`, and — because that pin raises managed
-  `HarfBuzzSharp` to 8.3.1.5 while naming no native assets — pins
-  `HarfBuzzSharp.NativeAssets.Linux` to match, so a shipped Linux client does not P/Invoke a
-  different build than the managed side expects. macOS and Win32 already resolved to .5 on their
-  own. Guarded by `GUIClient.Tests/Dependencies/SkiaHarfBuzzUnificationTest`, which asserts the
-  pin exists, that the Skia family is on one version across `src/`, and that the *resolved* graph
-  agrees — the last of which is what will catch the drift again when Avalonia adopts SkiaSharp 4.
-  Both halves fail on the pre-fix tree.
-- **The website's jQuery UI datepicker never loaded, and its one script file threw on every page.**
-  [_Layout.cshtml](src/WebSite/Views/Shared/_Layout.cshtml) pulled three stylesheets from
-  `~/Content/themes/base` and two scripts from `~/Scripts` — the classic ASP.NET convention, which
-  ASP.NET Core does not serve, and neither directory exists under `wwwroot`. Five 404s per page.
-  [site.js](src/WebSite/wwwroot/js/site.js) then guarded its `datepicker()` call with
-  `if (!Modernizr.inputtypes.date)`, and Modernizr is not loaded either, so the file raised
-  `ReferenceError` before reaching the call. The one consumer,
-  [DoReport.cshtml](src/WebSite/Views/FixReport/DoReport.cshtml), already uses `type="date"` and
-  gets the native picker. Removed the tags, the dead `site.js` body, and the two content-only
-  NuGet packages (`jQuery` 3.7.1 and `jQuery.UI.Widgets.Datepicker` 1.8.9 — the latter a 2011
-  release) that delivered none of it: the served jQuery is the copy checked into
-  `wwwroot/lib/jquery`. Guarded by `WebSite.Tests/Views/StaticAssetReferenceTest`, which fails on
-  all five pre-fix references.
+- Add the MIGR-TI/IA reference methodology and a phase-by-phase coverage analysis under docs/methodology/ (S27, S28)
+- Add Track 9 — MIGR-TI/IA Methodology Alignment to the roadmap as a planned track (M39, M40, M41, M42, M43, M44, M45, M46, M47, M48, M49, M50)
 
 ### Changed
-
-- **`ConsoleClient` and `BackgroundJobs` no longer ship Moq.** Both hosts built their background
-  principal with `new Mock<IHttpContextAccessor>()`, putting Moq and Castle.Core's dynamic proxy
-  generator into two service binaries — against this repository's own NSubstitute convention, and
-  avoidable attack surface in a process that runs unattended. Replaced by
-  [BackgroundServiceHttpContextAccessor](src/ServerServices/Security/BackgroundServiceHttpContextAccessor.cs),
-  a real implementation in `ServerServices` shared by both. The principal is unchanged — same Sid,
-  same name, same authentication type — so audit rows read identically across the change. Covered
-  by `ServerServices.Tests/Security/BackgroundServiceHttpContextAccessorTest`, which asserts each
-  property `DalService.GetUserId` reads in order, and by `TestOnlyPackageInventoryTest`, which
-  fails if any shipping project references a mocking or test framework again.
-- **Removed two unused Hangfire storage providers.** `BackgroundJobs` referenced
-  `Hangfire.LiteDB 0.4.1` (published October 2021, unmaintained) and `Hangfire.MemoryStorage`
-  alongside the `Hangfire.InMemory` it actually uses; both alternatives had been commented out in
-  `ConfigureHangFire` for as long as `InMemoryStorage` has been live. Removed the packages, the
-  dead `using` lines in `Program.cs` and `JobsManager.cs`, and the `catch (LiteException)` recovery
-  path that deleted `hangfire.db` — a file the in-memory backend never writes.
-- **Dropped the solution-wide `NU1608` suppression.** It existed in
-  [src/Directory.Build.props](src/Directory.Build.props) solely to silence the resolved-version
-  mismatch between the legacy `jQuery.UI.Core 1.8.9` dependency range and the jQuery the website
-  resolved. With those packages gone the warning has no source, and the full solution builds with
-  it un-suppressed — restoring a real restore-warning signal across all 36 projects.
-
-- **Package versions are now managed centrally**, in
-  [src/Directory.Packages.props](src/Directory.Packages.props): a project names a package, that
-  file names its version. Restating a version per project is what let two `LiveChartsCore` builds
-  resolve at once — `Model` and `ClientServices` declared 2.0.5 while `GUIClient` declared the
-  `2.1.0-dev-798` prerelease it needs for Avalonia 12, and NuGet silently unified everything up to
-  the prerelease without anyone declaring it. That unification is now written down. Across 28
-  projects and 95 packages it was the *only* conflict, and resolving it is the only change to any
-  resolved graph: every other package in every project restores to byte-identical versions before
-  and after. `ClientServices`' `LiveChartsCore` reference went entirely — the one LiveCharts type
-  it touches is the base of `Model.Statistics.LabeledPoints`, which arrives through the project
-  reference. Package-id casing was normalised at the same time (`livechartscore` →
-  `LiveChartsCore`), since two spellings is how the duplicate stayed invisible. Scope is `src/`
-  only: `libs/` sits beside it, so the vendored submodules keep their inline versions and their
-  separate bump gate. Guarded by `ServerServices.Tests/Security/CentralPackageManagementTest` —
-  central management is on, no project declares a version inline, every reference has a central
-  version, and no id is declared twice.
-- **Dependency sweep (patch/minor only).** Avalonia and its Desktop / Skia / Markup.Xaml.Loader /
-  Themes.Fluent / Themes.Simple packages 12.1.2 → 12.1.3, `Mapster` 10.0.12 → 10.0.13, `QuestPDF`
-  2026.8.0 → 2026.9.0, and `System.IdentityModel.Tokens.Jwt` with
-  `Microsoft.IdentityModel.Protocols.OpenIdConnect` 8.22.0 → 8.23.0 (bumped together — they must
-  stay in lockstep). `Avalonia.Controls.DataGrid` stays at 12.1.2, which is its latest.
-  Three proposed bumps were rejected with reasons recorded where the version lives, so the next
-  Dependabot pull request for each can be closed rather than re-investigated:
-  `FlashCap` 1.12.0, because `FlashCap*` is source-mapped in [nuget.config](nuget.config) to the
-  `uox-netrisk` feed, which carries only 1.11.37 — nuget.org is never consulted for it;
-  `Microsoft.Build` 18.10.1, because it has no `net10.0` asset for this consumer and restores the
-  .NET Framework build instead, taking the Nuke project from zero NU1701 warnings to eight — so
-  the apparent version split against `Microsoft.Build.Tasks.Core` / `.Utilities.Core` 18.10.1 is
-  deliberate, and is now commented as such in [build/build.csproj](build/build.csproj);
-  and `ReactiveUI.Avalonia` 14.7.1, which despite the higher number targets Avalonia `>= 11.0.0`
-  and ReactiveUI `>= 19.4.1` — an older lineage. 12.1.2 is the build aligned with Avalonia 12.1.x
-  and ReactiveUI 24.2.0, which is what this solution uses.
-  `SkiaSharp` 4.152.1 remains blocked by Avalonia 12.1.x pinning 3.119.4.
-- **`Fido2` 4.0.1 → 4.1.0**, taken on its own rather than in the sweep above because it is the
-  WebAuthn stack. 4.1 deprecates `Fido2Configuration.ServerDomain` and `ServerName` in favour of
-  `RPID` and `RPName`, which match the spec's vocabulary and which the next major removes;
-  [WebAuthnService](src/ServerServices/Auth/WebAuthnService.cs) now uses the new names, so the
-  upgrade lands with no deprecation warnings rather than deferring them. No behavioural change —
-  the properties are renames. `WebAuthnServiceInMemoryTest` (27 cases) and the Track 4 controller
-  tests (86) pass unchanged.
-- **The MySQL EF Core provider is now `Microting.EntityFrameworkCore.MySql`**, replacing
-  `Pomelo.EntityFrameworkCore.MySql` in [src/DAL/DAL.csproj](src/DAL/DAL.csproj). It is a fork of
-  Pomelo published on nuget.org that tracks each EF Core release more closely than Pomelo's own
-  cadence — this repo already runs EF Core 10.0.12, which the new package pins exactly. The public
-  API (`UseMySql`, `ServerVersion`, …) is unchanged; only internal namespaces and the assembly name
-  moved from `Pomelo.*` to `Microting.EntityFrameworkCore.MySql`, so the Serilog category override
-  in [src/API/LoggingBootstrapper.cs](src/API/LoggingBootstrapper.cs) and
-  [src/BackgroundJobs/Program.cs](src/BackgroundJobs/Program.cs) was updated to match, and the
-  now-unused `Pomelo.EntityFrameworkCore.MySql*` package-source-mapping pattern was dropped from
-  both `nuget.config` files. Verified with a full solution build and every non-integration test
-  project green, including the EF model-build guards (`Track6RelationshipModelTests`,
-  `StringColumnTypeGuardTest`, `SchemaUpgradeIdempotenceTest`/`SchemaUpgradeTableReferencesTest`)
-  that exercise the provider's relational model construction. **Not verified in this change:** the
-  Testcontainers-backed `DAL.IntegrationTests` suite against a real MariaDB instance — no Docker
-  daemon was available in this environment, so that pass is still outstanding before release.
+- Replace Moq with a real BackgroundServiceHttpContextAccessor in ConsoleClient and BackgroundJobs
+- Remove two unused Hangfire storage providers and the NU1608 suppression they required
+- Centralize package versions in Directory.Packages.props, resolving a duplicate LiveChartsCore version
+- Bump Fido2 to 4.1.0 for the RPID/RPName rename (T70)
+- Replace Pomelo.EntityFrameworkCore.MySql with its Microting fork
 
 ### Fixed
-
-- **Outbound HTTP responses are now bounded.** Every outbound call the server makes — notification
-  channels, issue trackers, Vision One, SecurityScorecard, identity-provider discovery and all
-  secret-vault plugin traffic — went through a single path that buffered the entire response body
-  into memory before any caller could look at it, with no size limit. An oversized or hostile
-  answer from an operator-configured remote was therefore an unbounded allocation in the API and
-  background-job hosts. Responses are now read through a length-limited stream and abandoned as
-  soon as they pass the cap (16 MiB by default, per request), and a declared `Content-Length` over
-  the cap is refused before the body is read at all. An oversized response is reported the same way
-  an unreachable host already was, so integrations need no change.
+- Pin SkiaSharp.HarfBuzz and HarfBuzzSharp.NativeAssets.Linux to the resolved SkiaSharp version, fixing a text-shaping TypeLoadException
+- Remove the WebSite's dead jQuery UI datepicker script and unserved theme assets
+- Bound every outbound HTTP response at 16 MiB to prevent unbounded allocation from a hostile or oversized remote reply
 
 ## [2.21.11] - 2026-09-14
 
-This release updates dependencies across the solution and changes how the REST client retries.
-
-### Added
-
 ### Changed
-
-- **The REST client now retries according to its injected policy alone.** The
-  `libs/reliable-rest-client-wrapper` submodule moves to 0.1.2, which removes an inner
-  11-attempt loop that the configured Polly policy was wrapping. The two multiplied, so a
-  call against an unreachable API retried far more often — and for far longer — than the
-  policy asked for. Effective retry counts drop accordingly.
-- Avalonia and ReactiveUI move to 12.1.2 and 24.2.0 (the `avalonia` group, 8 packages).
-- `Microsoft.Extensions.*` move to 10.0.12 (the `microsoft-extensions` group, 11 packages),
-  and Entity Framework Core to 10.0.12 (the `entity-framework` group, 5 packages). These two
-  go together: EF 10.0.12 requires `Microsoft.Extensions.*` 10.0.12 transitively, and with
-  the 10.0.11 pins still in place a restore fails outright on NU1605.
-- `System.Security.Cryptography.Xml` and `System.Drawing.Common` move to 10.0.12,
-  `Microsoft.ML.OnnxRuntime` to 1.30.0, `Tmds.DBus.Protocol` to 0.95.1, and
-  `Spectre.Console.Cli.Extensions.DependencyInjection` to 0.29.0.
-- Build and test tooling: `Microsoft.Build.Tasks.Core` and `Microsoft.Build.Utilities.Core`
-  to 18.10.1; `xunit.v3` to 4.0.1, `Microsoft.Testing.Extensions.CodeCoverage` to 18.11.2 and
-  `Testcontainers.MariaDb` to 4.15.0.
-
-### Fixed
-
-
+- Remove reliable-rest-client-wrapper's inner 11-attempt retry loop so only the configured Polly policy governs retries
+- Bump Avalonia/ReactiveUI, Microsoft.Extensions.*, EF Core and other dependencies to their latest patch
 
 ## [2.21.10] - 2026-09-14
 
-This release fixes the secret scan reporting the per-plugin test projects.
-
 ### Fixed
-
-- **The secret scan no longer reports the per-plugin test projects.** The gitleaks allowlist matched
-  `src/<Name>.Tests/` only, so the fake vault responses in
-  `src/Plugins/BastionVaultPlugin.Tests/BastionVaultSecretPluginTest.cs` — a `"password": "p4ss"`
-  field in a stubbed HTTP body — were reported four times as certificate passwords and failed the
-  scheduled `security` workflow. The path patterns now allow one intermediate directory segment, so
-  a test project under `src/Plugins/` is covered like every other one.
-
+- Widen the gitleaks allowlist path pattern so per-plugin test projects under src/Plugins/ are covered
 
 ## [2.21.9] - 2026-09-12
 
-This release fixes a vault connection key that is itself a vault reference.
-
 ### Fixed
-
-- **A vault connection whose own API key is stored as a vault reference is now refused with a
-  message that says so.** It is the one credential in the product that cannot be vault-backed,
-  because resolving it would need the very connection it belongs to — but `CountReferencesAsync`
-  counts `EncryptedApiKey` on that table, so the state is reachable, and
-  `ISecretProtector.Unprotect` hands a reference back verbatim by design. The result was that the
-  literal `vault:v1:…` string was sent as the vault token: BastionVault answered 403 "Permission
-  denied", which is exactly what it answers an expired token, and the operator went looking at vault
-  policies for a problem that was in the connection's own key field.
-
-
+- Refuse to save a vault connection whose own API key is itself stored as a vault reference (S36)
 
 ## [2.21.8] - 2026-09-12
 
-This release fixes which copy of a duplicated plugin serves a request.
-
 ### Fixed
-
-- **A plugin installed twice no longer serves requests from the older copy.** Listing collapsed
-  duplicates in 2.21.7, but the capability lookups behind them did not: `GetEnabledPluginsAsync`
-  returned one entry per *directory*, and `GetPluginByNameAsync` returned whichever the filesystem
-  enumerated first. On a host carrying BastionVaultPlugin 1.2.0 and 1.2.1 that meant every
-  credential resolved through 1.2.0 while Administration → Plugins showed 1.2.1 enabled — and
-  because both rows share one `Plugin_<name>_Enabled` setting, the per-row switches could not
-  express which copy was in use. The visible symptom was a vault connection test reporting
-  "BastionVault denied this token (HTTP 403)" without the vault's own explanation of why, since
-  quoting that explanation is exactly what 1.2.1 added. The newest version now serves, and a
-  duplicated plugin is offered once.
-
-
+- Serve plugin requests from the newest installed copy instead of whichever directory the filesystem enumerates first
 
 ## [2.21.7] - 2026-09-11
 
-This release fixes duplicate plugin installations and adds plugin removal.
-
 ### Added
-
-- **A plugin can be deleted from Administration → Plugins.** Each row has a delete button; it
-  switches the plugin off, removes the directory it was installed from, and reloads. A plugin whose
-  files the server still has open — which is the normal case on Windows, where a loaded assembly is
-  locked for the life of the process — is disabled and taken off the list immediately, and its files
-  are deleted the next time the server starts. The message says which of the two happened rather
-  than reporting both as "deleted".
-- `NETRISK_PLUGINS_PATH` moves the plugins root off the application directory, for a host that
-  mounts plugins as a volume.
-
-### Changed
+- Add plugin deletion from Administration → Plugins, disabling and removing its directory
+- Add `NETRISK_PLUGINS_PATH` to relocate the plugins root off the application directory
 
 ### Fixed
-
-- **Installing a new version of a plugin replaces the old one instead of listing both.** The install
-  directory was named after the uploaded file, and release packages are named for their version, so
-  `BastionVaultPlugin-1.2.0.zip` and `BastionVaultPlugin-1.2.1.zip` installed side by side: the
-  plugin appeared twice in Administration → Plugins, at two versions, each row with its own enabled
-  switch, and which copy a feature actually resolved was undefined. The directory is now named after
-  the plugin assembly, so a new release lands on the installed one; installing a plugin also removes
-  the leftover directories from the old naming, and the list shows one row per plugin — the newest
-  version — even if a duplicate directory arrives some other way.
-
-
+- Name a plugin's install directory after its assembly so a new version replaces rather than duplicates it
 
 ## [2.21.6] - 2026-09-11
 
-This release includes a fix to vault cluster discovery.
-
 ### Fixed
-
-- **Vault cluster discovery no longer reports every healthy node as unhealthy.** The health probe
-  asked for `/sys/health` instead of `/v1/sys/health`, and on a Vault-compatible server every route
-  lives under the API version — so each node answered 404, the resolver concluded the whole cluster
-  had failed its health check, and it fell back to SRV order. That order is a weighted *shuffle*,
-  so the node actually used was then random: an operator pointed at a three-node cluster got
-  "No vault node passed its health check" for three nodes that were all answering normally, and a
-  connection that could land on a sealed node as easily as the active one. Health scoring now works
-  as documented, and a standby (429), DR secondary (472) and performance standby (473) are all
-  recognised as serving nodes.
-
-
+- Probe `/v1/sys/health` instead of `/sys/health` so vault-cluster node health scoring works as documented (S36)
 
 ## [2.21.5] - 2026-09-11
 
-This release includes fixes to diagnosability.
-
 ### Fixed
-
-- **A failed outbound TLS handshake now says what was wrong with the certificate.** The reason came
-  from the outermost exception only, so every certificate problem in the product reported "The SSL
-  connection could not be established, see inner exception." — a message whose one piece of
-  information is a reference to something the operator cannot see. A secret-vault connection test,
-  whose whole output is that sentence in its *Last test* field, now names the actual cause (an
-  untrusted root, a hostname mismatch, an expired certificate), as do the per-node health-probe
-  results behind a cluster address and every other integration that goes through the outbound HTTP
-  client.
-
-- **The API no longer logs a permission denial for a request it allowed.** An admin satisfies every
-  permission requirement through the admin branch, but the denial line was logged whenever the
-  specific permission claim was absent — so an admin session produced a stream of `User has not the
-  required permission: configuration` at Information level next to the 200s those same requests
-  returned, which is the kind of log line that sends somebody chasing an authorization bug that does
-  not exist. (Also fixes the `Use`/`te` typos in those two messages.)
-
-
+- Report the actual TLS certificate failure reason instead of a generic inner-exception message
+- Stop logging a permission denial at Information level for a request an admin session actually allowed
 
 ## [2.21.4] - 2026-09-10
 
-This release includes new features and improvements.
-
 ### Added
-
-- **A secret-vault connection can carry an app ID.** BastionVault authorizes by application identity
-  as well as by token, and the connection had nowhere to put it — an installation whose vault
-  policies are written against an `app_id` could not be configured at all. The connection editor now
-  has an *App ID* field beside the machine ID, stored and returned in the clear for the same reason
-  (it names the caller, it does not authenticate it), and passed to the plugin as
-  `SecretVaultCredentials.AppId`. A plugin whose vault always needs one declares `RequiresAppId`, and
-  NetRisk then refuses to save a connection without it — on the form, rather than inside a sync job
-  hours later.
-
-- **A secret-vault connection can skip TLS certificate validation.** An on-premise vault is routinely
-  fronted by an internal CA the NetRisk host does not trust yet, and the connection test failed with
-  an SSL error and no way forward but installing the CA. The connection editor now has an *Ignore SSL
-  errors* checkbox that applies to that connection alone — its secret reads and the health probes
-  that pick a cluster node — so the escape hatch is not the process-wide switch operators reach for
-  otherwise. Off by default and on no existing connection; every unvalidated request is logged at
-  warning with the host, and the setting is returned to clients so the screen shows which connections
-  are running unvalidated. Installing the vault's CA remains the real fix.
-
-### Changed
-
-### Fixed
-
-
+- Add an App ID field to secret-vault connections for application-identity authorization (S36)
+- Add a per-connection "ignore SSL errors" option for secret-vault connections (S36)
 
 ## [2.21.3] - 2026-09-10
 
-This release includes new features and improvements.
-
 ### Added
-
-- **A secret-vault connection can point at a cluster instead of one node.** A BastionVault HA
-  deployment is several nodes published as DNS SRV records, and the connection's address field only
-  accepted an absolute `http(s)` URL — so it had to name one node, and the connection had a single
-  point of failure the vault deployment did not. It now accepts a bare cluster DNS name
-  (`vault.example.com`, looked up as `_bvault._tcp.vault.example.com` — the same string
-  `bastionvault::client::server_url` takes), or `srv+https://_label._tcp.name` for a cluster whose
-  SRV label differs. A full URL still means exactly one node, with no lookup and no probe.
-
-  Discovery runs in the host, not in the plugin: the plugin is handed one node's base URL and needs
-  no change. Nodes are ordered by RFC 2782 — priority, then a weighted draw so that every NetRisk in
-  an installation does not converge on whichever node sorts first — and each is probed at
-  `/sys/health` until one answers, which skips a sealed or uninitialised node without touching the
-  vault's audit log. If every probe fails the first candidate is used anyway with a note, so a vault
-  that does not serve that path is not turned into a connection that cannot be used. The choice is
-  cached per connection for the SRV TTL, clamped to 5–300 seconds. *Test* now reports which node
-  answered and keeps it in the connection's last-test message.
+- Support a BastionVault cluster DNS name or SRV record on the connection address instead of one node only (S36)
 
 ### Changed
-
-- **The Secret Vaults form explains what the address field takes**, and switches its machine-ID hint
-  to the required wording as soon as a plugin that demands one is selected.
+- Explain the vault address field's accepted formats on the Secret Vaults form
 
 ### Fixed
-
-- **A vault connection whose plugin requires a machine identity can no longer be saved without one.**
-  The check existed only in the resolution path, so the refusal arrived inside a background job hours
-  later rather than on the form that could have prevented it. It is now enforced on create and
-  update — and not while the plugin is uninstalled or disabled, so a connection can still be prepared
-  before its DLL is deployed.
-
-
+- Enforce a plugin's required machine identity on save instead of only at resolution time
 
 ## [2.21.2] - 2026-09-10
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Trend Micro Vision One imports CVEs again.** A Vision One sync brought in every host and zero
-  findings — 8390 hosts created and `0 finding(s) created` against a tenant of 16,389 devices — and
-  reported success while doing it. The CVE pass was reading `/v3.0/asrm/attackSurfaceDevices`, the
-  asset-inventory endpoint, and looking for a CVE array nested on each device row. That array does
-  not exist: the inventory row carries `cveCount`, a number, and no CVE identities at all. 2.19.6
-  moved the pass there on the belief that `/v3.0/asrm/vulnerableDevices` was not a published
-  endpoint. It is — it is in Vision One's own OpenAPI specification, titled "Get CVEs detected in a
-  device" — and the CVE pass reads it again, with the field names it actually sends: the array is
-  `cveRecords`, the CVE id is `id`, the severity is `eventRiskLevel`.
-
-  Four things follow from reading the real payload. Exploit activity comes from
-  `globalExploitActivityLevel` (Vision One's `high` is the console's "Actively exploited") and
-  `exploitAttemptCount`, so findings stop uniformly claiming no exploit exists. The affected software
-  and its path become the finding's description, because the endpoint supplies none and a bare CVE id
-  gives a triager nothing to act on. CVEs whose `mitigationStatus` is `closed` (the console's
-  "Remediated") or `dismissed` are not imported, since this import is not a full scan and nothing
-  would ever close them; an `accepted` one is imported, because an acceptance in Vision One is not an
-  acceptance in NetRisk. And a virtual patch is now recognised from `mitigationStatus: mitigated`
-  alone — the `protectionRules` array is the rules that *exist* for a CVE, not rules enforced on the
-  device, so inferring a compensating control from it meant a connection with "a virtual patch
-  mitigates the finding" enabled would mitigate findings on unprotected machines.
-
-  The endpoint also needs a different permission from the inventory it sits beside — *Dashboards &
-  Reports → Reports → View*, plus Flex credits allocated to Cyber Risk Exposure Management — so a
-  403 on it now says that instead of repeating the ASRM advice an operator has already followed.
-
-
+- Read Vision One's real CVE-pass field names, restoring CVE ingestion after a 2.19.6 endpoint move (T73)
 
 ## [2.21.1] - 2026-09-10
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Integration synchronizations announce their start and finish, and record a step-by-step progress
-  trail.** A Trend Micro Vision One sync is a long-running process and the product had no way to say
-  so: the desktop client showed a busy spinner, the only sign it had finished was a toast the
-  operator had usually walked away from, and a *scheduled* run — the daily job — was invisible
-  entirely. The sync-log row could say `Running`, which is the least useful thing to know about a
-  sync that has been running for twenty minutes.
-
-  Every integration that synchronizes now opens a tracked run: Vision One, SecurityScorecard, the
-  issue-tracker poll, the Jira Service Management mirror and the Jira Assets import. Each one writes
-  an `information` notification to the notification centre when it starts and an
-  `information`/`warning`/`error` one when it ends, carrying the counts or the failure reason. The
-  channel is the existing Jobs message chat, which the client's notification badge already polls, so
-  a scheduled run reaches a GUI that was not watching when it began. Recipients are the enabled
-  administrators, the same audience the SLA digest already falls back to. A manual sync additionally
-  toasts on click rather than only on completion.
-
-  The trail is stored on the run's own sync-log row (new `integration_sync_logs.progress_log`) as one
-  timestamped `step: message` line per step — inventory requested, N devices received, risk scores
-  rolled up, CVEs ingested, steps skipped and *why* they were skipped — and is appended while the run
-  is still going, so it can be read mid-run. Administration → Integrations → Posture providers now
-  shows the selected run's trail under the synchronization log, selectable so a failure can be pasted
-  into a ticket. Lines are buffered and flushed in batches rather than written per step, and the
-  trail is capped at 256 KB keeping its beginning and its end, so it can never be the reason the
-  write that records the run's outcome fails.
+- Track integration sync runs with start/finish notifications and a step-by-step progress trail (T71, T75, T79)
 
 ### Changed
-
-- **The issue-tracker poll, the Jira Service Management mirror and the Jira Assets import now record
-  a synchronization row when they start rather than after they finish.** All three used to insert a
-  single already-finished row with `started_at` and `finished_at` both set to "now", so a run in
-  progress was indistinguishable from no run at all, and a run that died half-way left no trace. They
-  now claim a `Running` row up front and settle it at the end. None of them takes on the
-  single-flight restriction the two posture integrations have, so concurrency is unchanged. A Jira
-  Assets *dry run* still records nothing, as before.
+- Claim a Running sync-log row up front for the issue-tracker poll, JSM mirror and Jira Assets import instead of after they finish (T79)
 
 ### Fixed
-
-- **A synchronization interrupted by an unexpected error no longer leaves its row `Running` until the
-  two-hour reaper horizon.** A tracked run settles itself as `Failed` on disposal if it escaped
-  without recording an outcome, which also covers the escape paths the services' own error handling
-  does not see.
-
-
+- Settle an interrupted sync as Failed on disposal instead of leaving it Running until the two-hour reaper horizon
 
 ## [2.21.0] - 2026-09-10
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Plugin packages can be installed from the administration screen.** Administration → Plugins now
-  has an upload button that takes a `.zip`, unpacks it into the server's `Plugins/<package>/`
-  directory and reloads the plugin surface, so a plugin no longer needs shell access to the API host
-  to install. New endpoint `POST /Plugins/upload` (administrator-only, `IFormFile file`).
-
-  The archive is validated from its table of contents *before* anything is written: an entry that
-  would escape the destination, an archive that expands past 400 MB or carries more than 5000
-  entries, and an upload over 100 MB are all refused with nothing on disk. Three further rejections
-  exist because their alternative is a silent one — a package with no `*Plugin.dll` at its top
-  level, one whose assembly sits a folder deeper than the loader globs, and one that ships
-  `Contracts.dll` would each install cleanly today and then never appear in the plugin list. A
-  replacement is staged through a backup directory and restored if extraction fails part-way, and
-  the server's refusal sentence is what the desktop client shows, because it is the only part of the
-  response that names what to change.
-
-  Uploading a plugin is running code on the server with the API's authority — the same privilege as
-  copying a DLL into the directory by hand, which is what this replaces. It is administrator-only,
-  the plugin still arrives *disabled*, and the signature policy (`plugins_require_signature`) still
-  applies at load time.
-
-### Changed
-
-### Fixed
-
-
+- Add plugin package upload from Administration → Plugins, validating the archive before extraction
 
 ## [2.20.3] - 2026-09-10
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Four desktop windows whose title or caption rendered unstyled.** `EditMgmtReview`,
-  `EditMitigationWindow` and `RiskGovernanceWindow` each asked for a `Panel.EditTitle` style that
-  has never existed, and `VulnerabilityImportWindow`'s warnings caption asked for a
-  `TextBlock.subHeader` that has never existed. Avalonia ignores a selector that matches nothing
-  silently, so the three title rows drew as loose text with no header band and the warnings caption
-  drew as plain body text. The three titles now use the same `TextBlock.header` band as
-  `EditRiskWindow` and `EditIncidentWindow`, and the caption uses `header3` — the documented classes
-  from [docs/ui-standard.md](docs/ui-standard.md) §3.1, so no new style or colour was introduced.
-
-
+- Apply the documented `header`/`header3` style classes to four windows that referenced non-existent style classes
 
 ## [2.20.2] - 2026-09-10
 
-This release includes new features and improvements.
-
 ### Added
-
-- **A UI standard gate that runs in CI and a UI section in the PR checklist.** `./build.sh LintUi`
-  now fails on any deviation from [docs/ui-standard.md](docs/ui-standard.md) in
-  `src/GUIClient/Views` — hard-coded colours, named status brushes, unlocalized user-facing strings,
-  unclassed buttons — and runs on every push and pull request. A view that genuinely cannot comply
-  declares an in-markup waiver with a written reason (`<!-- ui-lint-waive R5: … -->`); a waiver with
-  no reason is itself reported and still fails the build.
+- Add a UI-standard CI gate (`LintUi`) and a UI compliance section to the PR template (T5)
 
 ### Changed
-
-- **The BastionVault plugin now lives in its own repository.** It has moved out of this tree to
-  [netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration)
-  and is built and released from there, so it is no longer part of a NetRisk build. **Operators
-  upgrading:** `BastionVaultPlugin.dll` and its `.deps.json` are no longer produced by this
-  repository's build and are no longer copied into `Plugins/Secrets/` automatically — take them
-  from the plugin repository's own release and install them under **both** the API and the
-  background-job host, since both resolve credentials. A plugin present in only one of them is an
-  integration that works during the day and fails at night. Nothing about the vault integration
-  itself changed: the reference format, the resolver, the cache, the SDK contract and the desktop UI
-  are all as they were, and an already-installed plugin keeps working. What a plugin author must do
-  is unchanged too — a vault plugin is still an assembly ending in `Plugin.dll` that references
-  `Contracts` with `Private="false"`. `src/Plugins/FixtureVaultPlugin` replaces it in the tree as
-  test scaffolding only: a vault plugin with no vault behind it, so the loader's shared-assembly
-  arrangement can still be proved against a real assembly on disk.
-
-- **Window titles are localized instead of showing internal class names.** Twenty windows had a
-  hard-coded title, and most of those titles were the view's class name: the administration window
-  said "AdminWindow", the close-risk dialog said "CloseDialog", the vulnerability chat said
-  "VulnerabilityFixChatDialog", and the main window said "NetRisk Application". They now read their
-  purpose, in the user's language.
-- **Remaining hard-coded labels in the GUI are translated.** Forty-one user-facing strings —
-  the IP/FQDN field labels in the host dialog and host list, the risk ID and IRP labels, the
-  vulnerability grid's IP/CVEs/CVSS-3 headers, its Export tooltip, the SSO button's tooltip, the
-  report dialogs' Save/Cancel buttons and the report window's "Manage Templates"/"Manage Schedules"
-  actions — now come from the resource files, with seventeen new keys added in English and
-  Portuguese.
-- **Buttons across the GUI follow the documented taxonomy.** Forty-seven buttons carried no style
-  class and so rendered in the legacy generic grey: the attachment download/delete/add actions on
-  risks, incidents, mitigations and response plans; the report generate/export toolbars; the
-  vulnerability pager; the report template and schedule dialogs; the assessment page rail; the
-  logout button. Each now uses the class its role calls for, so identical actions look identical
-  from screen to screen.
-- **Status colours in the assessment and report screens come from the theme.** Error and warning
-  text, panel outlines, page badges and the completion tick were painted with literal colour values
-  in the markup; they now use theme classes, so they stay consistent with the rest of the dark
-  theme and change in one place.
-
-### Fixed
-
-
+- Move the BastionVault plugin to its own external repository, no longer built by this solution
+- Localize twenty hard-coded window titles that had shown their view's class name (T2)
 
 ## [2.20.1] - 2026-09-09
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- **The BastionVault secret picker types the field instead of choosing it.** A BastionVault listing
-  returns names and paths only; the sole way to learn a secret's field names is to read the secret,
-  which would put an access record in the vault's audit log for every click in the picker. The field
-  is now free text with suggestions for the vaults that do report them, and a wrong field is answered
-  at resolution time by a message naming the fields that exist. Leaving it empty still means "the
-  secret's whole value", which is also how a single-field secret resolves.
+- Make the BastionVault secret picker's field a free-text suggestion box instead of a listing call (S36)
 
 ### Fixed
-
-- **The BastionVault plugin spoke a protocol BastionVault does not have.** 2.20.0 shipped the vault
-  integration against a plausible-looking REST API written from the feature description rather than
-  from the product, and every particular of it was wrong: `Authorization: Bearer` instead of
-  `X-Vault-Token`, `GET /api/v1/secrets` instead of the non-standard `LIST /v1/{mount}{path}` verb, a
-  flat catalogue of ids instead of a tree of logical paths under mounted engines, a
-  `{"value":…,"fields":{…}}` body instead of `{"data":{field:value}}`, `maxCacheSeconds` instead of an
-  envelope-level `lease_duration`, and `{"error":…}` instead of `{"errors":[…]}`. BastionVault is
-  HashiCorp-Vault-compatible; the plugin now is too.
-
-  The sharpest of these would have failed silently. BastionVault's own `docs/api.md` offers
-  `GET {path}?list=true` as an alternative to the LIST verb, and it does not work: the logical router
-  maps GET to `Operation::Read` unconditionally and lifts only `env` and `version` out of the query
-  string, so that request **reads the secret** at that path instead of listing under it — and answers
-  200 with a value. The protocol was therefore taken from the server source rather than from its
-  reference documentation, and two tests exist purely to prevent a regression to the guess.
-
-  Listing is now a bounded walk rather than one call, since a BastionVault listing is one level deep
-  and marks folders with a trailing slash. Three decisions came out of that: a 403 on `sys/mounts`
-  falls back to the conventional `secret/` mount, because reading the mount table is a `sys/`
-  privilege a careful operator will not grant NetRisk; a 403 on an individual folder is skipped rather
-  than failing the enumeration, because a token scoped to just the paths NetRisk needs is the *right*
-  configuration and will be denied on its siblings; and `pki` and `cubbyhole` are excluded, the latter
-  because it is per-token storage whose contents would vanish with the token that listed them, so a
-  reference into it could never resolve again. The walk stops at 2,000 secrets and 10 levels.
-
-  `503` is now reported as "the vault is sealed" — the one failure whose remedy has nothing to do with
-  NetRisk's configuration.
-
-- **The machine ID is now checked rather than sent.** 2.20.0 sent it as an
-  `X-BastionVault-Machine-Id` header, which no part of BastionVault reads. FerroGate machine
-  authentication is a DPoP-bound attestation flow against `auth/ferrogate/login` that requires a local
-  Machine Identity Agent; there is no header that makes a request machine-bound. A headless
-  application mints a machine-bound token on the host with `bvault ferrogate token` and then presents
-  it like any other token.
-
-  So the machine ID on a connection is what the connection test now *verifies the supplied token is
-  bound to*, by comparing it against the token's own `spiffe_id` from `auth/token/lookup-self` — a
-  reserved token metadata key that `auth/token/create` refuses to set, which is what makes its
-  presence trustworthy evidence of attestation. A token issued for a different machine is refused,
-  because accepting one would make the field decorative. And when the server has
-  `require_machine_identity` on while the token is not machine-bound, the test fails with the exact
-  command that produces a usable one — rather than saving a connection that the server will refuse on
-  every subsequent request.
-
+- Rewrite the BastionVault plugin protocol to match the real HashiCorp-Vault-compatible API (S36)
+- Verify rather than send the machine ID, checked against the token's own `spiffe_id` (S36)
 
 ## [2.20.0] - 2026-09-09
 
-This release includes new features and improvements.
-
 ### Added
-
-- **External secret vaults, and the BastionVault integration that implements them.** NetRisk holds a
-  lot of other people's credentials — Vision One API keys, Jira tokens, Slack webhook URLs, OIDC
-  client secrets. Encrypting them at rest means a stolen database dump is ciphertext rather than a
-  working credential, but the credentials are still *in* NetRisk, and rotating one means editing it
-  here as well as wherever it came from.
-
-  A credential field can now hold a **reference** to a secret in an external vault instead, resolved
-  on the server at the moment of use. Next to every secret box on the Integrations screen there is now
-  a key icon: it lists the secrets the vault lets NetRisk see and binds the field to one. Rotating that
-  credential in the vault takes effect within the cache window, with no change in NetRisk at all.
-
-  The vault itself is a **plugin**, so any other product can be supported by writing one:
-  `Contracts.Secrets.INetriskSecretVaultPlugin` in the SDK submodule declares three operations —
-  test, list metadata, read one value — and deliberately no others. There is no "write secret",
-  because a plugin that could write would let a compromised NetRisk rewrite the estate's credentials;
-  and no "list all values", which is an exfiltration primitive with a friendly name. Plugins are handed
-  the host's HTTP client rather than making their own, so a base URL an operator pasted in is subject
-  to the same SSRF policy as every other integration.
-
-  BastionVault authenticates with **one API key** and, optionally, the **machine ID** it issued for
-  the server NetRisk runs on. The machine ID is optional because BastionVault only binds keys to a
-  machine when an account is configured that way; when a machine-bound account is reached without one,
-  the connection test says so explicitly instead of leaving the operator suspecting the API key.
-
-  Resolved values are held in memory as AES-256-GCM ciphertext under a key generated at process start
-  and never persisted, for **15 minutes** by default (1–60, per connection). The cache exists for
-  arithmetic — a Vision One sync makes dozens of calls and each one asks for the API key — and the
-  obfuscation is honest about what it buys: anyone who can read the process's memory can still recover
-  the plaintext, but a crash dump or heap snapshot no longer contains the estate's credentials as
-  scannable strings. Expiry is absolute rather than sliding, because a sliding window on a credential a
-  busy job touches constantly never expires — which turns a 15-minute cache into a permanent second
-  copy, and a revoked credential into one NetRisk keeps using. Rotating a connection's key evicts
-  everything that key fetched.
-
-  Two properties are worth stating plainly. **No endpoint anywhere returns a secret value** — the
-  desktop client can see which secrets exist and re-point a field at one, and cannot read a
-  credential out of NetRisk at all. And **a resolution failure is never an empty credential**: the
-  connection was deleted, the plugin is disabled, the key was revoked, the field was renamed — each
-  fails loudly with the vault named, rather than sending `""` to a third party and producing a 401
-  that points at the wrong integration.
-
-  Schema version 84 adds one table, `secret_vault_connections`. References live in the credential
-  columns that already exist, unencrypted and marked `vault:v1:…` — a reference names a secret rather
-  than being one, and keeping it queryable is what lets NetRisk refuse to delete a vault connection
-  that fields still resolve through. Full detail, including how to write a plugin for another vault:
-  [docs/features/secret-vaults.md](docs/features/secret-vaults.md).
+- Add external secret vaults and the BastionVault plugin implementing them, resolved server-side and never returned to a client (S36)
 
 ### Changed
-
-- **Every credential the server consumes now goes through `ISecretResolver` instead of
-  `ISecretProtector.Unprotect`.** After the vault feature exists a credential column holds one of two
-  things — ciphertext, or a reference — and only the read path can tell which. Leaving `Unprotect` in
-  place would have meant each integration authenticating with the literal string `vault:v1:3:…`,
-  which fails as a 401 from somebody else's API with no indication of why. Nineteen call sites moved
-  across Vision One, SecurityScorecard, the issue trackers, Jira Service Management and Assets, the
-  identity providers and the notification dispatcher; behaviour for a field that is not vault-backed
-  is unchanged.
-
-- **The Track 4 service registration now also supplies `IPluginsService` and `ISettingsService`**
-  (with `TryAdd`, so a host that registers its own keeps it). The vault graph depends on both, and a
-  host that composed Track 4 without them started fine and passed every test that did not touch a
-  credential — then failed on the first notification send. `SecretVaultRegistrationTest` resolves the
-  chain so that gap is a build failure rather than a production one.
-
-- **`PluginsService` no longer throws when the `Plugins` directory does not exist.** It created the
-  directory when enumerating DLLs but not when enumerating subdirectories, so a host without one got
-  an exception from `LoadPluginsAsync` instead of "there are no plugins" — which now matters on every
-  credential read, since the resolver asks the plugin service a question for any vault-backed field.
-
-- **CI API tokens are their own administration section.** They were the fourth tab of the
-  findings-admin screen, reached by pressing an icon whose hint began "Deduplication" — which is not
-  where anyone looks for a pipeline credential. Everything else on that screen tunes how scan
-  results are processed and is read by whoever administers the scanners; this is credential
-  issuance, a different act for a different audience, and the only screen in the application that
-  displays a secret. It now has its own icon in the Administration window's navigation bar, its own
-  hint, and its own view model (`ApiTokensViewModel`), with the findings-admin screen left as
-  deduplication, SLA policy and risk acceptances.
-
-  The section was also laid out again while it moved. Its issue form was a row of unlabelled
-  controls — a name box and a bare date picker showing "December 8 2026" with nothing to say the
-  date was an optional expiry — above a full-height empty grid, with the Revoke button stranded at
-  the bottom edge of the window, a screen away from the row it acts on. The form and the scope
-  checkboxes are now one card, the issued secret gets its own box, Revoke and Reload sit directly
-  above the list, the timestamp columns are formatted to the minute instead of rendering raw
-  `DateTime`s, and an empty list says that no tokens have been issued rather than showing an empty
-  grid that looks like a failed load. Pressing "Issue token" with no name or no scope selected used
-  to `return` silently, which on screen is indistinguishable from a button that does not work; both
-  now state what is missing, and every failure is shown on the screen instead of only in the log.
-
-- **The administration navigation icons now say what they open.** The bar in the top-right corner of
-  the Administration window is nine icons and no labels, and its hover hints repeated the section
-  name — "Deduplication" over an icon that also holds the SLA policy, the risk acceptances and the CI
-  API tokens. Each icon now hints at the sections it contains, in English and Portuguese.
+- Route every credential read through `ISecretResolver` instead of `ISecretProtector.Unprotect` (S36)
+- Split CI API tokens into their own administration section instead of a tab of the findings-admin screen (T58)
 
 ### Fixed
-
-- **The desktop client logged the same token-refresh failure 4,537 times in a day.**
-  `nr-gui20260909.log` holds twelve hours of `[DBG] Token is expired` followed by `[ERR] Unknown
-  error '<' is an invalid start of a value. Path: $ | LineNumber: 1 | BytePositionInLine: 0.`, one
-  pair every ten seconds, and `nr-gui20260908.log` holds about as many. Two separate faults produced
-  it. The notification bar's 10-second timer reaches the REST layer, which renews a token inside its
-  renewal window, and a renewal that had just failed was retried on the very next tick — nothing
-  anywhere backed off, so a reverse proxy answering `/Authentication/GetToken` with an HTML page cost
-  a request and an Error line every ten seconds for as long as the client stayed open. And the line
-  it logged was the JSON reader's complaint about byte 0 of a body it would not name: not the
-  endpoint, not the status code, not the fact that the body was an nginx error page rather than
-  anything the API had sent.
-
-  A failed refresh now buys silence — 30 seconds, doubling to a 10-minute ceiling, cleared by the
-  first success — and a refresh attempted inside that window is not performed at all and replays the
-  previous result, which is the answer it would have got. Twelve hours of a persistent failure costs
-  about 75 attempts instead of 4,320, and one Error line per hour instead of one per attempt; the
-  suppressed occurrences are still recorded at Debug. The message now reads `the server returned a
-  non-JSON response (HTML) to /Authentication/GetToken — HTTP 200 (OK), content-type text/html,
-  first 120 bytes of body: "…"`, with the multi-line error page collapsed to one line, and says that
-  a proxy or an error page in front of the API is the usual cause.
-
-  The refresh also asks for the error-reporting client now, so a 403 or a 502 is described with its
-  status and the server's own explanation instead of `Request failed with status code X`. That
-  turned up a trap worth recording: `ThrowOnAnyError = false` is honoured only by RestSharp's
-  `Execute` family — the `Get`/`Post`/`Put`/`Delete` extensions call `ThrowIfError()` themselves,
-  unconditionally — so asking for the reporting client and then calling `client.Get(request)` throws
-  before the body can be read anyway. RestSharp also reports `ResponseStatus.Error` on every
-  non-2xx, so a description that branches on it calls an intact 403 a failed request. Covered by
-  `TokenRefreshLoopTest` (ten of its fourteen cases fail on the pre-fix code),
-  `TokenRefreshBackoffTest` and `ServerResponseDescriptionTest`.
-
-- **"Could not issue an API token: '<' is an invalid start of a value."** The Track 3 administration
-  client (deduplication, SLA policy, risk acceptances, API tokens) sent its writes through the
-  default client, so `ThrowOnAnyError` raised before the response could be read: the
-  `Reject(..., response.Content)` call that exists precisely to pass the server's sentence through
-  ran only in the tests, whose stub answers a non-2xx instead of throwing — the same incomplete fix
-  the governance and IRP template clients had. Writes now go through the error-reporting client, and
-  the 401 that `AuthChallengeHandler` produces for an expired session is passed through with its
-  message rather than replaced by "Error calling /ApiTokens". A 2xx body that is not JSON is also no
-  longer reported as a parse error: the message names the status, the media type and the first bytes
-  of what arrived, because "'<' is an invalid start of a value" describes an identity provider's
-  login page as if the token issuer were at fault — which is what sent this investigation to the
-  server-side issuer, where nothing was wrong. Covered by `FindingsAdminRestServiceErrorTest`, whose
-  new cases fail on the pre-fix code with the exact message from the operator's log.
-
-- **An expired session was reported as a rejected save.** "Error saving here" on the IRP templates
-  screen — the log said `Error updating IRP template task message:Request failed with status code
-  BadRequest`, so the operator went looking for the mistake in the task they had just typed. The
-  request had never been authenticated: the API's default challenge scheme is the SAML one, so an
-  unauthenticated or expired call is answered with a **302 to the identity provider**, not a 401 —
-  and the REST client followed it. A GET then deserialized the identity provider's login page, which
-  is the `'<' is an invalid start of a value` that has been appearing across the client; a PUT or
-  POST was re-sent to that login URL, which answers a JSON write with 400. The client no longer
-  follows redirects, and a redirect answer is reported as `401 Unauthorized` and drops the stale
-  token, so the ~40 places in the client that already handle a 401 finally see one. Verified against
-  the homolog installation on 2026-09-09; covered by `AuthChallengeHandlerTest` and
-  `RestServiceAuthChallengeTest`, which reproduces the 400 over a loopback listener.
-
-- **A refused IRP template save did not say why it was refused.** The writes on that screen went
-  through the throwing client, which raises before the status can be read and carries only "Request
-  failed with status code X" — so the server's explanation was discarded, including the sentence the
-  task acyclicity check produces (`That predecessor would create a dependency cycle`) and the field
-  named by model validation. The reason now reaches the log and the toast.
-
-- **The client could not read the API's error documents at all.** `TryReadOperationError` parsed
-  them case-sensitively while the API serializes with MVC's web defaults (`title`, `status`,
-  `errors`), so every field came back at its default and a 400 that named the invalid parameter was
-  reported with an empty reason. The existing tests missed it because their fixtures were serialized
-  with the same default options the read used, producing a document the API never sends.
-
-- **The Vulnerabilities window froze for seconds and filled the log with "Error getting host" /
-  "Error getting team".** Its Fix team, Host, Analyst and Application columns each resolved every
-  cell through a value converter, and a converter cannot be asynchronous — so each cell made its own
-  blocking call to `/Teams/{id}`, `/Hosts/{id}`, `/Users/Name/{id}` or `/Entities/{id}` on the UI
-  thread, once per row and again on every re-render. A page of findings cost about ninety serialised
-  requests; the team, host and entity lookups cache nothing when the call fails, so while the server
-  was unreachable each one was retried and logged as an error, dozens of times a second. The window
-  now resolves the whole page up front — one bulk request per column, off the UI thread — and the
-  columns read the result. An id that cannot be resolved shows as the bare id instead of blanking
-  the column, and a failure is logged once per column per page.
-
-- **Saving a risk appetite failed with "Error calling /RiskAppetites".** The governance admin screen
-  showed that generic line for every refusal, including the one an operator is most likely to hit:
-  setting the dual-approval threshold above the acceptance ceiling, which the server refuses with a
-  400 explaining that the threshold has to be at or below the ceiling. The governance REST client
-  sent its writes through the default client, on which RestSharp's `ThrowOnAnyError` raises before
-  the response can be read — so the status handling that exists precisely to pass the server's
-  sentence through was unreachable, and the refusal the user could have acted on arrived as one they
-  could not. Writes and deletes now go through the error-reporting client, and the server's message
-  is shown as written.
-
-
+- Back off and suppress repeated token-refresh failures instead of retrying every 10 seconds
+- Fix "Could not issue an API token" and several REST error-reporting regressions across the governance/IRP/API-token clients (T58, T121)
+- Stop following redirects on REST calls so an expired session reports 401 instead of a JSON parse error
+- Resolve findings-window host/team/entity columns in one bulk request instead of one blocking call per grid cell
 
 ## [2.19.7] - 2026-09-09
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Saving an entity failed with "Error updating entities".** `PUT /Entities/{id}` returned 500 in
-  three separate ways, all traced to the update path reconciling the property bag from
-  client-supplied row ids and guessing whether a property was multi-valued from how many rows the
-  payload happened to carry. Selecting one value for a multi-valued property (a single application
-  on a business process) routed it through the create path and then appended it to the entity a
-  second time, and EF refused the save with "another instance with the same key value for {'Id'} is
-  already being tracked"; saving twice from the same open form asked to update a row the previous
-  save had deleted and re-inserted, failing with "EntityProperty not found"; and clearing a
-  multi-valued property emitted no rows at all, so its values were silently left in the database
-  forever. The bag is now reconciled by property type and value against the entity definition —
-  ids in the request are ignored, rows keep their ids across saves, a changed single value records
-  its predecessor in `OldValue`, and an omitted property is cleared. A missing entity answers 404
-  and a property set that does not validate answers 400, instead of both being reported as 500;
-  the 500 branch now logs the exception rather than only its message.
-- **The Mitigation dialog ignored the window height.** Its root grid put the whole form —
-  title, fields and buttons — in an `Auto` row and left the `*` row below it empty, so the content
-  kept its natural height at the top of the window and roughly the bottom 40% was dead space; the
-  Solution, Security Requirements, Recommendation and Documentation boxes stayed at a hard-coded
-  80px however large the window was. The form now fills the window: the single-line fields stay
-  compact on the left, the multi-line boxes and the document list share the remaining height, and
-  the body scrolls if the window is made shorter than they fit.
-- **The governance admin screen listed entities as `DAL.Entities.Entity`.** Both entity pickers on
-  Administration → Governance (the risk-appetite scope and the business-risk-reviewers selector)
-  were bound straight to the entity with no template, so every row rendered the class name — the
-  list was there but unreadable and unusable. An entity has no `name` column (the name is a row in
-  its property bag), so it now carries a `DisplayName`, and that is what the pickers and anything
-  else that prints an entity show.
-- **The reviewers grid identified people by user id.** The "User" column showed the numeric id
-  instead of the appointed person's name.
-- **The risk-appetite grid identified scopes by entity id.** On Administration → Governance the
-  "Entity" column of the appetite list showed the raw numeric id, and nothing at all for the
-  organization-wide row — whose entity id is null by definition — so the row that governs the whole
-  organization was the one that looked empty. The appetite list now carries the entity's property
-  bag from the server, and the column shows the entity's name, the localized "Global" for the
-  organization-wide row, or `#id` when an entity has no name recorded.
-- **The "risks above appetite" tab had the same blank scope cell.** The count for the
-  organization-wide bucket, and for any entity with no name recorded, arrived with no name and the
-  grid showed an empty cell beside the number — which does not say what the number counts. It now
-  uses the same scope label as the appetite grid.
-
+- Reconcile the entity property bag by type and value instead of by client-supplied row ids, fixing three save failures (T35)
+- Fill the Mitigation dialog's height instead of leaving 40% dead space
+- Show entity display names instead of the raw DAL class name on the governance admin pickers (T129, T137)
+- Show reviewer and appetite-scope names instead of raw ids on the governance admin grids (T129, T137)
 
 ## [2.19.6] - 2026-09-09
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **The Vision One sync called three endpoints, and only one of them exists.** The risk-score
-  pass read `/v3.0/asrm/highRiskDevices` and the CVE pass read `/v3.0/asrm/vulnerableDevices`;
-  neither is an endpoint Trend publishes. Both now read the attack-surface device inventory,
-  `/v3.0/asrm/attackSurfaceDevices`, which is where Vision One carries the risk score and the
-  nested CVE list — so the risk-score pass no longer crawls the whole tenant a second time. On a
-  tenant whose ASRM permission was denied, all three answered `403` alike, which is what kept the
-  two wrong paths hidden.
-- **Vision One risk scores were never read.** The device parser looked for `riskScore`,
-  `assetRiskScore` and `cyberRiskScore`, but the field Vision One publishes is `latestRiskScore`.
-  Every synchronized host therefore stored no score, and the entity's cyber risk index was
-  computed from an empty set. `osPlatform` is now read for the operating system as well.
-- **"Test connection" asked Vision One for a page size it rejects.** The test read one row with
-  `top=1`, but Vision One accepts `top` only from 10, 50, 100, 200, 500 and 1000, so a healthy key
-  would have been reported as a broken connection. The test now asks for 10.
-
-
+- Point the Vision One risk-score and CVE passes at the real `attackSurfaceDevices` endpoint (T72, T73)
+- Read Vision One's `latestRiskScore` field, restoring risk-score ingestion (T74)
+- Request a valid page size in the Vision One test-connection probe (T71)
 
 ## [2.19.5] - 2026-09-08
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **No REST write from the desktop client is retried any more.** The eleven Vision One
-  synchronizations fixed in 2.19.4 were not an integrations bug — every service in
-  `ClientServices` sent its writes through `RestService.GetReliableClient`, which retries anything
-  answering 500, 502, 503 or 504, and the wrapper it returns does so eleven times with no delay
-  between attempts under a Polly policy that can retry the whole sequence again. Only the
-  integrations service had been moved off it. Forty call sites across twelve services — creating a
-  host, a vulnerability, an incident, a response plan or one of its tasks and executions, an IRP
-  template, a risk acceptance, an SLA configuration, an entity-role assignment, a comment; starting a
-  scan import; sending a fix-request or update mail — went out through the retrying client, so a
-  server answering 5xx got the same POST up to eleven times. A duplicated sync is eleven jobs that
-  eventually end; a duplicated create is eleven rows that stay, and eleven mails nobody can recall.
-  Writes now go through `RestServiceBase.MutatingClient`, the same client without the retry policy;
-  reads keep the retrying one. A 5xx after a write is genuinely ambiguous — the server may have
-  committed the row before failing to say so — so it is reported rather than retried.
-
-- **The retry amplification is fixed at its source, upstream.** `ReliableRestClientWrapper.ExecuteAsync`
-  wrapped the caller's Polly policy around a private loop of up to eleven undelayed attempts, so a
-  ten-retry policy sent up to 121 requests for one logical call, and its `catch (Exception)` retried a
-  `JsonException` or an `ArgumentException` ten times before rethrowing the eleventh. Fixed in
-  [reliable-rest-client-wrapper#1](https://github.com/ffquintella/reliable-rest-client-wrapper/pull/1);
-  the submodule pointer is not moved in this release. `MutatingClient` remains the right split
-  regardless — a write must not be retried even by a correct retry policy.
-- **`StubRestBackend` no longer models the retrying client with a no-op policy.** It wrapped the stub
-  in `ReliableRestClientWrapper` with `Policy.NoOpAsync()` and relied on the wrapper's defective inner
-  loop to produce the retries, so the ten `…IsStillRetried` tests were asserting on the bug and would
-  have turned red the moment the submodule was fixed — reporting a repaired dependency as a regression
-  here. It now uses production's policy (`RestServerSideException`, ten retries) with the backoff
-  flattened to zero. Verified both ways: 1291 tests pass against the current and the fixed wrapper,
-  and eleven fail against the fixed wrapper with the no-op restored.
-
-
+- Split REST writes onto a non-retrying client so a 5xx is reported instead of retried up to eleven times (T71, T75)
+- Fix the upstream retry-amplification bug in reliable-rest-client-wrapper
+- Model the retrying client's real policy in the client test stub instead of a no-op
 
 ## [2.19.4] - 2026-09-08
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **One click on "Sync now" no longer starts a dozen synchronizations.** The Vision One sync-log
-  screen showed eleven runs, all Running, all started within three seconds of each other, for a
-  connection that has exactly one. Two independent defects were needed. On the client, the manual sync
-  went out through the reliable REST client, which retries anything answering 500, 502, 503 or 504 —
-  and the wrapper it uses retries eleven times with no delay between attempts, under a Polly policy
-  that can then retry the whole sequence. A POST is not idempotent, and a posture sync is the least
-  idempotent request in the client: every attempt was a real run against the provider, writing the
-  same hosts and findings. The integration writes (POST, PUT, DELETE) now use a client with no retry
-  policy; the reads keep the retrying one, which is what it is for. On the server, nothing refused a
-  second run: `TrendMicroService.SyncAsync` and `SecurityScorecardService.SyncAsync` now claim their
-  connection in the shared sync-log ledger and refuse a duplicate with 409 (`sync_already_running`),
-  naming the run in flight and when it started. The claim is insert-then-check, so two callers that
-  both find the ledger empty still resolve to one winner, and the daily job skips a busy connection
-  instead of failing the whole pass.
-- **A synchronization that says "Running" now always stops saying it.** A run whose process stopped
-  before it could record an outcome left a row marked Running forever, which reads exactly like a sync
-  still in progress hours later — and, with the guard above, would have locked its connection out of
-  every future sync. `IntegrationSyncLedger` settles any Running row older than two hours as Failed,
-  with a message saying it was abandoned, before the guard is consulted. Two paths that could produce
-  such a row are fixed as well: SecurityScorecard decrypted its stored API token between writing the
-  Running row and entering the `try` that completes it (the same defect Vision One had already had
-  fixed, and it now rethrows as 409 the way Vision One does), and a completion write that itself
-  failed threw out of the `catch` it was called from — turning a reported sync failure into a 500,
-  which is precisely what the client then retried.
-- **A refused integration request reads as a sentence rather than as JSON.** The admin view models
-  toast the exception message verbatim, and the integration endpoints answer a refusal with a JSON
-  body, so the operator was shown `{"error":"invalid_parameter","parameterName":…}`. The client now
-  shows the body's `message` (prefixed with the parameter name when it names one) and falls back to
-  the whole body for any other shape.
-
-- **A Vision One connection can be saved again: the region ComboBox was erasing it.**
-  `ComboBox.SelectedItem` is a two-way binding by default, and a ComboBox whose `ItemsSource` does not
-  contain the current value resets its selection to null and writes that null into the source. The
-  region dropdown bound `SelectedItem` straight at `TrendMicroDraft.Region`, the region list is empty
-  on first render, and `LoadPostureProvidersAsync` clears it again on load and after every save — so
-  unless the operator happened to touch the dropdown, the connection was sent with no region at all
-  and refused by model validation with "The Region field is required". Editing only the API key, which
-  is the path an operator takes to fix an undecryptable credential, reproduced it every time. Both
-  ComboBoxes in the integrations editor now bind to view-model properties that ignore the control's
-  own empty write, and re-read the value when their list is refilled. The second one — the
-  issue-tracker provider, bound the same way at `IssueTrackerDraft.Provider` — was found by the test
-  written for the first; it was less damaging, because a non-nullable enum rejects the null instead of
-  storing it, but it blanked the dropdown next to a draft that had a provider.
-  `ComboBoxSelectionBindingTests` now fails on any view that binds a selection straight into model
-  state, so the shape of the binding cannot come back.
-
-
+- Refuse a duplicate integration sync with 409 instead of allowing eleven concurrent runs (T71, T75)
+- Settle a sync stuck Running for over two hours as Failed
+- Show the server's structured refusal message instead of raw JSON in the integration admin views
+- Fix two ComboBox bindings that erased the Vision One region and issue-tracker provider on save (T71, T65)
 
 ## [2.19.3] - 2026-09-08
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **An integration credential that cannot be decrypted no longer looks like a sync that worked.** The
-  Vision One API key is decrypted before the first upstream call, and that decryption sat one line
-  *above* `SyncAsync`'s `try` — just below the call that writes the sync-log row. So a key encrypted
-  under a different installation's `ServerSecretToken` threw straight out of the method: nothing was
-  logged, and the row stayed `Running` forever. In the server log the result was indistinguishable
-  from a sync that had succeeded and had nothing to say, which is exactly how it was read. The
-  decryption now happens inside the `try`, the row is completed as `Failed` with the reason, and the
-  exception is still rethrown so the endpoint answers 409 rather than a 200 carrying an error count.
-- **The integration endpoints now log the refusals they were answering silently.** `InvalidParameter`
-  → 400 was the one arm of the shared exception mapping that returned without logging anything, and
-  `SecretProtection` → 409 was the other. The reason was in the response body, so a client that
-  reported "the request failed" and dropped the body left no record of it anywhere, on either side of
-  the call — which is what happened: a 400 that named the invalid parameter reached the operator as
-  "Error calling /TrendMicro/1".
-- **The desktop client stops discarding the server's explanation of a refusal.** `RestService` builds
-  its client with RestSharp's `ThrowOnAnyError`, which raises `HttpRequestException` for any non-2xx
-  *before* the caller can read the response and carries only "Request failed with status code X". Every
-  status-code branch in `IntegrationsRestService` — the ones that surface which parameter was invalid,
-  that a stored credential cannot be decrypted, and what an upstream provider answered — was therefore
-  unreachable in the running application, while passing its tests, because the test stub was built with
-  `ThrowOnAnyError` off. Those calls now request a client that reports error responses instead of
-  throwing them away, the stub can model either client (and says which one it is modelling), and the
-  two remaining failure paths name the reason in the exception message rather than only in an inner
-  exception the callers never read.
-
-
+- Complete a sync as Failed when its credential cannot be decrypted, instead of leaving it Running forever
+- Log the refusals the integration endpoints had been answering silently
+- Read error responses through a non-throwing REST client so refusal reasons reach the operator
 
 ## [2.19.2] - 2026-09-08
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **A failed Trend Micro Vision One sync now reports why Vision One refused it.** The paged ASRM reads
-  built their error from the status code alone and discarded the response body, so a sync that Vision
-  One answered with `403` logged `Vision One answered HTTP 403 for /v3.0/asrm/attackSurfaceDevices.`
-  and nothing else — while the Test Connection button, hitting the same endpoint, explained the same
-  failure in full. That is backwards: the message an operator actually sees is the one on the
-  connection's last-sync error and in the server log. A 403 there has three distinct causes — the
-  role behind the API key lacking read access to Attack Surface Risk Management (Cyber Risk Exposure
-  Management), the role's data-and-app-objects scope excluding the assets, and the tenant lacking the
-  entitlement — and only Vision One's own `error.code` tells them apart. The connection test, the
-  paged reads and the exemption write-back now share one message that names the endpoint, states what
-  to check, and quotes what Vision One said, reading `error.code` / `error.message` / `innerError`,
-  the flat `{code, message}` shape and the `errors` array, and passing a non-JSON gateway page through
-  on one line. The detail is capped so it cannot fill the bounded sync-log column.
-
-
+- Share one error message across Vision One's connection test and sync passes that names the endpoint and quotes Vision One's own reason (T71)
 
 ## [2.19.1] - 2026-09-03
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- **Every vendored submodule now declares the branch it tracks** (`.gitmodules`). Dependabot follows
-  a submodule's *default* branch when none is named, and it cannot tell that the pinned commit is
-  ahead of that branch — it just proposes the branch tip. `libs/Aura.UI` keeps the Avalonia 12 /
-  .NET 10 port on `avalonia12` while the fork's then-default `master` sat ten commits behind it, so
-  the updater raised a pull request proposing to revert the port. Naming the branch stops that at
-  the source; the fork's default branch was moved to `avalonia12` as well, but the declaration is
-  what this repository relies on.
-- **Dependency sweep: twelve Dependabot updates, verified as one combined state before merging.**
-  NuGet: Serilog.AspNetCore 9.0.0 → 10.0.0, LiveChartsCore and its SkiaSharpView / Avalonia
-  packages `2.1.0-dev-292` → `2.1.0-dev-798`, QuestPDF 2026.7.3 → 2026.8.0, Mapster 10.0.11 →
-  10.0.12, Hangfire and Hangfire.AspNetCore 1.8.24 → 1.8.25, and the `Tmds.DBus.Protocol`
-  transitive pin (GHSA-xrw6-gwf8-vvr9) 0.94.2 → 0.95.0. GitHub Actions: `actions/checkout` v4 → v7,
-  `actions/setup-dotnet` v4 → v6, `actions/upload-artifact` v4 → v7, `gitleaks/gitleaks-action`
-  v2 → v3 and `github/codeql-action` v3 → v4, which also brings
-  [`security.yml`](.github/workflows/security.yml) onto the same action versions
-  [`codeql.yml`](.github/workflows/codeql.yml) already used. The two that could plausibly have
-  broken something were the Serilog major and a LiveCharts jump of five hundred dev builds
-  underneath the desktop client's charts — and CI builds nothing and runs no tests, so its green
-  tick would not have caught either. The merged end state was therefore compiled in Release and put
-  through the whole suite first: 4,857 tests, including the Testcontainers MariaDB integration
-  tests, with zero warnings. The eleven red checks the pull requests carried were all the same
-  stale `NU1900` — the AvaloniaUI package feed had been unreachable during the runs — and clear on
-  a re-run.
+- Declare the tracked branch on every vendored submodule so Dependabot cannot propose reverting a fork's port
+- Verify a combined state across twelve Dependabot updates before merging them together
 
 ### Fixed
-
-- **The submodule provenance gate now rejects a bump by direction, not only by description.** The
-  gate required the pull-request body to name the submodule and both SHAs, which Dependabot's
-  generated body satisfies by construction — so a bump that moved `libs/Aura.UI` *backwards* passed
-  it, compiled with zero warnings, passed all 4,778 unit tests, and crashed the desktop client at
-  startup with a `MissingMethodException` from Aura.UI's theme (it had been compiled against Avalonia
-  11.2.2 and was running on 12.1.1). A bump whose new commit is an ancestor of the pinned one is now
-  rejected before the description is read.
-
-
+- Reject a submodule bump that moves the pinned commit backwards, regardless of its PR description (T110)
 
 ## [2.19.0] - 2026-09-03
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Jira Service Management is readable from NetRisk (Track 4.6)** — service desks, request types and
-  queues are read live, and the requests NetRisk cares about are mirrored with their SLA cycles.
-  Queues deliberately are not mirrored: a queue is a saved JQL filter whose membership changes on
-  every triage action, so a stored copy is wrong the moment it is written. SLA goes into columns
-  rather than a JSON blob because "what is breaching this week" has to be a query, and into a row per
-  *cycle* rather than per metric because a reopened request starts a second cycle of the same metric
-  and collapsing them would erase the first breach. A new breach raises a `jsm.sla_breached`
-  notification through the existing channel dispatcher, once per (request, metric, cycle), linking to
-  the Jira portal rather than to a NetRisk page — whoever acts on a service-desk breach acts on it in
-  the service desk. The mirror runs on the connection's existing poll interval, in the same recurring
-  job as the issue-link poll, so there is one schedule per connection instead of two that could
-  disagree. (`JiraServiceManagementClient`, `JiraIntegrationService`, `IssueSyncPollingJob`)
-- **Jira Assets registers for applications, servers and machines can be imported (Track 4.6)** — an
-  Assets object type is mapped to a NetRisk record kind and its attributes to fields, capturing
-  **name, responsible, environment and active state**. Servers and machines land on `hosts` through
-  the same asset-identity chain the Vision One integration uses (external id → MAC → FQDN → hostname
-  → IP), so an Assets server that a scanner already found updates that host instead of becoming a
-  third row for the same box; `hosts` gains `environment` and `owner`, and the active state maps onto
-  the `status` the hosts screen already renders rather than a parallel boolean that could disagree
-  with it. Applications land as `entities` rows on the `application` definition, which gains
-  `environment` and `active` properties. An owner that matches no `person` entity is **reported, not
-  invented** — creating a person row from a CMDB string is how a directory fills with near-duplicates
-  of real people — and the value is still recorded on the import row. Every object read produces an
-  audit row with the rule that matched or the reason it failed, including the ones that resolved to
-  nothing, so "why is that server not in NetRisk" has an answer. Retiring objects the register no
-  longer returns is opt-in and off by default: a typo in an AQL filter returns nothing, and an import
-  that decommissions production on a typo is worse than one that leaves a stale row. "Preview import"
-  is the same code path with the writes skipped and writes nothing at all, not even the audit row.
-  (`JiraAssetsClient`, `AssetAttributeProjector`, `JiraIntegrationService.Assets`)
-- **A Jira ticket can now hang off an incident or a risk, not only a finding (Track 4.6)** —
-  `finding_issue_links` was widened rather than duplicated, since the poll loop, the webhook lookup,
-  the loop protection and the conflict queue all key off that one table. Three real foreign keys plus
-  a `target_kind` discriminator, not a polymorphic `(kind, id)` pair: a polymorphic id cannot carry a
-  foreign key, so deleting a risk would leave a link pointing at nothing and the existing cascade
-  would stop working. Exactly one target is enforced in the entity, in a service guard, and by a
-  `CHECK` constraint. Inbound status actions stay **finding-only** — an incident's or a risk's
-  external status is mirrored and displayed and nothing transitions, because closing an incident is a
-  human process nobody has specified, and the configuration screen says so where the mapping is
-  edited. (`FindingIssueLink`, `RecordIssuesController`, `JiraIntegrationService.Links`)
-- **Jira field mapping against the site's own field list (Track 4.6)** — a NetRisk value can be
-  written into any Jira field, including a custom field, picked from `/rest/api/3/field` rather than
-  typed: nobody knows `customfield_10012` from memory. Transforms are a small closed enum
-  (`Trim`/`Upper`/`Lower`/`TruthyBoolean`/`FirstOfList`/`DateTime`/`Integer`) for the same reason the
-  templates are placeholder substitution — the values are third-party text crossing between two
-  systems, and an expression evaluator there is an injection surface for no benefit. The NetRisk
-  target list is served by the API so the picker cannot offer something the mapping engine does not
-  implement. (`jira_field_mappings`, `MappableFields`, `JiraMetadataClient`)
+- Read Jira Service Management service desks, request types, queues and SLA cycles live (T79, T80)
+- Import Jira Assets registers for applications, servers and machines (T82)
+- Widen `finding_issue_links` so a ticket can hang off an incident or a risk, not only a finding (T81)
+- Map NetRisk values onto any Jira field, including custom fields picked from the site's own field list (T79)
 
 ### Changed
-
-- **Issue templates can be previewed before they are saved.** `PreviewAsync` had existed on the
-  server since the feature landed with no UI on it, which left the title and description templates
-  editable and *unverifiable* — the only way to see what a placeholder produced was to file a ticket
-  in somebody else's project. *Preview* beside the template editors now renders them against a real
-  finding and shows the title, the mapped priority and the body. An unsaved edit is saved first,
-  because the preview renders the stored connection and silently previewing the old text is how a
-  placeholder edit looks like it did nothing — but only when a template field actually differs, so a
-  read-looking button does not write on every click. (`IntegrationsView`, `IssueTemplateDraft`)
-- **An imported Jira Assets object links back to its page on the Jira site.** Keyed on the object
-  **key** and not the numeric id — the id sits right beside the key in the payload and produces a URL
-  that looks correct and 404s. The link is built from the connection's base URL when the row is read
-  rather than stored, so renaming a site does not leave every previously imported row pointing at the
-  old host, and an object with no key stays plain text rather than becoming a button that reliably
-  fails. (`JiraIntegrationService.Assets`, `JiraIntegrationView`)
-- **One hardened URL launcher instead of two.** The Track 7 NR-2026-023 hardening — the
-  `ExternalUrlPolicy` check and `ArgumentList` quoting — lived in `VulnerabilitiesViewModel` and would
-  have needed a second copy for the Assets links. It moved to `ViewModelBase.OpenExternalUrl`, which
-  is the whole point of that finding: one place where a URL from someone else's system becomes a
-  process launch. (`ViewModelBase`, `VulnerabilitiesViewModel`)
-- **The issue-tracker status mapping is editable at last.** It shipped in 2.x as a read-only grid with
-  no way to add or remove a row, so the mapping the whole bi-directional sync depends on could be read
-  and never changed — the server has had a wholesale `PUT` for it since the feature landed and nothing
-  called it. It is now an editable grid with add/remove, a duplicate-status guard, and a *Load
-  statuses from Jira* button that fills the picker from the connection's project. (`IntegrationsView`,
-  `IntegrationsViewModel`)
-- **The Jira title and description templates and the severity→priority mapping have editors.** All
-  three were stored on the connection and none of them had a field in the UI, so the built-in defaults
-  were the only thing anybody could ship. (`IntegrationsView`)
-- **The Integrations screen has a Jira Assets tab** with three sub-tabs — field mapping, Service
-  Management, and Assets object mapping with a dry-run preview. Split into its own view model rather
-  than added to `IntegrationsViewModel`, which at ~1,500 lines across five tabs was already the
-  largest in the client. (`JiraIntegrationView`, `JiraIntegrationViewModel`)
-- **Schema: `db_version` 83, upgrade phase 14.** Eight additive tables, two columns on `hosts`, and
-  the issue-link widening. `target_kind` defaults to `Finding`, so every link written before this
-  release reads correctly with no backfill. Nothing is dropped and nothing is renamed, so the phase
-  has no destructive gate. (`Structure/83.sql`, `Data/83.sql`, `SchemaUpgradePhases.yaml`)
+- Add a live preview for issue templates before they are saved (T84)
+- Link an imported Jira Assets object back to its Jira page by object key (T85)
+- Make the issue-tracker status mapping grid editable with a duplicate guard and a "load from Jira" action (T83)
+- Add editors for the Jira title/description templates and severity→priority mapping (T83)
+- Add a Jira Assets tab with field-mapping, Service Management and Assets sub-tabs (T79)
+- Add schema version 83 (upgrade phase 14): eight additive tables, two host columns, and the finding_issue_links widening
 
 ### Fixed
-
-- **The solution builds with zero warnings.** 93 in our own code and 3 from a vendored library.
-  The bulk (57) were CS8632 — `string?` annotations written in five test projects whose annotation
-  context was never switched on; four now enable nullable outright and `API.Tests` enables
-  `annotations` only, because full `enable` reports 166 flow-analysis findings across its 1,061 tests
-  and that audit is its own piece of work, not a side effect of this one. The rest were real and
-  fixed rather than suppressed: a duplicate `Status`/`status` resource in the API resx that MSBuild
-  had been silently dropping (MSB3568), which is why the governance PDF's pt-BR status label showed
-  "Status" instead of the "Situação" somebody had translated; nullable returns dereferenced without a
-  check, now asserted, which makes those tests report "the service returned nothing" instead of a
-  `NullReferenceException`; `.Result` and `.GetAwaiter().GetResult()` inside test methods, now
-  awaited; and `Assert.Single(x.Where(…))` narrowed to the filtering overload. Where a warning was
-  correct but the code was deliberate — tests that exist to cover an obsolete overload the product
-  still ships — the suppression is narrow and carries the reason, because switching those to the
-  async replacement would leave the shipped method untested. The 3 remaining come from the
-  `Aura.UI` submodule, whose source is not ours to edit; they are silenced by code at the `libs/`
-  boundary with the reasoning recorded, so that the next real warning in our own code is not lost in
-  them. (`libs/Directory.Build.props`, five `.csproj`, `API/Resources/Localization*.resx`)
-- **A help paragraph under the issue templates rendered as `IssueTemplatePlaceholdersMSG`.** The
-  resource key was referenced and never declared; a missing resource does not throw — the localizer
-  returns the key name — so the view rendered, the build stayed clean, and the defect was only visible
-  to somebody reading that tab. Added, along with a `LocalizationCoverageTest` that scans the client's
-  source for `Localizer["Key"]` literals and fails on any that no resource declares. The test found
-  nine pre-existing offenders, which are allowlisted with a reason each rather than fixed as a side
-  effect of this change; **three of them are visible defects worth their own fix**, the worst being
-  `ErrorSavingMSG` — the generic write-failure toast in `ViewModelBase.RunAsync`, so every unexpected
-  save error in the desktop client currently shows the operator the literal text "ErrorSavingMSG".
-  (`Localization.resx`, `LocalizationCoverageTest`)
-
-
+- Fix 96 build warnings across the solution (nullable annotations, a duplicate resx key, blocking calls in tests)
+- Fix a missing `IssueTemplatePlaceholdersMSG` resource key and add a localization-coverage test
 
 ## [2.18.0] - 2026-08-31
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- **Section headers in the Administration window now stretch the full width of their panel.** The
-  *Flags*, *Face Id*, *Informations*, *Permissions*, *Profiles* and *Teams* headers were centred, so
-  their coloured background hugged the text and read as a badge rather than a separator — unlike the
-  *Users* and *Details* headers next to them, which already stretched. They now stretch like the
-  others, with the label still centred inside the band.
-- **The *Vulnerabilities* header on the risk screen stretches the full width too.** It sat inside a
-  horizontal `StackPanel`, which sized it to its text, so its coloured background stopped short
-  instead of running the width of the panel like the *Risk* and *Details* headers above it.
-- **The vulnerabilities grid on the risk screen now fills the height left over below the details.**
-  It was a fixed 270px block inside a vertical `StackPanel` in a scroll viewer, so it never grew
-  with the window and left the bottom of the screen empty. The detail column now stretches to at
-  least the scroll viewport's height and the vulnerabilities table takes the remaining space, with
-  its pager pinned underneath.
+- Stretch Administration section headers and the risk screen's Vulnerabilities header to the panel's full width
+- Fill the risk screen's vulnerabilities grid to the remaining viewport height
 
 ### Fixed
-
-- **The desktop client no longer loops forever asking for a new session token.** Sign-in appeared to
-  hang while the client logged `Token is expired` and the API logged `Authentication token created
-  for user` several times a second. `RestService.GetClient` required the token to be valid for
-  another 300 minutes before it would use it, which was survivable only while the API minted
-  day-long tokens; the shortened default lifetime (`JWT:Timeout`, 60 minutes) meant every token was
-  condemned the moment it arrived, so every REST call requested a replacement, rejected that one
-  too, and — because a refresh asks the server for the authenticated user, which needs a client —
-  recursed. The renewal window is now derived from the token's own lifetime (a quarter of it, capped
-  at five minutes), so it is always shorter than the lifetime whatever `JWT:Timeout` is set to. The
-  request that triggered a renewal also goes out with the *new* token; it used to carry the one that
-  had just been rejected.
-- **`make gui` builds clean again.** Four warnings had accumulated on the Track 8 governance
-  screens: `GovernanceAdminViewModel` redeclared `StrSave`, shadowing `ViewModelBase.StrSave` with
-  the same `Localizer["Save"]` value (CS0108), and three `TextBox` placeholders still used
-  Avalonia 11's `Watermark` instead of `PlaceholderText` (AVLN5001) in `GovernanceAdminView` and
-  `RiskGovernanceWindow`. Both are the same pair of mistakes cleared in 2.16.1 for
-  `FindingsAdminViewModel`; these were the last `Watermark` uses left in the GUI.
-
-
+- Derive the token-renewal window from the token's own lifetime instead of a fixed 300-minute floor, fixing an infinite renewal loop (T112)
+- Fix four build warnings on the Track 8 governance screens (T130)
 
 ## [2.17.4] - 2026-08-28
 
-This release includes new features and improvements.
-
 ### Added
-
-- **`make docker-release` builds every container image in Release and pushes all of them.** The
-  target runs `./build.sh CreateAllDockerImages --configuration Release` and then `docker push`
-  for each of the four published images (`netrisk-api`, `netrisk-website`, `netrisk-console`,
-  `netrisk-backgroundjobs`). It resolves the tag the way the Nuke build resolves `VersionClean` —
-  the newest of the `Releases/*` git tags and the version in `src/Directory.Build.props` — and
-  verifies all four tags exist locally *before* pushing any of them, so a version mismatch fails
-  with the missing tag named rather than publishing a partial set. `DOCKER_VERSION` and
-  `DOCKER_REGISTRY` override the tag and the registry.
-
-### Changed
+- Add `make docker-release` to build and push all four container images with one command
 
 ### Fixed
-
-- **`netrisk-console database ...` now finds the database credential however the binary was
-  launched.** 2.17.3 fixed this in a launcher — `/usr/local/bin/netrisk-console` inside the image,
-  which re-reads `/netrisk/netrisk.env` per invocation because the console container is a keepalive
-  and operator commands arrive by `docker exec`, which inherits nothing the entrypoint exported into
-  PID 1. That covers the launchers this repository ships and nothing else. The script operators
-  actually type lives on the deployment *host*, comes from the external
-  `ffquintella-dockerapp_netrisk` Puppet module, and on the deployed servers is dated October 2023 —
-  it predates the credential move (NR-2026-025) and runs
-  `docker exec ... /bin/bash -c "cd /netrisk; /netrisk/ConsoleClient $1 $2 $3 $4"`, straight past the
-  launcher. So `Database:ConnectionString` still resolved to null there, MySqlConnector still read
-  that as `server=localhost;port=3306`, and every database command still failed with
-  "Unable to connect to any of the specified MySQL hosts" while a correct connection string sat in
-  `/netrisk/netrisk.env` the whole time. The console host builder now reads that file as a
-  configuration source itself, below the process environment so an explicit
-  `docker exec -e Database__ConnectionString=...` still wins, and above `appsettings.json`, which
-  deliberately carries only a comment where the credential used to be. Parsing follows the shell
-  loader's rules exactly — the value is taken as the raw remainder of the line, never parsed as
-  shell, because it is a connection string full of `;`. `NETRISK_ENV_FILE` overrides the path for a
-  run outside a container.
-
-
+- Read the database credential from the deployment host's env file as a configuration source
 
 ## [2.17.3] - 2026-08-28
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **A missing `Database:ConnectionString` now says so, instead of meaning `localhost`.** An empty or
-  absent connection string reached `new MySqlConnection("")` at six call sites in `DatabaseService`
-  and `SchemaUpgradeService`, and MySqlConnector reads that as `server=localhost;port=3306`. So the
-  setting being unset surfaced either as `Unable to connect to any of the specified MySQL hosts` —
-  naming neither the setting nor the fallback — or, on a host that happens to run a local MariaDB, as
-  a *successful* connection to the wrong database, reported by `netrisk-console database status` as
-  `Schema does not exist`. Both diagnoses point at the database server, and the fault is in the
-  configuration. All six sites now resolve through one guard,
-  `DatabaseConnectionStringResolver`, which fails with a message naming `Database:ConnectionString`,
-  its `Database__ConnectionString` environment form, and the `docker exec` export-inheritance trap
-  that produced the original incident. `database status` reports the new status `Misconfigured`
-  rather than `Offline`, `init`/`update`/`upgrade-schema`/`baseline` repeat the message instead of
-  claiming the database is offline, and `Backup`/`Restore` resolve outside their catch-alls so a
-  missing setting can no longer be logged and swallowed. `upgrade-schema --dry-run`, which needs no
-  database, still runs with none configured.
-
-- **`netrisk-console` can reach the database on a deployed host.** Every `netrisk-console database …`
-  command failed with `Unable to connect to any of the specified MySQL hosts`, on every deployed
-  environment, since the credential moved out of `appsettings.json` (security finding NR-2026-025).
-  The credential now lives only in `/netrisk/netrisk.env`, which the container entrypoint loads into
-  *its own* environment — PID 1's. But the console container is a keepalive, so every operator
-  command arrives as `docker exec … netrisk-console <command>`, and a `docker exec` builds a fresh
-  environment from the image configuration and inherits none of those exports. With the
-  Puppet-rendered `/netrisk/appsettings.json` deliberately carrying a comment where the connection
-  string used to be, `Database:ConnectionString` resolved to null, MySqlConnector fell back to its
-  default `localhost:3306`, and the database is a separate container — so the connect was refused
-  instantly and the error named a database server that had never been configured instead of the
-  setting that was missing. `netrisk-console` is now a wrapper installed on `PATH` in the image that
-  loads `/netrisk/netrisk.env` itself, warns by name when the variable is still absent, and runs the
-  binary from `/netrisk` (where `appsettings.json` must be resolved from, since the console registers
-  it with `optional: false`). Its copy of the loader is byte-identical to the four entrypoints' and a
-  test holds all five that way, because reading that file with `.` is what caused the 2.17.0 restart
-  loop.
-
-- **Local development TLS material is no longer three years expired.** The self-signed certificate
-  `src/API` and `src/WebSite` serve with (`https:certificate:file`) was issued in September 2022 with
-  a one-year lifetime and expired on 2023-09-14, so every local client failed its handshake — the
-  desktop client reporting only `The SSL connection could not be established`, which names neither
-  the certificate nor its expiry. Reissued for ten years with `localhost` and `127.0.0.1`
-  subjectAltNames, which the old certificate lacked entirely (hostname validation matches a literal
-  IP against an iPAddress SAN, never against the common name, so the configured
-  `https://127.0.0.1:5443/` could not have validated even once trusted). Reissuing is now one
-  command, `./scripts/security/generate-dev-certificates.sh`, and a test fails 30 days *before*
-  expiry rather than after. The file names and the placeholder password are unchanged, so
-  `Tools.Security.CommittedCertificates` still refuses to boot a host configured with this material.
-
-- **The vulnerable-dependency gate can reach every project in the solution.** With the workflow
-  finally running past `setup-dotnet`, the scan failed on `build/build.csproj` with "No assets file
-  was found". `dotnet list package` enumerates every project in the solution and needs an assets
-  file for each, but `dotnet restore <solution>` does not produce one for every project a solution
-  contains: a project mapped with `ActiveCfg` and no `Build.0` is skipped, which is precisely how
-  Nuke registers the build project so that building the solution does not build the build script.
-  It reproduced locally the moment `build/obj` was removed — the gate had only ever passed on a
-  machine where `./build.sh` had restored that project as a side effect. `scan-dependencies.sh` now
-  restores by name any project the solution declines to build, rather than skipping it: the Nuke
-  project pulls its own transitive graph into the release process, which is exactly the supply chain
-  this gate exists to watch. A test derives the list of such projects from `netrisk.sln` itself, so
-  adding another one without restoring it fails in `dotnet test` instead of in CI.
-
-
+- Resolve the database connection string through one guard that names the missing setting instead of silently defaulting to localhost
+- Load `/netrisk/netrisk.env` from a `netrisk-console` wrapper on PATH instead of relying on `docker exec` inheriting entrypoint exports
+- Reissue the local development TLS certificate for ten years with correct SANs, and add an expiry-warning test
+- Restore any project the solution declines to build before scanning it for vulnerable dependencies
 
 ## [2.17.2] - 2026-08-28
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **The `security` workflow now runs.** Every one of its four gates had failed on every run since the
-  workflow was added, for two unrelated reasons, and the two masked each other — the secret scan's
-  red X read as more of the same `setup-dotnet` breakage sitting next to it.
-  - `global.json` pinned SDK `10.0.0`. That is a *runtime* version; .NET SDK feature bands start at
-    `.100`, and no SDK archive has ever been published under `10.0.0`. Both `actions/setup-dotnet`
-    (via `global-json-file`) and `build.sh` (via `dotnet-install --version`) install that exact
-    string, so both 404 — the CodeQL and dependency-scan jobs never reached their first real step,
-    and neither would a bootstrap build on a machine without an SDK. `rollForward` hid it from
-    anyone who already had one. Now pinned to `10.0.302`.
-  - `.gitleaks.toml` used a negative lookahead. gitleaks compiles with RE2, which has no lookaround,
-    so it panicked while translating the config and scanned nothing at all. Both lookaheads were
-    removable without loss: one was already implied by the value's character class, the other is now
-    a leading non-whitespace character.
-- **The gitleaks rules match credentials rather than the schema.** With the gate finally running, a
-  full-history scan returned 89 findings, 85 of them noise. The `nrk_`/`scim_` rules matched "the
-  prefix plus 20 word characters", which is every table, index and foreign key the SCIM feature owns
-  (`idx_scim_request_logs_occurred_at` and 71 more); they now match the shape the services actually
-  issue — prefix, 16 hex characters of key id, `_`, then the base64url secret. The
-  connection-string rule matched `password = expr` with spaces, which is an assignment in C#, Puppet
-  or shell, not a connection string; it now requires `pwd=value`. The remaining 11 findings are
-  genuine and pre-existing, and are baselined by fingerprint in a new `.gitleaksignore`, each with
-  its reason — so a *new* occurrence of the same credential still breaks the build.
-- **A credential in the repository's history is recorded and flagged for rotation.** The first
-  history scan the gate ever completed found a real connection string — user, private-network host
-  and a chosen password — in an EF-scaffolded `SRDbContext.cs` committed in 2023 and deleted since.
-  The audit's manual sweep had missed it because it searched tracked files only, and the file was no
-  longer one. Written up in [docs/security/FINDINGS.md](docs/security/FINDINGS.md), which previously
-  claimed the history was clean.
-
-
+- Pin the .NET SDK to 10.0.302 instead of the unpublished 10.0.0, and fix the gitleaks config so the security workflow runs at all
+- Narrow the gitleaks `nrk_`/`scim_` and connection-string rules to match real credential shapes instead of schema identifiers
+- Record and flag for rotation a credential found by the first completed full-history gitleaks scan (S19)
 
 ## [2.17.1] - 2026-08-28
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- **The container images assert that their configuration management agent is OpenVox.** The base
-  image (`ffquintella/docker-puppet`, Rocky Linux 9) has installed `openvox-agent` from
-  `yum.voxpupuli.org` rather than Perforce's `puppet-agent` since its 8.24 bump, but nothing in this
-  repository said so or checked it — and because OpenVox keeps the `puppet` command and the
-  `/opt/puppetlabs` layout, a base image that changed back would look identical from here. Each of
-  the four Dockerfiles now fails the build if `openvox-agent` is absent or if `puppet-agent` is
-  installed at all. The entrypoints and every manifest under `build/puppet` are unchanged: the
-  package ships no `openvox` binary, and `/opt/puppetlabs/bin/puppet apply` is the supported path.
+- Assert in each Dockerfile that the base image runs `openvox-agent`, not `puppet-agent`
 
 ### Fixed
-
-- **The console container's entrypoint no longer swallows a command passed to it.** `_main` ran the
-  keepalive (`tail -f /dev/null`, which never returns) and *then* `exec "$@"`, so the `exec` was
-  unreachable and `docker run <image> netrisk-console database init` printed nothing and hung
-  forever. The keepalive is the deployed behaviour and stays that way — the image declares no `CMD`
-  and the generated host launcher passes no command, so operators drive the container with
-  `docker exec` — but the entrypoint now execs the command when one is given instead of leaving dead
-  code that reads as though it does. Both paths are pinned by
-  `Packaging.Tests/ConsoleEntrypointCommandModeTest`, which runs the shipped `_main`.
-- **The API, WebSite and Console containers no longer restart in a loop on 2.17.0.** Two independent
-  regressions came in with the NR-2026-025 credential move. The Docker entrypoints read
-  `/netrisk/netrisk.env` with `.`, but that file is a literal `KEY=VALUE` environment file and the
-  value is a connection string full of `;` — a shell command separator — so
-  `Database__ConnectionString` was set to `server=<host>` and `port=`, `uid=`, `pwd=`, `database=`
-  became five unrelated variables. With no port left in the connection string MySqlConnector used its
-  default 3306 instead of the configured port, the API's database self test timed out after 15 s and
-  the host exited on every start. The entrypoints now export each line's raw value without letting
-  the shell parse it, so a password containing `;`, `$`, quotes, backticks or spaces survives intact.
-  Separately, `console.pp` and `website.pp` still passed `db_port` to `appsettings.json` templates
-  that no longer declare it, which failed catalog compilation and killed both containers before their
-  application started.
-- **A Puppet module edit now actually reaches the container images.** The four Docker packaging
-  targets staged `workdir/puppet-modules` only when that directory did not already exist, so a
-  workdir left over from an earlier build kept its old copy and any manifest or template change
-  silently never shipped. The tree is now restaged on every build.
+- Exec the given command in the console container's entrypoint instead of leaving it unreachable after the keepalive
+- Stop shell-parsing the netrisk.env connection string, fixing a container restart loop introduced by the NR-2026-025 credential move
+- Restage the Puppet modules tree on every Docker packaging build instead of only when absent
 
 ## [2.17.0] - 2026-08-26
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Track 8 — risk governance, approval workflows and a business review portal.** This track closes the gap between NetRisk's risk lifecycle and what an ISO 27001 / SOC 2 / DORA auditor actually samples. **Accepting a risk is now an artifact rather than a status**: a `risk_acceptances` record naming the authorizing manager, the business justification, the compensating controls, a snapshot of the residual score at the moment of the decision, and a mandatory expiry — with renew and revoke, severity-band authority checks, and a daily job that warns at T-30 and T-7 and reopens the risk when it lapses. **Risks carry an inherent and a residual score**, the residual derived from mitigation percentage and validated controls through a swappable strategy that composes multiple controls as `1 − Π(1 − pᵢ)` rather than summing them, so two 60% controls buy 84% and not 120%. **Approvals are enforced server-side rather than by convention**: a status state machine that refuses `Closed` without a review and `Mitigation Planned` without a mitigation; segregation of duties so a reviewer or acceptor cannot be the submitter, owner or manager — administrators included, with a break-glass path that demands a written reason and exports it in the evidence pack; and a `risk_appetites` model, global or per entity, with a dual-approval threshold and a hard acceptance ceiling. **"Who changed what, when" is a query**: an EF `SaveChanges` interceptor writes one `audit_logs` row per changed field across the governance aggregate, attributable end to end including a system actor for background jobs, with a retention policy that is applied rather than merely documented.
-- **A business risk acceptance portal (`src/RiskPortal`).** A new mobile-friendly ASP.NET Core application where the people who own a business entity — not the security team — periodically review, rank and decide their own risks. Reviewers are appointed per entity, hold a dedicated `business_risk_review` permission and see only their entity's risks. Campaigns are generated automatically each quarter (per-entity override available) on calendar-aligned periods with a unique `(entity, period)` index, so the job is idempotent by construction. A reviewer drags their risks into business-priority order — or types the numbers, if JavaScript is off — and for each one **accepts** it (creating a formal, expiring acceptance, refused if it breaches the entity's appetite), **requests mitigation** (creating treatment tasks with an owner and a due date), or **escalates** it to a named senior approver. Every decision writes a `MgmtReview`, so the desktop and the portal share one approval timeline rather than keeping two. It consumes the REST API only; the DB-decoupled `WebSite` is untouched, and `CompileRiskPortal`/`PackageRiskPortal` build it.
-- **Review cadence is pushed, not pulled.** A daily job walks the register against the existing review-level cadence and notifies through the Track 4.1 channels; a risk that has never been reviewed becomes overdue one cadence interval after submission rather than immediately, so the first notification is not the entire register. The `next_review_date_uses` setting now genuinely selects whether that cadence keys off the inherent or the residual score. Treatment work is tracked as `mitigation_tasks` line items with owners and due dates, feeding the same notifications. And the assessment intake pipeline works: a `PendingRisk` can be promoted into a real risk or dismissed with a reason — previously nothing promoted them, so they accumulated forever.
-- **An auditor evidence pack, per entity and period.** One export carrying the acceptances in force, the management reviews and their counter-signatures, the business review decisions, and the field-level change trail underneath — as CSV for a spreadsheet or as a PDF through the 2.1 reporting engine, which stores it as a report so the export is itself a record. An acceptance granted last year and still in force is in it; a campaign nobody decided is in it as undecided items rather than being quietly dropped; a change list cut short by the row limit says so. The CSV neutralises leading `=`, `+`, `-` and `@`, because an evidence pack is precisely a file that gets emailed and opened in a spreadsheet.
-- **Quantitative scoring, as an option rather than a replacement.** Every likelihood and impact level now carries a written definition and a numeric range — "1% – 5% a year", "R$100.000 – R$1.000.000" — shown at rating time under the choice, because a five-point scale labelled only Low/Medium/High is read differently by different raters and cannot be aggregated. Alongside it, a FAIR-lite scoring method: calibrated frequency and magnitude ranges, a Monte Carlo engine in `Tools` (PERT magnitude, Poisson event counts, seeded and reproducible), annualized-loss percentiles, a loss-exceedance curve, before/after-mitigation comparison, and a mapping into the existing risk bands by monetary threshold.
-- **Schema versions 80, 81 and 82 (upgrade phases 11, 12 and 13).** Governance core, review portal, and the tables the deferred security findings needed. Every statement is guarded and every Data script is a real transaction, so each is safe to apply twice; all three are applied against a real MariaDB in `DAL.IntegrationTests`, from version 79, in order.
-
-- **Track 7 — a security audit of every tier, and the machinery to keep it honest.** The full review of the request flow (GUIClient → ClientServices → API → ServerServices → DAL, plus BackgroundJobs, WebSite, plugin loading and file imports) produced a **34-finding register** under [docs/security/](docs/security/), triaged into milestones and cross-referenced from the code that fixes each one. Twenty-five are fixed with regression tests that fail on the pre-fix code; five stay open with a named owner, a proposed fix and a stated reason; four are risk-accepted with an expiry, dogfooding the product's own risk-acceptance discipline. The register records **how each finding was established**, because this repository has twice shipped a control that was documented as working and was not — and the audit found the same pattern a third time, in a class whose own doc comment claimed its endpoints were authenticated while it carried no `[Authorize]` attribute at all. Alongside it: a STRIDE [threat model](docs/security/THREAT_MODEL.md) over six named trust boundaries, an [ASVS Level 2 checklist](docs/security/ASVS_L2_CHECKLIST.md) where every ✅ names a file or a test, a [supply-chain policy](docs/security/SUPPLY_CHAIN.md), a [secrets inventory with rotation procedures](docs/security/SECRETS.md), a [data-protection posture](docs/security/DATA_PROTECTION.md), an [internal triage SLA](docs/security/TRIAGE_SLA.md) using the same numbers NetRisk ships as its product's remediation defaults, a [burn-down](docs/security/BURN_DOWN.md), and a [baseline report](docs/security/baseline-2026-08-26.md) that separates what was measured from what was asserted.
-- **Continuous security gates in CI.** [`.github/workflows/security.yml`](.github/workflows/security.yml) runs CodeQL (C#), gitleaks over the **full** history, a known-vulnerable-dependency scan and a submodule-provenance check, on push, on pull request and weekly — the weekly run matters because an advisory published against an already-pinned version appears in no diff. Every gate fails on something *new* rather than on the backlog, which is the only way a gate survives contact with a real backlog. Dependabot watches NuGet (solution and build), GitHub Actions and all five git submodules. The dependency gate is a committed script, so a developer can run exactly what CI runs; accepted findings live in [`security/dependency-suppressions.yml`](security/dependency-suppressions.yml), where every entry needs an advisory id, an owner, a real reason and an **expiry at most 180 days out** — an expired suppression fails the build, which is what stops the file becoming a list nobody revisits. The baseline scan found no vulnerable package across all 33 projects, so the file ships empty.
-- **A CycloneDX SBOM beside every artifact.** `GenerateSbom` emits `netrisk-<component>-<version>.cdx.json` plus a `.sha256` into each packaged component's directory, generated at build time from the *resolved* dependency graph rather than hand-maintained — a hand-maintained list records what somebody believed was shipping. It is `TriggeredBy` the `Package*` targets, so adding a component means one entry in `Sbom.Components`. Like the signing targets, a missing tool warns and still produces the artifact; only `--require-sbom` turns the gap into a failure, and the build reports the install command rather than installing anything itself.
-- **A submodule-provenance gate.** A submodule bump is a one-line diff that can pull in any amount of code, which makes it the highest-leverage, lowest-visibility change anyone can make to this repository. A pull request that moves a `libs/` pointer must now name the submodule and the commit range in its description; [docs/security/SUPPLY_CHAIN.md](docs/security/SUPPLY_CHAIN.md) sets out the review procedure, which submodules sit on a security surface (`NessusParser` parses untrusted scan files, `netrisk-plugin-sdk` defines what a plugin may do, `reliable-rest-client-wrapper` carries every outbound client call) and when to vendor rather than track.
-- **Progressive login throttling and rate limiting on the credential endpoints.** Four free failures per identity, then a lockout doubling from five seconds to a fifteen-minute cap, decaying after thirty minutes of quiet, keyed on **both** the account and the source address — account-only lets an attacker lock a colleague out on purpose, address-only lets a distributed attempt straight through. A per-source request budget sits in front of it for a different reason: bcrypt at work factor 15 is deliberately expensive, so a few hundred concurrent *refused* attempts are a problem on their own.
-- **Security response headers on the API and the WebSite.** HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `X-Permitted-Cross-Domain-Policies`, `Cross-Origin-Resource-Policy` and a Content-Security-Policy — `default-src 'none'` on the API, whose responses are data, and a page policy on the WebSite that keeps `script-src 'self'` with no inline allowance. `Security:Headers:HstsMaxAgeSeconds` is configurable and `0` genuinely disables HSTS, which is the right setting while an installation is still on a self-signed certificate: pinning a browser to HTTPS-only for a host whose certificate does not validate cannot be undone from the server side.
-- **Hosts read configuration from environment variables.** `Database__ConnectionString`, `https__certificate__password` and every other key can now be supplied from the environment or a secret store, which is what makes the "no credentials in `appsettings.json`" rule achievable rather than aspirational. Precedence is now file → user-secrets (Debug) → environment; it was previously inverted, so the committed `appsettings.json` silently overrode anything a developer set in user-secrets.
-
-- **Track 5.1 — automated code-signing pipelines.** The Nuke build now signs what it ships. On Windows, Azure Trusted Signing (through the `sign` CLI) is the first-class provider with `signtool` as the generic fallback — an installed certificate by thumbprint, a vendor CSP/key-container pair for a cloud HSM, or a PFX for internal builds — always SHA-256, always RFC 3161 timestamped, and always gated by `signtool verify /pa /all` before an artifact may be published. Timestamping walks an ordered fallback list (`timestamp.acs.microsoft.com`, DigiCert, Sectigo) because a single timestamp authority outage is the classic flaky release build. On macOS, `PackageMacGUI`/`PackageMacA64GUI` run the whole ordered pipeline — hardened-runtime `codesign` of every nested Mach-O and then the bundle with an entitlements file, `notarytool submit --wait`, `stapler staple`, `spctl --assess` — over the `.app`, the `.pkg` (via `productsign`) and the `.dmg`; a notarization rejection fails the build and prints Apple's own log, which is the only place that names the offending binary. **No credential is ever read from the repository and no ordinary build needs one:** with signing material absent the targets emit one warning line and produce the unsigned artifact, which is the normal outcome for a developer and for a CI fork, while `--require-signing`/`--require-notarization` turn a missing credential into a failure. Secrets arrive as `[Secret]` parameters or `NETRISK_*` environment variables and every command line carrying one is redacted before it reaches a log. Only three macOS entitlements are granted; a test fails if `disable-library-validation` or any other hardened-runtime weakening is added.
-- **Track 5.2 — modern native installers.** Windows gains `PackageWindowsMSI` (WiX v5, per-machine, no-UI so `msiexec /i … /qn` is the supported path, upgrade table wired so version N+1 replaces N, publish directory harvested rather than file-listed, and public `INSTALLFOLDER`, `SERVERURL` and `INSTALLDESKTOPSHORTCUT` properties for GPO/Intune rollouts) and `PackageWindowsMSIX` (rendered `AppxManifest.xml`, `makeappx pack`, signed, plus a published `.appinstaller` giving installed clients built-in auto-update with no updater inside the app). macOS `.dmg` assembly became genuinely drag-and-drop — the app bundle, an `/Applications` symlink, a branded background and a volume icon — on a pure `hdiutil` path that needs no Finder or AppleScript and so works on a headless runner, with `--branded-dmg` opting into `create-dmg` for window geometry. Linux gains `PackageLinuxFlatpak` (org.freedesktop.Platform 24.08) and `PackageLinuxSnap` (core24, strict confinement), both fed by the same self-contained publish and both with their sandbox permissions enumerated deliberately: rendering, GPU, network, the XDG download directory, and the tray and Secret Service bus names — and explicitly *not* `--device=all`, `--filesystem=home` or a raw D-Bus socket. Shared AppStream metadata and a freedesktop desktop entry are validated with `appstreamcli` when it is installed, and a validation failure fails the build because Flathub rejects invalid metadata. Every installer identifier — the MSI upgrade code, the MSIX identity, the macOS bundle id, the Flatpak app-id, the Snap name — is declared once in `PackageIdentity` instead of being restated per target.
-- **Administrators can pre-seed client settings with a `netrisk.ini` overlay.** The desktop client now layers an optional INI file, read last, on top of `appsettings.json`, so `[Server] Url=https://netrisk.example.com:5443/` next to the executable overrides the shipped default. It is what the MSI writes from its `SERVERURL` property — through the MSI `IniFile` table, so no custom action is involved and the file is removed again on uninstall — and it works identically for the macOS, Flatpak and Snap deployments. This is what makes enterprise server pre-configuration real rather than a property the app never reads.
-- **A release-engineering guide for whoever cuts a build.** [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md) covers every artifact and what signs it, the full parameter/environment table with the secrets marked, Azure Trusted Signing and signtool setup, certificate rotation (including the MSIX subject-DN trap that turns a rotation into a migration), Apple Developer ID and App Store Connect API key setup, CI keychain import, the enumerated Flatpak/Snap sandbox grants with the two features a strict sandbox limits, what each platform's runner must have installed, and a troubleshooting table.
-
-- **Track 4.1 — unified notification channels.** NetRisk now broadcasts domain events to Email, Slack, Microsoft Teams and generic webhooks through one extensible `INotificationChannel` contract. Each provider renders natively: Slack gets Block Kit inside a severity-coloured attachment, Teams gets an Adaptive Card 1.4 posted to a Workflows webhook (explicitly *not* the retired O365 `MessageCard`, which Microsoft has withdrawn), email gets inline-styled HTML with a plaintext alternative, and the generic webhook gets a documented, versioned JSON body signed with HMAC-SHA256 in `X-NetRisk-Signature` over `"{timestamp}.{body}"` — the timestamp is inside the signed string, so a captured request cannot be replayed indefinitely. Administrators configure an events × channels matrix (ten events, per-row minimum severity and entity filters, optional digest window) under Administration → Integrations, with a "send test message" button per channel that performs a real send rather than a reachability probe. The dispatcher owns retry (three attempts, 1/4/9-minute backoff, and a 400 or 403 is *not* retried because it is a configuration error), an ordered fallback chain that engages only once the primary is out of attempts, and digest windows that collapse an import of three thousand findings into one message. Every attempt is a row in a delivery log with its status, attempt count and last error — credentials redacted — because "the SLA breach fired, did the team hear about it?" cannot be answered from the absence of a Slack message.
-- **Track 4.2 — bi-directional issue sync.** Findings can be filed as developer tasks in **Jira Cloud**, **GitHub Issues**, **GitLab Issues** and **Azure DevOps Work Items**, singly or from a multi-selection, with a preview of the rendered title and description before anything is created — or linked to an issue that already exists, by key or URL. Each connection carries its own field mapping: severity → tracker priority, `{{Placeholder}}` templates, issue type and default labels. Closing a linked ticket transitions the NetRisk finding per a per-connection status-mapping table whose actions are `MarkMitigated`, `ScheduleReverify`, `MarkFalsePositive`, `Reactivate` or `None` — the mapping names an *action* rather than a destination status, because closing a ticket does not always mean the finding is fixed. Inbound changes arrive by validated webhook (`X-Hub-Signature-256` for GitHub, `X-Gitlab-Token` for GitLab, a URL secret for Jira and Azure DevOps, which cannot sign a body) with a per-connection polling fallback for instances that cannot reach NetRisk. Loop protection stops an inbound change echoing back out as a comment the tracker then reports as a change; a conflict between a NetRisk decision and a tracker one applies last-writer-wins *and* flags the link for a review queue.
-- **Track 4.3 — hardened enterprise authentication.** OIDC (authorization code with PKCE, discovery-document configuration) and SAML 2.0 in the service-provider role, several identity providers storable at once, per-IdP claim and group mapping, and JIT provisioning off by default. The desktop flow is the standard native-app pattern: the client opens the system browser and the API completes the dance through a loopback redirect, with the PKCE verifier held server-side and the state single-use. SAML validation enforces metadata-sourced signing certificates, signature-wrapping rejection, audience and `InResponseTo` checks, bounded clock skew and prohibited DTD processing. SCIM 2.0 provisioning at `/scim/v2/Users` and `/scim/v2/Groups` implements RFC 7644 PATCH semantics — including the path-less `replace` Entra ID sends — and `active:false` disables login and revokes live sessions on the next request rather than at the next token expiry. Provisioning tokens are per-connection, hashed, shown once and revocable, and every SCIM request is audited. WebAuthn/FIDO2 registration and authentication ceremonies (fido2-net-lib) support several named authenticators per user, signature-counter clone detection, a configurable attestation policy, a "require a hardware factor for administrative accounts" switch, and admin-issued single-use recovery codes.
-- **Track 4.4 — Trend Micro Vision One integration.** Region-aware connection management for all seven Vision One regions (a key issued in one region is rejected by the others, so the API root is derived from a picker rather than typed), with a test-connection utility that reads the ASRM endpoint the sync actually uses — proving the key carries the ASRM permission, which a `/whoami` probe would not. A daily job syncs the attack-surface device inventory onto NetRisk hosts, matching existing assets by external id, MAC, FQDN, hostname and finally IP, and filling only empty fields so a hostname a person typed is not overwritten nightly by one an agent guessed. Per-device CVEs are ingested through the shared finding pipeline, so they get the same deduplication, sticky triage and SLA due dates as a scanner import; a Trend Micro virtual patch records its IPS rule in the finding's evidence and optionally closes the finding, off by default because a virtual patch is a compensating control and not a fix. Device risk scores land on the host and roll into a criticality-weighted entity-wide Cyber Risk Index, with optional write-back of criticality and acceptance-derived exemptions.
-- **Track 4.5 — SecurityScorecard integration.** Domain-targeted connections authenticating with `Authorization: Token` (not `Bearer`, which SecurityScorecard rejects outright) and a test-connection utility that proves both the token and the entitlement to that domain. A daily job records the overall score and grade plus the ten risk factors as an append-only history for trend charting, and inverts the 0–100 "higher is better" score into the Cyber Risk Index, where higher is worse. Domain CVEs and active issues — missing SPF, expiring certificates, exposed ports — are ingested as findings under the `SecurityScorecard_Vulnerability` and `SecurityScorecard_Issue` categories, attached to a synthetic domain-asset host so that findings rated against a domain rather than a machine are visible in an asset-oriented register.
-- **Schema version 79 (upgrade phase 10).** Fifteen new tables — notification channels, subscriptions and deliveries; issue-tracker connections, status mappings and finding↔issue links; identity providers, SCIM tokens and request audit; WebAuthn credentials and MFA recovery codes; Vision One and SecurityScorecard connections with factor history; and a shared integration sync log — plus seven posture columns on `hosts` and four on `entities`. Purely additive: nothing is dropped, renamed or retyped, and an installation that configures no integration carries fifteen empty tables and behaves exactly as before. All of it is born Track 6 compliant.
-- **Integration credentials are encrypted at rest.** Webhook URLs, signing secrets, issue-tracker tokens, OIDC client secrets, Vision One API keys and SecurityScorecard tokens are stored as ciphertext under a key derived from the installation's server secret, and no endpoint returns them — reads carry a has-a-credential flag or a redaction placeholder, and a write that sends the placeholder back keeps the stored value. A value encrypted on another installation fails with a message that names the remedy rather than silently authenticating as an empty string.
+- Add Track 8 — formal expiring risk acceptance, inherent/residual scoring, a server-side approval state machine, segregation of duties, risk appetite, and a field-level audit trail (T120, T121, T122, T123, T124, T127, T128, T129, T131)
+- Stand up the Business Risk Acceptance Portal (src/RiskPortal), consumed by entity-appointed reviewers (T136, T137, T138, T139)
+- Push review cadence notifications and repair the pending-risk intake pipeline; add mitigation_tasks line items (T125, T133, T134, T135)
+- Add an auditor evidence export (CSV and PDF) per entity and period (T132, T140)
+- Add quantitative likelihood/impact definitions and a FAIR-lite Monte Carlo scoring method (T141, T142)
+- Add schema versions 80, 81 and 82 (upgrade phases 11, 12 and 13) for the governance core, review portal and deferred security findings
+- Add a 34-finding Track 7 security register naming how each finding was established (T104, T105, T106, T107, S19)
+- Add continuous security gates in CI: CodeQL, gitleaks over the full history, a dependency scan and a submodule-provenance check (T108, T110, T117)
+- Publish SECURITY.md's disclosure policy and an internal triage SLA (T118)
+- Schedule periodic re-audits and track remediation burn-down against the findings register (T119)
+- Add a CycloneDX SBOM generated at build time from the resolved dependency graph (T109)
+- Add progressive login throttling and rate limiting on the credential endpoints (T112)
+- Add security response headers (HSTS, CSP, X-Frame-Options, and others) on the API and the WebSite (T116)
+- Read configuration from environment variables with file → user-secrets → environment precedence (T113)
+- Wire automated Windows Authenticode and macOS Developer ID/notarization signing into the Nuke build (T86, T87)
+- Add the Windows MSI/MSIX, drag-and-drop macOS DMG, and Linux Flatpak/Snap packaging targets (T88, T89, T90)
+- Add a `netrisk.ini` overlay so administrators can pre-seed the desktop client's server URL
+- Add a release-engineering guide for cutting a signed build (S10)
+- Add Track 4.1 unified notification channels: Email, Slack, Teams and generic webhooks behind one dispatcher (T62, T63, T64)
+- Add Track 4.2 bi-directional issue sync with Jira, GitHub, GitLab and Azure DevOps (T65, T66, T67)
+- Add Track 4.3 hardened enterprise authentication: OIDC/SAML SSO, SCIM provisioning, and WebAuthn/FIDO2 (T68, T69, T70)
+- Add Track 4.4 Trend Micro Vision One integration: inventory sync, CVE ingestion, and Cyber Risk Index scoring (T71, T72, T73, T74)
+- Add Track 4.5 SecurityScorecard integration: posture sync, CVE and issue ingestion (T75, T76, T77, T78)
+- Add schema version 79 (upgrade phase 10): fifteen new integration tables plus posture columns on hosts and entities
+- Encrypt integration credentials at rest with no endpoint ever returning them
 
 ### Changed
-
-- **Shipped defaults are now the safe ones.** SAML is **off** by default (it was on, pointing at a public test identity provider), `OmitAssertionSignatureCheck` is `false` in both the shipped configuration and the Puppet template, the Puppet template's SAML digest and signature algorithms moved from SHA-1 to SHA-256, and the JWT lifetime dropped from 1440 minutes to 60 with a 1440-minute ceiling enforced — a longer configured value is clamped and logged, because it is a mistake rather than a policy. New `Security:` sections on both hosts cover the TLS floor, the header policy and the credential rate limit.
-- **A Release build refuses to start with the development certificate.** The shipped `appsettings.json` pointed at a `.pfx` whose private key is committed to this repository, with the password `"pass"`. A Debug build still uses it — that is what it is for — but a Release binary now refuses, rather than warning. Warning was rejected deliberately: a start-up warning is read once and then lives in a log nobody tails, and the whole point is that the insecure configuration was the one an installation got by changing nothing.
-- **TLS 1.2 is allowed alongside 1.3 rather than 1.3 alone.** The API listener previously pinned TLS 1.3 only, which is stricter than the 1.2 minimum this track set out to enforce — and which silently refuses clients on older platform TLS stacks, where the observed operator workaround is to turn HTTPS off altogether. Both hosts now accept 1.2 and 1.3 and nothing older; `Security:Tls:MinimumVersion=Tls13` pins 1.3 only for an installation that controls its clients. A live scan during the audit found .NET on macOS does not offer 1.3 in the server role at all, so the 1.3-only listener would have served nothing there.
-- **Integration credentials are re-encrypted with AES-256-GCM on save.** The `enc:v2:` format has a fresh salt and nonce per value and a 128-bit authentication tag; `enc:v1:` values are still read and are upgraded in place — but only after a round-trip check, because the old format is unauthenticated and decrypting with the wrong key returns plausible garbage rather than failing. A value that does not decrypt here is left byte-identical, so a credential encrypted on another installation stays recoverable there.
-- **Windows and Linux packaging now share one compiled output.** The publish step moved out of `PackageWindowsGUI`/`PackageLinuxGUI` into new `PublishWindowsGui`/`PublishLinuxGui` targets, so the Inno Setup installer, the MSI and the MSIX are all cut from the same signed binaries — and the Flatpak and the Snap from the same self-contained publish — instead of each target publishing its own. `PackageWindowsInstallers`, `PackageLinuxInstallers` and `PackageAllInstallers` build the whole set; `VerifySignatures` re-checks whatever is already in `output/publish`. Existing target names and artifact names are unchanged.
-- **The macOS `.dmg` now contains the app instead of a `.pkg`.** It previously wrapped the installer package, which meant a user who mounted it still had to run an installer. The `.pkg` is still produced as a separate artifact for managed deployments.
-- **The macOS bundle carries a real icon and a camera purpose string.** `Info.plist` moved to a reviewed template and gained `CFBundleIconFile`, `LSApplicationCategoryType`, `NSHighResolutionCapable`, a copyright line and `NSCameraUsageDescription` — without that last key the hardened runtime kills a signed build the moment FaceID touches the camera, instead of prompting.
-
-- **Every user-facing label in the GUI is now translatable.** `./build.sh LintUi` reported thirteen R5 violations — text typed straight into a view, which no locale can reach: *Status* (host editor), *Ctrl #:* (risk editor and risk detail), *Id:* / *HostName:* / *Mac Address:* (host detail), *Dt:* (both incident-response-plan windows), *Dt.* (risk detail), *Type* / *Content* / *Columns (comma-separated, blank = all)* (report template editor) and *Email* (user info). All thirteen now come from `Localization*.resx` through a `Str*` property, with five new keys (`Id`, `HostName`, `MacAddress`, `CtrlNumber`, `ReportColumnsHintMSG`) added in all three resource files. R5 is at zero and `GUIClient.Tests` now fails if it stops being.
-- **The *Available* / *Selected* headers on every multi-select picker are localized.** `AvaloniaExtraControls.MultiSelect` is a generic control library with no access to NetRisk's localizer, so it defaults those two headers to English literals and expects the consumer to supply them; only the entity form and the incident editor did. `StrAvailable`/`StrSelected` now sit on `ViewModelBase` next to `StrSave`/`StrCancel`, and the vulnerability editor and the two pickers in the user administration view bind them — so the risk, permission and team pickers read *Disponíveis* / *Selecionados* in pt-BR instead of *Available* / *Selected*.
-- **The risk register list shows what treatment bought.** Each row now carries `8.0 → 2.0 (−6.0)` under its subject, plus the rank the business reviewers gave it, from a single bulk score call per refresh rather than one request per row. The sign is the change in the score, so a treatment that reduced the risk reads as negative and one that made it worse reads as positive — which is the row worth looking at.
-- **The Detailed Entities Risks report gains a pre/post-treatment table** per entity, ordered by smallest reduction first, with untreated risks shown as a dash rather than dropped: a risk missing from a pre/post table reads as one that has been treated.
-- The finding lifecycle, risk creation, incident creation, IRP task assignment and scan-import completion now raise notification events. The publishers swallow their own failures, so a broken Slack webhook can never turn a successful triage decision into an error.
+- Turn off SAML by default and clamp the JWT lifetime to a 1440-minute ceiling, logging any configured excess (T112)
+- Allow TLS 1.2 alongside 1.3 rather than 1.3 alone, since .NET on macOS does not offer 1.3 in the server role (T114)
+- Re-encrypt integration credentials with AES-256-GCM on save, upgrading the old unauthenticated format after a round-trip check (T115)
+- Publish Windows and Linux packaging from one shared compiled output (T88, T90)
+- Package the macOS DMG around the signed app instead of the installer package (T89)
+- Add a real macOS bundle icon and camera-usage purpose string (T87)
+- Localize the thirteen remaining hard-coded GUI labels and the multi-select picker headers (T2)
+- Show the score delta on the risk register list and add a pre/post-treatment table to the Detailed Entities Risks report (T126)
+- Raise finding-lifecycle, risk, incident, IRP-task and scan-import events as notifications (T64)
 
 ### Fixed
+- Report a rejected write as the server's own refusal instead of a generic network failure
+- Fix the Impact-vs-Probability report sending its minimum score twice and its maximum never
+- Stop `JobManager` preventing the API from starting in Development
+- Stop `EmailService` accumulating recipients across sends inside one injected instance
 
-#### Security
-
-Each item states the **exposure**, not just the change. Full detail, including how each was established and which test pins it, is in [docs/security/FINDINGS.md](docs/security/FINDINGS.md).
-
-- **The five findings Track 7 left open are closed (NR-2026-008b, 017, 025, 028, 032).** Lockout counters are persisted to a `login_attempts` table keyed on the account *and* the source, so a deployment behind a load balancer shares one budget instead of handing out one per instance. Attachments have per-file access control: `nr_files` carries an entity and is covered by the tenancy query filter, and a new authorizer resolves whichever parent a file hangs off — risk, mitigation, incident, response plan, plan execution or acceptance — and applies that record's permission rules, on both the by-name and the enumerable by-id route. The Puppet module writes the database credential to a `0600` environment file owned by the service account instead of rendering it into `appsettings.json`, and no longer even passes the password to the template. Signing out revokes *that* session by its token id rather than only on password change, and a companion endpoint lets a client confirm it took effect. FaceID biometric templates and signature seeds are encrypted at column level with AES-GCM — not because they are easy to steal, but because a leaked password is rotated in a minute and a leaked face is not rotated at all; rows written before the change are read as-is and protected on their next write, so nobody has to re-enrol.
-- **A plugin's publisher is verified before it is loaded (NR-2026-027, still risk-accepted).** This does not confine anything and is not presented as a fix: a loaded plugin still runs with the API's full authority, and .NET offers no in-process sandbox. What changed is the trust decision — a detached `.sig`/`.cer` pair (portable, works on Linux, needs no OS trust store) or an Authenticode signature is checked against an optional publisher allowlist, and the publisher is logged on every load. "Any DLL in the plugins directory" becomes "a DLL from a publisher this installation named". Report-only by default, because defaulting to refusal would break every existing installation with a plugin on upgrade, which is how a security default gets switched off permanently.
-- **A single click on a link could hand an attacker anyone's session (NR-2026-001, critical).** The desktop single-sign-on flow created a pending sign-in under whatever request id the *caller* chose, on an anonymous endpoint; the browser step marked it accepted the moment a valid SAML identity appeared, with no consent; and a second anonymous endpoint returned a full session token for that identity to anybody who asked, repeatedly. So no guessing was involved: an attacker picked an id, sent a colleague the link, the colleague's existing SSO session completed the flow silently, and the attacker collected their session — any account, including an administrator's, on an installation where SAML was enabled by default. The flow now mints the id server-side for an administrator-approved client only, refuses any id the server did not mint, requires the person in the browser to **approve explicitly on a page naming the machine that asked** (with a single-use anti-forgery token, because the SAML cookie must be `SameSite=None`), and hands the token only to the client registration that minted the request, once.
-- **Password-reset links and file keys were predictable (NR-2026-002, critical).** One shared non-cryptographic generator produced the JWT signing key, password-reset link keys, file and report access keys, generated passwords and the SAML request id. Several of those values are given to the requester by design — a reset link arrives by e-mail, a file key comes back in the upload response — so an attacker who requested a few for their own account could recover the generator's state and predict *other people's* reset keys. Everything now draws from the platform CSPRNG, including the FaceID liveness challenge, whose predictability undermined its own replay protection.
-- **The shipped configuration served TLS with a private key published in this repository (NR-2026-003, critical).** `appsettings.json` named a committed, self-signed, expired `.pfx` with the password `"pass"`, in the file that becomes the deployment template — so an installation that changed nothing had no transport security at all against anyone who had read the source. See "A Release build refuses to start with the development certificate" above. **If any installation ever served with one of those certificates, treat it as compromised, reissue it, and rotate anything that travelled over a session it protected.**
-- **The desktop client accepted any server certificate (NR-2026-004, NR-2026-005, high).** Every call went through an unconditional "accept everything" callback — carrying its own `//TODO: Remove this line` — and so did the first-run check that decides which server the client trusts from then on. Anything able to answer on the configured host and port could read and rewrite the whole session, including the password in the sign-in header. Validation is now on by default; the bypass survives only as an explicit, per-installation, loudly-logged opt-in, and a certificate failure is now reported as a certificate failure instead of "Please enter a valid URL".
-- **Any authenticated user could write files anywhere the API could reach (NR-2026-006, high).** The chunked-upload endpoints passed a caller-supplied file id straight to `Path.Combine`, which is not a containment primitive, and then created directories and wrote to the result. Ids are now validated against a character allowlist *and* checked to resolve inside the upload directory.
-- **Disabled users could still sign in (NR-2026-007, high).** Basic authentication checked the lockout flag but not the `enabled` flag — the one the administrator UI and SCIM deprovisioning set. The JWT path already refused them, which is what made the asymmetry easy to miss. A deactivated account retained full access through the sign-in path the desktop client uses.
-- **Passwords could be guessed as fast as the server would answer (NR-2026-008, high).** Nothing counted a failed login: the `failed_login_attempts` column had no logic behind it and the lockout flag was only ever set by hand. See "Progressive login throttling" above. The counters were per process, so a multi-instance deployment got the budget per instance — recorded as NR-2026-008b and closed in Track 8 by persisting them.
-- **SAML assertions were accepted without checking the identity provider's signature (NR-2026-010, high).** `OmitAssertionSignatureCheck` was `true` in the shipped configuration *and* in the production Puppet template, with SAML enabled by default. An assertion is then just XML: forge one naming any user and the API accepts it.
-- **Stored integration credentials leaked which ones were equal, and could be tampered with undetectably (NR-2026-011, high).** They were encrypted with AES-CBC under a key of `SHA256(passphrase)` and an IV of `MD5(passphrase)` — both constant per installation, so identical secrets produced identical ciphertext, and CBC without authentication cannot tell a tampered value from a valid one. See the AES-GCM entry above.
-- **WebAuthn enrolment endpoints carried no authorization attribute (NR-2026-009, medium).** The class's own doc comment said "The registration endpoints are authenticated"; there was no `[Authorize]` anywhere on it. They failed closed only incidentally, because the base controller throws without a principal — a 500 rather than a 401, and one refactor away from being an open enrolment endpoint. A reflective test now fails if *any* action ships without authorization or a justified place on an anonymous allowlist.
-- **Session tokens were valid for a day, could not be revoked, and were validated only for their signature (NR-2026-012, medium).** Issuer, audience and algorithm are now pinned on both the minting and validating side, the default lifetime is 60 minutes, and a password change — precisely the reaction to a suspected compromise — now invalidates every token issued before it, using a timestamp column that already existed. Per-session logout still needs per-token state (NR-2026-028).
-- **An administrator could point an integration at the cloud metadata service and read the response (NR-2026-013, medium).** Outbound integration URLs had no destination policy, and the response body comes back to the caller — so the target was not the internet but `169.254.169.254`, whose reply on a default instance is a set of cloud credentials. Link-local and the metadata addresses are now always refused; private ranges stay allowed, because an on-premise Jira is the normal case for this product, and can be refused with `Integrations:BlockPrivateNetworks`. Redirects are not followed, and every resolved address is checked rather than the hostname.
-- **A malformed authentication header produced a 500, and passwords containing a colon were truncated (NR-2026-018, medium).** Neither the base64 decode nor the credential split was guarded, so an unauthenticated caller could pick between "401" and "server error" by malforming a header; and splitting on every colon silently discarded everything after the first one in a password.
-- **Webhook secrets for the unsigned issue trackers were compared character by character (NR-2026-019, medium).** Jira and Azure DevOps cannot sign a body, so a shared URL secret is the whole authentication — and `!=` returns as soon as two characters differ. The signed providers were already comparing in constant time; these now do too.
-- **Uploaded scan reports were staged in a world-writable directory (NR-2026-020, medium).** `/tmp/netrisk-api`, under predictable names, holding the most sensitive data in the product. Staging moved to an application-owned directory with `0700`; if it cannot be created the service falls back and *says* the fallback is world-writable.
-- **The SAML session cookie could be sent over plain HTTP (NR-2026-016, medium).** `SecurePolicy` was "same as request". Now always `Secure`.
-- **A scan-report URL could launch an arbitrary application on the analyst's workstation (NR-2026-023, medium).** The URL comes from an imported scan file, and on macOS the launcher was `Process.Start("open", "-u " + url)` — one string the operating system re-splits, so a URL containing a space smuggled `-a SomeApplication` past it. On Windows an arbitrary shell-executed target launches a local path as readily as it opens a link. Links are now validated as absolute `http`/`https` with no whitespace, and arguments are passed as a list rather than a re-parsed string.
-- **Two smaller ones with no current path, fixed because the premise could change:** three `information_schema` queries interpolated the schema name instead of parameterising it (NR-2026-021), and the legacy Nessus parse path allowed DTD processing (NR-2026-022) — unreachable today, since nothing calls the factory that reaches it, but "unreachable today" is not a property that stays true on its own. The three *live* importers were verified to prohibit DTDs by a test that asserts the refusal, rather than by reading the comment beside the setting.
-- **Password-reset links are indexed by SHA-256 instead of MD5 (NR-2026-014, medium),** on both the API and the WebSite — those rows are pushed to the website verbatim, so a digest change on one side alone would have made every reset link look expired. And the website sync now says out loud when it is running with certificate validation disabled (NR-2026-026).
-
-Six of the fixes above were themselves wrong on the first attempt and were corrected before this shipped — including a Content-Security-Policy that would have forbidden the very consent form the single-sign-on fix depends on, and a lockout keyed on a source address that behind a reverse proxy is shared by an entire organisation. Both would have been worse than the vulnerability they fixed. They are listed, with what caught each one, in [docs/security/FINDINGS.md](docs/security/FINDINGS.md) § "Regressions introduced by this track's own fixes", because the pattern is worth recording: a control tested at the level it was written at looks correct, and the break appears one layer up.
-
-#### Other
-
-- **A rejected write was reported to the desktop as a network failure.** RestSharp's verb extensions (`PostAsync`, `PutAsync`) throw on any non-2xx, so `FindingsAdminRestService`'s branch that reads a structured error body out of a 400 or 422 was unreachable: the user saw "error communicating with the server" for a request the server had understood and deliberately refused. The client now uses `ExecuteAsync` and distinguishes the two cases by whether a status code came back at all — RestSharp populates `ErrorException` and sets `ResponseStatus` to `Error` for a refusal as well as a transport failure, so only `StatusCode == 0` means "nothing answered". The same shape is used by the new governance client, where the refusals — a forbidden transition, a breach of appetite, a segregation-of-duties violation — are the whole point of the response.
-- **The Impact-vs-Probability report sent its minimum score twice and its maximum never.** `StatisticsRestService` added the `minRisk` query parameter twice and omitted `maxRisk`, so the server always applied its default upper bound and the report's maximum filter did nothing. The existing test asserted the bug; it now asserts the corrected parameters.
-- **`JobManager` prevented the API from starting in Development.** It is registered as a singleton and took a scoped `IAuthenticationService` it never used, which the .NET DI container's scope validation — on in Development, off in Production — rejects at start-up. The unused parameter is gone.
-
-- **`EmailService` accumulated recipients across sends.** `IFluentEmail` is a builder whose address list grows with each `.To()`, and one instance is injected per service — so a second message from the same service instance was also delivered to the first message's recipient. Nothing in the product sent two mails from one instance until the Track 4 email notification channel did, at which point a fallback email would have reached whoever happened to be notified before. The address lists are now cleared before every send. `SendNotificationAsync` also treats an unsuccessful `SendResponse` as a failure: FluentEmail reports a refused message by returning one rather than by throwing, so a caller that only caught exceptions would have recorded a rejected notification as delivered.
-
+### Security
+- Close the five findings Track 7 left open: persisted lockout counters, per-file attachment authorization, a 0600 Puppet credential file, per-session logout revocation, and column-encrypted FaceID templates (NR-2026-008b, 017, 025, 028, 032) (T112, T115)
+- Verify a plugin's publisher before loading it, report-only by default (NR-2026-027, risk-accepted) (T111)
+- Fix a critical SSO flow that let an attacker who controlled the request id collect any user's session token (NR-2026-001) (T111)
+- Draw the JWT signing key, reset links, file keys and the FaceID liveness challenge from a CSPRNG instead of a shared non-cryptographic generator (NR-2026-002) (T112)
+- Stop shipping a committed, expired TLS private key in the default configuration (NR-2026-003) (T113)
+- Validate the server certificate on every desktop-client connection instead of accepting any certificate (NR-2026-004, NR-2026-005) (T114)
+- Validate chunked-upload file ids against an allowlist and a resolved-path check (NR-2026-006)
+- Check the `enabled` flag on the Basic authentication path, not only on the JWT path (NR-2026-007)
+- Persist failed-login counters and enforce SAML assertion signature validation by default (NR-2026-008, NR-2026-010) (T112)
+- Encrypt stored integration credentials with AES-256-GCM instead of a constant-key/constant-IV AES-CBC scheme (NR-2026-011) (T115)
+- Add an `[Authorize]` attribute to the WebAuthn enrolment endpoints and a reflective authorization-inventory test (NR-2026-009) (T111)
+- Pin JWT issuer/audience/algorithm, shorten the default lifetime, and revoke sessions on password change (NR-2026-012) (T112)
+- Refuse outbound integration requests to link-local and cloud-metadata addresses (NR-2026-013) (T114)
+- Guard the base64 credential decode and stop truncating passwords containing a colon (NR-2026-018)
+- Compare unsigned webhook secrets in constant time (NR-2026-019)
+- Move uploaded scan-report staging off a world-writable `/tmp` directory (NR-2026-020) (T115)
+- Parameterise three `information_schema` queries and confirm DTD processing is refused by the three live scanner importers (NR-2026-021, NR-2026-022)
+- Hash password-reset links with SHA-256 instead of MD5, on the API and the WebSite (NR-2026-014)
+- Force the SAML session cookie to `Secure` always (NR-2026-016)
+- Validate scan-report links as absolute http/https with no whitespace, passing arguments as a list (NR-2026-023) (S17)
+- Log when the website sync is running with certificate validation disabled (NR-2026-026)
 
 ## [2.16.3] - 2026-08-25
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-
-- **The Vulnerability editor dialog was reorganised and made responsive.** It opened at a fixed 1150×600 and declared no `MinWidth`/`MinHeight`, so `DialogWindowBase`'s sizing contract pinned that opening size as the floor — the window could grow but never shrink, and nothing inside it grew when it did: the Description, Solution and Comments boxes were nailed to `Height="80"`, the risk `MultiSelect` to `MaxHeight="400"`, and every row of the content grid was `Auto`, so extra height became dead space at the bottom while a short screen simply clipped the form. The layout is now the one the UI standard describes (`docs/ui-standard.md` §5.2/§5.3.1/§5.6): a full-width header, a two-pane content row split by a `GridSplitter` (form left, risk association right), and the canonical centered action row. The form's three free-text boxes sit on star rows with a `MinHeight` floor so they absorb the slack, and the left pane is wrapped in a vertical `ScrollViewer` so it scrolls instead of clipping once the floors are reached. Fields are grouped under `header2` section headings — *Details* (title, score, description, solution, comments) and *Classification* (impact, technology, team, computer, analyst, application) — with labels in a shared `Auto` column so they line up, and inputs on `*` columns with `MinWidth` rather than fixed widths. Verified at 900×600 and 1500×1000.
-- The score spinner now formats to two decimals. The column is a float, so a stored 7.4 was widening to `7.40000009536743` in the box; the bound value is untouched, and the stepper moves by 0.1 instead of 1.
-- The dialog's own case-insensitive *Risk Filter* is now the only filter on the risk panel — `MultiSelect.ShowFilter` is off, so the two empty search boxes that used to sit under *Available*/*Selected* and duplicated it are gone.
-- The validation rules that gate Save now state themselves in the window, in a `validationSummary` line above the action row, instead of only in the disabled button's tooltip (closes the IX-4 gap recorded for this dialog in `docs/ux-interaction-standard.md`). Cancel is now `IsCancel`, and the Add-computer button has a tooltip.
-
-### Fixed
-
-
+- Reorganize the Vulnerability editor dialog into a responsive two-pane layout per the UI standard (S1, S2)
+- Format the score spinner to two decimals and add a step of 0.1
+- Remove the vulnerability dialog's duplicate risk-filter search box
+- Show the Save-gating validation rules in the window instead of only in a disabled-button tooltip
 
 ## [2.16.2] - 2026-08-25
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **The Vulnerabilities window came up completely blank — no rows, no column headers, not even the toolbar labels or the row count.** `MainWindow.axaml` handed the view its `DataContext` by binding it to a `VulnerabilitiesViewModel` property on the shell, but `MainWindowViewModel` built that view model in a **field initializer**, so it never passed through its `RaiseAndSetIfChanged` setter and never raised `PropertyChanged`. The binding resolved to null while the control was still being constructed — not yet attached to the tree, so DataContext inheritance had no source to offer — and with no change notification ever raised it never re-evaluated. `OnDataContextChanged` therefore hit its `_viewModel is null` guard on every pass, `BuildSource()` never ran, and `TreeDataGrid.Source` was never assigned, which is why the grid showed not even an empty header row. Everything bound went with it: all 43 text blocks measured zero-width (including the localizer constants, which fall back to the resource key and so can never be empty), all seven status-gated toolbar buttons reported themselves *enabled* because their `false` defaults were never overwritten, and Reload did nothing because its command binding was dead too. The view now creates its own view model in its constructor, as `DashboardView`, `RiskView`, `EntitiesView`, `HostsView` and `AssessmentView` already do — after `InitializeComponent()`, since `OnDataContextChanged` builds the grid source and needs the named `TreeDataGrid` to exist by then. The shell's now-unused property is gone: left in place it would have been a second view model, re-subscribing to `AuthenticationSucceeded` and duplicating every load. `MasterDashboardView` and `IncidentsView` keep the shell binding, which works for them precisely because their view models *are* assigned through the setter, on first navigation.
-- **Repairing that surfaced a second defect that had been unreachable behind it, and which aborted the whole client on launch.** With `BuildSource()` finally executing, the finding-lifecycle column threw `Expression of type 'DAL.Enums.FindingStatus' cannot be used for return type 'System.Object'` from inside the `MainWindow` constructor, taking the process down with `SIGABRT` before the login window appeared. TreeDataGrid walks a column getter as an expression tree, and its `ExpressionChainVisitor.VisitMethodCall` admits any call whose **return** type is a reference type, then builds a `Func<TModel, object>` over that call's **instance** — so `x => x.LifecycleStatus.ToString()` passed the guard on `string` and then failed to box the enum receiver. The column now hands the enum over raw; `TextCell` renders through `value?.ToString()` anyway, so the displayed text is identical. Two neighbouring columns escape the same trap only by accident and were left alone deliberately: `x.SlaDueDate.Value.ToString("yyyy-MM-dd")` survives because the preceding `== null` test moves the visitor's chain head off the member access, and `x.DaysOverdue(DateTime.UtcNow)` survives because `int?` *is* a value type and so fails the guard that would have built the bad lambda.
-
-
+- Build the Vulnerabilities view's own view model in its constructor instead of a shell field initializer, fixing a completely blank window
+- Stop the finding-lifecycle grid column from boxing an enum through an unsupported TreeDataGrid expression-tree path, fixing a startup SIGABRT (T48)
 
 ## [2.16.1] - 2026-08-25
 
-This release includes new features and improvements.
-
 ### Added
-
-### Changed
+- Add a root Makefile as the discoverable entry point for `make gui`, `build`, `test` and the other everyday developer commands
 
 ### Fixed
-
-
-
-## [2.16.1] - 2026-08-25
-
-This release includes new features and improvements.
-
-### Added
-
-- **A root `Makefile` as the discoverable entry point for the everyday developer commands.** `make` with no target lists every available target with a one-line description, so the commands documented across CLAUDE.md (Nuke build, `dotnet run`/`test`, the EF migration wrappers) are reachable without first knowing which script or project path to type. `make gui` starts the Avalonia desktop client with the `--environment` flag it needs to boot (`ENV=dev` by default), and there are matching targets for the API, website, background jobs and console client, plus `build`, `test`, `coverage`, `db-update` and `migration-add`. Targets that need an argument fail with a usage line instead of invoking the underlying tool with an empty one. Every target delegates to the existing tooling — nothing about the build is reimplemented here.
-
-### Changed
-
-### Fixed
-
-- **A failed `netrisk-console database update` can now simply be run again.** MariaDB implicitly commits every DDL statement, so the `START TRANSACTION` that wrapped 42 of the upgrade scripts rolled nothing back — when version 77 died part-way, two-thirds of it had already committed while `db_version` still read 76, and the only way forward was hand-written SQL. All 73 non-empty `DB/Structure/{n}.sql` scripts are now guarded statement by statement (`IF NOT EXISTS` / `IF EXISTS` where MariaDB has it; an `information_schema` probe driving `PREPARE`/`EXECUTE` for the 89 renames and primary-key swaps where it does not), and the misleading transaction wrappers are gone, replaced by a note explaining why. The `Data` scripts went the other way: they are pure DML, so all 78 are now wrapped in a real transaction with the `db_version` bump inside it as the genuine commit point — a Data script that fails rolls back whole. Both appliers force `AllowUserVariables` on their connection, since MySqlConnector would otherwise read the guards' `@nr_ddl` as a parameter placeholder and reject the script before the server saw it. Three tests hold the line: a statement-by-statement convention check that needs no database, the apply-order table-reference replay, and an integration test that applies all 78 versions with every Structure script run **twice** and requires the resulting schema — every column, index and foreign key — to match a single clean pass exactly. Two real defects surfaced while proving this: `information_schema` compares identifiers case-insensitively, so guarding the Track 6 case-only renames (`Incidents` → `incidents`, `OS` → `os`) silently skipped them until the probes were made `BINARY`; and MariaDB evaluates a sibling `ADD`'s `IF NOT EXISTS` against the table as it was *before* the statement, so guarding the `ADD INDEX` in `reports`' `DROP INDEX idx_name, ADD INDEX idx_name` dropped the index and never restored it.
-- **`netrisk-console database update` no longer aborts halfway to 78 with `Table 'netrisk.files' doesn't exist`.** The Track 3 upgrade script `DB/Structure/77.sql` attached the risk-acceptance evidence FK to a table called `files`, but that table was renamed to `nr_files` back in `DB/Structure/3.sql` — the EF migration the script was split from had the name right, and the hand-split copy did not. The failure was as bad as it was because MySQL implicitly commits every DDL statement: the `START TRANSACTION` wrapping the script bought nothing, so the twenty-odd statements before the bad one had already landed while `db_version` was still 76, leaving the database between versions with no rollback. The script now names `nr_files` (the index and constraint keep their `idx_files_…`/`fk_files_…` names, which is what the EF snapshot expects). A new test replays every numbered structure script in the order `DatabaseService.Update()` applies them, tracking creates, drops and renames, and fails if a script touches a table that does not exist at that point — the class of typo that reads correctly, compiles, reviews cleanly, and only shows up against a production database.
-- **Adding or editing a risk no longer kills the desktop client — and six other dialogs that were equally unreachable.** `DialogService` resolves a dialog's view from its view-model name by convention, and the convention was a bare `Replace("ViewModel", "")`. That only ever matched views named `*Dialog`, because those pair with a `*DialogViewModel`; every view named `*Window` pairs with a view model that has no `Window` in its name, so the lookup returned nothing and threw `View for EditRiskViewModel was not found!`. Since the throw happened inside a `ReactiveCommand` with nothing subscribed to `ThrownExceptions`, ReactiveUI's default handler rethrew it on the dispatcher and the process aborted with `SIGABRT` — pressing "Add risk" took the whole app down, unsaved work included. The convention now tries the bare stem first (so the dialogs that already resolved resolve to exactly the same type) and then the `Window` and `Dialog` suffixed forms, which repairs Add/Edit Risk, Close Risk, Edit Mitigation, Edit Incident, Incident Response Plan, IRP Task and Vulnerability Import together. Two guards keep it fixed: a ReactiveUI exception handler installed at builder time, so an escaping command error is logged and reported in a dialog instead of terminating the app; and a test that scans every `ShowDialogAsync` call site in `GUIClient` and fails if any of them names a view class that does not exist — the mismatch is invisible to the compiler, since resolution is reflective, so a test is the only place it can be caught before a user finds it.
-- **The v77 schema upgrade no longer fails partway through on the attachment column.** `Structure/77.sql` added Track 3's `risk_acceptance_id` evidence column with `ALTER TABLE \`files\``, but that table is renamed to `nr_files` back in `Structure/3.sql` and the EF model maps it as `nr_files` — so the statement aborted on any real database, leaving the upgrade half-applied and `db_version` short of 77. Every Track 3 read path then failed: the vulnerability register, `GET /Risks/{id}/Vulnerabilities`, `/Vulnerabilities/sla/compliance` and `/Vulnerabilities/LastScanDate` all returned 500 because the columns and tables they need were never created. The integration harness could not have caught this, because the test that builds the full numbered schema was pinned to version 75 and so never applied 77 at all; it now builds to whatever `DatabaseInformation.yaml` declares as the target, which both exercises the newest upgrade files against real MariaDB and fixes the two `EntityScopeQueryFilterTests` that were failing with `Unknown column 'v.component'` — the same staleness seen from the other side, a schema stopping short of columns the model already maps. Phase-specific tests keep their pinned versions, since for those the version under test is the point.
-- **`nuke CreateAllDockerImages` (and any Release build) no longer hangs forever on Apple Silicon.** `PackageMacGUI` used to cross-publish `osx-x64` by running the x86_64 .NET SDK inside a `--platform linux/amd64` container, which means running it under QEMU. QEMU mis-emulates the lock-free atomics in MSBuild's `XmlNameTableThreadSafe`, so the MSBuild worker node died with an `AccessViolationException` and `SIGABRT` while the parent `dotnet publish` kept waiting on the dead node's pipe — the container never exited, and the build blocked with no output and no error. The container was never needed: `GUIClient` publishes plain IL (no ReadyToRun, AOT, single-file or trimming), so an `osx-x64` publish only resolves and copies the `osx-x64` runtime pack and nothing x64 is ever executed. It now publishes natively on an arm64 host in well under a minute, and the produced apphost and `libcoreclr.dylib` are verified `Mach-O 64-bit x86_64`.
-- **A wedged external command now fails the build instead of blocking it.** The build's `RunProcess` helper called `WaitForExit()` with no timeout, so any hung child process stalled the whole run indefinitely. It now enforces a 30-minute budget per command — generous enough for a cold `docker build` — then kills the process tree and throws, logging whatever the child emitted before it died, which is where the real cause tends to be. Draining that partial output is itself time-bounded, since a surviving grandchild holding the pipe open would otherwise recreate the very hang the timeout exists to break.
-
-
+- Guard every numbered Structure script statement by statement instead of wrapping it in a transaction MariaDB implicitly commits anyway (T91)
+- Wrap every numbered Data script in a real transaction with the db_version bump as the genuine commit point (T91)
+- Rename the risk-acceptance evidence FK's target from `files` to `nr_files` in Structure/77.sql, fixing a schema upgrade that aborted partway through 78 (T50)
+- Try the bare, Window- and Dialog-suffixed view-model naming conventions in DialogService, fixing a SIGABRT on Add/Edit Risk and six other dialogs
+- Publish `PackageMacGUI`'s osx-x64 build natively on Apple Silicon instead of under QEMU, fixing an indefinite hang
+- Enforce a 30-minute timeout on external build commands so a wedged process fails the build instead of blocking it forever
 
 ## [2.16.0] - 2026-08-24
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Track 3 (ASPM) — extensible scanner importers (milestone 3.1).** A versioned `IVulnerabilityReportImporter` contract in the plugin SDK, and ten built-in importers against it: Tenable Nessus, a generic SARIF 2.1 importer (which alone unlocks CodeQL, ESLint, Bandit, Checkov, gitleaks and anything else with a SARIF exporter), OWASP ZAP, Trivy, Semgrep, OpenVAS/Greenbone, Burp Suite, Snyk, Grype and GitHub Dependabot. The contract's cardinal rule is that an importer parses and returns records — it never touches the database, the network or the file system — so persistence, deduplication and entity scoping stay in `ServerServices` and a third-party importer is safe to load and trivial to unit-test. `GET /Vulnerabilities/importers` lists built-ins and plugin importers indistinguishably; `POST /Vulnerabilities/import/{importerName}/{fileId}` resolves by name (the reserved name `auto` sniffs the file's content instead) and runs the import as a background job, because a 500 MB scan file makes a synchronous endpoint a timeout waiting to happen. `GET /Vulnerabilities/import-jobs/{id}` reports status and counts. Every importer reports the records it could not fully parse rather than dropping them silently, which is the classic importer bug: an import that lost a third of its rows otherwise looks exactly like a clean one. The legacy Nessus parser was refactored onto the contract and the old write-as-you-parse path retired, so `import/nessus/{fileId}` — which the desktop client still calls — now runs the same pipeline as everything else.
-- **Track 3 — finding lifecycle and audit trail (milestone 3.2).** A dedicated seven-state triage lifecycle (`Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated`) in a new `status_id` column, separate from the register's fifty-value general-purpose `Status` so the two cannot be confused, with the transition matrix enforced in the service and surfaced as HTTP 422 rather than only in the UI. Suppressing transitions require a stated reason; a duplicate must name the finding it duplicates. Two behaviours on re-import carry the milestone: **sticky triage** — a false positive, out-of-scope or accepted verdict survives the scanner reporting the finding again — and **regression detection** — a mitigated finding the scanner sees again reopens as Active with an event saying so. Every transition writes an append-only `finding_status_history` row recording who, when, why and whether a human, an import or a job did it; there is no update or delete path to that table anywhere in the API, which is the whole point of it. Rendered as a timeline on the finding detail view.
-- **Track 3 — formal, expiring risk acceptance (milestone 3.2.3–3.2.4).** A `risk_acceptances` entity generalizing Track 8.1's design: authorizing manager, business justification, compensating controls, residual-score snapshot, evidence attachments, and a **mandatory** expiry date — an acceptance without one is precisely the failure this exists to prevent, "accepted" quietly becoming "forgotten". Accepting findings suppresses them and records an event per finding; revoking or expiring reactivates them. A daily Hangfire job expires lapsed acceptances, reactivates what they covered with `source=Job`, and warns the authorizing manager at T-30 and T-7. The pass is idempotent — running it twice on the same day changes nothing the second time, so re-running a failed job is not something an operator has to think about — and it leaves a finding somebody has already re-triaged where it is, rather than dragging a human decision back to Active.
-- **Track 3 — the deduplication engine (milestone 3.3).** Layered, per-scanner strategy chains: `UniqueIdFromTool` (the scanner's own stable id, highest precedence when present), `HashBased` (SHA-256 over a configurable ordered field set, defaulting to tool + rule id + asset + location + CVE), `LegacyHashCode` (the pre-Track-3 Nessus hash, kept so a re-import matches rows the old code created instead of duplicating the whole register once), and `Custom` via a plugin. Keys are **persisted** on the finding and never recomputed, so upgrading the algorithm affects only new imports. The design property throughout is that dedup **groups without discarding**: a second sighting raises the occurrence count and moves the last-seen date, and never overwrites a human-entered field. Findings a **full** scan no longer reports are candidates for auto-close, off by default per scanner — a partial scan mistaken for a full one closes everything outside its slice. Every import is reconstructible from a new `scan_imports` log. The administration screen edits each scanner's chain and field set and includes a preview panel that computes two findings' keys and reports whether they would merge, without saving anything.
-- **Track 3 — SLA tracking and aging (milestone 3.4).** Effective-dated `sla_configurations` per severity, seeded to the CISA benchmarks the spec cites (Critical 15 days, High 30, Medium 60, Low 90; triage 2/5/10/15), with an optional per-entity override. Changing a policy supersedes the old row rather than editing it, so a change never rewrites a past compliance number. `sla_due_date` is computed at creation from the policy in force **when the finding appeared** and recomputed on severity change with the reason on the finding's timeline; `DaysOverdue` is derived at read time and never stored, so it cannot drift, and suppressed states pause the clock — a finding nobody is allowed to work on does not accrue overdue days. Surfaced as sortable grid columns, a dashboard compliance widget, and a daily digest job: one message per owner listing everything of theirs that is breached or approaching, rather than the per-finding alerting that trains people to filter the alerts. De-duplicated by (finding, threshold, due date), so a crossing notifies exactly once and moving a deadline legitimately re-arms it.
-- **Track 3 — CI/CD-first integration (milestone 3.5).** Scoped, revocable `nrk_`-prefixed API tokens: 256 bits of entropy, stored hashed and shown once, with a public key-id half so authentication is one indexed read and a leaked token is grep-able by secret scanners. Scopes (`vulnerabilities:import`, `:read`, `:write`, `risks:read`) narrow what the token can do on top of the permissions of the user it acts as — the two are an AND — and administrator privileges are deliberately never granted through a token. A `POST /Vulnerabilities/import/{importer}` endpoint takes the raw scan payload as the request body in one curl-able call, streaming it to disk rather than buffering it; an optional `Idempotency-Key` header makes a CI retry storm harmless by returning the original import instead of importing again. `netrisk-console ci gate --job <id> --fail-on new-critical` evaluates a small policy grammar (`new-<severity>`, `any-<severity>>N`, `sla-breach`, `none`) and exits non-zero on violation. "New vs pre-existing" rides on the dedup engine, which is what makes gating non-flaky — a build does not fail for a vulnerability that was already known and accepted. Copy-pasteable, pinned recipes for GitHub Actions, GitLab CI and Azure Pipelines live in [docs/ci/](docs/ci/), each covering the platform-native way to handle the credential.
-
-- **Track 2 — the Master Dashboard (milestone 2.3.3), end to end.** Administrators get a cross-entity posture view: one card per business entity with open risks (banded high/medium/low), open vulnerabilities (critical/high/medium), open incidents, mean risk score and a composite posture bar, ordered worst-first, above an organisation-wide totals band. The roadmap recorded this milestone's backend as complete, but no `/dashboard/master` endpoint or rollup service existed — so both tiers were built. `MasterDashboardService` groups each of the three fact tables by `entity_id` **once** and stitches the results together, rather than the per-entity fan-out the milestone spec rules out; records whose `entity_id` is still null are surfaced in an explicit "Unassigned" bucket so the totals reconcile with the per-module screens. Organisation-wide mean risk is weighted by open-risk count, so a one-risk entity cannot pull the average as hard as a thousand-risk one. Results are cached for two minutes on a singleton and handed out as copies, and the GUI's Refresh bypasses that cache. `GET /Dashboard/Master` is gated by `RequireAdminOnly`; the nav entry is admin-only and a refusal renders as a state of the view rather than a modal box.
-- **Track 2 — IRP template editing and automation rules (milestones 2.4.1 and 2.4.2).** A new Administration section edits incident-response playbooks: template CRUD, clone-from-existing, and an ordered task list with instructions, relative due offset, coordinator-approval gate and a predecessor dependency. The matching rule that decides which incidents activate a template (category + status) and each task's assignee rule (fixed user or role) are authored through pickers — the automation engine reads them as JSON, and this screen composes and parses those documents rather than making an author type them. `ClientServices` gained the `IrpTemplatesRestService` the milestone noted was missing entirely, and the API gained the template-task CRUD it never had (`GET/POST /IrpTemplates/{id}/Tasks`, `PUT/DELETE .../{taskId}`) plus `POST /IrpTemplates/{id}/Clone`. Predecessor edges are validated for acyclicity on save — a cycle would make the generated plan impossible to schedule — deleting a task re-parents its successors instead of orphaning them, and a clone writes its tasks in topological order so predecessors always exist before their dependants. A cloned or newly created template starts **disabled**, so it cannot begin matching live incidents before it has been reviewed.
-- **Track 2 — incident-response Gantt with critical path (milestone 2.4.3).** `IrpScheduleService` runs a real CPM forward/backward pass over a plan's tasks and `GET /IncidentResponsePlans/{id}/Schedule` returns early/late start, slack, the critical-path chain, and per-task blocked and overdue flags. The GUI renders it as a parented, singleton Gantt window opened from the plan editor: bars coloured by state (critical, overdue, blocked), slack per row, a "now" marker, and a legend. Computing the path server-side means every client draws the same bars.
-- **Track 2 — multi-entity scoping is now actually enforced (milestones 2.3.1 and 2.3.2), completing Track 2.** The roadmap described this as "enforced server-side"; it was not. `ApplyEntityScope` was called from exactly one query — `RisksService.GetAllAsync` — and `RisksController` never passed it a `ClaimsPrincipal`, so it always received null and returned the query unfiltered. Vulnerabilities, hosts, incidents, assessments, exports and reports had no scoping call at all. Any authenticated user could read every tenant's data. Enforcement now lives on the model as EF Core global query filters, which is the mechanism the 2.3 spec names first: the five `entity_id`-bearing types are filtered directly, and the nine record types that inherit an entity from a parent (mitigations, management reviews, host services, assessment questions, answers, runs and run answers, fix requests) are filtered through it, so a service that never thinks about scoping still cannot cross the boundary. Because query filters also govern `Find` and `FirstOrDefault`, an update or delete aimed at another entity's row resolves to nothing and turns into a clean not-found rather than a silent cross-tenant write. The one thing a query filter cannot cover — creating a record stamped with someone else's `entity_id`, or re-stamping one of your own on the way out — is refused in `AuditableContext.SaveChanges` and surfaces as a 403. A caller holding exactly one entity gets new records filed there automatically; a caller holding several must say which. An authenticated user with no assignment sees nothing, while global admins and non-HTTP callers (background jobs, the console client, migrations) stay unrestricted. Verified by 21 negative tests across every service including exports, and by MariaDB integration tests that assert the predicate reaches SQL instead of being evaluated client-side — the in-memory provider would have passed either way.
-- **Track 2 — Entity Access administration (milestone 2.3.2).** A new Administration section grants and revokes per-entity roles for a user, backed by the `UserAccessRestService` client the API had been waiting on. Revocation is a soft revoke, so "who could access what on date T" stays answerable. The screen calls out explicitly that a user with no assignment sees no data at all, which is the intended deny-by-default and otherwise surprises people.
-- **Track 2 — persisted IRP task dependencies and the blocked-task override (milestone 2.4.3).** Response-plan tasks can now declare that one waits on another; the edges live in a new `incident_response_plan_task_dependencies` table (schema phase 7, `db_version` 76) and are validated acyclic on save, since a cycle makes the plan impossible to schedule. A task with no explicit edge still falls back to the `ExecutionOrder`/`IsSequential` stage ordering, so plans authored before this schedule exactly as they did. Completing a task whose predecessors are unfinished now requires a stated reason and records who overrode the block and when.
-
-- **API controller test coverage, 8.7% → 77.1%.** The REST layer had tests for 4 of its 37 controllers; 731 new tests now cover 31 of them, every action and each of its outcome branches — not-found, bad request, unauthorized, conflict, and the catch-all 500 handlers that had never once been executed. What remains uncovered is the authentication and bootstrap surface (`AuthenticationController`, the JWT/Basic handlers, the policy providers, `Program.cs` and the bootstrappers) and `FaceIDController`, which needs a real ONNX runtime. `API.Tests` registration became convention-based to make this sustainable: `ServiceRegistration` discovers every `Mocked*.Create()` factory and every controller by reflection, and `BaseControllerTest.ResolveController<T>(configure)` layers per-test doubles on top, so covering a new controller no longer means editing a file shared with every other test.
-- **ClientServices test coverage, 5.2% → 70.6%.** The desktop client's REST layer had 3 of ~44 services tested; 1,083 new tests now cover 26 of them, every method with its happy path and each error branch it actually contains. The blocker was structural rather than effort: `IRestService.GetClient()` returns a **concrete** `RestClient`, which no NSubstitute double can satisfy, so the old shared mock could only reach the handful of methods that use `GetReliableClient()`. `ClientServices.Tests/Mock/StubRestBackend.cs` replaces it by stubbing the layer underneath — a real RestSharp client over a fake `HttpMessageHandler` — so serialization, status handling and RestSharp's own extension methods all run for real, and a test can assert the verb, path, query and body the service actually sent. Registration is convention-based as in `API.Tests`, and `ServiceResolutionTest` asserts every discovered service contract resolves, which is what caught the two services whose dependencies nothing supplied. Still uncovered: `AuthenticationRestService` and `FaceIDRestService`, the two Nessus/ScoreCard importers, and `RestService` itself.
-- **Test projects for the four projects that had none.** `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests` and `WebSite.Tests` cover `LanguageManager`, the website-sync setting helpers and `TmpCleanup`'s retention cutoff, the CLI command surface and the numbered-SQL upgrade ritual, and the website's signed `/sync` authentication boundary. `ConsoleClient.Tests` asserts the ritual itself rather than any one migration: that `targetVersion` matches the highest numbered script, that Structure and Data agree and have no gaps, that every data script bumps `db_version` to its own number, and that every script on disk is declared as `<Content>` so it actually reaches a release.
+- Add Track 3 extensible scanner importers: a versioned plugin contract plus ten built-in importers including SARIF 2.1 (T43, T44, T45, T46, T47)
+- Add Track 3 finding lifecycle and audit trail: a seven-state triage machine with sticky triage, regression detection and an append-only history (T48, T49)
+- Add Track 3 formal, expiring risk acceptance for findings with a daily T-30/T-7 expiry job (T50, T51)
+- Add Track 3 the deduplication engine: layered per-scanner strategy chains with a merge preview (T52, T53, T54)
+- Add Track 3 SLA tracking and aging: effective-dated policies, computed due dates, and a deduplicated breach digest (T55, T56, T57)
+- Add Track 3 CI/CD-first integration: scoped API tokens, idempotent bulk upload, and `netrisk-console ci gate` (T58, T59, T60, T61)
+- Build the Master Dashboard end to end: neither the endpoint nor the service existed despite being documented as complete (T37, T38)
+- Add IRP template editing, automation-rule authoring and a critical-path Gantt view (T39, T40, T41, T42)
+- Enforce multi-entity scoping via EF global query filters and a SaveChanges guard, correcting a previously undocumented gap (T35, T36)
+- Add API controller test coverage from 8.7% to 77.1% across 31 controllers
+- Add ClientServices test coverage from 5.2% to 70.6% across 26 services
+- Add test projects for SharedServices, BackgroundJobs, ConsoleClient and WebSite
 
 ### Changed
-
-- `JobManager` gained an `IJobManager` interface. A controller that starts a background job could not otherwise be built in a test without standing up the whole messaging and localization stack behind it.
-- `MasterDashboardService` is registered as a **singleton** rather than a transient with static cache state, so one process-wide cache does not leak between tests running in parallel.
-- New features and bug fixes must now ship with tests in the same change — the happy path plus each error branch for a feature, a failing-then-passing regression test for a fix. Recorded in [CLAUDE.md](CLAUDE.md) and [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md).
+- Require new features and bug fixes to ship with tests in the same change (recorded in CLAUDE.md and src/AI_TESTING_INSTRUCTIONS.md)
 
 ### Fixed
-
-- **`dotnet ef migrations script` could not run, and every regenerated model snapshot broke the build.** A `string` column with a `char(n)` store type makes EF Core 10's `ElementMappingConvention` treat the property — a string being an `IEnumerable<char>` — as a primitive collection of `char`. The MySQL provider has no char element mapping, so the model build died with a `NullReferenceException` raised deep inside the type mapping source, naming no property, and taking `migrations script`, `HasPendingModelChanges` and `database update` down with it. `processed_sync_actions.client_action_id` was the only such column. Expressing it as `HasMaxLength(36).IsFixedLength()` avoided writing `char(36)` in `OnModelCreating`, but the snapshot generator re-resolves store types and wrote it back, so the trap re-armed itself on every `migrationAdd.sh` and had to be patched out by hand each time — which is how Track 3's own migration was authored. The column is now `varchar(36)` (schema phase 9, `db_version` 78); the two hold the same 36-character id and differ only in trailing-space padding, which a UUID string never has. `Guid` columns are unaffected and deliberately not changed: Pomelo maps them to `char(36)` too, but a `Guid` is not a collection of anything. `DAL.IntegrationTests/StringColumnTypeGuardTest` now fails immediately if the shape is reintroduced — in the model or in the generated snapshot — and explains the cause instead of leaving the next person to bisect a null reference.
-- **`CWE-089` and `CWE-89` were treated as different weaknesses.** SARIF rule tags write the padded form (`external/cwe/cwe-089`) where the advisory databases write the unpadded one, so a finding imported from SARIF would not match its own CWE in any lookup, and a dedup key built from the CWE list would not match the same finding from another scanner. Leading zeros are now stripped on extraction. Found by the Track 3 importer tests.
-- **A gate policy of `none` passed a build whose import had failed.** The opt-out was evaluated before the failed-import check, so a pipeline that only reports would report success for a scan that never landed. Found by the Track 3 gate tests.
-- **Cross-entity data exposure.** See the multi-entity scoping entry above: entity scoping was declared but not wired up, leaving every authenticated user able to read, update and delete records belonging to business entities they were never assigned to.
-- **The schema upgrade to `db_version` 75 and 76 could not run from a build.** `DB/Structure/75.sql`, `76.sql` and their `DB/Data` counterparts were committed but never declared as `<Content>` in `ConsoleClient.csproj`, so they were not copied to the output directory — a packaged console client stopped at 74 while `DatabaseInformation.yaml` asked for 76, meaning the IRP task-dependency table above would never have been created on any real database. Every numbered script must be hand-declared in the project file, which is exactly the step that gets forgotten; `ConsoleClient.Tests` now fails if a script on disk is not declared.
-- **Two locales of the same language crashed the language list.** `LanguageManager.AllLanguages` keyed its dictionary by the two-letter ISO language code, so configuring `AvailableLocales` with both `en-US` and `en-GB` (or `pt-BR` and `pt-PT`) made `ToDictionary` throw `ArgumentException`. Because the dictionary is built lazily, the throw surfaced from the property getter — anywhere the language list was read — rather than at startup near the misconfiguration. The locales now collapse onto one entry per language, the first one configured winning.
-- **The desktop client's cache ignored its own expiry, and swept itself on a background thread.** `MemoryCacheService.Get` returned the stored value without ever comparing it to the expiry stamp it had saved alongside it, so an entry lived until an unrelated sweep happened to remove it — a user name, team or entity list edited elsewhere could keep being served long past the sixty minutes it was cached for. That sweep was itself `async void` over a `Task.Run`, so it mutated the plain `Dictionary` backing the cache from a background thread while the caller that started it was already reading it, and any exception it raised was unobservable. Eviction is now lazy and synchronous — a read checks the entry it found and drops it if it is stale — so expired data is never served, there is no background thread to race, and the behaviour is deterministic enough to be tested. `UsersRestService`, `TeamsRestService` and `VulnerabilitiesRestService` take the cache as a constructor dependency instead of pulling it out of the static service-provider accessor, which is what made their cache-hit paths untestable.
-
-- `RuleBrokenException` gained a constructor that carries a message. The existing single-argument overload set only the rule name and left `Message` as the framework default, so a caller catching one learned nothing about what had gone wrong.
-- **The desktop client discarded the reason a request was refused.** Two patterns in `ClientServices` threw away the error information a caller needs. First, `IncidentResponsePlansRestService` translated a 400 into a `RuleBrokenException` carrying the server's explanation — "adding this dependency would close a cycle", "an override reason is required" — but the branch was unreachable: RestSharp's `PostAsync` raises `HttpRequestException` on that status before any status check runs, so the Gantt view's rule-violation toast could never fire and every refusal read as a communication failure. Second, a handful of methods raised a specific exception inside a `try` whose `catch (Exception)` immediately re-wrapped it, so the guard was pointless: both `EmailsRestService` send methods, `AssessmentsRestService.DeleteRun` (whose `RestException` was replaced by a bare `Exception`, losing the HTTP status), and `HostsRestService.GetAllHostServiceAsync` (where a caller could not tell "no data" from "the transport broke"). Those catches are now narrowed to `HttpRequestException`, matching the pattern the rest of each file already used.
-- **Six client-side writes reported a failed server response as success.** Every one of these let the desktop client tell the user the change had been saved while the server had refused it. `HostsRestService.DeleteService` had its guard **inverted** — `if (response.StatusCode == HttpStatusCode.OK) throw` — so a successful delete raised and a rejected one returned quietly. `MitigationRestService.Save`, `FilesRestService.DeleteFile` and `ReportsRestService.DeleteReportAsync` guarded only on `response == null`, which RestSharp's untyped verbs never return, making the check dead code. `MessagesRestService.DeleteMessageAsync` never looked at the status, and `ReadMessageAsync` discarded the response entirely. Worst for data integrity, `RisksRestService.SaveRiskScoring` threw only when the error body happened to deserialize into an `OperationError`, so any other error body meant a discarded risk score read back as saved. The reason these all had the same shape is RestSharp 114's status handling: 404 is the *only* non-2xx status the verb extensions do not raise on, so a rejected write arrives as a perfectly ordinary completed response and nothing but an explicit status check distinguishes it. All six now check the status; where an `OperationError` is present it reaches the caller as before, and a shared `RestServiceBase.TryReadOperationError` helper means an error body that is absent or is not an `OperationError` produces a plain failure instead of the raw `JsonException` that `SaveRisk` used to leak. `NotificationsViewModel`'s two `async void` command handlers gained the try/catch they now need, since an escaping exception there would have been unhandled rather than shown.
-- **Misleading client-side error messages.** `ConfigurationsRestService.SetBackupPassword` reported "checking backup password status" on failure — copied from the getter; `TechnologiesRestService` named `/Technology` as the failing URL while the request went to `/Technologies`; and `EmailsRestService`'s update-mail method reported the fix-request path. `RisksRestService.DeleteRisk` and `DeleteRiskScoring`, `RolesRestService.UpdateRolePermissions`, `MgmtReviewsRestService.Create` and `EntitiesRestService`'s entity cache also threw bare `Exception`s where the rest of the layer throws typed ones, which left callers unable to distinguish a refused request from a bug.
-
-
+- Change the `char(36)` store type on `ClientActionId` to `varchar(36)`, fixing an EF Core 10 model-build NullReferenceException
+- Strip leading zeros so `CWE-089` and `CWE-89` match as the same weakness in importer dedup keys (T52)
+- Evaluate the failed-import check before a gate policy of `none`, so a failed scan cannot report success (T61)
+- Declare the schema-upgrade 75/76 SQL scripts as project content so a packaged console client actually ships them
+- Collapse duplicate-language locales instead of throwing from the language-list getter
+- Make the desktop client's memory cache check its own expiry synchronously instead of serving stale entries from a racing background sweep
+- Fix six client-side writes that reported a rejected server response as a successful save
 
 ## [2.15.0] - 2026-08-21
 
-This release includes new features and improvements.
-
 ### Added
-
-- **Track 1 Milestone 1.5 — Interaction & Workflow Standardization (Phases A–E).** Applies the interaction standard in [docs/ux-interaction-standard.md](docs/ux-interaction-standard.md) (IX-1…IX-9) across the desktop client, completing Track 1. 164 files changed (+5.7k/-4.1k lines). The phase-by-phase record is in that document's new Part V; the highlights:
-  - **One dialog stack.** The nine legacy hand-`new`-ed edit windows — CloseRisk, AddFaceImage, EditMgmtReview, EditMitigation, EditRisk, VulnerabilityImport, EditIncident, and the IRP plan and task windows — now derive from `DialogWindowBase<TResult>` and open through `DialogService`, so they get Esc, Ctrl/Cmd+S, owner-centring and typed results from one place instead of nine. Saved records travel back as typed results and the caller updates its own collection, replacing the events the dialogs used to raise into their parents. Launcher-side size overrides are gone: window size is declared in XAML only. `DialogService` now parents to and dims the **actual** launching window (via the new `IDimmableWindow`) rather than always MainWindow, so dialogs opened from a report manager no longer centre over and grey out the wrong window. `ISaveableDialog` is wired wherever a `SaveCommand` exists, fixing dead Ctrl+S in the report dialogs, ChangePassword and CreateReport. `DialogWindowBase` also stopped forcing `Min = Max` on open, so a dialog declaring `CanResize="True"` (the assessment runner and dialogs, FixRequestDialog) is actually resizable — the XAML no longer lies.
-  - **A real feedback language.** New `INotificationService` + `NotificationHost` toast stack: routine successes ("Saved", "Deleted", "Test run triggered") are transient notes instead of modal boxes the user must dismiss — nine success `MessageBox`es converted, and the two report manager windows, which reported *nothing at all* on save/delete/test, now report. Errors keep their modal box, because they need acknowledging. Validation messages surface inline under the field and on the disabled Save button's tooltip. `ViewModelBase` gained `IsBusy`/`WithBusyAsync`, and the six views that showed no busy indication at all (Entities, Incidents, Users, Hosts, Devices, Configuration) now do — the entity-tree reload in particular. Gated toolbar buttons state *why* they are disabled via the new `ActionTooltipConverter` (permission vs. current status), and every delete confirmation goes through one `ConfirmationDialog` helper — Yes/No, item name interpolated, cascade spelled out — replacing the four different button sets (YesNo, OkCancel, OkAbort, YesNoAbort) the same job used to use.
-  - **The risk lifecycle became a workflow.** Plan-mitigation, Revise, Add-review, Close and **Reopen** moved out of the scrolling detail pane (where they were 22px icons) into a state-driven toolbar on RiskView, enabled per the risk's current status and modelled on the vulnerability triage toolbar. After a management review commits, the next step it recorded is now offered instead of being captured and ignored (`RiskHelper.GetNextStepAction`, unit-tested); after creating a risk, planning its mitigation is offered.
-  - **Forms that fit.** EditIncidentWindow's seven stacked 120px narrative boxes became tabs and its Save/Save&Close/Close triple became one Save + Cancel — Save now commits and closes rather than silently flipping the window into Edit mode. The IRP task form's 25-row flat grid became four named sections. `EntityForm`, which built its entire UI imperatively in 450 lines of C#, was rebuilt as XAML over per-field-kind `DataTemplate`s with a real view-model, a Cancel alongside Save, dirty tracking, and validation that is **enforced** rather than merely displayed. DeviceView — the only view in the app with per-row action buttons — became a register with a selection toolbar and a status bar. The two near-duplicate report manager windows now share one `ManagerShell` control.
-  - **Shell polish.** A new `INavigationService` owns all shell routing and auxiliary windows; `WindowsManager` (a global window list that view-models grepped) is deleted, as is every `$parent.Parent.Parent…×8` `CommandParameter`. Reports, Notifications and Administration are now modeless, parented, singleton auxiliary windows — Administration no longer blocks the whole shell. MainWindow and the auxiliary windows persist and restore their geometry, clamped to a screen that still exists. `AuxiliaryWindowBase` gives every plain window Esc. Ctrl+F works on six module views with one semantic (reveal, focus, live-filter), and the editor dialogs have explicit TabIndex chains.
-  - **Dead surfaces removed:** the orphaned `RisksPanelView` trio, the duplicate `AssessmentQuestionView` editor (assessment questions are edited inline by the builder — IX-5 forbids two editors for one object), the dead `btn_SettingsOnClick` path, and the duplicated `StrThreatSources` block. The gear icon labelled "Settings" that opened Administration is now labelled Administration, and the read-only window misnamed `Settings` is now `AboutWindow`. `LoadConfigurationWindow` was rebuilt: localized (including the "Well-come" typo), sized, validated, with Esc/Enter and a Cancel.
-  - **Verification, and its limits.** The solution builds clean at zero warnings and all 563 unit tests pass. The GUI itself was **not** exercised at runtime while this work was done — Avalonia cannot start a window on this host from a non-interactive shell (`RenderTimer ... -6661`), so a manual click-through of the migrated dialogs is worth doing before release. `./build.sh LintUi` still reports 162 pre-existing `docs/ui-standard.md` violations (16 R1, 4 R4, 26 R5, 116 R6 — many R6 are false positives from the linter matching per line); those belong to the UI-STD-001 reference item, not to IX-1…IX-9, and only the ones inside files touched here were fixed.
-- **`GUIClient.Tests`** — a first test project for the desktop client, covering the validation layer (13 tests). It deliberately does not reference `GUIClient` (that would pull Avalonia into a headless run); it compiles the files under test directly. Also `ServerServices.Tests/Track1` covering the review next-step mapping (7 tests). Unit-test total: 563.
+- Add Track 1 Milestone 1.5 — Interaction & Workflow Standardization, completing Track 1 (T22, T23, T24, T25, T26)
+- Add GUIClient.Tests, the desktop client's first test project
+- Close the full docs/ui-standard.md compliance sweep across all 80 views, completing Track 1 (T1, T6, T7, T8, T9, T10, T11, T12)
+  - note: no dedicated per-item changelog entry exists for Milestones 1.2–1.4's individual tasks in the pre-migration file; version attributed from the roadmap's own "Milestones 1.1–1.5 shipped in 2.15.0" note
 
 ### Changed
-
-
-- **Upgraded the `libs/` submodules and reattached their detached HEADs.** All five were sitting at their tracking-branch tips already (nothing to pull), but three — `netrisk-plugin-sdk`, `reliable-rest-client-wrapper` and `NessusParser` — were on a detached HEAD; they are now on `main`/`master` respectively. `Aura.UI` was deliberately left on its `avalonia12` branch rather than moved to its default `master`: `avalonia12` is 9 commits ahead and `master` is still on Avalonia 11.2.2, so switching would have regressed it. Package upgrades, each committed and pushed in its own repository:
-  - **Aura.UI**: Avalonia (+`Desktop`, +`Markup.Xaml.Loader`) 12.0.1 → 12.1.1, `ReactiveUI` 23.2.1 → 24.1.0, `ReactiveUI.Avalonia` 12.0.1 → 12.1.1, `System.Reactive` 6.1.0 → 7.0.0, `Xaml.Behaviors.*` 12.0.0 → 12.0.5. The ReactiveUI 24 `Unit` → `RxVoid` rename needed no source changes there, as the library declares no `ReactiveCommand<…, Unit>` members. Avalonia 12.1's `Bitmap.Save(Stream, int?)` deprecation was fixed in `BlurryImage` with `PngBitmapEncoderOptions.Default`, the same fix applied in `GUIClient`.
-  - **netrisk-plugin-sdk**: `Serilog` 4.3.1 → 4.4.0, `SkiaSharp` 3.119.2 → 3.119.4.
-  - **reliable-rest-client-wrapper**: `Polly` 8.6.6 → 8.7.0.
-  - **TreeDataGrid.Avalonia**: `AvaloniaVersion` 12.0.1 → 12.1.1, plus `AvaloniaSamplesVersion` 12.0.* → 12.1.* so that repo's own samples/tests don't hit an NU1605 downgrade against the newer library.
-  - All six submodule projects NetRisk consumes now report up to date. `SkiaSharp` 3.119.4 → 4.151.1 is a deliberate hold: Avalonia.Skia 12.1.1 depends on 3.119.4, and `SKBitmap` is spread across the public `INetriskFaceIDPlugin` surface, which is registered as a **shared type** with `PluginLoader` — crossing the SkiaSharp major would change that type's identity and break externally built FaceID plugins at load time. It should move when Avalonia moves.
-  - **Not fixed, pre-existing**: Aura.UI's samples and `Tests/MathsForUI.Test` do not build, and did not before this change either (verified by rebuilding at unmodified HEAD). They target `net8.0` while the libraries moved to `net10.0` (NU1201), and `Aura.UI.Gallery.Web` additionally needs the `wasm-tools-net8` workload. Retargeting them and porting the galleries off Avalonia 11.2.2 is separate work.
-  - Verified after the upgrade: NetRisk builds clean at the 16-warning baseline, all 566 tests pass, and the GUI launches and renders correctly — which exercises both Aura.UI (theme) and TreeDataGrid (grids).
-
-- **`JetBrains.Annotations` 2025.2.4 → 2026.2.0** in the four test projects. Compile-time annotations only, no runtime impact.
-- **`NSubstitute` 5.3.0 → 6.2.0** across `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests` and `DAL.IntegrationTests`. The mocking surface in use is entirely core API (`Substitute.For`, `Returns`, `Received`, `Arg.Any`/`Arg.Is`, `Throws`/`ThrowsAsync`, `When`), none of which changed in v6, so the major bump needed no test edits. All 566 tests pass.
-- **Removed the now-redundant `SQLitePCLRaw.bundle_e_sqlite3` 2.1.13 pin from `WebSiteData`.** It was added to patch GHSA-2m69-gcr7-jv3q / CVE-2025-6965 back when EF Core Sqlite 10.0.7 pulled `SQLitePCLRaw` 2.1.11. After the EF Core bump to 10.0.11 the transitive version is 2.1.12, which already bundles SQLite 3.53.3 — well past the 3.50.2 fix. Verified by removing the pin and re-running `dotnet list package --vulnerable --include-transitive`: still clean, with the whole `SQLitePCLRaw` family resolving to 2.1.12. Dropping the pin means the SQLite provider now tracks whatever EF Core ships instead of being held one patch ahead by hand. Deliberately *not* bumped to `SQLitePCLRaw` 3.0.5: that is a major release EF Core 10 does not expect, and pinning across it would reintroduce exactly the kind of divergence this removal eliminates.
-- **Replaced the deprecated `Serilog.Sinks.RollingFile` 3.3.0 with `Serilog.Sinks.File` in `GUIClient`, and gave the client real log rolling.** The package was NuGet-deprecated (Legacy), and it turned out to be a half-finished migration: `GUIClient` already referenced `Serilog.Sinks.File` 7.0.0 and already called `.WriteTo.File(...)`, so the RollingFile package was a dead reference with no call sites and no config-driven activation (logging is wired in code in `LoggingBootstrapper`, and `Serilog.Settings.Configuration` isn't used anywhere). What survived from the old sink was the *idiom*: the filename was hand-stamped `log-{yyyy-MM-dd}.txt` once at startup while `.WriteTo.File` had no `rollingInterval`. For a desktop client left open past midnight that meant every subsequent day's entries kept landing in the file for the day it was launched, with no size cap and no retention.
-  - `GUIClient` now uses `.WriteTo.File(path, fileSizeLimitBytes: 10000000, rollOnFileSizeLimit: true, rollingInterval: RollingInterval.Day)` — the same configuration `API`, `BackgroundJobs` and `WebSite` already use, so the client is no longer the odd one out. The date is supplied by the sink rather than by the filename, and daily rolling brings Serilog's default 31-file retention with it.
-  - **User-visible change**: GUI log files are now named `nr-gui<yyyyMMdd>.log` (matching the existing `nr-api.log` convention) instead of `log-<yyyy-MM-dd>.txt`, in the same `…/NRGUIClient/logs` directory. Pre-existing `log-*.txt` files are left untouched and are not covered by the new retention limit, so they can be deleted by hand if desired.
-  - `dotnet list package --deprecated` now reports nothing for the solution's own projects; the only remaining entries are `ReactiveUI` / `ReactiveUI.Avalonia` inside the `libs/Aura.UI` submodule.
-
-
-- **Test suite migrated from xUnit v2 to xUnit v3 (all five test projects).** `xunit` 2.9.3 was deprecated in favour of `xunit.v3`; the suite now runs on **Microsoft.Testing.Platform (MTP)** instead of VSTest, because xunit.v3 4.0.0 depends on MTP and the .NET 10 SDK no longer supports running MTP projects through VSTest. All **566 tests still pass**, including the 23 Testcontainers MariaDB integration tests — no tests were lost or skipped in the move.
-  - `global.json` **moved from `src/` to the repository root** and gained a `test.runner` = `Microsoft.Testing.Platform` section. The runner setting is what makes `dotnet test` work at all; without it the SDK attempts VSTest and errors out. It has to be at the root because `global.json` is resolved by walking up from the current directory, and the documented commands run from the repo root. Moving it also means the SDK pin now applies from the root, which it previously did not.
-  - Test projects are now self-executing (`<OutputType>Exe</OutputType>`), as xunit v3 requires.
-  - Removed from every test project: `Microsoft.NET.Test.Sdk`, `xunit.runner.visualstudio` and `coverlet.collector`. All three are VSTest-specific and unused under MTP. Coverage now comes from `Microsoft.Testing.Extensions.CodeCoverage` 18.10.0, which also gave `DAL.IntegrationTests` coverage instrumentation it never had.
-  - Dropped the `System.Security.Cryptography.Xml` transitive pins from `API.Tests` and `ServerServices.Tests`. They existed to patch a vulnerable transitive dependency of `Microsoft.NET.Test.Sdk`; with the test SDK gone, nothing references that package any more (verified against `project.assets.json`), so the pins were dead references with misleading comments. `dotnet list package --vulnerable --include-transitive` remains clean.
-  - `MariaDbContainerFixture` updated for the v3 `IAsyncLifetime` contract, which returns `ValueTask` rather than `Task`.
-  - **xUnit's filter flags are not forwarded through `dotnet test`** — they silently match zero tests, so `--filter "Category!=Integration"` no longer works. Filtering is done by invoking the built test executable directly (`-class`, `-method`, `-trait-`). [CLAUDE.md](CLAUDE.md) documents the working recipes.
-  - `xUnit1051` is suppressed solution-wide in [src/Directory.Build.props](src/Directory.Build.props). The v3 analyzers advise threading `TestContext.Current.CancellationToken` through every call that accepts a `CancellationToken`; that is sound but it is an 83-call-site test refactor rather than part of this upgrade, and left unsuppressed it buried the 16 pre-existing real warnings. Wiring cancellation through the suite is follow-up work.
-
-- **Dependency refresh across the solution (patch/minor level only)**: brought the Microsoft-stack packages (EF Core, `Microsoft.Extensions.*`, `Microsoft.AspNetCore.Authentication.JwtBearer`, `System.Drawing.Common`) and `Mapster` from 10.0.7 to 10.0.11, `Serilog` 4.3.1 → 4.4.0, and the `dotnet-ef` tool manifest 10.0.9 → 10.0.11. Also `System.IdentityModel.Tokens.Jwt` 8.17.0 → 8.22.0, `BCrypt.Net-Next` 4.1.0 → 4.2.0, `BouncyCastle.Cryptography` 2.6.2 → 2.7.0, `MySqlConnector` 2.5.0 → 2.6.2, `MySqlBackup.NET.MySqlConnector` 2.7.0 → 2.7.1, `Hangfire` 1.8.23 → 1.8.24, `QuestPDF` 2026.6.0 → 2026.7.3, `ClosedXML` 0.105.0 → 0.105.1, `LiveChartsCore` 2.0.2 → 2.0.5 and `Microsoft.AspNetCore.Localization` 2.3.9 → 2.3.12. No behavioural change intended; full solution build and all 546 non-integration tests pass.
-- **`SkiaSharp` moved off a preview build**: `API` and `Tools` referenced 3.119.3-preview.1.1 because Avalonia.Skia 12.0.2 depended on a preview. Avalonia.Skia 12.0.5 and later depend on the stable 3.119.4, so both projects now reference **3.119.4** stable. Deliberately *not* moved to the 4.x line, which Avalonia 12 does not use.
-- **Avalonia updated 12.0.2 → 12.1.1** (`Avalonia.Controls.DataGrid` 12.0.0 → 12.1.2, `Avalonia.Skia` 12.0.2 → 12.1.1). Required raising the `Tmds.DBus.Protocol` transitive security pin from 0.92.0 to 0.94.2, because Avalonia 12.1.1 depends on >= 0.94.1 and the old pin would have downgraded it; 0.94.2 still satisfies the GHSA-xrw6-gwf8-vvr9 floor the pin exists to enforce. Avalonia 12.1 deprecated `Bitmap.Save(Stream, int?)`, so the four call sites in `GUIImageTools` and `AvaloniaToSkiaConverter` now pass `PngBitmapEncoderOptions.Default` — the exact equivalent of the previous default. GUI verified running: dashboard, charts and login dialog all render.
-- **ReactiveUI upgraded 23.2.19 → 24.1.0, `Splat` 19.3.1 → 21.0.0, `System.Reactive` 6.1.0 → 7.0.0, `ReactiveUI.Avalonia` 12.0.1 → 12.1.1.** This is a framework change, not a version bump: ReactiveUI 24 ships its own Rx primitives and renamed `System.Reactive.Unit` to `ReactiveUI.Primitives.RxVoid`, so `ReactiveCommand.Create(...)` now returns `ReactiveCommand<RxVoid, RxVoid>`. Ported **359 generic-argument sites across 46 files** in `GUIClient` and `AvaloniaExtraControls`. Notes on how it was done:
-  - `RxVoid` is imported with a **type-only using alias** (`using RxVoid = ReactiveUI.Primitives.RxVoid;`) rather than `using ReactiveUI.Primitives;`. A plain namespace import pulls in ReactiveUI's own `Subscribe`/`Select`/`Throttle` extension methods, which are ambiguous with `System.Reactive`'s and produced 46 `CS0121` errors. The alias keeps every existing Rx pipeline resolving to `System.Reactive` exactly as before, so operator and scheduler semantics are unchanged.
-  - ReactiveUI 24 no longer brings `System.Reactive` or `DynamicData` in transitively. Both are now explicit references in `GUIClient`: `System.Reactive` for `Observable`/`Subject`/`Throttle`, and `DynamicData` 9.4.33 purely for its Kernel extension methods (`IndexOf`, `AddRange`) used in `Program.cs`, `EditEntityDialogViewModel` and `VulnerabilitiesViewModel`. Nine other `using DynamicData;` imports were genuinely unused and were removed.
-  - The two deliberate `System.Reactive` uses in `AssessmentRunViewerViewModel` (`Subject<Unit>` / `Unit.Default`) are unchanged — only `ReactiveCommand` type arguments moved to `RxVoid`.
-  - `AvaloniaExtraControls` needed no `System.Reactive` reference afterwards; its only use was the now-removed `Unit`.
-  - Verified at runtime, not just at compile time. ReactiveUI 24 requires explicit initialization and throws from `WhenAnyValue` if it is missing; the existing `UseReactiveUI(_ => { })` in `Program.cs` does satisfy it under the real app lifecycle. Confirmed in the running app: `WhenAnyValue` chains, `RxVoid` command execution, `System.Reactive` `Subscribe` on ReactiveUI 24 command output, `ThrownExceptions.Subscribe`, and `canExecute` gated by an `IObservable<bool>` all behave correctly, with no unhandled exceptions.
-  - **Not covered by automated tests**: `GUIClient` view models have no test project, and the running-app check only reaches the dashboard and login window. The authenticated screens (assessments, incidents, vulnerabilities, reports, entity forms) were changed but not exercised.
-- **`Pomelo.EntityFrameworkCore.MySql` 10.0.0-rtm.1 → 10.0.0-rtm.3**. Verified against a real MariaDB container (all 23 `DAL.IntegrationTests` pass) and with the EF tooling (`migrationsList.sh` resolves the model and lists all 12 migrations).
-- **`YamlDotNet` 17.1.0 → 18.1.0** (`API`, `ServerServices`). The deserializer API used here (`DeserializerBuilder` / `WithNamingConvention` / `IgnoreUnmatchedProperties`) is unchanged. Covered by the 31 SchemaUpgrade tests, which include one that parses the real shipped `src/ConsoleClient/DB/SchemaUpgradePhases.yaml`.
-- **`Spectre.Console` 0.55.2 → 0.57.2** and `Spectre.Console.Cli.Extensions.DependencyInjection` 0.24.0 → 0.28.0. `Spectre.Console.Cli` **stays at 0.55.0** — that is still its latest stable release (the next one is `1.0.0-alpha`), and it floors at `Spectre.Console` >= 0.55.0 so it accepts 0.57.2. The DI extension 0.28.0 wants `Microsoft.Extensions.DependencyInjection` 10.0.11, which the Tier 1 bump already provides. CLI verified at runtime: root help plus the `database`, `database upgrade-schema` and `keys` subcommands all render.
-- **`Microsoft.ML.OnnxRuntime` 1.25.1 → 1.29.0** (`API`). Note this is inert: nothing in `API`, `ServerServices`, `Tools` or `Model` references ONNX at all — face embeddings are computed client-side in `GUIClient` (`AddFaceImageViewModel`, the only `FaceONNX` consumer), and the server side only does HMAC template anchoring via `BiometricTools`. See the note below.
-- **Nuke build stack updated**: `Nuke.Common` 9.0.4 → 10.1.0, `Microsoft.Build*` 17.14.28 → 18.9.6, `NuGet.Packaging` 6.14.3 → 7.9.0, `Tools.InnoSetup` 6.7.1 → 7.1.0. Nuke 10 removed `SolutionModelTasks.ParseSolution`, so `build/Build.cs` now uses the replacement `AbsolutePath.ReadSolution()` extension. Verified by running the `Usage`, `Restore` and `CompileApi` targets — the last one exercises `Solution.GetProject(...)`, so the parsed solution model is confirmed working, not just compiling.
+- Upgrade the five `libs/` submodules and reattach three detached HEADs to their tracking branches
+- Migrate the test suite from xUnit v2 to xUnit v3 on Microsoft.Testing.Platform across all five test projects
+- Refresh dependencies across the solution at patch/minor level (EF Core, Microsoft.Extensions.*, Serilog, and others)
+- Move `SkiaSharp` off a preview build onto the stable 3.119.4 release
+- Upgrade Avalonia 12.0.2 → 12.1.1 and ReactiveUI 23.2.19 → 24.1.0, porting 359 generic-argument sites to `RxVoid`
+- Replace the deprecated `Serilog.Sinks.RollingFile` with `Serilog.Sinks.File`, giving the desktop client real daily log rolling
 
 ### Fixed
-
-- **The desktop client's validation had been dead since February 2026.** `GUIClient/Validation/ValidationExtensions.cs` was a stub: `ValidationRule(...)` returned `Disposable.Empty` and `IsValid()` returned `Observable.Return(true)`. `ReactiveUI.Validation` had been dropped in commit `4c4abaa5` ("Fix Avalonia ReactiveUI startup") and replaced with these no-ops to keep the tree compiling, so for six months **not one** of the ~40 `ValidationRule`s declared across 15 view-models gated anything — every `SaveEnabled`/`CanSave` flag driven by `IsValid()` was permanently true. The July 2026 UX study recorded this as "validation is invisible"; it was in fact absent.
-  - Replaced with an in-tree `ValidationContext` (rather than the package, which has not been rebuilt against ReactiveUI 24). It keeps the same declaration surface — existing `this.ValidationRule(...)` / `this.IsValid()` call sites are unchanged — and additionally exposes the failing rules' text, which is what the new disabled-Save tooltips and inline error summaries bind to. Rules fail closed: a rule that has not produced a value yet counts as invalid, and a predicate that throws counts as invalid rather than tearing down the rule.
-  - **This is a behaviour change, not a pure refactor.** Dialogs whose rules genuinely fail will now disable Save where they previously did not — *including on legacy records that do not satisfy the rules*, for example an existing host stored without a valid FQDN or IP. That is the intended behaviour of the rules as written, but it is worth knowing before the release.
-  - Two view-models declared a local `IsBusy` that shadowed the new base-class one; both now use the base property. `ChangePasswordDialog`'s confirmation rule only re-evaluated when the confirmation box changed, so typing the password *after* the confirmation left a stale result — it now watches both fields.
-
-- **Stale `NU1608` suppression rationale in `src/Directory.Build.props`**: the comment justified the solution-wide suppression partly by Pomelo.EntityFrameworkCore.MySql pinning EF Core Relational to 9.x. `DAL` now uses Pomelo 10.0.0-rtm.1, which allows `[10.0.0, 10.0.999]` and therefore accepts the EF Core 10.0.x the solution resolves. Verified by restoring with the suppression lifted: the only remaining `NU1608` is the legacy jQuery.UI.Core 1.8.9 / jQuery 3.7.1 pairing in `WebSite`. The suppression is still needed, but only for that reason; the comment now says so.
-- **Stale `SQLitePCLRaw` pin comment in `WebSiteData`**: it described EF Core Sqlite 10.0.7 pulling `SQLitePCLRaw` 2.1.11. After the EF bump, 10.0.11 pulls 2.1.12, which already bundles SQLite 3.53.3 (verified from the packaged native library) — past the 3.50.2 fix for GHSA-2m69-gcr7-jv3q. The 2.1.13 pin is kept deliberately one patch ahead but is no longer load-bearing for the advisory, and the comment now records that.
-
-- **Every database operation failed with a `NullReferenceException` because the EF model could not be built**: `ProcessedSyncAction.ClientActionId` (added with the website sync feature) was mapped with `HasColumnType("char(36)")`. Because a `string` is an `IEnumerable<char>`, an explicit `char(n)` store type makes EF Core 10 route the property through primitive-collection mapping, where the missing `char` element mapping throws inside `RelationalTypeMappingSource.FindCollectionMapping` and aborts model finalization. Since `DALService.GetContext()` builds `NRDbContext` with the MySQL provider, this broke the API, BackgroundJobs and ConsoleClient on their first DB access — not just tests. Now expressed as `HasMaxLength(36).IsFixedLength()`, which resolves to the **same `char(36)` column** (no schema change) without tripping the collection path. Reproduced against EF Core 10.0.7 and 10.0.11 and Pomelo 10.0.0-rtm.1 and rtm.3 — no version upgrade avoids it, so the mapping had to change. The model snapshot and the `AddProcessedSyncActions` designer model were updated to match, restoring `dotnet ef` tooling. `Guid` properties mapped to `char(36)` are unaffected.
-- **`ServerServices.Tests` could not construct `IncidentsService`**: the service took an `IIrpAutomationService` constructor dependency that was never registered in the test DI container, so all four `IncidentsServiceTest` cases failed at construction. Registered it in `ServerServices.Tests.DI.ServiceRegistration` alongside the other incident services, matching `InMemoryServiceTestBase`.
-- **High-severity DoS vulnerabilities in the transitive `System.Security.Cryptography.Xml` dependency**: crafted encrypted XML could cause uncontrolled resource consumption (GHSA-8q5v-6pqq-x66h / CVE-2026-50525 and GHSA-cvvh-rhrc-wg4q / CVE-2026-47302, both CVSS 7.5, fixed upstream in 10.0.10). Bumped the existing transitive pins from 10.0.7 to 10.0.11 in `API.Tests` and `ServerServices.Tests`, and from 10.0.8 to 10.0.11 in the Nuke `build` project.
-- **High-severity memory-corruption vulnerability in the SQLite native library used by the website's local database** (GHSA-2m69-gcr7-jv3q / CVE-2025-6965, CVSS 7.2): EF Core Sqlite 10.0.7 pulls `SQLitePCLRaw` 2.1.11, which bundles a SQLite older than the 3.50.2 fix. Added a transitive pin for `SQLitePCLRaw.bundle_e_sqlite3` 2.1.13 (bundles SQLite 3.53.3) in `WebSiteData`; it flows to `WebSite` via the project reference. Pinning the bundle rather than just the native lib keeps the native library, providers and core in lockstep.
-- **High-severity path-traversal vulnerability in `SSH.NET`** (GHSA-q939-rpr3-3284 / CVE-2026-48798, CVSS 7.1): `ScpClient`'s recursive download did not validate server-supplied filenames, so a malicious SCP server could write outside the target directory. Bumped `Testcontainers.MariaDb` from 4.6.0 to 4.14.0 in `DAL.IntegrationTests`, which depends on the fixed `SSH.NET` 2026.0.0, and moved the container image to the non-obsolete `MariaDbBuilder("mariadb:10.11")` constructor form the newer version requires.
-
-
+- Replace the desktop client's stubbed validation layer, dead since a February 2026 regression, with an in-tree ValidationContext (T22)
+- Change `ProcessedSyncAction.ClientActionId`'s mapping to avoid EF Core 10's char-collection NullReferenceException
+- Register `IIrpAutomationService` in the ServerServices test container so `IncidentsService` can be constructed
+- Bump the transitive `System.Security.Cryptography.Xml`, `SQLitePCLRaw.bundle_e_sqlite3` and `SSH.NET` dependencies for CVE-2026-50525, CVE-2026-47302, CVE-2025-6965 and CVE-2026-48798
 
 ## [2.14.2] - 2026-06-25
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Operation buttons with text labels rendered as clipped squares**: the `Button.operation` style hard-coded a fixed 25×25 size, which is correct for icon-only buttons but clipped buttons that carry a label — the System Configurations *Save* button showed a single glyph instead of "Salvar", and the Users window Save / Change Password / Add Face / Save Profile / Save Team buttons collapsed to a bare icon with no caption. Changed the fixed `Width`/`Height` to `MinWidth`/`MinHeight` so labeled buttons grow to fit their content while icon-only buttons keep their 25×25 size. (`src/GUIClient/Styles/WindowStyles.axaml`)
-
-
+- Let labelled operation buttons grow to fit their content instead of clipping to a fixed 25×25 size
 
 ## [2.14.1] - 2026-06-25
 
-This release includes new features and improvements.
-
-### Added
-
-### Changed
-
 ### Fixed
-
-- **Admin window navigation icons rendered as clipped slivers**: the `Button.navigation` style (top-right Users/Devices/Configuration/Plugins toolbar in the Admin window) forced a 20×20 size while keeping the Fluent theme's default button padding and never sizing the icon, so the 24px `MaterialIcon` was squeezed into a near-zero content area and showed as a thin vertical bar. Zeroed the padding, centered the content, and sized the nav-button icon to 16×16 — mirroring the working `subButton` pattern. (`src/GUIClient/Styles/WindowStyles.axaml`)
-
-
+- Zero the padding and size the icon on the admin navigation buttons, fixing a clipped-sliver rendering
 
 ## [2.14.0] - 2026-06-18
 
-This release includes new features and improvements.
-
 ### Added
-- **Website decoupled from the main database via signed periodic sync**: the public WebSite no longer connects to MySQL/MariaDB. It now uses a local SQLite store and exposes signed `/sync` endpoints; the server (BackgroundJobs/Hangfire) periodically pushes the display data the site needs and pulls back visitor actions (fix reports, comments, password changes, link deletes, IRP task outcomes) to apply them via the existing services. Authentication uses ECDSA P-256 request signatures with one-time (TOFU) public-key enrollment. (`SyncContracts`, `WebSiteData`, `WebSite/Controllers/SyncController`, `ServerServices` `SyncKeyService`/`SyncClient`/`SyncPushBuilder`/`SyncIngestService`, `BackgroundJobs` `SyncBulkJob`/`SyncFastJob`)
-- **`netrisk-console keys` and `website` commands**: `keys create`/`rotate`/`show` manage the server's sync signing keypair (persisted under the server app-data folder); `website enroll --url` installs the public key on a website (TOFU). (`ConsoleClient`)
-- **Configurable website sync intervals in the GUI**: System Configurations now has Website URL, bulk sync interval (default 60 min) and fast-lane interval (default 2 min) for the security-sensitive path (password-reset links, password changes). (`ConfigurationView`, `ConfigurationsController` `WebsiteSync`)
-- **`processed_sync_actions` table** (db_version 75): idempotency ledger so website-originated actions apply exactly once under at-least-once delivery.
-
-### Changed
-- **`IIncidentResponsePlansService.ChangeExecutionTaskSatusByIdAsync`** gained an overload taking the visitor's action time, so a task execution's duration reflects when the user acted rather than the (later) sync-apply time.
-
-### Fixed
-
-
+- Decouple the public WebSite from the main database via a local SQLite store and a signed, ECDSA-authenticated periodic `/sync` (S37)
+- Add `netrisk-console keys` and `website enroll` commands to manage the sync signing keypair and TOFU-enroll a site
+- Add configurable website sync intervals, including a fast lane for password-reset-sensitive actions
+- Add the `processed_sync_actions` idempotency ledger (db_version 75)
 
 ## [2.13.4] - 2026-06-18
 
-This release includes new features and improvements.
-
 ### Added
-- **Assessment template import now carries answer options**: the JSON and Excel import formats support per-question answer options, and the importer persists them. JSON gains an `Answers` array (`Answer`, `Order`, `RiskScore`, `SubmitRisk`, `RiskSubject`) per question; Excel gains an optional **Answers** column (pipe-separated options). The import preview now also reports the answer-option count. (`ImportsService`, `AssessmentImportPreview`)
-
-### Changed
-- **Bundled NIST CSF 2.0 and ISO/IEC 27001:2022 starter templates now ship with answer options**: each question carries an implementation-status scale (Not / Partially / Largely / Fully implemented, Not applicable) so an imported assessment is immediately answerable in the run viewer instead of showing empty dropdowns.
+- Support per-question answer options in JSON and Excel assessment template imports (T33)
 
 ### Fixed
-- **NIST and ISO assessment imports were not bringing the answers**: imported assessments had empty answer dropdowns in the Assessment Run Viewer because `ImportsService` only persisted questions and the bundled templates contained no answer options. The importer now persists answer options and the templates include them. (`ImportsService.PersistAsync`, `nist-csf-2.0.json`, `iso-27001-2022-annex-a.json`)
-
-
+- Persist the bundled NIST CSF 2.0 and ISO 27001:2022 starter templates' answer options, which had been imported as empty dropdowns (T33)
 
 ## [2.13.3] - 2026-06-18
 
-This release includes new features and improvements.
-
-### Added
-
 ### Changed
-- **Editing an assessment execution now uses the paged run viewer too (GUIClient)**: the Edit flow still showed the old flat grid of all questions with inline answer combo-boxes (the last place the non-paged layout survived). Editing is now consistent with creating/answering — a slim metadata step (Entity / Host / Comments) followed by the same paged **Assessment Run Viewer** (page-by-page navigation, progress bar, auto-saved drafts, and Submit/Enviar on the Review page). The in-dialog question grid, its Commit button and the now-dead answer-selection plumbing were removed. (`AssessmentRunDialog.axaml`, `AssessmentRunDialogViewModel`, `AssessmentsRunsListViewModel`)
-
-### Fixed
-
-
+- Route editing an assessment execution through the paged run viewer too, retiring the last flat-grid answer editor (T31)
 
 ## [2.13.2] - 2026-06-18
 
 ### Added
-- **Questionnaire preview in the assessment builder (GUIClient)**: a **Pré-visualizar / Preview** button in the builder toolbar opens the paged run viewer in a read/answer-only preview mode, so authors can see exactly how the questionnaire will render to a respondent (pages, explanations, answer options, conditional show/hide) without creating a real execution or persisting anything. (`AssessmentBuilderView.axaml`, `AssessmentBuilderViewModel`, `AssessmentRunViewerParameter`, `AssessmentRunViewerViewModel`)
+- Add a read-only preview mode to the assessment builder so authors can see the run viewer's rendering before publishing (T31)
 
 ### Changed
-- **New assessment executions now use the paged run viewer (GUIClient)**: creating a new execution previously used a single flat grid of all questions. The flow is now a slim metadata step (Entity / Host / Comments) that creates the run, followed by the same paged **Assessment Run Viewer** used for viewing/answering — page-by-page navigation, progress bar, auto-saved drafts and a **Submit (Enviar)** action on the Review page that commits the run and creates vulnerabilities from high-risk answers. The flat question grid now appears only when editing an existing run. (`AssessmentRunDialog.axaml`, `AssessmentRunDialogViewModel`, `AssessmentRunViewer.axaml`, `AssessmentRunViewerViewModel`, `AssessmentsRunsListViewModel`)
-- **Redesigned assessment questionnaire builder (GUIClient)**: the Questions tab's grid + modal-dialog authoring flow was replaced with an inline, single-column **card canvas** modeled on modern form builders (Google Forms / Jotform). Each question is a card showing a page badge and indicators; clicking **Edit** expands an in-place editor — no modal — with question text, **Page**/**Order**, a rich-text **Explanation** field with a live Markdown preview pane, inline **answer options** (text + risk score + subject, add/remove), and a structured **show/hide rule** ("Show this question only if [question] [equals / is one of / is answered] [value]") built with dropdowns instead of raw JSON. Cards are grouped/ordered by page with **move up/down** reordering, and there are **Add question** / **Add page** actions. This makes the multi-page, conditional, rich-text capabilities authorable directly (previously only reachable via import). (`AssessmentBuilderViewModel`, `AssessmentQuestionCardViewModel`, `AssessmentAnswerEditViewModel`, `AssessmentBuilderView.axaml`, `AssessmentView.axaml`)
+- Route new assessment executions through the paged run viewer with auto-saved drafts and a Submit action (T31, T32)
+- Redesign the assessment questionnaire builder as an inline card canvas with structured show/hide rules (T31)
 
 ### Fixed
-- **User Info dialog showed a clipped logout button and a stale version (GUIClient)**: the "Logout and Quit / Descontectar e Fechar" button reused the fixed 25×25 icon-only `operation` style, so its label was clipped to a single character; it is now an auto-sizing labelled button. (`UserInfo.axaml`)
-- **Product version is now a single source of truth and bumps automatically (build)**: `AssemblyVersion`/`FileVersion` were hardcoded (and drifted to `2.4.5`) in all 16 project files, so a plain `dotnet run` reported the wrong version in the User Info dialog. The version now lives once in `src/Directory.Build.props` and every project inherits it. The Nuke `Bump`/`BumpMajor`/`BumpMinor`/`BumpPatch` targets rewrite that single file, and the changelog bump now also recognises the `[NEXT]` unreleased placeholder (previously it only matched a numeric `[x.y.z]`, which is why releases had to be hand-edited and left the project versions behind). (`src/Directory.Build.props`, all `*.csproj`, `build/Build.cs`)
-- **Assessment builder editor layout fixes (GUIClient)**: the inline "Add answer option" button reused the fixed-width icon-only `subButton` style, so its label was clipped to "+ A"; it is now an auto-sizing labelled button. The answer-option **Risk** numeric field sat in a too-narrow column where its value was hidden behind the spinner arrows; the column was widened and the answer rows now have **Answer / Risk / Subject** column headers. (`AssessmentBuilderView.axaml`, `AssessmentQuestionCardViewModel`)
-- **Assessment pages, order and rich-text explanation are now editable when authoring questions (GUIClient)**: previously `PageNumber`, `Order` and `ExplanationMarkdown` could only be set by importing a template, so manually-created questions all landed on page 1 and the multi-page experience only appeared for imported assessments. The Add/Edit Question dialog now has **Page**, **Order** and **Explanation (Markdown)** fields, the Questions list shows a **Page** column and is ordered by page then order, and the run viewer ("application") consequently renders the real page structure. (`AssessmentQuestionViewModel`, `AssessmentQuestionView.axaml`, `AssessmentViewModel`, `AssessmentView.axaml`)
+- Auto-size the User Info dialog's logout button instead of clipping its label
+- Make the product version a single source of truth in Directory.Build.props instead of sixteen hard-coded project files
+- Widen the assessment builder's answer-option Risk field and auto-size its Add button
+- Make assessment page, order and rich-text explanation editable when authoring questions manually (T31)
 
 ## [2.13.1] - 2026-06-17
 
 ### Fixed
-- **`ServerServices.Tests` no longer fails to compile**: `ServiceBehaviorInMemoryTest` constructed `ReportsService` with the old three-argument signature after the QuestPDF rendering dependency was added; it now resolves the already-registered `IQuestPdfRenderingService` from the test DI container, so the whole test project (including the assessment dry-run import tests) builds and runs again. (`ServiceBehaviorInMemoryTest`)
+- Resolve `IQuestPdfRenderingService` from the test DI container so `ServerServices.Tests` builds again
 
 ## [2.13.0] - 2026-06-17
 
 ### Added
-- **Interactive paged assessment-run viewer (GUIClient)** — completes Milestone 2.2: opening a run now launches a dedicated viewer with a left-rail page list (per-page completion state), previous/next navigation, and a final review page that lists unanswered required questions with jump-to-page links. Each question renders its rich-text `ExplanationMarkdown` help (via a new lightweight `MarkdownPresenter` control), nested sub-questions are indented, and answers are picked from the question's predefined options. Conditional show/hide is enforced server-side — the viewer fetches each page's visible questions through `GET /Assessments/runs/{runId}/pages/{pageNumber}/questions` and re-evaluates after every save. Draft answers auto-save with a ~2s debounce (`PATCH /Assessments/runs/{runId}/answers`), show a "saved at HH:mm" indicator, drive a live progress bar, and resume at the last page on reopen (`GET …/answers/draft`). Submitted runs open read-only. (`AssessmentRunViewerViewModel`, `AssessmentRunQuestionViewModel`, `AssessmentRunPageViewModel`, `AssessmentRunViewer.axaml`, `MarkdownPresenter`)
-- **Assessment template import dialog with dry-run validation (GUIClient + server)**: an "Import template" button on the Assessments view opens a dialog to pick a JSON or Excel (`.xlsx`) template. The dialog **dry-runs first** — it calls a new `POST /Imports/assessment/preview` endpoint that validates the file and returns a summary (page/question counts, warnings, and row-level errors) **without writing anything**; the Import button stays disabled until the preview is valid. Invalid files import nothing and show row-level reasons. On confirm, the same file is committed via `POST /Imports/assessment`. (`AssessmentImportDialogViewModel`, `AssessmentImportDialog.axaml`, `ImportsController.PreviewAssessment`, `ImportsService`, `AssessmentImportPreview`)
-- **Bundled assessment starter packs (GUIClient)**: the import dialog offers one-click **NIST CSF 2.0** and **ISO/IEC 27001:2022 Annex A** question sets (paged, with rich-text explanations), shipped as Avalonia assets under `Assets/AssessmentTemplates/`. Questions are paraphrased from the control outcomes (not reproduced verbatim) and serve as scaffolds — answer options are added afterward in the Questions tab. (`nist-csf-2.0.json`, `iso-27001-2022-annex-a.json`)
-- **Dry-run validation in the import service (server)**: `IImportsService` gained `PreviewAssessmentFromJsonAsync`/`PreviewAssessmentFromExcelAsync`; parsing/validation is now shared between preview and commit, and committing an invalid template throws before any DB write (so invalid files import nothing). Covered by new `ImportsServiceInMemoryTest` cases. (`ImportsService`, `IImportsService`)
-- **ClientServices REST methods for the assessment workflow**: `GetVisibleQuestionsForPageAsync`, `GetDraftAnswersAsync`, `SaveDraftAnswerAsync`, `PreviewTemplateAsync` and `ImportTemplateAsync` were added to `IAssessmentsService`/`AssessmentsRestService` to back the viewer and import dialog. (`AssessmentsRestService`)
-- **File reports can now be generated from report templates (GUIClient + server)**: the "Create Report" dialog's report-type dropdown now lists every report template alongside the two built-in reports, so a template-based PDF can be produced as a regular file report (not only as a scheduled email export). Picking a template creates a report whose parameters carry the template id; the server renders the latest template version through the QuestPDF engine (same data source as scheduled exports) and stores the resulting PDF. (`CreateReportDialogViewModel`, `ReportTypeOption`, `ReportDialogResult`, `FileReportsViewModel`, `ReportParameters`, `ReportsService`)
+- Add an interactive paged assessment-run viewer with server-enforced conditional show/hide and auto-saved drafts, completing Milestone 2.2 (T31, T32, T34)
+- Add an assessment template import dialog with dry-run preview validation for JSON and Excel (T33, T34)
+- Bundle NIST CSF 2.0 and ISO/IEC 27001:2022 Annex A starter assessment templates (T33)
+- Generate file reports directly from report templates, not only as scheduled email exports (T27)
 
 ### Changed
-- **"Create Report" dialog restyled to the standard dialog visual identity (GUIClient)**: centered content, centered button bar with `IsDefault` on Create, a named window and consistent margins — matching the other edit dialogs (e.g. `EditEntityDialog`) instead of its bespoke left-aligned layout. (`CreateReportDialog.axaml`)
+- Restyle the Create Report dialog to the standard dialog visual identity
 
 ## [2.12.8] - 2026-06-17
 
 ### Changed
-- **Report Template / Schedule Manager windows now follow the standard master/detail schema (GUIClient)**: the two manager windows were rebuilt to use the same layout and styling as the rest of the app (e.g. `IncidentsView`) instead of their bespoke schema — a `header`/`header2` title and section headers, a bottom control bar of `subButton`/`type2`/`type3` action buttons (Create/Update/Test/Delete) in place of the top `toolbar` border, a `GridSplitter` between list and detail, a `form_label` + `form_text2`/`form_long_text` detail grid (guarded by selection), dates rendered through `DateToFormatedStringConverter`, and the standard `footer`. (`ReportTemplateManagerWindow.axaml`, `ReportScheduleManagerWindow.axaml`)
+- Rebuild the Report Template and Schedule Manager windows onto the standard master/detail layout (T30)
 
 ### Fixed
-- **Nullable-safety in the report manager view-models (GUIClient)**: `SelectedTemplate`/`SelectedSchedule` are now nullable and the Update/Delete/Test commands no-op when nothing is selected, avoiding a null-dereference on an empty selection. (`ReportTemplateManagerViewModel`, `ReportScheduleManagerViewModel`)
-- **Deprecated `Watermark` replaced with `PlaceholderText` on `TextBox` (GUIClient)**: in the Edit Report Schedule dialog and the Risks panel filter. Dialog-result DTOs for report template/schedule editing now default their string properties to `string.Empty`. (`EditReportScheduleDialog.axaml`, `RisksPanelView.axaml`, `EditReportTemplateDialogResult`, `EditReportScheduleDialogResult`)
+- Make the report manager selections nullable so Update/Delete/Test no-op instead of null-dereferencing
+- Replace the deprecated `Watermark` property with `PlaceholderText` on two remaining TextBoxes
 
 ## [2.12.7] - 2026-06-17
 
 ### Fixed
-- **Could not select a version in the Edit Report Schedule dialog (GUIClient)**: the dialog populates the "Versão" dropdown from the selected template's `Versions` navigation collection, but `GET /ReportTemplates` only eager-loaded `Owner`, so every template arrived with an empty `Versions` collection and the dropdown was always empty (leaving Save disabled). The endpoint now `.Include(t => t.Versions)` like `GetById` already did. (`ReportTemplatesController.GetAll`)
+- Eager-load report template versions on `GET /ReportTemplates` so the schedule dialog's version dropdown is no longer always empty
 
 ## [2.12.6] - 2026-06-17
 
 ### Fixed
-- **Creating a child entity type (e.g. `organizationUnit`) failed with a server 500 instead of validation (GUIClient)**: definitions that require a parent (a mandatory property whose default value is the `"Parent"` sentinel) were submitted without a parent, and the server rejected them with `Parent is required` surfaced only as a generic `InternalServerError`. The add-entity flow now validates up front and shows a clear "select a parent entity" message (new `ParentRequiredMSG` localization) instead of committing.
-- **Assessment run could not be saved — "Could not parse entity id from selection:" (GUIClient)**: the Entity `AutoCompleteBox` in the assessment-run dialog was missing its `SelectedItem` binding (the Host box had one), so the selected entity never reached `SelectedEntityName`. Saving then failed to parse the (empty) entity. Added `SelectedItem="{Binding SelectedEntityName}"`.
-- **Opening dialogs crashed with "No service for type … has been registered" (GUIClient)**: a startup refactor switched `DialogService` to resolve dialog view-models from the DI container (`Program.ServiceProvider.GetRequiredService`) instead of instantiating them reflectively, but the dialog view-models were never registered. This crashed core flows such as **adding an entity** (`EditEntityDialogViewModel`) and the Reports **"+"** button (`CreateReportDialogViewModel`), among others. `GeneralServicesBootstrapper` now registers **every** concrete `DialogViewModelBase<>`-derived view-model by reflection, so all dialogs resolve (and future ones are covered automatically).
-- **Report Template / Schedule Manager windows didn't follow the platform visual identity (GUIClient)**: the two manager windows rendered raw, unstyled Avalonia controls (plain grey buttons, no theming) against the dark app. They now match the rest of the GUI — a themed toolbar with Material icon buttons and tooltips, styled section headers (`header`/`header2`), a labelled detail panel (`label`/`formData`), and a footer bar. (`ReportTemplateManagerWindow.axaml`, `ReportScheduleManagerWindow.axaml`)
+- Validate a required-parent entity definition client-side instead of surfacing the server's rejection as a generic 500
+- Bind the assessment-run dialog's entity AutoCompleteBox's SelectedItem, fixing "Could not parse entity id from selection"
+- Register every DialogViewModelBase-derived view-model by reflection, fixing dialogs that crashed with a missing DI registration
+- Restyle the Report Template and Schedule Manager windows onto the app's visual identity instead of raw unstyled controls
 
 ## [2.12.5] - 2026-06-17
 
 ### Added
-- **Report-template designer (GUIClient)**: the template editor is no longer a raw-JSON form. It now has a structured section editor (add / remove / reorder Title, Text and Table sections), branding controls (primary/secondary color with live swatches, font, and logo upload), a **"New from preset"** picker shipping three built-in starters (Executive Risk Summary, Vulnerability Posture, Incident Review), a **"Save as copy"** action, and a **live rendered PDF preview** pane. Preview is served by a new `POST /ReportTemplates/preview` endpoint that renders the first page to a PNG with sample data via `QuestPdfRenderingService.RenderPreviewImageAsync` (exposed client-side through `IReportTemplatesService.RenderPreviewAsync`).
-- **Scheduled-export configuration screen (GUIClient)**: the schedule editor replaces the raw cron string and recipients-JSON textboxes with a frequency builder (Daily / Weekly / Monthly + time + day + timezone, compiled to/parsed from a 5-field cron) and a recipient-list editor. The schedule manager list now surfaces each schedule's **last run time and status**, and a test run refreshes that status.
-- **Export actions on the Reports views (GUIClient)**: the Risk Review table and the Risks-vs-Costs, Impact-vs-Probability, Entities-Risks and Vulnerabilities-by-Time charts gained an **Export** button. Export is client-side ("what you see is what you export") to CSV (UTF-8 BOM, formula-injection-escaped) and typed Excel (ClosedXML) via the new `Tools.GridDataExporter` helper.
+- Add a structured report-template designer with branding, presets and a live rendered PDF preview (T27, T30)
+- Add a scheduled-export frequency builder and last-run status to the schedule manager (T28, T30)
+- Add client-side CSV and Excel export actions to the Reports views (T29)
 
 ## [2.12.4] - 2026-06-17
 
 ### Changed
-- **GUIClient export controls**: replaced the separate PDF/CSV/Excel toolbar buttons on the Risks, Vulnerabilities, Hosts, and Incidents views with a single **Export** button that opens a modal dialog to pick the format. The export icon buttons also now follow the standard view toolbar look-and-feel (previously the Incidents/Hosts export buttons rendered as default unstyled buttons). Format selection lives in the shared `Tools.ExportFileSaver.PickFormatAsync` helper.
+- Replace the separate PDF/CSV/Excel toolbar buttons with a single Export dialog on the Risks, Vulnerabilities, Hosts and Incidents views (T29)
 
 ### Fixed
-- **Unreadable PDF exports with many columns**: the default report layout dumped every entity property into a portrait A4 grid, squeezing ~28 columns into slivers that wrapped one character at a time. PDF reports now render in **landscape**, column headers are humanized (`ReportedByEntity` → `Reported By Entity`) so they wrap on word boundaries, and when a report has more columns than fit a readable grid (> 9) it automatically switches to a per-record **card layout** (label/value pairs, two per row) instead of an unreadable wide table. Narrow, column-selected templates keep the grid. (`QuestPdfRenderingService`)
-- **GUIClient crash when saving with a malformed entity/host selection**: clicking **Save** in the assessment-run dialog threw `IndexOutOfRangeException` (crashing the whole app) when the entity field didn't contain the expected `Name (id)` format. Hardened the `Name (id)` parsing behind a shared, exception-free `Tools.String.LabelIdParser` helper and applied it across all affected GUI editors (assessment run, edit vulnerability, edit risk, entities-risks report, entity form) — invalid selections now log and abort gracefully instead of crashing, and names that themselves contain parentheses are parsed correctly.
+- Render wide PDF reports in landscape with humanized headers, switching to a card layout past nine columns
+- Parse "Name (id)" selections through a shared, exception-free helper instead of crashing on a malformed selection
 
 ## [2.12.3] - 2026-06-17
 
 ### Added
-- Implemented the GUI for the Advanced Reporting Engine, including:
-  - A report-template designer to create, update, and delete report templates.
-  - A scheduled-export configuration screen to manage scheduled reports.
-  - PDF, CSV, and Excel export actions on the Risks, Vulnerabilities, Hosts, and Incidents views.
+- Add the report-template designer, scheduled-export screen and PDF/CSV/Excel export actions to the GUI (T30)
 
 ## [2.12.2] - 2026-06-16
 
 ### Fixed
-- **GUIClient assessment question editor**: corrected the window layout (fixed oversized/empty window, stretched the question box and reworked the answer-edit row so inputs and action buttons align), added hover tooltips to all answer/question buttons, and made **Guardar** commit an answer still being edited in the side fields before saving — previously that in-progress edit was silently discarded.
-- **GUIClient assessment questions grid**: top-aligned the `ID` and `Ações` columns so their cells line up (the question text was bottom-aligned while the ID was centered).
-- **GUIClient incident response plan window**: the per-attachment Download/Delete buttons rendered as blank squares because their icons had no explicit size inside the small buttons — sized the icons, enlarged the buttons, and added Download/Delete/Add tooltips.
-- **GUIClient mitigation and management-review editors**: fixed both window layouts — replaced the contradictory `SizeToContent.WidthAndHeight` + fixed size with height-to-content sizing, stretched the right-hand text fields so they no longer overflow the window edge, removed the dead space at the bottom, and made the Save/Cancel buttons span a visible bottom row.
+- Fix the assessment question editor's layout and make Save commit an in-progress answer edit instead of discarding it
+- Top-align the assessment questions grid's ID and Actions columns
+- Size the IRP window's attachment Download/Delete icons instead of rendering blank squares
+- Fix the mitigation and management-review editor window layouts
 
 ## [2.12.1] - 2026-06-16
 
 ### Fixed
-- Authentication crashed for every user (`Table 'netrisk.user_entity_roles' doesn't exist`) because the multi-entity scoped roles feature shipped in 2.11.0 without its database migration. Added the missing migration `AddUserEntityRoles` and the corresponding numbered SQL (`DB/Structure/74.sql` + `DB/Data/74.sql`, `targetVersion` → 74), which also creates the other drifted tables/columns introduced alongside it (Reports redesign, IRP templates, assessment-run answers and `entity_id` scoping columns).
+- Add the missing `AddUserEntityRoles` migration and numbered SQL (db_version 74) that 2.11.0's scoped roles shipped without
 
 ## [2.12.0] - 2026-06-15
 
 ### Added
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.4 (Incident Response Automation - IRP)**: Implemented customizable Incident Response Plan (IRP) templates and automated task compilation/assignee notifications matching SOAR playbooks.
-  - Created `IrpTemplate` and `IrpTemplateTask` database models under `DAL`, mapped via Fluent API configurations in `NRDbContext` with cascade deletion rules.
-  - Implemented the `IrpAutomationService` workflow matching engine to automatically instantiate IRPs and tasks from blueprints when a matching incident is created.
-  - Added support for dynamic relative due date offsets (e.g. T+4h) and human-in-the-loop task approval gates (`requires_confirmation` status proposed).
-  - Integrated the automation trigger directly inside the `IncidentsService.CreateAsync` pipeline with non-conflicting DbContext scoping.
-  - Created the REST-compliant `IrpTemplatesController` exposing `/IrpTemplates` CRUD endpoints.
-  - Added full test coverage in `IrpAutomationServiceInMemoryTest` achieving 100% success.
+- Add customizable Incident Response Plan templates with automated task generation and assignee notifications (T39, T40)
 
 ## [2.11.0] - 2026-06-15
 
 ### Added
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.3 (Multi-Entity & Multi-Tenant Support)**: Implemented data segregation by "Business Entity" and enforced role-based scoped access (RBAC) across assets, risks, and vulnerabilities.
-  - Added `EntityId` FKs and navigations to core entities `Risk`, `Host`, `Incident`, and `Assessment` under `DAL` (where `Vulnerability` already has `EntityId`), mapped via Fluent API configurations in `NRDbContext`.
-  - Created the `UserEntityRole` model to link users, entities, and roles, supporting active audit soft-deletion (`revoked_at` column).
-  - Extended the authentication handlers `JwtAuthenticationHandler` and `BasicAuthenticationHandler` to query active user-entity assignments and inject them as `entity_id` and `scope` claims.
-  - Developed the generic static helper `ApplyEntityScope` under `ServerServices` to dynamically filter queryable datasets based on user claims.
-  - Integrated dynamic scoping directly into `RisksService` (including `GetAllAsync` and `GetUserRisks` sync query) to restrict dataset visibility at the service layer.
-  - Created `UserAccessController` to manage user-entity-role assignments (Get, Assign, Revoke).
-  - Added full integration test coverage in `MultiEntityScopedAccessTest` verifying user-scoped isolation and global admin bypass with 100% success.
+- Add multi-entity and multi-tenant scoping: business-entity segregation and role-based scoped access (T35, T36)
+  - note: this initial pass was corrected in 2.16.0 after `ApplyEntityScope` was found to filter nothing (T35)
 
 ## [2.10.0] - 2026-06-15
 
 ### Added
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.2 (Enhanced Assessments Workflow)**: Implemented the backend database structures, visibility algorithms, auto-saving logic, and external template parsers for GRC assessments.
-  - Extended `AssessmentQuestion` with ParentQuestionId (nesting), PageNumber (pagination), ConditionJson (rules), and ExplanationMarkdown (help text).
-  - Extended `AssessmentRun` with ProgressPercentage and CurrentPageIndex.
-  - Created the `AssessmentRunAnswer` model under `DAL` to support saving in-progress draft responses.
-  - Implemented the on-the-fly conditional evaluation algorithm `GetVisibleQuestionsForPageAsync` inside `AssessmentsService` supporting 'equals', 'notempty', and 'in' logic operators.
-  - Implemented `SaveDraftAnswerAsync` to securely upsert in-progress user responses.
-  - Developed `ImportsService` supporting template importing from standard JSON files and Excel worksheets (NIST / ISO 27001) using ClosedXML.
-  - Created `ImportsController` exposing the `/Imports/assessment` upload endpoint and added REST routes for auto-saving drafts and visibility checks in `AssessmentsController`.
-  - Added comprehensive test coverage in `AssessmentsServiceGapInMemoryTest` and `ImportsServiceInMemoryTest` achieving 100% success.
+- Add the enhanced assessments workflow: a paged viewer, progress tracking, draft auto-save and template import (T31, T32, T33)
 
 ## [2.9.0] - 2026-06-15
 
 ### Added
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 3: Scheduled GRC Reports)**: Implemented scheduled report runs, automated PDF compiles, and email dispatches with PDF attachments.
-  - Added the `ReportSchedule` database model under `DAL`, mapped via Fluent API configurations in `NRDbContext` with cascade deletion rules.
-  - Implemented the `ScheduledReportJob` background worker under `ServerServices` to generate dynamic PDF summaries of incidents and send attachment-bearing emails via `FluentEmail` in memory.
-  - Developed the `ReportSchedulesController` in the `API` project with CRUD endpoints on `/ReportSchedules`, supporting active integration with the **Hangfire** scheduler (`RecurringJob.AddOrUpdate` / `BackgroundJob.Enqueue`).
-  - Added full test coverage in `ScheduledReportJobInMemoryTest` using NSubstitute.
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 2: Customizable Report Templates)**: Implemented the backend database structures, APIs, and fluid QuestPDF rendering engine for dynamic customizable templates.
-  - Added `ReportTemplate` and `ReportTemplateVersion` database models under `DAL`, mapped via Fluent API configurations in `NRDbContext` following standard conventions.
-  - Implemented the REST-compliant `ReportTemplatesController` with endpoints `GET`, `POST`, `PUT`, `DELETE` on `/ReportTemplates` to manage report templates with versioned layout and branding histories.
-  - Introduced the modern **QuestPDF** library (v2026.6.0) under `ServerServices` and integrated the `IQuestPdfRenderingService`/`QuestPdfRenderingService` engine.
-  - Configured QuestPDF for dynamic JSON layouts supporting logos, colors, customizable typography, title sections, body text, and complex table layouts.
-  - Integrated QuestPDF directly into the main `ExportService` so standard PDF exports automatically use the brand-new, ultra-modern templates.
-  - Added 100% test coverage in `QuestPdfRenderingServiceInMemoryTest`.
-- **Track 2 (GRC Core & Reporting Engine) — Milestone 2.1 (Phase 1: Core Export Service)**: Implemented the backend server-side export engine including the `IExportService` contract and its concrete implementation `ExportService`.
-  - Added support for generating CSV files safely against Formula Injection (CWE-1236) using UTF-8 BOM.
-  - Added support for generating Excel (XLSX) spreadsheets using ClosedXML with strongly-typed columns and custom formatting.
-  - Added a placeholder PDF table exporter using PDFsharp/MigraDoc with global FontResolver integration.
-  - Implemented the generic `ExportController` with endpoint `GET /Export/{format}` allowing Sieve-filtered export of major entities (`Risk`, `Vulnerability`, `Host`, `Incident`) without pagination limits.
-  - Added full test coverage in `ExportServiceInMemoryTest` achieving 100% success rate.
+- Add the advanced reporting engine's core export service, customizable report templates and scheduled GRC report exports (T27, T28)
 
 ## [2.8.0] - 2026-06-12
 
-### Changed
-- **Track 6 — Milestone 6.4 Phase 6b (drop deprecated tables), `db_version` 73**: **DESTRUCTIVE** removal of everything deprecated in Phase 6a after the recorded observation window — drops all 23 `zz_deprecated_*` tables and finally the orphan columns `risks.regulation`/`risks.project_id`. The legacy `risks.status` text column is **intentionally kept** (its Phase 5 `status_id` replacement must coexist for one release before removal — not in this milestone). Gated by the tool: requires the `6a` Success entry in `schema_upgrade_log` aged ≥ the manifest's `observationDays` **and** explicit `--yes`; the automatic pre-phase backup is the only recovery path. The 23 entity classes are deleted from `DAL`. EF migration `Track6Phase6bDropDeprecatedTables` (its `Down()` is irreversible by design) + numbered SQL `Structure/Data/73.sql` (drops under `FOREIGN_KEY_CHECKS=0` since deprecated tables retained their inter-table FKs through the rename); applied via `database upgrade-schema --phase 6b --yes`. Verified end-to-end on MariaDB (every `zz_deprecated_*` gone, orphan columns dropped, `status` retained, `--yes`/observation gate enforced).
-- **Track 6 — Milestone 6.4 Phase 6a (deprecate dead tables), `db_version` 72**: deprecated the 23 zero-reference tables (functional: `contributing_risks_impact`/`...likelihood`, `questionnaire_pending_risks`, `residual_risk_scoring_history`, `framework_control_test_results_to_risks`, `framework_control_type_mappings`, `permission_to_permission_group`, `mitigation_accept_users`, `risk_to_additional_stakeholder`/`...location`/`...technology`, `framework_control_test_comments`/`...audits`, `failed_login_attempts`, `user_pass_history`; enumeration: `control_phase`/`control_type`, `file_type_extensions`, `regulation`, `risk_function`, `test_status`, `threat_catalog`/`threat_grouping`) by **unmapping them from EF** (DbSets + `OnModelCreating` configs removed) and **RENAMING them to `zz_deprecated_*`** — reversible, data preserved, forgotten access fails loud. Also unmapped (no DDL) the orphan columns `risks.regulation`/`risks.project_id` (no live referent, zero code use), physically dropped in 6b. Security note: `failed_login_attempts`/`user_pass_history` confirmed unused (no login-lockout / password-reuse logic; `UserPassReuseHistory` is the live one and is **not** removed). EF migration `Track6Phase6aDeprecateDeadTables` (hand-written to RENAME, mirroring the numbered SQL, rather than EF's scaffolded `DropTable`) + numbered SQL `Structure/Data/72.sql`; applied via `database upgrade-schema --phase 6a`. Manifest `removalCandidates`/census corrected to the live snake_case table names (the PascalCase entity names never matched a case-sensitive DB). Verified end-to-end on MariaDB (≥23 tables renamed, originals gone, seeded row preserved through the rename, orphan columns retained for 6b).
-- **Track 6 — Milestone 6.4 Phase 5 (status type standardization), `db_version` 71**: added `risks.status_id` (`int`) as the type-safe replacement for the free-text `risks.status` and backfilled it from the known status strings (`New`=0, `Mitigation Planned`=1, `Mgmt Reviewed`=2, `Closed`=3; unmapped legacy values left `NULL`). **Create-copy-coexist**: the legacy `status` column is retained — the old column is never dropped in the same release that introduces its replacement. The C# `Risk.StatusId` maps to a new `DAL.Enums.RiskStatus` (mirrors `Model.Risks.RiskStatus`, since `Model`→`DAL` is the project dependency direction so `DAL` cannot reference `Model`) via explicit `HasConversion<int>()`; `BiometricTransaction.TransactionResult` also gained an explicit `HasConversion<int>()` (model-only — its column is already `int`). EF migration `Track6Phase5StatusTypeStandardization` + numbered SQL `Structure/Data/71.sql`; applied via `database upgrade-schema --phase 5`. *(The temporal `ON UPDATE CURRENT_TIMESTAMP` columns were intentionally left as-is — they are audit timestamps that should keep auto-updating.)* Verified end-to-end on MariaDB (column is `int`, backfill mapping correct, unmapped value `NULL`, legacy `status` retained).
-- **Track 6 — Milestone 6.3 Phase 4 (indexing + BLOB→text), `db_version` 70**: added hot-path indexes justified by the real Sieve filters/sorts (`ApplicationSieveProcessor`) and the risk listing query — `idx_vulnerabilities_first_detection`/`idx_vulnerabilities_last_detection`, `idx_hosts_status`/`idx_hosts_registration_date`, the composite `idx_risks_status_submission_date`, and `idx_user_email` — and dropped the redundant `UNIQUE` `id` index on `framework_control_tests` (already covered by the PK). Converted the text-bearing `blob` columns to proper text types and changed their C# properties from `byte[]` to `string`: `user.email` → `varchar(255)` (app-written UTF-8, direct conversion; MapsterConfiguration/`AuthenticationController`/`EmailController`/`UserCommand` simplified — the email map is now an identity), and `frameworks.name`/`description`, `framework_controls.long_name`/`description`/`supplemental_guidance`, `permissions.description` → `TEXT`. **Encoding note:** the legacy framework/permission BLOBs hold Windows-1252/latin1 seed bytes (they contain bytes like `0x94` that are *not* valid UTF-8 and the app never writes them), so they convert via a `latin1`→`utf8mb4` round-trip (lossless transcoding) rather than a direct `MODIFY` that would error; validate on a production clone first. `permissions.description` is returned raw by `GET /Users/permissions`, so that JSON field changes from base64 to plain text. EF migration `Track6Phase4IndexingBlobText` keeps the snapshot in sync; the numbered SQL `Structure/Data/70.sql` uses the latin1 round-trip and omits EF's incidental `risk_scoring` index rename (the real schema already names that index `id`). Applied via `database upgrade-schema --phase 4`. Verified end-to-end on MariaDB (cp1252 bytes transcode to the correct Unicode, app UTF-8 preserved, indexes present and in `EXPLAIN` possible_keys, redundant index gone).
-- **Track 6 — Milestone 6.3 Phase 3 (relationships), `db_version` 69**: promoted the orphan correlation columns to navigable, indexed foreign keys to `user(value)` — `risks.owner`/`manager`/`submitted_by` (`fk_risks_*`), `framework_controls.control_owner` (`fk_framework_controls_control_owner`), `framework_control_tests.tester` (`fk_framework_control_tests_tester`), all made nullable with **`ON DELETE SET NULL`** and EF navigations (`Risk.OwnerUser`/`ManagerUser`/`SubmittedByUser`, `FrameworkControl.ControlOwnerUser`, `FrameworkControlTest.TesterUser`). Added `incidents.reported_by_id` (nullable FK `fk_incidents_reported_by`, `Incident.ReportedByUser`), **keeping the free-text `ReportedBy` column for external reporters** and best-effort backfilling the FK by exact, unambiguous `user.name` match. **Orphan-safe order:** dangling references are logged to a new `schema_upgrade_orphans` audit table *before* being NULLed (the log is the recovery record, since `Down()` cannot un-null), then the constraints are added — applying the constraint against un-cleaned data fails by design. Resolved the `IncidentToIncidentResponsePlan` mapping ambiguity (removed the dead commented block; the join is mapped once via `UsingEntity`). `Risk.ProjectId` has no live `projects` table, so it gains **no FK** and is flagged a Milestone 6.4 removal candidate. EF migration `Track6Phase3Relationships` + numbered SQL `Structure/Data/69.sql` (hand-authored for the orphan log/cleanup/backfill ordering EF can't express); applied via `database upgrade-schema --phase 3`. Verified end-to-end on MariaDB (orphans logged then nulled, valid refs untouched, backfill matches only unique names, `ON DELETE SET NULL` confirmed, FK columns indexed).
-- **Track 6 — Milestone 6.2 Phase 1c (collation unification), `db_version` 68**: converted the entire schema to **utf8mb4 / utf8mb4_unicode_ci** — every legacy `utf8mb3` (and `utf8mb4_general_ci`) table, covering all 99 base tables present at `db_version` 67 (including legacy tables not mapped by EF), via `ALTER TABLE … CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci` (table default + all char columns) plus `ALTER DATABASE`. This lets text columns store 4-byte characters (emoji, etc.) that `utf8mb3` silently rejected. EF model collation annotations updated to match; migration `Track6Phase1cCollationUtf8mb4` keeps the snapshot in sync, but the numbered SQL `Structure/Data/68.sql` uses `CONVERT TO` (one statement per table) rather than EF's verbose per-column output. Applied via `database upgrade-schema --phase 1c`. Manifest phases 3–6b renumbered (+1, now `db_version` 69–73). Verified end-to-end on MariaDB: no `utf8mb3` table/column remains, existing data preserved, and a 4-byte emoji round-trips. *This completes the deferred 6.2 collation work; `dotnet-ef` is now pinned to 10.0.9 via a local tool manifest.*
-- **Track 6 — Milestone 6.2 Phase 2b (column naming), `db_version` 67**: renamed the last stray PascalCase column `comments.IsAnonymous` → `is_anonymous` (the Phase 1b boolean fix had kept the legacy name). EF migration `Track6Phase2bIsAnonymousColumnRename` + numbered SQL `Structure/Data/67.sql`; applied via `database upgrade-schema --phase 2b`. Manifest phases 3–6b renumbered (+1, now `db_version` 68–72). Verified end-to-end on MariaDB (new column present, old gone, value preserved).
-- **Track 6 — Milestone 6.2 Phase 1b (boolean width normalization), `db_version` 66**: normalized the genuine booleans `comments.IsAnonymous` and `framework_controls.deleted` from `tinyint(4)` to `tinyint(1)` (deferred from Phase 1). The C# properties changed from `sbyte` to `bool` (Pomelo maps `bool`↔`tinyint(1)`), along with the `SecurityControlStatistic.Deleted` DTO field and the call sites (`CommentsController`/`CommentsService`/`FixRequestController`/`VulnerabilityFixChatDialogViewModel`/`StatisticsController`). EF migration `Track6Phase1bBooleanNormalization` + numbered SQL `Structure/Data/66.sql`; applied via `database upgrade-schema --phase 1b`. Manifest phases 3–6b renumbered (+1, now `db_version` 67–71). Verified end-to-end on MariaDB (column type → `tinyint(1)`, 0/1 values preserved). *(Note: the `comments` column is still physically named `IsAnonymous` (PascalCase) — a snake_case rename is a separate naming gap, not part of the deferred width fix.)*
-- **Track 6 — Milestone 6.2 Phase 2 (naming uniformization), `db_version` 65**: renamed the 8 PascalCase tables to snake_case (`Incidents`→`incidents`, `IncidentResponsePlans`→`incident_response_plans`, `IncidentResponsePlanTasks`/`...Executions`/`...TaskExecutions`, `IncidentToIncidentResponsePlan`→`incident_to_incident_response_plan`, `FaceIDUsers`→`face_id_users`, `BiometricTransaction`→`biometric_transactions`, `FixRequest`→`fix_requests`) and the hybrid columns (`vulnerabilities_to_actions.actionId`/`vulnerabilityId`→`action_id`/`vulnerability_id`; `reports.creationDate`/`creatorId`/`fileId`→`created_at`/`creator_id`/`file_id`; `hosts.FQDN`/`OS`→`fqdn`/`os`; `messages.Message`→`message`). EF migration `Track6Phase2NamingUniformization` + numbered SQL `Structure/Data/65.sql` (hand-cleaned to drop Pomelo's `DELIMITER`-based PK procedure — the join-table PK is composite, not auto-increment — so `MySqlConnector` can apply it). **RENAME only — no data loss; C# entity/DTO names unchanged** (mapping via `ToTable`/`HasColumnName`). Verified end-to-end against the real legacy schema on MariaDB (renames + row-count/value parity).
-- **Track 6 — Milestone 6.2 Phase 1 (safe fixes), `db_version` 64**: renamed the typo indexes (`idx_biometic_id`/`idx_biometic_anchor` → `idx_biometric_transaction_id`/`idx_biometric_transaction_anchor`; `idx_irpt_sequencial`/`idx_irpt_optinal` → `idx_irpt_sequential`/`idx_irpt_optional`) and removed the illegal `0000-00-00` column defaults on `mgmt_reviews.next_review` (default dropped) and `mitigations.last_update` (→ `CURRENT_TIMESTAMP`) — these break MariaDB strict mode. Authored as EF migration `Track6Phase1SafeFixes` + numbered SQL `Structure/Data/64.sql`; applied via `database upgrade-schema --phase 1`. C# entities/DTOs unchanged. Boolean `tinyint(1)` normalization and broad collation unification are **deferred** (they need `sbyte`→`bool` type changes / a per-column survey, beyond Phase 1's rename-only safety). Verified end-to-end against the real legacy schema on MariaDB in `DAL.IntegrationTests`.
-
 ### Added
-- **Track 6 (Database Uniformization) — 6.1 tooling foundation**: introduced the `schema_upgrade_log` audit table (EF entity + migration `20260611141630_SchemaUpgradeLog`, applied via numbered SQL `db_version` 63) that records every schema-upgrade run, and a data-driven phase manifest (`src/ConsoleClient/DB/SchemaUpgradePhases.yaml`) describing the Track 6 phases (1–6b) with their target `db_version`, census queries, post-apply validations, and destructive-phase gate metadata.
-- **Track 6 — `netrisk-console database upgrade-schema` command**: new ConsoleClient operation with `--phase`, `--env`, `--check`, `--dry-run`, `--yes`, and `--output`. `--check` runs read-only pre-flight (connectivity, current-vs-expected `db_version`, phase SQL-file presence, and the destructive `6b` observation-window gate against `schema_upgrade_log`); `--dry-run` prints/writes the exact numbered SQL a phase would apply (both mutate nothing); and a real apply runs the full **backup → census → apply numbered SQL → post-apply validation → audit-log** sequence, aborting before any change if pre-flight fails and refusing destructive/prod runs without `--yes`. Post-apply validations cover index/foreign-key/column-type/table existence and custom scalar checks against `information_schema`. Backed by `ISchemaUpgradeService`/`SchemaUpgradeService`, the pure `SchemaUpgradePlanner`/`SchemaUpgradeManifestLoader`, and `SchemaUpgradeValidator`.
-- **Track 6 — `netrisk-console database baseline`**: new ConsoleClient operation (Plan Phase 0) that records the pre-uniformization baseline — current `db_version`, pending EF migrations, model-vs-snapshot divergence (`HasPendingModelChanges`), and a row-count census of the Phase-6 removal candidates (data-driven from the manifest's `removalCandidates`) that recommends `drop` (empty/absent) vs `archive` (has data). Optional `--output` writes a Markdown report. Read-only.
-- **Track 6 — `DAL.IntegrationTests` harness**: new test project using Testcontainers (`Testcontainers.MariaDb`) that boots a throwaway MariaDB container to verify the shipped `schema_upgrade_log` DDL, the EF entity round-trip, the full apply orchestration (apply + validate + audit-log, plus the validation-failure path), and the baseline census end-to-end against real MariaDB (NetRisk's production database). Tagged `Category=Integration` (requires Docker; exclude from the fast unit run with `--filter "Category!=Integration"`). Unit coverage for the tool is 31 tests in `ServerServices.Tests`.
-- **Track 6 — conventions documented** in [CLAUDE.md](CLAUDE.md): the target schema convention (so new entities are born compliant), how migrations actually reach production (numbered SQL + `db_version`), and the schema-upgrade/baseline tooling. Completes Milestone 6.1 (the operational production-baseline *run* against the live prod DB remains, by nature, an ops step). See [roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md](roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md).
+- Add Track 6 upgrade tooling: `schema_upgrade_log`, `netrisk-console database upgrade-schema`, `database baseline`, and `DAL.IntegrationTests` (T91, T92)
+- Document the Track 6 naming convention in CLAUDE.md (T93)
+
+### Changed
+- Fix invalid `0000-00-00` defaults and index-name typos (Milestone 6.2 phase 1, db_version 64) (T94)
+- Rename 8 PascalCase tables and hybrid camelCase columns to snake_case (Milestone 6.2 phase 2, db_version 65) (T98)
+- Normalize boolean columns from tinyint(4) to tinyint(1) (Milestone 6.2 phase 1b, db_version 66) (T95)
+- Snake-case the last stray column, `comments.IsAnonymous` (Milestone 6.2 phase 2b, db_version 67) (T96)
+- Convert all 99 base tables to utf8mb4/utf8mb4_unicode_ci (Milestone 6.2 phase 1c, db_version 68) (T97)
+- Add FK constraints and EF navigations for orphan id columns (Milestone 6.3 phase 3, db_version 69) (T99)
+- Add query-justified hot-path indexes and convert BLOB-for-text columns (Milestone 6.3 phase 4, db_version 70) (T100)
+- Migrate `risks.status` to an int-backed enum via create-copy-coexist (Milestone 6.4 phase 5, db_version 71) (T101)
+- Deprecate 23 unreferenced tables and orphan columns, reversibly (Milestone 6.4 phase 6a, db_version 72) (T102)
+- Drop the deprecated tables and columns after the observation window (Milestone 6.4 phase 6b, db_version 73, destructive) (T103)
 
 ## [2.7.7] - 2026-06-11
 
 ### Changed
-- **Test coverage for the data and server-service layers**: added unit tests raising `DAL` coverage to ~99% (excluding generated EF migrations) and `ServerServices` line coverage from ~11% to ~90%. New tests cover the change-auditing pipeline (`AuditableContext`, `Auditing.Base`) and the domain services, with at least one behavior test per service. Introduced an EF Core in-memory test harness (`InMemoryServiceTestBase`) and a `coverage.runsettings` that excludes generated migrations and genuinely-untestable I/O/rendering classes so the reported figure reflects testable logic. No production code changed.
+- Raise DAL test coverage to ~99% and ServerServices coverage from ~11% to ~90%, with an EF Core in-memory test harness
 
 ## [2.7.6] - 2026-06-10
 
 ### Changed
-- **File uploads now stream in chunks instead of a single request**: the GUI client previously POSTed the whole file base64-encoded inside one JSON body to `POST /Files`, so any attachment over ~22 MB exceeded Kestrel's 30 MB request-body limit and the connection was reset (surfaced to the user as a "Broken pipe"). `UploadFileAsync` now requests an upload id, sends the content in 5 MB chunks to `POST /Files/local/chunk`, then calls a new `POST /Files/local/complete` to finalize. This keeps every request small regardless of file size.
+- Stream file uploads in 5 MB chunks instead of one base64-encoded JSON body, fixing uploads over ~22 MB
 
 ### Fixed
-- **Chunked uploads were never persisted**: the server's chunk endpoint only reassembled the parts into a `.dat` file on disk and then stopped — it never created the `NrFile` database record, never stored the content (files are persisted as a DB blob), and never associated the file with its incident/risk/plan/task/mitigation, so a chunk-uploaded file was orphaned and never appeared as an attachment. Added `CompleteChunkedUpload` (and the `POST /Files/local/complete` endpoint) which reassembles the chunks, loads the content, persists the record with its entity association via the same path as a single-shot upload, and cleans up the temporary chunk files. The chunk endpoint no longer auto-combines, so finalization is the single authoritative reconciliation step.
-- **API request-body limit raised and made configurable**: Kestrel's default 30 MB `MaxRequestBodySize` is now raised to 100 MB and configurable via `Files:MaxRequestBodySizeBytes`, protecting non-chunked endpoints and giving headroom for the chunk-finalize call.
+- Persist a chunked upload's `NrFile` record and entity association at finalize time, fixing orphaned attachments
+- Raise and make configurable the API's request-body size limit
 
 ## [2.7.5] - 2026-06-10
 
 ### Fixed
-- **GUI crash when adding a file to an incident**: the "Add file" button on the Edit Incident window passed the window itself as a `CommandParameter` into `BtFileAddClicked`, a parameterless `ReactiveCommand<Unit, Unit>`. ReactiveUI rejects the type mismatch at execute time (`Command requires parameters of type System.Reactive.Unit, but received parameter of type EditIncidentWindow`), and the unhandled error tore down the app. The stale `CommandParameter` was removed — the handler already gets the window from its `ParentWindow` property.
-- **GUI crash when a file upload fails**: file-add handlers awaited `FilesService.UploadFileAsync` with no error handling, so a failed upload (e.g. a dropped connection surfacing as `Broken pipe` / `RestComunicationException`) escaped the `ReactiveCommand` pipeline and crashed the process via ReactiveUI's default exception handler. The upload is now wrapped in a try/catch that logs the error and shows an error dialog (`ErrorUploadingFileMSG`) instead of crashing, across all five upload sites: incidents, risks, incident response plans, IRP tasks, and mitigations.
+- Remove a stale CommandParameter on the Edit Incident file-add button, fixing a ReactiveCommand type-mismatch crash
+- Wrap file-upload calls in a try/catch across five upload sites instead of crashing on a failed upload
 
 ## [2.7.4] - 2026-06-09
 
 ### Fixed
-- **macOS x64 GUI cross-publish (`PackageMacGUI`) failing on Apple Silicon with `NU3012`**: the Docker `linux/amd64` cross-publish does a from-scratch NuGet restore inside the container, where the online certificate revocation check flagged the author signatures on the ReactiveUI/Splat packages as revoked, aborting `dotnet publish`. (The host build never hit this because those packages were already restored and cached, so signature verification didn't re-run.) The Docker `dotnet publish` invocation now sets `NUGET_CERT_REVOCATION_MODE=offline` so restore skips the online revocation lookup. The thrown error was also misleading — it only surfaced Docker's image-pull progress because `RunProcess` includes just stderr in the exception message.
+- Set `NUGET_CERT_REVOCATION_MODE=offline` for the Docker cross-publish restore, fixing an NU3012 signature-revocation failure on Apple Silicon
 
 ## [2.7.3] - 2026-06-09
 
 ### Fixed
-- **Docker containers failing to start with a misleading `no such file or directory` on `/entrypoint.sh`**: the entrypoint scripts are stored in git as LF, but with no `.gitattributes` a build host configured with `core.autocrlf=true` (Windows) checked them out as CRLF, so `COPY entrypoint-*.sh /entrypoint.sh` baked a `#!/bin/bash\r` shebang into the image. The kernel then tried to exec the interpreter `/bin/bash\r`, which doesn't exist. Added a repository `.gitattributes` that pins line endings (LF for `*.sh`/source/config, CRLF only for Windows `*.bat`/`*.cmd`/`*.ps1`) and renormalized all previously-CRLF-tracked files to LF. As defense in depth, each Dockerfile now strips CRs from the entrypoint (`sed -i 's/\r$//'`) before `chmod`.
+- Add a .gitattributes pinning shell-script line endings to LF, fixing a baked-in `\r` shebang that broke container entrypoints
 
 ## [2.7.2] - 2026-06-09
 
 ### Fixed
-- **Docker image builds failing during image export (`failed to Lchown ... no such file or directory`)**: every payload image did `COPY <payload> /netrisk` as root and then let puppet recursively re-own `/netrisk` (`file{'/netrisk': recurse => true}`). For the API/BackgroundJobs images this re-chowned the 177 MB `OpenFaceONNX.dll` (and the rest of the payload) into a second large layer, which tripped Docker Desktop's overlayfs/containerd snapshotter when extracting the layer on export. Ownership is now set once at copy time via `COPY --chown=7070:7070` (the numeric uid/gid of the puppet `netrisk` user) across all four Dockerfiles, and the redundant recursive `/netrisk` chown was dropped from the `api` and `backgroundjobs` puppet manifests. This both fixes the export failure and shrinks the images by not duplicating the payload across layers.
+- Set container payload ownership at copy time (`COPY --chown`) instead of a recursive Puppet chown, fixing an image-export failure
 
 ## [2.7.1] - 2026-06-08
 
 ### Fixed
-- **`CreateAllDockerImages` Nuke target failing in `CreateDockerImageWebSite`**: the website image build unconditionally copied the Windows/Linux/macOS GUI installer artifacts into the image, so on hosts where a given platform was not packaged (e.g. the `.dmg` files on Windows) the missing source tripped Nuke's `source.DirectoryExists() || source.FileExists()` assertion and aborted the whole run. Installer copies now go through a `CopyInstallerIfPresent` helper that skips and logs a warning when an artifact is absent, so the image builds with whatever installers the current host produced.
+- Skip absent per-platform installer artifacts when building the website Docker image instead of aborting the whole run
 
 ## [2.7.0] - 2026-06-08
 
 ### Changed
-- **Upgraded `Pomelo.EntityFrameworkCore.MySql` to `10.0.0-rtm.1`** (from `9.0.0`) to align the MySQL EF Core provider with the EF Core 10 packages already in use. The v10 build is sourced from the `uox-netrisk` Cloudsmith feed, which is now wired into the package source mapping.
+- Upgrade `Pomelo.EntityFrameworkCore.MySql` to a 10.0.0 release-candidate build sourced from a private feed
 
 ## [2.6.2] - 2026-06-03
 
 ### Fixed
-- **Clipped icons in `subButton` toolbars**: the `Button.subButton` style (add/edit/search/reload/delete toolbars on the Entities, Hosts, Incidents, and Risk views) never zeroed its default padding nor sized its child `MaterialIcon`, so the 25×25 button squeezed and clipped the glyph. Added `Padding=0` + centered content alignment and a `Button.subButton > MaterialIcon` rule sizing the icon to 16×16, mirroring the working `detailButton` pattern. Verified live on the Entities view.
+- Zero the padding and size the icon on `Button.subButton` toolbars, fixing clipped glyphs
 
 ## [2.6.1] - 2026-06-03
 
 ### Fixed
-- **Broken "show search" toolbar icon**: the search toggle button on the Entities, Hosts, Incidents, and Risk views referenced `Kind="SelectSearch"`, which is not a valid Material Design Icons name, so the `MaterialIcon` control rendered fallback glyph text instead of an icon. Changed to `Kind="Magnify"` (the same icon already used by the search-execute buttons).
+- Fix the search-toggle button's invalid Material icon name, which rendered as fallback glyph text
 
 ## [2.6.0] - 2026-06-03
 
 ### Added
-- **macOS global menu redirection** (Milestone 1.4): a `NativeMenu` mirroring the application menu is attached to `MainWindow`. On Apple Darwin it surfaces in the system global menu bar and the in-window `Menu` is collapsed (bound to a new `IsNotMacOS` flag); on Windows/Linux the in-window menu is used as before.
-- **Platform-native window-control alignment** (Milestone 1.4): the navigation bar is inset dynamically (`MainWindowViewModel.NavBarMargin`) so that, once the menu row collapses on macOS, its left-edge content clears the native top-left traffic-light controls. Platform probes consolidated into `Helpers/PlatformInfo`.
-- **Keyboard accessibility sweep** (Milestone 1.4):
-  - Global `Ctrl+P` opens the reporting/export surface from anywhere in the main window.
-  - `Ctrl+S` (save) and `Esc` (dismiss) wired on the Risk and Incident edit windows.
-  - Centralised `Esc` (dismiss) and `Ctrl/Cmd+S` (save, via the new `ISaveableDialog` opt-in) for every modal dialog inheriting `DialogWindowBase`.
-  - `Ctrl+F` toggles the search panel on the Entities and Incidents views.
-  - Logical `TabIndex` ordering plus `IsDefault`/`IsCancel` buttons on the Login window and entity dialog.
-- **System tray integration** (Milestone 1.4): `Helpers/TrayIconManager` adds a Windows notification-area icon / macOS menu-bar extra with a quick-status preview (sign-in state and version, refreshed every 15s), an Open/Hide/Exit context menu, and minimise-to-tray behaviour on Windows.
+- Add macOS global menu redirection and platform-native window-control alignment (T18, T19)
+- Sweep keyboard accessibility: global Ctrl+P/S/F, Esc, and TabIndex/IsDefault/IsCancel ordering (T20)
+- Add system tray / menu-bar-extra integration with a quick status preview (T21)
 
 ### Fixed
-- **macOS notification bell overlapping the traffic-light window controls**: the navigation bar's left inset (`NavBarMargin`, 80px on macOS) was bound on the `NavigationBar` element as a bare `{Binding NavBarMargin}`, which resolved against the control's own `NavigationBarViewModel` instead of the `MainWindowViewModel` that exposes the property — so it silently fell back to a zero margin and the notification bell sat under the native top-left window buttons. Bound the margin explicitly against the MainWindow's DataContext (`#MWindow.((dvm:MainWindowViewModel)DataContext).NavBarMargin`) so the bell clears the controls.
+- Bind the macOS navigation-bar inset explicitly against MainWindow's DataContext, fixing the notification bell overlapping the traffic lights (T19)
 
 ## [2.5.1] - 2026-06-03
 
 ### Fixed
-- **Widespread broken bindings under compiled bindings**: enabling `AvaloniaUseCompiledBindingsByDefault` (Milestone 1.3) silently broke every `{Binding}` that targeted a non-public view-model member — compiled bindings can only reach public members, whereas the previous reflection bindings reached private ones. This left labels blank, tab headers falling back to the `ViewLocator` ("Not Found: GUIClient.Views.…View"), command buttons inert, and child-VM content panels empty (e.g. the entire `AdminWindow`). Audited all views against their `x:DataType` view-models and promoted the 194 bound members across 26 view-models (plus `UserInfoViewModel`) from `private` to `public`. Verified live: `UserInfo` and `AdminWindow`/`UsersView` now render fully.
+- Promote 194 bound view-model members from private to public across 26 view-models, fixing widespread broken bindings under compiled bindings (T17)
 
 ## [2.5.0] - 2026-06-03
 
-This release includes new features and improvements.
-
 ### Added
-- **Compiled bindings enabled globally** (`AvaloniaUseCompiledBindingsByDefault=true` in GUIClient): every view now declares an explicit `x:DataType`, giving compile-time binding validation and faster rendering with a lower RAM footprint. (Milestone 1.3)
-- **High-performance virtualizing `TreeDataGrid`** for the dense vulnerability grid, replacing the `DataGrid`. Source/columns are built in code-behind (`FlatTreeDataGridSource<Vulnerability>`) reusing the existing converters and status cell template, with two-way selection sync.
-- TreeDataGrid via the `libs/TreeDataGrid.Avalonia` submodule (MIT, .NET-Foundation source ported to Avalonia 12; security-reviewed), since Avalonia 12's official `Avalonia.Controls.TreeDataGrid` package is now commercially licensed
-- Explicit `VirtualizingStackPanel` on the primary dense data lists (incidents, hosts, risks, users, notifications) to enforce UI virtualization and guard against accidental regressions
-- `RiskScoringPair` record (replaces `Tuple<Risk, RiskScoring>`) so the vulnerability risk panel binds with compiled bindings
-- Project docs: `CLAUDE.md`, `ROADMAP.md`, per-feature docs under `docs/features/`, `docs/ui-standard.md`
-- Transitive pin for `Tmds.DBus.Protocol` 0.92.0 in GUIClient (addresses GHSA-xrw6-gwf8-vvr9)
-- Transitive pin for `System.Security.Cryptography.Xml` 10.0.7 in API.Tests and ServerServices.Tests (addresses GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf)
-- UI standard compliance audit (`roadmap/UI_STANDARD_AUDIT.md`) and remediation plan (`roadmap/UI_STANDARD_COMPLIANCE_PLAN.md`)
-
-### Fixed
-- **macOS window dragging restored**: the custom title-bar `Menu` stretched the full window width with `ElementRole="User"` (non-draggable), leaving no `TitleBar` surface to grab; set `HorizontalAlignment="Left"` so the menu only occupies its items and the rest of the title-bar row is draggable again.
-- **`--environment` argument parsing** in `GUIClient`: now accepts both `--environment=dev` and `--environment dev` forms, guards against a missing value, and corrects the prior bug that validated the wrong variable (plus the "Unkown environment" typo).
-- Compile-time binding errors surfaced by enabling compiled bindings (previously silent, failing reflection bindings): added missing `StrActions` (AssessmentViewModel), `StrNotifications` (NavigationBarViewModel), `IsViewOperation`/`IsCreateOperation` (EditIncidentViewModel), and `CanCancel`/`CanClose` (IncidentResponsePlanTaskViewModel); corrected stale `ElementName`/`#name` references in `EditIncidentWindow`, `IncidentResponsePlanTaskWindow`, `EditMgmtReview`, `MainWindow`, and `AssessmentView`; typed the TreeViewItem style bindings in `EntitiesView`
+- Enable compiled bindings globally with explicit `x:DataType` on every view (T13, T15)
+- Add a high-performance virtualizing TreeDataGrid for the dense vulnerability grid (T16)
+- Add explicit VirtualizingStackPanel to the primary dense data lists (T16)
+- Add the UI standard compliance audit and remediation plan (S3, S4)
 
 ### Changed
-- **GUIClient UI compliance pass**: all Avalonia views now conform to the UI standard — hardcoded hex/named Background and Foreground colors removed from layout containers, all dialog/action/navigation buttons carry canonical CSS classes (`dialog1`, `dialog2`, `operation`, `subButton`, `navigation`, etc.), fixed-width inputs replaced with `MinWidth`, navigation buttons carry `Classes="navigation"`, `Classes="dark"` applied to modal windows. Semantic state colors (ProgressRing spinner, notification bell, FaceID status icons) preserved intentionally.
-
-### Changed
-- **Avalonia 11.3.11 → 12.0.1** across GUIClient, AvaloniaExtraControls, and the Aura.UI submodule. Trade-offs documented in ROADMAP.md (dev-tools overlay removed, tab drag-reorder removed, SVG assets replaced by Material icons, `SpacedGrid` replaced by native `Grid` spacing).
-- ReactiveUI 22.3.1→23.2.1, ReactiveUI.Avalonia 11.3.8→12.0.1, Splat 17→19
-- Material.Icons.Avalonia 2.4→3.0, MessageBox.Avalonia 3.x→12.x, Deadpikle.AvaloniaProgressRing 0.10→0.11
-- LiveChartsCore family 2.0.0-rc5.4 → 2.1.0-dev-292
-- SkiaSharp 3.119.2 → 3.119.3-preview.1.1 (required by Avalonia.Skia 12)
-- Spectre.Console 0.51→0.55.2, Spectre.Console.Cli 0.51→0.55.0, Serilog.Sinks.Spectre 0.5→0.6.0 (breaking: `Command.Execute` now takes `CancellationToken`; visibility `protected`)
-- Dependency refresh across all projects (patch/minor updates):
-  - Serilog 4.3.0→4.3.1, Serilog.Sinks.Console 6.0.0→6.1.1, Serilog.Extensions.Hosting 9→10, Serilog.Extensions.Logging 9→10
-  - Microsoft.Extensions.* 10.0.2→10.0.7 (Hosting, Localization, Configuration.Abstractions, DependencyInjection, DependencyInjection.Abstractions, DependencyModel)
-  - Microsoft.AspNetCore.Authentication.JwtBearer 10.0.2→10.0.7, SystemWebAdapters 2.2.1→2.3.0
-  - System.IdentityModel.Tokens.Jwt 8.15.0→8.17.0, System.Drawing.Common 10.0.2→10.0.7
-  - BCrypt.Net-Next 4.0.3→4.1.0, DeviceId 6.9→6.11, Polly 8.5.2→8.6.6
-  - MySqlConnector 2.4.0→2.5.0, MySqlBackup.NET.MySqlConnector 2.6.5→2.7.0
-  - SkiaSharp family 3.119.1→3.119.2
-  - Microsoft.ML.OnnxRuntime 1.23.2→1.24.4
-  - JetBrains.Annotations 2025.2.2→2025.2.4, xunit.runner.visualstudio 3.1.4→3.1.5, Microsoft.NET.Test.Sdk →18.5.0
-  - Tools.InnoSetup 6.4.3→6.7.1
-- `MainWindow.axaml`: removed `ExtendClientAreaToDecorationsHint`, dead acrylic border, and redundant nested Grid wrappers; simplified layout to `RowDefinitions="Auto, Auto, *"` (menu → navigation → content)
-- `NavigationBar.axaml`: replaced fragile level-index ancestor bindings (`$parent[7]`/`$parent[6]`) with type-safe `$parent[views:MainWindow]` lookups
-- UI compliance pass across all GUIClient views: removed inline `Background`/`Foreground` hex literals, added canonical button classes (`dialog1`, `dialog2`, `operation`, `subButton`, `navigation`), converted fixed `Width=` to `MinWidth=` on form inputs, migrated form `StackPanel`s to responsive `Grid` layouts with `form_label` classes
-- `LoginWindow.axaml`: migrated form to responsive `Grid`, added `dialog1`/`dialog2` button classes with icons
-- `CloseDialog.axaml`, `FixRequestDialog.axaml`: button classes normalized, `Classes="dark"` added to window
-- `NavigationBar.axaml`: `Classes="navigation"` added to all nav buttons
+- Upgrade Avalonia 11.3.11 → 12.0.1 and its dependent packages across GUIClient, AvaloniaExtraControls and Aura.UI
+- Complete the GUIClient UI compliance pass: canonical button classes, resx-based strings, MinWidth-based responsive inputs (T3, T4)
 
 ### Fixed
-- High-severity transitive vulnerabilities in `Tmds.DBus.Protocol` and `System.Security.Cryptography.Xml`
-- GUIClient startup crash on Avalonia 12 caused by `LiveChartsCore.SkiaSharpView.Avalonia` 2.0.1 still targeting Avalonia 11 APIs (`Avalonia.Input.Gestures.PinchEvent`)
-- `libs\Aura.UI\Aura.UI.sln` now loads cleanly after aligning the remaining Aura.UI test/desktop sample projects with `.NET 10` + Avalonia 12 and excluding the legacy Blazor gallery sample from the solution
-- MainWindow top-bar overlap where native OS title bar and custom `<Menu>` rendered in the same zone (caused by `ExtendClientAreaToDecorationsHint="True"` without the matching transparency stack)
-- Navigation bar buttons crashing with `NullReferenceException` / `ArgumentNullException` after layout flattening due to hardcoded ancestor-level bindings resolving to `null`
-
-
+- Restore macOS window dragging by constraining the custom title-bar menu's width
+- Accept both `--environment=dev` and `--environment dev` argument forms
+- Fix compile-time binding errors surfaced by enabling compiled bindings across several view-models (T14)
+- Fix two high-severity transitive dependency vulnerabilities in `Tmds.DBus.Protocol` and `System.Security.Cryptography.Xml`
 
 ## [2.2.0] - 2026-02-06
 
-This is a major maintenance release with .NET 10 upgrade and significant UI improvements.
-
 ### Added
-- Responsive window layouts for EditRiskWindow (controls now expand/contract with window resizing)
-- Responsive DataGrid columns in RisksPanelView with user controls for reordering, resizing, and sorting
-- Tooltips to status icons in RisksPanelView for better user experience
-- AssetTargetFallback configuration to support .NET 8/9 packages in .NET 10 projects
+- Add responsive layouts and DataGrid columns to EditRiskWindow and RisksPanelView
 
 ### Changed
-- **Upgraded to .NET 10.0** with C# 13 language support across all projects
-- Updated NuGet package source mapping to allow all packages from nuget.org by default
-- Upgraded Hangfire from 1.8.21 to 1.8.23
-- Upgraded MySqlConnector from 2.4.0 to 2.5.0
-- Upgraded Newtonsoft.Json from 13.0.3 to 13.0.4 (security update)
-- Upgraded Microsoft.Extensions.DependencyInjection from 9.0.9 to 9.0.12
-- EditRiskWindow now starts at 1200x800 with minimum size of 900x650
-- EditRiskWindow controls converted from fixed-width StackPanels to responsive Grid layouts
-- RisksPanelView DataGrid columns now use star-sizing for proportional distribution
-- Updated submodules: NessusParser, Aura.UI, netrisk-plugin-sdk, reliable-rest-client-wrapper
-- Improved horizontal and vertical responsiveness across GUIClient views
+- Upgrade to .NET 10.0 with C# 13 across all projects
 
 ### Fixed
-- Resolved duplicate Applications.resx resource conflicts
-- Fixed EF Core dependency warnings in DAL project
-- Fixed ServerServices compile warnings (CS8603 nullable reference warnings in MapsterConfiguration)
-- Fixed ServerServices CS0219 warning (unused variable in FaceIDService)
-- Fixed PDFsharp restore failures
-- Fixed API build failures and license gating issues
-- Fixed GUI client build errors during migration
-- Fixed Avalonia ReactiveUI startup issues
-- Fixed EditRiskWindow buttons not staying at bottom during vertical resize
-- Fixed EditRiskWindow right panel overlapping dropdowns on narrow windows
-- Fixed risk deletion and closure bugs
-- Package dependency warnings across all projects resolved
+- Fix EditRiskWindow's button placement and right-panel overlap on resize
+- Fix risk deletion and closure bugs
 
+## [2.1.4] - 2025-09-27
 
+### Fixed
+- Fix a risk closure bug
 
-## [2.1.4] - 27/09/2025
-
-This is a maintenance release with several bug fixes and improvements.
+## [2.1.0] - 2025-08-27
 
 ### Added
+- Add a search on the incident response plan list
+- Add a risk calculation command-line command
+- Add the plugin system, FaceID plugin verification, registration and risk-closure verification
+- Add the security classification, organization data and organization data group entities
 
 ### Changed
+- Upgrade to Avalonia 11.3 and .NET 9
 
 ### Fixed
-- Risk closure bug
-
-
-## [2.1.0] - 27/08/2025
-
-This is a maintenance release with several bug fixes and improvements.
-
-### Added
-- A search on the incident response plan list
-- Risk calculation command line command
-- Plugin system
-- FaceId plugin verification
-- FaceId registration
-- FaceId verification for risk closure
-- Created the security classification entity
-- Created the organization data entity
-- Created the organization data group entity
-
-### Changed
-- Layout improvements on the incident window
-- Changed the position of the edit button on the entities view
-- Upgraded several packages to the latest version
-- Incident ReportedByEntity field is now nullable
-- Upgraded to Avalonia 11.3
-- Upgraded to .NET 9
-- Upgraded LiveCharts
-- Bussiness process entitiy has new fields
-
-### Fixed
-- Return to the first pagination on the risk vulnerability list after selecting a new risk
-- The search on the incident response plan list
-- Bug in risk association
-- Contributing score no longer considers closed vulnerabilities
-- Bug in closing incident response plan window
+- Return to the first pagination page on the risk vulnerability list after selecting a new risk
+- Fix the incident response plan list search
+- Fix a bug in risk association
+- Stop the contributing score considering closed vulnerabilities
+- Fix a bug in closing the incident response plan window
 
 ## [2.0.7] - 2025-08-01
 
-This is a bug fix release.
-
-### Added
-
 ### Changed
-- Filter to only show approved incidents response plans on the incident window
-- Layout improvements on the incident window
+- Filter the incident window to only show approved incident response plans
 
 ### Fixed
-- Risk vulnerability pagination
-- Risks loading time
-- Added missing scroll view on the incidents window
-- Removed leftover foreign key on the incident response plan
-
+- Fix risk vulnerability pagination and risk loading time
+- Add a missing scroll view on the incidents window
+- Remove a leftover foreign key on the incident response plan
 
 ## [2.0.6] - 2025-07-01
 
-This is a bug fix release.
-
 ### Added
-- Risk vulnerability pagination
-
-### Changed
-
+- Add risk vulnerability pagination
 
 ### Fixed
-- Risks loading time
-
+- Fix risk loading time
 
 ## [2.0.0] - 2025-06-01
 
-This is a new major release that brings some new features and improvements.
-
 ### Added
-- Incident Management
-- Incident Response Plans
-- New Dashboard graphics and improved performance
-- Last import date on vulnerability data
-- Filters on the entity list
-
-### Changed
-- Ordering of the entity list
-- Filters for the multi select fields
-- Risk filter location
+- Add Incident Management and Incident Response Plans
+- Add new dashboard graphics with improved performance
+- Add last-import date on vulnerability data and filters on the entity list
 
 ### Fixed
-- Several bug fixed - please see [Github issues](https://github.com/ffquintella/netrisk/issues)
+- Fix several bugs; see [GitHub issues](https://github.com/ffquintella/netrisk/issues)
 
 ## [1.7.1] - 2024-11-06
 
-This is a new major release that brings some new features and improvements.
-
 ### Added
-
-- Vulnerability chat tracking and improved e-mail communication
-- New Dashboard graphics and improved performance
-- Started to use .net migrations as a way to manage the database schema
-
-### Changed
-
-- The way risk catalogs are stored and managed
+- Add vulnerability chat tracking and improved e-mail communication
+- Start using .NET migrations to manage the database schema
 
 ### Fixed
-
-- Several bug fixed - please see [Github issues](https://github.com/ffquintella/netrisk/issues)
+- Fix several bugs; see [GitHub issues](https://github.com/ffquintella/netrisk/issues)
 
 ## [1.6.1] - 2024-10-15
 
-...
-
+<!-- source content elided in the pre-migration file; nothing to migrate -->

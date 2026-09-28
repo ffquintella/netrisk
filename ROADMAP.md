@@ -1,591 +1,708 @@
-# NetRisk Product Roadmap
-
-This document tracks the strategic direction and planned features for NetRisk. To allow the team to select features freely and adapt to changing priorities, this roadmap is organized as **modular Milestone Tracks**. Each track represents a major area of capability, allowing features to be scheduled, developed, and released independently or in mixed-milestone batches.
-
-For shipped changes, see [CHANGELOG.md](CHANGELOG.md).
-
-> **Status: Tracks 1–8 are delivered as of 2.17.0** — 8 tracks, 37 milestones, 137 line items. Those
-> tracks are kept as the record of what was built and why; each item states what shipped, and where
-> the delivered behaviour differs from the original specification the item says so rather than
-> simply claiming the box.
->
-> **Track 9 is planned, not started.** It is the first track added after the 1–8 sweep and it does
-> not reopen any of them. Its items are unticked and stay unticked until each stage's specification
-> is merged and its tests are green — see the two gates in
-> [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md).
->
-> Two categories of work deliberately remain outside these ticks:
-> - **Accepted security risks and informational findings** — three of the 34 findings from the
->   Track 7 audit are recorded decisions rather than outstanding work (a plugin running with the
->   API's authority, `AllowedHosts: *`, and the absence of a CORS policy). They live in
->   [docs/security/FINDINGS.md](docs/security/FINDINGS.md) and are re-examined each minor release
->   via [docs/security/BURN_DOWN.md](docs/security/BURN_DOWN.md).
-> - **Artifacts that cannot be produced on a single build host** — the Windows and Linux installer
->   formats and the signing and notarisation paths need their own platforms and real certificates;
->   see the Track 5 items and [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md).
-
 ---
+ptf: 1
+project: netrisk
+---
+
+# Roadmap
+
+NetRisk is a cross-platform risk/vulnerability/incident management application. This roadmap tracks
+strategic direction as **modular Milestone Tracks**: each track is a major capability area, scheduled,
+developed and released independently or in mixed-milestone batches. For shipped changes, see
+[CHANGELOG.md](CHANGELOG.md).
+
+Tracks 1–8 are delivered as of 2.17.0 (37 milestones, 137 line items) and are kept below as the record
+of what was built and why — where delivered behaviour differs from the original specification, the
+task's `note:` says so rather than simply claiming the box. Track 9 is planned and does not reopen any
+of them.
+
+Two categories of work deliberately stay outside milestone tracking:
+
+- **Accepted security risks and informational findings** — three of the Track 7 audit's 34 findings are
+  recorded decisions rather than outstanding work (a plugin running with the API's authority,
+  `AllowedHosts: *`, and the absence of a CORS policy). They live in
+  [docs/security/FINDINGS.md](docs/security/FINDINGS.md) (S19) and are re-examined each minor release
+  via [docs/security/BURN_DOWN.md](docs/security/BURN_DOWN.md) (S24).
+- **Artifacts that cannot be produced on a single build host** — the Windows and Linux installer
+  formats and the signing/notarisation paths need their own platforms and real certificates; see M21–M22
+  and [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md) (S10).
 
 ## Guiding Principles
 
 - **FOSS Risk Management:** Professional-grade GRC tools accessible to small/medium organizations.
-- **Secure by Default:** Designed with deep-tier segregation, role-based access, and enterprise security standards.
+- **Secure by Default:** Deep-tier segregation, role-based access, enterprise security standards.
 - **Cross-Platform:** Full feature parity on Windows, Linux, and macOS.
 - **Modular Architecture:** Segregated API, Avalonia GUI, background jobs, and a pluggable system core.
 
----
-
-## 🗺️ Milestone Tracks
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ MODULAR MILESTONE TRACKS:                                               │
-│                                                                         │
-│   Track 1: Modern Desktop Experience (UI/UX Compliance)   ✓             │
-│   Track 2: GRC Core & Reporting Engine (Vulnerability/Risk)   ✓         │
-│   Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)   ✓     │
-│   Track 4: Integrations & Notification Channels (Slack/Jira/Teams)   ✓  │
-│   Track 5: Native Packaging & Release Engineering   ✓                   │
-│   Track 6: Database Uniformization & Schema Health   ✓                  │
-│   Track 7: Security Review & Hardening   ✓                              │
-│   Track 8: Risk Governance & Approval Workflows (Acceptance/Portal)   ✓ │
-│   Track 9: MIGR-TI/IA Methodology Alignment   ◻ planned                 │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-### Track 1: Modern Desktop Experience (UI/UX Compliance)
-
-This track focuses on performance tuning, visual standardization, and desktop ergonomics to achieve a world-class user experience.
-
-> **Status:** Milestones 1.1–1.5 shipped in **2.15.0**; the **UI-STD-001** reference item below is now closed too. `./build.sh LintUi` reports **0 violations across 80 views**, and the check is gated in CI ([.github/workflows/ui-compliance.yml](.github/workflows/ui-compliance.yml)) where any violation fails the build. What actually closed, and what did not:
->
-> - **The linter was wrong before it was strict.** It matched line by line, so a `<Button` whose `Classes` attribute sat on the following line — the dominant formatting in this codebase — was reported as unclassed. The rule engine was extracted to [`build/NetRisk.Packaging/UiStandardLinter.cs`](build/NetRisk.Packaging/UiStandardLinter.cs), rewritten to scan whole start tags, and unit-tested in [`src/Packaging.Tests/UiStandardLinterTest.cs`](src/Packaging.Tests/UiStandardLinterTest.cs). 11 of the 58 R6 reports were false positives; those views were already compliant. The previously reported "162 violations (16/4/26/116)" was a doubled log count and never the real figure.
-> - **The rewrite found more than it cleared.** Seeing whole elements also made R1 and R5 see attributes they had been missing: R5 had been reporting **0** while 45 genuine unlocalized strings were present, including 20 window titles that showed a class name in the title bar (`Title="AdminWindow"`, `Title="CloseDialog"`, `Title="VulnerabilityFixChatDialog"`). The true baseline was **106**, not 162.
-> - **102 fixed, 4 waived.** 12 hex literals and 2 named brushes replaced by five new classes in `WindowStyles.axaml` (each reusing a hex already in that file, no new token); 41 strings moved to 17 new keys added to all three `Localization*.resx` files; 47 buttons given a class from the §4.1 taxonomy. The 4 waivers are the same two debug commands duplicated across the macOS `NativeMenu` and the in-window `Menu`, which §3.2 of the standard exempts explicitly — declared in markup with a written reason via a new `<!-- ui-lint-waive R5: … -->` mechanism that the linter validates (a waiver with no reason is itself a violation and still fails the build). `NativeMenuItem` was *added* to the R5 rule while closing this, so the macOS copy could not hide behind a gap; the honest consequence was two more waivers rather than two fewer findings.
-> - **Evidence and gates.** Per-file pass/fail for all 80 views is in [roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md](roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md); a UI compliance section was added to [.github/pull_request_template.md](.github/pull_request_template.md); the zero-violation state is also asserted from `dotnet test`, so the gate holds if the Nuke target is bypassed. The GUI was run and both windows screenshotted — the login window title now renders as **Entrar** and the shell as **NetRisk**, both resolved through the localizer at run time.
-> - **The four dangling class references are now fixed.** Four views referenced style classes that no style defines (`Panel.EditTitle` in three edit windows, `TextBlock.subHeader` in `VulnerabilityImportWindow`), so those controls rendered unstyled. The linter cannot see this — it checks that a button *has* a class, not that the class *exists* — so `GUIClient.Tests/Views/StyleClassReferenceTest` was added to fail on any dangling reference, with these four on a reasoned allowlist. They have since been closed by adopting the documented classes rather than inventing new ones: the three title panels became the `TextBlock.header` band that `EditRiskWindow` and `EditIncidentWindow` already use, and the warnings caption became `header3`. **The allowlist is now empty** and the guard is unconditional. Views behind the login could not be observed on screen (the login needs a real password), so for those the evidence is compile-time binding validation plus the localization and style-class tests rather than a screenshot.
-
-> **Reference item — UI-STD-001: Full `docs/ui-standard.md` compliance sweep** — **closed** (see the status note above)
-> The source standard lives at [docs/ui-standard.md](docs/ui-standard.md). A refreshed static audit of `GUIClient/Views/**/*.axaml` on 2026-04-29 found broad divergence: 23 files with hard-coded color literals, 39 with literal user-facing strings, 29 with hard-coded window titles, 28 button-class deviations, and 18 fixed-width input/layout violations. The line-item remediation work is tracked by the milestones below; the supporting audit and plan live in [roadmap/UI_STANDARD_AUDIT.md](roadmap/UI_STANDARD_AUDIT.md) and [roadmap/UI_STANDARD_COMPLIANCE_PLAN.md](roadmap/UI_STANDARD_COMPLIANCE_PLAN.md).
-> **Acceptance criteria:** every file under `GUIClient/Views/**/*.axaml` has a recorded pass/fail compliance status; no unapproved hard-coded colors, spacing, or typography values remain; reusable style classes/resources are used where required; verification evidence is captured in a follow-up audit document; and a UI compliance checklist is added to the PR template (or a CI validation step for XAML style rules).
-> **Acceptance:** all five met. Pass/fail for all 80 views → [roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md](roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md); no unapproved colors → `LintUi` R1/R4 at 0, with the five new classes added to `WindowStyles.axaml` rather than inlined; reusable classes used → all 47 previously unclassed buttons carry a taxonomy class, and the four *dangling* class references found while auditing were recorded as defects with a guard test rather than quietly renamed, and have since been fixed by adopting the documented `header`/`header3` classes (allowlist now empty); follow-up audit document → as above; PR checklist **and** CI step → [.github/pull_request_template.md](.github/pull_request_template.md) and [.github/workflows/ui-compliance.yml](.github/workflows/ui-compliance.yml).
-
-#### Milestone 1.1: Visual Theme Standardization (Completed)
-*Align all 67 views of the desktop client with the uniform visual standard to eliminate design and token drift.*
-*   [x] **Color & Depth Tokenization:** Replace inline hex colors (`#222222`, `#666666`) and named brushes (`Azure`, `Green`, `Red`) with semantic class references from `WindowStyles.axaml` and `DarkStyles.axaml` to enforce the 5-plane depth model.
-*   [x] **String Extraction (Localization):** Move all user-facing English strings and window titles (such as "Save", "Cancel", "Score", "ID") into localized `.resx` resource dictionaries and bind them via `Str*` VM properties.
-*   [x] **Button Taxonomy Enforcement:** Re-class legacy and unclassed buttons to follow the canonical button taxonomy (`dialog1`, `dialog2`, `operation`). Implement unified icon+text stacks on all 28 button-bearing views.
-*   [x] **Responsive Form Sizing:** Convert fixed-width form layouts (e.g., inputs with static `Width`) to responsive `Grid`/`SpacedGrid` columns and `MinWidth` constraints using the standard spacing scale (xxs to xxl).
-*   [x] **Theme Protection Audits:** Integrate automated lint checks inside Nuke builds or pre-commit hooks to detect and reject inline hex colors or unclassed button tags in AXAML files.
-
-#### Milestone 1.2: Shell Backdrop & Material Stabilization (Completed)
-*Deliver beautiful glassmorphic window compositions with clean, solid-color fallbacks across various host OS window managers.*
-*   [x] **MainWindow Acrylic Panel:** Refactor `MainWindow.axaml` to wrap content in a layout-compliant acrylic/Mica panel structure.
-*   [x] **Windows 11 Mica Integration:** Implement conditional platform-aware materials to apply native Mica backdrops for stable, high-performance backgrounds.
-*   [x] **macOS Vibrancy Integration:** Apply native Apple system Vibrancy on sidebar and navigation panels under Darwin.
-*   [x] **Graceful Fallbacks:** Ensure backgrounds gracefully degrade to a high-contrast solid background (`#282928` / `surface/base`) when desktop compositions or GPU acrylics are unsupported (e.g., older Linux desktops or virtual machines).
-*   [x] **Sizing Constraints:** Enforce standard window sizing (e.g., MinWidth and MinHeight constraints) globally.
-*   [x] **Code Cleanup:** Purge the legacy, unreferenced scratch file `src/GUIClient/Views/teste.axaml`.
-
-#### Milestone 1.3: Compiled Bindings & Rendering Optimization (Completed)
-*Unleash extreme rendering speeds, minimize RAM footprint, and enable compile-time binding safety.*
-*   [x] **Explicit DataType Bindings:** Declare explicit `x:DataType="vm:ClassName"` across all 85+ views.
-*   [x] **VM Refactoring:** Resolve compile-time binding errors on legacy, reflection-based view-models.
-*   [x] **Enable Compiled Bindings Globally:** Flip the configuration flag to `true` in `netrisk.sln`:
-    `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>`.
-*   [x] **UI Virtualization:** Enforce virtualization on all list containers, and implement the high-performance `TreeDataGrid` container for dense incident and vulnerability grids.
-*   [x] **Binding Visibility Hardening:** Audit all views against their `x:DataType` view-models and promote bound members (labels, commands, child VMs, collections) from `private`/`protected` to `public`, since compiled bindings — unlike the old reflection bindings — can only reach public members. (Fixed post-migration regressions in `UserInfo`, `AdminWindow`/`UsersView`, and 24 other views; shipped in 2.5.1.)
-
-#### Milestone 1.4: Platform-Native Ergonomics & Accessibility (Completed)
-*Ensure the app feels like a local, native utility rather than a port, and optimize it for keyboard and mouse precision.*
-*   [x] **macOS Global Menu Redirection:** A `NativeMenu` mirroring the window menu is attached to `MainWindow`; on Apple Darwin it is hoisted into the system global menu bar while the in-window `Menu` is collapsed (`IsNotMacOS`). On Windows/Linux the native menu is ignored and the in-window menu is shown.
-*   [x] **Window Control Alignment:** macOS renders its traffic-light controls top-left natively; the navigation bar is inset dynamically (`NavBarMargin`) so its left-edge content clears those controls once the menu row collapses on Darwin.
-*   [x] **Keyboard Accessibility Sweep:** Global `Ctrl+P` (Print/Export → Reports) on `MainWindow`; `Ctrl+S` (Save) + `Esc` (Dismiss) on edit windows and — centralised in `DialogWindowBase` via `ISaveableDialog` — across all modal dialogs; `Ctrl+F` (Search) on the Entities and Incidents views; logical `TabIndex` order plus `IsDefault`/`IsCancel` buttons on the Login and entity forms.
-*   [x] **System Tray Integration:** `TrayIconManager` adds a Windows tray icon / macOS menu-bar extra with a quick-status preview (sign-in state + version, refreshed every 15s), Open/Hide/Exit context menu, and minimise-to-tray on Windows.
-
-#### Milestone 1.5: Interaction & Workflow Standardization (Completed — 2.15.0)
-*Standardize how windows behave — one dialog stack, one feedback language, state-driven workflows — per the July 2026 UX interaction study. The full standard (IX-1…IX-9), the window-by-window gap analysis, and the phase details live in [docs/ux-interaction-standard.md](docs/ux-interaction-standard.md).*
-*   [x] **Phase A — Defects & quick wins:** dead Reopen button on RiskView (client `ReopenRiskAsync` added — the API endpoint already existed), inert incident save-validation, unenforced UsersView validation, ConfigurationView missing error handling, dead/duplicate views, unified YesNo delete confirmations, `CanResize`-vs-`LockSize` contradiction, gear→Administration / Settings→About renames, missing localizations. **Also uncovered and fixed:** the GUI's entire validation layer had been a no-op stub since Feb 2026 (`ReactiveUI.Validation` was dropped in commit `4c4abaa5` and replaced with stubs returning `Disposable.Empty` / `Observable.Return(true)`), so *no* declared `ValidationRule` in any view-model had gated anything. Replaced with an in-tree `ValidationContext` that also surfaces per-field and summary messages, which is what Phase C's validation feedback binds to.
-*   [x] **Phase B — One dialog stack:** migrated the 9 legacy hand-`new`-ed edit windows (CloseRisk, AddFaceImage, EditMgmtReview, EditMitigation, EditRisk, VulnerabilityImport, EditIncident, IRP, IRP Task) onto `DialogWindowBase<TResult>`/`DialogService` with typed results; `ISaveableDialog` wired wherever `SaveCommand` exists (report dialogs, ChangePassword, CreateReport); `DialogService` now parents to and dims the actual launching window via `IDimmableWindow`; launcher-side size overrides deleted (size is XAML-only); duplicate AssessmentQuestionView editor retired.
-*   [x] **Phase C — Feedback standard:** `INotificationService` + `NotificationHost` toast stack replacing routine success MessageBoxes; validation messages surfaced inline and on disabled-Save tooltips (`ValidationContext.Text`); `IsBusy`/`WithBusyAsync` on `ViewModelBase` with ProgressRing overlays on the six views that had none; disabled-with-reason tooltips via `ActionTooltipConverter` on permission- and state-gated toolbar buttons.
-*   [x] **Phase D — Workflow convergence:** state-driven risk-lifecycle toolbar on RiskView (Plan mitigation / Revise / Review / Close / **Reopen**, enabled per status) with next-step prompts driven by `RiskHelper.GetNextStepAction`; EditIncidentWindow re-sectioned (narrative fields tabbed, one Save/Cancel row); IRP-task form grouped into named sections; IRP window made modal; DeviceView rebuilt as an archetype-B register with a selection toolbar and status bar; assessment tab-switch state loss fixed; AssessmentsRunsList rail made horizontal; EntityForm rebuilt declaratively (XAML + per-field-kind DataTemplates) with Save+Cancel, dirty tracking and enforced validation; shared `ManagerShell` control extracted for both report managers; Ctrl+F converged across six module views.
-*   [x] **Phase E — Shell polish:** `INavigationService` for all shell routing and auxiliary windows — `WindowsManager` and every visual-tree-walking `CommandParameter` deleted; auxiliary windows parented + singleton; window-geometry persistence (`WindowGeometryPersistence`, clamped to attached screens) on MainWindow and the auxiliary windows; Esc on all plain windows via `AuxiliaryWindowBase`; explicit TabIndex chains across the editor/utility dialogs.
-
----
-
-### Track 2: GRC Core & Reporting Engine
-
-This track focuses on the GRC (Governance, Risk, and Compliance) core features, incident workflows, and data output templates. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_2_GRC_REPORTING.md](docs/roadmap/TRACK_2_GRC_REPORTING.md).
-
-> **Status legend:** `[x]` shipped end-to-end (backend + GUI) · `[~]` backend complete, **GUI not yet implemented** · `[ ]` not started.
-> Milestones 2.1–2.4 below are backend-only: the REST API and `ServerServices` exist, but there are no `ClientServices` REST clients or `GUIClient` views, so these capabilities are **not yet usable from the desktop app**. The pre-existing basic Reports / Assessments / Entities / Incidents screens are *not* these enhanced features.
-
-#### Milestone 2.1: Advanced Reporting Engine (Completed)
-*Enable rich, customizable risk reports and automated exports.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.1](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-21-advanced-reporting-engine)
-*   [x] Introduce customizable report templates allowing organizations to define their logo, styling, and sections (backend + GUI designer with section reorder, branding/logo, presets, and live rendered preview).
-*   [x] Support scheduled exports of dashboards, compliance grids, and open incidents via email (`ScheduledReportJob` backend + GUI schedule editor with frequency/recipient builders and run-status surfacing).
-*   [x] Add PDF, CSV, and Excel export targets for all statistics tables (backend export service + GUI export actions on entity grids and Reports views).
-*   [x] **GUI:** report-template designer, scheduled-export configuration screen, and PDF/CSV/Excel export actions on statistics tables.
-
-#### Milestone 2.2: Enhanced Assessments Workflow (Completed)
-*Optimize how organizations collect, triage, and score vulnerability and compliance questionnaires.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.2](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-22-enhanced-assessments-workflow)
-*   [x] Build an interactive, paged assessment viewer supporting nested questions, conditional show/hide logic, and rich-text explanations.
-*   [x] Implement progress trackers and draft auto-saving to prevent data loss.
-*   [x] Support importing assessment templates from industry standards (e.g., NIST, ISO 27001) via JSON/Excel.
-*   [x] **GUI:** paged assessment-run viewer with conditional show/hide, rich-text rendering, progress tracker, draft auto-save, and a template-import dialog.
-
-#### Milestone 2.3: Multi-Entity & Multi-Tenant Support (Completed)
-*Enable managed risk monitoring across distinct organizational subdivisions.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.3](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-23-multi-entity--multi-tenant-support)
-*   [x] Segregate assets, risks, and vulnerabilities by "Business Entity". **This was not in fact enforced** — despite the previous "enforced server-side" note, `ApplyEntityScope` was called from exactly one query and the controller never passed it a principal, so every caller ran unfiltered. Enforcement now lives on the model as EF global query filters over the five `entity_id`-bearing types plus the nine records that inherit an entity from a parent (mitigations, management reviews, host services, assessment questions/answers/runs and their answers, fix requests), so a service that forgets to scope still cannot cross the boundary; `AuditableContext.SaveChanges` additionally refuses a write that would file a record into another entity, which no query filter can cover.
-*   [x] Introduce role-based scoped access (e.g., users can only view risks belonging to their assigned Business Entity) — deny-by-default for an authenticated user with no assignment, unrestricted for global admins and non-HTTP callers (jobs, console, migrations), with an Entity Access admin screen to grant and revoke per-entity roles. Covered by 21 negative tests proving an entity-A user cannot read, update or delete an entity-B record through any service including exports, and by MariaDB integration tests asserting the predicate reaches SQL rather than being evaluated client-side.
-*   [x] Add a central Master Dashboard for administrators to view aggregated posture metrics across all entities. **The backend did not in fact exist** — despite the previous "backend complete" note there was no `/dashboard/master` endpoint or cross-entity rollup service, so both halves were built: `MasterDashboardService` (single-pass grouping of risks/vulnerabilities/incidents by `entity_id`, weighted org averages, 2-minute cache on a singleton) + `GET /Dashboard/Master` gated by `RequireAdminOnly`.
-*   [x] **GUI:** central Master Dashboard view aggregating posture metrics across all entities — admin-only nav entry, per-entity posture cards ordered worst-first, org totals band, refresh that bypasses the server cache, and empty/not-authorised states.
-
-#### Milestone 2.4: Incident Response Automation (IRP) (Completed)
-*Close the loop on incident management with active workflows.* — Spec: [docs/roadmap/TRACK_2_GRC_REPORTING.md § 2.4](docs/roadmap/TRACK_2_GRC_REPORTING.md#milestone-24-incident-response-automation-irp)
-*   [x] Create customizable Incident Response Plan (IRP) templates — `IrpTemplatesRestService` client added, and the API gained the task CRUD it was missing (`GET/POST /IrpTemplates/{id}/Tasks`, `PUT/DELETE .../{taskId}`) plus `POST /IrpTemplates/{id}/Clone`, with predecessor edges validated for acyclicity on save and clones written in topological order.
-*   [x] Support automatic task generation and assignment when an incident of a specific type is created — the `IrpAutomationService` engine already existed; its `MatchingRulesJson` (category + status) and per-task `AssigneeRuleJson` (User/Role) are now authored through pickers instead of raw JSON.
-*   [x] Build task-dependency Gantt trackers to visualize critical paths during emergency response — server-side CPM (`IrpScheduleService`, `GET /IncidentResponsePlans/{id}/Schedule`) with early/late start, slack, critical flag, blocked and overdue detection, rendered as a parented Gantt window with a today marker. Dependencies are now **persisted** as `incident_response_plan_task_dependencies` edges (schema phase 7, `db_version` 76) and validated acyclic on save; a task with no explicit edge still falls back to the `ExecutionOrder`/`IsSequential` ordering so plans authored earlier schedule unchanged. Completing a blocked task requires a stated reason and records who overrode it and when.
-*   [x] **GUI:** IRP template editor, automation-rule configuration screen, and a task-dependency Gantt/critical-path view.
-
----
-
-### Track 3: Vulnerability Aggregation & Finding Lifecycle (ASPM)
-
-This track bridges GRC with Application Security Posture Management (ASPM), allowing organizations to ingest, deduplicate, and triage automated scanner outputs. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_3_ASPM.md](docs/roadmap/TRACK_3_ASPM.md).
-
-#### Milestone 3.1: Extensible Scanner Importers (Completed)
-*Provide a unified plugin interface to feed findings from any security tool.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.1](docs/roadmap/TRACK_3_ASPM.md#milestone-31-extensible-scanner-importers)
-*   [x] Define a generic `IVulnerabilityImporter` plugin contract in the `netrisk-plugin-sdk` (input: report stream; output: normalized `Vulnerability` + `Host` + `CVEDetail` models) — shipped as `IVulnerabilityReportImporter` plus `INetriskVulnerabilityImporterPlugin`, with an explicit `ImporterContract.Version` so an SDK upgrade cannot silently break a third-party plugin. An implementation parses and returns records; it never touches the database, the network or the file system.
-*   [x] Refactor the legacy, built-in Nessus parser onto the new extensible contract — the old write-as-you-parse path is retired, and `import/nessus/{fileId}` is a compatibility alias onto the new pipeline.
-*   [x] Write native importers for: OWASP ZAP, Trivy, Semgrep, OpenVAS, Burp Suite, Snyk, Grype, and GitHub Dependabot — plus a **generic SARIF 2.1 importer**, which alone unlocks CodeQL, ESLint, Bandit, Checkov, gitleaks and anything else with a SARIF exporter. Field mappings documented in [docs/features/scanner-importers.md](docs/features/scanner-importers.md).
-*   [x] API Modernization: Generalize `POST /vulnerabilities/import/{importerName}/{fileId}` with dynamic importer discovery via `IPluginsService` — plus `GET /vulnerabilities/importers`, `GET /vulnerabilities/import-jobs/{id}` for status and counts, and the reserved importer name `auto` for content sniffing. Imports run as background jobs, because a 500 MB scan file makes a synchronous endpoint a timeout trap.
-*   [x] GUIClient Modernization: Build a dynamic importer selector inside the vulnerability import dialog — auto-detect by default, live job progress, and the per-import summary with its downloadable warning list.
-
-#### Milestone 3.2: Finding Lifecycle & Audit Trails (Completed)
-*Establish a rigorous triage state-machine for individual findings.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.2](docs/roadmap/TRACK_3_ASPM.md#milestone-32-finding-lifecycle--audit-trails)
-*   [x] Add granular lifecycles: `Active`, `Verified`, `FalsePositive`, `OutOfScope`, `Duplicate`, `RiskAccepted`, `Mitigated` — int-backed in a `status_id` column, separate from the register's fifty-value general-purpose `Status`, with the transition matrix enforced in `ServerServices` and surfaced as HTTP 422. Re-imports respect suppressing verdicts; a `Mitigated` finding seen again reopens as a regression.
-*   [x] Implement an audit logging mechanism to track state transitions (who, when, why) on individual findings — append-only `finding_status_history` with no update or delete path anywhere in the API, rendered as a timeline on the finding detail view.
-*   [x] Introduce a dedicated `RiskAcceptance` entity containing expiration dates, authorizing managers, and business justifications. *(Entity design generalized by [Track 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions) — one shared entity covers both risks and findings; this item delivers the finding-level wiring.)*
-*   [x] Implement a background job (Hangfire) to automatically re-open expired risk-acceptance agreements. *(Shared with Track 8.1.3.)* — daily, idempotent, with T-30/T-7 pre-expiry warnings; leaves a finding somebody has already re-triaged where it is.
-
-#### Milestone 3.3: Intelligent Deduplication Engine (Completed)
-*Prevent database bloat from repeated automated scans using pluggable matching strategies.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.3](docs/roadmap/TRACK_3_ASPM.md#milestone-33-intelligent-deduplication-engine)
-*   [x] Extend the default hash-based lookup with modular strategies: `HashBased`, `UniqueIdFromTool`, `LegacyHashCode`, `Custom` — chained per scanner, first non-null key wins, keys persisted in `dedup_key` and never recomputed so an algorithm upgrade affects only new imports.
-*   [x] Ensure importing updates existing open findings rather than creating duplicates, while maintaining historical scan logs — dedup groups without discarding, and every import is reconstructible from the new `scan_imports` table. Auto-close of findings a **full** scan no longer reports is configurable per scanner and **off by default**.
-*   [x] Build an administration UI to toggle and configure deduplication heuristics per scanner type — with the preview panel that computes two findings' keys and reports whether they would merge, before anything is saved, and a change history.
-
-#### Milestone 3.4: SLA Tracking & Aging (Completed)
-*Enforce compliance boundaries with automated service level agreements (SLAs).* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.4](docs/roadmap/TRACK_3_ASPM.md#milestone-34-sla-tracking--aging)
-*   [x] Introduce `SlaConfiguration` schemas defining max triage/remediation days per severity (Critical, High, Medium, Low) — effective-dated and superseded rather than edited, so a policy change never rewrites a past compliance number. Seeded to the CISA benchmarks; per-entity overrides compose with Track 2.3.
-*   [x] Implement computed fields tracking `SlaDueDate` and `DaysOverdue` on open findings — the due date computed from the policy in force when the finding appeared and recomputed on severity change; days overdue derived at read time, never stored, and paused in suppressed states.
-*   [x] Automate email and webhook breach notifications as target deadlines approach — a daily digest job, one message per owner rather than per finding, de-duplicated by (finding, threshold, due date) so a crossing notifies exactly once. Channels beyond email and in-app messaging await Track 4.1.
-
-#### Milestone 3.5: CI/CD-First Integration API (Completed)
-*Integrate NetRisk directly into automated build pipelines.* — Spec: [docs/roadmap/TRACK_3_ASPM.md § 3.5](docs/roadmap/TRACK_3_ASPM.md#milestone-35-cicd-first-integration-api)
-*   [x] Implement scoped, non-interactive API-token authentication optimized for CI runners — `nrk_`-prefixed, 256-bit, stored hashed and shown once, with scopes that narrow the acting user's permissions rather than widening them, optional expiry and entity binding, and instant revocation.
-*   [x] Support bulk, idempotent direct upload endpoints: `POST /vulnerabilities/import/{importer}` accepting raw payloads — streamed to disk rather than buffered, asynchronous by default with `?wait=true` for small payloads, and an `Idempotency-Key` header that makes a CI retry storm harmless.
-*   [x] Publish official, copy-pasteable GitHub Actions, GitLab CI, and Azure Pipelines task recipes — in [docs/ci/](docs/ci/), pinned by SHA where the platform allows it, each covering the platform-native way to handle the credential.
-*   [x] Support exit-code gating patterns (e.g., fail builds if new Critical vulnerabilities are imported) — `netrisk-console ci gate --job <id> --fail-on <policy>`, exiting 2 on violation. "New vs pre-existing" rides on the dedup engine, which is what makes gating non-flaky.
-
----
-
-### Track 4: Integrations & Notification Channels
-
-This track focuses on connecting NetRisk with external messaging platforms, issue trackers, and enterprise identity systems. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRACK_4_INTEGRATIONS.md).
-
-> **Status:** Milestones 4.1–4.5 are complete. Their schema arrives as `db_version` 79 (upgrade phase 10):
-> fifteen new tables plus posture columns on `hosts` and `entities`. Feature documentation lives in
-> [docs/features/notification-channels.md](docs/features/notification-channels.md),
-> [docs/features/issue-tracker-sync.md](docs/features/issue-tracker-sync.md),
-> [docs/features/enterprise-authentication.md](docs/features/enterprise-authentication.md) and
-> [docs/features/posture-integrations.md](docs/features/posture-integrations.md). Where the
-> implementation departs from the written spec, the item below says so rather than quietly ticking.
-> **Milestone 4.6 (Jira Service Management & Assets) is complete** — `db_version` 83 as upgrade
-> phase 14: eight additive tables, two CMDB columns on `hosts`, and the widening of
-> `finding_issue_links` from findings to findings, incidents and risks. Specified in
-> [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.6](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-46-jira-service-management--assets),
-> documented in [docs/features/jira-service-management.md](docs/features/jira-service-management.md).
-
-#### Milestone 4.1: Unified Notification Channels (Completed)
-*Broadcast alerts to platforms where security and engineering teams already communicate.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.1](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-41-unified-notification-channels)
-*   [x] Implement an extensible `INotificationChannel` interface — `Name`/`Kind`, `SendAsync(NotificationMessage, ChannelConfiguration)` and `TestAsync`, with a registry resolving one provider per channel kind. Providers are stateless renderers: subscription matching, retry with backoff (3 attempts at 1/4/9 minutes), the ordered fallback chain, digest windows and the delivery log all live in the dispatcher, so adding a provider is one renderer.
-*   [x] Write native notification channel providers for: Email, Slack, Microsoft Teams, and generic Webhooks. Slack renders Block Kit inside a severity-coloured attachment and honours HTTP 429 `Retry-After`; Teams posts an Adaptive Card 1.4 to a Workflows webhook (explicitly **not** the retired O365 `MessageCard`); the generic webhook POSTs a documented, versioned JSON body with custom headers and an `X-NetRisk-Signature` HMAC-SHA256 over `"{timestamp}.{body}"`; email renders HTML with a plaintext alternative. Every provider implements `TestAsync`, wired to a "send test message" button in the admin UI.
-*   [x] Allow administrators to configure event-triggered notifications (e.g., dispatch a Slack alert when a new Critical risk is recorded or when an SLA breach occurs) — a ten-event catalog raised from `ServerServices`, `notification_subscriptions` with per-row minimum-severity and entity filters and an optional digest window, and a `notification_deliveries` log (status, attempts, last error, re-send) in Administration → Integrations. Channel credentials are encrypted at rest and no endpoint returns them. **Deviation:** the queue is a database table swept every minute by a Hangfire recurring job rather than per-message Hangfire jobs — the immediate send happens inline so "within seconds" holds, and the durable retry/digest state stays inspectable in the admin UI.
-
-#### Milestone 4.2: Bi-directional Issue Sync (Completed)
-*Align security triage with development workflows.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.2](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-42-bi-directional-issue-sync)
-*   [x] Create a modular issue tracker integration core — `IIssueTrackerProvider` (`CreateIssueAsync`, `UpdateIssueAsync`, `GetIssueAsync`, `TestConnectionAsync`, `ParseWebhook`) with capability flags; `issue_tracker_connections` carrying per-connection field mapping (severity → tracker priority, `{{Placeholder}}` title/description templates, issue type, default labels); `finding_issue_links` with last-synced status, `last_sync_at` and a sync-error state, so one finding may link to several trackers; and a per-connection sync log.
-*   [x] Support creating and linking developer tasks directly from vulnerability records to **Jira** (Cloud REST v3, ADF descriptions, transitions resolved by id from the issue's available transitions), **GitHub Issues** (PAT, `X-Hub-Signature-256`), **GitLab Issues** (project token, addressed by `iid`) and **Azure DevOps Work Items** (PAT, JSON Patch). From a finding or a multi-selection: preview the rendered title and description, then create + link, or link an existing issue by key or URL. The description carries severity, asset, CVE links, an evidence excerpt and the deep link back. Creation is idempotent per (connection, finding). Policy mode auto-creates at or above a configured severity, off by default.
-*   [x] Implement bi-directional synchronization (e.g., closing a linked Jira ticket automatically transitions the NetRisk finding to `Mitigated` or schedules a re-verify task) — validated webhook receivers per provider (GitHub/GitLab signature or token; a URL secret for Jira and Azure DevOps, which cannot sign) plus a per-connection polling fallback; a status-mapping table whose actions are `MarkMitigated`, `ScheduleReverify`, `MarkFalsePositive`, `Reactivate` or `None`; every applied transition recorded with `source=IssueSync` and the tracker's status in the justification; outbound comments and transitions on a NetRisk transition; loop protection via sync-origin marking; and last-writer-wins with a flagged conflict review queue.
-
-#### Milestone 4.3: Hardened Enterprise Authentication (Completed, with deviations)
-*Secure access with standard enterprise single sign-on (SSO).* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.3](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-43-hardened-enterprise-authentication)
-*   [x] Support SAML 2.0 and OIDC authentication protocols — multiple storable IdP configurations, per-IdP claim/attribute and group mapping shared with SCIM, JIT provisioning off by default, the system-browser + loopback-redirect desktop flow, and local-admin break-glass. **Two deviations from the spec's wording.** OIDC is an explicit authorization-code-with-PKCE flow (`Microsoft.IdentityModel` for discovery, JWKS and id_token validation) rather than ASP.NET Core's cookie-based `AddOpenIdConnect` middleware: the primary client is a desktop app redirecting to a loopback URI, and cookie middleware has nowhere to put a cookie in that shape. SAML is implemented directly over `SignedXml` (metadata-sourced certificates, signature-wrapping and audience checks, DTD processing prohibited) rather than through Sustainsys.Saml2 — the existing `UOX.Saml2.Authentication` package stays wired for the legacy cookie path, and a second SAML stack beside it would have meant two ways to configure an IdP. Encrypted assertions and single logout are **not** implemented; single logout is stored as a capability flag only.
-*   [x] Implement automated User Provisioning via SCIM — `/scim/v2/Users` and `/scim/v2/Groups` with RFC 7644 PATCH semantics (including the path-less `replace` Entra ID sends and URN-prefixed paths), `attribute eq "value"` filtering, 1-based pagination and `ServiceProviderConfig`. `active:false` sets both `Enabled=false` and `Lockout=1`, and every authenticated request re-reads both, so deprovisioning revokes live sessions on the next request. Long-lived per-connection bearer tokens (`scim_…`, stored hashed, shown once, revocable in the admin UI) with full request auditing in `scim_request_logs`. **Deviation:** a SCIM group maps onto a NetRisk **role** — the only group-shaped concept NetRisk has — so `DELETE /Groups/{id}` empties the group but keeps the role, and SCIM `externalId` is matched against the login rather than stored in a column of its own.
-*   [x] Support hardware-based authentication tokens (YubiKey, WebAuthn) for administrative accounts — fido2-net-lib registration and authentication ceremonies, several named authenticators per user with created/last-used tracking, configurable attestation policy (`none` by default), signature-counter clone detection, an `authentication:requireHardwareFactorForAdmins` policy switch surfaced through a status endpoint, and admin-issued single-use recovery codes whose generation is audited. Both ceremonies run through the system-browser flow established above, since WebAuthn is a browser API. **Deviation:** WebAuthn registers as an independent second factor alongside FaceID rather than the two being merged into one MFA-method registry; a unified second-factor abstraction over both is not built.
-
-#### Milestone 4.4: Trend Micro Vision One Integration (Completed)
-*Integrate with Trend Micro Vision One for asset, risk, vulnerability, and posture synchronization.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.4](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-44-trend-micro-vision-one-integration)
-*   [x] Establish connection management with region-aware API keys and test connection utilities — `trendmicro_connections` with a region picker (seven Vision One regions, API root derived from the region, explicit override allowed), encrypted API key, synchronization schedule and active flag; "Test connection" reads one page of `/v3.0/asrm/attackSurfaceDevices` (Vision One accepts `top` only from 10/50/100/200/500/1000, so the obvious `top=1` is a 400), which also proves the key carries the ASRM permission — a `/whoami`-style probe would pass without it.
-*   [x] Automate computer inventory synchronization mapping endpoints from Trend Micro to NetRisk Hosts — a daily Hangfire job over `/v3.0/asrm/attackSurfaceDevices` mapping hostname/FQDN, IP, MAC, OS and version, asset criticality and the Vision One asset id onto new `hosts` columns (`external_id`, `external_provider`, `os_version`, `criticality`, `risk_score`). **Deviation:** deduplication is an asset-identity chain (external id → MAC → FQDN → hostname → IP) rather than the Track 3.3 engine, which keys on findings and has nothing to say about hosts; the finding half of this integration does go through that engine.
-*   [x] Ingest and map CVE vulnerabilities from at-risk devices, including virtual patching status detection — `/v3.0/asrm/attackSurfaceDevices`, whose device rows carry the CVE list, expanded to one finding per CVE per device and ingested through the shared ingestion pipeline, so Vision One findings get the same deduplication, sticky triage and SLA due dates as a scanner import. A virtual patch records its IPS rule id in the finding's evidence and, when the connection opts in, transitions the finding to `Mitigated` with that rule in the audit trail; the default is off, because a virtual patch is a compensating control and closing the finding by default would hide unpatched software.
-*   [x] Synchronize risk scores (0-100) and posture metrics to aggregate into the NetRisk entity-wide Cyber Risk Index — device scores onto `hosts.risk_score` with their source, rolled into `entities.cyber_risk_index` as a criticality-weighted mean so one critical server is not averaged away by twenty test machines; optional write-back of asset criticality and acceptance-derived exemptions through `/v3.0/asrm/attackSurfaceDevices/update`, off by default.
-
-#### Milestone 4.5: SecurityScorecard Integration (Completed)
-*Integrate with SecurityScorecard for domain-level cyber rating, factor scores, vulnerability, and issue synchronization.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.5](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-45-securityscorecard-integration)
-*   [x] Establish connection management with domain targeting and token authentication tests — `securityscorecard_connections` with a bare registered domain as the target (a URL, path or email address is refused at save, because it otherwise produces a 404 that reads as "no scorecard exists"), an encrypted token sent as `Authorization: Token`, synchronization schedule and active flag; "Test connection" reads `GET /companies/{domain}`, which proves both the token and the entitlement.
-*   [x] Automate posture synchronization retrieving overall grade, score, and the 10 risk factor details — a daily Hangfire job over `/companies/{domain}` and `/companies/{domain}/factors`, writing an append-only `security_scorecard_factors` history (one row per factor per run plus a flagged synthetic `overall` row) for trend charting, and inverting the 0–100 "higher is better" score into `entities.cyber_risk_index`, where higher is worse.
-*   [x] Ingest and map domain-level CVE vulnerabilities and potential exposures — `/companies/{domain}/issues/potentially_vulnerable` ingested through the shared pipeline as findings under the `SecurityScorecard_Vulnerability` category, attached to a synthetic domain-asset host so they are visible in an asset-oriented register.
-*   [x] Synchronize active security issues and findings (missing SPF, ports, SSL, etc.) under custom categories — `/companies/{domain}/issues` ingested under `SecurityScorecard_Issue` with issue type, risk factor, impacted host/IP/URL, port and `first_seen`/`last_seen` preserved in the finding's evidence. **Deviation:** the category rides on the finding as an importer tool field rather than as a first-class `categories` row, so no schema change is needed to hold a vendor taxonomy that changes without notice.
-
-#### Milestone 4.6: Jira Service Management & Assets (Completed)
-*Read the service desk, and import the CMDB registers that describe applications, servers and machines.* — Spec: [docs/roadmap/TRACK_4_INTEGRATIONS.md § 4.6](docs/roadmap/TRACK_4_INTEGRATIONS.md#milestone-46-jira-service-management--assets)
-*   [x] Extend the existing Jira connection with a Service Management and Assets facet instead of adding a fifth provider — a 1:1 `jira_connection_settings` row carrying the deployment kind (Cloud/Data Center), service desk, queue imports and Assets workspace/schema, so one credential serves Jira Software, JSM and Assets and one ticket cannot end up linked through two connections. Only Cloud is supported; Data Center's Insight API is refused at save rather than half-implemented.
-*   [x] Read the Service Management surface — service desks, request types and queues live (`/rest/servicedeskapi/…`), and a mirror of the requests NetRisk cares about (`jira_service_requests`) with their SLA cycles in columns rather than a blob (`jira_request_slas`), so "what breaches this week" is a query. A breaching SLA raises a new `jsm.sla_breached` event through the 4.1 dispatcher, once per `(request, metric, cycle)`.
-*   [x] Generalise `finding_issue_links` so a ticket can hang off a **finding, an incident or a risk** — a `target_kind` discriminator plus real `incident_id`/`risk_id` foreign keys (not a polymorphic id, which cannot cascade) and a `CHECK` that exactly one is set. Inbound `IssueSyncAction`s stay finding-only: mirroring an incident's external status is safe, transitioning the incident automatically is a policy nobody has specified.
-*   [x] Import Jira Assets registers for applications, servers and machines — AQL-paged reads of a mapped object type, projected through a configurable attribute mapping onto **name, responsible, environment and active state**. Servers and machines land on `hosts` through 4.4.2's identity chain (external id → MAC → FQDN → hostname → IP) so they reconcile with the existing inventory instead of duplicating it, with two new columns (`environment`, `owner`) and the active state mapped onto the `status` the hosts screen already renders. Applications land as `entities` rows on the `application` definition, which gains `environment` and `active` properties.
-*   [x] Make the configuration screen configurable — the status-mapping grid is editable at last (add/remove, a duplicate guard, and *Load statuses from Jira*), and the title and description templates and the severity→priority mapping have editors for the first time; all four had been stored on the connection since 4.2.1 with no UI, and the wholesale `PUT` behind the status mapping had never been called. A new **Jira Assets** tab adds three more: field mapping against the site's own field list including custom fields, Service Management with the queue picker and the request mirror, and Assets object and attribute mapping with a dry-run preview before the first import. **Deviation:** three sub-tabs in a tab of their own rather than the five sub-tabs the spec describes — the connection form and the status mapping apply to all four providers, so they stayed where they were instead of becoming Jira-only.
-*   [x] Render the templates against a real finding before saving them — *Preview* beside the template editors shows the title, the mapped priority and the body. `IIssueTrackerService.PreviewAsync` had existed since 4.2.1 with no UI on it, which left the templates editable and unverifiable: the only way to see what a placeholder produced was to file a ticket in somebody else's project. An unsaved template edit is saved first, but only when a template field actually differs, so a read-looking button does not write on every click.
-*   [x] Link an imported Assets object back to its page on the Jira site — keyed on the object **key** and not the numeric id, per Atlassian's documentation for the route; the id is the plausible wrong guess and produces a URL that looks right and 404s. Built from the connection's base URL on read rather than stored, so renaming a site does not leave every previously imported row pointing at the old host, and opened through the same hardened launcher as the finding screen's CVE links (Track 7 NR-2026-023).
-*   **One deviation remains, recorded rather than quietly ticked.** The milestone's first risk is still open: whether the Assets Cloud API accepts basic auth with an API token is confirmed by the connection test at run time, not by Atlassian's own reference — the code is written for basic auth and the probe is the first thing an operator exercises.
-
----
-
-### Track 5: Native Packaging & Release Engineering
-
-This track automates artifact production, ensuring secure and seamless software distribution. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_5_PACKAGING.md](docs/roadmap/TRACK_5_PACKAGING.md).
-
-> **Status:** Milestones 5.1 and 5.2 are implemented in the Nuke build. Read the honesty notes on each item: the packaging logic, manifests and signing pipelines are all in place and unit-tested, but **no signed, notarized or Windows/Linux-native artifact has actually been produced yet**, because that needs real certificates, an Apple Developer account and Windows/Linux runners. The operational guide for release engineers — which credential goes where, what each runner must install, how to rotate a certificate — is [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md).
-
-#### Milestone 5.1: Automated Code-Signing Pipelines (Completed)
-*Eliminate OS-level safety warnings and establish verified publisher trust.* — Spec: [docs/roadmap/TRACK_5_PACKAGING.md § 5.1](docs/roadmap/TRACK_5_PACKAGING.md#milestone-51-automated-code-signing-pipelines)
-*   [x] **Windows Authenticode:** Signing is wired into the Windows packaging path in Nuke (`build/Build.Signing.cs`): Azure Trusted Signing via the `sign` CLI as the first-class provider with `signtool` (thumbprint, CSP/key-container cloud HSM, or PFX) as the fallback, SHA-256 digests, RFC 3161 timestamping with an ordered fallback list, and a `signtool verify /pa /all` gate. Every shipped `.exe`/`.dll` plus the Inno Setup installer, the `.msi` and the `.msix` go through it. Credentials come only from parameters/environment and are redacted from logs; with none present the build emits one warning and produces unsigned artifacts, and `--require-signing` turns that into a failure. **Not executed:** signing itself needs a Windows host and a real certificate, so it has never run — the decision logic (skip/sign/fail, provider selection, timestamp fallback ordering, redaction) is covered by `src/Packaging.Tests`, not by a signed binary.
-*   [x] **macOS Developer ID & Notarization:** `PackageMacGUI`/`PackageMacA64GUI` now run the full ordered pipeline — hardened-runtime `codesign` of every nested Mach-O then the bundle with an entitlements file, `notarytool submit --wait` (App Store Connect API key preferred, keychain profile supported), `stapler staple`, `spctl --assess` — for the `.app`, the `.pkg` (`productsign`) and the `.dmg`. A notarization rejection fails the build and prints Apple's log. CI certificate import goes through a throwaway keychain that is deleted in a `finally`. Only three entitlements are granted and a test fails if any hardened-runtime weakening (e.g. `disable-library-validation`) is added. **Not executed:** signing and notarization were never run end to end — there is no Developer ID certificate or Apple account in this environment. The unsigned path *was* exercised: `PackageMacA64GUI` runs to completion and produces the `.app`, `.pkg` and `.dmg`, logging that signing was skipped.
-
-#### Milestone 5.2: Modern Native Installers (Completed)
-*Provide streamlined, native installation packages matching platform standards.* — Spec: [docs/roadmap/TRACK_5_PACKAGING.md § 5.2](docs/roadmap/TRACK_5_PACKAGING.md#milestone-52-modern-native-installers)
-*   [x] **Windows:** New `PackageWindowsMSI` (WiX v5 authoring at `build/installers/windows/msi/NetRisk.wxs` — per-machine, no-UI/silent, upgrade table wired, publish directory harvested, public `INSTALLFOLDER`/`SERVERURL`/`INSTALLDESKTOPSHORTCUT` properties) and `PackageWindowsMSIX` (rendered `AppxManifest.xml`, `makeappx pack`, signed, plus a published `.appinstaller` for built-in auto-update). `SERVERURL` writes a `netrisk.ini` overlay that the client now layers on top of `appsettings.json`, so enterprise server pre-configuration works end to end. **Not executed:** WiX and `makeappx.exe` are Windows-only. On this macOS host `wix build` prints "All behavior after this point is undefined", rejects every legal `Directory/@Name` (WIX0389) and then crashes in its bind phase, so **no `.msi` or `.msix` file has been produced**. Both targets skip with one warning off Windows — the MSIX target still writes and validates the package layout, the manifest and the `.appinstaller`. The authoring and manifests are verified statically instead (XML well-formedness plus assertions on upgrade code, install scope, secure properties, the INI row, shortcut targets, MSIX identity/version/capability set and `.appinstaller` URIs) in `src/Packaging.Tests`.
-*   [x] **macOS:** `.dmg` assembly is now genuinely drag-and-drop: the signed/notarized `NetRisk.app`, an `/Applications` symlink, a branded background and a volume icon. The default path is pure `hdiutil` with no Finder or AppleScript dependency (CI-reproducible); `--branded-dmg` opts into `create-dmg` for window geometry when a GUI session is available. **Executed here:** `./build.sh PackageMacA64GUI --configuration Release` was run on this Apple Silicon machine and produced a mountable drag-and-drop DMG containing `NetRisk.app`, an `/Applications` symlink, the background and the volume icon, with the expected "signing skipped" warnings; the `create-dmg` branded layout was separately exercised with the build's exact argument list and produced the window geometry (a `.DS_Store`) as intended.
-*   [x] **Linux:** New `PackageLinuxFlatpak` and `PackageLinuxSnap` targets, both fed by the same self-contained `linux-x64` publish. Flatpak targets `org.freedesktop.Platform` 24.08 with a deliberately enumerated least-privilege sandbox (wayland/fallback-x11/ipc/dri, network, `xdg-download`, tray + Secret Service D-Bus names — and explicitly **not** `--device=all`, `--filesystem=home` or a raw bus socket); Snap is `core24`, strictly confined, with the matching interface list and a stable/devel grade mapped to the release type. AppStream metainfo and a freedesktop `.desktop` entry are shared by both and validated with `appstreamcli` when available. **Not executed:** `flatpak-builder` and `snapcraft` are Linux-only and absent here, so **no `.flatpak` or `.snap` file has been produced** and neither has been published to Flathub or the Snap Store (both also need store registration, which is an ops step). Both targets stage the payload and render the manifest on any host, then skip with one warning; the rendered recipes are parsed and asserted in `src/Packaging.Tests`. The two known sandbox limitations — camera-based FaceID needs an explicit `--device=all`/`snap connect` opt-in, and file dialogs go through the XDG portal — are documented rather than papered over.
-
----
-
-### Track 6: Database Uniformization & Schema Health
-
-This track standardizes the database schema (naming, relationships, indexing, types) and removes dead tables/columns — with zero data loss. The full multi-phase plan, including the per-phase migration strategy and risk analysis, lives in [docs/plano-uniformizacao-banco.md](docs/plano-uniformizacao-banco.md). Each milestone below has a detailed specification under [roadmap/track-6/](roadmap/track-6/).
-
-#### Milestone 6.1: Upgrade Tooling & Preparation (Plan: Tool + Phase 0) (Completed)
-*Build the safety net before touching the schema.* — Spec: [roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md](roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md)
-*   [x] Extend the ConsoleClient `database` command with `upgrade-schema --phase <n> [--env homolog|prod] [--check] [--dry-run] [--yes] [--output]`: pre-flight checks, automatic backup, phase apply over the numbered-SQL `db_version` path, post-apply validations (index/FK/column-type/table/custom), a destructive-phase observation gate, and a `schema_upgrade_log` audit trail — all driven by the versioned manifest `src/ConsoleClient/DB/SchemaUpgradePhases.yaml`. (Apply runs over the existing numbered-SQL mechanism, not `Database.Migrate()`; EF migrations remain the source for generating that SQL.)
-*   [x] Production baseline tooling via `database baseline`: row-count census of removal candidates (recommends drop vs archive), pending-migration + model-vs-snapshot divergence report, optional Markdown output. (The one-time *run* against the live prod DB, including the full dump, remains an ops step.)
-*   [x] Document the target naming convention (snake_case tables/columns, `fk_`/`idx_`/`uq_` prefixes, UTC DATETIME, `tinyint(1)`, int+enum, no BLOB-for-text) in [CLAUDE.md](CLAUDE.md) so new entities are born compliant.
-*   [x] Verified by `ServerServices.Tests` (unit) and `DAL.IntegrationTests` (Testcontainers MySQL, `Category=Integration`).
-
-#### Milestone 6.2: Safe Fixes & Naming Uniformization (Plan: Phases 1–2) (Completed)
-*Low-risk corrections and snake_case convergence — renames only, no drops.* — Spec: [roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md](roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md)
-*   [x] **Phase 1 (`db_version` 64):** fixed invalid `0000-00-00` defaults (`mgmt_reviews.next_review` default dropped; `mitigations.last_update` → `CURRENT_TIMESTAMP`) and the index typos (`biometic`/`sequencial`/`optinal`).
-*   [x] **Phase 1b (`db_version` 66):** boolean `tinyint(4)` → `tinyint(1)` for `comments.IsAnonymous` and `framework_controls.deleted` (C# `sbyte` → `bool` end-to-end).
-*   [x] **Phase 2b (`db_version` 67):** snake_cased the last stray column `comments.IsAnonymous` → `is_anonymous`.
-*   [x] **Phase 1c (`db_version` 68):** collation/charset unification — converted all 99 base tables to `utf8mb4` / `utf8mb4_unicode_ci` via `CONVERT TO` (wholesale `utf8mb3` → `utf8mb4`), so text columns can store 4-byte characters. Verified on MariaDB: no `utf8mb3` remains, data preserved, emoji round-trips.
-*   [x] **Phase 2 (`db_version` 65):** renamed the 8 PascalCase tables (`Incidents`, `IncidentResponsePlan*`, `BiometricTransaction`, `FaceIDUsers`, `FixRequest`) and the hybrid camelCase columns (`vulnerabilities_to_actions`, `reports`, `hosts`, `messages`) to snake_case via `RenameTable`/`RenameColumn` — C# entities and DTOs unchanged (mapping via `ToTable`/`HasColumnName`).
-*   [x] Applied through `database upgrade-schema --phase 1|2`; verified end-to-end against the real legacy schema on MariaDB in `DAL.IntegrationTests` (renames + row-count/value parity).
-
-#### Milestone 6.3: Relationships & Indexing for Performance (Plan: Phases 3–4) (Completed)
-*Every correlation column becomes a real, navigable, indexed foreign key.* — Spec: [roadmap/track-6/MILESTONE_6.3_RELATIONSHIPS_INDEXING.md](roadmap/track-6/MILESTONE_6.3_RELATIONSHIPS_INDEXING.md)
-*   [x] **Phase 3 (`db_version` 69):** FK constraints + EF navigations for the orphan id columns (`Risk.Owner`/`Manager`/`SubmittedBy`, `FrameworkControl.ControlOwner`, `FrameworkControlTest.Tester` → `user`, all `ON DELETE SET NULL`), with dangling references logged to `schema_upgrade_orphans` before being nulled. Added `incidents.reported_by_id` (FK, free-text `ReportedBy` kept, best-effort name backfill); resolved the `IncidentToIncidentResponsePlan` join ambiguity; `Risk.ProjectId` flagged for 6.4 removal (no live `projects` table). *(Note: `FrameworkControl` has no `Tester` column — that was plan-doc drift; only `FrameworkControlTest.Tester` exists.)*
-*   [x] **Phase 4 (`db_version` 70):** Sieve/query-justified hot-path indexes (vulnerabilities first/last detection, hosts status + registration_date, risks `status,submission_date` composite, user email); dropped the redundant `UNIQUE id` index on `framework_control_tests`; converted text-bearing BLOB columns to `varchar`/`TEXT` (C# `byte[]` → `string`) — `user.email` direct (UTF-8), legacy framework/permission BLOBs via a `latin1`→`utf8mb4` round-trip (cp1252 seed bytes).
-*   [x] Applied through `database upgrade-schema --phase 3|4`; verified end-to-end on MariaDB in `DAL.IntegrationTests` (orphan cleanup ordering, `ON DELETE SET NULL`, FK indexing, BLOB→text encoding round-trip) + EF-model-metadata unit tests in `ServerServices.Tests`.
-
-#### Milestone 6.4: Type Standardization & Dead Schema Removal (Plan: Phases 5–6) (Completed)
-*Consistent temporal/status types, then staged removal of unused objects.* — Spec: [roadmap/track-6/MILESTONE_6.4_TYPES_DEAD_SCHEMA.md](roadmap/track-6/MILESTONE_6.4_TYPES_DEAD_SCHEMA.md)
-*   [x] **Phase 5 (`db_version` 71):** migrated `risks.status` (varchar) to an int-backed enum via create-copy-coexist — added `risks.status_id` (`int`, `DAL.Enums.RiskStatus` + explicit `HasConversion<int>()`), backfilled from the known status strings (unmapped legacy values left `NULL`), legacy `status` retained for one release. Added an explicit `HasConversion<int>()` to `BiometricTransaction.TransactionResult` (model-only). *(The `ON UPDATE CURRENT_TIMESTAMP` temporal columns were intentionally left as-is — they are audit timestamps that should keep auto-updating, so no temporal-type sweep was needed.)*
-*   [x] **Phase 6a (`db_version` 72):** deprecated the 23 unreferenced tables (rename to `zz_deprecated_*`, unmap from EF) and unmapped the orphan columns `risks.regulation`/`risks.project_id` — reversible, data preserved. Confirmed `failed_login_attempts`/`user_pass_history` carry no live lockout/reuse logic (`UserPassReuseHistory` is the live one, not removed). Manifest `removalCandidates`/census corrected to the live snake_case table names.
-*   [x] **Phase 6b (`db_version` 73):** after the observation window, dropped the 23 `zz_deprecated_*` tables and the orphan columns, gated by the upgrade tool (requires the aged `6a` Success in `schema_upgrade_log` + `--yes`; automatic backup is the recovery dump). The legacy `risks.status` is **not** dropped here — its `status_id` replacement must coexist a release first (a future phase removes it).
-
----
-
-### Track 7: Security Review & Hardening
-
-A full, end-to-end security review of the codebase across every tier (API, ServerServices, DAL, ClientServices, GUIClient, BackgroundJobs, WebSite, Plugins), producing a prioritized findings register and a remediation backlog. As a security/GRC product, NetRisk should hold itself to the standards it helps customers enforce. The output of 7.1 feeds concrete, scheduled work into 7.2–7.5. Detailed, research-backed specifications for every milestone live in [docs/roadmap/TRACK_7_SECURITY.md](docs/roadmap/TRACK_7_SECURITY.md).
-
-> **Status: complete (2026-08-26).** 34 findings raised, 25 fixed with regression tests, 5 open with a named owner and proposed fix, 4 risk-accepted with an expiry. No critical or high finding outstanding. Deliverables in [docs/security/](docs/security/); the annotations below say where the outcome differs from the spec.
->
-> Six of the fixes were wrong on the first attempt and were corrected before landing — two of them in ways that would have been worse than the vulnerability they fixed. They are listed in [FINDINGS.md](docs/security/FINDINGS.md) § "Regressions introduced by this track's own fixes" rather than quietly corrected, because what caught each one (the `/security-review` gate, an adversarial second pass, and curling a running instance) is the useful part.
-
-#### Milestone 7.1: Comprehensive Security Audit ✅ (Completed)
-*Establish a baseline by systematically reviewing the code against a recognized standard.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.1](docs/roadmap/TRACK_7_SECURITY.md#milestone-71-comprehensive-security-audit)
-*   [x] Threat-model the request flow (GUIClient → ClientServices → API → ServerServices → DAL) and document trust boundaries, data flows, and assets. → [docs/security/THREAT_MODEL.md](docs/security/THREAT_MODEL.md): eleven assets, six trust boundaries (TB1–TB6), STRIDE per boundary, a control map where every "mitigated" names its test, and five explicit risk acceptances.
-*   [x] Audit the codebase against the OWASP ASVS / Top 10, covering: authN/authZ, input validation, injection (SQL/EF, command, path), secrets handling, crypto usage, deserialization, SSRF, and file-upload/import paths (Nessus and future scanner importers). → [docs/security/ASVS_L2_CHECKLIST.md](docs/security/ASVS_L2_CHECKLIST.md), chapter by chapter, every ✅ naming a file or a test. **Note:** the spec suggests *fuzzing* the Nessus XML parser; that was not done. Instead the three payload classes a hostile XML file actually uses (external file entity, external HTTP entity, entity expansion) are asserted against each live importer in `ImporterXxeTest`. A fuzzing campaign was **not** done in Track 8 either and remains open — recorded in [baseline-2026-08-26.md](docs/security/baseline-2026-08-26.md) §7.
-*   [x] Produce a prioritized findings register (severity, affected tier, exploitability, proposed fix) checked into [docs/security/](docs/security/), and triage each finding into the milestones below. → [docs/security/FINDINGS.md](docs/security/FINDINGS.md). Every finding also records **how it was established**, because two controls in this repository's history were documented as working and were not. **Note:** the spec suggests keeping weaponizing detail in a private tracker and referencing ids. The register is public and detailed instead — every issue it describes is fixed in the same commit, and a register a reader cannot check is the failure mode this track exists to correct.
-*   [x] Run the repo's own `/security-review` over the current branch as a recurring gate and capture the baseline report. → [docs/security/baseline-2026-08-26.md](docs/security/baseline-2026-08-26.md). It earned its place on the first run: it found that the initial SAML fix had raised the *entropy* of a request id the attacker did not have to guess, because they chose it.
-
-#### Milestone 7.2: Dependency & Supply-Chain Security ✅ (Completed)
-*Know and control what ships in the binaries and submodules.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.2](docs/roadmap/TRACK_7_SECURITY.md#milestone-72-dependency--supply-chain-security)
-*   [x] Enable automated dependency scanning (Dependabot / `dotnet list package --vulnerable`) across all projects and the `libs/` submodules. → [`.github/dependabot.yml`](.github/dependabot.yml) (NuGet ×2, GitHub Actions, all five git submodules) and a CI gate over the whole solution via [`scripts/security/scan-dependencies.sh`](scripts/security/scan-dependencies.sh), with an *expiring* suppression file. Baseline: no vulnerable package in any of the 33 projects.
-*   [x] Generate and publish an SBOM as part of the Nuke `Package*` targets. → [`build/Build.Sbom.cs`](build/Build.Sbom.cs), CycloneDX, `TriggeredBy` every `Package*` target, checksummed. **Note:** publishing to the WebSite/GitHub Releases and pushing to a Dependency-Track instance are the *optional* halves of the spec and are not done — the SBOM is produced, not yet continuously monitored. Recorded in [SUPPLY_CHAIN.md](docs/security/SUPPLY_CHAIN.md) §5.
-*   [x] Pin and verify submodule provenance (`NessusParser`, `Aura.UI`, `netrisk-plugin-sdk`, `reliable-rest-client-wrapper`); document an upgrade/patching policy. → [docs/security/SUPPLY_CHAIN.md](docs/security/SUPPLY_CHAIN.md) plus a CI gate requiring a reviewed diff for any bump. **Note:** there are **five** submodules, not the four the spec names — `TreeDataGrid.Avalonia` was added after the spec was written, which is why the policy derives its table from `.gitmodules`.
-
-#### Milestone 7.3: AuthN/AuthZ & Secrets Hardening ✅ (Completed)
-*Close gaps in identity, access control, and secret management.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.3](docs/roadmap/TRACK_7_SECURITY.md#milestone-73-authnauthz--secrets-hardening)
-*   [x] Verify every API controller enforces authorization (no unintentionally anonymous endpoints) and that role/entity scoping is applied consistently in `ServerServices`. → Enumerated by reflection rather than read from comments, which is how `WebAuthnController` was found shipping with no `[Authorize]` at all (NR-2026-009) despite a doc comment claiming otherwise. `ControllerAuthorizationInventoryTest` now fails on a new unannotated or unjustified-anonymous endpoint, and asserts that the fallback policy denies. Entity scoping was verified to be genuinely enforced at the model level (EF global query filters plus a `SaveChanges` guard), which is what makes it un-forgettable.
-*   [x] Audit token issuance/validation, session lifetime, password and FaceID/biometric flows, and lockout/brute-force protections. → NR-2026-001, 002, 008, 010, 012. Issuer/audience/algorithm now validated, lifetime 1440 → 60 minutes with a ceiling, real revocation on password change, progressive lockout plus rate limiting, and the FaceID liveness challenge moved off a predictable generator. **Closed in Track 8:** the lockout counters are now persisted to `login_attempts` (NR-2026-008b), per-session logout revokes by `jti` (NR-2026-028), and biometric templates are column-encrypted (NR-2026-032) — each with a named regression test in [docs/security/FINDINGS.md](docs/security/FINDINGS.md).
-*   [x] Confirm no secrets are committed; standardize on user-secrets/environment/secret-store and document rotation. → [docs/security/SECRETS.md](docs/security/SECRETS.md), with a per-secret rotation procedure and a deployment checklist. **Committed key material was found** — self-signed, expired development certificates with their private keys, referenced by the shipped configuration with the password `"pass"` (NR-2026-003). History was **not** rewritten; the decision is the repository owner's, and the recommendation is at the end of the register. A Release build now refuses to start with them. Trying to *verify* the environment-variable guidance found that no host read environment variables at all (NR-2026-033) — fixed, which is what makes this milestone's requirement achievable rather than aspirational. **Open:** the Puppet templates still render the database password to disk (NR-2026-025).
-
-#### Milestone 7.4: Data Protection & Transport Security ✅ (Completed)
-*Protect data in transit and at rest.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.4](docs/roadmap/TRACK_7_SECURITY.md#milestone-74-data-protection--transport-security)
-*   [x] Enforce TLS configuration and certificate validation on all client↔server and outbound integration calls. → NR-2026-004, 005, 013, 026. The desktop client's unconditional "accept any certificate" callback is gone; the bypass survives only as a loudly-logged explicit opt-in, and the private-CA path (OS trust store) is documented. TLS floor is 1.2 on both hosts with 1.0/1.1 unreachable through configuration. **Note:** the API listener previously pinned TLS **1.3 only**, which is *stricter* than the spec's 1.2 minimum; 1.2 was allowed alongside it deliberately, because a live scan showed .NET on macOS does not offer 1.3 in the server role, so a 1.3-only listener serves nothing there. `Security:Tls:MinimumVersion=Tls13` restores the stricter setting.
-*   [x] Review encryption of sensitive columns and uploaded files at rest; validate hashing/KDF choices. → [docs/security/DATA_PROTECTION.md](docs/security/DATA_PROTECTION.md). Integration credentials moved to AES-256-GCM with a per-value salt and nonce (NR-2026-011); bcrypt at work factor 15 confirmed appropriate; MD5 removed from the reset-link path (NR-2026-014); upload staging moved off `/tmp` (NR-2026-020). **Note:** the spec asks for uploaded files *and* biometric data to be encrypted at rest. Uploaded files are database BLOBs and are **not** column-encrypted, nor is the finding register — a documented, reasoned acceptance (TM-A4: application-level encryption of the register removes filtering, sorting and reporting, which is the product), with volume-level encryption as the compensating control. Biometric templates are a genuine gap, raised as NR-2026-032 and open.
-*   [x] Harden CORS, security headers, and cookie flags on the `API` and `WebSite`. → NR-2026-015, 016. Full header set on both hosts from one shared policy object, verified by a **live scan** of a running instance — which caught this track's own middleware leaving `server: Kestrel` in place, because Kestrel writes that header below the middleware pipeline. CORS needed no change: there is no policy at all, which is the strongest position, recorded as NR-2026-024 so a future addition is recognised as a security decision. **Note:** the acceptance criterion asks for a clean scanner run captured in the audit doc; the capture is [baseline-2026-08-26.md](docs/security/baseline-2026-08-26.md) §4, taken against the WebSite. The API could not be started in this environment (it needs MariaDB), so its headers are verified by unit test and by shared code path rather than by a live scan.
-
-#### Milestone 7.5: Continuous Security in CI/CD ✅ (Completed)
-*Make security verification automatic and non-regressing.* — Spec: [docs/roadmap/TRACK_7_SECURITY.md § 7.5](docs/roadmap/TRACK_7_SECURITY.md#milestone-75-continuous-security-in-cicd)
-*   [x] Add SAST and secret-scanning steps to the build/CI pipeline that fail on new high-severity findings. → [`.github/workflows/security.yml`](.github/workflows/security.yml): CodeQL (C#), gitleaks over the full history, the dependency gate and the submodule-provenance check, on push, pull request and weekly. Every gate fails on the delta, never on the backlog. **Note:** neither CodeQL nor gitleaks could be run locally — CodeQL is a GitHub-hosted analysis and gitleaks is not installed on this host — so the *first* SAST and history-scan baselines will be produced by the next push. The working tree was swept manually in the meantime; both facts are recorded in [baseline-2026-08-26.md](docs/security/baseline-2026-08-26.md) §3 and §7.
-*   [x] Establish a coordinated vulnerability disclosure policy (`SECURITY.md`) and an internal triage SLA for reported issues. → [SECURITY.md](SECURITY.md) (private reporting, acknowledgement times, a 90-day coordinated window, safe harbour, a scope list that says the plugin system is out of scope and why) and [docs/security/TRIAGE_SLA.md](docs/security/TRIAGE_SLA.md), whose numbers are deliberately the ones NetRisk ships as its product's remediation defaults.
-*   [x] Schedule periodic re-audits (each minor release) and track remediation burn-down against the 7.1 findings register. → [docs/security/BURN_DOWN.md](docs/security/BURN_DOWN.md), with the cadence and the rule that a release cannot ship with an *untriaged* critical finding. **Note:** the release-checklist item is documented rather than mechanically enforced in the Nuke release flow — enforcing it needs the register in a machine-readable form. Track 8 did **not** do this; it remains open.
-
----
-
-### Track 8: Risk Governance & Approval Workflows
-
-This track closes the gap between NetRisk's risk lifecycle and what ISO 27001 / SOC 2 / DORA auditors and the major frameworks (NIST RMF, COSO ERM) actually test: formal, expiring risk acceptance; residual-vs-inherent risk; segregated, multi-level approvals; a field-level audit trail; proactive review notifications; and a business-facing review portal. It is grounded in a July 2026 best-practice gap analysis; the full gap documentation and detailed, research-backed specifications live in [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md).
-
-**Status: delivered.** All 23 items are implemented. Three carry a deliberate difference from the spec, annotated on the item itself rather than ticked silently: the acceptance panel is a tabbed dialog rather than an inline panel; the inherent/residual heatmap toggle changes which score is filtered and labelled but does not move the point, because a residual score has no likelihood/impact decomposition to plot; and no `risk_appetites` row is seeded, so appetite gating is inactive until an organisation configures its own threshold. One correction to the spec is worth carrying forward: `next_review_date_uses` was described as an existing setting that did nothing, but it had been **deleted** in db_version 29 and had to be re-created.
-
-The Avalonia desktop changes are **compile- and lint-verified only** — the GUI cannot be launched in this environment. `src/RiskPortal` was run and exercised end to end against a real MariaDB and API, which is where four of the track's defects were found.
-
-#### Milestone 8.1: Formal Risk Acceptance & Time-Bound Exceptions (Completed)
-*Make "accepting a risk" a first-class, expiring, authorized artifact — the ISO 27001 6.1.3 evidence auditors sample.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.1](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-81-formal-risk-acceptance--time-bound-exceptions)
-*   [x] `risk_acceptances` entity (authorizing manager, justification, residual score snapshot, mandatory expiry, revoke/renew lifecycle) — generalizes Track 3.2.3 to cover risks and findings with one entity. → db_version 80; `start_date` is backfilled from `created_at` on upgrade rather than left at the NOT NULL floor, asserted in `Track8GovernanceSchemaTests`.
-*   [x] Acceptance service + API with severity-band authority checks; acceptance writes into the existing `MgmtReview` timeline. → `RiskAcceptancesService`, `RiskGovernanceController`. **Note:** the band is resolved from the seeded `risk_levels` rows by `ResolveBand`, tested as a pure function — `risk_levels` is keyless, so the EF in-memory provider cannot track it and the end-to-end path is covered by `DAL.IntegrationTests`.
-*   [x] Hangfire expiry automation: T-30/T-7 warnings, auto-reopen + notify on lapse (absorbs Track 3.2.4). → `RiskAcceptanceExpiryPass`, daily at 06:15. A defect the tests caught: the first implementation took the *first* matching threshold, so an acceptance warned at T-30 never fired T-7; it now takes the tightest applicable one.
-*   [x] **GUI:** acceptance panel on the risk editor (current acceptance, history, renew/revoke). → `RiskGovernanceWindow`, reached from a toolbar button on the risk view. **Differs from the spec:** it is a tabbed dialog rather than a panel embedded in the editor, because the editor is already a dense two-column form and five more sections would not fit. Compile- and lint-verified only — the Avalonia GUI cannot be launched in this environment.
-
-#### Milestone 8.2: Inherent vs. Residual Risk (Completed)
-*Track pre- and post-treatment scores — the routing key for escalation and the mitigation-effectiveness evidence.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.2](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-82-inherent-vs-residual-risk)
-*   [x] Residual score on `risk_scorings` (+ history), derived from mitigation % and validated controls via a swappable strategy. → `MitigationPercentResidualStrategy` composes multiple mitigations as `1 − Π(1 − pᵢ)` rather than summing, so two 60% controls give 84% and not 120%.
-*   [x] Cadence setting `next_review_date_uses` actually selects inherent vs residual. **Correction to the spec:** the setting did not exist to be repaired — it was seeded in db_version 1 and *deleted* in db_version 29, so it had been absent for fifty versions. db_version 80 re-creates it and `MgmtReviewsService` now reads it. Proved end-to-end over the real keyless `risk_levels`/`review_levels` by `DAL.IntegrationTests/Track8CadenceBasisTests`.
-*   [x] **GUI/Reports:** both scores with delta on lists and editors; inherent/residual heatmap toggle; pre/post-treatment report table. → the register list shows `8.0 → 2.0 (−6.0)` under each subject (one bulk `/Risks/Scores` call per refresh, not one per row); the risk detail panel shows both scores and the delta; `DetailedEntitiesRisksPdfReport` gains a per-entity pre/post table ordered by smallest reduction first. **The heatmap toggle switches which score is filtered and labelled but does not move the point** — the axes are the matrix's likelihood and impact ratings, and a residual score is a single derived number with no likelihood/impact decomposition, so plotting it in a cell would put a risk somewhere nobody rated it. A risk with no residual is omitted from the residual view rather than plotted at its inherent position.
-
-#### Milestone 8.3: Approval Workflow Engine (State Machine, Segregation of Duties, Escalation, Appetite) (Completed)
-*Turn convention into enforcement: server-side transitions, maker-checker, threshold-escalated dual sign-off, and a risk-appetite model.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.3](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-83-approval-workflow-engine--state-machine-segregation-of-duties-escalation-appetite)
-*   [x] Server-side risk status state machine in `RisksService` (e.g., no `Closed` without a review; no `Mitigation Planned` without a mitigation). → `RiskWorkflowService.EnsureTransitionAllowedAsync`, refusing with 422. **One deliberate exception:** `ReopenRisk` stays on the unguarded save, because a reopen has to work on a legacy risk whose current status the state machine would refuse. Legacy violations are reported by `FindLegacyViolationsAsync` and surfaced in the governance admin screen instead of blocking.
-*   [x] Segregation of duties: reviewer/acceptor ≠ submitter/owner/manager — admins included (audited break-glass option only). → `EnsureSegregationOfDutiesAsync`; the break-glass path requires a written reason that is persisted on `mgmt_reviews.segregation_override_reason` and exported in the 8.4 evidence pack. Negative tests prove each forbidden combination is refused server-side, admins included.
-*   [x] `risk_appetites` (global + per entity): dual-approval threshold and a hard acceptance ceiling; counter-signature flow on `mgmt_reviews`. **No appetite row is seeded.** An invented threshold is a policy decision made by the installer, and it would silently start refusing acceptances an organisation never agreed to — with no row configured, gating is inactive and the admin screen says so.
-*   [x] **GUI:** appetite admin screen; "risks above appetite" on dashboards; counter-sign action. → `GovernanceAdminView` (five tabs) and the counter-sign tab of `RiskGovernanceWindow`. Compile- and lint-verified only.
-
-#### Milestone 8.4: Field-Level Audit Trail & Auditor Evidence Export (Completed)
-*Answer "who changed what, when" from the database, and generate the audit evidence pack from live data.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.4](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-84-field-level-audit-trail--auditor-evidence-export)
-*   [x] EF `SaveChanges`-interceptor audit log (`audit_logs`) over the risk-governance aggregate, attributable end-to-end (API user context + system user for jobs), with retention policy. → `GovernanceAuditInterceptor`, one row per changed field with a correlation id per save, over an allowlist of nine types. **Deliberately not global:** a trail over a vulnerability import would write millions of rows nobody reads. Retention defaults to 1 825 days and is applied by a nightly job.
-*   [x] Auditor evidence export per entity/period: register with inherent/residual, treatment plans, review history, acceptances, and the field-level trail (via the 2.1 reporting engine). → one `GovernanceEvidencePack` rendered by both paths — CSV (four labelled sections, RFC 4180 quoting, formula-injection guard) and PDF through the engine as `Report.Type == 3`, stored as an `NrFile` so the export is itself recorded and schedulable. Reachable from the desktop through the Create Report dialog, which reveals an entity picker and a period for this report only.
-
-#### Milestone 8.5: Review Cadence Automation & Intake Repair (Completed)
-*Push, don't pull: overdue-review and expiring-acceptance notifications; fix the dead assessment→risk pipeline; POA&M-style mitigation tasks.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.5](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-85-review-cadence-automation--intake-repair)
-*   [x] Daily notification job over the existing `ReviewLevel`/`GetToReview` cadence machinery (Track 4.1 channels; email first), plus event-triggered review flags (new critical vulnerability/incident on a risk). → `RiskReviewCadenceJob` at 07:30, after both expiry passes so a risk whose acceptance lapsed overnight is in this morning's list. A never-reviewed risk becomes overdue one cadence interval after *submission*, not immediately — otherwise the first notification covers the entire register.
-*   [x] Pending-risk triage: promote/dismiss `PendingRisk` records via API + GUI (today nothing promotes them). → promotion creates the risk and its scoring in one transaction and links back to the assessment answer.
-*   [x] `mitigation_tasks` line-items (owner, due date, status) on mitigations, feeding the same notifications. → db_version 80, surfaced on the treatment-tasks tab of the per-risk governance dialog.
-
-#### Milestone 8.6: Business Risk Acceptance Portal (Web Application) (Completed)
-*A dedicated web app where business-appointed risk reviewers periodically review, rank, and decide their entity's risks — accept or commission mitigation work.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.6](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-86-business-risk-acceptance-portal-web-application)
-*   [x] New `src/RiskPortal` ASP.NET Core web app consuming the REST API (the DB-decoupled `WebSite` stays untouched); Nuke `CompileRiskPortal`/`PackageRiskPortal` targets; mobile-friendly. → Razor Pages, cookie auth matching the API token's 60-minute lifetime, CSP and antiforgery, `/healthz`, en-US/pt-BR request localization. **Actually run and exercised locally** against a real MariaDB and API — which is where four of this track's defects were found.
-*   [x] Reviewer designation: one or more `entity_risk_reviewers` per business entity, appointed by entity admins; entity-scoped access (Track 2.3 RBAC) + `business_risk_review` permission; 8.3 segregation rules apply. **Defect found by running it:** appointing a reviewer did not grant them anything, because Track 2.3 scopes by `user_entity_roles`; `AppointAsync` now ensures that row. A second one: the first draft of `Data/81.sql` created the permission with a hardcoded id that already belonged to `incident-response-plans`, silently renaming it — now an id-less `INSERT IGNORE`, with `SchemaUpgradeFilesTest` failing on any later Data script that assigns an explicit permission id.
-*   [x] Periodic review campaigns auto-generated per entity (default quarterly, per-entity override) with deep-link notifications; items pre-populated from open risks, overdue reviews, and expiring acceptances. → generated daily at 08:00, on calendar-aligned periods with a unique `(entity, period)` index so the job is idempotent by construction rather than by convention.
-*   [x] Reviewer flow: drag-to-rank business prioritization + per-risk decision — **Accept** (creates an 8.1 `RiskAcceptance`, appetite-gated), **Request mitigation** (creates 8.5.3 tasks with owner/due date), or **Escalate**; completion writes `MgmtReview` records so desktop and portal share one approval timeline. Drag-to-rank is progressive enhancement: without JavaScript the same ordering is settable as numbers and posted normally. **Defect found by running it:** the review screen showed no scores or appetite, because a business reviewer holds `business_risk_review` and deliberately *not* `riskmanagement`, so `/Risks/Scores` and `/Risks/{id}/Appetite` are closed to them — fixed by a campaign sub-resource, `GET /RiskReviewCampaigns/{id}/Items`, which keeps the reviewer scoped to the campaign they were appointed to.
-*   [x] Governance outputs: business rank surfaced in the desktop risk list/reports; campaign evidence feeds the 8.4 auditor export; campaign completion statistics. → the rank appears in the register list beside the scores; campaign decisions are a section of the evidence pack, selected by *campaign period overlap* rather than by decision date, so a quarter nobody reviewed shows as undecided items instead of reading as a completed review with no risks in it.
-
-#### Milestone 8.7: Quantitative Scoring Option (FAIR-lite) & Scale Anchors (Completed)
-*Address the documented limits of ordinal risk matrices: anchored scales now, a quantitative alternative next.* — Spec: [docs/roadmap/TRACK_8_RISK_GOVERNANCE.md § 8.7](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md#milestone-87-quantitative-scoring-option-fair-lite--scale-anchors)
-*   [x] Quantitative definitions/anchors on every likelihood/impact level, shown at rating time; document the composite total score as a triage heuristic. → `likelihood.definition`/`impact.definition` plus probability and monetary bounds, seeded in db_version 80 and shown under each choice in the risk editor. An installation that rewrites them gets its own wording with no code change.
-*   [x] FAIR-lite `ScoringMethod`: calibrated range inputs (loss-event frequency + magnitude), Monte Carlo engine in `Tools`, annualized-loss percentiles and loss-exceedance curve, before/after-mitigation comparison; maps into existing `RiskLevel` bands via monetary thresholds. → `Tools.Risks.MonteCarloRiskSimulator` (PERT magnitude, Poisson event counts, seeded for reproducibility). **A defect the tests caught:** the mapped score was taken from the median ALE, which is legitimately zero for a low-frequency risk — "once a decade, eight million" scored 0. It now maps from the mean.
-
----
-
-### Track 9: MIGR-TI/IA Methodology Alignment
-
-This track aligns NetRisk with the **MIGR-TI/IA** reference methodology — the integrated,
-process-oriented IT risk-management methodology for enterprises and universities, documented in
-[docs/methodology/](docs/methodology/). It is scoped by a phase-by-phase coverage analysis of the
-2.21.11 codebase ([docs/methodology/migr-ti-ia-coverage.md](docs/methodology/migr-ti-ia-coverage.md)),
-which confronted each activity of the methodology with the code and the schema rather than with the
-product documentation. The twelve stages below are the fifteen prioritized gaps from § 12 of that
-analysis, grouped by dependency. Full specifications and the per-stage edge cases live in
-[docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md).
-
-**Status: planned.** Nothing is started. This track does **not** reopen Track 8 — it builds on what
-Track 8 delivered (expiring formal acceptance with a residual snapshot, inherent vs. residual,
-enforced state machine, segregation of duties, appetite gating, the field-level audit trail,
-FAIR/Monte Carlo) and adds what the methodology requires and the system does not instrument.
-
-> **Two gates apply to every stage, without exception. They are the substance of this plan, not a
-> preamble.**
->
-> **Gate 1 — Specification.** Each stage begins with a **complete, reviewed specification**, merged
-> as its own document under `docs/roadmap/track9/9.N-<slug>.md` **before the first implementation
-> commit**. No item below may be ticked, and no implementation PR may be opened, until that
-> specification is merged. A specification is complete only with all eleven required sections: gap
-> and phase · current state **naming the entity, service, endpoint or test** · target state and
-> negative scope · data model under the Track 6 conventions · schema path (EF migration **and**
-> numbered `Structure`/`Data` SQL) · API contract with the `[Authorize]`/`[PermissionAuthorize]`
-> attribute of every action · client and GUI surface with localization keys and style classes · the
-> **test plan, per layer, naming the cases** · verifiable acceptance criteria · the effect on the
-> coverage analysis, including which lines stay partial and why · risks, deviations and deliberate
-> decisions. A section that does not apply is declared as such with a reason — never omitted,
-> because an absent section is indistinguishable from a forgotten one. A merged specification changes
-> by dated amendment, not by a contradicting commit.
->
-> **Gate 2 — Tests.** Tests are part of the change, not a follow-up
-> ([src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md)). No item is ticked without the
-> tests its specification planned: the happy path **and every guard or error branch introduced**;
-> a regression test that **fails on the pre-fix code** for every defect; schema idempotence and
-> replay for every numbered script; negative authorization cases for every new endpoint; pure
-> statistical and economic calculations in `Tools.Tests`, seeded and deterministic. No assertion is
-> weakened or deleted to get a green run — a defect found and not fixed is reported explicitly.
-> Beyond the minimum, each stage writes the edge cases the methodology itself names; the stage
-> specifications list theirs.
->
-> The reason both gates are stated this firmly: this repository has three times shipped a control
-> documented as working that was not, and its sharpest defects — the T-7 warning that never fired,
-> the quantitative band mapped from the median, the setting that had been deleted fifty db_versions
-> earlier — surfaced only because someone specified the expected behaviour and wrote the test.
-
-**Phase I — Register foundation.** Nothing else anchors without these two: the gates need flags, the
-flags need a structured scenario, and critical-process coverage needs the chain.
-
-#### Stage 9.1: The linkage chain — objective → process → IT service → data → asset (Planned)
-*Make the methodology's linkage chain navigable, so a risk traces to a strategic objective and not only to one generic entity.* — Spec: [§ 9.1](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-91--cadeia-de-ligação-objetivo--processo--serviço--dado--ativo) · Closes gap 1
-*   [ ] Specification merged (eleven sections, test plan reviewed) — **precedes all items below**
-*   [ ] Strategic objective as a first-class entity, rather than free text on `businessProcess.objective`
-*   [ ] `itService` type in the entity schema (technical owner, processes served) — there is no service catalogue today
-*   [ ] Risk links to each link of the chain, every link optional but queryable; `risks.entity_id` keeps working for legacy risks during coexistence
-*   [ ] Critical-process coverage metric (Phase 7) computable, counting processes **marked critical** rather than all
-*   [ ] Tests: chain with a missing middle link never hides the risk from a query; coexistence of the legacy single link
-
-#### Stage 9.2: Structured scenario, record discrimination and evidence confidence (Planned)
-*Four separate scenario fields plus a confidence level, so the Phase 2 quality rules become machine-verifiable.* — Spec: [§ 9.2](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-92--cenário-estruturado-discriminação-de-registros-e-confiança-da-evidência) · Closes gap 2
-*   [ ] Specification merged
-*   [ ] Cause/threat · vulnerability/condition · central event · consequences as separate fields (today: `Subject`, `Assessment`, `Notes` free text)
-*   [ ] Evidence confidence level — confirmed / indicative / hypothesis
-*   [ ] Standalone hypothesis records (`PendingRisk` exists but only ever originates from an assessment answer)
-*   [ ] Near miss distinguished from incident
-*   [ ] Duplicate-risk detection on the (central event, consequence) pair — as a **warning**, not a block
-*   [ ] **Deliberately out of scope:** back-filling the four fields from existing free text. Legacy risks keep them null and the coverage analysis measures how many are filled; decomposing text nobody wrote with that intent would produce wrong scenarios that look right
-*   [ ] Tests: legacy risk with all four fields null stays editable, listable and scorable
-
-**Phase II — Decision signals.**
-
-#### Stage 9.3: BIA — MTPD/MAO, RTO, RPO and cascading dependencies (Planned)
-*The continuity fields that flag 4, Gate A and the restoration metric all depend on, and that exist nowhere today.* — Spec: [§ 9.3](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-93--bia-mtpdmao-rto-rpo-e-dependências-em-cascata) · Closes gap 4
-*   [ ] Specification merged
-*   [ ] MTPD/MAO, RTO and RPO declared on the process and the IT service; process criticality
-*   [ ] Dependencies with cascading effect
-*   [ ] Restoration-test records, comparable against the declared RTO/RPO
-*   [ ] Tests: a declared RTO with no restoration test reads as **unverified**, not as met — otherwise the metric measures the intention; a cyclic dependency does not recurse forever; a process with no BIA is neither zero nor infinite RTO but absent
-
-#### Stage 9.4: Exploitation signals — CISA KEV, first-class EPSS and MITRE ATT&CK (Planned)
-*The Phase 3 prioritization signals. EPSS reaches NetRisk today only via Vision One, into a free-key bag.* — Spec: [§ 9.4](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-94--sinais-de-exploração-cisa-kev-epss-de-primeira-classe-e-mitre-attck) · Closes gap 6
-*   [ ] Specification merged
-*   [ ] EPSS promoted from `ToolFields["epss"]` to a column on `vulnerabilities`, with its own synchronization rather than only the Vision One path
-*   [ ] CISA KEV catalogue synchronized, with the listing date and the deadline (Track 3 cites the 14-day KEV benchmark and nothing consults the catalogue)
-*   [ ] MITRE ATT&CK techniques associable to the finding and to the risk scenario
-*   [ ] Prioritization combining the signals Phase 3 lists, with CVSS as an **input**
-*   [ ] Outbound synchronization through `IOutboundHttpClient` — the SSRF policy applies
-*   [ ] **Out of scope, stated so the stage does not appear to close Phase 3:** exposure (internal/perimeter/external), required privileges and blast radius depend on topology modelling and stay ❌ in the coverage analysis
-*   [ ] Tests: an unavailable or malformed catalogue does not silently de-list an item that was KEV; two EPSS sources for one CVE converge by a declared rule, not by write order; synchronization is idempotent and does not rewrite unchanged rows
-
-#### Stage 9.5: The eleven mandatory flags and Gate A (Planned)
-*Gate A is non-discretionary in the methodology and not implementable in NetRisk, because none of the flags exist as queryable fields.* — Spec: [§ 9.5](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-95--as-11-flags-obrigatórias-e-o-portão-a) · Closes gap 3 · Depends on 9.3 and 9.4
-*   [ ] Specification merged, declaring the origin of each of the eleven flags (derived from KEV/EPSS, from the BIA, from data classification, or declared by the assessor)
-*   [ ] The eleven flags as queryable fields
-*   [ ] Gate A refusing to discard a risk carrying a non-discretionary flag, with immediate notified escalation
-*   [ ] An "act immediately" decision distinct from high severity
-*   [ ] "Top Risks" executive list carrying trend, confidence and next decision
-*   [ ] Tests: a derived flag that loses its basis reverts **with an audit-trail entry**, not silently; a true non-discretionary flag refuses acceptance even where appetite would allow it — **Gate A precedes Gate B, and the ordering is the test**; any Gate A break-glass persists a written reason and exports it, like the segregation override
-
-**Phase III — Economics and the tail.**
-
-#### Stage 9.6: Treatment economics — monetary cost, Gates C and D, the full option set (Planned)
-*Gate C has every ingredient and no calculation, because `MitigationCost` is an ordinal label table.* — Spec: [§ 9.6](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-96--economia-do-tratamento-custo-monetário-portões-c-e-d-tratamento-completo) · Closes gaps 7, 10 and part of 13
-*   [ ] Specification merged
-*   [ ] Monetary control cost alongside the ordinal scale (the scale stays, for installations that do not estimate in currency)
-*   [ ] Gate C: `E[L before] − E[L after] > total cost`, recording Gordon–Loeb explicitly as an economic reference and **not** as a fixed 37 % rule
-*   [ ] Gate D: portfolio selection under budget, people, dependencies and deadline
-*   [ ] Avoid and transfer/share as treatment types (only reduce and accept exist today)
-*   [ ] Completion evidence and acceptance criterion on `MitigationTask` (it has owner, due date and status and neither of these)
-*   [ ] Target risk level in the register
-*   [ ] Tests: a mitigation with no monetary cost enters Gate C as **not assessable**, not as zero, and that shows; marginal benefit uses the **mean** ALE, for the same reason the band mapping does; Gate D **preserves tail and systemic risks even at moderate E[L]** — the rule a naive optimizer violates first
-
-#### Stage 9.7: Tail statistics and portfolio — P95, CVaR, aggregation and correlation (Planned)
-*The Monte Carlo engine is good and reproducible; the tail statistic appetite compares against, and the portfolio sum Phase 7 asks for, are missing.* — Spec: [§ 9.7](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-97--estatística-de-cauda-e-portfólio-p95-cvar-agregação-e-correlação) · Closes gap 9
-*   [ ] Specification merged
-*   [ ] P95 and CVaR computed and stored (P90 is the maximum today); confidence intervals reported
-*   [ ] Loss magnitude decomposable into response, recovery, productivity, revenue, liability, fine and reputation
-*   [ ] Portfolio aggregation with declared correlation between scenarios — each risk is simulated in isolation today, so "aggregate exposure above appetite (E[L] and P95)" is not computable
-*   [ ] Appetite comparable against P95/CVaR, as Gate B provides for
-*   [ ] Tests: CVaR of a low-frequency scenario is **not** zero because most iterations are zero — the test that separates the right implementation from the obvious one; a portfolio sum at zero correlation is not the sum of individual P95s, and the specification declares which statistic is additive; a fixed seed reproduces the aggregate, not only the individual result
-
-**Phase IV — Monitoring and the cycle.**
-
-#### Stage 9.8: KRIs, mandatory reassessment triggers and the methodology's metrics (Planned)
-*There is no KRI in the system — no indicator, no threshold, no trigger. It is the widest-reaching gap in Phase 7.* — Spec: [§ 9.8](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-98--kris-gatilhos-obrigatórios-de-reavaliação-e-métricas-da-metodologia) · Closes gap 5
-*   [ ] Specification merged, listing which metrics this stage delivers and which arrive with their own stage
-*   [ ] KRI as a first-class record: definition, source, tolerance threshold, history
-*   [ ] The six mandatory reassessment triggers of Phase 7 — architecture change, new supplier or migration, incident or near miss, new regulation, new AI model, KRI over tolerance
-*   [ ] Gate B by indicator, not only by score
-*   [ ] Metrics panel for the methodology's own performance measures
-*   [ ] Tests: a KRI with no recent reading reads as **stale**, not as within tolerance — false comfort is the characteristic indicator-panel defect; the reassessment trigger is idempotent (a KRI breached for thirty days does not open thirty reassessments); the relative ordering against the existing 06:15 → 07:30 → 08:00 jobs is preserved and tested
-
-#### Stage 9.9: Archival with triggers, backtesting, the risk committee and the third line (Planned)
-*Close the decision cycle: an archive that can reopen, a cut calibrated against what actually happened, and the Phase 0 roles that are missing.* — Spec: [§ 9.9](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-99--arquivamento-com-gatilho-backtesting-comitê-e-terceira-linha) · Closes gaps 13 (part), 14 and 15
-*   [ ] Specification merged
-*   [ ] "Archived" state with justification, a **condition-based** reopening trigger and quarterly review (only the temporal acceptance-expiry trigger exists today)
-*   [ ] Backtesting of incidents and near misses against the register — "unforeseen incidents" and "false negatives" are not computable today
-*   [ ] Risk committee as a collegiate approver, alongside the individual authorizing manager
-*   [ ] Third-line (audit) read-only assurance role — the auditor consumes the evidence pack, not the system
-*   [ ] Tests: a condition trigger fires once and records, rather than reopening repeatedly; backtesting does not count as foreseen a scenario registered **after** the incident — the date is the test; the third-line role reads and cannot write, review or accept, proved by negative cases like the Track 8 segregation rules
-
-**Phase V — Missing domains.**
-
-#### Stage 9.10: Third-party register — HECVAT, SBOM, concentration and exit plan (Planned)
-*The only discovery front with no instrument at all, and the methodology treats it as central in both enterprises and universities.* — Spec: [§ 9.10](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-910--registro-de-terceiros-hecvat-sbom-concentração-e-exit-plan) · Closes gap 8
-*   [ ] Specification merged
-*   [ ] Third party as a first-class record — a supplier can only be a generic `organization`/`organizationUnit` today
-*   [ ] HECVAT assessment; SBOM of the supplied component; sub-processors; data location; contracted SLA and RTO/RPO; right to audit; exit plan and portability
-*   [ ] Concentration measured by supplier, cloud and identity
-*   [ ] Linked to the IT service of 9.1 and the data record of 9.11
-*   [ ] Tests: concentration counts a supplier **once per dependent critical process**, not once per asset, or the metric measures inventory; a partially answered HECVAT scores as incomplete, not compliant; deleting a supplier in use is refused — extending the reference registry `SecretVaultService.CountReferencesAsync` already maintains rather than duplicating it
-
-#### Stage 9.11: LGPD data catalogue — legal basis, purpose, retention, location and DPIA (Planned)
-*Classification exists; compliance is not demonstrable, and flags 2 and 5 have nothing to derive from.* — Spec: [§ 9.11](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-911--catálogo-de-dados-lgpd-base-legal-finalidade-retenção-localização-e-dpia) · Closes gap 11
-*   [ ] Specification merged
-*   [ ] Legal basis and purpose, retention, location, international transfer, personal- and sensitive-data marking, lineage on `organizationData`
-*   [ ] DPIA as an artifact linked to the data record and the process
-*   [ ] Legal and contractual requirements back on the risk register, linked to the catalogue instead of free text (the orphan `regulation` column was dropped in Track 6 phase 6b)
-*   [ ] Tests: sensitive personal data with no declared legal basis **is a finding** and shows as one rather than compliant by omission; expired retention signals and deletes nothing — erasing a data subject's data is the controller's decision, not a job's side effect; removing the sensitive marking removes flag 5 with an audit-trail entry
-
-#### Stage 9.12: AI governance — model inventory, flag 11 and model metrics (Planned)
-*Phase 6's **prohibitions already hold by construction**, because every approval requires a `User`. The gap is the inventory and the assurance, not the authority control.* — Spec: [§ 9.12](docs/roadmap/TRACK_9_MIGR_TI_IA.md#etapa-912--governança-de-ia-inventário-de-modelos-flag-11-e-métricas-de-modelo) · Closes gap 12
-*   [ ] Specification merged
-*   [ ] Model inventory as a first-class record — purpose, data, vendor, version — with assurance proportional to risk
-*   [ ] Risks of the AI component itself in the **same** register, with flag 11 derived from the inventory
-*   [ ] Model metrics: accuracy, recall, calibration, drift and **human override rate**
-*   [ ] **Out of scope, deliberately: adding AI to the risk workflow.** The methodology requires the governance instrument to exist *before* the use; the reverse order is how compliance debt accumulates. Any AI feature becomes its own track that presupposes this one
-*   [ ] Tests: explicit negative tests that the prohibitions still hold **after** this stage — no path lets a non-user accept residual risk, approve an exception or close a material finding — so the by-construction guarantee is not lost to a later refactor; a model with no recorded evaluation is not treated as evaluated; the human override rate requires overrides to be recordable, with author and reason
-
-**Track completion.** The track is done when the coverage analysis is **re-run** and the lines each
-specification declared in its section 10 read ✅ — and those that stay 🟡 or ❌ are named with the
-reason, as they are today. The coverage analysis is the track's acceptance criterion, which is why it
-lives in [docs/methodology/](docs/methodology/): it is measured against the code, repeatedly, rather
-than written once.
-
----
-
-## 🔮 Ideas & Future Explorations
-
-The following concepts are under consideration and are not yet committed to any active milestone track:
-
-- **Mobile Companion App:** Lightweight iOS and Android viewer for executive incident tracking and risk sign-off.
-- **Real-Time Collaboration:** Synchronized document editing for Incident Response Plans and joint risk assessments.
-- **AI-Assisted Risk Scoring:** Large Language Model integrations to automatically analyze vulnerabilities, correlate threat intelligence, and propose mitigation strategies. **Precondition:** Track 9 stage 9.12 (AI governance — model inventory, flag 11, model metrics). The MIGR-TI/IA methodology requires the governance instrument to exist before the use, and requires explicit sources, a declared confidence level and mandatory human review of every AI result used in a decision.
-- **Move the BastionVault plugin onto `BastionVault.IntegrationSdk`:** Replace the hand-written wire protocol in [netrisk-plugin-bastionvault-integration](https://github.com/ffquintella/netrisk-plugin-bastionvault-integration) (`BastionVaultApi.cs`, 284 lines of routes, envelope parsing and failure text) with the vendor's own `net10.0` client, published on the `uox-bastionvault` feed added to [nuget.config](nuget.config). The case is not line count — it is that **the plugin does not support KV v2 today** and answers a valid v2 secret with *"holds several fields (data, metadata)"*, because it reads the envelope's `data` object directly while a v2 read nests `data.data`; enumeration misses v2 for the matching reason, and the secret version is discarded. The load-bearing piece is an `ITransport` over the host's `IPluginHttpClient`, so egress stays inside the SSRF policy, plus four explicit client settings — chiefly `EnvironmentSource.None`, since the SDK's default constructor would otherwise let a `VAULT_TOKEN` in the API host's environment override the configured connection. Host-side SRV discovery (`VaultEndpointResolver`) deliberately stays as it is. Four stages, each ending green; the 33 existing plugin tests must pass **unedited** as the non-regression evidence, with new failing-first tests for the v2 defect. Design: [docs/features/bastionvault-integration-sdk-migration.md](docs/features/bastionvault-integration-sdk-migration.md).
+## Track 1 — Modern Desktop Experience (UI/UX Compliance)
+
+Performance tuning, visual standardization, and desktop ergonomics. `./build.sh LintUi` reports 0
+violations across 80 views, gated in CI ([.github/workflows/ui-compliance.yml](.github/workflows/ui-compliance.yml)).
+The linter itself was rewritten mid-track to scan whole start tags instead of matching line by line —
+the previous line-based version both over-reported (11 of 58 R6 hits were false positives on views
+already compliant) and under-reported (R5 had been reporting 0 while 45 genuine unlocalized strings,
+including 20 window titles showing a class name, were present). True baseline was 106 violations, not
+the previously logged 162 (a doubled log count). 102 were fixed and 4 waived with a written reason via
+`<!-- ui-lint-waive R5: ... -->`, which the linter validates.
+
+### [M1] Visual Theme Standardization
+> outcome: All 67 views of the desktop client comply with the visual token, localization, button and
+> responsive-sizing standard, enforced by CI lint.
+> version: 2.15.0
+> spec: S1
+
+- [x] T1 Replace inline hex colors and named brushes with semantic style classes
+- [x] T2 Extract user-facing strings and window titles into localized resx bindings
+- [x] T3 Re-class buttons onto the canonical taxonomy with icon+text stacks
+- [x] T4 Convert fixed-width form layouts to responsive Grid/SpacedGrid sizing
+- [x] T5 Add automated lint checks rejecting inline colors or unclassed buttons
+- [x] T6 Close the full docs/ui-standard.md compliance sweep (UI-STD-001) (S3, S4, S5)
+  - note: 4 dangling style-class references found (`Panel.EditTitle`, `TextBlock.subHeader`) and fixed by adopting documented classes; guarded by GUIClient.Tests/Views/StyleClassReferenceTest
+
+### [M2] Shell Backdrop & Material Stabilization
+> outcome: Glassmorphic window compositions with clean solid-color fallbacks across host window managers.
+> version: 2.15.0
+
+- [x] T7 Wrap MainWindow content in a layout-compliant acrylic/Mica panel
+- [x] T8 Apply native Windows 11 Mica backdrops conditionally per platform
+- [x] T9 Apply native macOS Vibrancy on sidebar and navigation panels
+- [x] T10 Fall back to a solid high-contrast background when compositing is unsupported
+- [x] T11 Enforce global minimum window sizing constraints
+- [x] T12 Remove the unreferenced scratch view teste.axaml
+
+### [M3] Compiled Bindings & Rendering Optimization
+> outcome: Compile-time binding safety and virtualization across the desktop client, at extreme
+> rendering speed and minimal RAM footprint.
+> version: 2.15.0
+
+- [x] T13 Declare explicit x:DataType bindings across all 85+ views
+- [x] T14 Resolve compile-time binding errors on reflection-based view-models
+- [x] T15 Enable compiled bindings globally in netrisk.sln
+- [x] T16 Enforce UI virtualization and adopt TreeDataGrid for dense grids
+- [x] T17 Promote bound view-model members to public for compiled-binding visibility
+  - note: fixed post-migration regressions in UserInfo, AdminWindow/UsersView and 24 other views; shipped in 2.5.1
+
+### [M4] Platform-Native Ergonomics & Accessibility
+> outcome: The app feels like a native local utility, optimized for keyboard and mouse precision.
+> version: 2.15.0
+
+- [x] T18 Mirror the window menu into the macOS native global menu bar
+- [x] T19 Align window controls and nav bar margin with macOS traffic lights
+- [x] T20 Sweep keyboard accessibility: shortcuts, tab order, default/cancel buttons
+- [x] T21 Add tray / menu-bar-extra integration with a quick status preview
+
+### [M5] Interaction & Workflow Standardization
+> outcome: One dialog stack, one feedback language, state-driven workflows across the desktop client.
+> version: 2.15.0
+> spec: S2
+
+- [x] T22 Phase A — fix defects and restore the GUI's no-op validation layer
+  - note: ReactiveUI.Validation had been dropped and stubbed since Feb 2026 (commit 4c4abaa5); replaced with in-tree ValidationContext
+- [x] T23 Phase B — migrate legacy edit windows onto DialogWindowBase/DialogService
+- [x] T24 Phase C — add toast notifications, inline validation and busy overlays
+- [x] T25 Phase D — converge risk/incident/IRP/device/entity workflows
+- [x] T26 Phase E — centralize navigation, window parenting and geometry persistence
+
+## Track 2 — GRC Core & Reporting Engine
+
+GRC core features, incident workflows, and data output templates. Detailed specifications:
+[docs/roadmap/TRACK_2_GRC_REPORTING.md](docs/roadmap/TRACK_2_GRC_REPORTING.md) (S6).
+
+### [M6] Advanced Reporting Engine
+> outcome: Rich, customizable risk reports and automated exports.
+> spec: S6
+> version: 2.9.0
+
+- [x] T27 Add customizable report templates with branding, sections and live preview
+- [x] T28 Support scheduled dashboard/compliance/incident exports via email
+- [x] T29 Add PDF, CSV and Excel export targets for all statistics tables
+- [x] T30 Build the report-template designer and scheduled-export GUI screens
+
+### [M7] Enhanced Assessments Workflow
+> outcome: Organizations collect, triage and score vulnerability/compliance questionnaires efficiently.
+> spec: S6
+> version: 2.10.0
+
+- [x] T31 Build a paged assessment viewer with conditional show/hide logic
+- [x] T32 Implement progress trackers and draft auto-saving
+- [x] T33 Support importing assessment templates from industry standards (NIST, ISO 27001)
+- [x] T34 Build the assessment-run viewer, progress tracker and template-import GUI
+
+### [M8] Multi-Entity & Multi-Tenant Support
+> outcome: Managed risk monitoring across distinct organizational subdivisions, enforced server-side.
+> spec: S6
+> version: 2.16.0
+
+- [x] T35 Enforce entity segregation via EF global query filters and a SaveChanges guard
+  - note: initial scoping shipped 2.11.0; `ApplyEntityScope` had been called from one query only and filtered nothing, corrected in 2.16.0 to cover 5 entity_id-bearing types plus 9 inherited types
+- [x] T36 Add role-based scoped access with an Entity Access admin screen
+  - note: deny-by-default for an unassigned authenticated user; 21 negative cross-entity tests plus MariaDB integration tests
+- [x] T37 Add a Master Dashboard service aggregating posture metrics across entities
+  - note: neither the endpoint nor the service existed despite being previously documented as done; both were built in 2.16.0 (`GET /Dashboard/Master`, admin-only)
+- [x] T38 Build the admin-only Master Dashboard GUI view
+
+### [M9] Incident Response Automation (IRP)
+> outcome: Close the loop on incident management with active, trackable workflows.
+> spec: S6
+> version: 2.16.0
+
+- [x] T39 Add customizable IRP templates with task CRUD and clone
+  - note: initial templates shipped 2.12.0
+- [x] T40 Support automatic task generation/assignment via authored matching rules
+- [x] T41 Build server-side CPM scheduling with a Gantt critical-path view
+  - note: dependencies now persisted as incident_response_plan_task_dependencies edges and validated acyclic on save (db_version 76); automation/Gantt UI landed 2.16.0
+- [x] T42 Build the IRP template editor, automation-rule and Gantt GUI screens
+
+## Track 3 — Vulnerability Aggregation & Finding Lifecycle (ASPM)
+
+Bridges GRC with Application Security Posture Management: ingest, deduplicate, and triage automated
+scanner outputs. Detailed specifications:
+[docs/roadmap/TRACK_3_ASPM.md](docs/roadmap/TRACK_3_ASPM.md) (S7).
+
+### [M10] Extensible Scanner Importers
+> outcome: A unified plugin interface feeds findings from any security tool.
+> spec: S7
+> version: 2.16.0
+
+- [x] T43 Define the IVulnerabilityReportImporter plugin contract in the SDK
+- [x] T44 Refactor the legacy Nessus parser onto the extensible importer contract
+- [x] T45 Ship native importers for ZAP, Trivy, Semgrep, OpenVAS, Burp, Snyk, Grype, Dependabot and SARIF 2.1 (S29)
+- [x] T46 Generalize the vulnerability import API with dynamic importer discovery
+- [x] T47 Build the dynamic importer selector GUI with live job progress
+
+### [M11] Finding Lifecycle & Audit Trails
+> outcome: A rigorous triage state machine for individual findings, with a tamper-evident history.
+> spec: S7
+> version: 2.16.0
+
+- [x] T48 Add granular finding lifecycle states with an enforced transition matrix
+- [x] T49 Add an append-only finding_status_history audit log with a timeline view
+- [x] T50 Add a RiskAcceptance entity with expiry, authorizer and justification
+  - note: generalized further by Track 8.1 into one entity shared by risks and findings
+- [x] T51 Add a Hangfire job to auto-reopen expired risk acceptances
+
+### [M12] Intelligent Deduplication Engine
+> outcome: No database bloat from repeated automated scans, via pluggable matching strategies.
+> spec: S7
+> version: 2.16.0
+
+- [x] T52 Add pluggable dedup strategies (HashBased/UniqueIdFromTool/LegacyHashCode/Custom) chained per scanner
+- [x] T53 Update existing findings on re-import instead of duplicating, keeping scan logs
+- [x] T54 Build an admin UI to configure dedup heuristics with a merge preview
+
+### [M13] SLA Tracking & Aging
+> outcome: Compliance boundaries enforced with automated SLAs per severity.
+> spec: S7
+> version: 2.16.0
+
+- [x] T55 Add effective-dated SlaConfiguration per severity, seeded to CISA benchmarks
+- [x] T56 Compute SlaDueDate and DaysOverdue on open findings at read time
+- [x] T57 Automate SLA breach email/webhook notifications as a deduplicated digest
+
+### [M14] CI/CD-First Integration API
+> outcome: NetRisk integrates directly into automated build pipelines.
+> spec: S7
+> version: 2.16.0
+
+- [x] T58 Add scoped, revocable API-token authentication for CI runners
+- [x] T59 Support bulk idempotent direct-upload import endpoints
+- [x] T60 Publish official GitHub Actions/GitLab CI/Azure Pipelines recipes (docs/ci/)
+- [x] T61 Support exit-code gating via `netrisk-console ci gate`
+
+## Track 4 — Integrations & Notification Channels
+
+Connects NetRisk with external messaging platforms, issue trackers, and enterprise identity systems.
+Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRACK_4_INTEGRATIONS.md)
+(S8). Schema arrives as `db_version` 79 (phase 10) for M15–M19, and `db_version` 83 (phase 14) for M20.
+
+### [M15] Unified Notification Channels
+> outcome: Alerts broadcast to platforms where security and engineering teams already communicate.
+> spec: S8
+> version: 2.17.0
+
+- [x] T62 Define the extensible INotificationChannel provider interface
+- [x] T63 Ship native channel providers: Email, Slack, Teams and generic webhooks (S30)
+- [x] T64 Add event-triggered notification subscriptions with a delivery log
+  - note: deviation — the queue is a database table swept every minute by Hangfire rather than per-message jobs, so retry/digest state stays inspectable
+
+### [M16] Bi-directional Issue Sync
+> outcome: Security triage aligned with development workflows.
+> spec: S8
+> version: 2.17.0
+
+- [x] T65 Build the modular IIssueTrackerProvider integration core (S31)
+- [x] T66 Support creating/linking developer tasks in Jira, GitHub, GitLab and Azure DevOps
+- [x] T67 Implement bi-directional sync via validated webhooks and a status-mapping table
+
+### [M17] Hardened Enterprise Authentication
+> outcome: Standard enterprise SSO secures access, with SCIM provisioning and hardware second factors.
+> spec: S8
+> version: 2.17.0
+
+- [x] T68 Support SAML 2.0 and OIDC SSO with per-IdP claim/group mapping (S32)
+  - note: deviations — OIDC is an explicit PKCE flow rather than cookie middleware (desktop redirects to a loopback URI); SAML is over SignedXml rather than Sustainsys; encrypted assertions and single logout are not implemented
+- [x] T69 Implement SCIM 2.0 user/group provisioning with RFC 7644 PATCH semantics
+  - note: a SCIM group maps onto a NetRisk role; `active:false` revokes live sessions on the next request
+- [x] T70 Support WebAuthn/FIDO2 hardware authentication for admin accounts
+  - note: registers as an independent second factor alongside FaceID, not merged into one MFA registry
+
+### [M18] Trend Micro Vision One Integration
+> outcome: Asset, risk, vulnerability and posture synchronization with Trend Micro Vision One.
+> spec: S8
+> version: 2.17.0
+
+- [x] T71 Add region-aware connection management with a test-connection probe
+- [x] T72 Automate daily computer-inventory synchronization onto hosts
+  - note: dedup is an asset-identity chain (external id → MAC → FQDN → hostname → IP), a separate mechanism from the Track 3.3 finding dedup engine
+- [x] T73 Ingest CVE vulnerabilities per device with virtual-patch detection
+- [x] T74 Synchronize risk scores into the entity-wide Cyber Risk Index
+
+### [M19] SecurityScorecard Integration
+> outcome: Domain-level cyber rating, factor scores, and issue synchronization with SecurityScorecard.
+> spec: S8
+> version: 2.17.0
+
+- [x] T75 Add domain-targeted connection management with a token test
+- [x] T76 Automate posture synchronization of grade, score and factor history
+- [x] T77 Ingest domain-level CVE vulnerabilities under a synthetic domain host
+- [x] T78 Ingest active security issues under custom categories
+
+### [M20] Jira Service Management & Assets
+> outcome: Read the service desk and import the CMDB registers describing applications and machines.
+> spec: S8
+> version: 2.19.0
+
+- [x] T79 Extend the Jira connection with a Service Management/Assets facet (S34)
+  - note: only Jira Cloud is supported; Data Center's Insight API is refused at save
+- [x] T80 Mirror service-desk requests and SLA cycles with breach notifications
+- [x] T81 Generalize finding_issue_links to incidents and risks via a target_kind discriminator
+- [x] T82 Import Jira Assets registers for applications, servers and machines
+- [x] T83 Make the status-mapping, template and severity-priority screens editable
+- [x] T84 Add a live template preview against a real finding before saving
+- [x] T85 Link an imported Assets object back to its Jira page by object key
+
+## Track 5 — Native Packaging & Release Engineering
+
+Automates artifact production for secure, seamless software distribution. Detailed specifications:
+[docs/roadmap/TRACK_5_PACKAGING.md](docs/roadmap/TRACK_5_PACKAGING.md) (S9). Packaging logic, manifests
+and signing pipelines are unit-tested, but no signed, notarized or Windows/Linux-native artifact has
+been produced yet in this environment — that needs real certificates, an Apple Developer account and
+Windows/Linux runners. Operational guide: [docs/packaging/release-engineering.md](docs/packaging/release-engineering.md) (S10).
+
+### [M21] Automated Code-Signing Pipelines
+> outcome: OS-level safety warnings are eliminated and publisher trust is verified.
+> spec: S9, S10
+> version: 2.17.0
+
+- [x] T86 Wire Windows Authenticode signing (Azure Trusted Signing, signtool fallback)
+  - note: never executed end to end in this environment — needs a Windows host and a real certificate; decision logic covered by src/Packaging.Tests
+- [x] T87 Wire macOS Developer ID signing and notarization for app/pkg/dmg
+  - note: never executed end to end — no Developer ID certificate or Apple account available here
+
+### [M22] Modern Native Installers
+> outcome: Streamlined, native installation packages matching platform standards.
+> spec: S9, S10
+> version: 2.17.0
+
+- [x] T88 Author the Windows MSI (WiX v5) and MSIX packaging targets
+  - note: WiX/makeappx are Windows-only; no .msi/.msix produced here, verified statically in src/Packaging.Tests
+- [x] T89 Assemble a drag-and-drop macOS DMG with background and volume icon
+  - note: executed on Apple Silicon; produced a mountable DMG with the expected unsigned-build warnings
+- [x] T90 Author the Linux Flatpak and Snap packaging targets with least-privilege sandboxing
+  - note: flatpak-builder/snapcraft are Linux-only; no .flatpak/.snap produced here, rendered recipes asserted in src/Packaging.Tests
+
+## Track 6 — Database Uniformization & Schema Health
+
+Standardizes the database schema (naming, relationships, indexing, types) and removes dead
+tables/columns with zero data loss. Full plan:
+[docs/plano-uniformizacao-banco.md](docs/plano-uniformizacao-banco.md) (S11).
+
+### [M23] Upgrade Tooling & Preparation (Plan: Tool + Phase 0)
+> outcome: A safety net exists before touching the schema.
+> spec: S12
+> version: 2.8.0
+
+- [x] T91 Add `netrisk-console database upgrade-schema` with pre-flight/backup/validation/audit
+- [x] T92 Add `netrisk-console database baseline` census and model-divergence report
+- [x] T93 Document the Track 6 naming convention in CLAUDE.md
+
+### [M24] Safe Fixes & Naming Uniformization (Plan: Phases 1–2)
+> outcome: Low-risk corrections and snake_case convergence — renames only, no drops.
+> spec: S13
+> version: 2.8.0
+
+- [x] T94 Fix invalid `0000-00-00` defaults and index-name typos (phase 1, db_version 64)
+- [x] T95 Normalize boolean columns from tinyint(4) to tinyint(1) (phase 1b, db_version 66)
+- [x] T96 Snake-case the last stray column, `comments.IsAnonymous` (phase 2b, db_version 67)
+- [x] T97 Convert all 99 base tables to utf8mb4/utf8mb4_unicode_ci (phase 1c, db_version 68)
+- [x] T98 Rename 8 PascalCase tables and hybrid camelCase columns to snake_case (phase 2, db_version 65)
+
+### [M25] Relationships & Indexing for Performance (Plan: Phases 3–4)
+> outcome: Every correlation column becomes a real, navigable, indexed foreign key.
+> spec: S14
+> version: 2.8.0
+
+- [x] T99 Add FK constraints and EF navigations for orphan id columns (phase 3, db_version 69)
+- [x] T100 Add query-justified hot-path indexes and convert BLOB-for-text columns (phase 4, db_version 70)
+
+### [M26] Type Standardization & Dead Schema Removal (Plan: Phases 5–6)
+> outcome: Consistent temporal/status types, then staged removal of unused objects.
+> spec: S15
+> version: 2.8.0
+
+- [x] T101 Migrate `risks.status` to an int-backed enum via create-copy-coexist (phase 5, db_version 71)
+- [x] T102 Deprecate 23 unreferenced tables and orphan columns, reversibly (phase 6a, db_version 72)
+- [x] T103 Drop the deprecated tables and columns after the observation window (phase 6b, db_version 73)
+
+## Track 7 — Security Review & Hardening
+
+A full, end-to-end security review across every tier, producing a prioritized findings register and a
+remediation backlog. **Status: complete (2026-08-26).** 34 findings raised, 25 fixed with regression
+tests, 5 open with a named owner and proposed fix, 4 risk-accepted with an expiry. No critical or high
+finding outstanding. Six of the fixes were wrong on the first attempt and were corrected before landing;
+they are listed in [FINDINGS.md](docs/security/FINDINGS.md) §"Regressions introduced by this track's own
+fixes" rather than quietly corrected. Detailed specifications:
+[docs/roadmap/TRACK_7_SECURITY.md](docs/roadmap/TRACK_7_SECURITY.md) (S16).
+
+### [M27] Comprehensive Security Audit
+> outcome: A baseline is established by systematically reviewing the code against a recognized standard.
+> spec: S16
+> version: 2.17.0
+
+- [x] T104 Threat-model the request flow and document trust boundaries (S17)
+- [x] T105 Audit the codebase against OWASP ASVS/Top 10 chapter by chapter (S18)
+  - note: fuzzing the Nessus XML parser was not done; the three XXE payload classes are instead asserted against each importer in ImporterXxeTest
+- [x] T106 Produce a prioritized findings register naming how each finding was established (S19)
+- [x] T107 Run `/security-review` as a recurring gate and capture the baseline report (S20)
+
+### [M28] Dependency & Supply-Chain Security
+> outcome: What ships in the binaries and submodules is known and controlled.
+> spec: S16
+> version: 2.17.0
+
+- [x] T108 Enable Dependabot and a CI dependency-vulnerability scan gate
+- [x] T109 Generate and publish a CycloneDX SBOM from Nuke `Package*` targets
+  - note: publishing to a Dependency-Track instance is the optional half of the spec and is not done
+- [x] T110 Pin and document submodule provenance with a reviewed-bump CI gate (S21)
+
+### [M29] AuthN/AuthZ & Secrets Hardening
+> outcome: Gaps in identity, access control, and secret management are closed.
+> spec: S16
+> version: 2.17.0
+
+- [x] T111 Verify every API controller enforces authorization, by reflection not by comment
+  - note: found `WebAuthnController` shipping with no `[Authorize]` at all (NR-2026-009)
+- [x] T112 Harden token issuance, session lifetime, lockout and FaceID liveness (NR-2026-001/002/008/010/012)
+- [x] T113 Standardize secret storage and document a per-secret rotation procedure (S22)
+  - note: found committed expired dev certificates with password "pass" (NR-2026-003); history not rewritten, a Release build now refuses to start with them
+
+### [M30] Data Protection & Transport Security
+> outcome: Data is protected in transit and at rest.
+> spec: S16
+> version: 2.17.0
+
+- [x] T114 Enforce TLS 1.2+ and certificate validation on all client/server and outbound calls (NR-2026-004/005/013/026)
+- [x] T115 Encrypt sensitive columns at rest and validate hashing/KDF choices (S23)
+  - note: uploaded files and the finding register are not column-encrypted (TM-A4, accepted); biometric templates were a genuine gap, raised as NR-2026-032
+- [x] T116 Harden CORS, security headers and cookie flags, verified by a live scan (NR-2026-015/016)
+
+### [M31] Continuous Security in CI/CD
+> outcome: Security verification is automatic and non-regressing.
+> spec: S16
+> version: 2.17.0
+
+- [x] T117 Add CodeQL and gitleaks SAST/secret-scanning gates to CI, failing on new findings
+- [x] T118 Publish SECURITY.md and an internal triage SLA (S25)
+- [x] T119 Schedule periodic re-audits and track remediation burn-down (S24)
+  - note: the release-checklist item is documented, not mechanically enforced in the Nuke release flow
+
+## Track 8 — Risk Governance & Approval Workflows
+
+Closes the gap between NetRisk's risk lifecycle and what ISO 27001 / SOC 2 / DORA auditors and NIST
+RMF / COSO ERM test: formal expiring risk acceptance, residual-vs-inherent risk, segregated multi-level
+approvals, a field-level audit trail, proactive review notifications, and a business-facing review
+portal. **Status: delivered.** All 23 items are implemented; three carry a deliberate difference from
+spec, annotated on the item itself. Detailed specifications:
+[docs/roadmap/TRACK_8_RISK_GOVERNANCE.md](docs/roadmap/TRACK_8_RISK_GOVERNANCE.md) (S26). The Avalonia
+desktop changes are compile- and lint-verified only in this environment; `src/RiskPortal` was run and
+exercised end to end against a real MariaDB and API.
+
+### [M32] Formal Risk Acceptance & Time-Bound Exceptions
+> outcome: Accepting a risk is a first-class, expiring, authorized artifact (ISO 27001 6.1.3 evidence).
+> spec: S26
+> version: 2.17.0
+
+- [x] T120 Add the risk_acceptances entity with expiry and revoke/renew lifecycle (db_version 80)
+- [x] T121 Add the acceptance service/API with severity-band authority checks
+- [x] T122 Automate T-30/T-7 expiry warnings and auto-reopen on lapse
+  - note: the first implementation took the first matching threshold and never fired T-7; fixed to take the tightest applicable one
+- [x] T123 Build the risk-acceptance GUI panel on the risk editor
+  - note: deviation — shipped as a tabbed dialog (`RiskGovernanceWindow`) rather than an inline panel; compile/lint-verified only
+
+### [M33] Inherent vs. Residual Risk
+> outcome: Pre- and post-treatment scores are tracked as the routing key for escalation.
+> spec: S26
+> version: 2.17.0
+
+- [x] T124 Add residual scoring with a swappable mitigation-effectiveness strategy
+- [x] T125 Re-create `next_review_date_uses` to select inherent vs residual cadence
+  - note: correction to spec — the setting had been deleted in db_version 29, not merely unused for fifty versions; re-created in db_version 80
+- [x] T126 Show both scores with delta on lists/editors and an inherent/residual heatmap toggle
+  - note: the toggle relabels which score is filtered; it does not move the plotted point, since a residual score has no likelihood/impact decomposition
+
+### [M34] Approval Workflow Engine (State Machine, Segregation of Duties, Escalation, Appetite)
+> outcome: Server-side transitions, maker-checker, threshold-escalated dual sign-off, and risk appetite.
+> spec: S26
+> version: 2.17.0
+
+- [x] T127 Enforce a server-side risk status state machine, refusing with 422
+  - note: `ReopenRisk` stays on the unguarded save deliberately; legacy violations are reported, not blocked
+- [x] T128 Enforce segregation of duties (reviewer/acceptor ≠ submitter/owner/manager) with an audited break-glass override
+- [x] T129 Add risk_appetites with a dual-approval threshold and counter-signature flow
+  - note: no appetite row is seeded; gating stays inactive until an organisation configures its own threshold
+- [x] T130 Build the appetite admin screen and counter-sign GUI action
+
+### [M35] Field-Level Audit Trail & Auditor Evidence Export
+> outcome: "Who changed what, when" is answerable from the database with an exportable evidence pack.
+> spec: S26
+> version: 2.17.0
+
+- [x] T131 Add a SaveChanges-interceptor field-level audit log over the governance aggregate
+  - note: deliberately not global — a trail over vulnerability imports would write millions of unread rows; retention defaults to 1,825 days
+- [x] T132 Build the auditor evidence export (CSV + PDF) via the reporting engine
+
+### [M36] Review Cadence Automation & Intake Repair
+> outcome: Push, don't pull — overdue reviews and expiring acceptances notify; POA&M-style tasks exist.
+> spec: S26
+> version: 2.17.0
+
+- [x] T133 Add a daily review-cadence notification job over the existing ReviewLevel cadence
+- [x] T134 Add pending-risk promote/dismiss via API and GUI
+- [x] T135 Add mitigation_tasks line-items (owner, due date, status) feeding the same notifications
+
+### [M37] Business Risk Acceptance Portal (Web Application)
+> outcome: Business-appointed reviewers periodically review, rank and decide their entity's risks.
+> spec: S26
+> version: 2.17.0
+
+- [x] T136 Stand up the src/RiskPortal ASP.NET Core web app consuming the REST API
+  - note: actually run and exercised locally against a real MariaDB and API, where four of this milestone's defects were found
+- [x] T137 Add entity-scoped reviewer designation and appointment
+  - note: appointing a reviewer did not grant access until `AppointAsync` was fixed to create the entity-role row
+- [x] T138 Auto-generate periodic per-entity review campaigns
+- [x] T139 Build the reviewer drag-to-rank and accept/mitigate/escalate decision flow
+- [x] T140 Surface business rank and campaign evidence in desktop reports
+
+### [M38] Quantitative Scoring Option (FAIR-lite) & Scale Anchors
+> outcome: Anchored ordinal scales now, a quantitative alternative for the documented limits of matrices.
+> spec: S26
+> version: 2.17.0
+
+- [x] T141 Add quantitative definitions/anchors on every likelihood/impact level
+- [x] T142 Add the FAIR-lite Monte Carlo scoring method with ALE percentiles and loss-exceedance curve
+  - note: the mapped score was taken from median ALE and scored a low-frequency high-impact risk as 0; fixed to map from the mean
+
+## Track 9 — MIGR-TI/IA Methodology Alignment
+
+Aligns NetRisk with the **MIGR-TI/IA** reference methodology, documented in
+[docs/methodology/](docs/methodology/) and scoped by a phase-by-phase coverage analysis
+([docs/methodology/migr-ti-ia-coverage.md](docs/methodology/migr-ti-ia-coverage.md), S28). Twelve stages,
+the fifteen prioritized gaps from that analysis's §12, grouped by dependency. **Status: planned, nothing
+started.** Does not reopen Track 8. Detailed specifications:
+[docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
+
+> **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
+> sections) merges under `docs/roadmap/track9/9.N-<slug>.md` before the first implementation commit.
+> Gate 2 — no item is ticked without the tests its specification planned: happy path, every guard/error
+> branch, a regression test that fails on the pre-fix code, schema idempotence/replay, negative
+> authorization cases. See [src/AI_TESTING_INSTRUCTIONS.md](src/AI_TESTING_INSTRUCTIONS.md).
+
+### [M39] Stage 9.1 — The linkage chain: objective → process → IT service → data → asset
+> outcome: A risk traces to a strategic objective, not only to one generic entity. Closes gap 1.
+> spec: S27
+
+- [ ] T143 Merge the Stage 9.1 specification (eleven sections, test plan reviewed)
+- [ ] T144 Model the strategic objective as a first-class entity
+- [ ] T145 Add an itService type to the entity schema (technical owner, processes served)
+- [ ] T146 Link risks to each optional, queryable link of the chain
+- [ ] T147 Compute a critical-process coverage metric counting only processes marked critical
+- [ ] T148 Test chain traversal with a missing middle link and legacy single-link coexistence
+
+### [M40] Stage 9.2 — Structured scenario, record discrimination and evidence confidence
+> outcome: Four scenario fields plus a confidence level make the Phase 2 quality rules machine-verifiable. Closes gap 2.
+> spec: S27
+
+- [ ] T149 Merge the Stage 9.2 specification
+- [ ] T150 Split cause/threat, vulnerability/condition, central event and consequences into separate fields
+- [ ] T151 Add an evidence confidence level (confirmed / indicative / hypothesis)
+- [ ] T152 Support standalone hypothesis records, not only ones originating from an assessment answer
+- [ ] T153 Distinguish a near miss from an incident
+- [ ] T154 Add duplicate-risk detection on (central event, consequence) as a warning, not a block
+  - note: deliberately out of scope — back-filling the four fields from existing free text; legacy risks keep them null
+- [ ] T155 Test that a legacy risk with all four fields null stays editable, listable and scorable
+
+### [M41] Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies
+> outcome: Continuity fields that flag 4, Gate A and the restoration metric depend on. Closes gap 4.
+> spec: S27
+
+- [ ] T156 Merge the Stage 9.3 specification
+- [ ] T157 Declare MTPD/MAO, RTO and RPO on the process and the IT service, plus process criticality
+- [ ] T158 Model dependencies with cascading effect
+- [ ] T159 Add restoration-test records comparable against the declared RTO/RPO
+- [ ] T160 Test that a declared RTO with no restoration test reads as unverified, not met; cyclic dependencies don't recurse forever
+
+### [M42] Stage 9.4 — Exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK
+> outcome: The Phase 3 prioritization signals reach NetRisk as first-class data, not only via Vision One. Closes gap 6.
+> spec: S27
+
+- [ ] T161 Merge the Stage 9.4 specification
+- [ ] T162 Promote EPSS from a tool-fields bag to a column on vulnerabilities, with its own sync
+- [ ] T163 Synchronize the CISA KEV catalogue with listing date and deadline
+- [ ] T164 Associate MITRE ATT&CK techniques to the finding and the risk scenario
+- [ ] T165 Combine the Phase 3 signals into a prioritization with CVSS as an input
+- [ ] T166 Synchronize outbound through IOutboundHttpClient under the SSRF policy
+  - note: deliberately out of scope — exposure, required privileges and blast radius (topology modelling); stays ❌ in the coverage analysis
+- [ ] T167 Test that an unavailable/malformed KEV catalogue never silently de-lists a KEV item, and two EPSS sources converge by a declared rule
+
+### [M43] Stage 9.5 — The eleven mandatory flags and Gate A
+> outcome: Gate A, non-discretionary in the methodology, becomes implementable via queryable flags. Closes gap 3.
+> spec: S27
+> depends-on: M41, M42
+
+- [ ] T168 Merge the Stage 9.5 specification, declaring the origin of each of the eleven flags
+- [ ] T169 Model the eleven flags as queryable fields
+- [ ] T170 Refuse to discard a risk carrying a non-discretionary flag, with notified escalation (Gate A)
+- [ ] T171 Distinguish an "act immediately" decision from high severity
+- [ ] T172 Build a "Top Risks" executive list carrying trend, confidence and next decision
+- [ ] T173 Test that a derived flag reverts with an audit-trail entry, and that Gate A precedes Gate B
+
+### [M44] Stage 9.6 — Treatment economics: monetary cost, Gates C and D, the full option set
+> outcome: Gate C gets a calculation; Gate D gets portfolio selection under constraints. Closes gaps 7, 10, part of 13.
+> spec: S27
+
+- [ ] T174 Merge the Stage 9.6 specification
+- [ ] T175 Add monetary control cost alongside the existing ordinal MitigationCost scale
+- [ ] T176 Implement Gate C: E[L before] − E[L after] > total cost, citing Gordon–Loeb as a reference, not a fixed 37% rule
+- [ ] T177 Implement Gate D: portfolio selection under budget, people, dependencies and deadline
+- [ ] T178 Add avoid and transfer/share as treatment types alongside reduce and accept
+- [ ] T179 Add completion evidence and an acceptance criterion on MitigationTask
+- [ ] T180 Add a target risk level to the register
+- [ ] T181 Test that a mitigation with no monetary cost enters Gate C as not-assessable, and Gate D preserves tail/systemic risks at moderate E[L]
+
+### [M45] Stage 9.7 — Tail statistics and portfolio: P95, CVaR, aggregation and correlation
+> outcome: The tail statistic appetite compares against, and the portfolio sum Phase 7 needs, exist. Closes gap 9.
+> spec: S27
+
+- [ ] T182 Merge the Stage 9.7 specification
+- [ ] T183 Compute and store P95 and CVaR with confidence intervals
+- [ ] T184 Decompose loss magnitude into response, recovery, productivity, revenue, liability, fine and reputation
+- [ ] T185 Aggregate portfolio exposure with declared correlation between scenarios
+- [ ] T186 Compare appetite against P95/CVaR (Gate B)
+- [ ] T187 Test that CVaR of a low-frequency scenario is not zero, and a zero-correlation portfolio sum is not the sum of individual P95s
+
+### [M46] Stage 9.8 — KRIs, mandatory reassessment triggers and the methodology's metrics
+> outcome: A first-class KRI record and the six mandatory reassessment triggers of Phase 7 exist. Closes gap 5.
+> spec: S27
+
+- [ ] T188 Merge the Stage 9.8 specification, listing which metrics this stage delivers
+- [ ] T189 Model KRI as a first-class record: definition, source, tolerance threshold, history
+- [ ] T190 Implement the six mandatory reassessment triggers of Phase 7
+- [ ] T191 Gate B by indicator, not only by score
+- [ ] T192 Build a metrics panel for the methodology's own performance measures
+- [ ] T193 Test that a KRI with no recent reading reads as stale, and a reassessment trigger is idempotent
+
+### [M47] Stage 9.9 — Archival with triggers, backtesting, the risk committee and the third line
+> outcome: The decision cycle closes: reopenable archive, backtesting, and the missing Phase 0 roles. Closes gaps 13 (part), 14, 15.
+> spec: S27
+
+- [ ] T194 Merge the Stage 9.9 specification
+- [ ] T195 Add an "Archived" state with justification, a condition-based reopening trigger and quarterly review
+- [ ] T196 Backtest incidents and near misses against the register
+- [ ] T197 Add the risk committee as a collegiate approver alongside the individual authorizing manager
+- [ ] T198 Add a third-line (audit) read-only assurance role
+- [ ] T199 Test that a condition trigger fires once, backtesting never counts a post-incident registration as foreseen, and the third-line role cannot write
+
+### [M48] Stage 9.10 — Third-party register: HECVAT, SBOM, concentration and exit plan
+> outcome: The only discovery front with no instrument gets one. Closes gap 8.
+> spec: S27
+
+- [ ] T200 Merge the Stage 9.10 specification
+- [ ] T201 Model third party as a first-class record, distinct from a generic organization
+- [ ] T202 Add HECVAT assessment, SBOM, sub-processors, data location, SLA/RTO/RPO, right to audit, exit plan
+- [ ] T203 Measure concentration by supplier, cloud and identity
+- [ ] T204 Link the third-party record to the Stage 9.1 IT service and the Stage 9.11 data record
+- [ ] T205 Test that concentration counts a supplier once per dependent critical process, and a partial HECVAT scores as incomplete
+
+### [M49] Stage 9.11 — LGPD data catalogue: legal basis, purpose, retention, location and DPIA
+> outcome: Compliance becomes demonstrable; flags 2 and 5 get something to derive from. Closes gap 11.
+> spec: S27
+
+- [ ] T206 Merge the Stage 9.11 specification
+- [ ] T207 Add legal basis, purpose, retention, location, transfer and sensitivity marking on organizationData
+- [ ] T208 Add DPIA as an artifact linked to the data record and the process
+- [ ] T209 Link legal/contractual requirements on the risk register to the catalogue instead of free text
+- [ ] T210 Test that sensitive data with no declared legal basis is a finding, and expired retention signals but does not auto-delete
+
+### [M50] Stage 9.12 — AI governance: model inventory, flag 11 and model metrics
+> outcome: The inventory and assurance the by-construction authority controls are missing. Closes gap 12.
+> spec: S27
+
+- [ ] T211 Merge the Stage 9.12 specification
+- [ ] T212 Add a model inventory as a first-class record (purpose, data, vendor, version)
+- [ ] T213 Put AI-component risks in the same register, with flag 11 derived from the inventory
+- [ ] T214 Add model metrics: accuracy, recall, calibration, drift, human override rate
+  - note: deliberately out of scope — adding AI to the risk workflow; the governance instrument must exist before the use
+- [ ] T215 Test that the existing non-user-approval prohibitions still hold after this stage, and a model with no recorded evaluation is not treated as evaluated
+
+**Track completion.** The track is done when the coverage analysis (S28) is re-run and the lines each
+specification declared read ✅ — lines that stay 🟡 or ❌ are named with the reason.
+
+## Backlog
+
+- [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
+- [ ] T217 Add Real-Time Collaboration: synchronized editing for IRPs and joint risk assessments
+- [ ] T218 Add AI-Assisted Risk Scoring (LLM-based vulnerability analysis and mitigation proposals)
+  - note: precondition — Stage 9.12 (AI governance) must land first; the methodology requires the governance instrument before the use
+- [ ] T219 Move the BastionVault plugin onto BastionVault.IntegrationSdk, replacing the hand-written wire protocol (S35)
+  - note: current plugin does not support KV v2 and misreads a v2 secret's nested `data.data`; four-stage migration with the 33 existing plugin tests as non-regression evidence
+
+## Specs
+
+| ID | Title | Path |
+|----|-------|------|
+| S1 | Desktop UI standard | docs/ui-standard.md |
+| S2 | UX interaction standard | docs/ux-interaction-standard.md |
+| S3 | UI standard audit (initial) | roadmap/UI_STANDARD_AUDIT.md |
+| S4 | UI standard compliance plan | roadmap/UI_STANDARD_COMPLIANCE_PLAN.md |
+| S5 | UI standard compliance audit (per-view evidence) | roadmap/UI_STANDARD_COMPLIANCE_AUDIT.md |
+| S6 | Track 2 — GRC & reporting spec | docs/roadmap/TRACK_2_GRC_REPORTING.md |
+| S7 | Track 3 — ASPM spec | docs/roadmap/TRACK_3_ASPM.md |
+| S8 | Track 4 — Integrations spec | docs/roadmap/TRACK_4_INTEGRATIONS.md |
+| S9 | Track 5 — Packaging spec | docs/roadmap/TRACK_5_PACKAGING.md |
+| S10 | Release engineering operational guide | docs/packaging/release-engineering.md |
+| S11 | Database uniformization plan | docs/plano-uniformizacao-banco.md |
+| S12 | Milestone 6.1 spec — tooling & preparation | roadmap/track-6/MILESTONE_6.1_TOOLING_PREPARATION.md |
+| S13 | Milestone 6.2 spec — safe fixes & naming | roadmap/track-6/MILESTONE_6.2_SAFE_FIXES_NAMING.md |
+| S14 | Milestone 6.3 spec — relationships & indexing | roadmap/track-6/MILESTONE_6.3_RELATIONSHIPS_INDEXING.md |
+| S15 | Milestone 6.4 spec — types & dead schema | roadmap/track-6/MILESTONE_6.4_TYPES_DEAD_SCHEMA.md |
+| S16 | Track 7 — Security spec | docs/roadmap/TRACK_7_SECURITY.md |
+| S17 | Threat model | docs/security/THREAT_MODEL.md |
+| S18 | ASVS L2 checklist | docs/security/ASVS_L2_CHECKLIST.md |
+| S19 | Findings register | docs/security/FINDINGS.md |
+| S20 | Security baseline report (2026-08-26) | docs/security/baseline-2026-08-26.md |
+| S21 | Supply-chain policy | docs/security/SUPPLY_CHAIN.md |
+| S22 | Secrets handling & rotation | docs/security/SECRETS.md |
+| S23 | Data protection | docs/security/DATA_PROTECTION.md |
+| S24 | Security burn-down | docs/security/BURN_DOWN.md |
+| S25 | Triage SLA | docs/security/TRIAGE_SLA.md |
+| S26 | Track 8 — Risk governance spec | docs/roadmap/TRACK_8_RISK_GOVERNANCE.md |
+| S27 | Track 9 — MIGR-TI/IA spec | docs/roadmap/TRACK_9_MIGR_TI_IA.md |
+| S28 | MIGR-TI/IA coverage analysis | docs/methodology/migr-ti-ia-coverage.md |
+| S29 | Scanner importer field mappings | docs/features/scanner-importers.md |
+| S30 | Notification channels | docs/features/notification-channels.md |
+| S31 | Issue-tracker sync | docs/features/issue-tracker-sync.md |
+| S32 | Enterprise authentication | docs/features/enterprise-authentication.md |
+| S33 | Posture integrations | docs/features/posture-integrations.md |
+| S34 | Jira Service Management | docs/features/jira-service-management.md |
+| S35 | BastionVault integration SDK migration design | docs/features/bastionvault-integration-sdk-migration.md |
+| S36 | Secret vaults | docs/features/secret-vaults.md |
+| S37 | Settings form rollout | roadmap/SETTINGS_FORM_ROLLOUT.md |
