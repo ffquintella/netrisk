@@ -257,6 +257,7 @@ public class IssueTrackerServiceInMemoryTest : InMemoryServiceTestBase
     [Theory]
     [InlineData(IssueTrackerProviderKind.Jira, "https://acme.atlassian.net/browse/SEC-1421", "SEC-1421")]
     [InlineData(IssueTrackerProviderKind.Jira, "sec-1421", "SEC-1421")]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, "https://hml-jira.acme.br/browse/SDESI-42", "SDESI-42")]
     [InlineData(IssueTrackerProviderKind.GitHub, "https://github.com/a/b/issues/88", "88")]
     [InlineData(IssueTrackerProviderKind.GitLab, "https://gitlab.com/g/p/-/issues/12", "12")]
     [InlineData(IssueTrackerProviderKind.AzureDevOps, "https://dev.azure.com/a/p/_workitems/edit/4712", "4712")]
@@ -606,6 +607,8 @@ public class IssueTrackerServiceInMemoryTest : InMemoryServiceTestBase
     public void OnlyTheProvidersThatCannotSignNeedAUrlSecret()
     {
         Assert.True(IssueTrackerService.RequiresUrlSecret(IssueTrackerProviderKind.Jira));
+        // Data Center's webhooks are unsigned for the same reason Cloud's are.
+        Assert.True(IssueTrackerService.RequiresUrlSecret(IssueTrackerProviderKind.JiraDataCenter));
         Assert.True(IssueTrackerService.RequiresUrlSecret(IssueTrackerProviderKind.AzureDevOps));
         // GitHub and GitLab authenticate the delivery itself.
         Assert.False(IssueTrackerService.RequiresUrlSecret(IssueTrackerProviderKind.GitHub));

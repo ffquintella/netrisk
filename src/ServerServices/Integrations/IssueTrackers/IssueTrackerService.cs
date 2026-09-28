@@ -37,6 +37,9 @@ public class IssueTrackerService(
         {
             [IssueTrackerProviderKind.Jira] = new()
                 { [4] = "Highest", [3] = "High", [2] = "Medium", [1] = "Low" },
+            // Data Center ships the same five-priority scheme as Cloud.
+            [IssueTrackerProviderKind.JiraDataCenter] = new()
+                { [4] = "Highest", [3] = "High", [2] = "Medium", [1] = "Low" },
             [IssueTrackerProviderKind.GitHub] = new()
                 { [4] = "critical", [3] = "high", [2] = "medium", [1] = "low" },
             [IssueTrackerProviderKind.GitLab] = new()
@@ -920,7 +923,8 @@ public class IssueTrackerService(
     /// one.
     /// </summary>
     internal static bool RequiresUrlSecret(IssueTrackerProviderKind provider) =>
-        provider is IssueTrackerProviderKind.Jira or IssueTrackerProviderKind.AzureDevOps;
+        provider is IssueTrackerProviderKind.Jira or IssueTrackerProviderKind.JiraDataCenter
+            or IssueTrackerProviderKind.AzureDevOps;
 
     internal IssueDraft BuildDraft(IssueTrackerConnection connection, Vulnerability finding, string? assetName)
     {
@@ -987,7 +991,7 @@ public class IssueTrackerService(
     {
         var trimmed = input.Trim();
 
-        if (provider == IssueTrackerProviderKind.Jira)
+        if (provider is IssueTrackerProviderKind.Jira or IssueTrackerProviderKind.JiraDataCenter)
         {
             var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"[A-Z][A-Z0-9_]+-\d+",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);

@@ -6,13 +6,14 @@
 > editors they had been missing.
 
 NetRisk creates and links developer tasks from vulnerability findings, and keeps the two in step in
-both directions. The modular core means adding a fifth tracker is one renderer, not a redesign:
+both directions. The modular core means adding another tracker is one renderer, not a redesign:
 providers do transport and shape translation only, and every policy decision — severity mapping,
 templates, when to auto-create, what a closed ticket means — lives on the connection.
 
 ```
-finding ──► template + priority mapping ──► IIssueTrackerProvider ──► Jira / GitHub / GitLab / ADO
-   ▲                                                                          │
+finding ──► template + priority mapping ──► IIssueTrackerProvider ──► Jira Cloud / Jira DC /
+   ▲                                                                   GitHub / GitLab / ADO
+   │                                                                          │
    └────── status mapping ◄── webhook (validated) or 15-minute poll ◄──────────┘
 ```
 
@@ -21,13 +22,26 @@ finding ──► template + priority mapping ──► IIssueTrackerProvider �
 | Provider | Auth | Project | Priority | Transitions | Webhook authenticity |
 |---|---|---|---|---|---|
 | **Jira Cloud** (REST v3) | Basic — account email + API token | Project key (`SEC`) | Native field | By **transition id**, resolved from the issue's *available* transitions | Unsigned: shared secret in the receiver URL |
+| **Jira Data Center** (REST v2) | **Bearer** — a Personal Access Token, with the authentication user left *empty*; a filled user means username + password basic auth | Project key (`SDESI`) | Native field | Same | Unsigned: shared secret in the receiver URL |
 | **GitHub Issues** | Bearer PAT / App token | `owner/repo` | **None** — expressed as a `priority:` label | `open` / `closed` only | `X-Hub-Signature-256`, HMAC-SHA256 of the raw body |
 | **GitLab Issues** | `PRIVATE-TOKEN` | Full path or numeric id | **None** — a `priority::` scoped label | `state_event` `close` / `reopen` | `X-Gitlab-Token`, compared in constant time |
 | **Azure DevOps** | Basic — empty user + PAT | Project name | `Microsoft.VSTS.Common.Priority` | `System.State` via JSON Patch | Unsigned: shared secret in the receiver URL |
 
 Details worth knowing because they are easy to get wrong:
 
-* Jira v3 takes **Atlassian Document Format**, not a string; a plain string is rejected outright.
+* Jira Cloud's v3 takes **Atlassian Document Format**, not a string; a plain string is rejected
+  outright. Data Center's v2 is the mirror image: it takes wiki markup and rejects the ADF object.
+* **A Cloud connection pointed at a Data Center instance fails as a 403, not a 404.** Data Center has
+  no `/rest/api/3`; it authenticates the request first and then refuses the route, so a valid
+  credential reads as a permission problem. That is the whole reason Data Center is its own provider
+  kind rather than a flag — see `JiraDialect`, which is the one place the two deployments' three
+  differences (REST version, body format, credential shape) live.
+* A Data Center **PAT sent as a basic-auth password does not authenticate**, and after a handful of
+  such attempts Seraph puts the account behind a CAPTCHA and answers **403 even for a correct
+  credential**. Clearing it takes one browser sign-in as that account. The connection test says so.
+* Service Management and Assets stay **Cloud-only**: Data Center serves Insight from
+  `/rest/insight/1.0/` with a different object model. Fields, priorities and project statuses *are*
+  read from both, so the status picker works either way.
 * GitLab addresses an issue by its per-project **`iid`**, not its global `id`. Using the id produces
   a 404 against a project that does have the issue.
 * Azure DevOps answers an invalid PAT with **HTTP 203 and a sign-in page**, not a 401. The connection
@@ -46,7 +60,7 @@ own field list, so a custom field is chosen rather than typed from memory.
 |---|---|
 | Title template | `[{{Severity}}] {{Title}}` |
 | Description template | A table of severity, status, asset, component, location, CVE links, CVSS, first-seen and SLA due date, plus the description, evidence excerpt and a deep link |
-| Priority mapping | Provider defaults — Jira `Highest…Low`; ADO `1…4` (**inverted**, because its scale is) |
+| Priority mapping | Provider defaults — either Jira `Highest…Low`; ADO `1…4` (**inverted**, because its scale is) |
 | Default labels | none |
 
 Templates use `{{Placeholder}}` substitution, not a template language. The values are

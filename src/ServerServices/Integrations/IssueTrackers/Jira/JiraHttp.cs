@@ -18,13 +18,13 @@ namespace ServerServices.Integrations.IssueTrackers.Jira;
 internal static class JiraHttp
 {
     /// <summary>
-    /// Atlassian Cloud basic auth: the account email as the user, an API token as the password.
-    /// Password authentication has been refused since Atlassian deprecated it, so a connection whose
-    /// token is really a password gets a 401 that <see cref="Describe"/> explains.
+    /// The connection's credential in the shape its deployment accepts — Cloud basic auth with
+    /// <c>email:api-token</c>, or a Data Center Personal Access Token as a bearer. Delegated to
+    /// <see cref="JiraDialect"/> so the metadata, Service Management and Assets clients cannot
+    /// disagree with the issue-tracker provider about it.
     /// </summary>
-    internal static string BasicAuth(IssueTrackerConnection connection, string? token) =>
-        "Basic " + Convert.ToBase64String(
-            Encoding.UTF8.GetBytes($"{connection.AuthUser}:{token}"));
+    internal static string AuthHeader(IssueTrackerConnection connection, string? token) =>
+        JiraDialect.AuthHeader(connection, token);
 
     internal static Task<OutboundHttpResponse> SendAsync(IOutboundHttpClient http,
         IssueTrackerConnection connection, string? token, string method, string url, string? body,
@@ -37,7 +37,7 @@ internal static class JiraHttp
             Body = body,
             Headers =
             {
-                ["Authorization"] = BasicAuth(connection, token),
+                ["Authorization"] = AuthHeader(connection, token),
                 ["Accept"] = "application/json"
             }
         }, ct);
@@ -46,6 +46,15 @@ internal static class JiraHttp
     /// <summary>A path on the connection's own site.</summary>
     internal static string SiteUrl(IssueTrackerConnection connection, string path) =>
         connection.BaseUrl.TrimEnd('/') + path;
+
+    /// <summary>
+    /// A path on the connection's platform API, under whichever REST version its deployment serves:
+    /// <c>ApiUrl(connection, "/field")</c>, never a hardcoded <c>/rest/api/3/field</c>. Cloud has no
+    /// v2 worth targeting and Data Center has no v3 at all, so a literal version in a URL is a 404 or
+    /// a 403 on one of the two deployments.
+    /// </summary>
+    internal static string ApiUrl(IssueTrackerConnection connection, string path) =>
+        SiteUrl(connection, JiraDialect.ApiBase(connection.Provider) + path);
 
     /// <summary>
     /// The Assets root for a workspace.

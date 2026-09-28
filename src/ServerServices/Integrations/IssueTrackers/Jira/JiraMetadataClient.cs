@@ -20,7 +20,7 @@ public class JiraMetadataClient(IOutboundHttpClient http) : IJiraMetadataClient
     public async Task<List<JiraFieldView>> GetFieldsAsync(IssueTrackerConnection connection, string? token,
         CancellationToken ct = default)
     {
-        var url = JiraHttp.SiteUrl(connection, "/rest/api/3/field");
+        var url = JiraHttp.ApiUrl(connection, "/field");
 
         var response = await JiraHttp.SendAsync(http, connection, token, "GET", url, null, ct);
 
@@ -59,7 +59,7 @@ public class JiraMetadataClient(IOutboundHttpClient http) : IJiraMetadataClient
     public async Task<List<string>> GetPrioritiesAsync(IssueTrackerConnection connection, string? token,
         CancellationToken ct = default)
     {
-        var url = JiraHttp.SiteUrl(connection, "/rest/api/3/priority");
+        var url = JiraHttp.ApiUrl(connection, "/priority");
 
         var response = await JiraHttp.SendAsync(http, connection, token, "GET", url, null, ct);
 
@@ -90,8 +90,8 @@ public class JiraMetadataClient(IOutboundHttpClient http) : IJiraMetadataClient
     public async Task<List<string>> GetProjectStatusesAsync(IssueTrackerConnection connection,
         string? token, CancellationToken ct = default)
     {
-        var url = JiraHttp.SiteUrl(connection,
-            $"/rest/api/3/project/{Uri.EscapeDataString(connection.ProjectKey)}/statuses");
+        var url = JiraHttp.ApiUrl(connection,
+            $"/project/{Uri.EscapeDataString(connection.ProjectKey)}/statuses");
 
         var response = await JiraHttp.SendAsync(http, connection, token, "GET", url, null, ct);
 

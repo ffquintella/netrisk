@@ -73,6 +73,36 @@ public partial class JiraIntegrationService(
     }
 
     /// <summary>
+    /// A connection and its credential for a platform-metadata read — the site's fields, its
+    /// priorities, a project's statuses.
+    ///
+    /// Separate from <see cref="ResolveAsync"/>, which refuses Data Center, because those three
+    /// endpoints exist on both deployments: only Service Management and Assets are Cloud-only. Going
+    /// through the strict resolve is what used to make the status picker on the issue-tracker screen
+    /// answer a Data Center connection with a sentence about Assets, leaving the operator to type the
+    /// workflow's status names from memory.
+    /// </summary>
+    private async Task<(IssueTrackerConnection Connection, string? Token)> ResolveMetadataAsync(
+        int connectionId)
+    {
+        await using var db = DalService.GetContext();
+
+        var connection = await db.IssueTrackerConnections
+                             .FirstOrDefaultAsync(c => c.Id == connectionId)
+                         ?? throw new DataNotFoundException("issue tracker connection",
+                             connectionId.ToString(),
+                             new Exception($"No issue-tracker connection {connectionId}."));
+
+        if (connection.Provider is not (IssueTrackerProviderKind.Jira
+            or IssueTrackerProviderKind.JiraDataCenter))
+            throw new InvalidParameterException(nameof(connectionId),
+                $"Connection '{connection.Name}' is a {connection.Provider} connection. Reading "
+                + "fields, priorities and statuses is a Jira feature.");
+
+        return (connection, await resolver.ResolveAsync(connection.EncryptedToken));
+    }
+
+    /// <summary>
     /// The settings row, created with defaults if it is missing.
     ///
     /// Created rather than returned as null so no caller and no screen has to carry a
@@ -212,19 +242,19 @@ public partial class JiraIntegrationService(
 
     public async Task<List<JiraFieldView>> GetJiraFieldsAsync(int connectionId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token) = await ResolveMetadataAsync(connectionId);
         return await metadata.GetFieldsAsync(connection, token);
     }
 
     public async Task<List<string>> GetJiraPrioritiesAsync(int connectionId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token) = await ResolveMetadataAsync(connectionId);
         return await metadata.GetPrioritiesAsync(connection, token);
     }
 
     public async Task<List<string>> GetJiraStatusesAsync(int connectionId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token) = await ResolveMetadataAsync(connectionId);
         return await metadata.GetProjectStatusesAsync(connection, token);
     }
 

@@ -4,12 +4,13 @@ using DAL.Entities;
 using DAL.Enums;
 using Model.Integrations;
 using Serilog;
+using ServerServices.Integrations.IssueTrackers.Jira;
 using ServerServices.Interfaces;
 
 namespace ServerServices.Integrations.IssueTrackers;
 
 /// <summary>
-/// Jira Cloud REST v3 (Track 4 milestone 4.2.2).
+/// Jira Cloud REST v3 (Track 4 milestone 4.2.2), and the base of the Server / Data Center provider.
 ///
 /// Two things about v3 shape this provider. Descriptions and comments are Atlassian Document Format,
 /// not text — posting a plain string to v3 is rejected — so Markdown is converted to a minimal ADF
@@ -17,14 +18,20 @@ namespace ServerServices.Integrations.IssueTrackers;
 /// issue means reading <c>/transitions</c> first and matching by name; there is no "set status" field.
 ///
 /// Auth is HTTP basic with <c>email:api-token</c>, which is what Atlassian issues for Cloud.
+///
+/// Everything that differs on Server / Data Center is read from <see cref="JiraDialect"/> off the
+/// connection's own provider kind rather than being branched on here, so
+/// <see cref="JiraDataCenterIssueTrackerProvider"/> inherits the whole request shape — the summary
+/// truncation, the label rules, the transition-by-name resolution — and overrides only its identity
+/// and the sentences it says when a request fails.
 /// </summary>
 public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) : IIssueTrackerProvider
 {
-    public IssueTrackerProviderKind Kind => IssueTrackerProviderKind.Jira;
+    public virtual IssueTrackerProviderKind Kind => IssueTrackerProviderKind.Jira;
 
-    public string Name => "Jira";
+    public virtual string Name => "Jira";
 
-    public IssueTrackerCapabilities Capabilities => new()
+    public virtual IssueTrackerCapabilities Capabilities => new()
     {
         SupportsWebhooks = true,
         SupportsComments = true,
@@ -40,14 +47,14 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
     public async Task<ConnectionTestResult> TestConnectionAsync(IssueTrackerConnection connection,
         string? token, CancellationToken ct = default)
     {
-        var me = await SendAsync(connection, token, "GET", "/rest/api/3/myself", null, ct);
+        var me = await SendAsync(connection, token, "GET", "/myself", null, ct);
 
-        if (!me.IsSuccess) return Describe(me, "Jira");
+        if (!me.IsSuccess) return Describe(connection, me);
 
         // The credential being valid is not the question an operator is asking; whether it can see
         // the project is.
         var project = await SendAsync(connection, token,
-            "GET", $"/rest/api/3/project/{Uri.EscapeDataString(connection.ProjectKey)}", null, ct);
+            "GET", $"/project/{Uri.EscapeDataString(connection.ProjectKey)}", null, ct);
 
         if (!project.IsSuccess)
             return ConnectionTestResult.Fail(
@@ -77,8 +84,7 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
             // Jira rejects a summary over 255 characters outright, and a finding title can exceed it.
             json.WriteString("summary", Truncate(draft.Title, 255));
 
-            json.WritePropertyName("description");
-            WriteAdf(json, draft.Description);
+            WriteRichText(connection, json, "description", draft.Description);
 
             json.WriteStartObject("issuetype");
             json.WriteString("name", string.IsNullOrWhiteSpace(draft.IssueType) ? "Task" : draft.IssueType);
@@ -105,11 +111,11 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
         }
 
         var payload = Encoding.UTF8.GetString(body.ToArray());
-        var response = await SendAsync(connection, token, "POST", "/rest/api/3/issue", payload, ct);
+        var response = await SendAsync(connection, token, "POST", "/issue", payload, ct);
 
         if (!response.IsSuccess)
-            throw new Model.Exceptions.IntegrationRequestException("Jira",
-                $"Jira refused to create the issue (HTTP {response.StatusCode}): {Excerpt(response.Body)}");
+            throw new Model.Exceptions.IntegrationRequestException(Name,
+                $"{Name} refused to create the issue (HTTP {response.StatusCode}): {Excerpt(response.Body)}");
 
         using var document = JsonDocument.Parse(response.Body!);
         var key = document.RootElement.GetProperty("key").GetString()!;
@@ -134,17 +140,16 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
             using (var json = new Utf8JsonWriter(body))
             {
                 json.WriteStartObject();
-                json.WritePropertyName("body");
-                WriteAdf(json, comment);
+                WriteRichText(connection, json, "body", comment);
                 json.WriteEndObject();
             }
 
             var commentResponse = await SendAsync(connection, token, "POST",
-                $"/rest/api/3/issue/{Uri.EscapeDataString(issueKey)}/comment",
+                $"/issue/{Uri.EscapeDataString(issueKey)}/comment",
                 Encoding.UTF8.GetString(body.ToArray()), ct);
 
             if (!commentResponse.IsSuccess)
-                throw new Model.Exceptions.IntegrationRequestException("Jira",
+                throw new Model.Exceptions.IntegrationRequestException(Name,
                     $"Could not comment on {issueKey} (HTTP {commentResponse.StatusCode}): "
                     + Excerpt(commentResponse.Body));
         }
@@ -167,10 +172,10 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
         string issueKey, string transitionTo, CancellationToken ct)
     {
         var available = await SendAsync(connection, token, "GET",
-            $"/rest/api/3/issue/{Uri.EscapeDataString(issueKey)}/transitions", null, ct);
+            $"/issue/{Uri.EscapeDataString(issueKey)}/transitions", null, ct);
 
         if (!available.IsSuccess)
-            throw new Model.Exceptions.IntegrationRequestException("Jira",
+            throw new Model.Exceptions.IntegrationRequestException(Name,
                 $"Could not read the transitions for {issueKey} (HTTP {available.StatusCode}).");
 
         using var document = JsonDocument.Parse(available.Body!);
@@ -198,18 +203,18 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
         }
 
         if (transitionId == null)
-            throw new Model.Exceptions.IntegrationRequestException("Jira",
+            throw new Model.Exceptions.IntegrationRequestException(Name,
                 $"'{transitionTo}' is not an available transition for {issueKey}. "
                 + $"Available now: {string.Join(", ", names)}.");
 
         var payload = $"{{\"transition\":{{\"id\":\"{transitionId}\"}}}}";
 
         var executed = await SendAsync(connection, token, "POST",
-            $"/rest/api/3/issue/{Uri.EscapeDataString(issueKey)}/transitions", payload, ct);
+            $"/issue/{Uri.EscapeDataString(issueKey)}/transitions", payload, ct);
 
         if (!executed.IsSuccess)
-            throw new Model.Exceptions.IntegrationRequestException("Jira",
-                $"Jira refused the transition of {issueKey} (HTTP {executed.StatusCode}): "
+            throw new Model.Exceptions.IntegrationRequestException(Name,
+                $"{Name} refused the transition of {issueKey} (HTTP {executed.StatusCode}): "
                 + Excerpt(executed.Body));
     }
 
@@ -217,12 +222,12 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
         string issueKey, CancellationToken ct = default)
     {
         var response = await SendAsync(connection, token, "GET",
-            $"/rest/api/3/issue/{Uri.EscapeDataString(issueKey)}?fields=summary,status,updated", null, ct);
+            $"/issue/{Uri.EscapeDataString(issueKey)}?fields=summary,status,updated", null, ct);
 
         if (response.StatusCode == 404) return null;
 
         if (!response.IsSuccess)
-            throw new Model.Exceptions.IntegrationRequestException("Jira",
+            throw new Model.Exceptions.IntegrationRequestException(Name,
                 $"Could not read {issueKey} (HTTP {response.StatusCode}).");
 
         return ParseIssue(connection, JsonDocument.Parse(response.Body!).RootElement);
@@ -330,34 +335,67 @@ public class JiraIssueTrackerProvider(ILogger logger, IOutboundHttpClient http) 
         json.WriteEndObject();
     }
 
+    /// <summary>
+    /// A description or comment body, in whichever format the deployment's API version accepts.
+    ///
+    /// Cloud's v3 rejects a plain string outright and Data Center's v2 rejects the ADF object, so this
+    /// is not a cosmetic difference — it is a 400 with a message about an unexpected field either way.
+    /// </summary>
+    private static void WriteRichText(IssueTrackerConnection connection, Utf8JsonWriter json,
+        string property, string markdown)
+    {
+        if (!JiraDialect.UsesAdf(connection.Provider))
+        {
+            // v2 wants wiki markup. The Markdown is passed through rather than translated: Jira's
+            // renderer shows the field list and the links legibly either way, and a half-finished
+            // Markdown-to-wiki translator is worse than neither.
+            json.WriteString(property, markdown ?? string.Empty);
+            return;
+        }
+
+        json.WritePropertyName(property);
+        WriteAdf(json, markdown);
+    }
+
+    /// <summary>
+    /// A request against the connection's platform API, under whichever REST version it serves and
+    /// with whichever credential shape it accepts. <paramref name="path"/> is version-relative:
+    /// <c>/myself</c>, not <c>/rest/api/3/myself</c>.
+    /// </summary>
     private Task<OutboundHttpResponse> SendAsync(IssueTrackerConnection connection, string? token,
         string method, string path, string? body, CancellationToken ct)
     {
-        var basic = Convert.ToBase64String(
-            Encoding.UTF8.GetBytes($"{connection.AuthUser}:{token}"));
-
         return http.SendAsync(new OutboundHttpRequest
         {
             Method = method,
-            Url = connection.BaseUrl.TrimEnd('/') + path,
+            Url = connection.BaseUrl.TrimEnd('/') + JiraDialect.ApiBase(connection.Provider) + path,
             Body = body,
             Headers =
             {
-                ["Authorization"] = "Basic " + basic,
+                ["Authorization"] = JiraDialect.AuthHeader(connection, token),
                 ["Accept"] = "application/json"
             }
         }, ct);
     }
 
-    private static ConnectionTestResult Describe(OutboundHttpResponse response, string provider) =>
+    /// <summary>
+    /// Turns a failed connection test into a sentence that names the cause an operator can act on.
+    ///
+    /// Virtual because the two deployments fail differently on the same status code, and the 403 is
+    /// the one that matters: on Cloud it really is a permission; on Data Center it is most often a PAT
+    /// that was sent as a basic-auth password, whose failed attempts then earn the account a CAPTCHA
+    /// that answers 403 even once the credential is right.
+    /// </summary>
+    protected virtual ConnectionTestResult Describe(IssueTrackerConnection connection,
+        OutboundHttpResponse response) =>
         response.StatusCode switch
         {
-            0 => ConnectionTestResult.Fail($"{provider} could not be reached: {response.TransportError}"),
-            401 => ConnectionTestResult.Fail($"{provider} rejected the credentials (401). "
+            0 => ConnectionTestResult.Fail($"{Name} could not be reached: {response.TransportError}"),
+            401 => ConnectionTestResult.Fail($"{Name} rejected the credentials (401). "
                                              + "For Jira Cloud the user is the account email and the credential is an API token."),
-            403 => ConnectionTestResult.Fail($"{provider} accepted the credentials but refused the request (403)."),
-            404 => ConnectionTestResult.Fail($"{provider} returned 404. Check the base URL."),
-            _ => ConnectionTestResult.Fail($"{provider} answered HTTP {response.StatusCode}.")
+            403 => ConnectionTestResult.Fail($"{Name} accepted the credentials but refused the request (403)."),
+            404 => ConnectionTestResult.Fail($"{Name} returned 404. Check the base URL."),
+            _ => ConnectionTestResult.Fail($"{Name} answered HTTP {response.StatusCode}.")
         };
 
     private static void TryAdd(Dictionary<string, string> details, string label, string? json, string property)

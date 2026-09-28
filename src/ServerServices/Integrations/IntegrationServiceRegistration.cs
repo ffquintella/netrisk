@@ -115,6 +115,7 @@ public static class IntegrationServiceRegistration
 
         // 4.2 — issue trackers.
         services.AddTransient<IIssueTrackerProvider, JiraIssueTrackerProvider>();
+        services.AddTransient<IIssueTrackerProvider, JiraDataCenterIssueTrackerProvider>();
         services.AddTransient<IIssueTrackerProvider, GitHubIssueTrackerProvider>();
         services.AddTransient<IIssueTrackerProvider, GitLabIssueTrackerProvider>();
         services.AddTransient<IIssueTrackerProvider, AzureDevOpsIssueTrackerProvider>();

@@ -81,6 +81,9 @@ public class IssueTrackerProviderTest
         var labels = fields.GetProperty("labels").EnumerateArray().Select(l => l.GetString()).ToList();
         Assert.Contains("security-finding", labels);
 
+        // v3, not v2: Cloud's v2 is legacy and its ADF handling differs.
+        Assert.Equal("https://acme.atlassian.net/rest/api/3/issue", request.Url);
+
         // Basic auth with email:token is what Atlassian issues for Cloud.
         Assert.StartsWith("Basic ", request.Headers["Authorization"]);
         Assert.Equal("ci@acme.com:token", Encoding.UTF8.GetString(
@@ -525,5 +528,159 @@ public class IssueTrackerProviderTest
 
         Assert.Equal("4712", issue!.Key);
         Assert.True(issue.IsClosed);
+    }
+
+    // --- Jira Data Center -------------------------------------------------------------------
+
+    private static IssueTrackerConnection DataCenter(string? authUser) => new()
+    {
+        Id = 2,
+        Name = "Jira-hml",
+        Provider = IssueTrackerProviderKind.JiraDataCenter,
+        BaseUrl = "https://hml-jira.acme.br",
+        ProjectKey = "SDESI",
+        AuthUser = authUser,
+        IssueType = "Bug"
+    };
+
+    [Fact]
+    public async Task JiraDataCenterTargetsRestV2WithABearerTokenAndAPlainTextDescription()
+    {
+        var http = new FakeOutboundHttpClient()
+            .EnqueueJson("""{"id":"20001","key":"SDESI-42"}""", 201);
+
+        var provider = new JiraDataCenterIssueTrackerProvider(Log, http);
+
+        var issue = await provider.CreateIssueAsync(DataCenter(null), "pat-abc", Draft());
+
+        Assert.Equal("SDESI-42", issue.Key);
+        Assert.Equal("https://hml-jira.acme.br/browse/SDESI-42", issue.Url);
+
+        var request = Assert.Single(http.Requests);
+
+        // Data Center has no /rest/api/3 at all: it authenticates first and then refuses the route,
+        // which is the 403-on-a-valid-credential this provider exists to avoid.
+        Assert.Equal("https://hml-jira.acme.br/rest/api/2/issue", request.Url);
+
+        // A PAT is only accepted as a bearer; as a basic-auth password it does not authenticate.
+        Assert.Equal("Bearer pat-abc", request.Headers["Authorization"]);
+
+        using var body = JsonDocument.Parse(request.Body!);
+        var fields = body.RootElement.GetProperty("fields");
+
+        // v2 takes wiki markup. The ADF object Cloud requires is rejected here.
+        var description = fields.GetProperty("description");
+        Assert.Equal(JsonValueKind.String, description.ValueKind);
+        Assert.Contains("NetRisk finding", description.GetString());
+
+        // Everything the Cloud provider already got right is inherited, not reimplemented.
+        Assert.Equal("Highest", fields.GetProperty("priority").GetProperty("name").GetString());
+        Assert.Contains("security-finding",
+            fields.GetProperty("labels").EnumerateArray().Select(l => l.GetString()));
+    }
+
+    [Fact]
+    public async Task JiraDataCenterUsesBasicAuthWhenTheConnectionNamesAnAuthenticationUser()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueJson("""{"id":"1","key":"SDESI-1"}""", 201);
+
+        var provider = new JiraDataCenterIssueTrackerProvider(Log, http);
+
+        await provider.CreateIssueAsync(DataCenter("automato"), "secret", Draft());
+
+        var header = http.Requests[0].Headers["Authorization"];
+
+        // A named user is the only signal the schema carries for "this is a username + password".
+        Assert.StartsWith("Basic ", header);
+        Assert.Equal("automato:secret",
+            Encoding.UTF8.GetString(Convert.FromBase64String(header["Basic ".Length..])));
+    }
+
+    [Fact]
+    public async Task JiraDataCenterCommentsWithAPlainStringAndTransitionsById()
+    {
+        var http = new FakeOutboundHttpClient()
+            .RuleFor("/transitions", """{"transitions":[{"id":"31","name":"Done","to":{"name":"Concluído"}}]}""")
+            .RuleFor("/issue/SDESI-42?fields",
+                """{"key":"SDESI-42","fields":{"summary":"s","status":{"name":"Concluído","statusCategory":{"key":"done"}}}}""")
+            .RuleFor("/comment", "{}", 201);
+
+        var provider = new JiraDataCenterIssueTrackerProvider(Log, http);
+
+        var issue = await provider.UpdateIssueAsync(DataCenter(null), "pat", "SDESI-42",
+            "Closed in NetRisk.", "Done");
+
+        Assert.True(issue.IsClosed);
+
+        var comment = http.Requests.Single(r => r.Url.EndsWith("/comment"));
+        Assert.Equal("https://hml-jira.acme.br/rest/api/2/issue/SDESI-42/comment", comment.Url);
+
+        using var body = JsonDocument.Parse(comment.Body!);
+        Assert.Equal(JsonValueKind.String, body.RootElement.GetProperty("body").ValueKind);
+        Assert.Equal("Closed in NetRisk.", body.RootElement.GetProperty("body").GetString());
+    }
+
+    /// <summary>
+    /// The regression test for the failure that produced this provider: a Data Center instance
+    /// configured as Jira Cloud answers the connection test with a bare "accepted the credentials but
+    /// refused the request (403)", which reads as a project permission and sends the operator to
+    /// rotate a token that was never the problem.
+    /// </summary>
+    [Fact]
+    public async Task JiraDataCenterExplainsA403AsThePatMistakeAndTheCaptchaRatherThanAPermission()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(403);
+
+        var result = await new JiraDataCenterIssueTrackerProvider(Log, http)
+            .TestConnectionAsync(DataCenter("automato"), "pat");
+
+        Assert.False(result.Success);
+        Assert.Contains("CAPTCHA", result.Message);
+        // The credential shape is the actionable half: clear the user to send the PAT as a bearer.
+        Assert.Contains("clear the authentication user", result.Message);
+        Assert.Contains("bearer", result.Message);
+    }
+
+    [Fact]
+    public async Task JiraDataCenterA403OnABearerConnectionPointsAtThePermissionInstead()
+    {
+        var http = new FakeOutboundHttpClient().EnqueueFailure(403);
+
+        var result = await new JiraDataCenterIssueTrackerProvider(Log, http)
+            .TestConnectionAsync(DataCenter(null), "pat");
+
+        Assert.False(result.Success);
+        Assert.Contains("Browse Projects", result.Message);
+        // Nothing to fix about the credential shape here, so it must not be suggested.
+        Assert.DoesNotContain("clear the authentication user", result.Message);
+    }
+
+    [Fact]
+    public async Task JiraDataCenterTestReadsTheProjectUnderV2()
+    {
+        var http = new FakeOutboundHttpClient()
+            .RuleFor("/myself", """{"displayName":"automato"}""")
+            .RuleFor("/project/SDESI", """{"name":"Servicos SDESI"}""");
+
+        var result = await new JiraDataCenterIssueTrackerProvider(Log, http)
+            .TestConnectionAsync(DataCenter(null), "pat");
+
+        Assert.True(result.Success);
+        Assert.Equal("automato", result.Details["Account"]);
+        Assert.Equal("Servicos SDESI", result.Details["Project"]);
+        Assert.All(http.Requests, r => Assert.Contains("/rest/api/2/", r.Url));
+    }
+
+    [Fact]
+    public void JiraDataCenterIdentifiesItselfAsItsOwnKindAndExplainsThePatInItsSetupHint()
+    {
+        var provider = new JiraDataCenterIssueTrackerProvider(Log, new FakeOutboundHttpClient());
+
+        Assert.Equal(IssueTrackerProviderKind.JiraDataCenter, provider.Kind);
+        Assert.Equal("Jira Data Center", provider.Name);
+
+        // The hint is the only place an operator learns the blank-user rule before it bites them.
+        Assert.Contains("Personal Access Token", provider.Capabilities.SetupHint);
+        Assert.Contains("empty", provider.Capabilities.SetupHint);
     }
 }

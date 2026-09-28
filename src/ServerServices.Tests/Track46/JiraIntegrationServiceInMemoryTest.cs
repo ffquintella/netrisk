@@ -65,6 +65,24 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
         return created.Id;
     }
 
+    private async Task<int> DataCenterConnectionAsync()
+    {
+        var created = await _trackers.CreateConnectionAsync(new IssueTrackerConnection
+        {
+            Name = "Jira-hml",
+            Provider = IssueTrackerProviderKind.JiraDataCenter,
+            BaseUrl = "https://hml-jira.acme.br",
+            ProjectKey = "SDESI",
+            // A Data Center PAT belongs to nobody the caller names, so the user stays empty and the
+            // credential travels as a bearer token.
+            AuthUser = null,
+            Enabled = true,
+            PollIntervalMinutes = 15
+        }, "pat", "webhook-secret", 1);
+
+        return created.Id;
+    }
+
     private async Task<int> GitHubConnectionAsync()
     {
         var created = await _trackers.CreateConnectionAsync(new IssueTrackerConnection
@@ -213,6 +231,42 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
             () => _svc.GetAssetSchemasAsync(id));
 
         Assert.Contains("Data Center", ex.Message);
+    }
+
+    /// <summary>
+    /// The platform metadata reads are *not* Cloud-only, and a Data Center connection must get them.
+    ///
+    /// Fields, priorities and project statuses exist under both deployments' APIs; only Service
+    /// Management and Assets are Cloud features. Routing these three through the strict resolve — the
+    /// one the test above exercises — answered a Data Center connection's status picker with a
+    /// sentence about Assets, leaving the operator to type the workflow's status names from memory.
+    /// </summary>
+    [Fact]
+    public async Task ADataCenterConnectionCanStillReadItsProjectStatusesUnderRestV2()
+    {
+        var id = await DataCenterConnectionAsync();
+
+        FakeOutboundHttpClient.RuleFor("/rest/api/2/project/SDESI/statuses",
+            """[{"statuses":[{"name":"Aberto"},{"name":"Concluido"}]},{"statuses":[{"name":"Aberto"}]}]""");
+
+        var statuses = await _svc.GetJiraStatusesAsync(id);
+
+        Assert.Equal(["Aberto", "Concluido"], statuses);
+
+        var request = Assert.Single(FakeOutboundHttpClient.Requests);
+        Assert.Equal("https://hml-jira.acme.br/rest/api/2/project/SDESI/statuses", request.Url);
+        Assert.Equal("Bearer pat", request.Headers["Authorization"]);
+    }
+
+    [Fact]
+    public async Task ReadingTheMetadataOfANonJiraConnectionIsStillRefused()
+    {
+        var id = await GitHubConnectionAsync();
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.GetJiraStatusesAsync(id));
+
+        Assert.Contains("GitHub", ex.Message);
     }
 
     [Fact]

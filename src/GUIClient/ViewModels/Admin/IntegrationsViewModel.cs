@@ -1382,13 +1382,14 @@ public class IntegrationsViewModel : ViewModelBase
     /// <summary>
     /// Fills the status picker from the connection's Jira project.
     ///
-    /// Jira only: the other three providers have no status endpoint to read — GitHub and GitLab have
-    /// two states, and Azure DevOps' are per work-item type. For those the column stays free text,
-    /// which is what their vocabulary actually is.
+    /// Either Jira deployment: the other three providers have no status endpoint to read — GitHub and
+    /// GitLab have two states, and Azure DevOps' are per work-item type. For those the column stays
+    /// free text, which is what their vocabulary actually is.
     /// </summary>
     private async Task LoadStatusesFromJiraAsync()
     {
-        if (SelectedIssueTracker is not { Provider: IssueTrackerProviderKind.Jira } connection) return;
+        if (SelectedIssueTracker is not { Provider: IssueTrackerProviderKind.Jira
+            or IssueTrackerProviderKind.JiraDataCenter } connection) return;
 
         try
         {

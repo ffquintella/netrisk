@@ -16,6 +16,32 @@ This release includes new features and improvements.
 
 
 
+## [2.22.6] - 2026-09-28
+
+This release includes new features and improvements.
+
+### Added
+
+- **Jira Server / Data Center** is now its own issue-tracker provider, alongside Jira Cloud. Pick
+  *Jira Data Center* in the provider list, give the instance root as the base URL — including a
+  context path such as `/jira` — and leave the **authentication user empty** with a Personal Access
+  Token as the credential. A named user still means username + password basic auth, for the instances
+  that allow it. Status mappings can be loaded from a Data Center project's workflow the same way as
+  from Cloud; Service Management and Assets remain Cloud-only, because Data Center serves Insight
+  from a different API with a different object model.
+  Until now the only Jira option spoke Cloud's REST v3 and sent the credential as basic auth, and a
+  Data Center instance answers that with a **403 on a perfectly valid credential** — it authenticates
+  the request and then refuses the route, which reads as a missing project permission. The connection
+  test now says which of the two it is, and names the two things that actually cause it: a PAT sent as
+  a basic-auth password, and the CAPTCHA challenge Jira puts on an account after the failed logins
+  that follow, which answers 403 even once the credential is right.
+
+### Changed
+
+### Fixed
+
+
+
 ## [2.22.5] - 2026-09-28
 
 This release includes new features and improvements.
