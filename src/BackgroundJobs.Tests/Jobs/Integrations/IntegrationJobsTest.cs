@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BackgroundJobs.Jobs.Integrations;
 using BackgroundJobs.Tests.DI;
 using JetBrains.Annotations;
+using DAL.Enums;
 using Model.Integrations;
+using ServerServices.Integrations;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using ServerServices.Interfaces;
@@ -245,6 +248,38 @@ public class IntegrationJobsTest
             .ThrowsAsync(new Exception("Vision One is refusing the key"));
 
         new TrendMicroSyncJob(TestDoubles.Logger(), TestDoubles.DalService(), trendMicro).Run();
+    }
+
+    // --- the abandoned-run sweep --------------------------------------------------------------
+
+    [Fact]
+    public void TheSweepSettlesRunsLeftBehindByAStoppedProcess()
+    {
+        var reaper = Substitute.For<IIntegrationSyncReaper>();
+
+        reaper.ReapAsync(Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<AbandonedRun>>(
+            [
+                new AbandonedRun(1, IntegrationKind.TrendMicroVisionOne, 1, "Trend",
+                    DateTime.UtcNow.AddDays(-3), TimeSpan.FromDays(3))
+            ]));
+
+        new IntegrationSyncReaperJob(TestDoubles.Logger(), TestDoubles.DalService(), reaper).Run();
+
+        reaper.Received(1).ReapAsync(Arg.Any<DateTime>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void AFailingAbandonedRunSweepDoesNotThrow()
+    {
+        var reaper = Substitute.For<IIntegrationSyncReaper>();
+
+        reaper.ReapAsync(Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("the database is refusing connections"));
+
+        // Hourly, and the thing it settles is a symptom of the host already having died once. A
+        // sweep that propagates would be retried immediately against the same broken state.
+        new IntegrationSyncReaperJob(TestDoubles.Logger(), TestDoubles.DalService(), reaper).Run();
     }
 
     [Fact]

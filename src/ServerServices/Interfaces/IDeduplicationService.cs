@@ -35,6 +35,16 @@ public interface IDeduplicationService
     Task<DedupKeyResult> ComputeKeyAsync(DedupContext context, ScannerDedupConfiguration configuration);
 
     /// <summary>
+    /// The same chain, resolved once and reusable — for a caller keying many findings under one
+    /// configuration.
+    ///
+    /// <see cref="ComputeKeyAsync"/> re-resolves the chain on every call, and resolving it
+    /// enumerates the plugin directory and loads each enabled plugin. Per finding that is fine; per
+    /// finding across half a million of them it is most of the import.
+    /// </summary>
+    Task<IDedupKeyCalculator> GetKeyCalculatorAsync(ScannerDedupConfiguration configuration);
+
+    /// <summary>
     /// The admin preview (3.3.3): would these two findings be treated as one under the importer's
     /// current configuration? Has no side effects, so a heuristic can be tried before it is saved.
     /// </summary>
@@ -42,4 +52,17 @@ public interface IDeduplicationService
 
     /// <summary>Built-in strategies plus any contributed by enabled plugins.</summary>
     Task<List<string>> KnownStrategyNamesAsync();
+}
+
+/// <summary>
+/// A dedup chain resolved against one scanner configuration, ready to key findings.
+///
+/// Synchronous by design: every strategy is a pure function, so once the chain is resolved there is
+/// nothing left to await, and an async signature here would invite a per-finding await that does no
+/// I/O.
+/// </summary>
+public interface IDedupKeyCalculator
+{
+    /// <summary>Every key the chain produces for one finding, in chain order.</summary>
+    DedupKeyResult ComputeKey(DedupContext context);
 }

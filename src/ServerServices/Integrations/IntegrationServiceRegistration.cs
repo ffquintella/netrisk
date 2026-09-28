@@ -12,6 +12,7 @@ using ServerServices.Notifications;
 using ServerServices.Secrets;
 using ServerServices.Services;
 using ServerServices.Security;
+using ServerServices.Security.MasterKey;
 
 namespace ServerServices.Integrations;
 
@@ -44,6 +45,11 @@ public static class IntegrationServiceRegistration
         // TryAdd, not Add: a host that has already supplied its own protector — the tests do, over a
         // fixed root secret so nothing writes to the install's key file — keeps it. With Add, the last
         // registration wins and this one would silently replace the override.
+        // Singleton, and resolved before the protector that depends on it: the key is read from a
+        // TPM, a keychain or a file exactly once per process, and a transient would pay that cost —
+        // several hundred milliseconds on the TPM path — on every credential read.
+        services.TryAddSingleton<IMasterKeyProvider, MasterKeyProvider>();
+
         services.TryAddSingleton<ISecretProtector, SecretProtector>();
 
         // External secret vaults. Registered here rather than in a graph of their own because the
@@ -91,6 +97,11 @@ public static class IntegrationServiceRegistration
         services.TryAddTransient<IMessagesService, MessagesService>();
         services.AddTransient<IIntegrationSyncNotifier, IntegrationSyncNotifier>();
         services.AddTransient<IIntegrationSyncTracker, IntegrationSyncTracker>();
+
+        // The reaper is in the shared graph even though only the job host schedules it: the API
+        // resolves it too, so a future "settle this run" button has the service rather than a second
+        // copy of the rule for how long a run may stay Running.
+        services.AddTransient<IIntegrationSyncReaper, IntegrationSyncReaper>();
 
         // 4.1 — notification channels, dispatch and subscriptions.
         services.AddTransient<INotificationChannel, EmailNotificationChannel>();

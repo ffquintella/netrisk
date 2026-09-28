@@ -227,6 +227,71 @@ public class SecretProtectorTest
     }
 
     /// <summary>
+    /// The upgrade path. Until this release the key was derived from the JWT signing token; now it
+    /// comes from the master key store. An installation that upgrades must keep reading what it
+    /// already stored, so the old derivation survives as a decrypt-only fallback.
+    /// </summary>
+    [Fact]
+    public void ReadsAValueEncryptedUnderASupersededKey()
+    {
+        var before = new SecretProtector(Log, "old-jwt-derived-root");
+        var stored = before.Protect("jira-pat-abc");
+
+        var after = new SecretProtector(Log, "new-master-key-root", "old-jwt-derived-root");
+
+        Assert.Equal("jira-pat-abc", after.Unprotect(stored));
+    }
+
+    /// <summary>
+    /// The fallback is read-only. A value that came back under the superseded key must be rewritten
+    /// under the current one on the next save, or the fallback could never be retired.
+    /// </summary>
+    [Fact]
+    public void ReSavingMigratesAValueOntoTheCurrentKey()
+    {
+        var before = new SecretProtector(Log, "old-jwt-derived-root");
+        var stored = before.Protect("jira-pat-abc");
+
+        var after = new SecretProtector(Log, "new-master-key-root", "old-jwt-derived-root");
+        var migrated = after.Protect(after.Unprotect(stored));
+
+        // Readable by a protector that has only the current key — i.e. the fallback is no longer
+        // load-bearing for this value.
+        Assert.Equal("jira-pat-abc", new SecretProtector(Log, "new-master-key-root").Unprotect(migrated));
+    }
+
+    /// <summary>
+    /// A v1 value under the superseded key must not be "decrypted" by the current one. v1 is
+    /// unauthenticated CBC, so the wrong key returns garbage rather than failing, and handing that
+    /// to a provider is a 401 nobody can explain.
+    /// </summary>
+    [Fact]
+    public void DoesNotReturnGarbageForALegacyValueUnderTheWrongCandidateKey()
+    {
+        var legacy = "enc:v1:" + Tools.Criptography.AES.Encrypt("vision-one-key", LegacyPassphrase("old-jwt-derived-root"));
+
+        var withFallback = new SecretProtector(Log, "new-master-key-root", "old-jwt-derived-root");
+        Assert.Equal("vision-one-key", withFallback.Unprotect(legacy));
+
+        var withoutFallback = new SecretProtector(Log, "new-master-key-root");
+        Assert.Throws<SecretProtectionException>(() => withoutFallback.Unprotect(legacy));
+    }
+
+    /// <summary>
+    /// A value from a genuinely different installation still fails loudly. The fallback widens the
+    /// set of keys tried; it must not turn "this is not ours" into silence.
+    /// </summary>
+    [Fact]
+    public void StillRejectsAValueFromAnotherInstallation()
+    {
+        var foreign = new SecretProtector(Log, "some-other-install").Protect("token");
+
+        var protector = new SecretProtector(Log, "new-master-key-root", "old-jwt-derived-root");
+
+        Assert.Throws<SecretProtectionException>(() => protector.Unprotect(foreign));
+    }
+
+    /// <summary>
     /// Mirrors <c>SecretProtector.DerivePassphrase</c>, so a test can produce a value in the old
     /// format without the production code exposing its key derivation.
     /// </summary>

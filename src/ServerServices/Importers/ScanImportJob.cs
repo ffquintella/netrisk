@@ -109,7 +109,16 @@ public class ScanImportJob : IJobRunner
             Progress(50);
 
             _request.ExistingImportId = ImportId;
-            var result = await _ingestion.IngestAsync(parsed, _request, CancellationTokenSource.Token);
+
+            // The persist half now reports itself rather than jumping 50 → 100 when it happens to
+            // finish. For a large report that jump was the whole of the slow part.
+            var result = await _ingestion.IngestAsync(parsed, _request,
+                progress =>
+                {
+                    Progress(50 + (progress.Percent ?? 0) / 2);
+                    return Task.CompletedTask;
+                },
+                CancellationTokenSource.Token);
 
             Progress(100);
 

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,15 +66,86 @@ public static class IntegrationSyncLedger
         {
             row.Status = IntegrationSyncStatus.Failed;
             row.FinishedAt = nowUtc;
-            row.ErrorMessage = $"The run was abandoned: it was still marked as running "
-                               + $"{StaleAfter.TotalHours:0} hours after it started, which means the "
-                               + "process it was running in stopped before it could record an outcome.";
+            row.ErrorMessage = AbandonedMessage(nowUtc - row.StartedAt);
         }
 
         if (abandoned.Count > 0) await db.SaveChangesAsync(ct);
 
         return abandoned.Count;
     }
+
+    /// <summary>
+    /// Settles every abandoned Running row across every integration, and reports what it settled.
+    ///
+    /// The kind-scoped <see cref="ReapAbandonedAsync"/> only ever runs when somebody is about to sync
+    /// <em>that</em> provider, which is the wrong trigger for the case it exists to handle: a row is
+    /// orphaned precisely because its process stopped, and nothing about that makes the next sync
+    /// happen. A Vision One row left Running by a killed process sat on the sync-log screen for three
+    /// days reading as live work, because the only thing that would have settled it was the next
+    /// Vision One sync — and the job host that would have started one was the process that died.
+    ///
+    /// So this variant takes no kind: the hourly sweep that calls it settles whatever is stale,
+    /// whoever left it behind, without needing to know which integrations exist.
+    /// </summary>
+    /// <returns>
+    /// The rows settled, as they were <em>before</em> settling — the caller announces them, and
+    /// "which connection, and how long was it stuck" is what makes that announcement worth reading.
+    /// </returns>
+    public static async Task<IReadOnlyList<AbandonedRun>> ReapAllAsync(AuditableContext db,
+        DateTime nowUtc, CancellationToken ct = default)
+    {
+        var horizon = nowUtc - StaleAfter;
+
+        var abandoned = await db.IntegrationSyncLogs
+            .Where(l => l.Status == IntegrationSyncStatus.Running && l.StartedAt < horizon)
+            .ToListAsync(ct);
+
+        if (abandoned.Count == 0) return [];
+
+        var reaped = new List<AbandonedRun>(abandoned.Count);
+
+        foreach (var row in abandoned)
+        {
+            reaped.Add(new AbandonedRun(row.Id, row.Integration, row.ConnectionId, row.ConnectionName,
+                row.StartedAt, nowUtc - row.StartedAt));
+
+            row.Status = IntegrationSyncStatus.Failed;
+            row.FinishedAt = nowUtc;
+            row.ErrorMessage = AbandonedMessage(nowUtc - row.StartedAt);
+            row.ProgressLog = IntegrationSyncProgressLog.Append(row.ProgressLog,
+            [
+                IntegrationSyncProgressLog.Line(nowUtc, "reaped",
+                    "No progress was recorded for "
+                    + $"{FormatAge(nowUtc - row.StartedAt)}, so the run was settled as failed by the "
+                    + "abandoned-run sweep. The process it was running in stopped before it could "
+                    + "record an outcome.")
+            ]);
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        return reaped;
+    }
+
+    /// <summary>
+    /// What a settled row says about why. Shared by both reapers so the operator reads one
+    /// explanation, not two that differ by which code path happened to notice.
+    /// </summary>
+    internal static string AbandonedMessage(TimeSpan age) =>
+        $"The run was abandoned: it was still marked as running {FormatAge(age)} after it started, "
+        + "which means the process it was running in stopped before it could record an outcome.";
+
+    /// <summary>
+    /// Renders an age the way an operator reads one — hours below a day, days above.
+    ///
+    /// Invariant culture, because this lands in an error column and a log line: on a pt-BR host the
+    /// default formatter writes "3,1 day(s)", which reads as a list of two numbers.
+    /// </summary>
+    internal static string FormatAge(TimeSpan age) =>
+        age.TotalDays >= 1
+            ? string.Format(CultureInfo.InvariantCulture, "{0:0.#} day(s)", age.TotalDays)
+            : string.Format(CultureInfo.InvariantCulture, "{0:0} hour(s)",
+                Math.Max(1, Math.Round(age.TotalHours)));
 
     /// <summary>
     /// Claims the connection for a new run and returns its Running row.
@@ -116,3 +189,15 @@ public static class IntegrationSyncLedger
         throw new IntegrationSyncBusyException(provider, connectionName, incumbent.StartedAt);
     }
 }
+
+/// <summary>
+/// One run the sweep found abandoned, described as it was before it was settled.
+/// </summary>
+/// <param name="LogId">The <c>integration_sync_logs</c> row.</param>
+/// <param name="Kind">Which integration left it behind.</param>
+/// <param name="ConnectionId">The connection it was syncing.</param>
+/// <param name="ConnectionName">That connection's name, as the operator sees it.</param>
+/// <param name="StartedAt">When the run started, UTC.</param>
+/// <param name="Age">How long it had been Running when the sweep settled it.</param>
+public record AbandonedRun(int LogId, IntegrationKind Kind, int? ConnectionId, string? ConnectionName,
+    DateTime StartedAt, TimeSpan Age);

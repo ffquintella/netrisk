@@ -16,6 +16,61 @@ This release includes new features and improvements.
 
 
 
+## [2.22.5] - 2026-09-28
+
+This release includes new features and improvements.
+
+### Added
+
+- An hourly background sweep settles integration synchronization runs whose process stopped before it
+  could record an outcome. The rule for what counts as abandoned — still `Running` two hours after it
+  started — is the one that already existed; what is new is that something runs it on a clock. Until
+  now it ran only when somebody started another sync of the same provider, which is the one thing a
+  dead process cannot cause: a Vision One run killed mid-import read as live work on the Posture
+  providers screen for three days, and refused every retry of that connection for the same three days.
+  Each settled run is announced to administrators and says how long it had been stuck, and the reason
+  is appended to its progress trail rather than replacing the last line the dead run managed to write.
+- Imports now report progress while they persist. A finding-import job's progress bar moves through
+  the second half of the run instead of jumping from 50% to 100%, and a Vision One synchronization
+  writes a trail line per percent through the CVE and virtual-patch passes, each carrying the running
+  created/updated/skipped counts.
+
+### Changed
+
+- Stored credentials are now encrypted under a dedicated master key held in the most protected place
+  the host offers, instead of a key derived from the JWT signing token. On Linux the key is sealed to
+  a TPM 2.0 when `/dev/tpmrm0` and `tpm2-tools` are present; on macOS it is a keychain item, which is
+  Secure Enclave-protected on Apple silicon; on Windows it is wrapped with DPAPI at machine scope.
+  Where none of those is available it falls back to an owner-only (0600) file at
+  `<AppData>/NRServer/secrets/master.key`, and a deployment with nowhere durable to write can supply
+  the key as `NETRISK_SECRET_MASTER_KEY` instead. Existing credentials keep working: the old
+  derivation remains as a decrypt-only fallback and any save re-encrypts under the new key. Two
+  consequences worth knowing before a host rebuild: rotating or deleting the JWT signing key no
+  longer destroys every stored credential, and the hardware-backed stores are deliberately not
+  portable to another machine — see §3.7 of `docs/security/SECRETS.md`.
+
+### Fixed
+
+- A large vulnerability import no longer runs indefinitely. The ingestion pipeline put every finding
+  of an import through one long-lived `DbContext` and saved after each insert, so each save swept a
+  change tracker holding everything ingested so far — quadratic, and invisible at the few thousand
+  findings a scanner file contains. A Vision One tenant reporting 563,310 of them never finished:
+  three days in, the run had recorded no progress past the line before the import started. Findings
+  are now persisted in batches of 500 on a context per batch, the deduplication strategy chain is
+  resolved once per import rather than once per finding (resolving it enumerates and loads every
+  enabled plugin), the SLA policy table is read once instead of per finding from two separate places,
+  and the existing-finding lookup is one batched query instead of up to two per finding. Behaviour is
+  unchanged: every candidate key is still tried in chain order, `import_hash` is still consulted for
+  the legacy strategy, duplicates within and across batches still group rather than duplicate, and a
+  batch the database rejects is retried one finding at a time so a single bad row is still reported as
+  itself instead of losing its 499 neighbours.
+- The Vision One virtual-patch pass and the importer's auto-close pass had the same shape of problem
+  and are fixed with it: the first ran one query per patched record, the second built an `IN` list
+  holding every finding the import had touched, which a large scan turns into a statement the server
+  refuses rather than a filter.
+
+
+
 ## [2.22.4] - 2026-09-25
 
 This release includes new features and improvements.

@@ -154,33 +154,16 @@ public class DeduplicationService : ServiceBase, IDeduplicationService
 
     public async Task<DedupKeyResult> ComputeKeyAsync(DedupContext context, ScannerDedupConfiguration configuration)
     {
+        var calculator = await GetKeyCalculatorAsync(configuration);
+        return calculator.ComputeKey(context);
+    }
+
+    public async Task<IDedupKeyCalculator> GetKeyCalculatorAsync(ScannerDedupConfiguration configuration)
+    {
         var strategies = await ResolveChainAsync(configuration.StrategyChain);
         var fields = DedupFieldSet.Parse(configuration.HashFields);
 
-        var candidates = new List<DedupCandidate>();
-
-        foreach (var strategy in strategies)
-        {
-            string? key;
-            try
-            {
-                key = strategy.ComputeKey(context, fields);
-            }
-            catch (Exception ex)
-            {
-                // A plugin strategy that throws must not fail the import. Skipping it degrades
-                // dedup for that finding, which is recoverable; aborting the scan is not.
-                Logger.Warning("Deduplication strategy {Strategy} threw for finding {Title}: {Message}",
-                    strategy.Name, context.Finding.Title, ex.Message);
-                continue;
-            }
-
-            if (string.IsNullOrWhiteSpace(key)) continue;
-
-            candidates.Add(new DedupCandidate(strategy.Name, key, strategy.MatchesLegacyImportHash));
-        }
-
-        return new DedupKeyResult(candidates);
+        return new DedupKeyCalculator(Logger, strategies, fields);
     }
 
     public async Task<DedupPreview> PreviewAsync(DedupContext left, DedupContext right, string importer)

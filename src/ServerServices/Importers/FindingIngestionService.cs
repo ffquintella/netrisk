@@ -103,14 +103,36 @@ public class FindingIngestionService(
         await db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// How many findings share one <c>DbContext</c> and one round of batched lookups.
+    ///
+    /// The number exists because the loop used to run every finding through a single long-lived
+    /// context. Each save then walked a change tracker holding everything ingested so far, which is
+    /// quadratic: fine for a 5000-finding Nessus file, and the reason a 563,310-finding Vision One
+    /// sync ran for three days without finishing. A fresh context per batch bounds the tracker.
+    /// </summary>
+    public const int FindingBatchSize = 500;
+
+    /// <summary>Largest <c>IN (…)</c> list sent in one lookup, so a batch cannot overrun the packet.</summary>
+    private const int LookupBatchSize = 500;
+
     public async Task<ScanImport> IngestAsync(ImportResult parsed, ImportIngestionRequest request,
-        CancellationToken ct = default)
+        Func<ImportProgress, Task>? onProgress = null, CancellationToken ct = default)
     {
         var configuration = await dedupService.GetConfigurationAsync(request.Importer);
 
-        await using var db = DalService.GetContext();
+        // Resolved once per import, not once per finding. Resolving the chain enumerates the plugin
+        // directory and loads every enabled plugin, and the SLA policy table was queried per finding
+        // from two different places; both are small, unchanging tables read half a million times.
+        var keys = await dedupService.GetKeyCalculatorAsync(configuration);
+        var sla = await LoadSlaPoliciesAsync(ct);
 
-        var import = await ResolveImportRowAsync(db, request);
+        int importId;
+
+        await using (var setup = DalService.GetContext())
+        {
+            importId = (await ResolveImportRowAsync(setup, request)).Id;
+        }
 
         var counts = new IngestCounts();
         var newBySeverity = new Dictionary<NormalizedSeverity, int>();
@@ -120,66 +142,48 @@ public class FindingIngestionService(
         // present" from "gone" without re-deriving keys.
         var seenFindingIds = new HashSet<int>();
 
-        // Cached per import: a 5000-finding Nessus report touches a handful of hosts, and resolving
-        // each one from the database per finding is what made the previous importer slow.
-        var hostCache = new Dictionary<string, Host>(StringComparer.OrdinalIgnoreCase);
-        var serviceCache = new Dictionary<string, DAL.Entities.HostsService>(StringComparer.OrdinalIgnoreCase);
+        // Asset resolution keeps its own context, because a host is shared by many findings while a
+        // finding belongs to one batch. Its tracker is cleared after each write, so the cache holds
+        // ids rather than entities and nothing accumulates across a long import.
+        await using var assetDb = DalService.GetContext();
 
-        foreach (var finding in parsed.Findings)
+        var hostIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var serviceIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        // Candidate key → the finding it resolves to, for keys already looked up or created during
+        // this import. Without it, a batch lookup would miss a duplicate created by an earlier batch
+        // — which the old per-finding lookup caught only because it saved after every insert.
+        var knownIdsByKey = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        var total = parsed.Findings.Count;
+        var processed = 0;
+
+        await ReportAsync(onProgress, "findings", processed, total, counts);
+
+        foreach (var batch in Batch(parsed.Findings, FindingBatchSize))
         {
             ct.ThrowIfCancellationRequested();
 
-            try
-            {
-                var host = await ResolveHostAsync(db, finding, request, hostCache);
-                var service = host == null
-                    ? null
-                    : await ResolveServiceAsync(db, host, finding, serviceCache);
+            await IngestBatchAsync(batch, request, keys, sla, assetDb, hostIds, serviceIds,
+                knownIdsByKey, seenFindingIds, counts, newBySeverity, warnings, importId, ct);
 
-                var context = new DedupContext
-                {
-                    Finding = finding,
-                    HostId = host?.Id,
-                    HostServiceId = service?.Id,
-                    EntityId = request.EntityId
-                };
+            processed += batch.Count;
 
-                var keys = await dedupService.ComputeKeyAsync(context, configuration);
-                var existing = await FindExistingAsync(db, keys, request.EntityId);
-
-                if (existing != null)
-                {
-                    var outcome = UpdateExisting(db, existing, finding, request, keys, import.Id);
-                    seenFindingIds.Add(existing.Id);
-
-                    if (outcome == ExistingOutcome.Suppressed) counts.Duplicates++;
-                    else counts.Updated++;
-                }
-                else
-                {
-                    var created = await CreateFindingAsync(db, finding, host, service, request, keys, import.Id);
-                    seenFindingIds.Add(created.Id);
-
-                    counts.New++;
-                    newBySeverity[finding.Severity] = newBySeverity.GetValueOrDefault(finding.Severity) + 1;
-                }
-            }
-            catch (Exception ex)
-            {
-                // One malformed finding must not lose the other 4999. The failure is recorded as a
-                // skip so the summary's counts still add up to what was in the file.
-                counts.Skipped++;
-                warnings.Add($"[skipped] {finding.Title}: {ex.Message}");
-                Logger.Warning("Could not ingest finding {Title} from import {Import}: {Message}",
-                    finding.Title, import.Id, ex.Message);
-            }
+            await ReportAsync(onProgress, "findings", processed, total, counts);
         }
+
+        await using var db = DalService.GetContext();
+
+        var import = await db.ScanImports.FirstAsync(i => i.Id == importId, ct);
 
         // Auto-close is opt-in per scanner and only ever runs for a report the importer itself
         // declared exhaustive. A partial scan treated as full closes every finding outside its
         // slice, which is far worse than a stale open one.
         if (configuration.AutoCloseMissing && parsed.IsFullScan)
-            counts.Closed = await AutoCloseMissingAsync(db, request, seenFindingIds, import.Id);
+        {
+            await ReportAsync(onProgress, "auto-close", processed, total, counts);
+            counts.Closed = await AutoCloseMissingAsync(db, request, seenFindingIds, importId, ct);
+        }
         else if (configuration.AutoCloseMissing && !parsed.IsFullScan)
             warnings.Add("[warning] Auto-close is enabled for this scanner but the report is not a full scan; " +
                          "no findings were closed.");
@@ -195,7 +199,7 @@ public class FindingIngestionService(
         import.Status = (int)ScanImportStatus.Succeeded;
         import.FinishedAt = DateTime.UtcNow;
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
 
         Logger.Information(
             "Import {Import} ({Importer}) finished: {New} new, {Updated} updated, {Duplicate} suppressed, {Closed} closed, {Skipped} skipped",
@@ -208,6 +212,219 @@ public class FindingIngestionService(
         await notifications.VulnerabilityImportedAsync(import);
 
         return import;
+    }
+
+    /// <summary>
+    /// Persists one batch of findings on a context of its own.
+    ///
+    /// Two saves rather than one: a created finding's first history event needs its id, and the id
+    /// only exists after the insert. The alternative the old code used — saving per finding so the
+    /// id was there — is the quadratic behaviour this replaced.
+    /// </summary>
+    /// <summary>
+    /// Persists one batch, falling back to one finding at a time if the batch insert is rejected.
+    ///
+    /// The fallback is what keeps the old per-finding guarantee that "one malformed finding must not
+    /// lose the other 4999". With a single insert per batch, a row the database refuses now takes its
+    /// 499 neighbours with it, and only a retry can tell which one was at fault.
+    /// </summary>
+    private async Task IngestBatchAsync(List<NormalizedFinding> batch, ImportIngestionRequest request,
+        IDedupKeyCalculator keys, SlaPolicySet sla, NRDbContext assetDb,
+        Dictionary<string, int> hostIds, Dictionary<string, int> serviceIds,
+        Dictionary<string, int> knownIdsByKey, HashSet<int> seenFindingIds, IngestCounts counts,
+        Dictionary<NormalizedSeverity, int> newBySeverity, List<string> warnings, int importId,
+        CancellationToken ct)
+    {
+        var outcome = await TryBatchAsync(batch, request, keys, sla, assetDb, hostIds, serviceIds,
+            knownIdsByKey, importId, ct);
+
+        if (outcome != null)
+        {
+            outcome.MergeInto(counts, newBySeverity, warnings, seenFindingIds, knownIdsByKey);
+            return;
+        }
+
+        Logger.Warning(
+            "A batch of {Count} finding(s) from import {Import} was rejected as a whole; retrying "
+            + "one at a time to isolate the row at fault", batch.Count, importId);
+
+        foreach (var finding in batch)
+        {
+            // A one-finding batch never reports itself as un-isolatable — there is nothing left to
+            // isolate — so this always has an outcome, and a rejected row comes back as its own skip.
+            var single = await TryBatchAsync([finding], request, keys, sla, assetDb, hostIds,
+                serviceIds, knownIdsByKey, importId, ct);
+
+            single?.MergeInto(counts, newBySeverity, warnings, seenFindingIds, knownIdsByKey);
+        }
+    }
+
+    /// <summary>
+    /// Persists one batch on a context of its own, or returns null if the write was rejected.
+    ///
+    /// Everything it decides is accumulated into the returned outcome rather than written into the
+    /// caller's running totals, so a batch that fails can be retried without having already counted
+    /// the findings the retry will count again.
+    /// </summary>
+    private async Task<BatchOutcome?> TryBatchAsync(List<NormalizedFinding> batch,
+        ImportIngestionRequest request, IDedupKeyCalculator keys, SlaPolicySet sla,
+        NRDbContext assetDb, Dictionary<string, int> hostIds, Dictionary<string, int> serviceIds,
+        Dictionary<string, int> knownIdsByKey, int importId, CancellationToken ct)
+    {
+        var outcome = new BatchOutcome();
+
+        await using var db = DalService.GetContext();
+
+        // Asset resolution first and for the whole batch, because the dedup key depends on the host
+        // and service ids it produces. It commits as it goes on its own context, so a rejected batch
+        // does not undo it — and must not, since the retry reuses the same ids.
+        var resolved = new List<(NormalizedFinding Finding, int? HostId, int? ServiceId, DedupKeyResult Keys)>(batch.Count);
+
+        foreach (var finding in batch)
+        {
+            try
+            {
+                var hostId = await ResolveHostIdAsync(assetDb, finding, request, hostIds, ct);
+                var serviceId = hostId == null
+                    ? null
+                    : await ResolveServiceIdAsync(assetDb, hostId.Value, finding, serviceIds, ct);
+
+                resolved.Add((finding, hostId, serviceId, keys.ComputeKey(new DedupContext
+                {
+                    Finding = finding,
+                    HostId = hostId,
+                    HostServiceId = serviceId,
+                    EntityId = request.EntityId
+                })));
+            }
+            catch (Exception ex)
+            {
+                outcome.Skip(finding, ex, Logger, importId);
+            }
+        }
+
+        var existingById = await LoadExistingAsync(db, resolved, knownIdsByKey, request.EntityId, ct);
+
+        // Findings created earlier in this same batch, by every key they answer to. Without it three
+        // copies of one finding in one batch all miss the database lookup and all get created — which
+        // the old code avoided only by saving after each insert.
+        var pendingByKey = new Dictionary<string, Vulnerability>(StringComparer.Ordinal);
+
+        var created = new List<(Vulnerability Finding, FindingStatusHistory History)>();
+
+        foreach (var (finding, hostId, serviceId, findingKeys) in resolved)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var existing = MatchExisting(findingKeys, knownIdsByKey, existingById)
+                               ?? MatchPending(findingKeys, pendingByKey);
+
+                if (existing != null)
+                {
+                    var result = UpdateExisting(db, existing, finding, request, findingKeys, importId, sla);
+
+                    // Id is 0 for a match against something created earlier in this batch; the
+                    // second pass below picks those up once the insert has assigned one.
+                    if (existing.Id != 0) outcome.Seen.Add(existing.Id);
+
+                    outcome.Remember(findingKeys, existing);
+
+                    if (result == ExistingOutcome.Suppressed) outcome.Duplicates++;
+                    else outcome.Updated++;
+                }
+                else
+                {
+                    var (row, history) = CreateFinding(db, finding, hostId, serviceId, request,
+                        findingKeys, importId, sla);
+
+                    created.Add((row, history));
+
+                    foreach (var candidate in findingKeys.Candidates) pendingByKey[candidate.Key] = row;
+
+                    outcome.Remember(findingKeys, row);
+
+                    outcome.New++;
+                    outcome.NewBySeverity[finding.Severity] =
+                        outcome.NewBySeverity.GetValueOrDefault(finding.Severity) + 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                outcome.Skip(finding, ex, Logger, importId);
+            }
+        }
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+
+            foreach (var (row, history) in created)
+            {
+                history.VulnerabilityId = row.Id;
+                db.FindingStatusHistories.Add(history);
+
+                outcome.Seen.Add(row.Id);
+            }
+
+            if (created.Count > 0) await db.SaveChangesAsync(ct);
+        }
+        catch (Exception ex) when (batch.Count > 1)
+        {
+            // Only worth isolating when there is more than one candidate for the blame. A single
+            // finding that fails is simply a skip, which the caller records.
+            Logger.Warning("A batch of {Count} finding(s) for import {Import} could not be saved: "
+                           + "{Message}", batch.Count, importId, ex.Message);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            outcome.Skip(batch[0], ex, Logger, importId);
+            outcome.Undo();
+
+            return outcome;
+        }
+
+        return outcome;
+    }
+
+    /// <summary>A finding created earlier in this batch that one of these keys already names.</summary>
+    private static Vulnerability? MatchPending(DedupKeyResult keys,
+        Dictionary<string, Vulnerability> pending)
+    {
+        foreach (var candidate in keys.Candidates)
+            if (pending.TryGetValue(candidate.Key, out var match))
+                return match;
+
+        return null;
+    }
+
+    private void Skip(IngestCounts counts, List<string> warnings, NormalizedFinding finding,
+        int importId, Exception ex)
+    {
+        counts.Skipped++;
+        warnings.Add($"[skipped] {finding.Title}: {ex.Message}");
+        Logger.Warning("Could not ingest finding {Title} from import {Import}: {Message}",
+            finding.Title, importId, ex.Message);
+    }
+
+    /// <summary>
+    /// Splits a list into consecutive batches without copying the whole thing first.
+    /// </summary>
+    private static IEnumerable<List<T>> Batch<T>(List<T> source, int size)
+    {
+        for (var offset = 0; offset < source.Count; offset += size)
+            yield return source.GetRange(offset, Math.Min(size, source.Count - offset));
+    }
+
+    private static async Task ReportAsync(Func<ImportProgress, Task>? onProgress, string phase,
+        int processed, int total, IngestCounts counts)
+    {
+        if (onProgress == null) return;
+
+        await onProgress(new ImportProgress(phase, processed, total, counts.New, counts.Updated,
+            counts.Skipped));
     }
 
     public async Task<ScanImport> GetImportAsync(int importId)
@@ -280,12 +497,14 @@ public class FindingIngestionService(
     }
 
     /// <summary>
-    /// Finds or creates the asset a finding sits on. Returns null for findings that have none —
-    /// code and dependency scanners report a file path, not a host, and inventing an asset for them
-    /// would fill the inventory with fictional machines.
+    /// Finds or creates the asset a finding sits on, and returns its id. Null for findings that have
+    /// none — code and dependency scanners report a file path, not a host, and inventing an asset for
+    /// them would fill the inventory with fictional machines.
+    ///
+    /// Ids rather than entities, so the cache survives the tracker being cleared below.
     /// </summary>
-    private async Task<Host?> ResolveHostAsync(NRDbContext db, NormalizedFinding finding,
-        ImportIngestionRequest request, Dictionary<string, Host> cache)
+    private async Task<int?> ResolveHostIdAsync(NRDbContext db, NormalizedFinding finding,
+        ImportIngestionRequest request, Dictionary<string, int> cache, CancellationToken ct)
     {
         var normalized = finding.Host;
         if (normalized == null || normalized.IsEmpty) return null;
@@ -295,8 +514,8 @@ public class FindingIngestionService(
         if (cache.TryGetValue(key, out var cached)) return cached;
 
         var existing = normalized.Ip != null
-            ? await db.Hosts.FirstOrDefaultAsync(h => h.Ip == normalized.Ip)
-            : await db.Hosts.FirstOrDefaultAsync(h => h.HostName == key || h.Fqdn == key);
+            ? await db.Hosts.FirstOrDefaultAsync(h => h.Ip == normalized.Ip, ct)
+            : await db.Hosts.FirstOrDefaultAsync(h => h.HostName == key || h.Fqdn == key, ct);
 
         if (existing != null)
         {
@@ -312,8 +531,10 @@ public class FindingIngestionService(
             existing.MacAddress ??= normalized.MacAddress;
             if (string.IsNullOrWhiteSpace(existing.Properties)) existing.Properties = normalized.Properties;
 
-            cache[key] = existing;
-            return existing;
+            await SaveAndForgetAsync(db, ct);
+
+            cache[key] = existing.Id;
+            return existing.Id;
         }
 
         var host = new Host
@@ -334,14 +555,14 @@ public class FindingIngestionService(
         };
 
         db.Hosts.Add(host);
-        await db.SaveChangesAsync();
+        await SaveAndForgetAsync(db, ct);
 
-        cache[key] = host;
-        return host;
+        cache[key] = host.Id;
+        return host.Id;
     }
 
-    private async Task<DAL.Entities.HostsService?> ResolveServiceAsync(NRDbContext db, Host host,
-        NormalizedFinding finding, Dictionary<string, DAL.Entities.HostsService> cache)
+    private async Task<int?> ResolveServiceIdAsync(NRDbContext db, int hostId,
+        NormalizedFinding finding, Dictionary<string, int> cache, CancellationToken ct)
     {
         var normalized = finding.Host;
         if (normalized == null) return null;
@@ -352,63 +573,172 @@ public class FindingIngestionService(
         var protocol = normalized.Protocol ?? "tcp";
         int? port = int.TryParse(normalized.Port, out var parsedPort) ? parsedPort : null;
 
-        var key = $"{host.Id}|{name}|{port}|{protocol}";
+        var key = $"{hostId}|{name}|{port}|{protocol}";
         if (cache.TryGetValue(key, out var cached)) return cached;
 
         var existing = await db.HostsServices
-            .FirstOrDefaultAsync(s => s.HostId == host.Id && s.Name == name && s.Port == port
-                                      && s.Protocol == protocol);
+            .FirstOrDefaultAsync(s => s.HostId == hostId && s.Name == name && s.Port == port
+                                      && s.Protocol == protocol, ct);
 
         if (existing != null)
         {
-            cache[key] = existing;
-            return existing;
+            cache[key] = existing.Id;
+            return existing.Id;
         }
 
         var service = new DAL.Entities.HostsService
         {
-            HostId = host.Id,
+            HostId = hostId,
             Name = name,
             Port = port,
             Protocol = protocol
         };
 
         db.HostsServices.Add(service);
-        await db.SaveChangesAsync();
+        await SaveAndForgetAsync(db, ct);
 
-        cache[key] = service;
-        return service;
+        cache[key] = service.Id;
+        return service.Id;
     }
 
     /// <summary>
-    /// Looks for a finding matching any of the chain's candidate keys.
+    /// Saves, then forgets everything the context was tracking.
     ///
-    /// Every candidate is tried, not just the primary one, because a finding imported before a
-    /// configuration change was keyed by whatever strategy led the chain then; matching only the
-    /// current primary key would duplicate the whole register on the next scan. The legacy
-    /// candidate is additionally compared against <c>import_hash</c>, which is where the
-    /// pre-Track-3 code stored it.
+    /// The asset context lives for the whole import, and without the clear it would accumulate every
+    /// host it touched — putting the same growing-tracker cost on host resolution that batching
+    /// removed from findings. Nothing downstream holds these entities; the caches keep ids.
     /// </summary>
-    private static async Task<Vulnerability?> FindExistingAsync(NRDbContext db, DedupKeyResult keys, int? entityId)
+    private static async Task SaveAndForgetAsync(NRDbContext db, CancellationToken ct)
+    {
+        await db.SaveChangesAsync(ct);
+        db.ChangeTracker.Clear();
+    }
+
+    /// <summary>
+    /// Loads, in one pass over the batch, every existing finding any of its candidate keys matches.
+    ///
+    /// This replaced a pair of <c>FirstOrDefault</c> queries per finding. The behaviour that had to
+    /// survive is that every candidate is tried, not just the primary one: a finding imported before
+    /// a configuration change was keyed by whatever strategy led the chain then, and matching only
+    /// the current primary key would duplicate the whole register on the next scan.
+    /// </summary>
+    private static async Task<Dictionary<int, Vulnerability>> LoadExistingAsync(NRDbContext db,
+        List<(NormalizedFinding Finding, int? HostId, int? ServiceId, DedupKeyResult Keys)> resolved,
+        Dictionary<string, int> knownIdsByKey, int? entityId, CancellationToken ct)
+    {
+        var unresolved = new HashSet<string>(StringComparer.Ordinal);
+        var legacy = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var (_, _, _, keys) in resolved)
+        {
+            if (!keys.HasKey) continue;
+
+            foreach (var candidate in keys.Candidates)
+            {
+                if (knownIdsByKey.ContainsKey(candidate.Key)) continue;
+
+                unresolved.Add(candidate.Key);
+
+                // The legacy candidate is additionally compared against import_hash, which is where
+                // the pre-Track-3 code stored it.
+                if (candidate.MatchesLegacyImportHash) legacy.Add(candidate.Key);
+            }
+        }
+
+        if (unresolved.Count > 0)
+            await MapKeysAsync(db, unresolved, legacy: false, entityId, knownIdsByKey, ct);
+
+        if (legacy.Count > 0)
+        {
+            // Only the keys the dedup_key pass did not already place: an import_hash match is the
+            // fallback, never an override.
+            var stillUnresolved = legacy.Where(k => !knownIdsByKey.ContainsKey(k)).ToHashSet(StringComparer.Ordinal);
+
+            if (stillUnresolved.Count > 0)
+                await MapKeysAsync(db, stillUnresolved, legacy: true, entityId, knownIdsByKey, ct);
+        }
+
+        var wanted = new HashSet<int>();
+
+        foreach (var (_, _, _, keys) in resolved)
+        foreach (var candidate in keys.Candidates)
+            if (knownIdsByKey.TryGetValue(candidate.Key, out var id))
+                wanted.Add(id);
+
+        var loaded = new Dictionary<int, Vulnerability>();
+
+        foreach (var slice in Slice(wanted, LookupBatchSize))
+        {
+            var rows = await db.Vulnerabilities.Where(v => slice.Contains(v.Id)).ToListAsync(ct);
+            foreach (var row in rows) loaded[row.Id] = row;
+        }
+
+        return loaded;
+    }
+
+    /// <summary>
+    /// Records which finding each of <paramref name="candidateKeys"/> belongs to, if any.
+    /// </summary>
+    private static async Task MapKeysAsync(NRDbContext db, IReadOnlyCollection<string> candidateKeys,
+        bool legacy, int? entityId, Dictionary<string, int> knownIdsByKey, CancellationToken ct)
+    {
+        foreach (var slice in Slice(candidateKeys, LookupBatchSize))
+        {
+            var matches = legacy
+                ? await db.Vulnerabilities.AsNoTracking()
+                    .Where(v => v.ImportHash != null && slice.Contains(v.ImportHash)
+                                && (entityId == null || v.EntityId == entityId))
+                    .Select(v => new { v.Id, Key = v.ImportHash! })
+                    .ToListAsync(ct)
+                : await db.Vulnerabilities.AsNoTracking()
+                    .Where(v => v.DedupKey != null && slice.Contains(v.DedupKey)
+                                && (entityId == null || v.EntityId == entityId))
+                    .Select(v => new { v.Id, Key = v.DedupKey! })
+                    .ToListAsync(ct);
+
+            foreach (var match in matches)
+            {
+                // Lowest id wins a key two findings somehow share, so a re-import is deterministic
+                // rather than dependent on the order the database happened to return rows in.
+                if (knownIdsByKey.TryGetValue(match.Key, out var already) && already <= match.Id) continue;
+
+                knownIdsByKey[match.Key] = match.Id;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The finding this one's candidate keys resolve to, trying them in chain order.
+    /// </summary>
+    private static Vulnerability? MatchExisting(DedupKeyResult keys,
+        Dictionary<string, int> knownIdsByKey, Dictionary<int, Vulnerability> loaded)
     {
         if (!keys.HasKey) return null;
 
         foreach (var candidate in keys.Candidates)
         {
-            var match = await db.Vulnerabilities
-                .FirstOrDefaultAsync(v => v.DedupKey == candidate.Key
-                                          && (entityId == null || v.EntityId == entityId));
-            if (match != null) return match;
-
-            if (!candidate.MatchesLegacyImportHash) continue;
-
-            match = await db.Vulnerabilities
-                .FirstOrDefaultAsync(v => v.ImportHash == candidate.Key
-                                          && (entityId == null || v.EntityId == entityId));
-            if (match != null) return match;
+            if (!knownIdsByKey.TryGetValue(candidate.Key, out var id)) continue;
+            if (loaded.TryGetValue(id, out var match)) return match;
         }
 
         return null;
+    }
+
+    private static IEnumerable<List<T>> Slice<T>(IEnumerable<T> source, int size)
+    {
+        var batch = new List<T>(size);
+
+        foreach (var item in source)
+        {
+            batch.Add(item);
+
+            if (batch.Count < size) continue;
+
+            yield return batch;
+            batch = new List<T>(size);
+        }
+
+        if (batch.Count > 0) yield return batch;
     }
 
     /// <summary>
@@ -419,7 +749,7 @@ public class FindingIngestionService(
     /// lifecycle.
     /// </summary>
     private ExistingOutcome UpdateExisting(NRDbContext db, Vulnerability existing, NormalizedFinding finding,
-        ImportIngestionRequest request, DedupKeyResult keys, int importId)
+        ImportIngestionRequest request, DedupKeyResult keys, int importId, SlaPolicySet sla)
     {
         existing.LastDetection = request.ImportedAt;
         existing.DetectionCount++;
@@ -449,7 +779,10 @@ public class FindingIngestionService(
 
             db.FindingStatusHistories.Add(new FindingStatusHistory
             {
-                VulnerabilityId = existing.Id,
+                // The navigation, not just the id: `existing` may be a finding created earlier in
+                // this same batch and not yet inserted, whose id is still 0. EF fills the foreign
+                // key in from the reference once the principal has one.
+                Vulnerability = existing,
                 FromStatus = from,
                 ToStatus = FindingStatus.Active,
                 UserId = request.UserId,
@@ -464,11 +797,11 @@ public class FindingIngestionService(
         {
             // A severity change moves the SLA deadline, so both facts go on the timeline together:
             // "why is this due sooner than it was" has one answer and it is here.
-            var recomputed = RecomputeDueDate(db, existing, finding, request);
+            var recomputed = RecomputeDueDate(sla, existing, finding, request);
 
             db.FindingStatusHistories.Add(new FindingStatusHistory
             {
-                VulnerabilityId = existing.Id,
+                Vulnerability = existing,
                 FromStatus = existing.LifecycleStatus,
                 ToStatus = existing.LifecycleStatus,
                 UserId = request.UserId,
@@ -485,8 +818,16 @@ public class FindingIngestionService(
         return outcome == ReimportOutcome.KeepSuppressed ? ExistingOutcome.Suppressed : ExistingOutcome.Updated;
     }
 
-    private async Task<Vulnerability> CreateFindingAsync(NRDbContext db, NormalizedFinding finding, Host? host,
-        DAL.Entities.HostsService? service, ImportIngestionRequest request, DedupKeyResult keys, int importId)
+    /// <summary>
+    /// Builds a new finding and its first history event, without saving either.
+    ///
+    /// The history is handed back rather than added, because its foreign key needs an id the insert
+    /// has not produced yet. Saving here to get one is what the old code did, and it is what made a
+    /// large import quadratic.
+    /// </summary>
+    private (Vulnerability Finding, FindingStatusHistory History) CreateFinding(NRDbContext db,
+        NormalizedFinding finding, int? hostId, int? serviceId, ImportIngestionRequest request,
+        DedupKeyResult keys, int importId, SlaPolicySet sla)
     {
         var firstSeen = finding.FirstSeen ?? request.ImportedAt;
 
@@ -506,8 +847,8 @@ public class FindingIngestionService(
             // existing triage buttons keep behaving; the ASPM lifecycle is status_id.
             Status = (ushort)IntStatus.New,
             LifecycleStatus = FindingStatus.Active,
-            HostId = host?.Id,
-            HostServiceId = service?.Id,
+            HostId = hostId,
+            HostServiceId = serviceId,
             EntityId = request.EntityId,
             AnalystId = request.UserId,
             FixTeamId = request.FixTeamId ?? DefaultFixTeamId,
@@ -523,14 +864,12 @@ public class FindingIngestionService(
 
         ApplyScannerFields(vulnerability, finding);
 
-        vulnerability.SlaDueDate = await slaService.ComputeDueDateAsync(finding.Severity, request.EntityId, firstSeen);
+        vulnerability.SlaDueDate = sla.DueDate(finding.Severity, request.EntityId, firstSeen);
 
         db.Vulnerabilities.Add(vulnerability);
-        await db.SaveChangesAsync();
 
-        db.FindingStatusHistories.Add(new FindingStatusHistory
+        var history = new FindingStatusHistory
         {
-            VulnerabilityId = vulnerability.Id,
             FromStatus = null,
             ToStatus = FindingStatus.Active,
             UserId = request.UserId,
@@ -538,9 +877,9 @@ public class FindingIngestionService(
             ChangedAt = request.ImportedAt,
             Justification = $"Imported from {request.Importer}" +
                             (request.FileName == null ? "." : $" ({request.FileName}).")
-        });
+        };
 
-        return vulnerability;
+        return (vulnerability, history);
     }
 
     /// <summary>
@@ -548,14 +887,18 @@ public class FindingIngestionService(
     /// (3.3.2). Only reached when the scanner is configured for it and the report is a full scan.
     /// </summary>
     private async Task<int> AutoCloseMissingAsync(NRDbContext db, ImportIngestionRequest request,
-        HashSet<int> seenFindingIds, int importId)
+        HashSet<int> seenFindingIds, int importId, CancellationToken ct)
     {
-        var stale = await db.Vulnerabilities
+        // "Not seen" is applied in memory, not in the query. As a predicate it becomes an IN list
+        // holding every finding the import touched, which for a large scan is a statement the server
+        // rejects rather than a filter.
+        var candidates = await db.Vulnerabilities
             .Where(v => v.ImportSource == request.Importer
                         && (v.LifecycleStatus == FindingStatus.Active || v.LifecycleStatus == FindingStatus.Verified)
-                        && !seenFindingIds.Contains(v.Id)
                         && (request.EntityId == null || v.EntityId == request.EntityId))
-            .ToListAsync();
+            .ToListAsync(ct);
+
+        var stale = candidates.Where(v => !seenFindingIds.Contains(v.Id)).ToList();
 
         foreach (var finding in stale)
         {
@@ -580,6 +923,16 @@ public class FindingIngestionService(
     }
 
     // --- helpers ---------------------------------------------------------------------------
+
+    /// <summary>
+    /// Reads the SLA policy table once, for the whole import.
+    /// </summary>
+    private async Task<SlaPolicySet> LoadSlaPoliciesAsync(CancellationToken ct)
+    {
+        await using var db = DalService.GetContext();
+
+        return new SlaPolicySet(await db.SlaConfigurations.AsNoTracking().ToListAsync(ct));
+    }
 
     /// <summary>
     /// Copies the scanner-derived fields. Split out because create and update need exactly the same
@@ -627,23 +980,10 @@ public class FindingIngestionService(
     /// transaction as the severity that caused it. <see cref="ISlaService"/>'s own recompute opens
     /// its own context, which would split the two.
     /// </summary>
-    private DateTime? RecomputeDueDate(NRDbContext db, Vulnerability existing, NormalizedFinding finding,
-        ImportIngestionRequest request)
+    private static DateTime? RecomputeDueDate(SlaPolicySet sla, Vulnerability existing,
+        NormalizedFinding finding, ImportIngestionRequest request)
     {
-        var policy = db.SlaConfigurations
-            .AsNoTracking()
-            .Where(c => c.Severity == (int)finding.Severity
-                        && c.EffectiveFrom <= existing.FirstDetection
-                        && (c.EffectiveTo == null || c.EffectiveTo > existing.FirstDetection)
-                        && (c.EntityId == null || c.EntityId == request.EntityId))
-            .OrderByDescending(c => c.EntityId != null)
-            .ThenByDescending(c => c.EffectiveFrom)
-            .ThenByDescending(c => c.Id)
-            .FirstOrDefault();
-
-        existing.SlaDueDate = policy == null
-            ? null
-            : existing.FirstDetection.AddDays(policy.MaxRemediationDays);
+        existing.SlaDueDate = sla.DueDate(finding.Severity, request.EntityId, existing.FirstDetection);
 
         return existing.SlaDueDate;
     }
@@ -666,6 +1006,72 @@ public class FindingIngestionService(
         // can be written as "critical" instead of "4".
         var byName = counts.ToDictionary(c => c.Key.ToString().ToLowerInvariant(), c => c.Value);
         return JsonSerializer.Serialize(byName);
+    }
+
+    /// <summary>
+    /// What one batch decided, held apart from the import's running totals until it commits.
+    ///
+    /// A batch the database rejects is retried a finding at a time, and the retry decides the same
+    /// findings again. Counting into the totals as it went would count them twice.
+    /// </summary>
+    private sealed class BatchOutcome
+    {
+        public int New;
+        public int Updated;
+        public int Duplicates;
+        public int Skipped;
+
+        public readonly Dictionary<NormalizedSeverity, int> NewBySeverity = new();
+        public readonly List<string> Warnings = [];
+        public readonly HashSet<int> Seen = [];
+
+        /// <summary>Findings this batch resolved, by every key that names them.</summary>
+        private readonly List<(DedupKeyResult Keys, Vulnerability Finding)> _resolved = [];
+
+        public void Remember(DedupKeyResult keys, Vulnerability finding) =>
+            _resolved.Add((keys, finding));
+
+        public void Skip(NormalizedFinding finding, Exception ex, ILogger logger, int importId)
+        {
+            Skipped++;
+            Warnings.Add($"[skipped] {finding.Title}: {ex.Message}");
+            logger.Warning("Could not ingest finding {Title} from import {Import}: {Message}",
+                finding.Title, importId, ex.Message);
+        }
+
+        /// <summary>Forgets everything but the skips, for a batch whose write did not land.</summary>
+        public void Undo()
+        {
+            New = Updated = Duplicates = 0;
+            NewBySeverity.Clear();
+            Seen.Clear();
+            _resolved.Clear();
+        }
+
+        public void MergeInto(IngestCounts counts, Dictionary<NormalizedSeverity, int> newBySeverity,
+            List<string> warnings, HashSet<int> seenFindingIds, Dictionary<string, int> knownIdsByKey)
+        {
+            counts.New += New;
+            counts.Updated += Updated;
+            counts.Duplicates += Duplicates;
+            counts.Skipped += Skipped;
+
+            foreach (var (severity, count) in NewBySeverity)
+                newBySeverity[severity] = newBySeverity.GetValueOrDefault(severity) + count;
+
+            warnings.AddRange(Warnings);
+            seenFindingIds.UnionWith(Seen);
+
+            // Merged only now, and only for rows that actually have an id: a key pointing at a
+            // finding the retry is about to create again would send the next batch to a row that
+            // does not exist.
+            foreach (var (keys, finding) in _resolved)
+            {
+                if (finding.Id == 0) continue;
+
+                foreach (var candidate in keys.Candidates) knownIdsByKey[candidate.Key] = finding.Id;
+            }
+        }
     }
 
     private class IngestCounts

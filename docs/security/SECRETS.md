@@ -35,7 +35,8 @@ https__certificate__password=...
 | Secret | Lives in | Set by | Read by | Rotation |
 |---|---|---|---|---|
 | **Database connection string** (contains the password) | Environment `Database__ConnectionString`, or user-secrets in development | Operator | API, BackgroundJobs, ConsoleClient, WebSite | §3.1 |
-| **JWT signing key** | `<AppData>/NRServer/secret_token.txt`, generated on first start | Generated — 32 characters of CSPRNG output, base64-encoded | `EnvironmentService.ServerSecretToken` → `AuthenticationBootstrapper`, `SecretProtector` | §3.2 — **read the warning** |
+| **JWT signing key** | `<AppData>/NRServer/secret_token.txt`, generated on first start | Generated — 32 characters of CSPRNG output, base64-encoded | `EnvironmentService.ServerSecretToken` → `AuthenticationBootstrapper` | §3.2 |
+| **Credential master key** | The most protected store the host offers — TPM 2.0 (Linux), keychain (macOS), DPAPI (Windows), else `<AppData>/NRServer/secrets/master.key` at mode 0600. Overridable with `NETRISK_SECRET_MASTER_KEY`. | Generated — 32 CSPRNG bytes, base64-encoded | `MasterKeyProvider` → `SecretProtector` | §3.7 — **destructive, read first** |
 | **TLS certificate password** | Environment `https__certificate__password` | Operator | `Program.cs` on both hosts | §3.3 |
 | **TLS private key** | Operator-supplied `.pfx` outside the repository | Operator / CA | Kestrel | §3.3 |
 | **SMTP credentials** | Environment under `email:` | Operator | `AddSmtpSender` | Provider-dependent; no NetRisk state |
@@ -64,30 +65,29 @@ https__certificate__password=...
 
 No application state depends on the password, so this is safe to do at any time.
 
-### 3.2 JWT signing key — **destructive, read first**
+### 3.2 JWT signing key
 
-The key at `<AppData>/NRServer/secret_token.txt` is used for two things: signing session tokens
-**and**, through a domain-separated derivation, encrypting integration credentials
-(`SecretProtector`). Deleting it therefore does two things at once:
+The key at `<AppData>/NRServer/secret_token.txt` signs session tokens. Deleting it invalidates every
+outstanding session token; users sign in again, and nothing else is lost.
 
-* every outstanding session token becomes invalid — acceptable, users sign in again;
-* **every stored integration credential becomes undecryptable** — not acceptable without preparation.
+Until 2.22.5 it did more than that — the credential-encryption key was derived from it, so rotating
+it also made every stored integration credential undecryptable. That is no longer true: credentials
+are encrypted under the separate master key of §3.7. The old derivation survives as a **decrypt-only
+fallback** in `SecretProtector`, so an installation that has not yet re-saved its connections still
+reads them; once every connection has been saved once, this file no longer matters to them.
 
 Procedure:
 
-1. Note every configured integration (notification channels, issue trackers, posture providers).
-2. Stop the API and BackgroundJobs.
-3. Move the old file aside — move, do not delete, until step 6 has succeeded.
-4. Start the API. A new key is generated on first use.
-5. Re-enter every integration credential noted in step 1. `SecretProtector.Unprotect` throws
-   `SecretProtectionException`, which the controllers surface as **409 Conflict** with a message
-   telling the operator to re-enter the value — so the failure is legible rather than a silent 401
-   from the provider.
-6. Confirm each integration with its "test connection" action, then delete the old file.
+1. Stop the API and BackgroundJobs.
+2. Move the old file aside.
+3. Start the API. A new key is generated on first use.
+4. If the installation has **not** re-saved its integration connections since the upgrade to 2.22.5,
+   re-enter each credential — the fallback key is gone with the file. `SecretProtector.Unprotect`
+   throws `SecretProtectionException`, which the controllers surface as **409 Conflict** with a
+   message telling the operator to re-enter the value, so the failure is legible rather than a
+   silent 401 from the provider.
 
-**Rotate when:** the file may have been read (host compromise, a backup landing somewhere it should
-not, an operator leaving with a copy). Not on a schedule — the cost is re-entering every credential,
-and a rotation people avoid is worse than one they do deliberately.
+**Rotate when:** the file may have been read. Sessions are the only guaranteed cost.
 
 ### 3.3 TLS certificate and its password
 
@@ -145,6 +145,49 @@ The new public key is presented **signed with the current private key**, proving
 trusted key, and only committed locally once the website accepts it. If the private key is already
 lost, fall back to trust-on-first-use recovery — documented in the website-sync guide — which
 requires an operator action on the website side.
+
+### 3.7 Credential master key — **destructive, read first**
+
+This is the key every stored integration credential, OIDC client secret, webhook shared secret and
+biometric template is encrypted under. Losing it loses all of them.
+
+**Where it is.** `MasterKeyProvider` resolves it once per process, from the most protected place the
+host offers, and logs which one it landed on at first use:
+
+| Order | Backend | Where the key actually is |
+|---|---|---|
+| 1 | Environment | `NETRISK_SECRET_MASTER_KEY` — base64 of 32 bytes. Nothing is written to disk. |
+| 2 | TPM 2.0 (Linux) | Sealed to the chip. `<AppData>/NRServer/secrets/master.key.tpm2.pub` + `.priv` are the sealed blobs; they are useless on any other machine. Requires `/dev/tpmrm0` and `tpm2-tools`. |
+| 2 | Keychain (macOS) | Generic-password item, service `netrisk-server`, account `secret-master-key`. Protected by the Secure Enclave on Apple silicon. Inspect with `security find-generic-password -s netrisk-server -a secret-master-key`. |
+| 2 | DPAPI (Windows) | `<AppData>/NRServer/secrets/master.key.dpapi`, wrapped at machine scope — TPM-bound where the OS binds DPAPI keys to one. |
+| 3 | Protected file | `<AppData>/NRServer/secrets/master.key`, mode 0600 in a 0700 directory. The fallback when none of the above is available. |
+
+`<AppData>` is `/var/netrisk` on Linux, `%APPDATA%` on Windows, `~/Library/Application Support` on
+macOS.
+
+An existing key is **never** replaced: every store is read before any write is considered, so a host
+that gains or loses TPM tooling keeps the key it already had
+(`MasterKeyProviderTest.ReadsAnExistingKeyFromALowerStoreRatherThanMintingANewOne`). A newly written
+key is read back and compared before it is used, so a backend that reports success and cannot
+actually return the key is demoted rather than trusted
+(`MasterKeyProviderTest.SkipsAStoreThatDoesNotReturnWhatItWasGiven`).
+
+**Back it up.** The hardware-backed stores are, by design, not portable: a TPM-sealed blob restored
+onto another machine will not unseal, and a keychain item does not travel in a `tar` of the home
+directory. That is the point, and it is also the failure mode — a host rebuild with no plan is every
+credential re-entered. Either accept that cost deliberately, or run the installation on
+`NETRISK_SECRET_MASTER_KEY` supplied from wherever the deployment already keeps its database
+password, which makes the key an input to the deployment instead of state on the host.
+
+**Rotation** is the same shape as §3.2 and has the same cost:
+
+1. Note every configured integration.
+2. Stop the API and BackgroundJobs.
+3. Remove the key: `security delete-generic-password -s netrisk-server -a secret-master-key` on
+   macOS, or move `<AppData>/NRServer/secrets/` aside — move, do not delete, until step 6.
+4. Start the API. A new key is generated on first use.
+5. Re-enter every credential noted in step 1.
+6. Confirm each integration with its "test connection" action, then destroy the old key.
 
 ---
 

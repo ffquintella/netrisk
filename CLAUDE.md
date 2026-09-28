@@ -190,6 +190,7 @@ attribute anywhere on the class). A review that cannot name the test must downgr
 | A token, key, password or id | `Tools.RandomGenerator` (CSPRNG) or `RandomNumberGenerator` | `System.Random` — it is recoverable from a few observed outputs |
 | A path from caller input | `Tools.Security.SafePathTool` | `Path.Combine` alone; it is not a containment primitive |
 | Encrypt a stored secret | `ISecretProtector` → `Tools.Criptography.AesGcm256` | `Tools.Criptography.AES` (CBC, constant IV, unauthenticated — read path only) |
+| The key those secrets are encrypted under | `IMasterKeyProvider` (TPM / keychain / DPAPI / 0600 file, in that order) | `IEnvironmentService.ServerSecretToken` — that is the JWT signing key; deriving from it made rotating a session key destroy every stored credential |
 | **Consume** a stored credential | `ISecretResolver.ResolveAsync` | `ISecretProtector.Unprotect` — a credential column may hold a `vault:v1:…` reference, and sending that as the credential is a 401 from a third party with no clue why |
 | Hash a high-entropy token | `HashTool.CreateSha256` | `CreateMD5` / `CreateSha1` — compatibility reads only |
 | Hash a password | bcrypt work factor 15 (`UsersService`) | anything else |

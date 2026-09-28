@@ -9,13 +9,26 @@ using Tools.Criptography;
 namespace ServerServices.Security;
 
 /// <summary>
-/// AES encryption of integration credentials keyed off the per-installation server secret
-/// (Track 4).
+/// AES encryption of integration credentials, keyed off the installation's master key (Track 4).
 ///
-/// The key is derived from <see cref="IEnvironmentService.ServerSecretToken"/> with a fixed label
-/// rather than being the token itself. That costs nothing and means a value stolen from
-/// <c>encrypted_api_key</c> is not decryptable by anything that happens to know the JWT signing key,
-/// and vice versa.
+/// <para>
+/// The key comes from <see cref="IMasterKeyProvider"/>, which holds it in the most protected place
+/// the host offers — a TPM, the macOS keychain, DPAPI, or failing those an owner-only file. It used
+/// to be derived from <see cref="IEnvironmentService.ServerSecretToken"/>, the JWT signing key.
+/// Sharing one value was wrong in both directions: rotating or losing the signing key made every
+/// stored credential unreadable, and a key that only has to sign a token has no reason to live in
+/// hardware while a key that decrypts credentials does.
+/// </para>
+/// <para>
+/// The old derivation stays as a <i>decrypt-only</i> fallback, so an installation that upgrades
+/// keeps reading credentials it encrypted before the master key existed; any save re-encrypts them
+/// under the new key. Removing that fallback is what makes the upgrade destructive, so it stays
+/// until a release that can state every install has re-saved.
+/// </para>
+/// <para>
+/// Trying two candidate keys on read is safe rather than a guess: the v2 format is AES-GCM, so the
+/// authentication tag makes "wrong key" a clean failure rather than plausible-looking plaintext.
+/// </para>
 /// </summary>
 public class SecretProtector : ISecretProtector
 {
@@ -40,19 +53,41 @@ public class SecretProtector : ISecretProtector
     private const string KeyLabel = "netrisk.integrations.secret.v1";
 
     private readonly ILogger _logger;
+
+    /// <summary>The key everything is written under.</summary>
     private readonly string _passphrase;
 
-    public SecretProtector(ILogger logger, IEnvironmentService environmentService)
+    /// <summary>
+    /// Superseded keys, tried on read only, in order. Lazy because resolving the legacy one reads —
+    /// and on a fresh install creates — the JWT key file, which a process that never decrypts an
+    /// old credential has no reason to touch.
+    /// </summary>
+    private readonly Lazy<IReadOnlyList<string>> _fallbackPassphrases;
+
+    public SecretProtector(ILogger logger, IMasterKeyProvider masterKeyProvider, IEnvironmentService environmentService)
     {
         _logger = logger;
-        _passphrase = DerivePassphrase(environmentService.ServerSecretToken);
+        _passphrase = DerivePassphrase(masterKeyProvider.GetMasterKey());
+        _fallbackPassphrases = new Lazy<IReadOnlyList<string>>(
+            () => [DerivePassphrase(environmentService.ServerSecretToken)],
+            LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
-    /// <summary>Test seam: construct over an explicit root secret instead of the install's key file.</summary>
+    /// <summary>Test seam: construct over an explicit root secret instead of the install's key store.</summary>
     internal SecretProtector(ILogger logger, string rootSecret)
     {
         _logger = logger;
         _passphrase = DerivePassphrase(rootSecret);
+        _fallbackPassphrases = new Lazy<IReadOnlyList<string>>(() => []);
+    }
+
+    /// <summary>Test seam: an explicit current key plus explicit superseded ones.</summary>
+    internal SecretProtector(ILogger logger, string rootSecret, params string[] supersededRootSecrets)
+    {
+        _logger = logger;
+        _passphrase = DerivePassphrase(rootSecret);
+        _fallbackPassphrases = new Lazy<IReadOnlyList<string>>(
+            () => supersededRootSecrets.Select(DerivePassphrase).ToList());
     }
 
     private static string DerivePassphrase(string rootSecret)
@@ -99,25 +134,37 @@ public class SecretProtector : ISecretProtector
     /// </summary>
     private string UpgradeLegacy(string legacy)
     {
-        try
-        {
-            var body = legacy[LegacyPrefix.Length..];
-            var recovered = AES.Decrypt(body, _passphrase);
+        var body = legacy[LegacyPrefix.Length..];
 
-            if (!string.Equals(AES.Encrypt(recovered, _passphrase), body, StringComparison.Ordinal))
+        foreach (var candidate in Candidates())
+        {
+            try
             {
-                _logger.Warning(
-                    "A stored credential is in the superseded enc:v1 format but does not decrypt with "
-                    + "this installation's key; leaving it untouched");
-                return legacy;
-            }
+                var recovered = AES.Decrypt(body, candidate);
 
-            return Prefix + AesGcm256.Encrypt(recovered, _passphrase);
+                if (!string.Equals(AES.Encrypt(recovered, candidate), body, StringComparison.Ordinal))
+                    continue;
+
+                return Prefix + AesGcm256.Encrypt(recovered, _passphrase);
+            }
+            catch (Exception)
+            {
+                // Try the next candidate key; a v1 value written before the master key existed is
+                // readable only under the superseded derivation.
+            }
         }
-        catch (Exception)
-        {
-            return legacy;
-        }
+
+        _logger.Warning(
+            "A stored credential is in the superseded enc:v1 format but does not decrypt with any of "
+            + "this installation's keys; leaving it untouched");
+        return legacy;
+    }
+
+    /// <summary>The current key first, then any superseded one, for read paths that may meet either.</summary>
+    private IEnumerable<string> Candidates()
+    {
+        yield return _passphrase;
+        foreach (var fallback in _fallbackPassphrases.Value) yield return fallback;
     }
 
     public string? Unprotect(string? ciphertext)
@@ -140,18 +187,52 @@ public class SecretProtector : ISecretProtector
             return ciphertext;
         }
 
-        try
+        var isLegacyFormat = ciphertext.StartsWith(LegacyPrefix, StringComparison.Ordinal);
+        var body = ciphertext[(isLegacyFormat ? LegacyPrefix.Length : Prefix.Length)..];
+        Exception? firstFailure = null;
+        var underCurrentKey = true;
+
+        foreach (var candidate in Candidates())
         {
-            return ciphertext.StartsWith(LegacyPrefix, StringComparison.Ordinal)
-                ? AES.Decrypt(ciphertext[LegacyPrefix.Length..], _passphrase)
-                : AesGcm256.Decrypt(ciphertext[Prefix.Length..], _passphrase);
+            try
+            {
+                string plaintext;
+
+                if (isLegacyFormat)
+                {
+                    // v1 is unauthenticated CBC: the wrong key does not fail, it returns garbage.
+                    // With more than one candidate key that is no longer a theoretical problem —
+                    // the current key would "succeed" on a value written under the superseded one
+                    // and hand a caller rubbish to authenticate with. v1 is deterministic, so
+                    // re-encrypting and comparing is an exact check, and it is the same one
+                    // UpgradeLegacy uses.
+                    plaintext = AES.Decrypt(body, candidate);
+                    if (!string.Equals(AES.Encrypt(plaintext, candidate), body, StringComparison.Ordinal))
+                        throw new SecretProtectionException("the enc:v1 value does not round-trip under this key");
+                }
+                else
+                {
+                    plaintext = AesGcm256.Decrypt(body, candidate);
+                }
+
+                if (!underCurrentKey)
+                    _logger.Information(
+                        "A stored credential decrypted under a superseded installation key; re-save the "
+                        + "connection to re-encrypt it under the current one");
+
+                return plaintext;
+            }
+            catch (Exception ex)
+            {
+                firstFailure ??= ex;
+                underCurrentKey = false;
+            }
         }
-        catch (Exception ex)
-        {
-            throw new SecretProtectionException(
-                "A stored integration credential could not be decrypted with this installation's key. "
-                + "It was most likely encrypted on another installation; re-enter it on the connection.", ex);
-        }
+
+        throw new SecretProtectionException(
+            "A stored integration credential could not be decrypted with this installation's key. "
+            + "It was most likely encrypted on another installation; re-enter it on the connection.",
+            firstFailure!);
     }
 
     public bool LooksProtected(string? value) =>

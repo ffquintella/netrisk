@@ -452,7 +452,7 @@ public class SecurityScorecardService(
             Importer = ImporterName,
             FileName = $"SecurityScorecard {connection.Domain} {DateTime.UtcNow:yyyy-MM-dd HH:mm}",
             EntityId = connection.EntityId
-        }, ct);
+        }, ct: ct);
 
         result.ImportId = import.Id;
         result.FindingsCreated += import.NewCount;

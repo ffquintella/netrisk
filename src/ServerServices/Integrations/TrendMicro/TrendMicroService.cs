@@ -214,7 +214,7 @@ public class TrendMicroService(
 
                 await run.StepAsync("cves", "Vulnerability records received.", vulnerabilities.Count, ct);
 
-                await IngestVulnerabilitiesAsync(connection, vulnerabilities, devices, result, ct);
+                await IngestVulnerabilitiesAsync(connection, vulnerabilities, devices, result, run, ct);
 
                 await run.StepAsync("cves",
                     $"{result.FindingsCreated} finding(s) created, {result.FindingsUpdated} updated, "
@@ -709,11 +709,14 @@ public class TrendMicroService(
     /// </summary>
     private async Task IngestVulnerabilitiesAsync(TrendMicroConnection connection,
         List<TrendMicroDeviceVulnerability> vulnerabilities, List<TrendMicroDevice> devices,
-        PostureSyncResult result, CancellationToken ct)
+        PostureSyncResult result, IntegrationSyncRun run, CancellationToken ct)
     {
         if (vulnerabilities.Count == 0) return;
 
         var byId = devices.ToDictionary(d => d.Id, d => d, StringComparer.OrdinalIgnoreCase);
+
+        await run.StepAsync("cves", "Mapping vulnerability records onto findings.",
+            vulnerabilities.Count, ct);
 
         var parsed = new ImportResult
         {
@@ -783,21 +786,48 @@ public class TrendMicroService(
             parsed.Findings.Add(finding);
         }
 
+        await run.StepAsync("cves", $"Persisting {parsed.Findings.Count} finding(s).", ct: ct);
+
         var import = await ingestion.IngestAsync(parsed, new ImportIngestionRequest
         {
             Importer = ImporterName,
             FileName = $"Vision One {connection.Name} {DateTime.UtcNow:yyyy-MM-dd HH:mm}",
             EntityId = connection.EntityId
-        }, ct);
+        }, Throttled(run, ct), ct);
 
         result.ImportId = import.Id;
         result.FindingsCreated += import.NewCount;
         result.FindingsUpdated += import.UpdatedCount;
 
         if (connection.VirtualPatchClosesFinding)
-            await ApplyVirtualPatchPolicyAsync(vulnerabilities, result, ct);
+            await ApplyVirtualPatchPolicyAsync(vulnerabilities, result, run, ct);
         else
             result.VirtualPatchesApplied = 0;
+    }
+
+    /// <summary>
+    /// A progress callback that writes at most one trail line per whole percent.
+    ///
+    /// Throttled because the pipeline reports per batch — over a thousand times for a half-million
+    /// finding sync — and the trail is capped from the front, so an unthrottled one would discard
+    /// the start of the run to make room for near-identical persistence lines.
+    /// </summary>
+    private static Func<ImportProgress, Task> Throttled(IntegrationSyncRun run, CancellationToken ct)
+    {
+        var lastPercent = -1;
+
+        return progress =>
+        {
+            var percent = progress.Percent ?? -1;
+
+            if (percent == lastPercent) return Task.CompletedTask;
+
+            lastPercent = percent;
+
+            return run.StepAsync("cves",
+                $"Persisting findings: {percent}% — {progress.Created} created, "
+                + $"{progress.Updated} updated, {progress.Skipped} skipped.", progress.Processed, ct);
+        };
     }
 
     /// <summary>
@@ -809,27 +839,45 @@ public class TrendMicroService(
     /// policy call, and defaulting to closing it would quietly hide unpatched software.
     /// </summary>
     private async Task ApplyVirtualPatchPolicyAsync(List<TrendMicroDeviceVulnerability> vulnerabilities,
-        PostureSyncResult result, CancellationToken ct)
+        PostureSyncResult result, IntegrationSyncRun run, CancellationToken ct)
     {
         var patched = vulnerabilities.Where(v => v.VirtualPatchApplied).ToList();
 
         if (patched.Count == 0) return;
 
-        await using var db = DalService.GetContext();
+        await run.StepAsync("virtual-patch", "Applying the virtual-patch policy.", patched.Count, ct);
+
+        // Looked up in batches rather than one query per record, for the same reason the ingestion
+        // pipeline is batched: this list is a slice of the same half-million.
+        var statuses = await LoadPatchTargetsAsync(patched, ct);
+
+        var considered = 0;
+        var lastPercent = -1;
 
         foreach (var vulnerability in patched)
         {
+            ct.ThrowIfCancellationRequested();
+
+            considered++;
+
+            var percent = (int)(100L * considered / patched.Count);
+
+            if (percent != lastPercent)
+            {
+                lastPercent = percent;
+                await run.StepAsync("virtual-patch",
+                    $"{percent}% — {result.VirtualPatchesApplied} finding(s) closed so far.",
+                    considered, ct);
+            }
+
             var toolUniqueId = $"{vulnerability.DeviceId}:{vulnerability.CveId}";
 
-            var finding = await db.Vulnerabilities.FirstOrDefaultAsync(
-                v => v.ToolUniqueId == toolUniqueId && v.ImportSource == ImporterName, ct);
-
-            if (finding == null) continue;
-            if (finding.LifecycleStatus == FindingStatus.Mitigated) continue;
+            if (!statuses.TryGetValue(toolUniqueId, out var finding)) continue;
+            if (finding.Status == FindingStatus.Mitigated) continue;
 
             // Suppressed findings are left alone: a finding somebody marked false-positive must not be
             // reopened and re-closed by an integration.
-            if (finding.LifecycleStatus.IsSuppressed()) continue;
+            if (finding.Status.IsSuppressed()) continue;
 
             try
             {
@@ -849,6 +897,41 @@ public class TrendMicroService(
             }
         }
     }
+
+    /// <summary>
+    /// The id and lifecycle status of every finding the patched records name, in batched lookups.
+    /// </summary>
+    private async Task<Dictionary<string, (int Id, FindingStatus Status)>> LoadPatchTargetsAsync(
+        List<TrendMicroDeviceVulnerability> patched, CancellationToken ct)
+    {
+        var ids = patched
+            .Select(v => $"{v.DeviceId}:{v.CveId}")
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var found = new Dictionary<string, (int Id, FindingStatus Status)>(StringComparer.Ordinal);
+
+        await using var db = DalService.GetContext();
+
+        for (var offset = 0; offset < ids.Count; offset += PatchLookupBatchSize)
+        {
+            var slice = ids.GetRange(offset, Math.Min(PatchLookupBatchSize, ids.Count - offset));
+
+            var rows = await db.Vulnerabilities
+                .AsNoTracking()
+                .Where(v => v.ImportSource == ImporterName
+                            && v.ToolUniqueId != null && slice.Contains(v.ToolUniqueId))
+                .Select(v => new { v.Id, v.ToolUniqueId, v.LifecycleStatus })
+                .ToListAsync(ct);
+
+            foreach (var row in rows) found[row.ToolUniqueId!] = (row.Id, row.LifecycleStatus);
+        }
+
+        return found;
+    }
+
+    /// <summary>Keys per <c>IN (…)</c> list, so one batch cannot overrun the packet.</summary>
+    private const int PatchLookupBatchSize = 500;
 
     public async Task<bool> PushExemptionAsync(int findingId, string reason, CancellationToken ct = default)
     {

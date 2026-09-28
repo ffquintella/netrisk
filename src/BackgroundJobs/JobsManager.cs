@@ -93,6 +93,14 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<SecurityScorecardSyncJob>("SecurityScorecardSync",
                 x => x.Run(), Cron.Daily(4));
+
+        // Hourly, at :10 so it never starts in the same minute as the syncs above. A run left
+        // Running by a killed process both misreports as live work and refuses the next sync of that
+        // connection, so the horizon that matters is "how long until an operator can retry", not
+        // "how long until the display is tidy".
+        RecurringJob
+            .AddOrUpdate<IntegrationSyncReaperJob>("IntegrationSyncReaper",
+                x => x.Run(), "10 * * * *");
     }
 
     /// <summary>

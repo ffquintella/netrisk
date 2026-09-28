@@ -25,6 +25,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ClosedXML" />
+    <!-- Windows DPAPI, used by WindowsDpapiMasterKeyStore to wrap the credential-encryption key
+         under a key the OS holds. Windows-only at runtime; the package is reference-safe elsewhere
+         and the store is [SupportedOSPlatform("windows")] and never constructed off Windows. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
     <!-- Track 7 secret vaults: DNS SRV discovery of a vault cluster's nodes. System.Net.Dns exposes
          A/AAAA only and has no supported way to ask for an SRV record, so the lookup needs a real
          resolver library. Confined to DnsClientSrvLookup, behind IDnsSrvLookup. -->

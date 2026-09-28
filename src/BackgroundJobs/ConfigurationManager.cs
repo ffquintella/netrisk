@@ -115,6 +115,7 @@ public static class ConfigurationManager
         services.AddScoped<BackgroundJobs.Jobs.Integrations.IssueSyncPollingJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.TrendMicroSyncJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.SecurityScorecardSyncJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.IntegrationSyncReaperJob>();
 
         ConfigureHangFire(services);
 

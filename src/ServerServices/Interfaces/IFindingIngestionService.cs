@@ -18,8 +18,13 @@ public interface IFindingIngestionService
     /// Ingests one parse result. Creates, updates or suppresses each finding per the importer's
     /// dedup configuration, writes the <c>scan_imports</c> row, and returns its counts.
     /// </summary>
+    /// <param name="onProgress">
+    /// Called as each batch lands, for a caller with somewhere to show it. A half-million-finding
+    /// Vision One sync spends almost all of its wall clock inside this one call, and without this the
+    /// only thing an operator could see was the line printed before it started.
+    /// </param>
     Task<ScanImport> IngestAsync(ImportResult parsed, ImportIngestionRequest request,
-        CancellationToken ct = default);
+        Func<ImportProgress, Task>? onProgress = null, CancellationToken ct = default);
 
     /// <summary>The log row for an import, for <c>GET /vulnerabilities/import-jobs/{id}</c>.</summary>
     Task<ScanImport> GetImportAsync(int importId);
@@ -92,4 +97,20 @@ public class ImportIngestionRequest
     /// because a CI pipeline importing into a specific team is a reasonable thing to want.
     /// </summary>
     public int? FixTeamId { get; init; }
+}
+
+/// <summary>
+/// How far an import has got, reported as each batch is persisted.
+/// </summary>
+/// <param name="Phase">Which pass is running — <c>findings</c> or <c>auto-close</c>.</param>
+/// <param name="Processed">Findings persisted so far.</param>
+/// <param name="Total">Findings in the parse result.</param>
+/// <param name="Created">New findings so far.</param>
+/// <param name="Updated">Findings matched to an existing one so far.</param>
+/// <param name="Skipped">Findings that threw and were recorded as skips so far.</param>
+public readonly record struct ImportProgress(
+    string Phase, int Processed, int Total, int Created, int Updated, int Skipped)
+{
+    /// <summary>Percentage complete, or null when the total is not yet known.</summary>
+    public int? Percent => Total <= 0 ? null : (int)(100L * Processed / Total);
 }

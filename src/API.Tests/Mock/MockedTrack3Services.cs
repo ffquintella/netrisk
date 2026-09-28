@@ -102,7 +102,8 @@ public static class MockedFindingIngestionService
         });
 
         service.IngestAsync(Arg.Any<ImportResult>(), Arg.Any<ImportIngestionRequest>(),
-            Arg.Any<CancellationToken>()).Returns(Task.FromResult(Succeeded()));
+                Arg.Any<Func<ImportProgress, Task>?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Succeeded()));
 
         service.FindByIdempotencyKeyAsync(Arg.Any<string>()).Returns(call =>
             Task.FromResult<ScanImport?>(call.ArgAt<string>(0) == "already-used" ? Succeeded() : null));
