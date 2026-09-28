@@ -162,6 +162,29 @@ public class SecretVaultsController(
     }
 
     /// <summary>
+    /// The values a plugin offers for one of the controls it contributed to a screen — the
+    /// environments of a BastionVault secret, say.
+    ///
+    /// A POST with a body for the same reason as <c>describe</c>: the selected secret id is in it,
+    /// and a secret id has no business in an access log. And a call rather than part of the plugin
+    /// listing, because the answer depends on this connection's credential.
+    /// </summary>
+    [HttpPost]
+    [Route("{id:int}/field-options")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<VaultFieldOptionView>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public Task<ActionResult<List<VaultFieldOptionView>>> FieldOptions(int id,
+        [FromBody] VaultFieldOptionsRequest request)
+    {
+        GetUser();
+
+        return RunAsync(() => service.ListFieldOptionsAsync(id, request ?? new VaultFieldOptionsRequest()),
+            $"listing the plugin field options of vault connection {id}");
+    }
+
+    /// <summary>
     /// Describes what a stored credential value points at, so a form can show "Prod vault: db-main /
     /// password" beside a field instead of the raw reference.
     ///

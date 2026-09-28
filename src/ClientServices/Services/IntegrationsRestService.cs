@@ -367,6 +367,11 @@ public class IntegrationsRestService(IRestService restService)
     public Task<List<VaultSecretSummary>> GetVaultSecretsAsync(int connectionId) =>
         GetAsync<List<VaultSecretSummary>>($"/SecretVaults/{connectionId}/secrets", []);
 
+    public Task<List<VaultFieldOptionView>> GetVaultFieldOptionsAsync(int connectionId,
+        VaultFieldOptionsRequest request) =>
+        SendAsync<List<VaultFieldOptionView>>($"/SecretVaults/{connectionId}/field-options",
+            Method.Post, request);
+
     public Task<SecretReferenceView> DescribeSecretReferenceAsync(string? storedValue) =>
         SendAsync<SecretReferenceView>("/SecretVaults/describe", Method.Post,
             new SecretReferenceDescribeRequest { Value = storedValue });

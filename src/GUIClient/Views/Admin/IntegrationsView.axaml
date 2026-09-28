@@ -9,6 +9,7 @@
              xmlns:scim="clr-namespace:Model.Authentication.Scim;assembly=Model"
              xmlns:federation="clr-namespace:Model.Authentication.Federation;assembly=Model"
              xmlns:enums="clr-namespace:DAL.Enums;assembly=DAL"
+             xmlns:controls="clr-namespace:GUIClient.Views.Controls"
              xmlns:admin="clr-namespace:GUIClient.Views.Admin"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="750"
              x:DataType="vm:IntegrationsViewModel"
@@ -1285,6 +1286,17 @@
                                 <TextBlock Text="{Binding StrAppId}" Classes="fieldLabel" Margin="0 12 0 3"/>
                                 <TextBox Text="{Binding VaultDraft.AppId}"/>
                                 <TextBlock Text="{Binding StrVaultAppIdHint}" Classes="hint"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Whatever this vault's plugin declared that the four fixed credentials
+                             above do not name - a namespace, a mount, a tenant. Hidden entirely for
+                             a plugin that declares none, which is every plugin built against an
+                             earlier SDK, so the form is unchanged for them. -->
+                        <Border Classes="formCard" IsVisible="{Binding HasVaultPluginFields}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding StrVaultPluginSettings}" Classes="sectionCaption"/>
+                                <controls:PluginFieldsView Fields="{Binding VaultPluginFields}"/>
                             </StackPanel>
                         </Border>
 

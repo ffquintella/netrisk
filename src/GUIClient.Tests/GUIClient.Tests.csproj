@@ -56,6 +56,10 @@
          precisely so it can be tested here: sending a reference where a literal was meant, or the
          other way round, is a failure a person only sees as somebody else's 401. -->
     <Compile Include="..\GUIClient\Tools\VaultSecretFieldState.cs" LinkBase="Tools" />
+    <!-- One control a vault plugin contributed to a screen, while an operator fills it in. Avalonia-free
+         for the same reason: the validation rules an operator sees enforced in the picker and in the
+         connection editor are worth testing without a window. -->
+    <Compile Include="..\GUIClient\Tools\PluginFieldState.cs" LinkBase="Tools" />
     <!-- Which window a toast lands on. Deliberately Avalonia-free so the rule that keeps
          Administration's feedback out of the main window can be tested here. -->
     <Compile Include="..\GUIClient\Notifications\NotificationRouting.cs" LinkBase="Notifications" />

@@ -134,6 +134,7 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrPlugin { get; } = Localizer["Plugin"];
     public string StrLastTest { get; } = Localizer["LastTest"];
     public string StrNoSecretVaultPlugins { get; } = Localizer["NoSecretVaultPluginsMSG"];
+    public string StrVaultPluginSettings { get; } = Localizer["VaultPluginSettings"];
     public string StrSecurityScorecard { get; } = Localizer["SecurityScorecard"];
     public string StrAdd { get; } = Localizer["Add"];
     public string StrDelete { get; } = Localizer["Delete"];
@@ -696,6 +697,10 @@ public class IntegrationsViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
             this.RaisePropertyChanged(nameof(VaultRequiresAppId));
             this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
+
+            // The declared controls belong to the plugin, so switching plugin replaces them. Values
+            // are not carried across: one vault's "namespace" is not another's.
+            BuildVaultPluginFields(VaultDraft.Options);
         }
     }
 
@@ -728,6 +733,24 @@ public class IntegrationsViewModel : ViewModelBase
     /// <summary>The app-ID hint, in the "required" wording when the plugin demands one.</summary>
     public string StrVaultAppIdHint =>
         VaultRequiresAppId ? StrAppIdRequiredHint : StrAppIdHint;
+
+    /// <summary>
+    /// The controls the selected plugin contributed to the connection editor — a namespace, a
+    /// mount, a tenant: whatever this vault needs that base URL, machine ID and app ID do not name.
+    ///
+    /// Empty for a plugin that declares none, which is every plugin built against an earlier SDK.
+    /// This is what replaces adding a fifth fixed field and a sixth boolean to the contract every
+    /// time a vault turns out to need one more thing.
+    /// </summary>
+    public ObservableCollection<PluginFieldState> VaultPluginFields { get; } = [];
+
+    private bool _hasVaultPluginFields;
+
+    public bool HasVaultPluginFields
+    {
+        get => _hasVaultPluginFields;
+        private set => this.RaiseAndSetIfChanged(ref _hasVaultPluginFields, value);
+    }
 
     private string _vaultApiKey = "";
     public string VaultApiKey
@@ -2272,6 +2295,61 @@ public class IntegrationsViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
         this.RaisePropertyChanged(nameof(VaultRequiresAppId));
         this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
+
+        BuildVaultPluginFields(null);
+    }
+
+    /// <summary>
+    /// Rebuilds the plugin's declared connection fields for whichever plugin the draft names, and
+    /// fetches the options of any choice among them.
+    ///
+    /// <para>The fetch needs a saved connection, because the plugin is asked with that connection's
+    /// credential — that is the whole reason options are a call and not part of the declaration. On
+    /// a draft that has never been saved there is nothing to ask with, so a choice renders as an
+    /// empty list: the operator saves the connection first and the list fills in. A plugin that
+    /// needs a value before it can answer declares the field with <c>AllowCustomValue</c>, which
+    /// renders as a suggestion box an operator can type into.</para>
+    /// </summary>
+    private void BuildVaultPluginFields(Dictionary<string, string>? current)
+    {
+        VaultPluginFields.Clear();
+
+        var declared = VaultPlugins.FirstOrDefault(p =>
+            string.Equals(p.PluginName, VaultDraft.PluginName, StringComparison.Ordinal))
+            ?.ConnectionEditorFields ?? [];
+
+        foreach (var field in PluginFieldState.Build(declared, current)) VaultPluginFields.Add(field);
+
+        HasVaultPluginFields = VaultPluginFields.Count > 0;
+
+        if (VaultDraft.Id > 0 && HasVaultPluginFields) _ = LoadVaultPluginOptionsAsync(VaultDraft.Id);
+    }
+
+    private async Task LoadVaultPluginOptionsAsync(int connectionId)
+    {
+        foreach (var field in VaultPluginFields.Where(f => f.IsClosedChoice || f.IsOpenChoice).ToArray())
+        {
+            try
+            {
+                field.Options = await Integrations.GetVaultFieldOptionsAsync(connectionId,
+                    new VaultFieldOptionsRequest
+                    {
+                        Screen = VaultScreen.VaultConnectionEditor,
+                        FieldKey = field.Key,
+                        Values = PluginFieldState.Values(VaultPluginFields)
+                    });
+            }
+            catch (Exception ex)
+            {
+                // Not a toast. A connection whose credential is wrong cannot list anything, and that
+                // is what the connection test is for — a popup per declared field while somebody is
+                // still filling the form in would be noise on top of a failure they already know.
+                Logger.Warning("Could not list the values of vault connection field {Field}: {Message}",
+                    field.Key, ex.Message);
+
+                field.Options = [];
+            }
+        }
     }
 
     private void LoadVaultEditor(SecretVaultConnectionView? connection)
@@ -2288,7 +2366,8 @@ public class IntegrationsViewModel : ViewModelBase
             AppId = connection.AppId ?? "",
             IgnoreSslErrors = connection.IgnoreSslErrors,
             Enabled = connection.Enabled,
-            CacheTtlMinutes = connection.CacheTtlMinutes
+            CacheTtlMinutes = connection.CacheTtlMinutes,
+            Options = new Dictionary<string, string>(connection.Options, StringComparer.Ordinal)
         };
 
         VaultApiKey = "";
@@ -2299,6 +2378,8 @@ public class IntegrationsViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(StrVaultMachineIdHint));
         this.RaisePropertyChanged(nameof(VaultRequiresAppId));
         this.RaisePropertyChanged(nameof(StrVaultAppIdHint));
+
+        BuildVaultPluginFields(VaultDraft.Options);
 
         _ = LoadVaultUsageAsync(connection.Id);
     }
@@ -2321,6 +2402,17 @@ public class IntegrationsViewModel : ViewModelBase
     {
         try
         {
+            // Checked before the call, so a missing namespace is an error beside the control rather
+            // than a 400 with the plugin's label in it. The server runs the same rules, because the
+            // form is not the only caller of the API.
+            if (VaultPluginFields.Count(field => !field.Validate(key => Localizer[key])) > 0)
+            {
+                Toasts.Error(VaultPluginFields.First(f => f.HasError).Error!);
+                return;
+            }
+
+            VaultDraft.Options = PluginFieldState.Values(VaultPluginFields);
+
             var apiKey = string.IsNullOrWhiteSpace(VaultApiKey) ? null : VaultApiKey.Trim();
 
             var saved = VaultDraft.Id == 0

@@ -3,7 +3,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using ClientServices.Interfaces;
+using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Secrets;
@@ -36,6 +38,7 @@ public class SecretVaultPickerViewModel
     public new string StrCancel { get; } = Localizer["Cancel"];
     public string StrNoVaultsMsg { get; } = Localizer["NoSecretVaultsConfiguredMSG"];
     public string StrFieldHint { get; } = Localizer["VaultSecretFieldHintMSG"];
+    public string StrPluginOptionsFailed { get; } = Localizer["VaultPluginOptionsFailedMSG"];
 
     #endregion
 
@@ -74,6 +77,37 @@ public class SecretVaultPickerViewModel
     /// </summary>
     public ObservableCollection<string> Fields { get; } = [];
 
+    /// <summary>
+    /// The controls the connection's plugin contributed to this dialog, in the order it declared
+    /// them. Empty for a plugin that declares none, which renders the picker exactly as it was
+    /// before plugins could contribute anything.
+    ///
+    /// This is what replaced a plugin encoding its own concepts inside the secret id: an
+    /// environment is now a combo the plugin declared and the host drew, and its value travels in
+    /// the reference's own options rather than inside a string the host treats as opaque.
+    /// </summary>
+    public ObservableCollection<PluginFieldState> PluginFields { get; } = [];
+
+    private bool _hasPluginFields;
+
+    public bool HasPluginFields
+    {
+        get => _hasPluginFields;
+        private set => this.RaiseAndSetIfChanged(ref _hasPluginFields, value);
+    }
+
+    /// <summary>
+    /// The installed vault plugins, by plugin name. Fetched once when the dialog opens: the
+    /// declaration is per plugin, and a connection change is a lookup rather than a round trip.
+    /// </summary>
+    private Dictionary<string, SecretVaultPluginInfo> _plugins = new(StringComparer.Ordinal);
+
+    /// <summary>The values a previously stored reference carried, to pre-fill the declared controls.</summary>
+    private IReadOnlyDictionary<string, string> _initialOptions = new Dictionary<string, string>();
+
+    /// <summary>The reference the field was bound to when the dialog opened, or null.</summary>
+    private string? _currentReference;
+
     private SecretVaultConnectionView? _selectedConnection;
     public SecretVaultConnectionView? SelectedConnection
     {
@@ -81,7 +115,12 @@ public class SecretVaultPickerViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedConnection, value);
-            if (value != null) _ = LoadSecretsAsync(value.Id);
+
+            if (value != null)
+            {
+                BuildPluginFields(value);
+                _ = LoadSecretsAsync(value.Id);
+            }
         }
     }
 
@@ -94,6 +133,11 @@ public class SecretVaultPickerViewModel
             this.RaiseAndSetIfChanged(ref _selectedSecret, value);
             LoadFields(value);
             this.RaisePropertyChanged(nameof(SelectEnabled));
+
+            // A field whose options depend on the selection has to ask again: the environments a
+            // secret can be read in are the ones its mount declares, not the union of every mount
+            // the credential can see.
+            _ = LoadPluginOptionsAsync(dependentOnSecretOnly: true);
         }
     }
 
@@ -174,6 +218,15 @@ public class SecretVaultPickerViewModel
     {
         TargetFieldCaption = parameter.FieldName ?? string.Empty;
 
+        // Kept so the declared controls open on what the field is already bound to, the same way
+        // the connection combo does. Re-picking a field should start where the operator left it.
+        _currentReference = parameter.CurrentReference;
+
+        if (SecretReference.TryParse(parameter.CurrentReference, out var current))
+            _initialOptions = current.Options;
+
+        await LoadPluginsAsync();
+
         await LoadConnectionsAsync(parameter.CurrentReference);
     }
 
@@ -215,6 +268,103 @@ public class SecretVaultPickerViewModel
         finally
         {
             Busy = false;
+        }
+    }
+
+    private async Task LoadPluginsAsync()
+    {
+        try
+        {
+            var plugins = await _integrations.GetSecretVaultPluginsAsync();
+
+            _plugins = plugins
+                .GroupBy(p => p.PluginName, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+        }
+        catch (Exception ex)
+        {
+            // Not fatal. The picker's own controls are the host's; the plugin's are an addition, and
+            // a dialog that cannot list plugins is still a dialog that can pick a secret.
+            Logger.Error("Could not load the vault plugin declarations: {Message}", ex.Message);
+            _plugins = new Dictionary<string, SecretVaultPluginInfo>(StringComparer.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the declared controls for a connection, pre-filled from the reference the field is
+    /// already bound to, and fetches the options that do not depend on the selected secret.
+    /// </summary>
+    private void BuildPluginFields(SecretVaultConnectionView connection)
+    {
+        PluginFields.Clear();
+
+        var declared = _plugins.TryGetValue(connection.PluginName, out var plugin)
+            ? plugin.SecretSelectorFields
+            : [];
+
+        // The stored values belong to the connection they were picked against. Carrying them onto a
+        // different vault would pre-fill an environment that vault has never heard of.
+        var current = SelectedConnectionMatchesStoredReference(connection)
+            ? _initialOptions
+            : null;
+
+        foreach (var field in PluginFieldState.Build(declared, current)) PluginFields.Add(field);
+
+        HasPluginFields = PluginFields.Count > 0;
+
+        _ = LoadPluginOptionsAsync(dependentOnSecretOnly: false);
+    }
+
+    private bool SelectedConnectionMatchesStoredReference(SecretVaultConnectionView connection) =>
+        _initialOptions.Count > 0
+        && SecretReference.TryParse(_currentReference, out var stored)
+        && stored.ConnectionId == connection.Id;
+
+    /// <summary>
+    /// Fetches the options for the declared choice fields.
+    ///
+    /// <paramref name="dependentOnSecretOnly"/> narrows it to the fields that said their list
+    /// depends on the selection, which is the set worth re-asking for on every click in the grid.
+    /// The rest are asked once per connection.
+    /// </summary>
+    private async Task LoadPluginOptionsAsync(bool dependentOnSecretOnly)
+    {
+        var connection = SelectedConnection;
+        if (connection == null) return;
+
+        var fields = PluginFields
+            .Where(f => f.IsClosedChoice || f.IsOpenChoice)
+            .Where(f => !dependentOnSecretOnly || f.OptionsDependOnSecret)
+            .ToArray();
+
+        if (fields.Length == 0) return;
+
+        foreach (var field in fields)
+        {
+            try
+            {
+                var options = await _integrations.GetVaultFieldOptionsAsync(connection.Id,
+                    new VaultFieldOptionsRequest
+                    {
+                        Screen = VaultScreen.VaultSecretSelector,
+                        FieldKey = field.Key,
+                        SecretId = SelectedSecret?.Id,
+                        Values = PluginFieldState.Values(PluginFields)
+                    });
+
+                field.Options = options;
+            }
+            catch (Exception ex)
+            {
+                // An empty list, and the reason in the status line. The operator can still pick the
+                // secret; what they cannot do is choose a value the vault would not name, and the
+                // plugin refuses that on the read path with a message that says which vault.
+                Logger.Error("Could not list the values of vault field {Field}: {Message}",
+                    field.Key, ex.Message);
+
+                field.Options = [];
+                Status = StrPluginOptionsFailed;
+            }
         }
     }
 
@@ -285,16 +435,35 @@ public class SecretVaultPickerViewModel
     {
         if (SelectedConnection == null || SelectedSecret == null) return;
 
+        // Checked here, and again on the server when the value is used, because the dialog is not
+        // the only way a credential column gets written. What this catches is the case the whole
+        // feature exists for: a vault that refuses every read which does not name an environment,
+        // told to the operator while they are choosing rather than at 3am by a sync job.
+        var invalid = PluginFields.Count(field => !field.Validate(key => Localizer[key]));
+
+        if (invalid > 0)
+        {
+            Status = PluginFields.FirstOrDefault(f => f.HasError)?.Error ?? string.Empty;
+            return;
+        }
+
         var field = string.IsNullOrWhiteSpace(FieldName) ? null : FieldName.Trim();
 
-        var reference = SecretReference.Create(SelectedConnection.Id, SelectedSecret.Id, field);
+        var options = PluginFieldState.Values(PluginFields);
+
+        var reference = SecretReference.Create(SelectedConnection.Id, SelectedSecret.Id, field, options);
+
+        var declared = options.Count == 0
+            ? string.Empty
+            : " (" + string.Join(", ", options.OrderBy(o => o.Key, StringComparer.Ordinal)
+                .Select(o => o.Key + "=" + o.Value)) + ")";
 
         Close(new SecretVaultPickerResult
         {
             Action = ResultActions.Ok,
             Reference = reference.ToString(),
             DisplayName = SelectedConnection.Name + ": " + SelectedSecret.DisplayName
-                          + (field == null ? string.Empty : " / " + field)
+                          + (field == null ? string.Empty : " / " + field) + declared
         });
     }
 

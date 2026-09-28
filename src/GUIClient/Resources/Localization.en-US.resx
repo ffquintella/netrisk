@@ -3180,4 +3180,31 @@
   <data name="FormSectionTemplates" xml:space="preserve">
     <value>Templates</value>
   </data>
+  <data name="VaultPluginFieldRequiredMSG" xml:space="preserve">
+    <value>'{0}' is required by this vault.</value>
+  </data>
+  <data name="VaultPluginFieldTooLongMSG" xml:space="preserve">
+    <value>'{0}' may be at most {1} characters.</value>
+  </data>
+  <data name="VaultPluginFieldNotBooleanMSG" xml:space="preserve">
+    <value>'{0}' must be true or false.</value>
+  </data>
+  <data name="VaultPluginFieldNotNumberMSG" xml:space="preserve">
+    <value>'{0}' must be a whole number.</value>
+  </data>
+  <data name="VaultPluginFieldNoSpacesMSG" xml:space="preserve">
+    <value>'{0}' may not contain spaces.</value>
+  </data>
+  <data name="VaultPluginFieldIdentifierMSG" xml:space="preserve">
+    <value>'{0}' may contain only letters, digits, '-', '_' and '.'.</value>
+  </data>
+  <data name="VaultPluginFieldNotOfferedMSG" xml:space="preserve">
+    <value>'{0}' is not one of the values this vault offers.</value>
+  </data>
+  <data name="VaultPluginSettings" xml:space="preserve">
+    <value>Vault-specific settings</value>
+  </data>
+  <data name="VaultPluginOptionsFailedMSG" xml:space="preserve">
+    <value>The vault could not list the values for this field.</value>
+  </data>
 </root>

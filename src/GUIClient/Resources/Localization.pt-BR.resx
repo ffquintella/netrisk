@@ -3246,4 +3246,31 @@
   <data name="FormSectionTemplates" xml:space="preserve">
     <value>Modelos</value>
   </data>
+  <data name="VaultPluginFieldRequiredMSG" xml:space="preserve">
+    <value>'{0}' é exigido por este cofre.</value>
+  </data>
+  <data name="VaultPluginFieldTooLongMSG" xml:space="preserve">
+    <value>'{0}' pode ter no máximo {1} caracteres.</value>
+  </data>
+  <data name="VaultPluginFieldNotBooleanMSG" xml:space="preserve">
+    <value>'{0}' deve ser verdadeiro ou falso.</value>
+  </data>
+  <data name="VaultPluginFieldNotNumberMSG" xml:space="preserve">
+    <value>'{0}' deve ser um número inteiro.</value>
+  </data>
+  <data name="VaultPluginFieldNoSpacesMSG" xml:space="preserve">
+    <value>'{0}' não pode conter espaços.</value>
+  </data>
+  <data name="VaultPluginFieldIdentifierMSG" xml:space="preserve">
+    <value>'{0}' pode conter apenas letras, dígitos, '-', '_' e '.'.</value>
+  </data>
+  <data name="VaultPluginFieldNotOfferedMSG" xml:space="preserve">
+    <value>'{0}' não é um dos valores oferecidos por este cofre.</value>
+  </data>
+  <data name="VaultPluginSettings" xml:space="preserve">
+    <value>Configurações específicas do cofre</value>
+  </data>
+  <data name="VaultPluginOptionsFailedMSG" xml:space="preserve">
+    <value>O cofre não conseguiu listar os valores para este campo.</value>
+  </data>
 </root>

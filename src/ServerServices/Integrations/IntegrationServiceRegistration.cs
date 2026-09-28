@@ -77,6 +77,7 @@ public static class IntegrationServiceRegistration
         services.TryAddSingleton<IDnsSrvLookup, DnsClientSrvLookup>();
         services.TryAddSingleton<IVaultEndpointResolver, VaultEndpointResolver>();
         services.AddTransient<ISecretVaultService, SecretVaultService>();
+        services.AddTransient<ISecretReferenceNormalizer, SecretReferenceNormalizer>();
         services.AddTransient<ISecretResolver, SecretResolver>();
 
         // Sync run tracking: the progress trail and the start/finish notifications, shared by every

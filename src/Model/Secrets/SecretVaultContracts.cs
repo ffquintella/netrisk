@@ -64,6 +64,13 @@ public class SecretVaultConnectionView
 
     /// <summary>Whether the plugin requires <see cref="AppId"/>. Drives the required marker in the UI.</summary>
     public bool RequiresAppId { get; set; }
+
+    /// <summary>
+    /// The values of the controls the plugin contributed to the connection editor, keyed by field
+    /// key. Returned in the clear for the same reason as <see cref="MachineId"/>: a declared
+    /// connection field names a location or an identity, and may not carry a credential.
+    /// </summary>
+    public Dictionary<string, string> Options { get; set; } = new();
 }
 
 /// <summary>
@@ -110,6 +117,15 @@ public class SecretVaultConnectionInput
     /// value out of range is corrected rather than refused.
     /// </summary>
     public int CacheTtlMinutes { get; set; } = SecretVaultDefaults.CacheTtlMinutes;
+
+    /// <summary>
+    /// Values for the controls the plugin declared for this screen, keyed by field key. Empty for a
+    /// plugin that declares none, which is every plugin built against an earlier SDK.
+    ///
+    /// One dictionary and not a column per field: the acceptance criterion for the whole feature is
+    /// that a plugin can add a control without the host's schema changing.
+    /// </summary>
+    public Dictionary<string, string> Options { get; set; } = new();
 }
 
 /// <summary>One secret an operator can pick, as the API returns it. Metadata only — no value.</summary>
@@ -174,6 +190,12 @@ public class SecretReferenceView
 
     public string? Field { get; set; }
 
+    /// <summary>
+    /// The plugin-declared values the reference carries, keyed by field key. Empty for a v1
+    /// reference, which is every reference stored before a plugin declared anything.
+    /// </summary>
+    public Dictionary<string, string> Options { get; set; } = new();
+
     /// <summary>Human-readable label, or an explanation when the reference no longer resolves.</summary>
     public string DisplayName { get; set; } = string.Empty;
 
@@ -199,6 +221,32 @@ public static class SecretVaultDefaults
     /// of the credential — which is the thing this feature exists to remove.
     /// </summary>
     public const int MaxCacheTtlMinutes = 60;
+
+    /// <summary>
+    /// How many controls one plugin may contribute to one screen.
+    ///
+    /// Eight, because the screens this extends are a dialog and a form column, and a plugin that
+    /// needs more than eight extra fields is asking for a screen of its own rather than for
+    /// controls on one of the host's. A declaration that exceeds it is dropped whole and the screen
+    /// renders as it did before — a missing control is recoverable, a screen the host cannot draw
+    /// is not.
+    /// </summary>
+    public const int MaxPluginFieldsPerScreen = 8;
+
+    /// <summary>Upper bound on a declared field's value, whatever the plugin asked for.</summary>
+    public const int MaxFieldValueLength = 256;
+
+    /// <summary>Upper bound on a declared label, beyond which it is truncated rather than rejected.</summary>
+    public const int MaxFieldLabelLength = 120;
+
+    /// <summary>Upper bound on a declared help sentence.</summary>
+    public const int MaxFieldHelpLength = 300;
+
+    /// <summary>
+    /// How many options one fetch may return. A combo is a thing an operator reads; past this it is
+    /// a list they filter, and the plugin should be narrowing it by the selected secret instead.
+    /// </summary>
+    public const int MaxFieldOptions = 200;
 
     /// <summary>The <c>Plugins</c> subdirectory secret-vault plugins are installed into.</summary>
     public const string PluginDirectory = "Secrets";
@@ -276,6 +324,114 @@ public class SecretVaultPluginInfo
 
     /// <summary>Whether this vault authorizes by application identity and so needs an app id.</summary>
     public bool RequiresAppId { get; set; }
+
+    /// <summary>
+    /// The controls this plugin contributes to the secret picker, already checked against the host's
+    /// bounds. Empty for a plugin that declares none — which renders the picker exactly as it was
+    /// before this contract existed.
+    /// </summary>
+    public List<VaultFieldSpecView> SecretSelectorFields { get; set; } = new();
+
+    /// <summary>The controls this plugin contributes to the connection editor. Same rules.</summary>
+    public List<VaultFieldSpecView> ConnectionEditorFields { get; set; } = new();
+}
+
+/// <summary>
+/// The control a declared field is rendered as.
+///
+/// A mirror of <c>Contracts.Ui.PluginFieldKind</c> rather than a reuse of it. <c>Model</c> is the
+/// wire contract between the server and its clients; <c>Contracts</c> is the ABI third-party plugin
+/// assemblies are compiled against. Referencing one from the other would put the plugin SDK — and
+/// its dependencies — inside every client that only wanted to draw a combo box. The projection in
+/// <c>SecretVaultService</c> maps the two explicitly, so a member added on one side and not the
+/// other fails to compile there rather than silently renumbering.
+/// </summary>
+public enum VaultFieldKind
+{
+    Text = 0,
+    Choice = 1,
+    Toggle = 2,
+    Number = 3
+}
+
+/// <summary>How far the client checks a <see cref="VaultFieldKind.Text"/> value. Mirrors <c>Contracts.Ui.PluginFieldFormat</c>.</summary>
+public enum VaultFieldFormat
+{
+    Any = 0,
+    NoWhitespace = 1,
+    Identifier = 2
+}
+
+/// <summary>
+/// One control a plugin contributes to a host screen, as the API returns it.
+///
+/// Everything here has already passed the host's bounds check in <c>PluginFieldSpecProjection</c>:
+/// the key matches the allowed shape, the label and help are truncated, and the length bound is
+/// clamped. A client renders this without re-deciding whether it is safe to render.
+/// </summary>
+public class VaultFieldSpecView
+{
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>Already resolved to the caller's culture by the server. Plain text, from the plugin.</summary>
+    public string Label { get; set; } = string.Empty;
+
+    public string? Help { get; set; }
+
+    public VaultFieldKind Kind { get; set; } = VaultFieldKind.Text;
+
+    public bool Required { get; set; }
+
+    public string? DefaultValue { get; set; }
+
+    public VaultFieldFormat Format { get; set; } = VaultFieldFormat.Any;
+
+    public int MaxLength { get; set; } = SecretVaultDefaults.MaxFieldValueLength;
+
+    /// <summary>For a choice: whether a value the plugin did not offer is accepted.</summary>
+    public bool AllowCustomValue { get; set; }
+
+    /// <summary>For a choice: whether the options must be re-fetched when the selected secret changes.</summary>
+    public bool OptionsDependOnSecret { get; set; }
+}
+
+/// <summary>One option of a declared choice field. Metadata only — never a secret, by contract.</summary>
+public class VaultFieldOptionView
+{
+    public string Value { get; set; } = string.Empty;
+
+    public string Label { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+}
+
+/// <summary>
+/// The body of a field-options request.
+///
+/// A POST body and not a query string because the selected secret id is in it, and a secret id has
+/// no business in an access log — the same judgement as
+/// <see cref="SecretReferenceDescribeRequest"/>.
+/// </summary>
+public class VaultFieldOptionsRequest
+{
+    /// <summary>Which screen is asking. Mirrors <c>Contracts.Ui.PluginScreen</c>.</summary>
+    public VaultScreen Screen { get; set; } = VaultScreen.VaultSecretSelector;
+
+    /// <summary>The field whose options are wanted.</summary>
+    public string FieldKey { get; set; } = string.Empty;
+
+    /// <summary>The selected secret, when the screen has one and one is selected.</summary>
+    public string? SecretId { get; set; }
+
+    /// <summary>The plugin's other fields as filled so far, so one choice can narrow another.</summary>
+    public Dictionary<string, string> Values { get; set; } = new();
+}
+
+/// <summary>The host screens a plugin may contribute to. Mirrors <c>Contracts.Ui.PluginScreen</c>.</summary>
+public enum VaultScreen
+{
+    VaultSecretSelector = 0,
+    VaultConnectionEditor = 1
 }
 
 /// <summary>

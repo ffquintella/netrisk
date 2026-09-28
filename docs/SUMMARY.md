@@ -68,3 +68,7 @@
 * [🖱️ UX Interaction & Workflow Standard](ux-interaction-standard.md)
 * [🖥️ Native GUI Best Practices](native-gui-best-practices.md)
 * [🔮 NetRisk Visual Theme Standard](netrisk-visual-theme-standard.md)
+
+## Decisions
+
+* [ADR 0001 — Plugin-contributed screens](adr/0001-plugin-contributed-screens.md)

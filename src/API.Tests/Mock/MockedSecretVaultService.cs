@@ -117,6 +117,25 @@ public static class MockedSecretVaultService
             });
         });
 
+        service.ListFieldOptionsAsync(Arg.Any<int>(), Arg.Any<VaultFieldOptionsRequest>())
+            .Returns(call =>
+            {
+                var id = call.ArgAt<int>(0);
+                if (id != KnownConnectionId) throw NotFound(id);
+
+                var request = call.ArgAt<VaultFieldOptionsRequest>(1);
+
+                if (request.FieldKey != "environment")
+                    throw new Model.Exceptions.InvalidParameterException(nameof(request.FieldKey),
+                        "The plugin declares no choice field by that name on that screen.");
+
+                return Task.FromResult(new List<VaultFieldOptionView>
+                {
+                    new() { Value = "hml", Label = "Homologation" },
+                    new() { Value = "prd", Label = "Production" }
+                });
+            });
+
         service.DescribeAsync(Arg.Any<string?>()).Returns(call =>
         {
             var value = call.ArgAt<string?>(0);

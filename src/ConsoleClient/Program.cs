@@ -164,6 +164,7 @@ public class Program
                     config.AddCommand<KeysCommand>("keys");
                     config.AddCommand<WebsiteCommand>("website");
                     config.AddCommand<CiCommand>("ci");
+                    config.AddCommand<VaultCommand>("vault");
                 });
 
                 services.AddSingleton(app);

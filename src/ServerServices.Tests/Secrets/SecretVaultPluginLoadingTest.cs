@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Contracts.Secrets;
+using Contracts.Ui;
 using JetBrains.Annotations;
 using Model.Secrets;
 using ServerServices.Interfaces;
@@ -136,6 +138,49 @@ public class SecretVaultPluginLoadingTest : InMemoryServiceTestBase, IDisposable
         Assert.Empty(await _plugins.GetEnabledPluginsAsync<INetriskSecretVaultPlugin>());
     }
 
+    /// <summary>
+    /// The back-compatibility promise, tested against a real assembly across the load-context
+    /// boundary rather than against a substitute.
+    ///
+    /// <para>This fixture implements exactly the members the contract had before screens could be
+    /// contributed — it is, in every way that matters, a plugin built against the earlier SDK. It
+    /// still loads, it is still recognised, and the three newer members answer from their default
+    /// implementations: no controls, no options, and a reference returned exactly as it was
+    /// stored.</para>
+    ///
+    /// <para>Default interface members are what makes that work, and the thing they do <i>not</i>
+    /// survive is being resolved through a second copy of <c>Contracts.dll</c> — which is the
+    /// failure the rest of this file exists for, and why this assertion belongs here rather than
+    /// beside the substituted tests.</para>
+    /// </summary>
+    [Fact]
+    public async Task APluginThatDeclaresNoScreensGetsTheContractsDefaults()
+    {
+        await _plugins.LoadPluginsAsync();
+
+        var plugin = await _plugins.GetPluginByNameAsync<INetriskSecretVaultPlugin>(PluginName);
+
+        Assert.NotNull(plugin);
+        Assert.Empty(plugin.DescribeScreen(PluginScreen.VaultSecretSelector));
+        Assert.Empty(plugin.DescribeScreen(PluginScreen.VaultConnectionEditor));
+
+        Assert.Empty(await plugin.GetFieldOptionsAsync(
+            new SecretVaultContext
+            {
+                Credentials = new SecretVaultCredentials { BaseUrl = "https://v", ApiKey = "k" },
+                Http = new FailingPluginHttpClient()
+            },
+            new PluginFieldQuery
+            {
+                Screen = PluginScreen.VaultSecretSelector,
+                FieldKey = "environment"
+            }));
+
+        var reference = new VaultSecretReference { SecretId = "fixture/secret", Field = "value" };
+
+        Assert.Same(reference, plugin.NormalizeReference(reference));
+    }
+
     [Fact]
     public async Task AskingForADifferentPluginNameDoesNotReturnThisOne()
     {
@@ -168,4 +213,15 @@ public class PluginDirectoryCollection
 
         if (Directory.Exists(path)) Directory.Delete(path, recursive: true);
     }
+}
+
+/// <summary>
+/// An HTTP seam that refuses everything, so a default <c>GetFieldOptionsAsync</c> that quietly made
+/// a call would fail the test rather than pass it.
+/// </summary>
+internal sealed class FailingPluginHttpClient : IPluginHttpClient
+{
+    public Task<PluginHttpResponse> SendAsync(PluginHttpRequest request,
+        CancellationToken ct = default) =>
+        throw new InvalidOperationException("A plugin that declares nothing must make no call.");
 }

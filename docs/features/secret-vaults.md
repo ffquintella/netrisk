@@ -221,9 +221,17 @@ lives in the credential column itself, marked:
 
 ```
 vault:v1:{connectionId}:{base64url(secretId)}[:{base64url(field)}]
+vault:v2:{connectionId}:{base64url(secretId)}:{base64url(field)}:{base64url(options)}
 ```
 
 ([`SecretReference`](../../src/Model/Secrets/SecretReference.cs))
+
+**v2 carries the values of the controls a plugin contributed to the picker** (see
+[ADR 0001](../adr/0001-plugin-contributed-screens.md)) and is written *only* when there are any, so
+every reference stored before that feature existed is still byte-identical and a field nobody
+re-picks never changes. A v1 parser meeting a v2 string rejects it outright rather than mis-reading
+it — which is why v2 is a new tag and not a fourth segment on v1, where the extra part would have
+landed inside the decoded field and produced a silently wrong credential.
 
 The trade this makes:
 
@@ -241,7 +249,9 @@ The trade this makes:
 
 The credential-bearing columns are enumerated in one place —
 `SecretVaultService.CountReferencesAsync` — and **that is the list to extend** when a new column
-gains vault support.
+gains vault support. It scans *both* prefixes (`SecretReference.ConnectionPrefixes`): missing v2
+would make deleting a connection that a v2 reference still points at allowed.
+`SecretReferenceNormalizer` walks the same list, so a column added to one belongs in the other.
 
 ---
 
@@ -358,6 +368,54 @@ scaffolding) off disk specifically to prove this has not regressed.
 The assembly name must end in `Plugin.dll` (that is what discovery matches) and the file goes in a
 subdirectory of the host's `Plugins` folder — `Plugins/Secrets/` by convention for this capability.
 
+### Contributing controls to a screen
+
+Two of NetRisk's screens are a plugin's in all but name: the secret picker and the vault connection
+editor both exist to configure one particular vault. When a vault has a concept the fixed contract
+does not name, the plugin **declares** a control and the host **renders** it — see
+[ADR 0001](../adr/0001-plugin-contributed-screens.md) for the reasoning and the alternatives.
+
+| Member | Purpose |
+|---|---|
+| `DescribeScreen(PluginScreen)` | The controls this plugin adds to that screen. Pure: no I/O, no credential — it is called to build a form, possibly before a connection exists. |
+| `GetFieldOptionsAsync(context, query, ct)` | The values of one choice control, with the connection's context. |
+| `NormalizeReference(reference)` | A stored reference in a form the plugin no longer writes, rewritten into the one it does. Pure and offline. |
+
+All three are **default interface members**, so a plugin built against an earlier SDK keeps loading
+and its screens render exactly as before. The operator's answers arrive in
+`VaultSecretReference.Options` (picker) and `SecretVaultCredentials.Options` (connection editor).
+
+Three more rules on top of the three above:
+
+4. **Declarative, never executable.** `Contracts.Ui` is data classes — four control kinds, a label,
+   help, a length bound and a three-value text format. There is no way to ship markup, a view type
+   or a callback from a plugin assembly, and there will not be: a plugin already runs with the
+   API's full authority, and a screen from it must not become a place where its code runs.
+5. **Never put an option list in the declaration.** It depends on the credential — an
+   environment-scoped role may read the environments its scope names and no others — so it comes
+   from `GetFieldOptionsAsync`.
+6. **An option is metadata.** The no-values rule that governs `ListSecretsAsync` governs option
+   lists too: never a secret, and never read a secret to build one.
+
+The host bounds everything it renders — key shape, label and help length, at most
+`SecretVaultDefaults.MaxPluginFieldsPerScreen` fields and `MaxFieldOptions` options
+([`PluginFieldSpecProjection`](../../src/ServerServices/Secrets/PluginFieldSpecProjection.cs)). A
+declaration that breaks a structural rule is dropped **whole**, with a warning in the log, and the
+screen renders as it did before the plugin declared anything; one that is merely immoderate is
+truncated and clamped. A plugin that throws from `DescribeScreen` contributes nothing and takes
+nobody else's screen down with it.
+
+Connection-editor values are stored as JSON in `secret_vault_connections.extra_settings` — one
+column and not one per field, so a plugin adding a control is not a schema migration. They are
+stored and returned **in the clear**, like `machine_id` and `app_id`, and may not carry a
+credential.
+
+**Retiring an encoding you already shipped.** If an earlier version of the plugin wrote something of
+its own inside the secret id, keep accepting it on the read path and implement `NormalizeReference`.
+The host calls it when displaying a reference, and
+`netrisk-console vault normalize-references [--apply]` persists the rewrite — reporting every change
+before writing any. The host never learns what the old encoding meant, which is the point.
+
 ### The BastionVault wire protocol
 
 > **The protocol is no longer NetRisk's.** The plugin speaks BastionVault through the vendor's own
@@ -456,7 +514,8 @@ mounted and is not treated as a refusal.
 | Cluster discovery | [`VaultAddress.cs`](../../src/ServerServices/Secrets/VaultAddress.cs), [`VaultEndpointResolver.cs`](../../src/ServerServices/Secrets/VaultEndpointResolver.cs), [`DnsClientSrvLookup.cs`](../../src/ServerServices/Secrets/DnsClientSrvLookup.cs) |
 | API | [`SecretVaultsController.cs`](../../src/API/Controllers/SecretVaultsController.cs) |
 | Client | `IIntegrationsService` / `IntegrationsRestService` (the `…SecretVault…` members) |
-| Desktop | [`VaultSecretFieldState.cs`](../../src/GUIClient/Tools/VaultSecretFieldState.cs), [`SecretVaultPickerViewModel.cs`](../../src/GUIClient/ViewModels/Dialogs/SecretVaultPickerViewModel.cs), `SecretVaultPickerDialog.axaml`, the Secret Vaults tab of `IntegrationsView.axaml` |
+| Desktop | [`VaultSecretFieldState.cs`](../../src/GUIClient/Tools/VaultSecretFieldState.cs), [`PluginFieldState.cs`](../../src/GUIClient/Tools/PluginFieldState.cs), [`SecretVaultPickerViewModel.cs`](../../src/GUIClient/ViewModels/Dialogs/SecretVaultPickerViewModel.cs), `SecretVaultPickerDialog.axaml`, `Views/Controls/PluginFieldsView.axaml`, the Secret Vaults tab of `IntegrationsView.axaml` |
+| Contributed controls | [ADR 0001](../adr/0001-plugin-contributed-screens.md), [`PluginScreenTypes.cs`](../../libs/netrisk-plugin-sdk/Contracts/Ui/PluginScreenTypes.cs), [`PluginFieldSpecProjection.cs`](../../src/ServerServices/Secrets/PluginFieldSpecProjection.cs), [`SecretReferenceNormalizer.cs`](../../src/ServerServices/Secrets/SecretReferenceNormalizer.cs), [`VaultCommand.cs`](../../src/ConsoleClient/Commands/VaultCommand.cs) |
 | Test scaffolding | [`FixtureVaultPlugin`](../../src/Plugins/FixtureVaultPlugin) — a vault plugin with no vault, so the loader can be tested against a real assembly |
 
 ## API
@@ -474,6 +533,7 @@ All actions are `[PermissionAuthorize("configuration")]`.
 | DELETE | `/SecretVaults/{id}` | Delete — 400 while references exist |
 | POST | `/SecretVaults/{id}/test` | Test; a failure is a 200 carrying the reason |
 | GET | `/SecretVaults/{id}/secrets` | Secret metadata for the picker |
+| POST | `/SecretVaults/{id}/field-options` | The values of a control the plugin contributed (POST, so the selected secret id stays out of access logs) |
 | POST | `/SecretVaults/describe` | What a stored reference points at (POST, so a reference stays out of access logs) |
 | GET | `/SecretVaults/{id}/usage` | How many fields resolve through this connection |
 
@@ -488,12 +548,15 @@ All actions are `[PermissionAuthorize("configuration")]`.
 | | `Secrets/VaultAddressTest.cs` | The address grammar: node URL, cluster name, `srv+` form, and what is refused |
 | | `Secrets/VaultEndpointResolverTest.cs` | SRV ordering, skipping a sealed node, the all-unhealthy fallback, cache reuse and invalidation, the weighted draw |
 | | `Secrets/SecretVaultPluginLoadingTest.cs` | A **real** plugin assembly (`FixtureVaultPlugin`) loaded off disk across the load-context boundary |
+| | `Secrets/PluginFieldSpecProjectionTest.cs` | The bounds on a plugin's declaration, and the validation of the values it produces |
+| | `Secrets/SecretReferenceNormalizerTest.cs` | Rewriting a reference through its plugin: planned by default, written on request |
 | | `Secrets/SecretVaultRegistrationTest.cs` | The DI graph composes in every host |
 | | `Secrets/PluginCapabilityDiscoveryTest.cs` | A host with no plugins answers "no" rather than throwing |
 | | `Track4/SecretProtectorTest.cs` | A reference is stored in the clear and warns about nothing |
 | `API.Tests` | `APITests/SecretVaultsControllerTest.cs` | The HTTP contract, and that **no** action returns a value |
 | `ClientServices.Tests` | `Services/SecretVaultRestServiceTest.cs` | Every route and status branch; no way to read a value |
 | `GUIClient.Tests` | `Tools/VaultSecretFieldStateTest.cs` | The typed / picked / bound decision |
+| | `Tools/PluginFieldStateTest.cs` | The four control kinds and the validation an operator sees |
 | | `Views/IntegrationsVaultBindingTests.cs` | The XAML `CommandParameter` keys match the view-model's |
 
 ## Not covered

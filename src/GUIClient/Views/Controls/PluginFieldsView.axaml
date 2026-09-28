@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:tools="clr-namespace:GUIClient.Tools"
+             xmlns:secrets="clr-namespace:Model.Secrets;assembly=Model"
+             mc:Ignorable="d" d:DesignWidth="420"
+             x:Class="GUIClient.Views.Controls.PluginFieldsView"
+             x:Name="Root">
+
+    <!--
+        The controls a secret-vault plugin contributed to this screen, rendered by the host.
+
+        Everything here is bound: the label, the help and the option list all come from the plugin
+        over the API, already length-bounded and stripped of control characters by
+        PluginFieldSpecProjection on the server. Nothing executable crosses the boundary - a plugin
+        declares a field, it does not ship a view - which is the whole point, since a plugin is
+        third-party code running with the host's authority.
+
+        All four kinds are laid out and one is shown. A template selector would be tidier XAML and
+        one more class to keep in step with an enum that already exists on the wire; at most eight
+        fields per screen, the extra visual tree is not worth a type.
+    -->
+    <ItemsControl ItemsSource="{Binding #Root.Fields}">
+        <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="tools:PluginFieldState">
+                <StackPanel Orientation="Vertical" Margin="0 0 0 10">
+
+                    <TextBlock Text="{Binding Label}" Classes="fieldLabel"/>
+
+                    <TextBox Text="{Binding Value}"
+                             MaxLength="{Binding MaxLength}"
+                             IsVisible="{Binding IsText}"
+                             HorizontalAlignment="Stretch"/>
+
+                    <ComboBox ItemsSource="{Binding Options}"
+                              SelectedItem="{Binding SelectedOption}"
+                              IsVisible="{Binding IsClosedChoice}"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="secrets:VaultFieldOptionView">
+                                <TextBlock Text="{Binding Label}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- An open list is a suggestion box: the vault accepts values the plugin
+                         cannot enumerate, so the plugin is the only thing that can reject one and
+                         it does so on the read path. -->
+                    <AutoCompleteBox Text="{Binding Value}"
+                                     ItemsSource="{Binding OptionValues}"
+                                     FilterMode="ContainsOrdinal"
+                                     IsVisible="{Binding IsOpenChoice}"
+                                     HorizontalAlignment="Stretch"/>
+
+                    <CheckBox IsChecked="{Binding BoolValue}"
+                              IsVisible="{Binding IsToggle}"/>
+
+                    <NumericUpDown Value="{Binding NumberValue}"
+                                   Increment="1"
+                                   FormatString="0"
+                                   IsVisible="{Binding IsNumber}"
+                                   HorizontalAlignment="Stretch"/>
+
+                    <TextBlock Text="{Binding Help}" Classes="hint" IsVisible="{Binding HasHelp}"/>
+
+                    <TextBlock Text="{Binding Error}" Classes="errorText" IsVisible="{Binding HasError}"/>
+
+                </StackPanel>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+</UserControl>

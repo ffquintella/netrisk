@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 
 namespace Model.Secrets;
 
@@ -24,19 +25,41 @@ namespace Model.Secrets;
 /// (<c>SecretVaultService.DeleteConnectionAsync</c>) rather than by pretending the database can see
 /// it.
 ///
-/// Wire format, chosen to be unambiguous against a real credential and stable enough to be in the
-/// database for years:
+/// <para><b>Wire format.</b> Two versions, chosen to be unambiguous against a real credential and
+/// stable enough to be in the database for years:</para>
 ///
-/// <code>vault:v1:{connectionId}:{base64url(secretId)}[:{base64url(field)}]</code>
+/// <code>
+/// vault:v1:{connectionId}:{base64url(secretId)}[:{base64url(field)}]
+/// vault:v2:{connectionId}:{base64url(secretId)}:{base64url(field)}:{base64url(options)}
+/// </code>
 ///
 /// The identifiers are base64url-encoded rather than written literally because a vault's secret id
 /// is arbitrary text — Bastionvault allows <c>/</c> and <c>:</c> in a path — and a delimiter that can
 /// appear inside a field is a parser that breaks on somebody's real data.
+///
+/// <para><b>v2 exists for <see cref="Options"/>, and is written only when there are any.</b>
+/// <see cref="ToString"/> emits v1 whenever the options are empty, so every reference in every
+/// installed database stays byte-identical and a field nobody re-picks never changes. A v1 parser
+/// meeting a v2 string rejects it outright rather than mis-reading it — which is why v2 is a new
+/// tag and not a fourth segment appended to v1, where the extra part would have landed inside the
+/// decoded field and produced a silently wrong credential.</para>
 /// </summary>
 public sealed class SecretReference
 {
-    /// <summary>The marker. Nothing else in a credential column may start with this.</summary>
+    /// <summary>The original marker: a reference with no plugin-declared values. Still the common case.</summary>
     public const string Prefix = "vault:v1:";
+
+    /// <summary>The marker for a reference that carries <see cref="Options"/>.</summary>
+    public const string PrefixV2 = "vault:v2:";
+
+    /// <summary>
+    /// What an <see cref="Options"/> key may look like: lower-case, starting with a letter or digit,
+    /// at most 32 characters. Mirrors the bound the host puts on
+    /// <c>Contracts.Ui.PluginFieldSpec.Key</c> — a key is part of a stored reference, so it is a
+    /// column name in all but name.
+    /// </summary>
+    public static readonly Regex OptionKeyPattern =
+        new("^[a-z0-9][a-z0-9_.-]{0,31}$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     /// <summary>The <c>secret_vault_connections</c> row that resolves this reference.</summary>
     public required int ConnectionId { get; init; }
@@ -48,14 +71,56 @@ public sealed class SecretReference
     public string? Field { get; init; }
 
     /// <summary>
-    /// A short, non-secret label for logs and for the UI — the reference without the connection id,
-    /// which is the part a person recognises.
+    /// The values of the controls the plugin contributed to the picker, keyed by the plugin's field
+    /// key — BastionVault's <c>environment</c> being the first of them.
+    ///
+    /// <para>This is the property that keeps <see cref="SecretId"/> opaque. Before it existed, a
+    /// plugin with a concept the contract had not foreseen could only encode it inside the id, and
+    /// the id is a string the host stores, prefix-scans and displays without knowing it had acquired
+    /// a grammar. The host does not interpret what is in here either — but it does carry it in a
+    /// place of its own, where a second plugin's keys cannot collide with a first plugin's
+    /// punctuation.</para>
+    ///
+    /// <para>Empty for every reference stored before a plugin declared a field, which is nearly all
+    /// of them.</para>
     /// </summary>
-    public string DisplayKey => Field is null ? SecretId : SecretId + " / " + Field;
+    public IReadOnlyDictionary<string, string> Options { get; init; } =
+        new Dictionary<string, string>();
+
+    /// <summary>
+    /// A short, non-secret label for logs and for the UI — the reference without the connection id,
+    /// which is the part a person recognises. Plugin values are appended, because "which environment
+    /// did that read" is otherwise invisible in a log line.
+    /// </summary>
+    public string DisplayKey
+    {
+        get
+        {
+            var key = Field is null ? SecretId : SecretId + " / " + Field;
+
+            return Options.Count == 0
+                ? key
+                : key + " (" + string.Join(", ", Options.OrderBy(o => o.Key, StringComparer.Ordinal)
+                    .Select(o => o.Key + "=" + o.Value)) + ")";
+        }
+    }
 
     /// <summary>Whether <paramref name="value"/> is a vault reference rather than a literal secret.</summary>
     public static bool IsReference(string? value) =>
-        value is not null && value.StartsWith(Prefix, StringComparison.Ordinal);
+        value is not null
+        && (value.StartsWith(Prefix, StringComparison.Ordinal)
+            || value.StartsWith(PrefixV2, StringComparison.Ordinal));
+
+    /// <summary>
+    /// The stored-value prefixes that belong to one connection, for the <c>StartsWith</c> scan that
+    /// answers "is this connection still in use".
+    ///
+    /// <b>Both versions, always.</b> Counting only v1 would make deleting a connection that a v2
+    /// reference still points at allowed, and that field would then fail to resolve with a message
+    /// naming a connection that no longer exists.
+    /// </summary>
+    public static string[] ConnectionPrefixes(int connectionId) =>
+        [Prefix + connectionId + ":", PrefixV2 + connectionId + ":"];
 
     /// <summary>
     /// The stored value when it is a vault reference, null when it is a literal credential or empty.
@@ -68,8 +133,17 @@ public sealed class SecretReference
 
     public override string ToString()
     {
-        var encoded = Prefix + ConnectionId + ":" + Encode(SecretId);
-        return Field is null ? encoded : encoded + ":" + Encode(Field);
+        // v1 while there is nothing v1 cannot say. Every stored reference predates Options, so this
+        // is what keeps them all byte-identical after the upgrade.
+        if (Options.Count == 0)
+        {
+            var v1 = Prefix + ConnectionId + ":" + Encode(SecretId);
+            return Field is null ? v1 : v1 + ":" + Encode(Field);
+        }
+
+        return PrefixV2 + ConnectionId + ":" + Encode(SecretId)
+               + ":" + (Field is null ? string.Empty : Encode(Field))
+               + ":" + Encode(EncodeOptions(Options));
     }
 
     /// <summary>
@@ -79,11 +153,21 @@ public sealed class SecretReference
     public static bool TryParse(string? value, [NotNullWhen(true)] out SecretReference? reference)
     {
         reference = null;
-        if (!IsReference(value)) return false;
+        if (value is null) return false;
+
+        return value.StartsWith(PrefixV2, StringComparison.Ordinal)
+            ? TryParseV2(value, out reference)
+            : TryParseV1(value, out reference);
+    }
+
+    private static bool TryParseV1(string value, [NotNullWhen(true)] out SecretReference? reference)
+    {
+        reference = null;
+        if (!value.StartsWith(Prefix, StringComparison.Ordinal)) return false;
 
         // Split with a cap, not an unbounded split: a field that decoded to something containing a
         // colon would otherwise turn into extra parts and be rejected.
-        var parts = value![Prefix.Length..].Split(':', 3);
+        var parts = value[Prefix.Length..].Split(':', 3);
         if (parts.Length is < 2 or > 3) return false;
 
         if (!int.TryParse(parts[0], out var connectionId) || connectionId <= 0) return false;
@@ -102,11 +186,53 @@ public sealed class SecretReference
     }
 
     /// <summary>
+    /// v2 is fixed-arity — four segments, the field one possibly empty — so "no field" and "no
+    /// options" are told apart by position rather than by count.
+    /// </summary>
+    private static bool TryParseV2(string value, [NotNullWhen(true)] out SecretReference? reference)
+    {
+        reference = null;
+
+        var parts = value[PrefixV2.Length..].Split(':');
+        if (parts.Length != 4) return false;
+
+        if (!int.TryParse(parts[0], out var connectionId) || connectionId <= 0) return false;
+
+        if (!TryDecode(parts[1], out var secretId) || secretId.Length == 0) return false;
+
+        string? field = null;
+        if (parts[2].Length > 0)
+        {
+            if (!TryDecode(parts[2], out var decodedField) || decodedField.Length == 0) return false;
+            field = decodedField;
+        }
+
+        if (!TryDecode(parts[3], out var encodedOptions)) return false;
+        if (!TryDecodeOptions(encodedOptions, out var options)) return false;
+
+        // A v2 string with no options is not something this type ever writes, and accepting it would
+        // give one selection two canonical forms — which the cache key is built from.
+        if (options.Count == 0) return false;
+
+        reference = new SecretReference
+        {
+            ConnectionId = connectionId,
+            SecretId = secretId,
+            Field = field,
+            Options = options
+        };
+
+        return true;
+    }
+
+    /// <summary>
     /// Builds a reference, rejecting the empty inputs that would produce one that cannot be parsed
     /// back. A whitespace-only field is treated as absent, which is what an untouched text box in the
-    /// picker sends.
+    /// picker sends — and so is a whitespace-only plugin value, which is what an untouched declared
+    /// control sends.
     /// </summary>
-    public static SecretReference Create(int connectionId, string secretId, string? field = null)
+    public static SecretReference Create(int connectionId, string secretId, string? field = null,
+        IReadOnlyDictionary<string, string>? options = null)
     {
         if (connectionId <= 0)
             throw new ArgumentOutOfRangeException(nameof(connectionId), "A vault connection id is required.");
@@ -117,8 +243,80 @@ public sealed class SecretReference
         {
             ConnectionId = connectionId,
             SecretId = secretId,
-            Field = string.IsNullOrWhiteSpace(field) ? null : field
+            Field = string.IsNullOrWhiteSpace(field) ? null : field,
+            Options = Clean(options)
         };
+    }
+
+    /// <summary>
+    /// The plugin values worth storing: a blank one is an untouched control and means "not set", and
+    /// a key that is not a key at all is dropped rather than written into a format that would then
+    /// fail to parse back.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string> Clean(IReadOnlyDictionary<string, string>? options)
+    {
+        if (options is null || options.Count == 0) return new Dictionary<string, string>();
+
+        var cleaned = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var (key, value) in options)
+        {
+            if (key is null || value is null) continue;
+            if (string.IsNullOrWhiteSpace(value)) continue;
+            if (!OptionKeyPattern.IsMatch(key)) continue;
+
+            cleaned[key] = value.Trim();
+        }
+
+        return cleaned;
+    }
+
+    /// <summary>
+    /// The canonical text of the options: keys sorted ordinal, both halves percent-encoded, joined
+    /// with <c>&amp;</c>.
+    ///
+    /// Sorted because the whole string is the cache key (<c>SecretVaultService.CacheKey</c>), and two
+    /// spellings of one selection would be two cache entries and two vault reads. Percent-encoded
+    /// because a value is operator-supplied text that may contain <c>=</c> or <c>&amp;</c>.
+    /// </summary>
+    private static string EncodeOptions(IReadOnlyDictionary<string, string> options) =>
+        string.Join('&', options
+            .OrderBy(o => o.Key, StringComparer.Ordinal)
+            .Select(o => Uri.EscapeDataString(o.Key) + "=" + Uri.EscapeDataString(o.Value)));
+
+    private static bool TryDecodeOptions(string encoded,
+        [NotNullWhen(true)] out Dictionary<string, string>? options)
+    {
+        options = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        if (encoded.Length == 0) return true;
+
+        foreach (var pair in encoded.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separator = pair.IndexOf('=');
+            if (separator <= 0) { options = null; return false; }
+
+            string key, value;
+
+            try
+            {
+                key = Uri.UnescapeDataString(pair[..separator]);
+                value = Uri.UnescapeDataString(pair[(separator + 1)..]);
+            }
+            catch (UriFormatException)
+            {
+                options = null;
+                return false;
+            }
+
+            if (!OptionKeyPattern.IsMatch(key) || value.Length == 0) { options = null; return false; }
+
+            // A repeated key has no meaning and no obvious winner, so it is a malformed reference
+            // rather than a last-one-wins.
+            if (!options.TryAdd(key, value)) { options = null; return false; }
+        }
+
+        return true;
     }
 
     private static string Encode(string value) =>

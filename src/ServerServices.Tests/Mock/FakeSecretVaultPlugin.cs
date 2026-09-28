@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts.Secrets;
+using Contracts.Ui;
 using Serilog;
 
 namespace ServerServices.Tests.Mock;
@@ -59,6 +60,26 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
     public int ListCalls { get; private set; }
 
     public int TestCalls { get; private set; }
+
+    public int OptionCalls { get; private set; }
+
+    /// <summary>The controls this plugin claims to contribute, per screen. Empty by default.</summary>
+    public Dictionary<PluginScreen, List<PluginFieldSpec>> Screens { get; } = new();
+
+    /// <summary>Options per field key, for the choice fields the test declared.</summary>
+    public Dictionary<string, List<PluginFieldOption>> FieldOptions { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>Set to make DescribeScreen throw, which the host must survive.</summary>
+    public Exception? ThrowFromDescribe { get; set; }
+
+    /// <summary>A plugin's private reading of an older stored reference. Identity by default.</summary>
+    public Func<VaultSecretReference, VaultSecretReference>? Normalizer { get; set; }
+
+    /// <summary>The reference of the most recent read, so a test can assert what reached the plugin.</summary>
+    public VaultSecretReference? LastReference { get; private set; }
+
+    /// <summary>The query of the most recent option fetch.</summary>
+    public PluginFieldQuery? LastQuery { get; private set; }
 
     /// <summary>The credentials of the most recent call, so a test can assert what the host passed.</summary>
     public SecretVaultCredentials? LastCredentials { get; private set; }
@@ -121,11 +142,38 @@ public class FakeSecretVaultPlugin : INetriskSecretVaultPlugin
         return descriptors;
     }
 
+    public IReadOnlyList<PluginFieldSpec> DescribeScreen(PluginScreen screen)
+    {
+        if (ThrowFromDescribe != null) throw ThrowFromDescribe;
+
+        return Screens.TryGetValue(screen, out var fields) ? fields : [];
+    }
+
+    public Task<IReadOnlyList<PluginFieldOption>> GetFieldOptionsAsync(SecretVaultContext context,
+        PluginFieldQuery query, CancellationToken ct = default)
+    {
+        OptionCalls++;
+        LastCredentials = context.Credentials;
+        LastQuery = query;
+
+        if (ThrowUnexpected != null) throw ThrowUnexpected;
+        if (FailWith != null) throw new SecretVaultException(FailWith);
+
+        IReadOnlyList<PluginFieldOption> options =
+            FieldOptions.TryGetValue(query.FieldKey, out var declared) ? declared : [];
+
+        return Task.FromResult(options);
+    }
+
+    public VaultSecretReference NormalizeReference(VaultSecretReference reference) =>
+        Normalizer is null ? reference : Normalizer(reference);
+
     public async Task<VaultSecretValue> GetSecretAsync(SecretVaultContext context,
         VaultSecretReference reference, CancellationToken ct = default)
     {
         GetCalls++;
         LastCredentials = context.Credentials;
+        LastReference = reference;
 
         if (CallUrl != null)
             await context.Http.SendAsync(new PluginHttpRequest { Method = "GET", Url = CallUrl }, ct);

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts.Secrets;
+using Contracts.Ui;
 using DAL.Entities;
 using DAL.Enums;
 using JetBrains.Annotations;
@@ -1084,6 +1086,310 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         // resolution failures every time a sync was stopped.
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => _svc.ResolveAsync(SecretReference.Create(created.Id, "tm-key"), CancellationToken.None));
+    }
+
+    // --- controls contributed by the plugin -----------------------------------------------------
+
+    /// <summary>The environment case, as a fixture: one choice field on the picker.</summary>
+    private void ArrangeDeclaredEnvironment(bool required = false)
+    {
+        _plugin.Screens[PluginScreen.VaultSecretSelector] =
+        [
+            new PluginFieldSpec
+            {
+                Key = "environment",
+                Label = "Environment",
+                Kind = PluginFieldKind.Choice,
+                Required = required,
+                OptionsDependOnSecret = true
+            }
+        ];
+
+        _plugin.FieldOptions["environment"] =
+        [
+            new PluginFieldOption { Value = "hml", Label = "Homologation" },
+            new PluginFieldOption { Value = "prd", Label = "Production" }
+        ];
+    }
+
+    [Fact]
+    public async Task ReportsTheControlsThePluginContributes()
+    {
+        ArrangeDeclaredEnvironment();
+
+        var plugin = Assert.Single(await _svc.GetAvailablePluginsAsync());
+
+        var field = Assert.Single(plugin.SecretSelectorFields);
+        Assert.Equal("environment", field.Key);
+        Assert.Equal(VaultFieldKind.Choice, field.Kind);
+
+        Assert.Empty(plugin.ConnectionEditorFields);
+    }
+
+    /// <summary>
+    /// A declaration the host will not render costs the plugin its controls and nobody else
+    /// anything. The screen then looks exactly as it did before the plugin declared them, which is
+    /// a state an operator can be told about — unlike a half-drawn dialog on the credential path.
+    /// </summary>
+    [Fact]
+    public async Task DropsADeclarationThatBreaksTheHostsBounds()
+    {
+        _plugin.Screens[PluginScreen.VaultSecretSelector] =
+        [
+            new PluginFieldSpec { Key = "environment", Label = "Environment" },
+            new PluginFieldSpec { Key = "Not A Key", Label = "Whatever" }
+        ];
+
+        var plugin = Assert.Single(await _svc.GetAvailablePluginsAsync());
+
+        Assert.Empty(plugin.SecretSelectorFields);
+    }
+
+    /// <summary>
+    /// DescribeScreen is third-party code called while building a form. A throw there must not take
+    /// the connection editor down for every vault, including the ones whose plugin behaved.
+    /// </summary>
+    [Fact]
+    public async Task SurvivesAPluginThatThrowsWhileDescribingAScreen()
+    {
+        _plugin.ThrowFromDescribe = new InvalidOperationException("boom");
+
+        var plugin = Assert.Single(await _svc.GetAvailablePluginsAsync());
+
+        Assert.Empty(plugin.SecretSelectorFields);
+        Assert.Equal("fake", plugin.VaultKind);
+    }
+
+    [Fact]
+    public async Task ListsTheOptionsOfADeclaredChoice()
+    {
+        ArrangeDeclaredEnvironment();
+        var created = await CreateAsync();
+
+        var options = await _svc.ListFieldOptionsAsync(created.Id, new VaultFieldOptionsRequest
+        {
+            Screen = VaultScreen.VaultSecretSelector,
+            FieldKey = "environment",
+            SecretId = "db-prod"
+        });
+
+        Assert.Equal(["hml", "prd"], options.Select(o => o.Value));
+
+        // The plugin is asked with the connection's credential, which is the whole reason options
+        // are a call and not part of the declaration.
+        Assert.Equal("bv-api-key", _plugin.LastCredentials!.ApiKey);
+        Assert.Equal("db-prod", _plugin.LastQuery!.SecretId);
+    }
+
+    /// <summary>
+    /// Without this the endpoint is a way to call an arbitrary plugin method with an arbitrary key,
+    /// and the bounds the projection applies would be decoration.
+    /// </summary>
+    [Fact]
+    public async Task RefusesOptionsForAFieldThePluginNeverDeclared()
+    {
+        ArrangeDeclaredEnvironment();
+        var created = await CreateAsync();
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(() =>
+            _svc.ListFieldOptionsAsync(created.Id, new VaultFieldOptionsRequest
+            {
+                Screen = VaultScreen.VaultSecretSelector,
+                FieldKey = "namespace"
+            }));
+
+        Assert.Contains("no choice field", ex.Message);
+        Assert.Equal(0, _plugin.OptionCalls);
+    }
+
+    [Fact]
+    public async Task CarriesTheDeclaredValuesToThePluginOnARead()
+    {
+        ArrangeDeclaredEnvironment();
+        var created = await CreateAsync();
+
+        var reference = SecretReference.Create(created.Id, "db-prod", "password",
+            new Dictionary<string, string> { ["environment"] = "hml" });
+
+        Assert.Equal("p4ss", await _svc.ResolveAsync(reference));
+        Assert.Equal("hml", _plugin.LastReference!.Options["environment"]);
+    }
+
+    /// <summary>
+    /// Two selections of the same secret in different environments are two cache entries. Sharing
+    /// one would serve the homologation password to production, which is the exact confusion the
+    /// environment exists to prevent.
+    /// </summary>
+    [Fact]
+    public async Task CachesEachSetOfDeclaredValuesSeparately()
+    {
+        ArrangeDeclaredEnvironment();
+        var created = await CreateAsync();
+
+        await _svc.ResolveAsync(SecretReference.Create(created.Id, "db-prod", "password",
+            new Dictionary<string, string> { ["environment"] = "hml" }));
+
+        await _svc.ResolveAsync(SecretReference.Create(created.Id, "db-prod", "password",
+            new Dictionary<string, string> { ["environment"] = "prd" }));
+
+        Assert.Equal(2, _plugin.GetCalls);
+
+        // And the same selection twice is still one read.
+        await _svc.ResolveAsync(SecretReference.Create(created.Id, "db-prod", "password",
+            new Dictionary<string, string> { ["environment"] = "hml" }));
+
+        Assert.Equal(2, _plugin.GetCalls);
+    }
+
+    /// <summary>
+    /// Said by the host rather than by the vault. An environment-scoped BastionVault credential
+    /// answers a read that names no environment with a flat permission-denied, which is
+    /// indistinguishable from an expired token and sends the operator to the wrong place.
+    /// </summary>
+    [Fact]
+    public async Task RefusesAReadWhoseRequiredDeclaredValueIsMissing()
+    {
+        ArrangeDeclaredEnvironment(required: true);
+        var created = await CreateAsync();
+
+        var ex = await Assert.ThrowsAsync<SecretVaultResolutionException>(() =>
+            _svc.ResolveAsync(SecretReference.Create(created.Id, "db-prod", "password")));
+
+        Assert.Contains("Environment", ex.Message);
+        Assert.Equal(0, _plugin.GetCalls);
+    }
+
+    /// <summary>
+    /// The compatibility path. A reference stored before the plugin had a control carries the value
+    /// in whatever private form that plugin used, and normalizing first is what lets the required
+    /// check above pass for it — without the host ever learning the form.
+    /// </summary>
+    [Fact]
+    public async Task NormalizesAStoredReferenceBeforeReadingItAndBeforeCheckingIt()
+    {
+        ArrangeDeclaredEnvironment(required: true);
+
+        _plugin.Normalizer = reference => reference.SecretId.Contains("?env=")
+            ? new VaultSecretReference
+            {
+                SecretId = reference.SecretId[..reference.SecretId.IndexOf("?env=", StringComparison.Ordinal)],
+                Field = reference.Field,
+                Options = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    ["environment"] = reference.SecretId[(reference.SecretId.IndexOf("?env=", StringComparison.Ordinal) + 5)..]
+                }
+            }
+            : reference;
+
+        var created = await CreateAsync();
+
+        var value = await _svc.ResolveAsync(
+            SecretReference.Create(created.Id, "db-prod?env=hml", "password"));
+
+        Assert.Equal("p4ss", value);
+        Assert.Equal("db-prod", _plugin.LastReference!.SecretId);
+        Assert.Equal("hml", _plugin.LastReference.Options["environment"]);
+    }
+
+    /// <summary>
+    /// A reference that already carries declared values came from a declared control, so there is
+    /// no older form to read out of it and the plugin is not invited to rewrite what an operator
+    /// chose.
+    /// </summary>
+    [Fact]
+    public async Task DoesNotNormalizeAReferenceThatAlreadyCarriesValues()
+    {
+        ArrangeDeclaredEnvironment();
+        _plugin.Normalizer = _ => throw new InvalidOperationException("must not be asked");
+
+        var created = await CreateAsync();
+
+        await _svc.ResolveAsync(SecretReference.Create(created.Id, "db-prod", "password",
+            new Dictionary<string, string> { ["environment"] = "hml" }));
+
+        Assert.Equal(1, _plugin.GetCalls);
+    }
+
+    /// <summary>
+    /// Counting only v1 would let a connection a v2 reference still points at be deleted, and that
+    /// field would then fail to resolve naming a connection that no longer exists.
+    /// </summary>
+    [Fact]
+    public async Task CountsReferencesThatCarryDeclaredValues()
+    {
+        var created = await CreateAsync();
+
+        var reference = SecretReference.Create(created.Id, "tm-key", null,
+            new Dictionary<string, string> { ["environment"] = "prd" });
+
+        await using (var context = GetService<IDalService>().GetContext())
+        {
+            context.TrendMicroConnections.Add(new TrendMicroConnection
+            {
+                Name = "Vision One",
+                Region = "us-east-1",
+                BaseUrl = "https://api.xdr.trendmicro.com",
+                EncryptedApiKey = reference.ToString()
+            });
+
+            await context.SaveChangesAsync();
+        }
+
+        Assert.Equal(1, await _svc.CountReferencesAsync(created.Id));
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.DeleteConnectionAsync(created.Id));
+
+        Assert.Contains("1", ex.Message);
+    }
+
+    // --- controls on the connection editor ------------------------------------------------------
+
+    [Fact]
+    public async Task RoundTripsTheConnectionsDeclaredValuesAndHandsThemToThePlugin()
+    {
+        _plugin.Screens[PluginScreen.VaultConnectionEditor] =
+            [new PluginFieldSpec { Key = "namespace", Label = "Namespace" }];
+
+        var input = Input();
+        input.Options = new Dictionary<string, string> { ["namespace"] = "teams/netrisk" };
+
+        var created = await _svc.CreateConnectionAsync(input, "bv-api-key");
+
+        Assert.Equal("teams/netrisk", created.Options["namespace"]);
+        Assert.Equal("teams/netrisk", (await _svc.GetConnectionAsync(created.Id)).Options["namespace"]);
+
+        await _svc.ResolveAsync(SecretReference.Create(created.Id, "tm-key"));
+
+        Assert.Equal("teams/netrisk", _plugin.LastCredentials!.Options["namespace"]);
+    }
+
+    /// <summary>
+    /// The same check the form runs, repeated because the form is not the only caller of the API.
+    /// </summary>
+    [Fact]
+    public async Task RefusesAConnectionMissingARequiredDeclaredValue()
+    {
+        _plugin.Screens[PluginScreen.VaultConnectionEditor] =
+            [new PluginFieldSpec { Key = "namespace", Label = "Namespace", Required = true }];
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.CreateConnectionAsync(Input(), "bv-api-key"));
+
+        Assert.Contains("Namespace", ex.Message);
+    }
+
+    /// <summary>
+    /// A plugin that declares nothing must see no change at all: no column written, no dictionary
+    /// where there was none.
+    /// </summary>
+    [Fact]
+    public async Task StoresNothingForAPluginThatDeclaresNoConnectionFields()
+    {
+        var created = await CreateAsync();
+
+        Assert.Null(Read(created.Id).ExtraSettings);
+        Assert.Empty(created.Options);
     }
 
     private DAL.Entities.SecretVaultConnection Read(int id)

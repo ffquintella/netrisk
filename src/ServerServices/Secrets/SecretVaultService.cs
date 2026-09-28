@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Text.Json;
 using Contracts.Secrets;
+using Contracts.Ui;
 using DAL.Context;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -80,7 +83,9 @@ public class SecretVaultService(
                 Description = p.PluginDescription,
                 Version = p.PluginVersion,
                 RequiresMachineId = p.RequiresMachineId,
-                RequiresAppId = p.RequiresAppId
+                RequiresAppId = p.RequiresAppId,
+                SecretSelectorFields = DescribeScreen(p, PluginScreen.VaultSecretSelector),
+                ConnectionEditorFields = DescribeScreen(p, PluginScreen.VaultConnectionEditor)
             }).ToList();
         }
         catch (Exception ex)
@@ -335,10 +340,27 @@ public class SecretVaultService(
 
         VaultSecretValue value;
 
+        var pluginReference = Normalize(plugin, new VaultSecretReference
+        {
+            SecretId = reference.SecretId,
+            Field = reference.Field,
+            Options = reference.Options
+        });
+
+        // The declared fields are checked here and not only in the picker, because the picker is not
+        // the only way a credential column gets written and because a plugin may have started
+        // requiring a field after the reference was stored. Normalizing first is what keeps a
+        // reference in the plugin's older self-encoded form passing: by this point its values are in
+        // Options where the declaration can see them.
+        if (RequiredFieldMissing(plugin, pluginReference) is { } missing)
+            throw new SecretVaultResolutionException(
+                $"The secret '{reference.DisplayKey}' cannot be read from '{stored.Name}': {missing} "
+                + "Re-select the secret on the field so the value can be chosen.",
+                reference.ToString());
+
         try
         {
-            value = await plugin.GetSecretAsync(context,
-                new VaultSecretReference { SecretId = reference.SecretId, Field = reference.Field }, ct);
+            value = await plugin.GetSecretAsync(context, pluginReference, ct);
         }
         catch (SecretVaultException ex)
         {
@@ -399,12 +421,19 @@ public class SecretVaultService(
         var connection = await db.SecretVaultConnections
             .FirstOrDefaultAsync(c => c.Id == reference.ConnectionId);
 
+        // Read through the plugin's own eyes before it is shown. A reference in a form the plugin no
+        // longer produces -- an environment encoded inside the secret id, say -- would otherwise be
+        // displayed as the raw string an operator cannot act on, and the caption beside a credential
+        // field is exactly where the environment it reads ought to be legible.
+        var described = await NormalizeForDisplayAsync(connection, reference);
+
         var view = new SecretReferenceView
         {
             IsVaultReference = true,
             ConnectionId = reference.ConnectionId,
-            SecretId = reference.SecretId,
-            Field = reference.Field,
+            SecretId = described.SecretId,
+            Field = described.Field,
+            Options = described.Options.ToDictionary(o => o.Key, o => o.Value, StringComparer.Ordinal),
             ConnectionName = connection?.Name ?? string.Empty,
             Resolvable = connection is { Enabled: true }
         };
@@ -413,13 +442,42 @@ public class SecretVaultService(
         // form with six credential fields would otherwise be six network round trips before it
         // renders. Whether the *secret* still exists is answered by the connection test and by the
         // picker, both of which the operator invokes on purpose.
+        var label = SecretReference.Create(reference.ConnectionId, described.SecretId, described.Field,
+            described.Options).DisplayKey;
+
         view.DisplayName = connection is null
-            ? $"{reference.DisplayKey} (vault connection {reference.ConnectionId} is missing)"
+            ? $"{label} (vault connection {reference.ConnectionId} is missing)"
             : connection.Enabled
-                ? $"{connection.Name}: {reference.DisplayKey}"
-                : $"{connection.Name}: {reference.DisplayKey} (connection disabled)";
+                ? $"{connection.Name}: {label}"
+                : $"{connection.Name}: {label} (connection disabled)";
 
         return view;
+    }
+
+    /// <summary>
+    /// The reference as its plugin reads it, for display only.
+    ///
+    /// Still no vault call — <c>NormalizeReference</c> is contracted to be offline — but it does
+    /// instantiate the plugin, which is why it is skipped for a reference that already carries
+    /// declared values and for a connection whose plugin is not installed. A form with six
+    /// credential fields asks this six times, and the answer has to stay cheap enough that it does.
+    /// </summary>
+    private async Task<VaultSecretReference> NormalizeForDisplayAsync(SecretVaultConnection? connection,
+        SecretReference reference)
+    {
+        var asStored = new VaultSecretReference
+        {
+            SecretId = reference.SecretId,
+            Field = reference.Field,
+            Options = reference.Options
+        };
+
+        if (connection is null || reference.Options.Count > 0) return asStored;
+
+        var plugin = await pluginsService
+            .GetPluginByNameAsync<INetriskSecretVaultPlugin>(connection.PluginName);
+
+        return plugin is null ? asStored : Normalize(plugin, asStored);
     }
 
     public async Task<int> CountReferencesAsync(int connectionId)
@@ -518,7 +576,8 @@ public class SecretVaultService(
                 BaseUrl = selection.BaseUrl,
                 ApiKey = apiKey,
                 MachineId = string.IsNullOrWhiteSpace(connection.MachineId) ? null : connection.MachineId,
-                AppId = string.IsNullOrWhiteSpace(connection.AppId) ? null : connection.AppId
+                AppId = string.IsNullOrWhiteSpace(connection.AppId) ? null : connection.AppId,
+                Options = ReadExtraSettings(connection)
             },
             Http = httpFactory.Create(connection.IgnoreSslErrors)
         };
@@ -530,6 +589,172 @@ public class SecretVaultService(
         await db.SecretVaultConnections.FirstOrDefaultAsync(c => c.Id == id)
         ?? throw new DataNotFoundException("SecretVaultConnection", id.ToString(),
             new Exception($"Vault connection {id} was not found."));
+
+    /// <summary>
+    /// What one plugin contributes to one screen, checked against the host's bounds.
+    ///
+    /// <para>Every part of this is defensive, because <c>DescribeScreen</c> is third-party code the
+    /// host calls while building a form. It is contracted to be pure and it is called on a plugin
+    /// instance the host just created, but "contracted" is not "guaranteed": a throw here would take
+    /// down the connection editor and the picker for every vault, including the ones whose plugin
+    /// behaved. So a plugin that throws contributes nothing and says so in the log, which is the
+    /// same answer as a plugin that declares nothing.</para>
+    ///
+    /// <para>A declaration that breaks a structural rule is dropped whole by
+    /// <see cref="PluginFieldSpecProjection"/> rather than partly rendered. See there for why.</para>
+    /// </summary>
+    private List<VaultFieldSpecView> DescribeScreen(INetriskSecretVaultPlugin plugin, PluginScreen screen)
+    {
+        IReadOnlyList<PluginFieldSpec> declared;
+
+        try
+        {
+            declared = plugin.DescribeScreen(screen);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Secret vault plugin {Plugin} threw while describing the {Screen} screen; "
+                             + "it contributes no controls to it", plugin.PluginName, screen);
+            return [];
+        }
+
+        var projection = PluginFieldSpecProjection.Project(declared, CultureInfo.CurrentUICulture);
+
+        if (projection.Problem is { } problem)
+        {
+            Logger.Warning(
+                "Secret vault plugin {Plugin} declared controls for the {Screen} screen that this "
+                + "host will not render, because {Problem}. The screen renders without them",
+                plugin.PluginName, screen, problem);
+
+            return [];
+        }
+
+        return projection.Fields;
+    }
+
+    /// <summary>
+    /// The options for one declared choice field, fetched from the plugin with the connection's
+    /// context.
+    ///
+    /// By call and never from the declaration, because the answer depends on the credential: an
+    /// environment-scoped role may read the environments its scope names and no others, so two
+    /// connections served by one plugin answer differently.
+    /// </summary>
+    public async Task<List<VaultFieldOptionView>> ListFieldOptionsAsync(int connectionId,
+        VaultFieldOptionsRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        await using var db = DalService.GetContext();
+
+        var stored = await LoadAsync(db, connectionId);
+
+        var (plugin, context, _) = await OpenAsync(stored);
+
+        var screen = (PluginScreen)(int)request.Screen;
+
+        // Asked only for a field the plugin actually declared as a choice. Without this the endpoint
+        // is a way to call an arbitrary plugin method with an arbitrary key, and the bounds the
+        // projection applies would have been decoration.
+        var declared = DescribeScreen(plugin, screen)
+            .FirstOrDefault(f => string.Equals(f.Key, request.FieldKey, StringComparison.Ordinal));
+
+        if (declared is null || declared.Kind != VaultFieldKind.Choice)
+            throw new InvalidParameterException(nameof(request.FieldKey),
+                $"The '{stored.PluginName}' plugin declares no choice field named "
+                + $"'{request.FieldKey}' on that screen.");
+
+        var query = new PluginFieldQuery
+        {
+            Screen = screen,
+            FieldKey = declared.Key,
+            SecretId = string.IsNullOrWhiteSpace(request.SecretId) ? null : request.SecretId,
+            Values = request.Values ?? new Dictionary<string, string>()
+        };
+
+        IReadOnlyList<PluginFieldOption> options;
+
+        try
+        {
+            options = await plugin.GetFieldOptionsAsync(context, query);
+        }
+        catch (SecretVaultException ex)
+        {
+            throw new IntegrationRequestException(stored.PluginName,
+                $"The vault '{stored.Name}' could not list the values for '{declared.Label}': {ex.Message}",
+                ex);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Secret vault plugin {Plugin} threw while listing the options of {Field}",
+                stored.PluginName, declared.Key);
+
+            throw new IntegrationRequestException(stored.PluginName,
+                $"The '{stored.PluginName}' plugin failed while listing the values for "
+                + $"'{declared.Label}'.", ex);
+        }
+
+        var projected = PluginFieldSpecProjection.ProjectOptions(options, CultureInfo.CurrentUICulture,
+            out var truncated);
+
+        if (truncated)
+            Logger.Warning(
+                "Secret vault plugin {Plugin} offered more than {Max} options for {Field}; the list "
+                + "shown to the operator is cut short", stored.PluginName,
+                SecretVaultDefaults.MaxFieldOptions, declared.Key);
+
+        return projected;
+    }
+
+    /// <summary>
+    /// The plugin's own reading of a stored reference, for a reference that carries no declared
+    /// values.
+    ///
+    /// <para>This is how a plugin retires a grammar it once had to invent. BastionVault could not
+    /// put an environment anywhere the contract named, so it wrote it into the secret id as
+    /// <c>?env=hml</c>; only BastionVault knows that, and a host that learned it would be repeating
+    /// the mistake this contract exists to end. So the host hands the reference back and uses
+    /// whatever comes out.</para>
+    ///
+    /// <para>Skipped when the reference already carries values: those came from a declared control,
+    /// so there is nothing legacy to read. Contracted to be pure and offline, and wrapped anyway —
+    /// a plugin that throws here leaves the reference exactly as it was stored, which is the
+    /// behaviour of every plugin that does not implement it.</para>
+    /// </summary>
+    /// <summary>
+    /// The complaint about a reference whose declared fields are not all filled, or null when they
+    /// are.
+    ///
+    /// The point of saying it here is that the alternative is the vault saying it: an
+    /// environment-scoped BastionVault credential answers a read that names no environment with a
+    /// flat permission-denied, which is indistinguishable from an expired token and sends the
+    /// operator to the wrong place.
+    /// </summary>
+    private string? RequiredFieldMissing(INetriskSecretVaultPlugin plugin, VaultSecretReference reference)
+    {
+        var declared = DescribeScreen(plugin, PluginScreen.VaultSecretSelector);
+
+        return declared.Count == 0
+            ? null
+            : PluginFieldSpecProjection.Validate(declared, reference.Options);
+    }
+
+    private VaultSecretReference Normalize(INetriskSecretVaultPlugin plugin, VaultSecretReference reference)
+    {
+        if (reference.Options.Count > 0) return reference;
+
+        try
+        {
+            return plugin.NormalizeReference(reference) ?? reference;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Secret vault plugin {Plugin} threw while normalizing a stored reference; "
+                             + "it is used as stored", plugin.PluginName);
+            return reference;
+        }
+    }
 
     /// <summary>
     /// Counts the credential fields that resolve through a connection.
@@ -546,31 +771,37 @@ public class SecretVaultService(
     /// </summary>
     private static async Task<int> CountReferencesAsync(NRDbContext db, int connectionId)
     {
-        var prefix = SecretReference.Prefix + connectionId + ":";
-
         var count = 0;
 
-        count += await db.TrendMicroConnections
-            .CountAsync(c => c.EncryptedApiKey != null && c.EncryptedApiKey.StartsWith(prefix));
+        // Both wire versions, in one loop. A v2 reference (one carrying plugin-declared values) that
+        // this scan missed would make deleting the connection it points at allowed, and that field
+        // would then fail to resolve naming a connection that no longer exists.
+        foreach (var prefix in SecretReference.ConnectionPrefixes(connectionId))
+        {
+            count += await db.TrendMicroConnections
+                .CountAsync(c => c.EncryptedApiKey != null && c.EncryptedApiKey.StartsWith(prefix));
 
-        count += await db.SecurityScorecardConnections
-            .CountAsync(c => c.EncryptedApiToken != null && c.EncryptedApiToken.StartsWith(prefix));
+            count += await db.SecurityScorecardConnections
+                .CountAsync(c => c.EncryptedApiToken != null && c.EncryptedApiToken.StartsWith(prefix));
 
-        count += await db.IssueTrackerConnections
-            .CountAsync(c => c.EncryptedToken != null && c.EncryptedToken.StartsWith(prefix));
+            count += await db.IssueTrackerConnections
+                .CountAsync(c => c.EncryptedToken != null && c.EncryptedToken.StartsWith(prefix));
 
-        count += await db.IssueTrackerConnections
-            .CountAsync(c => c.EncryptedWebhookSecret != null && c.EncryptedWebhookSecret.StartsWith(prefix));
+            count += await db.IssueTrackerConnections
+                .CountAsync(c => c.EncryptedWebhookSecret != null
+                                 && c.EncryptedWebhookSecret.StartsWith(prefix));
 
-        count += await db.IdentityProviders
-            .CountAsync(p => p.EncryptedClientSecret != null && p.EncryptedClientSecret.StartsWith(prefix));
+            count += await db.IdentityProviders
+                .CountAsync(p => p.EncryptedClientSecret != null
+                                 && p.EncryptedClientSecret.StartsWith(prefix));
 
-        // Notification channel secrets live inside a JSON blob rather than in a column of their own,
-        // so this is a containment test and not a prefix test. It over-counts nothing real: the
-        // prefix includes the connection id and a colon, which does not occur in ordinary
-        // configuration.
-        count += await db.NotificationChannels
-            .CountAsync(c => c.ConfigurationJson.Contains(prefix));
+            // Notification channel secrets live inside a JSON blob rather than in a column of their
+            // own, so this is a containment test and not a prefix test. It over-counts nothing real:
+            // the prefix includes the connection id and a colon, which does not occur in ordinary
+            // configuration.
+            count += await db.NotificationChannels
+                .CountAsync(c => c.ConfigurationJson.Contains(prefix));
+        }
 
         return count;
     }
@@ -604,6 +835,12 @@ public class SecretVaultService(
             throw new InvalidParameterException(nameof(input.MachineId),
                 $"The '{plugin.PluginName}' plugin binds credentials to a machine identity, so this "
                 + "connection needs the machine ID the vault issued for this server.");
+
+        // The same check the connection editor runs while the form is open, repeated because the
+        // form is not the only caller of the API. Its messages name the plugin's own label, which is
+        // the only name an operator has for a control the host did not invent.
+        if (PluginFieldSpecProjection.Validate(plugin.ConnectionEditorFields, input.Options) is { } problem)
+            throw new InvalidParameterException(nameof(input.Options), problem);
 
         if (plugin.RequiresAppId && string.IsNullOrWhiteSpace(input.AppId))
             throw new InvalidParameterException(nameof(input.AppId),
@@ -656,6 +893,53 @@ public class SecretVaultService(
         // enforce anyway.
         target.CacheTtlMinutes = Math.Clamp(input.CacheTtlMinutes,
             SecretVaultDefaults.MinCacheTtlMinutes, SecretVaultDefaults.MaxCacheTtlMinutes);
+
+        target.ExtraSettings = WriteExtraSettings(input.Options);
+    }
+
+    /// <summary>
+    /// The connection's plugin-declared values, as the plugin will receive them.
+    ///
+    /// Null and unparseable both read back as empty rather than throwing. A row whose JSON somebody
+    /// hand-edited into nonsense must not take every other connection's listing down with it, and an
+    /// empty dictionary is what a plugin that declares nothing gets anyway — so the failure mode is
+    /// "the vault says the namespace is missing", which names the problem, rather than a 500 on the
+    /// connections page.
+    /// </summary>
+    private IReadOnlyDictionary<string, string> ReadExtraSettings(SecretVaultConnection connection)
+    {
+        if (string.IsNullOrWhiteSpace(connection.ExtraSettings)) return new Dictionary<string, string>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(connection.ExtraSettings)
+                   ?? new Dictionary<string, string>();
+        }
+        catch (JsonException ex)
+        {
+            Logger.Warning(ex, "Vault connection {Name} has unreadable plugin settings; the plugin is "
+                               + "called as though it had none", connection.Name);
+
+            return new Dictionary<string, string>();
+        }
+    }
+
+    /// <summary>
+    /// The values worth storing, as JSON — or null when there are none, so a connection whose plugin
+    /// declares nothing keeps a null column rather than an empty object.
+    ///
+    /// Blank values are dropped: an untouched control means "not set", and storing an empty string
+    /// would make a plugin's <c>TryGetValue</c> succeed with nothing in it.
+    /// </summary>
+    private static string? WriteExtraSettings(Dictionary<string, string>? options)
+    {
+        if (options is null || options.Count == 0) return null;
+
+        var kept = options
+            .Where(o => !string.IsNullOrWhiteSpace(o.Key) && !string.IsNullOrWhiteSpace(o.Value))
+            .ToDictionary(o => o.Key.Trim(), o => o.Value.Trim(), StringComparer.Ordinal);
+
+        return kept.Count == 0 ? null : JsonSerializer.Serialize(kept);
     }
 
     private static SecretVaultConnectionView ToView(SecretVaultConnection connection,
@@ -682,7 +966,29 @@ public class SecretVaultService(
             LastTestMessage = connection.LastTestMessage,
             PluginAvailable = plugin is not null,
             RequiresMachineId = plugin?.RequiresMachineId ?? false,
-            RequiresAppId = plugin?.RequiresAppId ?? false
+            RequiresAppId = plugin?.RequiresAppId ?? false,
+            Options = ReadExtraSettingsForView(connection)
         };
+    }
+
+    /// <summary>
+    /// <see cref="ReadExtraSettings"/> for the read-only path, where there is no instance to log
+    /// through: <see cref="ToView"/> is static because it is called once per row of a list.
+    /// </summary>
+    private static Dictionary<string, string> ReadExtraSettingsForView(SecretVaultConnection connection)
+    {
+        if (string.IsNullOrWhiteSpace(connection.ExtraSettings)) return new Dictionary<string, string>();
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(connection.ExtraSettings)
+                   ?? new Dictionary<string, string>();
+        }
+        catch (JsonException)
+        {
+            // Reported by ReadExtraSettings on the path that actually calls the vault. Here it would
+            // be one log line per row per page load.
+            return new Dictionary<string, string>();
+        }
     }
 }

@@ -69,9 +69,30 @@ public class SecretVaultsControllerTest : BaseControllerTest
 
         foreach (var type in payloadTypes)
         foreach (var property in type.GetProperties())
+        {
+            if (Allowed.Contains((type.Name, property.Name))) continue;
+
             Assert.False(LooksLikeAValue(property.Name),
                 $"{type.Name}.{property.Name} could carry a secret value out of the server.");
+        }
     }
+
+    /// <summary>
+    /// The one exception, named as a pair so it exempts nothing else.
+    ///
+    /// <c>VaultFieldOptionView.Value</c> is what a combo the plugin contributed stores when an
+    /// operator picks that option — <c>hml</c>, a namespace, a tenant. It is the natural word for
+    /// it and the one the SDK uses, so the rule above catches it by name rather than by nature.
+    ///
+    /// <b>It is not a hole.</b> The option list is metadata by contract — <c>Contracts.Ui</c>
+    /// states that an option must not be a secret or be derived from reading one, exactly as
+    /// <c>VaultSecretDescriptor</c> does for a listing — and the value is stored in the clear in
+    /// the reference and rendered in a dropdown, so a plugin that put a credential here would be
+    /// publishing it to the screen rather than smuggling it out. Exempting the pair and not the
+    /// type is what keeps a genuinely value-shaped property added here later from passing.
+    /// </summary>
+    private static readonly HashSet<(string Type, string Property)> Allowed =
+        [(nameof(VaultFieldOptionView), nameof(VaultFieldOptionView.Value))];
 
     private static bool LooksLikeAValue(string name) =>
         name is "Value" or "Secret" or "SecretValue" or "Password" or "ApiKey" or "Token"
@@ -184,6 +205,49 @@ public class SecretVaultsControllerTest : BaseControllerTest
     {
         Assert.IsType<NotFoundObjectResult>(
             (await Controller().ListSecrets(999)).Result);
+    }
+
+    [Fact]
+    public async Task ListsTheOptionsOfAControlThePluginContributed()
+    {
+        var options = Ok(await Controller().FieldOptions(MockedSecretVaultService.KnownConnectionId,
+            new VaultFieldOptionsRequest
+            {
+                Screen = VaultScreen.VaultSecretSelector,
+                FieldKey = "environment",
+                SecretId = "db-prod"
+            }));
+
+        Assert.Equal(["hml", "prd"], options.Select(o => o.Value));
+
+        // An option names a value; it is never one. Same rule as a listing.
+        Assert.Null(typeof(VaultFieldOptionView).GetProperty("Secret"));
+    }
+
+    [Fact]
+    public async Task OptionsForAnUnknownConnectionIsA404()
+    {
+        Assert.IsType<NotFoundObjectResult>(
+            (await Controller().FieldOptions(999, new VaultFieldOptionsRequest
+            {
+                Screen = VaultScreen.VaultSecretSelector,
+                FieldKey = "environment"
+            })).Result);
+    }
+
+    /// <summary>
+    /// Without this the endpoint is a way to call an arbitrary plugin method with an arbitrary key.
+    /// </summary>
+    [Fact]
+    public async Task OptionsForAnUndeclaredFieldIsA400()
+    {
+        Assert.IsType<BadRequestObjectResult>(
+            (await Controller().FieldOptions(MockedSecretVaultService.KnownConnectionId,
+                new VaultFieldOptionsRequest
+                {
+                    Screen = VaultScreen.VaultSecretSelector,
+                    FieldKey = "namespace"
+                })).Result);
     }
 
     [Fact]

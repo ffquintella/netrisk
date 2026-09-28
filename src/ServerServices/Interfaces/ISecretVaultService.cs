@@ -59,6 +59,21 @@ public interface ISecretVaultService
     Task<List<VaultSecretSummary>> ListSecretsAsync(int connectionId);
 
     /// <summary>
+    /// The values a plugin offers for one control it contributed to a screen.
+    ///
+    /// Fetched rather than declared, because the list depends on the credential: an
+    /// environment-scoped role may read the environments its scope names and no others, so two
+    /// connections served by one plugin answer differently. Metadata only, like a listing — the
+    /// contract forbids an option that is, or is derived from, a secret.
+    /// </summary>
+    /// <exception cref="Model.Exceptions.InvalidParameterException">
+    /// The plugin declares no choice field by that name on that screen. Checked so the endpoint
+    /// cannot be used to call a plugin with a key nobody declared.
+    /// </exception>
+    Task<List<VaultFieldOptionView>> ListFieldOptionsAsync(int connectionId,
+        VaultFieldOptionsRequest request);
+
+    /// <summary>
     /// Resolves a reference to its secret value, from the obfuscated cache when it is warm and from
     /// the vault when it is not.
     /// </summary>

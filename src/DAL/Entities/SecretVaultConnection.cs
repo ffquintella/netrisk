@@ -68,6 +68,24 @@ public class SecretVaultConnection
     /// </summary>
     public bool IgnoreSslErrors { get; set; }
 
+    /// <summary>
+    /// The values of the controls the plugin declared for the connection editor, as a JSON object of
+    /// string to string, or null when it declared none.
+    ///
+    /// <para>One column and not one per field. The acceptance criterion for plugin-contributed
+    /// screens is that a plugin adds a control without the host's schema changing, and a column per
+    /// field is the opposite of that — it puts every vault's vocabulary in NetRisk's table
+    /// definition and makes the next one a migration.</para>
+    ///
+    /// <para>Not encrypted, and not allowed to hold a credential: what goes here is a namespace, a
+    /// mount, a tenant — the same kind of thing as <see cref="MachineId"/> and <see cref="AppId"/>,
+    /// which are also in the clear because they name the caller rather than authenticate it. A vault
+    /// that genuinely needs a second credential needs <c>ISecretProtector</c>, the never-return rule
+    /// and the "null means unchanged" update convention, none of which a free-form dictionary can
+    /// carry.</para>
+    /// </summary>
+    public string? ExtraSettings { get; set; }
+
     /// <summary>A disabled connection resolves nothing. References to it fail loudly rather than silently.</summary>
     public bool Enabled { get; set; } = true;
 

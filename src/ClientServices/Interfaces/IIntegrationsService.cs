@@ -259,6 +259,16 @@ public interface IIntegrationsService
     /// <summary>Metadata for the secrets a connection can see — the picker's contents. No values.</summary>
     Task<List<VaultSecretSummary>> GetVaultSecretsAsync(int connectionId);
 
+    /// <summary>
+    /// The values a vault plugin offers for one of the controls it contributed to a screen.
+    ///
+    /// A call and not part of the plugin listing, because the answer depends on the connection's
+    /// credential — the environments an environment-scoped BastionVault role may read are its own,
+    /// not the vault's.
+    /// </summary>
+    Task<List<VaultFieldOptionView>> GetVaultFieldOptionsAsync(int connectionId,
+        VaultFieldOptionsRequest request);
+
     /// <summary>What a stored credential field points at, for the label beside it.</summary>
     Task<SecretReferenceView> DescribeSecretReferenceAsync(string? storedValue);
 

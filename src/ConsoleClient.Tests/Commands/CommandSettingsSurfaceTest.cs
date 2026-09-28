@@ -41,7 +41,8 @@ public class CommandSettingsSurfaceTest
             {
                 nameof(CalculationSettings), nameof(CiSettings), nameof(DatabaseSettings),
                 nameof(KeysSettings), nameof(RegistrationSettings), nameof(SettingsSettings),
-                nameof(TechnologySettings), nameof(UserSettings), nameof(WebsiteSettings)
+                nameof(TechnologySettings), nameof(UserSettings), nameof(VaultSettings),
+                nameof(WebsiteSettings)
             },
             names);
     }
