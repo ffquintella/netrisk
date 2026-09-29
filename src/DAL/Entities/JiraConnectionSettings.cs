@@ -22,10 +22,9 @@ public class JiraConnectionSettings
     public int ConnectionId { get; set; }
 
     /// <summary>
-    /// Cloud or Data Center. Only <see cref="JiraDeployment.Cloud"/> is implemented; a Data Center
-    /// connection is refused at save, because Assets on Data Center is the Insight API with a
-    /// different root and a different object model, and pointing the Cloud client at it produces 404s
-    /// that read as bad credentials.
+    /// Cloud or Data Center — a mirror of the connection's provider kind, written from it on every
+    /// save and never from the client, so the two cannot disagree. Both deployments import Assets;
+    /// Service Management is Cloud-only and enabling it on Data Center is refused at save.
     /// </summary>
     public JiraDeployment Deployment { get; set; } = JiraDeployment.Cloud;
 

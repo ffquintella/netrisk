@@ -16,7 +16,7 @@ public partial class JiraIntegrationService
 {
     public async Task<JsmSyncResult> SyncServiceManagementAsync(int connectionId, int? userId = null)
     {
-        var (connection, token, settings) = await ResolveAsync(connectionId);
+        var (connection, token, settings) = await ResolveAsync(connectionId, JiraFacet.ServiceManagement);
 
         var result = new JsmSyncResult();
 

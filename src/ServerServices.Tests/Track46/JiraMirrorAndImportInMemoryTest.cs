@@ -310,10 +310,27 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
         FakeOutboundHttpClient.RuleFor("/object/aql", objects);
     }
 
-    private async Task<int> ConnectionWithAServerMappingAsync(
-        JiraAssetTargetKind kind = JiraAssetTargetKind.Host, bool deactivateMissing = false)
+    private async Task<int> DataCenterConnectionAsync()
     {
-        var id = await ConnectionAsync();
+        var created = await _trackers.CreateConnectionAsync(new IssueTrackerConnection
+        {
+            Name = "Jira-hml",
+            Provider = IssueTrackerProviderKind.JiraDataCenter,
+            BaseUrl = "https://hml-jira.acme.br",
+            ProjectKey = "SDESI",
+            AuthUser = null,
+            Enabled = true,
+            PollIntervalMinutes = 15
+        }, "pat", null, 1);
+
+        return created.Id;
+    }
+
+    private async Task<int> ConnectionWithAServerMappingAsync(
+        JiraAssetTargetKind kind = JiraAssetTargetKind.Host, bool deactivateMissing = false,
+        bool dataCenter = false)
+    {
+        var id = dataCenter ? await DataCenterConnectionAsync() : await ConnectionAsync();
 
         var settings = await _svc.GetSettingsAsync(id);
         settings.AssetsEnabled = true;
@@ -486,6 +503,88 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
         // And every Assets call goes to Atlassian's API host, not to the connection's own site.
         Assert.Contains(FakeOutboundHttpClient.Requests,
             r => r.Url.StartsWith("https://api.atlassian.com/jsm/assets/workspace/"));
+    }
+
+    // The same server as ObjectsJson, in Data Center's documented ObjectListResultEntry shape.
+    private const string DataCenterObjectsJson = """
+        {
+          "objectEntries": [
+            {
+              "id": 1042, "label": "srv-prod-01", "objectKey": "ITSM-88",
+              "objectType": { "id": 23, "name": "Server", "objectSchemaId": 5 },
+              "created": "2026-01-04T10:00:00.000Z", "updated": "2026-08-20T14:31:00.000Z",
+              "attributes": [
+                { "id": 1, "objectTypeAttributeId": 231, "objectId": 1042, "objectAttributeValues": [ { "value": "srv-prod-01", "displayValue": "srv-prod-01" } ] },
+                { "id": 2, "objectTypeAttributeId": 232, "objectId": 1042, "objectAttributeValues": [ { "user": { "displayName": "Alice Silva", "key": "asilva" }, "displayValue": "Alice Silva" } ] },
+                { "id": 3, "objectTypeAttributeId": 233, "objectId": 1042, "objectAttributeValues": [ { "value": "Production", "displayValue": "Production" } ] },
+                { "id": 4, "objectTypeAttributeId": 234, "objectId": 1042, "objectAttributeValues": [ { "status": { "id": 1, "name": "In Production" }, "displayValue": "In Production" } ] },
+                { "id": 5, "objectTypeAttributeId": 235, "objectId": 1042, "objectAttributeValues": [ { "value": "aa:bb:cc:dd:ee:ff", "displayValue": "aa:bb:cc:dd:ee:ff" } ] }
+              ],
+              "_links": { "self": "https://hml-jira.acme.br/secure/ShowObject.jspa?id=1042" }
+            }
+          ],
+          "totalFilterCount": 1, "pageNumber": 1, "pageObjectSize": 100, "pageSize": 1
+        }
+        """;
+
+    /// <summary>The whole import on Data Center: instance URLs, no workspace, the scanner's host matched.</summary>
+    [Fact]
+    public async Task ADataCenterConnectionImportsItsRegisterFromTheInstance()
+    {
+        FakeOutboundHttpClient.RuleFor("/rest/assets/1.0/objecttype/23/attributes", AttributesJson);
+        FakeOutboundHttpClient.RuleFor("/rest/assets/1.0/aql/objects", DataCenterObjectsJson);
+        var id = await ConnectionWithAServerMappingAsync(dataCenter: true);
+
+        var result = await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        Assert.Equal(1, result.Examined);
+        Assert.Equal(1, result.Updated);
+        Assert.Equal(0, result.Errors);
+
+        Assert.All(FakeOutboundHttpClient.Requests, r =>
+        {
+            Assert.StartsWith("https://hml-jira.acme.br/rest/assets/1.0/", r.Url);
+            Assert.Equal("Bearer pat", r.Headers["Authorization"]);
+        });
+        Assert.DoesNotContain(FakeOutboundHttpClient.Requests, r => r.Url.Contains("workspace"));
+
+        var imported = Assert.Single(await _svc.GetAssetObjectsAsync(id));
+        Assert.Equal("srv-prod-01", imported.MappedName);
+        Assert.Equal("Alice Silva", imported.MappedOwner);
+        Assert.Equal("mac", imported.MatchReason);
+        Assert.Equal("https://hml-jira.acme.br/secure/ShowObject.jspa?id=1042", imported.ObjectUrl);
+
+        Read(ctx => Assert.Equal("1042", ctx.Hosts.Single(h => h.Id == 1).ExternalId));
+    }
+
+    [Theory]
+    [InlineData("https://hml-jira.acme.br/", "1042", "https://hml-jira.acme.br/secure/ShowObject.jspa?id=1042")]
+    [InlineData("https://acme.br/jira", "7", "https://acme.br/jira/secure/ShowObject.jspa?id=7")]
+    [InlineData("https://hml-jira.acme.br", null, null)]
+    [InlineData(null, "1042", null)]
+    public void ADataCenterObjectLinksToShowObjectById(string? baseUrl, string? objectId, string? expected)
+    {
+        Assert.Equal(expected, JiraIntegrationService.AssetObjectUrl(
+            IssueTrackerProviderKind.JiraDataCenter, baseUrl, objectId, "ITSM-88"));
+    }
+
+    /// <summary>The JSM scheduler stays Cloud-only: a Data Center row with JSM on is not polled.</summary>
+    [Fact]
+    public async Task TheServiceManagementSchedulerSkipsDataCenterConnections()
+    {
+        var id = await DataCenterConnectionAsync();
+        await _svc.GetSettingsAsync(id);
+
+        using (var ctx = OpenContext())
+        {
+            ctx.JiraConnectionSettings.Single(s => s.ConnectionId == id).JsmEnabled = true;
+            await ctx.SaveChangesAsync();
+        }
+
+        var result = await _svc.SyncDueServiceManagementAsync(Now);
+
+        Assert.Equal(0, result.Errors);
+        Assert.Empty(FakeOutboundHttpClient.Requests);
     }
 
     /// <summary>

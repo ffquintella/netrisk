@@ -45,6 +45,13 @@
     <!-- Whether pressing Preview has to save first (4.6). Worth testing here because it decides
          whether a read-looking button performs a write. -->
     <Compile Include="..\GUIClient\Tools\IssueTemplateDraft.cs" LinkBase="Tools" />
+    <!-- Which option a ComboBox shows for a stored value: what keeps the issue-tracker Provider
+         field from going blank after a save refills the provider list. -->
+    <Compile Include="..\GUIClient\Tools\ComboSelection.cs" LinkBase="Tools" />
+    <!-- Which Jira tabs a provider kind gets (Assets on Data Center, Service Management Cloud-only). -->
+    <Compile Include="..\GUIClient\Tools\JiraFacets.cs" LinkBase="Tools" />
+    <!-- What the queue selection Save sends: null until the grid is loaded, so it cannot wipe imports. -->
+    <Compile Include="..\GUIClient\Tools\JiraQueueImports.cs" LinkBase="Tools" />
     <!-- The findings grid's id -> label maps: pure collection logic, and what replaced the
          per-cell blocking REST call in the Fix team / Host columns. -->
     <Compile Include="..\GUIClient\Tools\RowLabelCache.cs" LinkBase="Tools" />

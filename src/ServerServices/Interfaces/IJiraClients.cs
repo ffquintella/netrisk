@@ -53,18 +53,19 @@ public interface IJiraServiceManagementClient
 }
 
 /// <summary>
-/// Jira Assets — the Service Management CMDB (Track 4 milestone 4.6), Cloud only.
+/// Jira Assets — the Service Management CMDB (Track 4 milestone 4.6), Cloud and Data Center.
 ///
-/// Reached at <c>api.atlassian.com</c> rather than on the connection's own site, keyed by the
-/// workspace id from <see cref="IJiraServiceManagementClient.GetAssetsWorkspaceIdAsync"/>.
+/// Cloud is reached at <c>api.atlassian.com</c>, keyed by the workspace id from
+/// <see cref="IJiraServiceManagementClient.GetAssetsWorkspaceIdAsync"/>. Data Center is reached on the
+/// connection's own instance and has no workspace, so <c>workspaceId</c> is null there.
 /// </summary>
 public interface IJiraAssetsClient
 {
     Task<List<JiraObjectSchemaView>> GetSchemasAsync(IssueTrackerConnection connection, string? token,
-        string workspaceId, CancellationToken ct = default);
+        string? workspaceId, CancellationToken ct = default);
 
     Task<List<JiraObjectTypeView>> GetObjectTypesAsync(IssueTrackerConnection connection, string? token,
-        string workspaceId, int schemaId, CancellationToken ct = default);
+        string? workspaceId, int schemaId, CancellationToken ct = default);
 
     /// <summary>
     /// An object type's attributes. Needed twice: to populate the mapping editor's source picker, and
@@ -72,18 +73,18 @@ public interface IJiraAssetsClient
     /// carry them.
     /// </summary>
     Task<List<JiraObjectTypeAttributeView>> GetAttributesAsync(IssueTrackerConnection connection,
-        string? token, string workspaceId, int objectTypeId, CancellationToken ct = default);
+        string? token, string? workspaceId, int objectTypeId, CancellationToken ct = default);
 
     /// <summary>One page of an AQL search.</summary>
-    Task<AssetSearchPage> SearchAsync(IssueTrackerConnection connection, string? token, string workspaceId,
+    Task<AssetSearchPage> SearchAsync(IssueTrackerConnection connection, string? token, string? workspaceId,
         string aql, int startAt, int maxResults, CancellationToken ct = default);
 
     /// <summary>
-    /// Proves the credential reaches <c>api.atlassian.com</c>, the workspace id resolves, and the
-    /// site's plan includes Assets — three things that fail independently.
+    /// Proves the credential reaches Assets and that Assets answers — on Cloud also that the workspace
+    /// id resolves and the plan includes Assets, three things that fail independently.
     /// </summary>
     Task<ConnectionTestResult> TestAsync(IssueTrackerConnection connection, string? token,
-        string workspaceId, CancellationToken ct = default);
+        string? workspaceId, CancellationToken ct = default);
 }
 
 /// <summary>

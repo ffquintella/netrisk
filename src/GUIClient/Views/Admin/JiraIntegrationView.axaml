@@ -124,151 +124,152 @@
         <!-- Service Management: the desk, the queues that feed the mirror, and the mirror. -->
         <!-- ============================================================================= -->
         <TabItem Header="{Binding StrServiceManagement}">
-            <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
-                <WrapPanel Grid.Row="0">
-                    <CheckBox IsChecked="{Binding Settings.JsmEnabled}" Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrEnableJsm}"/>
-                    </CheckBox>
+            <Panel>
+                <!-- Cloud-only. On Data Center the tab stays and says why it is empty; the deployment
+                     is the connection's provider kind, so there is no picker to get wrong. -->
+                <TextBlock Text="{Binding StrServiceManagementCloudOnly}" TextWrapping="Wrap"
+                           Margin="10" Opacity="0.7" IsVisible="{Binding !SupportsServiceManagement}"/>
+                <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10"
+                      IsVisible="{Binding SupportsServiceManagement}">
+                    <WrapPanel Grid.Row="0">
+                        <CheckBox IsChecked="{Binding Settings.JsmEnabled}" Margin="0 0 20 0">
+                            <TextBlock Text="{Binding StrEnableJsm}"/>
+                        </CheckBox>
 
-                    <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrDeployment}" Classes="fieldLabel"/>
-                        <ComboBox MinWidth="150" ItemsSource="{Binding Deployments}"
-                                  SelectedItem="{Binding Settings.Deployment}"/>
-                    </StackPanel>
-
-                    <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrServiceDesk}" Classes="fieldLabel"/>
-                        <StackPanel Orientation="Horizontal">
-                            <ComboBox MinWidth="230" ItemsSource="{Binding ServiceDesks}"
-                                      SelectedValue="{Binding Settings.ServiceDeskId}"
-                                      SelectedValueBinding="{Binding Id}"
-                                      DisplayMemberBinding="{Binding ProjectName}"/>
-                            <Button Classes="subButton" Margin="5 0 0 0"
-                                    Command="{Binding BtLoadServiceDesksClicked}"
-                                    ToolTip.Tip="{Binding StrLoadFromJira}">
-                                <material:MaterialIcon Kind="CloudDownload"/>
-                            </Button>
+                        <StackPanel Margin="0 0 20 0">
+                            <TextBlock Text="{Binding StrServiceDesk}" Classes="fieldLabel"/>
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox MinWidth="230" ItemsSource="{Binding ServiceDesks}"
+                                          SelectedValue="{Binding Settings.ServiceDeskId}"
+                                          SelectedValueBinding="{Binding Id}"
+                                          DisplayMemberBinding="{Binding ProjectName}"/>
+                                <Button Classes="subButton" Margin="5 0 0 0"
+                                        Command="{Binding BtLoadServiceDesksClicked}"
+                                        ToolTip.Tip="{Binding StrLoadFromJira}">
+                                    <material:MaterialIcon Kind="CloudDownload"/>
+                                </Button>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
 
-                    <StackPanel Margin="0 0 20 0">
-                        <TextBlock Text="{Binding StrRequestType}" Classes="fieldLabel"/>
-                        <TextBox Text="{Binding Settings.RequestTypeFilter}" MinWidth="180"
-                                 PlaceholderText="10001,10002"/>
-                    </StackPanel>
+                        <StackPanel Margin="0 0 20 0">
+                            <TextBlock Text="{Binding StrRequestType}" Classes="fieldLabel"/>
+                            <TextBox Text="{Binding Settings.RequestTypeFilter}" MinWidth="180"
+                                     PlaceholderText="10001,10002"/>
+                        </StackPanel>
 
-                    <StackPanel VerticalAlignment="Bottom">
-                        <CheckBox IsChecked="{Binding Settings.ImportSlas}">
-                            <TextBlock Text="{Binding StrImportSlas}"/>
-                        </CheckBox>
-                        <CheckBox IsChecked="{Binding Settings.SlaBreachNotifications}">
-                            <TextBlock Text="{Binding StrSlaBreachNotifications}"/>
-                        </CheckBox>
-                    </StackPanel>
-                </WrapPanel>
+                        <StackPanel VerticalAlignment="Bottom">
+                            <CheckBox IsChecked="{Binding Settings.ImportSlas}">
+                                <TextBlock Text="{Binding StrImportSlas}"/>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding Settings.SlaBreachNotifications}">
+                                <TextBlock Text="{Binding StrSlaBreachNotifications}"/>
+                            </CheckBox>
+                        </StackPanel>
+                    </WrapPanel>
 
-                <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0 10 0 0">
-                    <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*" Margin="0 10 0 0">
+                        <StackPanel Grid.Column="0" Margin="0 0 10 0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StrQueues}" Classes="header2"
+                                           VerticalAlignment="Center"/>
+                                <Button Classes="subButton" Margin="10 0 0 0"
+                                        Command="{Binding BtLoadQueuesClicked}"
+                                        ToolTip.Tip="{Binding StrLoadFromJira}">
+                                    <material:MaterialIcon Kind="CloudDownload"/>
+                                </Button>
+                            </StackPanel>
+                            <DataGrid ItemsSource="{Binding Queues}" MinHeight="150"
+                                      CanUserSortColumns="False">
+                                <DataGrid.Columns>
+                                    <DataGridCheckBoxColumn Header="{Binding StrImportRequests}"
+                                                            Binding="{Binding Import}" Width="110"/>
+                                    <DataGridTextColumn Header="{Binding StrQueue}" Binding="{Binding Name}"
+                                                        IsReadOnly="True" Width="*"/>
+                                    <DataGridTextColumn Header="#" Binding="{Binding IssueCount}"
+                                                        IsReadOnly="True" Width="80"/>
+                                    <DataGridTextColumn Header="{Binding StrMaxRequests}"
+                                                        Binding="{Binding MaxRequests}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
+                            <DataGrid ItemsSource="{Binding RequestTypes}" IsReadOnly="True" MinHeight="150">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="90"/>
+                                    <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"
+                                                        Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Margin="0 10 0 0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding StrQueues}" Classes="header2"
+                            <TextBlock Text="{Binding StrMirroredRequests}" Classes="header2"
                                        VerticalAlignment="Center"/>
-                            <Button Classes="subButton" Margin="10 0 0 0"
-                                    Command="{Binding BtLoadQueuesClicked}"
-                                    ToolTip.Tip="{Binding StrLoadFromJira}">
-                                <material:MaterialIcon Kind="CloudDownload"/>
-                            </Button>
+                            <CheckBox IsChecked="{Binding BreachedOnly}" Margin="15 0 0 0">
+                                <TextBlock Text="{Binding StrBreachedOnly}"/>
+                            </CheckBox>
                         </StackPanel>
-                        <DataGrid ItemsSource="{Binding Queues}" MinHeight="150"
-                                  CanUserSortColumns="False">
+                        <DataGrid ItemsSource="{Binding MirroredRequests}"
+                                  SelectedItem="{Binding SelectedRequest}" IsReadOnly="True"
+                                  MinHeight="160">
                             <DataGrid.Columns>
-                                <DataGridCheckBoxColumn Header="{Binding StrImportRequests}"
-                                                        Binding="{Binding Import}" Width="110"/>
-                                <DataGridTextColumn Header="{Binding StrQueue}" Binding="{Binding Name}"
-                                                    IsReadOnly="True" Width="*"/>
-                                <DataGridTextColumn Header="#" Binding="{Binding IssueCount}"
-                                                    IsReadOnly="True" Width="80"/>
-                                <DataGridTextColumn Header="{Binding StrMaxRequests}"
-                                                    Binding="{Binding MaxRequests}" Width="110"/>
+                                <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding IssueKey}"
+                                                    Width="110"/>
+                                <DataGridTextColumn Header="{Binding StrRequestType}"
+                                                    Binding="{Binding RequestTypeName}" Width="150"/>
+                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Summary}"
+                                                    Width="*"/>
+                                <DataGridTextColumn Header="{Binding StrStatus}"
+                                                    Binding="{Binding StatusName}" Width="140"/>
+                                <DataGridTextColumn Header="{Binding StrReporter}"
+                                                    Binding="{Binding ReporterDisplayName}" Width="150"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrBreached}"
+                                                        Binding="{Binding AnySlaBreached}" Width="90"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- The selected request's SLA cycles. A row per cycle, because a reopened
+                             request has more than one of the same metric and the first breach matters. -->
+                        <TextBlock Text="{Binding StrMetric}" Classes="header2" Margin="0 8 0 0"
+                                   IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        <DataGrid ItemsSource="{Binding SelectedRequest.Slas}" IsReadOnly="True"
+                                  MinHeight="90"
+                                  IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrMetric}"
+                                                    Binding="{Binding MetricName}" Width="*"/>
+                                <DataGridCheckBoxColumn Header="{Binding StrBreached}"
+                                                        Binding="{Binding Breached}" Width="90"/>
+                                <DataGridTextColumn Header="{Binding StrRemaining}"
+                                                    Binding="{Binding RemainingMs}" Width="130"/>
+                                <DataGridTextColumn Header="{Binding StrStatus}"
+                                                    Binding="{Binding CycleStartAt}" Width="170"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding StrRequestType}" Classes="header2"/>
-                        <DataGrid ItemsSource="{Binding RequestTypes}" IsReadOnly="True" MinHeight="150">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="90"/>
-                                <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"
-                                                    Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
+                        <Button Classes="dialog1" Command="{Binding BtSaveSettingsClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                                <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtSyncJsmClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Sync"/>
+                                <TextBlock Text="{Binding StrSyncNow}" Margin="5 0 0 0"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding StrRecordLinkNote}" TextWrapping="Wrap" MaxWidth="520"
+                                   Margin="20 0 0 0" VerticalAlignment="Center" Opacity="0.7"/>
                     </StackPanel>
                 </Grid>
-
-                <StackPanel Grid.Row="2" Margin="0 10 0 0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding StrMirroredRequests}" Classes="header2"
-                                   VerticalAlignment="Center"/>
-                        <CheckBox IsChecked="{Binding BreachedOnly}" Margin="15 0 0 0">
-                            <TextBlock Text="{Binding StrBreachedOnly}"/>
-                        </CheckBox>
-                    </StackPanel>
-                    <DataGrid ItemsSource="{Binding MirroredRequests}"
-                              SelectedItem="{Binding SelectedRequest}" IsReadOnly="True"
-                              MinHeight="160">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding IssueKey}"
-                                                Width="110"/>
-                            <DataGridTextColumn Header="{Binding StrRequestType}"
-                                                Binding="{Binding RequestTypeName}" Width="150"/>
-                            <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Summary}"
-                                                Width="*"/>
-                            <DataGridTextColumn Header="{Binding StrStatus}"
-                                                Binding="{Binding StatusName}" Width="140"/>
-                            <DataGridTextColumn Header="{Binding StrReporter}"
-                                                Binding="{Binding ReporterDisplayName}" Width="150"/>
-                            <DataGridCheckBoxColumn Header="{Binding StrBreached}"
-                                                    Binding="{Binding AnySlaBreached}" Width="90"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- The selected request's SLA cycles. A row per cycle, because a reopened
-                         request has more than one of the same metric and the first breach matters. -->
-                    <TextBlock Text="{Binding StrMetric}" Classes="header2" Margin="0 8 0 0"
-                               IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                    <DataGrid ItemsSource="{Binding SelectedRequest.Slas}" IsReadOnly="True"
-                              MinHeight="90"
-                              IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="{Binding StrMetric}"
-                                                Binding="{Binding MetricName}" Width="*"/>
-                            <DataGridCheckBoxColumn Header="{Binding StrBreached}"
-                                                    Binding="{Binding Breached}" Width="90"/>
-                            <DataGridTextColumn Header="{Binding StrRemaining}"
-                                                Binding="{Binding RemainingMs}" Width="130"/>
-                            <DataGridTextColumn Header="{Binding StrStatus}"
-                                                Binding="{Binding CycleStartAt}" Width="170"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
-                    <Button Classes="dialog1" Command="{Binding BtSaveSettingsClicked}">
-                        <StackPanel Orientation="Horizontal">
-                            <material:MaterialIcon Kind="ContentSave"/>
-                            <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtSyncJsmClicked}">
-                        <StackPanel Orientation="Horizontal">
-                            <material:MaterialIcon Kind="Sync"/>
-                            <TextBlock Text="{Binding StrSyncNow}" Margin="5 0 0 0"/>
-                        </StackPanel>
-                    </Button>
-                    <TextBlock Text="{Binding StrRecordLinkNote}" TextWrapping="Wrap" MaxWidth="520"
-                               Margin="20 0 0 0" VerticalAlignment="Center" Opacity="0.7"/>
-                </StackPanel>
-            </Grid>
+            </Panel>
         </TabItem>
 
         <!-- ============================================================================= -->
@@ -283,7 +284,7 @@
                         <TextBlock Text="{Binding StrEnableAssets}"/>
                     </CheckBox>
 
-                    <StackPanel Margin="0 0 20 0">
+                    <StackPanel Margin="0 0 20 0" IsVisible="{Binding UsesAssetsWorkspace}">
                         <TextBlock Text="{Binding StrAssetsWorkspace}" Classes="fieldLabel"/>
                         <!-- Read-only: the workspace id is discovered from the site. A typed one
                              produces 404s from api.atlassian.com that read as bad credentials. -->
@@ -486,7 +487,8 @@
                 </Grid>
 
                 <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0 10 0 0">
-                    <Button Classes="dialog1" Command="{Binding BtSaveObjectMappingsClicked}">
+                    <!-- Saves the Assets settings above and the object mappings. -->
+                    <Button Classes="dialog1" Command="{Binding BtSaveAssetsClicked}">
                         <StackPanel Orientation="Horizontal">
                             <material:MaterialIcon Kind="ContentSave"/>
                             <TextBlock Text="{Binding StrSave}" Margin="5 0 0 0"/>

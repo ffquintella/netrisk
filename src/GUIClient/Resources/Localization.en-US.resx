@@ -2928,6 +2928,12 @@
   <data name="JiraAssetsPlanNoteMSG" xml:space="preserve">
     <value>Assets requires Jira Service Management Premium or Enterprise. The workspace id is discovered from the site — it cannot be typed. Always preview an import before running it.</value>
   </data>
+  <data name="JiraServiceManagementCloudOnlyMSG" xml:space="preserve">
+    <value>Service Management (service desks, queues and the SLA mirror) is available for Jira Cloud only. This is a Jira Data Center connection: use the Assets tab to import its CMDB.</value>
+  </data>
+  <data name="JiraAssetsDataCenterNoteMSG" xml:space="preserve">
+    <value>On Jira Data Center, Assets is read from this instance (/rest/assets/1.0, or /rest/insight/1.0 on older versions) with the connection's own credential — there is no workspace to discover. Service Management is available for Jira Cloud only. Always preview an import before running it.</value>
+  </data>
   <data name="DuplicateStatusMappingMSG" xml:space="preserve">
     <value>Two rows map the status '{0}'. One action per status, or the result depends on row order.</value>
   </data>

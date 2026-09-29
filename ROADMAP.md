@@ -272,13 +272,15 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 > version: 2.19.0
 
 - [x] T79 Extend the Jira connection with a Service Management/Assets facet (S34)
-  - note: only Jira Cloud is supported; Data Center's Insight API is refused at save
+  - note: Assets runs on Cloud and Data Center (T220); Service Management stays Cloud-only and enabling it on a Data Center connection is refused at save
 - [x] T80 Mirror service-desk requests and SLA cycles with breach notifications
 - [x] T81 Generalize finding_issue_links to incidents and risks via a target_kind discriminator
 - [x] T82 Import Jira Assets registers for applications, servers and machines
 - [x] T83 Make the status-mapping, template and severity-priority screens editable
 - [x] T84 Add a live template preview against a real finding before saving
 - [x] T85 Link an imported Assets object back to its Jira page by object key
+- [x] T220 Import Jira Assets from Jira Data Center connections through the instance's own Assets REST API (S34)
+  - note: tries /rest/assets/1.0 then /rest/insight/1.0 on a 404; verified against Atlassian's published reference and fixtures only, not a live Data Center instance
 
 ## Track 5 — Native Packaging & Release Engineering
 

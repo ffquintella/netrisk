@@ -232,6 +232,21 @@ BASE_REF=<sha> HEAD_REF=<sha> PR_BODY="$(cat msg.txt)" ./scripts/security/check-
 
 ## Docs & Roadmap
 
-- [ROADMAP.md](ROADMAP.md) — planned direction (short/medium/long term).
-- [CHANGELOG.md](CHANGELOG.md) — Keep-a-Changelog format, SemVer. Record user-visible changes under `[NEXT] - Unreleased` as you work.
+Both files follow **Project Tracking Format v1** (`ptf: 1` front matter; spec:
+[TRACKING-FORMAT.md](https://github.com/felipe/project-tracker/blob/main/TRACKING-FORMAT.md)). Every
+item has a stable ID that never changes or gets reused, so a new item takes the next unused number:
+
+- [ROADMAP.md](ROADMAP.md) is organised by **Track** (`## Track n — …`, a capability area). Each track
+  holds **milestones** `### [M<n>] Title`, and each milestone has a `> outcome:` line and, where they
+  apply, `> version:`, `> spec:` and `> depends-on:` lines. Milestones hold **tasks**:
+  `- [ ] T<n> Imperative sentence (S<n>)`, with an indented `  - note:` sub-bullet recording any gap
+  between the spec and what was delivered. Unscheduled tasks go under `## Backlog`. Long-form
+  design lives under `docs/`, not in the roadmap. It is registered in the `## Specs` table as
+  `S<n>` and referenced by that ID.
+- [CHANGELOG.md](CHANGELOG.md) uses Keep a Changelog 1.1.0 + SemVer. Record user-visible changes under
+  `## [Unreleased]` as you work, one sentence per entry, in the imperative, ending with the IDs it
+  delivers (`… (T79)`, `… (T113, S22)`). Categories go in the canonical order `Added`, `Changed`,
+  `Deprecated`, `Removed`, `Fixed`, `Security`, and dates are ISO (`YYYY-MM-DD`).
+- When a task ships, tick it (`[x]`) in the roadmap **and** reference it from a changelog entry. Every
+  `[x]` task must appear in the changelog, and every ID the changelog cites must exist in the roadmap.
 - [docs/](docs/) — fundamentals, product guides, and per-feature stubs under [docs/features/](docs/features/).

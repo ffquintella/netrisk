@@ -2994,6 +2994,12 @@
   <data name="JiraAssetsPlanNoteMSG" xml:space="preserve">
     <value>O Assets requer Jira Service Management Premium ou Enterprise. O id do workspace é descoberto no site — não pode ser digitado. Sempre pré-visualize uma importação antes de executá-la.</value>
   </data>
+  <data name="JiraServiceManagementCloudOnlyMSG" xml:space="preserve">
+    <value>O Service Management (service desks, filas e o espelho de SLA) está disponível apenas para o Jira Cloud. Esta é uma conexão Jira Data Center: use a aba Assets para importar o CMDB.</value>
+  </data>
+  <data name="JiraAssetsDataCenterNoteMSG" xml:space="preserve">
+    <value>No Jira Data Center, o Assets é lido desta instância (/rest/assets/1.0, ou /rest/insight/1.0 em versões antigas) com a credencial da própria conexão — não há workspace a descobrir. O Service Management está disponível apenas para o Jira Cloud. Sempre pré-visualize uma importação antes de executá-la.</value>
+  </data>
   <data name="DuplicateStatusMappingMSG" xml:space="preserve">
     <value>Duas linhas mapeiam o status '{0}'. Uma ação por status, ou o resultado depende da ordem das linhas.</value>
   </data>

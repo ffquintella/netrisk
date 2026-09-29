@@ -145,7 +145,7 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
         Assert.False(settings.JsmEnabled);
         Assert.False(settings.AssetsEnabled);
         Assert.True(settings.ImportSlas);
-        Assert.Empty(settings.QueueImports);
+        Assert.Empty(settings.QueueImports!);
     }
 
     [Fact]
@@ -163,16 +163,54 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
         ];
 
         var saved = await _svc.SaveSettingsAsync(id, settings);
-        Assert.Equal(2, saved.QueueImports.Count);
+        Assert.Equal(2, saved.QueueImports!.Count);
 
-        saved.QueueImports = [saved.QueueImports.First(q => q.QueueId == 11)];
+        saved.QueueImports = [saved.QueueImports!.First(q => q.QueueId == 11)];
 
         var second = await _svc.SaveSettingsAsync(id, saved);
 
         // Wholesale, because the selection is edited as a checkbox list: a per-row save leaves a
         // selection that is neither the old one nor the one the operator chose.
-        Assert.Single(second.QueueImports);
-        Assert.Equal(11, second.QueueImports[0].QueueId);
+        Assert.Single(second.QueueImports!);
+        Assert.Equal(11, second.QueueImports![0].QueueId);
+    }
+
+    [Fact]
+    public async Task ANullQueueSelectionKeepsTheStoredOne()
+    {
+        var id = await JiraConnectionAsync();
+
+        var settings = await _svc.GetSettingsAsync(id);
+        settings.ServiceDeskId = 3;
+        settings.QueueImports =
+            [new JiraQueueImportView { ServiceDeskId = 3, QueueId = 10, QueueName = "Open", MaxRequests = 50 }];
+        var saved = await _svc.SaveSettingsAsync(id, settings);
+
+        // Regression: a Save from a queue grid that was never loaded deleted every stored import.
+        saved.QueueImports = null;
+        saved.ImportSlas = false;
+        var second = await _svc.SaveSettingsAsync(id, saved);
+
+        Assert.False(second.ImportSlas);
+        var queue = Assert.Single(second.QueueImports!);
+        Assert.Equal(10, queue.QueueId);
+        Assert.Equal(50, queue.MaxRequests);
+    }
+
+    [Fact]
+    public async Task AnEmptyQueueSelectionClearsTheStoredOne()
+    {
+        var id = await JiraConnectionAsync();
+
+        var settings = await _svc.GetSettingsAsync(id);
+        settings.ServiceDeskId = 3;
+        settings.QueueImports = [new JiraQueueImportView { ServiceDeskId = 3, QueueId = 10 }];
+        var saved = await _svc.SaveSettingsAsync(id, settings);
+
+        saved.QueueImports = [];
+        var second = await _svc.SaveSettingsAsync(id, saved);
+
+        Assert.Empty(second.QueueImports!);
     }
 
     [Fact]
@@ -192,8 +230,8 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
 
         // A 0 would import nothing and a million would hold a job for an hour, and neither is what
         // the operator who typed it meant.
-        Assert.Equal(1, saved.QueueImports.Single(q => q.QueueId == 10).MaxRequests);
-        Assert.Equal(5000, saved.QueueImports.Single(q => q.QueueId == 11).MaxRequests);
+        Assert.Equal(1, saved.QueueImports!.Single(q => q.QueueId == 10).MaxRequests);
+        Assert.Equal(5000, saved.QueueImports!.Single(q => q.QueueId == 11).MaxRequests);
     }
 
     /// <summary>
@@ -211,26 +249,134 @@ public class JiraIntegrationServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Contains("GitHub", ex.Message);
     }
 
-    /// <summary>
-    /// Data Center is recognised and refused, not half-served.
-    ///
-    /// Its Assets equivalent is Insight at <c>/rest/insight/1.0/</c> with a different object model, so
-    /// pointing the Cloud client at it produces 404s from <c>api.atlassian.com</c> that read as "your
-    /// credentials are wrong" — and an operator would rotate a token that was never the problem.
-    /// </summary>
+    /// <summary>Service Management stays Cloud-only, and says so rather than failing upstream.</summary>
     [Fact]
-    public async Task ADataCenterConnectionIsRefusedWithAReasonRatherThanFailingUpstream()
+    public async Task ServiceManagementOnADataCenterConnectionIsRefusedWithItsReason()
     {
-        var id = await JiraConnectionAsync();
+        var id = await DataCenterConnectionAsync();
 
-        var settings = await _svc.GetSettingsAsync(id);
-        settings.Deployment = JiraDeployment.DataCenter;
-        await _svc.SaveSettingsAsync(id, settings);
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.GetServiceDesksAsync(id));
+
+        Assert.Contains("Data Center", ex.Message);
+        Assert.Contains("Service Management is implemented for Jira Cloud only", ex.Message);
+        Assert.Empty(FakeOutboundHttpClient.Requests);
+
+        await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.SyncServiceManagementAsync(id));
+    }
+
+    /// <summary>Assets on Data Center reads the instance itself, with the PAT, and asks for no workspace.</summary>
+    [Fact]
+    public async Task AssetsOnADataCenterConnectionReadsTheInstanceWithoutAWorkspace()
+    {
+        var id = await DataCenterConnectionAsync();
+
+        FakeOutboundHttpClient.RuleFor("/rest/assets/1.0/objectschema/list",
+            """{ "objectschemas": [ { "id": 3, "name": "CMDB", "objectSchemaKey": "CMDB", "objectCount": 12, "objectTypeCount": 4 } ] }""");
+
+        var schemas = await _svc.GetAssetSchemasAsync(id);
+
+        Assert.Equal("CMDB", Assert.Single(schemas).Name);
+
+        var request = Assert.Single(FakeOutboundHttpClient.Requests);
+        Assert.Equal("https://hml-jira.acme.br/rest/assets/1.0/objectschema/list", request.Url);
+        Assert.Equal("Bearer pat", request.Headers["Authorization"]);
+    }
+
+    [Fact]
+    public async Task AssetsOnANonJiraConnectionIsStillRefused()
+    {
+        var id = await GitHubConnectionAsync();
 
         var ex = await Assert.ThrowsAsync<InvalidParameterException>(
             () => _svc.GetAssetSchemasAsync(id));
 
-        Assert.Contains("Data Center", ex.Message);
+        Assert.Contains("GitHub", ex.Message);
+        Assert.Empty(FakeOutboundHttpClient.Requests);
+    }
+
+    /// <summary>The save-time refusal covers Service Management only; Assets saves on Data Center.</summary>
+    [Fact]
+    public async Task EnablingServiceManagementOnADataCenterConnectionIsRefusedAtSave()
+    {
+        var id = await DataCenterConnectionAsync();
+
+        var settings = await _svc.GetSettingsAsync(id);
+        settings.JsmEnabled = true;
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.SaveSettingsAsync(id, settings));
+
+        Assert.Contains("Cloud only", ex.Message);
+        Assert.False((await _svc.GetSettingsAsync(id)).JsmEnabled);
+    }
+
+    [Fact]
+    public async Task EnablingAssetsOnADataCenterConnectionSavesWithoutWorkspaceDiscovery()
+    {
+        var id = await DataCenterConnectionAsync();
+
+        var settings = await _svc.GetSettingsAsync(id);
+        settings.AssetsEnabled = true;
+        settings.AssetsSchemaId = 3;
+        settings.AssetsWorkspaceId = "typed-by-a-client";
+
+        var saved = await _svc.SaveSettingsAsync(id, settings);
+
+        Assert.True(saved.AssetsEnabled);
+        Assert.Equal(3, saved.AssetsSchemaId);
+        Assert.Null(saved.AssetsWorkspaceId);
+        Assert.Empty(FakeOutboundHttpClient.Requests);
+    }
+
+    /// <summary>The provider kind is the one source of truth; the view's Deployment cannot override it.</summary>
+    [Fact]
+    public async Task TheDeploymentFollowsTheProviderKindAndIgnoresTheClient()
+    {
+        var dataCenter = await DataCenterConnectionAsync();
+        var cloud = await JiraConnectionAsync();
+
+        Assert.Equal(JiraDeployment.DataCenter, (await _svc.GetSettingsAsync(dataCenter)).Deployment);
+
+        var settings = await _svc.GetSettingsAsync(cloud);
+        settings.Deployment = JiraDeployment.DataCenter;
+        var saved = await _svc.SaveSettingsAsync(cloud, settings);
+
+        Assert.Equal(JiraDeployment.Cloud, saved.Deployment);
+
+        using var ctx = OpenContext();
+        Assert.Equal(JiraDeployment.Cloud,
+            ctx.JiraConnectionSettings.Single(s => s.ConnectionId == cloud).Deployment);
+    }
+
+    [Fact]
+    public async Task LinkingARecordOnADataCenterConnectionIsRefusedWithItsOwnReason()
+    {
+        var id = await DataCenterConnectionAsync();
+
+        var ex = await Assert.ThrowsAsync<InvalidParameterException>(
+            () => _svc.LinkRecordAsync(id, IssueLinkTargetKind.Incident, 1, "SDESI-1", 1));
+
+        Assert.Contains("incidents and risks", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(IssueTrackerProviderKind.Jira, nameof(JiraFacet.ServiceManagement), false)]
+    [InlineData(IssueTrackerProviderKind.Jira, nameof(JiraFacet.Assets), false)]
+    [InlineData(IssueTrackerProviderKind.Jira, nameof(JiraFacet.RecordLinks), false)]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, nameof(JiraFacet.ServiceManagement), true)]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, nameof(JiraFacet.Assets), false)]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, nameof(JiraFacet.RecordLinks), true)]
+    [InlineData(IssueTrackerProviderKind.GitHub, nameof(JiraFacet.Assets), true)]
+    [InlineData(IssueTrackerProviderKind.GitLab, nameof(JiraFacet.ServiceManagement), true)]
+    public void TheGateAllowsEachFacetOnlyWhereItIsImplemented(IssueTrackerProviderKind kind,
+        string facet, bool refused)
+    {
+        var connection = new IssueTrackerConnection { Name = "c", Provider = kind };
+
+        Assert.Equal(refused,
+            JiraIntegrationService.Refusal(connection, Enum.Parse<JiraFacet>(facet)) != null);
     }
 
     /// <summary>

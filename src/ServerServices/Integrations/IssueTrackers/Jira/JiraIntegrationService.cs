@@ -36,16 +36,15 @@ public partial class JiraIntegrationService(
     : ServiceBase(logger, dalService), IJiraIntegrationService
 {
     /// <summary>
-    /// Resolves a connection and its decrypted token, refusing anything that is not a usable Jira
-    /// Cloud connection.
+    /// Resolves a connection and its decrypted token for one Jira facet, refusing a connection the
+    /// facet is not implemented for with a sentence that names why.
     ///
-    /// The Data Center refusal is here rather than at each call site because it is the one place every
-    /// Jira read passes through: a Data Center connection reaching the Assets client would produce
-    /// 404s from <c>api.atlassian.com</c> that read as "your credentials are wrong", and an operator
-    /// would rotate a token that was never the problem.
+    /// Here rather than at each call site because every Service Management, Assets and record-link
+    /// read passes through it. The provider kind alone decides — Assets on both deployments, Service
+    /// Management and record links on Cloud only — so a settings row can never re-route a call.
     /// </summary>
     private async Task<(IssueTrackerConnection Connection, string? Token, JiraConnectionSettings Settings)>
-        ResolveAsync(int connectionId)
+        ResolveAsync(int connectionId, JiraFacet facet)
     {
         await using var db = DalService.GetContext();
 
@@ -56,31 +55,43 @@ public partial class JiraIntegrationService(
                              connectionId.ToString(),
                              new Exception($"No issue-tracker connection {connectionId}."));
 
-        if (connection.Provider != IssueTrackerProviderKind.Jira)
-            throw new InvalidParameterException(nameof(connectionId),
-                $"Connection '{connection.Name}' is a {connection.Provider} connection. Service "
-                + "Management and Assets are Jira features.");
+        if (Refusal(connection, facet) is { } refusal)
+            throw new InvalidParameterException(nameof(connectionId), refusal);
 
-        var settings = connection.JiraSettings ?? await EnsureSettingsAsync(connectionId);
-
-        if (settings.Deployment == JiraDeployment.DataCenter)
-            throw new InvalidParameterException(nameof(connectionId),
-                $"Connection '{connection.Name}' is configured as Jira Data Center. Service Management "
-                + "and Assets are implemented for Jira Cloud only — Data Center serves Insight from "
-                + "/rest/insight/1.0/ with a different object model.");
+        var settings = connection.JiraSettings
+                       ?? await EnsureSettingsAsync(connectionId, connection.Provider);
 
         return (connection, await resolver.ResolveAsync(connection.EncryptedToken), settings);
+    }
+
+    /// <summary>Why <paramref name="facet"/> cannot be used on this connection, or null when it can.</summary>
+    internal static string? Refusal(IssueTrackerConnection connection, JiraFacet facet)
+    {
+        if (!JiraDialect.IsJira(connection.Provider))
+            return $"Connection '{connection.Name}' is a {connection.Provider} connection. Service "
+                   + "Management and Assets are Jira features.";
+
+        return facet switch
+        {
+            JiraFacet.Assets => null,
+            _ when JiraDialect.SupportsServiceManagement(connection.Provider) => null,
+            JiraFacet.ServiceManagement =>
+                $"Connection '{connection.Name}' is a Jira Data Center connection. Service Management "
+                + "is implemented for Jira Cloud only; Assets is available on Data Center.",
+            _ =>
+                $"Connection '{connection.Name}' is a Jira Data Center connection. Creating or linking "
+                + "issues for incidents and risks is implemented for Jira Cloud only."
+        };
     }
 
     /// <summary>
     /// A connection and its credential for a platform-metadata read — the site's fields, its
     /// priorities, a project's statuses.
     ///
-    /// Separate from <see cref="ResolveAsync"/>, which refuses Data Center, because those three
-    /// endpoints exist on both deployments: only Service Management and Assets are Cloud-only. Going
-    /// through the strict resolve is what used to make the status picker on the issue-tracker screen
-    /// answer a Data Center connection with a sentence about Assets, leaving the operator to type the
-    /// workflow's status names from memory.
+    /// Separate from <see cref="ResolveAsync"/> because these three endpoints need no Jira facet at
+    /// all: they are platform API on both deployments. Going through the facet resolve is what used to
+    /// make the status picker on the issue-tracker screen answer a Data Center connection with a
+    /// sentence about Assets, leaving the operator to type the workflow's status names from memory.
     /// </summary>
     private async Task<(IssueTrackerConnection Connection, string? Token)> ResolveMetadataAsync(
         int connectionId)
@@ -109,7 +120,8 @@ public partial class JiraIntegrationService(
     /// "not configured yet" branch — that branch is a second layout that only the first operator to
     /// open the tab ever sees, which is where the bugs live.
     /// </summary>
-    private async Task<JiraConnectionSettings> EnsureSettingsAsync(int connectionId)
+    private async Task<JiraConnectionSettings> EnsureSettingsAsync(int connectionId,
+        IssueTrackerProviderKind provider)
     {
         await using var db = DalService.GetContext();
 
@@ -122,7 +134,7 @@ public partial class JiraIntegrationService(
         settings = new JiraConnectionSettings
         {
             ConnectionId = connectionId,
-            Deployment = JiraDeployment.Cloud,
+            Deployment = JiraDialect.DeploymentOf(provider),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -136,7 +148,7 @@ public partial class JiraIntegrationService(
 
     public async Task<JiraConnectionSettingsView> GetSettingsAsync(int connectionId)
     {
-        await EnsureConnectionExistsAsync(connectionId);
+        var provider = await RequireProviderAsync(connectionId);
 
         await using var db = DalService.GetContext();
 
@@ -144,16 +156,24 @@ public partial class JiraIntegrationService(
             .Include(s => s.QueueImports)
             .FirstOrDefaultAsync(s => s.ConnectionId == connectionId);
 
-        settings ??= await EnsureSettingsAsync(connectionId);
+        settings ??= await EnsureSettingsAsync(connectionId, provider);
 
-        return ToView(settings);
+        return ToView(settings, provider);
     }
 
     public async Task<JiraConnectionSettingsView> SaveSettingsAsync(int connectionId,
         JiraConnectionSettingsView view)
     {
-        await EnsureConnectionExistsAsync(connectionId);
-        await EnsureSettingsAsync(connectionId);
+        var provider = await RequireProviderAsync(connectionId);
+
+        // The one save-time refusal: a Data Center desk would be accepted here and then fail on every
+        // sync. Assets is not refused — it is implemented for Data Center.
+        if (view.JsmEnabled && !JiraDialect.SupportsServiceManagement(provider))
+            throw new InvalidParameterException(nameof(view.JsmEnabled),
+                "Service Management is implemented for Jira Cloud only; on a Jira Data Center "
+                + "connection only Assets can be enabled.");
+
+        await EnsureSettingsAsync(connectionId, provider);
 
         await using var db = DalService.GetContext();
 
@@ -161,7 +181,9 @@ public partial class JiraIntegrationService(
             .Include(s => s.QueueImports)
             .FirstAsync(s => s.ConnectionId == connectionId);
 
-        settings.Deployment = view.Deployment;
+        // Written from the kind, never from the client: the view's Deployment is display-only, so a
+        // client cannot make the stored value disagree with the provider the registry resolves.
+        settings.Deployment = JiraDialect.DeploymentOf(provider);
         settings.JsmEnabled = view.JsmEnabled;
         settings.ServiceDeskId = view.ServiceDeskId;
         settings.ServiceDeskName = Clip(view.ServiceDeskName, 255);
@@ -177,8 +199,12 @@ public partial class JiraIntegrationService(
         // The workspace id is discovered, never accepted from the client: a typed one produces 404s
         // from api.atlassian.com that look like an authentication failure. If Assets is being turned
         // on and we do not have one yet, ask the site for it now, so the operator finds out here
-        // rather than on the first import.
-        if (view.AssetsEnabled && string.IsNullOrWhiteSpace(settings.AssetsWorkspaceId))
+        // rather than on the first import. Data Center has no workspace, so there is nothing to ask.
+        if (JiraDialect.IsDataCenter(provider))
+        {
+            settings.AssetsWorkspaceId = null;
+        }
+        else if (view.AssetsEnabled && string.IsNullOrWhiteSpace(settings.AssetsWorkspaceId))
         {
             var connection = await db.IssueTrackerConnections.FirstAsync(c => c.Id == connectionId);
 
@@ -193,27 +219,31 @@ public partial class JiraIntegrationService(
         }
 
         // Queue selection is replaced wholesale. It is edited as a checkbox list, and a per-row save
-        // leaves a selection that is neither the old one nor the one the operator chose.
-        db.JiraQueueImports.RemoveRange(settings.QueueImports);
+        // leaves a selection that is neither the old one nor the one the operator chose. A null list
+        // means the client never loaded the queue grid, so the stored selection is kept.
+        if (view.QueueImports != null)
+        {
+            db.JiraQueueImports.RemoveRange(settings.QueueImports);
 
-        foreach (var queue in view.QueueImports.Where(q => q.QueueId > 0)
-                     .GroupBy(q => q.QueueId).Select(g => g.First()))
-            db.JiraQueueImports.Add(new JiraQueueImport
-            {
-                ConnectionId = connectionId,
-                ServiceDeskId = queue.ServiceDeskId > 0
-                    ? queue.ServiceDeskId
-                    : settings.ServiceDeskId ?? 0,
-                QueueId = queue.QueueId,
-                QueueName = Clip(queue.QueueName, 255),
-                Enabled = queue.Enabled,
-                LinkTargetKind = queue.LinkTargetKind,
-                // Clamped rather than trusted: a client sending 0 would import nothing and a client
-                // sending a million would hold a job for an hour, and neither is what the operator
-                // who typed it meant.
-                MaxRequests = Math.Clamp(queue.MaxRequests, 1, 5000),
-                CreatedAt = DateTime.UtcNow
-            });
+            foreach (var queue in view.QueueImports.Where(q => q.QueueId > 0)
+                         .GroupBy(q => q.QueueId).Select(g => g.First()))
+                db.JiraQueueImports.Add(new JiraQueueImport
+                {
+                    ConnectionId = connectionId,
+                    ServiceDeskId = queue.ServiceDeskId > 0
+                        ? queue.ServiceDeskId
+                        : settings.ServiceDeskId ?? 0,
+                    QueueId = queue.QueueId,
+                    QueueName = Clip(queue.QueueName, 255),
+                    Enabled = queue.Enabled,
+                    LinkTargetKind = queue.LinkTargetKind,
+                    // Clamped rather than trusted: a client sending 0 would import nothing and a client
+                    // sending a million would hold a job for an hour, and neither is what the operator
+                    // who typed it meant.
+                    MaxRequests = Math.Clamp(queue.MaxRequests, 1, 5000),
+                    CreatedAt = DateTime.UtcNow
+                });
+        }
 
         await db.SaveChangesAsync();
 
@@ -224,19 +254,19 @@ public partial class JiraIntegrationService(
 
     public async Task<List<JiraServiceDeskView>> GetServiceDesksAsync(int connectionId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token, _) = await ResolveAsync(connectionId, JiraFacet.ServiceManagement);
         return await jsm.GetServiceDesksAsync(connection, token);
     }
 
     public async Task<List<JiraRequestTypeView>> GetRequestTypesAsync(int connectionId, int serviceDeskId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token, _) = await ResolveAsync(connectionId, JiraFacet.ServiceManagement);
         return await jsm.GetRequestTypesAsync(connection, token, serviceDeskId);
     }
 
     public async Task<List<JiraQueueView>> GetQueuesAsync(int connectionId, int serviceDeskId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token, _) = await ResolveAsync(connectionId, JiraFacet.ServiceManagement);
         return await jsm.GetQueuesAsync(connection, token, serviceDeskId);
     }
 
@@ -260,16 +290,16 @@ public partial class JiraIntegrationService(
 
     public async Task<List<JiraObjectSchemaView>> GetAssetSchemasAsync(int connectionId)
     {
-        var (connection, token, settings) = await ResolveAsync(connectionId);
-        var workspace = await RequireWorkspaceAsync(connection, token, settings);
+        var (connection, token, settings) = await ResolveAsync(connectionId, JiraFacet.Assets);
+        var workspace = await AssetsWorkspaceAsync(connection, token, settings);
 
         return await assets.GetSchemasAsync(connection, token, workspace);
     }
 
     public async Task<List<JiraObjectTypeView>> GetAssetObjectTypesAsync(int connectionId, int schemaId)
     {
-        var (connection, token, settings) = await ResolveAsync(connectionId);
-        var workspace = await RequireWorkspaceAsync(connection, token, settings);
+        var (connection, token, settings) = await ResolveAsync(connectionId, JiraFacet.Assets);
+        var workspace = await AssetsWorkspaceAsync(connection, token, settings);
 
         return await assets.GetObjectTypesAsync(connection, token, workspace, schemaId);
     }
@@ -277,8 +307,8 @@ public partial class JiraIntegrationService(
     public async Task<List<JiraObjectTypeAttributeView>> GetAssetAttributesAsync(int connectionId,
         int objectTypeId)
     {
-        var (connection, token, settings) = await ResolveAsync(connectionId);
-        var workspace = await RequireWorkspaceAsync(connection, token, settings);
+        var (connection, token, settings) = await ResolveAsync(connectionId, JiraFacet.Assets);
+        var workspace = await AssetsWorkspaceAsync(connection, token, settings);
 
         return await assets.GetAttributesAsync(connection, token, workspace, objectTypeId);
     }
@@ -289,15 +319,18 @@ public partial class JiraIntegrationService(
             : MappableFields.ForAssetTarget(targetKind.Value);
 
     /// <summary>
-    /// The Assets workspace id, discovering and caching it if this is the first Assets call.
+    /// The Assets workspace id, discovering and caching it if this is the first Assets call — or null
+    /// on Data Center, which serves Assets from the instance itself and has no workspace.
     ///
     /// Discovered lazily rather than only on save, because an operator who configured Assets before
     /// the site had it provisioned would otherwise have a permanently blank workspace and no way to
     /// retry short of toggling the checkbox off and on.
     /// </summary>
-    private async Task<string> RequireWorkspaceAsync(IssueTrackerConnection connection, string? token,
+    private async Task<string?> AssetsWorkspaceAsync(IssueTrackerConnection connection, string? token,
         JiraConnectionSettings settings)
     {
+        if (JiraDialect.IsDataCenter(connection.Provider)) return null;
+
         if (!string.IsNullOrWhiteSpace(settings.AssetsWorkspaceId)) return settings.AssetsWorkspaceId;
 
         var workspace = await jsm.GetAssetsWorkspaceIdAsync(connection, token)
@@ -540,6 +573,20 @@ public partial class JiraIntegrationService(
 
     // --- shared helpers ---------------------------------------------------------------------
 
+    /// <summary>The connection's provider kind, or not-found. The kind decides the deployment.</summary>
+    private async Task<IssueTrackerProviderKind> RequireProviderAsync(int connectionId)
+    {
+        await using var db = DalService.GetContext();
+
+        var provider = await db.IssueTrackerConnections
+            .Where(c => c.Id == connectionId)
+            .Select(c => (IssueTrackerProviderKind?)c.Provider)
+            .FirstOrDefaultAsync();
+
+        return provider ?? throw new DataNotFoundException("issue tracker connection",
+            connectionId.ToString(), new Exception($"No issue-tracker connection {connectionId}."));
+    }
+
     private async Task EnsureConnectionExistsAsync(int connectionId)
     {
         await using var db = DalService.GetContext();
@@ -561,10 +608,13 @@ public partial class JiraIntegrationService(
         string.IsNullOrWhiteSpace(value) ? null
             : value.Length <= max ? value.Trim() : value.Trim()[..max];
 
-    private static JiraConnectionSettingsView ToView(JiraConnectionSettings settings) => new()
+    private static JiraConnectionSettingsView ToView(JiraConnectionSettings settings,
+        IssueTrackerProviderKind provider) => new()
     {
         ConnectionId = settings.ConnectionId,
-        Deployment = settings.Deployment,
+        // From the kind, so a row written before the kind existed cannot report a deployment the
+        // connection does not have.
+        Deployment = JiraDialect.DeploymentOf(provider),
         JsmEnabled = settings.JsmEnabled,
         ServiceDeskId = settings.ServiceDeskId,
         ServiceDeskName = settings.ServiceDeskName,
@@ -635,4 +685,12 @@ public partial class JiraIntegrationService(
 
     private static string Truncate(string text, int max) =>
         text.Length <= max ? text : text[..(max - 1)] + "…";
+}
+
+/// <summary>The Jira surfaces <c>ResolveAsync</c> gates, each with its own deployment support.</summary>
+internal enum JiraFacet
+{
+    ServiceManagement,
+    Assets,
+    RecordLinks
 }

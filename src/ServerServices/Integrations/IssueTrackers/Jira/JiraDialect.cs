@@ -30,6 +30,33 @@ internal static class JiraDialect
     internal static bool IsDataCenter(IssueTrackerProviderKind kind) =>
         kind == IssueTrackerProviderKind.JiraDataCenter;
 
+    internal static bool IsJira(IssueTrackerProviderKind kind) =>
+        kind is IssueTrackerProviderKind.Jira or IssueTrackerProviderKind.JiraDataCenter;
+
+    /// <summary>
+    /// The deployment a connection's Jira facet reports, derived from the kind and never stored
+    /// independently of it — a settings row that said Data Center on a Cloud connection used to be
+    /// the only way the two could disagree.
+    /// </summary>
+    internal static JiraDeployment DeploymentOf(IssueTrackerProviderKind kind) =>
+        IsDataCenter(kind) ? JiraDeployment.DataCenter : JiraDeployment.Cloud;
+
+    /// <summary>Service Management (the desk, its queues, the SLA mirror) is implemented for Cloud only.</summary>
+    internal static bool SupportsServiceManagement(IssueTrackerProviderKind kind) =>
+        kind == IssueTrackerProviderKind.Jira;
+
+    /// <summary>Assets is implemented for both: Cloud through a workspace, Data Center on the instance.</summary>
+    internal static bool SupportsAssets(IssueTrackerProviderKind kind) => IsJira(kind);
+
+    /// <summary>
+    /// The Data Center Assets REST roots, newest first. Assets 10.x (JSM 5 and later) serves
+    /// <c>/rest/assets/1.0</c>; the Insight app it replaced (Assets 9.x, JSM 4) served only
+    /// <c>/rest/insight/1.0</c>, whose object search is <c>iql/objects</c> rather than <c>aql/objects</c>.
+    /// </summary>
+    internal const string DataCenterAssetsRoot = "/rest/assets/1.0";
+
+    internal const string DataCenterInsightRoot = "/rest/insight/1.0";
+
     /// <summary>The REST root the platform API lives under, without a trailing slash.</summary>
     internal static string ApiBase(IssueTrackerProviderKind kind) =>
         IsDataCenter(kind) ? "/rest/api/2" : "/rest/api/3";

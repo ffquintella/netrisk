@@ -33,7 +33,7 @@ public partial class JiraIntegrationService
     public async Task<AssetImportResult> ImportAssetsAsync(int connectionId, bool dryRun,
         int? userId = null)
     {
-        var (connection, token, settings) = await ResolveAsync(connectionId);
+        var (connection, token, settings) = await ResolveAsync(connectionId, JiraFacet.Assets);
 
         var result = new AssetImportResult { DryRun = dryRun };
 
@@ -43,7 +43,7 @@ public partial class JiraIntegrationService
             return result;
         }
 
-        var workspace = await RequireWorkspaceAsync(connection, token, settings);
+        var workspace = await AssetsWorkspaceAsync(connection, token, settings);
 
         await using var db = DalService.GetContext();
 
@@ -118,7 +118,7 @@ public partial class JiraIntegrationService
     }
 
     private async Task ImportMappingAsync(AuditableContext db, IssueTrackerConnection connection,
-        string? token, string workspace, JiraObjectMapping mapping, bool dryRun, int? userId,
+        string? token, string? workspace, JiraObjectMapping mapping, bool dryRun, int? userId,
         AssetImportResult result)
     {
         // The attribute names come from the object type, not from the search payload: the AQL response
@@ -220,7 +220,8 @@ public partial class JiraIntegrationService
             ObjectKey = payload.ObjectKey,
             // Set on the dry run's sample too, so the preview an operator reads offers the same link
             // out to Jira that the imported register will.
-            ObjectUrl = AssetObjectUrl(connection.BaseUrl, payload.ObjectKey),
+            ObjectUrl = AssetObjectUrl(connection.Provider, connection.BaseUrl, payload.ObjectId,
+                payload.ObjectKey),
             ObjectTypeName = payload.ObjectTypeName ?? mapping.ObjectTypeName,
             Label = payload.Label,
             MappedName = projected.Name,
@@ -637,10 +638,10 @@ public partial class JiraIntegrationService
         // The base URL is read once and the links built from it, rather than a URL being stored per
         // row: a site that is renamed would otherwise leave every previously imported row pointing at
         // the old host.
-        var baseUrl = await db.IssueTrackerConnections
+        var site = await db.IssueTrackerConnections
             .Where(c => c.Id == connectionId)
-            .Select(c => c.BaseUrl)
-            .FirstOrDefaultAsync();
+            .Select(c => new { c.BaseUrl, c.Provider })
+            .FirstAsync();
 
         return (await db.JiraAssetObjects
                 .Where(o => o.ConnectionId == connectionId)
@@ -652,7 +653,7 @@ public partial class JiraIntegrationService
                 Id = o.Id,
                 ObjectId = o.ObjectId,
                 ObjectKey = o.ObjectKey,
-                ObjectUrl = AssetObjectUrl(baseUrl, o.ObjectKey),
+                ObjectUrl = AssetObjectUrl(site.Provider, site.BaseUrl, o.ObjectId, o.ObjectKey),
                 ObjectTypeName = o.ObjectTypeName,
                 Label = o.Label,
                 MappedName = o.MappedName,
@@ -707,6 +708,21 @@ public partial class JiraIntegrationService
         string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(objectKey)
             ? null
             : $"{baseUrl.TrimEnd('/')}/jira/servicedesk/assets/object/{Uri.EscapeDataString(objectKey)}";
+
+    /// <summary>
+    /// The object's page for either deployment. Data Center has no Cloud route; its object page is
+    /// <c>/secure/ShowObject.jspa?id={id}</c>, the <c>_links.self</c> the Assets REST API itself
+    /// returns, keyed on the numeric id.
+    /// </summary>
+    internal static string? AssetObjectUrl(IssueTrackerProviderKind provider, string? baseUrl,
+        string? objectId, string? objectKey)
+    {
+        if (!JiraDialect.IsDataCenter(provider)) return AssetObjectUrl(baseUrl, objectKey);
+
+        return string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(objectId)
+            ? null
+            : $"{baseUrl.TrimEnd('/')}/secure/ShowObject.jspa?id={Uri.EscapeDataString(objectId)}";
+    }
 
     /// <summary>
     /// The value written to <c>hosts.external_provider</c>, alongside Vision One's and

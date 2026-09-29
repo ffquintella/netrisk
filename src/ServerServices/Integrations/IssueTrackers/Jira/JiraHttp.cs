@@ -69,6 +69,15 @@ internal static class JiraHttp
         $"{AssetsHost}/jsm/assets/workspace/{Uri.EscapeDataString(workspaceId)}/v1{path}";
 
     /// <summary>
+    /// A Data Center Assets path: on the instance itself, under one of
+    /// <see cref="JiraDialect.DataCenterAssetsRoot"/> / <see cref="JiraDialect.DataCenterInsightRoot"/>,
+    /// with no workspace. Same host as the issue calls, so the SSRF policy treats it identically.
+    /// </summary>
+    internal static string DataCenterAssetsUrl(IssueTrackerConnection connection, string root,
+        string path) =>
+        SiteUrl(connection, root + path);
+
+    /// <summary>
     /// Reads a response body as JSON, or null when it is not JSON at all.
     ///
     /// Null rather than a throw because Jira answers some misconfigurations with an HTML sign-in page

@@ -39,8 +39,9 @@ Details worth knowing because they are easy to get wrong:
 * A Data Center **PAT sent as a basic-auth password does not authenticate**, and after a handful of
   such attempts Seraph puts the account behind a CAPTCHA and answers **403 even for a correct
   credential**. Clearing it takes one browser sign-in as that account. The connection test says so.
-* Service Management and Assets stay **Cloud-only**: Data Center serves Insight from
-  `/rest/insight/1.0/` with a different object model. Fields, priorities and project statuses *are*
+* **Assets works on Data Center** too, read from the instance's `/rest/assets/1.0` (or
+  `/rest/insight/1.0`) — see [Jira Service Management & Assets](jira-service-management.md). Service
+  Management stays **Cloud-only**. Fields, priorities and project statuses *are*
   read from both, so the status picker works either way.
 * GitLab addresses an issue by its per-project **`iid`**, not its global `id`. Using the id produces
   a 404 against a project that does have the issue.

@@ -12,6 +12,15 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.22.7] - 2026-09-29
+
+### Added
+- Import Jira Assets schemas, object types, attributes and objects from Jira Data Center connections, while Service Management stays Cloud-only (T220, S34)
+
+### Fixed
+- Keep the selected provider shown in the issue-tracker connection form after saving instead of blanking the field when the provider list reloads (T79)
+- Keep a Jira connection's stored service-desk queue imports when its Service Management settings are saved without loading the queues first, instead of deleting them (T80)
+
 ## [2.22.6] - 2026-09-28
 
 ### Added

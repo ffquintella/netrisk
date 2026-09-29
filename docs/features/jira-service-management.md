@@ -14,6 +14,7 @@ Jira site ──────────────┤
 
 api.atlassian.com ────────► Assets objects (AQL) ──► attribute mapping ──┬──► hosts
  /jsm/assets/workspace/…                                                 └──► application entities
+   (Data Center: the instance itself, /rest/assets/1.0 or /rest/insight/1.0)
 ```
 
 ## One connection, three facets
@@ -30,18 +31,36 @@ how a generic table stops being generic.
 
 | Setting | Notes |
 |---|---|
-| Deployment | **Cloud** or Data Center. Only Cloud is implemented; a Data Center connection is refused at save |
+| Deployment | Derived from the provider kind (`Jira` → Cloud, `JiraDataCenter` → Data Center), never chosen. Assets works on both; enabling Service Management on Data Center is refused at save |
 | Service desk | Picked from the site's own list |
 | Request-type filter | Comma-separated ids. Empty means every type |
 | Queue imports | Which queues feed the mirror, with a per-queue ceiling (clamped to 1–5000) |
-| Assets workspace | **Discovered**, never typed |
+| Assets workspace | **Discovered**, never typed. Cloud only — Data Center has none, and the field is hidden |
 | Assets schema | Picked from the workspace's own list |
 
-**Why Data Center is refused rather than half-supported.** Assets on Cloud is served from
-`api.atlassian.com/jsm/assets/workspace/{id}/v1`; Data Center's equivalent is Insight at
-`/rest/insight/1.0/` on the site, with a different object model. Pointing the Cloud client at a Data
-Center site produces 404s that read as "your credentials are wrong", and an operator would rotate a
-token that was never the problem.
+**Data Center: Assets yes, Service Management no.** Cloud serves Assets from
+`api.atlassian.com/jsm/assets/workspace/{id}/v1`. Data Center serves it from the instance itself, with
+the connection's own credential (PAT as bearer, or user + password), and has no workspace:
+
+| Read | Cloud | Data Center |
+|---|---|---|
+| Schemas | `GET …/v1/objectschema/list` → `{values:[…]}` | `GET {base}/rest/assets/1.0/objectschema/list` → `{objectschemas:[…]}` |
+| Object types | `GET …/objectschema/{id}/objecttypes/flat` | same path under `/rest/assets/1.0` — bare array on both |
+| Attributes | `GET …/objecttype/{id}/attributes` | same path under `/rest/assets/1.0` — bare array on both |
+| Objects | `POST …/object/aql?startAt=&maxResults=` body `{qlQuery}` → `{values, total, isLast}` | `GET /rest/assets/1.0/aql/objects?qlQuery=&page=&resultPerPage=` → `{objectEntries, totalFilterCount}` |
+| Object page | `{base}/jira/servicedesk/assets/object/{key}` | `{base}/secure/ShowObject.jspa?id={id}` |
+
+Assets 10.x (JSM 5 and later) serves `/rest/assets/1.0`; the Insight app it replaced (Assets 9.x)
+serves only `/rest/insight/1.0`, whose search is `iql/objects?iql=`. A **404** on the first root is
+retried once on the second; a 401/403 is not, since retrying a refused credential is what trips
+Seraph's CAPTCHA. References: [Assets REST 10.7.0](https://docs.atlassian.com/assets/REST/10.7.0/),
+[Assets REST 9.1.16](https://docs.atlassian.com/assets/REST/9.1.16/),
+[JSM DC REST — Assets](https://developer.atlassian.com/server/jira-servicedesk/rest/v1001/api-group-assets---aql/).
+The calls reach the same host as the Data Center issue calls through `IOutboundHttpClient`, so the
+SSRF policy treats them identically (`Integrations:AllowedPrivateHosts` if private networks are blocked).
+
+Service Management stays **Cloud-only**: its desk, queue and SLA reads are refused on a Data Center
+connection with a sentence saying so, and the scheduler polls only Cloud connections.
 
 ## Service Management, read-only
 
@@ -278,8 +297,8 @@ imported register needs `hosts`, because that is what it describes.
 1. On the Jira connection, set **Deployment** to Cloud and test the connection.
 2. **Service Management:** enable it, load the service desks, pick one, load the queues, tick the ones
    to import and set each ceiling. Save, then *Sync now*.
-3. **Assets:** enable it and save — the workspace id is discovered at that point. Load the schemas,
-   pick one, load the object types.
+3. **Assets:** enable it and save from the Assets tab — on Cloud the workspace id is discovered at that
+   point; Data Center has none. Load the schemas, pick one, load the object types.
 4. Add an object mapping per type: pick the type, the target (Host for servers and machines,
    Application for applications), and optionally an AQL filter.
 5. Map its attributes. **At minimum a `Name` target**; then responsible, environment, and the active
@@ -288,9 +307,9 @@ imported register needs `hosts`, because that is what it describes.
 
 ## Known limitations
 
-* **Data Center is not supported.** Insight has a different root and object model; a Data Center
-  connection is refused where it is configured.
-* **Assets needs Jira Service Management Premium or Enterprise.** The connection test distinguishes
+* **Service Management is Cloud-only.** On a Data Center connection only Assets is available.
+* **Data Center Assets is verified against Atlassian's published reference, not a live instance.**
+* **Assets on Cloud needs Jira Service Management Premium or Enterprise.** The connection test distinguishes
   "not entitled" (403/404 on the workspace endpoint) from "misconfigured", so a Standard-plan customer
   does not read a bug.
 * An unmatched `responsible` is reported and not created, so an application's owner stays unlinked until

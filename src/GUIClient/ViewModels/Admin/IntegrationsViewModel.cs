@@ -416,23 +416,19 @@ public class IntegrationsViewModel : ViewModelBase
     public IssueTrackerConnection IssueTrackerDraft { get; private set; } = NewIssueTracker();
 
     /// <summary>
-    /// The provider ComboBox's selection, guarded the same way as
-    /// <see cref="SelectedTrendMicroRegion"/> and for the same reason: the control resets its selection
-    /// to null when it cannot resolve the current value — on first render, and again every time the
-    /// provider list is cleared and refilled — and writes that null back through a two-way binding.
-    ///
-    /// Less damaging here than on the region, because <c>Provider</c> is a non-nullable enum and the
-    /// binding rejects the null rather than storing it. The dropdown still went blank next to a draft
-    /// that had a provider, and the shape of the binding is the defect either way.
+    /// The provider ComboBox's selection: the entry of the current provider list that matches the
+    /// draft. An item rather than the enum value, because the list is cleared and refilled on every
+    /// load and Avalonia never re-selects a <c>SelectedValue</c> after that — see
+    /// <see cref="ComboSelection"/>. A null from the control (the list being cleared) is ignored.
     /// </summary>
-    public IssueTrackerProviderKind? SelectedIssueTrackerProvider
+    public IssueTrackerProviderInfo? SelectedIssueTrackerProvider
     {
-        get => IssueTrackerDraft.Provider;
+        get => ComboSelection.ItemFor(IssueTrackerProviders, p => p.Provider, IssueTrackerDraft.Provider);
         set
         {
             if (value == null) return;
 
-            IssueTrackerDraft.Provider = value.Value;
+            IssueTrackerDraft.Provider = value.Provider;
             this.RaisePropertyChanged();
         }
     }

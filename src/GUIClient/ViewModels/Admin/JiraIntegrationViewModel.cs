@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Enums;
+using GUIClient.Tools;
 using Model.Integrations;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
@@ -30,7 +31,6 @@ public class JiraIntegrationViewModel : ViewModelBase
     public string StrFieldMapping { get; } = Localizer["FieldMapping"];
     public string StrServiceManagement { get; } = Localizer["ServiceManagement"];
     public string StrAssets { get; } = Localizer["JiraAssets"];
-    public string StrDeployment { get; } = Localizer["JiraDeployment"];
     public string StrServiceDesk { get; } = Localizer["ServiceDesk"];
     public string StrRequestType { get; } = Localizer["RequestType"];
     public string StrQueues { get; } = Localizer["Queues"];
@@ -96,13 +96,24 @@ public class JiraIntegrationViewModel : ViewModelBase
     /// </summary>
     public string StrRecordLinkNote { get; } = Localizer["JiraRecordLinkNoteMSG"];
 
-    public string StrAssetsPlanNote { get; } = Localizer["JiraAssetsPlanNoteMSG"];
+    private string _strAssetsPlanNote = Localizer["JiraAssetsPlanNoteMSG"];
+
+    /// <summary>The note under the Assets settings: Cloud's plan/workspace note, or Data Center's.</summary>
+    public string StrAssetsPlanNote
+    {
+        get => _strAssetsPlanNote;
+        private set => this.RaiseAndSetIfChanged(ref _strAssetsPlanNote, value);
+    }
+
+    public string StrServiceManagementCloudOnly { get; } = Localizer["JiraServiceManagementCloudOnlyMSG"];
 
     #endregion
 
     private IIntegrationsService Integrations { get; } = GetService<IIntegrationsService>();
 
     private int _connectionId;
+
+    private IssueTrackerProviderKind _provider;
 
     /// <summary>
     /// True only for a Jira connection. The whole Jira surface is hidden otherwise, because offering a
@@ -113,6 +124,22 @@ public class JiraIntegrationViewModel : ViewModelBase
     {
         get => _isJira;
         private set => this.RaiseAndSetIfChanged(ref _isJira, value);
+    }
+
+    /// <summary>Cloud only. On Data Center the tab stays, showing why it is empty.</summary>
+    private bool _supportsServiceManagement;
+    public bool SupportsServiceManagement
+    {
+        get => _supportsServiceManagement;
+        private set => this.RaiseAndSetIfChanged(ref _supportsServiceManagement, value);
+    }
+
+    /// <summary>Cloud only: Data Center serves Assets from the instance and has no workspace.</summary>
+    private bool _usesAssetsWorkspace;
+    public bool UsesAssetsWorkspace
+    {
+        get => _usesAssetsWorkspace;
+        private set => this.RaiseAndSetIfChanged(ref _usesAssetsWorkspace, value);
     }
 
     private bool _busy;
@@ -131,9 +158,6 @@ public class JiraIntegrationViewModel : ViewModelBase
         private set => this.RaiseAndSetIfChanged(ref _settings, value);
     }
 
-    public ObservableCollection<JiraDeployment> Deployments { get; } =
-        new([JiraDeployment.Cloud, JiraDeployment.DataCenter]);
-
     public ObservableCollection<JiraServiceDeskView> ServiceDesks { get; } = new();
 
     public ObservableCollection<JiraRequestTypeView> RequestTypes { get; } = new();
@@ -144,6 +168,9 @@ public class JiraIntegrationViewModel : ViewModelBase
     /// decision, and it loses the issue counts that make the decision.
     /// </summary>
     public ObservableCollection<QueueSelection> Queues { get; } = new();
+
+    /// <summary>Whether <see cref="Queues"/> holds a live list, or is still the empty initial grid.</summary>
+    private bool _queuesLoaded;
 
     // --- field mapping ----------------------------------------------------------------------
 
@@ -256,6 +283,7 @@ public class JiraIntegrationViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtAddAttributeMappingClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtRemoveAttributeMappingClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtSaveObjectMappingsClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveAssetsClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtPreviewImportClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtImportClicked { get; }
 
@@ -285,6 +313,7 @@ public class JiraIntegrationViewModel : ViewModelBase
         BtAddAttributeMappingClicked = ReactiveCommand.Create(AddAttributeMapping);
         BtRemoveAttributeMappingClicked = ReactiveCommand.Create(RemoveAttributeMapping);
         BtSaveObjectMappingsClicked = ReactiveCommand.CreateFromTask(SaveObjectMappingsAsync);
+        BtSaveAssetsClicked = ReactiveCommand.CreateFromTask(SaveAssetsAsync);
         BtPreviewImportClicked = ReactiveCommand.CreateFromTask(PreviewImportAsync);
         BtImportClicked = ReactiveCommand.CreateFromTask(ImportAsync);
 
@@ -310,7 +339,11 @@ public class JiraIntegrationViewModel : ViewModelBase
     public async Task LoadAsync(int connectionId, IssueTrackerProviderKind provider)
     {
         _connectionId = connectionId;
-        IsJira = connectionId > 0 && provider == IssueTrackerProviderKind.Jira;
+        _provider = provider;
+        IsJira = connectionId > 0 && JiraFacets.IsJira(provider);
+        SupportsServiceManagement = IsJira && JiraFacets.SupportsServiceManagement(provider);
+        UsesAssetsWorkspace = IsJira && JiraFacets.UsesAssetsWorkspace(provider);
+        StrAssetsPlanNote = Localizer[JiraFacets.AssetsNoteKey(provider)];
 
         Clear();
 
@@ -333,7 +366,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
             foreach (var field in MappableSourceFields()) NetRiskFields.Add(field);
 
-            await LoadMirrorAsync();
+            if (SupportsServiceManagement) await LoadMirrorAsync();
             await LoadImportedObjectsAsync();
         }
         catch (Exception ex)
@@ -353,6 +386,7 @@ public class JiraIntegrationViewModel : ViewModelBase
         ServiceDesks.Clear();
         RequestTypes.Clear();
         Queues.Clear();
+        _queuesLoaded = false;
         FieldMappings.Clear();
         JiraFields.Clear();
         JiraPriorities.Clear();
@@ -375,21 +409,14 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task SaveSettingsAsync()
     {
-        if (!IsJira) return;
+        if (!SupportsServiceManagement) return;
 
         try
         {
-            // The queue grid is the source of truth for the selection, so it is projected back onto
-            // the settings before the save rather than being kept in sync on every checkbox tick.
-            Settings.QueueImports = Queues.Where(q => q.Import)
-                .Select(q => new JiraQueueImportView
-                {
-                    ServiceDeskId = Settings.ServiceDeskId ?? 0,
-                    QueueId = q.QueueId,
-                    QueueName = q.Name,
-                    Enabled = true,
-                    MaxRequests = q.MaxRequests
-                }).ToList();
+            // The queue grid is the source of truth for the selection once it has been loaded, so it
+            // is projected back onto the settings before the save; before that, null keeps the stored one.
+            Settings.QueueImports = JiraQueueImports.ForSave(_queuesLoaded, Settings.ServiceDeskId ?? 0,
+                Queues.Select(q => new QueueRow(q.QueueId, q.Name, q.Import, q.MaxRequests)));
 
             Settings = await Integrations.SaveJiraSettingsAsync(_connectionId, Settings);
 
@@ -406,7 +433,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadServiceDesksAsync()
     {
-        if (!IsJira) return;
+        if (!SupportsServiceManagement) return;
 
         await LiveReadAsync(async () =>
         {
@@ -418,7 +445,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadQueuesAsync()
     {
-        if (!IsJira || Settings.ServiceDeskId is not { } serviceDeskId) return;
+        if (!SupportsServiceManagement || Settings.ServiceDeskId is not { } serviceDeskId) return;
 
         await LiveReadAsync(async () =>
         {
@@ -436,6 +463,7 @@ public class JiraIntegrationViewModel : ViewModelBase
                     IssueCount = queue.IssueCount
                 });
 
+            _queuesLoaded = true;
             SyncQueueSelection();
         }, "the queues");
     }
@@ -445,7 +473,7 @@ public class JiraIntegrationViewModel : ViewModelBase
     {
         foreach (var queue in Queues)
         {
-            var stored = Settings.QueueImports.FirstOrDefault(q => q.QueueId == queue.QueueId);
+            var stored = Settings.QueueImports?.FirstOrDefault(q => q.QueueId == queue.QueueId);
 
             queue.Import = stored != null;
             if (stored != null) queue.MaxRequests = stored.MaxRequests;
@@ -454,7 +482,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task SyncJsmAsync()
     {
-        if (!IsJira) return;
+        if (!SupportsServiceManagement) return;
 
         try
         {
@@ -481,7 +509,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadMirrorAsync()
     {
-        if (!IsJira) return;
+        if (!SupportsServiceManagement) return;
 
         try
         {
@@ -704,6 +732,30 @@ public class JiraIntegrationViewModel : ViewModelBase
             Logger.Error("Could not save the Assets object mappings: {Message}", ex.Message);
             Toasts.Error(ExplainError(ex));
         }
+    }
+
+    /// <summary>
+    /// The Assets tab's Save: the Assets settings, then the object mappings. Sends the stored queue
+    /// selection back untouched — projecting the queue grid here would clear the service-desk
+    /// imports whenever that grid was never loaded, and on Data Center it never is.
+    /// </summary>
+    private async Task SaveAssetsAsync()
+    {
+        if (!IsJira) return;
+
+        try
+        {
+            Settings = await Integrations.SaveJiraSettingsAsync(_connectionId,
+                JiraFacets.ForAssetsSave(Settings, _provider));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not save the Assets settings: {Message}", ex.Message);
+            Toasts.Error(ExplainError(ex));
+            return;
+        }
+
+        await SaveObjectMappingsAsync();
     }
 
     private Task PreviewImportAsync() => RunImportAsync(dryRun: true);

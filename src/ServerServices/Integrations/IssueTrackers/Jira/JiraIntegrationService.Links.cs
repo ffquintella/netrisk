@@ -47,7 +47,7 @@ public partial class JiraIntegrationService
                 "Findings are created through the finding-issues endpoint, which also applies the "
                 + "auto-create policy and the conflict queue.");
 
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token, _) = await ResolveAsync(connectionId, JiraFacet.RecordLinks);
 
         await using var db = DalService.GetContext();
 
@@ -92,7 +92,7 @@ public partial class JiraIntegrationService
     public async Task<FindingIssueLinkView> LinkRecordAsync(int connectionId,
         IssueLinkTargetKind targetKind, int targetId, string issueKeyOrUrl, int? userId)
     {
-        var (connection, token, _) = await ResolveAsync(connectionId);
+        var (connection, token, _) = await ResolveAsync(connectionId, JiraFacet.RecordLinks);
 
         var key = ExtractKey(issueKeyOrUrl);
 

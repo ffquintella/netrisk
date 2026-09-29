@@ -17,9 +17,9 @@ namespace ServerServices.Integrations.IssueTrackers;
 /// pointing the Cloud provider at a Data Center instance produces a <b>403 on a valid credential</b>,
 /// which is indistinguishable from a permission problem and sends the operator to rotate a token.
 ///
-/// Service Management and Assets are deliberately not offered here. Data Center serves Insight from
-/// <c>/rest/insight/1.0/</c> with a different object model, so the 4.6 facet stays Cloud-only rather
-/// than half-working.
+/// Of the 4.6 facet, Data Center gets Assets — served from the instance at <c>/rest/assets/1.0</c>
+/// (or <c>/rest/insight/1.0</c> on Insight), see <c>JiraAssetsClient</c> — and not Service
+/// Management, which stays Cloud-only and is refused with a reason by <c>JiraIntegrationService</c>.
 /// </summary>
 public class JiraDataCenterIssueTrackerProvider(ILogger logger, IOutboundHttpClient http)
     : JiraIssueTrackerProvider(logger, http)

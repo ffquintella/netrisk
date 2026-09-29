@@ -7,23 +7,18 @@ using ServerServices.Interfaces;
 namespace ServerServices.Integrations.IssueTrackers.Jira;
 
 /// <summary>
-/// Jira Assets (the Service Management CMDB, formerly Insight) — Cloud only
+/// Jira Assets (the Service Management CMDB, formerly Insight) on Cloud and Data Center
 /// (Track 4 milestone 4.6).
 ///
-/// Assets is not served from the Jira site. It lives at
-/// <c>api.atlassian.com/jsm/assets/workspace/{workspaceId}/v1</c>, behind a workspace id that is
-/// neither the site host nor the Jira cloud id and has to be discovered from the site first
-/// (<see cref="IJiraServiceManagementClient.GetAssetsWorkspaceIdAsync"/>). That is the single fact
-/// most likely to be got wrong here, so every URL in this class is built by
-/// <see cref="JiraHttp.AssetsUrl"/> and none of them by string concatenation on the base URL.
+/// Cloud serves Assets from <c>api.atlassian.com/jsm/assets/workspace/{workspaceId}/v1</c>, behind a
+/// workspace id discovered from the site (<see cref="IJiraServiceManagementClient.GetAssetsWorkspaceIdAsync"/>).
+/// Data Center serves it from the instance itself, with no workspace: <c>/rest/assets/1.0</c> on
+/// Assets 10.x, <c>/rest/insight/1.0</c> on the Insight 9.x it replaced. The schema list is wrapped
+/// differently and the object search is a paged GET instead of an offset POST; the rest is the same
+/// object model. Every URL is built by <see cref="JiraHttp"/>, never by concatenation here.
 ///
-/// The calls still go through <see cref="IOutboundHttpClient"/>, so <c>OutboundUrlPolicy</c>
-/// evaluates the new host like any other; the policy is a deny-list (cloud metadata always, private
-/// ranges optionally), so <c>api.atlassian.com</c> needs no configuration to be reachable.
-///
-/// Data Center is deliberately unimplemented: its equivalent is the Insight API at
-/// <c>/rest/insight/1.0/</c> on the site, with a different object model. A Data Center connection is
-/// refused where it is configured rather than half-served from here.
+/// All calls go through <see cref="IOutboundHttpClient"/>, so <c>OutboundUrlPolicy</c> evaluates
+/// <c>api.atlassian.com</c> and a Data Center host exactly as it evaluates the issue calls.
 /// </summary>
 public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraAssetsClient
 {
@@ -31,19 +26,18 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     internal const int PageSize = 100;
 
     public async Task<List<JiraObjectSchemaView>> GetSchemasAsync(IssueTrackerConnection connection,
-        string? token, string workspaceId, CancellationToken ct = default)
+        string? token, string? workspaceId, CancellationToken ct = default)
     {
-        var url = JiraHttp.AssetsUrl(workspaceId, "/objectschema/list?maxResults=200&includeCounts=true");
-
-        using var document = await GetJsonAsync(connection, token, url, "the Assets schema list", ct);
+        // Data Center's list takes no paging or count parameters; it always returns every schema
+        // the account can see, with its object count.
+        using var document = await GetJsonAsync(connection, token, workspaceId,
+            "/objectschema/list?maxResults=200&includeCounts=true", "/objectschema/list",
+            "the Assets schema list", ct);
 
         var schemas = new List<JiraObjectSchemaView>();
 
-        if (document == null
-            || !document.RootElement.TryGetProperty("values", out var values)
-            || values.ValueKind != JsonValueKind.Array) return schemas;
-
-        foreach (var schema in values.EnumerateArray())
+        // Cloud pages them under "values"; Data Center answers {"objectschemas":[...]}.
+        foreach (var schema in Items(document, "values", "objectschemas"))
         {
             var id = JiraHttp.Int(schema, "id");
             if (id == null) continue;
@@ -61,30 +55,22 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     }
 
     public async Task<List<JiraObjectTypeView>> GetObjectTypesAsync(IssueTrackerConnection connection,
-        string? token, string workspaceId, int schemaId, CancellationToken ct = default)
+        string? token, string? workspaceId, int schemaId, CancellationToken ct = default)
     {
         // The flat variant, not the hierarchical one: the mapping editor needs a pickable list, and a
         // nested tree would have to be flattened for the picker anyway. It also lives in the
         // *objectschema* group — there is no object-type listing under /objecttype, which is the
-        // wrong guess to make here.
-        var url = JiraHttp.AssetsUrl(workspaceId, $"/objectschema/{schemaId}/objecttypes/flat");
+        // wrong guess to make here. Same path on both deployments.
+        var path = $"/objectschema/{schemaId}/objecttypes/flat";
 
-        using var document = await GetJsonAsync(connection, token, url,
+        using var document = await GetJsonAsync(connection, token, workspaceId, path, path,
             $"the object types of schema {schemaId}", ct);
 
         var types = new List<JiraObjectTypeView>();
 
-        if (document == null) return types;
-
-        // This endpoint answers with a bare array rather than a paginated envelope. Both are handled,
-        // because getting it wrong shows up as "no object types" and reads like a permissions problem.
-        var items = document.RootElement.ValueKind == JsonValueKind.Array
-            ? document.RootElement
-            : document.RootElement.TryGetProperty("values", out var values) ? values : default;
-
-        if (items.ValueKind != JsonValueKind.Array) return types;
-
-        foreach (var type in items.EnumerateArray())
+        // A bare array rather than a paginated envelope, on both. Both shapes are handled, because
+        // getting it wrong shows up as "no object types" and reads like a permissions problem.
+        foreach (var type in Items(document, "values"))
         {
             var id = JiraHttp.Int(type, "id");
             if (id == null) continue;
@@ -102,25 +88,17 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     }
 
     public async Task<List<JiraObjectTypeAttributeView>> GetAttributesAsync(
-        IssueTrackerConnection connection, string? token, string workspaceId, int objectTypeId,
+        IssueTrackerConnection connection, string? token, string? workspaceId, int objectTypeId,
         CancellationToken ct = default)
     {
-        var url = JiraHttp.AssetsUrl(workspaceId, $"/objecttype/{objectTypeId}/attributes");
+        var path = $"/objecttype/{objectTypeId}/attributes";
 
-        using var document = await GetJsonAsync(connection, token, url,
+        using var document = await GetJsonAsync(connection, token, workspaceId, path, path,
             $"the attributes of object type {objectTypeId}", ct);
 
         var attributes = new List<JiraObjectTypeAttributeView>();
 
-        if (document == null) return attributes;
-
-        var items = document.RootElement.ValueKind == JsonValueKind.Array
-            ? document.RootElement
-            : document.RootElement.TryGetProperty("values", out var values) ? values : default;
-
-        if (items.ValueKind != JsonValueKind.Array) return attributes;
-
-        foreach (var attribute in items.EnumerateArray())
+        foreach (var attribute in Items(document, "values"))
         {
             var id = JiraHttp.Int(attribute, "id");
             if (id == null) continue;
@@ -138,26 +116,30 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     }
 
     public async Task<AssetSearchPage> SearchAsync(IssueTrackerConnection connection, string? token,
-        string workspaceId, string aql, int startAt, int maxResults, CancellationToken ct = default)
+        string? workspaceId, string aql, int startAt, int maxResults, CancellationToken ct = default)
     {
-        var url = JiraHttp.AssetsUrl(workspaceId,
-            $"/object/aql?startAt={startAt}&maxResults={Math.Clamp(maxResults, 1, PageSize)}"
-            + "&includeAttributes=true");
+        var size = Math.Clamp(maxResults, 1, PageSize);
+        var dataCenter = JiraDialect.IsDataCenter(connection.Provider);
 
-        // The query travels as JSON in the body, not in the URL. It is the customer's AQL over their
-        // own schema, sent to Jira and never interpolated into SQL; serialising it through a JSON
-        // writer rather than a format string is what keeps a quote in an object name from producing
-        // an unparseable request.
-        var body = JsonSerializer.Serialize(new { qlQuery = aql });
-
-        var response = await JiraHttp.SendAsync(http, connection, token, "POST", url, body, ct);
+        // Cloud takes the query as JSON in the body; Data Center as a query parameter of a GET. Either
+        // way it is the customer's AQL over their own schema, sent to Jira and never interpolated
+        // into SQL, and it goes through a JSON writer or Uri.EscapeDataString — never a format string
+        // — so a quote or an ampersand in an object name cannot produce a different request.
+        var response = dataCenter
+            ? (await SendDataCenterAsync(connection, token,
+                root => DataCenterSearchPath(root, aql, startAt / size + 1, size), ct)).Response
+            : await JiraHttp.SendAsync(http, connection, token, "POST",
+                JiraHttp.AssetsUrl(RequireWorkspace(workspaceId),
+                    $"/object/aql?startAt={startAt}&maxResults={size}&includeAttributes=true"),
+                JsonSerializer.Serialize(new { qlQuery = aql }), ct);
 
         if (!response.IsSuccess)
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
                 $"Assets refused the query (HTTP {response.StatusCode}): {JiraHttp.Excerpt(response.Body)}"
                 + (response.StatusCode == 400
                     ? $" — check the AQL: {aql}"
-                    : string.Empty));
+                    : string.Empty)
+                + (dataCenter && response.StatusCode == 404 ? DataCenterNotFoundHint : string.Empty));
 
         using var document = JiraHttp.TryParse(response.Body);
 
@@ -165,21 +147,31 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
                 "The Assets search response was not JSON.");
 
+        var root = document.RootElement;
+
         var page = new AssetSearchPage
         {
-            Total = JiraHttp.Int(document.RootElement, "total"),
+            Total = JiraHttp.Int(root, dataCenter ? "totalFilterCount" : "total"),
             IsLast = true
         };
 
-        if (!document.RootElement.TryGetProperty("values", out var values)
-            || values.ValueKind != JsonValueKind.Array) return page;
-
-        foreach (var value in values.EnumerateArray())
+        foreach (var value in Items(document, dataCenter ? "objectEntries" : "values"))
             page.Objects.Add(ParseObject(value));
+
+        if (dataCenter)
+        {
+            // Page-numbered, with the total always present; the total decides, and a short page
+            // only when an older Insight omitted it.
+            page.IsLast = page.Total is { } total
+                ? startAt + page.Objects.Count >= total
+                : page.Objects.Count < size;
+
+            return page;
+        }
 
         // isLast when Assets says so; otherwise inferred from a short page. Assets has changed which
         // of the two it sends between versions of this endpoint, so neither is trusted alone.
-        page.IsLast = document.RootElement.TryGetProperty("isLast", out var isLast)
+        page.IsLast = root.TryGetProperty("isLast", out var isLast)
                       && isLast.ValueKind is JsonValueKind.True or JsonValueKind.False
             ? isLast.ValueKind == JsonValueKind.True
             : page.Objects.Count < maxResults;
@@ -187,13 +179,41 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
         return page;
     }
 
-    public async Task<ConnectionTestResult> TestAsync(IssueTrackerConnection connection, string? token,
-        string workspaceId, CancellationToken ct = default)
+    /// <summary>
+    /// The Data Center object search under one root. Insight named the language IQL and the
+    /// parameter after it; Assets 10 renamed both. Pages are 1-based.
+    /// </summary>
+    internal static string DataCenterSearchPath(string root, string aql, int page, int size)
     {
+        var query = Uri.EscapeDataString(aql);
+
+        return root == JiraDialect.DataCenterInsightRoot
+            ? $"/iql/objects?iql={query}&page={page}&resultPerPage={size}&includeAttributes=true"
+            : $"/aql/objects?qlQuery={query}&page={page}&resultPerPage={size}&includeAttributes=true";
+    }
+
+    public async Task<ConnectionTestResult> TestAsync(IssueTrackerConnection connection, string? token,
+        string? workspaceId, CancellationToken ct = default)
+    {
+        if (JiraDialect.IsDataCenter(connection.Provider))
+        {
+            var (dcResponse, root) = await SendDataCenterAsync(connection, token,
+                _ => "/objectschema/list", ct);
+
+            if (!dcResponse.IsSuccess) return JiraHttp.Describe(dcResponse, "Jira Assets");
+
+            using var dcDocument = JiraHttp.TryParse(dcResponse.Body);
+
+            return ConnectionTestResult.Ok(
+                $"Reached Assets on {connection.BaseUrl} and found "
+                + $"{Items(dcDocument, "objectschemas").Count()} object schema(s).",
+                new Dictionary<string, string> { ["Assets API"] = root });
+        }
+
         // The schema list rather than a lighter probe, because it proves the three things that can
         // each be independently wrong: the credential is accepted by api.atlassian.com, the workspace
         // id resolves, and the site's plan actually includes Assets.
-        var url = JiraHttp.AssetsUrl(workspaceId, "/objectschema/list?maxResults=1");
+        var url = JiraHttp.AssetsUrl(RequireWorkspace(workspaceId), "/objectschema/list?maxResults=1");
 
         var response = await JiraHttp.SendAsync(http, connection, token, "GET", url, null, ct);
 
@@ -210,7 +230,7 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
         return ConnectionTestResult.Ok(
             $"Reached Assets workspace {workspaceId}"
             + (count == null ? "." : $" and found {count} object schema(s)."),
-            new Dictionary<string, string> { ["Assets workspace"] = workspaceId });
+            new Dictionary<string, string> { ["Assets workspace"] = workspaceId! });
     }
 
     // --- parsing ----------------------------------------------------------------------------
@@ -322,13 +342,19 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     }
 
     private async Task<JsonDocument?> GetJsonAsync(IssueTrackerConnection connection, string? token,
-        string url, string what, CancellationToken ct)
+        string? workspaceId, string cloudPath, string dataCenterPath, string what, CancellationToken ct)
     {
-        var response = await JiraHttp.SendAsync(http, connection, token, "GET", url, null, ct);
+        var dataCenter = JiraDialect.IsDataCenter(connection.Provider);
+
+        var response = dataCenter
+            ? (await SendDataCenterAsync(connection, token, _ => dataCenterPath, ct)).Response
+            : await JiraHttp.SendAsync(http, connection, token, "GET",
+                JiraHttp.AssetsUrl(RequireWorkspace(workspaceId), cloudPath), null, ct);
 
         if (!response.IsSuccess)
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
-                $"Could not read {what} (HTTP {response.StatusCode}): {JiraHttp.Excerpt(response.Body)}");
+                $"Could not read {what} (HTTP {response.StatusCode}): {JiraHttp.Excerpt(response.Body)}"
+                + (dataCenter && response.StatusCode == 404 ? DataCenterNotFoundHint : string.Empty));
 
         var document = JiraHttp.TryParse(response.Body);
 
@@ -336,5 +362,56 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
             logger.Warning("The Assets response for {What} was not JSON", what);
 
         return document;
+    }
+
+    /// <summary>
+    /// One Data Center Assets request: the Assets 10 root first, and the Insight root only when that
+    /// one is a 404. Anything else — a 401, a 403 — is the answer, because retrying a refused
+    /// credential against a second path is how Seraph's CAPTCHA gets tripped.
+    /// </summary>
+    private async Task<(OutboundHttpResponse Response, string Root)> SendDataCenterAsync(
+        IssueTrackerConnection connection, string? token, Func<string, string> path, CancellationToken ct)
+    {
+        var response = await JiraHttp.SendAsync(http, connection, token, "GET",
+            JiraHttp.DataCenterAssetsUrl(connection, JiraDialect.DataCenterAssetsRoot,
+                path(JiraDialect.DataCenterAssetsRoot)), null, ct);
+
+        if (response.StatusCode != 404) return (response, JiraDialect.DataCenterAssetsRoot);
+
+        return (await JiraHttp.SendAsync(http, connection, token, "GET",
+            JiraHttp.DataCenterAssetsUrl(connection, JiraDialect.DataCenterInsightRoot,
+                path(JiraDialect.DataCenterInsightRoot)), null, ct), JiraDialect.DataCenterInsightRoot);
+    }
+
+    private const string DataCenterNotFoundHint =
+        " — neither /rest/assets/1.0 nor /rest/insight/1.0 answered on this instance. Check that the "
+        + "base URL is the instance root (with any context path) and that Assets is installed.";
+
+    /// <summary>A Cloud call needs the workspace; reaching here without one is a caller bug, said plainly.</summary>
+    private static string RequireWorkspace(string? workspaceId) =>
+        string.IsNullOrWhiteSpace(workspaceId)
+            ? throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
+                "A Jira Cloud Assets call needs the Assets workspace id, and none was resolved.")
+            : workspaceId;
+
+    /// <summary>
+    /// The items of a response that is a bare array or an object holding one under the first of
+    /// <paramref name="properties"/> present. Empty rather than null, so callers need no branch.
+    /// </summary>
+    private static IEnumerable<JsonElement> Items(JsonDocument? document, params string[] properties)
+    {
+        if (document == null) return [];
+
+        var root = document.RootElement;
+
+        if (root.ValueKind == JsonValueKind.Array) return root.EnumerateArray().ToList();
+
+        if (root.ValueKind != JsonValueKind.Object) return [];
+
+        foreach (var property in properties)
+            if (root.TryGetProperty(property, out var items) && items.ValueKind == JsonValueKind.Array)
+                return items.EnumerateArray().ToList();
+
+        return [];
     }
 }

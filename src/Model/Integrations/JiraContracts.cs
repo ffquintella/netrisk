@@ -42,7 +42,11 @@ public class JiraConnectionSettingsView
 
     public DateTime? LastAssetsSyncAt { get; set; }
 
-    public List<JiraQueueImportView> QueueImports { get; set; } = new();
+    /// <summary>
+    /// Always filled on a read. On a save, <c>null</c> keeps the stored selection and a list —
+    /// including an empty one — replaces it.
+    /// </summary>
+    public List<JiraQueueImportView>? QueueImports { get; set; }
 }
 
 /// <summary>One queue selected for import (4.6).</summary>

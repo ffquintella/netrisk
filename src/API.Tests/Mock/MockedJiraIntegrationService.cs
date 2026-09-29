@@ -50,9 +50,12 @@ public static class MockedJiraIntegrationService
 
                 var settings = call.ArgAt<JiraConnectionSettingsView>(1);
 
-                if (settings.Deployment == JiraDeployment.DataCenter)
-                    throw new InvalidParameterException("connectionId",
-                        "Service Management and Assets are implemented for Jira Cloud only.");
+                // The service's one save-time refusal: Service Management on Data Center. Assets is
+                // implemented there and saves.
+                if (settings.JsmEnabled && settings.Deployment == JiraDeployment.DataCenter)
+                    throw new InvalidParameterException("JsmEnabled",
+                        "Service Management is implemented for Jira Cloud only; on a Jira Data Center "
+                        + "connection only Assets can be enabled.");
 
                 settings.ConnectionId = KnownConnectionId;
 

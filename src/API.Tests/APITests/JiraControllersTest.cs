@@ -121,12 +121,24 @@ public class JiraControllersTest : BaseControllerTest
     }
 
     [Fact]
-    public async Task SavingADataCenterDeploymentIs400()
+    public async Task EnablingServiceManagementOnADataCenterDeploymentIs400()
     {
         var settings = Ok(await Jira().GetSettings(Connection));
         settings.Deployment = JiraDeployment.DataCenter;
+        settings.JsmEnabled = true;
 
         Assert.IsType<BadRequestObjectResult>((await Jira().SaveSettings(Connection, settings)).Result);
+    }
+
+    [Fact]
+    public async Task EnablingAssetsOnADataCenterDeploymentIsSaved()
+    {
+        var settings = Ok(await Jira().GetSettings(Connection));
+        settings.Deployment = JiraDeployment.DataCenter;
+        settings.JsmEnabled = false;
+        settings.AssetsEnabled = true;
+
+        Assert.True(Ok(await Jira().SaveSettings(Connection, settings)).AssetsEnabled);
     }
 
     // --- metadata ---------------------------------------------------------------------------
