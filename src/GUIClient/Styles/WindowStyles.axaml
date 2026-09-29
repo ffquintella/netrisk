@@ -160,6 +160,7 @@
     </Style>
     
     <Style Selector="TextBlock.form_long_text">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
         <Setter Property="Margin" Value="0 6 0 0"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
@@ -171,6 +172,7 @@
     </Style>
     
     <Style Selector="TextBlock.formData">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
         <Setter Property="Margin" Value="0 5 0 0"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
