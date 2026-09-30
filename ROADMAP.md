@@ -245,6 +245,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 - [x] T70 Support WebAuthn/FIDO2 hardware authentication for admin accounts
   - note: registers as an independent second factor alongside FaceID, not merged into one MFA registry
 - [x] T223 Recover the desktop client's session in place when its token is rejected mid-use (e.g. expired across a machine sleep/hibernate), instead of leaving it stuck resending the same rejected token with no way back but quitting
+- [x] T224 Release and recover the shared LiteDB configuration-store mutex when a caller's read/write throws, instead of every config access (including the auth token) failing the same way forever after just one bad LiteDB open
 
 ### [M18] Trend Micro Vision One Integration
 > outcome: Asset, risk, vulnerability and posture synchronization with Trend Micro Vision One.
@@ -284,6 +285,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
   - note: tries /rest/assets/1.0 then /rest/insight/1.0 on a 404; verified against Atlassian's published reference and fixtures only, not a live Data Center instance
 - [x] T221 Surface the server's actual refusal on a failed integration read instead of a generic "Error calling {route}", and stop the Assets schema/object-type refresh from firing while "Enable Assets" is unchecked
 - [x] T222 Tell the operator to pick an Assets schema when the object-type button is clicked before one is selected, instead of returning with no feedback
+- [x] T225 Show a toast confirming how many Assets object types were loaded, instead of the click's only visible effect being an edit-mode combo box the operator had to double-click a row to check
 
 ## Track 5 — Native Packaging & Release Engineering
 

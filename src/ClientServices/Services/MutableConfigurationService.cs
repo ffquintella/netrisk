@@ -35,113 +35,148 @@ public class MutableConfigurationService: IMutableConfigurationService
         {
             if(!Directory.Exists(_environmentService.ApplicationDataFolder)) Directory.CreateDirectory(_environmentService.ApplicationDataFolder);
 
-            mut.WaitOne();
-            using var db = new LiteDatabase(_configurationConnectionString);
-            var col = db.GetCollection<MutableConfiguration>("configuration");
-
-            col.Insert(new MutableConfiguration
+            WithLock(() =>
             {
-                ID = 1,
-                Name = "DeviceID",
-                Value = _environmentService.DeviceID
+                using var db = new LiteDatabase(_configurationConnectionString);
+                var col = db.GetCollection<MutableConfiguration>("configuration");
+
+                col.Insert(new MutableConfiguration
+                {
+                    ID = 1,
+                    Name = "DeviceID",
+                    Value = _environmentService.DeviceID
+                });
+                col.EnsureIndex(x => x.Name);
             });
-            col.EnsureIndex(x => x.Name);
-            
-            mut.ReleaseMutex();
         }
     }
 
     public string? GetConfigurationValue(string name)
     {
         if (!IsInitialized) Initialize();
-        mut.WaitOne();
-        using var db = new LiteDatabase(_configurationConnectionString);
-        var col = db.GetCollection<MutableConfiguration>("configuration");
-        var config = col.FindOne(x => x.Name == name);
-        mut.ReleaseMutex();
-        if (config == null) return null;
-        return config.Value;
+        return WithLock(() =>
+        {
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<MutableConfiguration>("configuration");
+            var config = col.FindOne(x => x.Name == name);
+            return config?.Value;
+        });
     }
 
     public Task<string?> GetConfigurationValueAsync(string name)
     {
-        return Task.Run(() =>
-        {
-            if (!IsInitialized) Initialize();
-            mut.WaitOne();
-            using var db = new LiteDatabase(_configurationConnectionString);
-            var col = db.GetCollection<MutableConfiguration>("configuration");
-            var config = col.FindOne(x => x.Name == name);
-            mut.ReleaseMutex();
-            if (config == null) return null;
-            return config.Value;
-        });
+        return Task.Run(() => GetConfigurationValue(name));
     }
 
     public void SetConfigurationValue(string name, string value)
     {
         if (!IsInitialized) Initialize();
-        mut.WaitOne();
-        using var db = new LiteDatabase(_configurationConnectionString);
-        var col = db.GetCollection<MutableConfiguration>("configuration");
-
-        MutableConfiguration conf = col.FindOne(mo => mo.Name == name);
-
-        if (conf == null)
+        WithLock(() =>
         {
-            col.Insert(new MutableConfiguration
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<MutableConfiguration>("configuration");
+
+            MutableConfiguration conf = col.FindOne(mo => mo.Name == name);
+
+            if (conf == null)
             {
-                Name = name,
-                Value = value
-            });
-        }
-        else
-        {
-            conf.Value = value;
-            col.Update(conf);
-        }
-        mut.ReleaseMutex();
+                col.Insert(new MutableConfiguration
+                {
+                    Name = name,
+                    Value = value
+                });
+            }
+            else
+            {
+                conf.Value = value;
+                col.Update(conf);
+            }
+        });
     }
 
     public void RemoveConfigurationValue(string name)
     {
         if (!IsInitialized) Initialize();
-        mut.WaitOne();
-        using var db = new LiteDatabase(_configurationConnectionString);
-        var col = db.GetCollection<MutableConfiguration>("configuration");
-
-        MutableConfiguration conf = col.FindOne(mo => mo.Name == name);
-
-        if (conf != null)
+        WithLock(() =>
         {
-            col.Delete(conf.ID);
-        }
-        mut.ReleaseMutex();
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<MutableConfiguration>("configuration");
+
+            MutableConfiguration conf = col.FindOne(mo => mo.Name == name);
+
+            if (conf != null)
+            {
+                col.Delete(conf.ID);
+            }
+        });
     }
-    
+
     public void SaveAuthenticatedUser(AuthenticatedUserInfo user)
     {
         if (!IsInitialized) Initialize();
-        mut.WaitOne();
-        using var db = new LiteDatabase(_configurationConnectionString);
-        var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
-
-        if (!col.Update(user))
+        WithLock(() =>
         {
-            col.Insert(user);
-        }
-        mut.ReleaseMutex();
-        
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
+
+            if (!col.Update(user))
+            {
+                col.Insert(user);
+            }
+        });
     }
-    
+
     public AuthenticatedUserInfo? GetAuthenticatedUser()
     {
         if (!IsInitialized) Initialize();
-        mut.WaitOne();
-        using var db = new LiteDatabase(_configurationConnectionString);
-        var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
-        var user = col.FindOne(u => true);
-        mut.ReleaseMutex();
-        return user ?? null;
+        return WithLock(() =>
+        {
+            using var db = new LiteDatabase(_configurationConnectionString);
+            var col = db.GetCollection<AuthenticatedUserInfo>("authenticatedUser");
+            return col.FindOne(u => true);
+        });
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> under the shared LiteDB mutex, releasing it even when the action
+    /// throws.
+    ///
+    /// Every caller used to sandwich its own <c>WaitOne()</c>/<c>ReleaseMutex()</c> pair around the
+    /// LiteDB call with no <c>try</c>/<c>finally</c>. The first time any of them threw — a concurrent
+    /// open of the same file from two threads is exactly the case this mutex exists to serialize
+    /// against — the mutex was abandoned and never released. The next caller's <c>WaitOne()</c> then
+    /// throws <see cref="AbandonedMutexException"/> *to a method with the same missing
+    /// <c>try</c>/<c>finally</c>*, so it abandons the mutex again before it can reach its own
+    /// <c>ReleaseMutex()</c> — every config read/write after that point fails the same way forever,
+    /// including the auth token, which is how one bad LiteDB open turned into an unrecoverable
+    /// "Unauthorized" for the rest of the session.
+    /// </summary>
+    private static void WithLock(Action action) => WithLock<object?>(() =>
+    {
+        action();
+        return null;
+    });
+
+    private static T WithLock<T>(Func<T> func)
+    {
+        try
+        {
+            mut.WaitOne();
+        }
+        catch (AbandonedMutexException)
+        {
+            // Ownership was still granted to this call despite the exception — a previous holder
+            // died without releasing. Proceed instead of propagating: this is the recovery step that
+            // was missing, not a new failure.
+        }
+
+        try
+        {
+            return func();
+        }
+        finally
+        {
+            mut.ReleaseMutex();
+        }
     }
 }

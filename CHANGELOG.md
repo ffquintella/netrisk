@@ -12,6 +12,14 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.22.10] - 2026-09-30
+
+### Added
+- Show a toast confirming how many Assets object types were loaded from Jira (T225)
+
+### Fixed
+- Release and recover the shared LiteDB configuration-store mutex when a caller's read/write throws, instead of every config access (including the auth token) failing the same way forever after just one bad LiteDB open (T224)
+
 ## [2.22.9] - 2026-09-30
 
 ### Fixed

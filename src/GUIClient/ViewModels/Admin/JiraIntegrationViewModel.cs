@@ -615,8 +615,13 @@ public class JiraIntegrationViewModel : ViewModelBase
         await LiveReadAsync(async () =>
         {
             AssetObjectTypes.Clear();
-            foreach (var type in await Integrations.GetAssetObjectTypesAsync(_connectionId, schemaId))
-                AssetObjectTypes.Add(type);
+            var types = await Integrations.GetAssetObjectTypesAsync(_connectionId, schemaId);
+            foreach (var type in types) AssetObjectTypes.Add(type);
+
+            // The load's only visible effect used to be the edit-mode combo box on the object-type
+            // grid column, so a successful click looked exactly like a failed one until the operator
+            // knew to double-click a row to check. A count says the click did something.
+            Toasts.Success(string.Format(Localizer["LoadedAssetObjectTypesMSG"], types.Count));
         }, "the Assets object types");
     }
 

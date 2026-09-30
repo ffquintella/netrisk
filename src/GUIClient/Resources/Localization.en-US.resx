@@ -2970,6 +2970,9 @@
   <data name="SelectAnAssetsSchemaFirstMSG" xml:space="preserve">
     <value>Select an Assets schema first.</value>
   </data>
+  <data name="LoadedAssetObjectTypesMSG" xml:space="preserve">
+    <value>{0} object type(s) loaded from Jira.</value>
+  </data>
   <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
     <value>Enter the id of a finding to render the templates against.</value>
   </data>

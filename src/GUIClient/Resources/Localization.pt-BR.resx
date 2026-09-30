@@ -3036,6 +3036,9 @@
   <data name="SelectAnAssetsSchemaFirstMSG" xml:space="preserve">
     <value>Selecione um esquema do Assets primeiro.</value>
   </data>
+  <data name="LoadedAssetObjectTypesMSG" xml:space="preserve">
+    <value>{0} tipo(s) de objeto carregado(s) do Jira.</value>
+  </data>
   <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
     <value>Informe o id de uma constatação para gerar os modelos.</value>
   </data>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
@@ -166,6 +167,69 @@ public class MutableConfigurationServiceTest : IDisposable
         _service.SaveAuthenticatedUser(new AuthenticatedUserInfo { UserId = 1, UserAccount = "second" });
 
         Assert.Equal("second", _service.GetAuthenticatedUser()!.UserAccount);
+    }
+
+    /// <summary>
+    /// Reproduces the production incident directly: a real OS thread whose LiteDB call fails between
+    /// <c>WaitOne()</c> and <c>ReleaseMutex()</c> abandons the shared <c>Mutex</c> when it exits. The
+    /// next caller's own <c>WaitOne()</c> then throws <see cref="AbandonedMutexException"/> to it —
+    /// which, without a <c>try</c>/<c>finally</c>, made that caller abandon the mutex again before
+    /// reaching its own release, so every config read/write (including the auth token) failed the
+    /// same way forever after just one bad LiteDB open.
+    /// </summary>
+    [Fact]
+    public async Task SetConfigurationValueRecoversAfterAnotherThreadAbandonsTheMutex()
+    {
+        _service.Initialize();
+        var dbPath = Path.Combine(_dataFolder.FullName, "configuration.db");
+
+        // Force a genuine failure inside the critical section, on a dedicated OS thread that then
+        // exits — Task.Run reuses pool threads and would not reliably abandon the Mutex the way a
+        // thread that actually terminates does.
+        File.SetAttributes(dbPath, FileAttributes.ReadOnly);
+
+        Exception? forcedFailure = null;
+        var failingThread = new Thread(() =>
+        {
+            try
+            {
+                _service.SetConfigurationValue("Boom", "value");
+            }
+            catch (Exception ex)
+            {
+                forcedFailure = ex;
+            }
+        });
+        failingThread.Start();
+        failingThread.Join();
+
+        Assert.NotNull(forcedFailure);
+
+        File.SetAttributes(dbPath, FileAttributes.Normal);
+
+        var recovered = Task.Run(() =>
+        {
+            _service.SetConfigurationValue("AfterFailure", "ok");
+            return _service.GetConfigurationValue("AfterFailure");
+        });
+
+        string? afterValue;
+        try
+        {
+            afterValue = await recovered.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        catch (TimeoutException)
+        {
+            throw new Exception("SetConfigurationValue hung after a prior failure abandoned the mutex");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(
+                "SetConfigurationValue kept throwing after a prior failure abandoned the mutex: "
+                + ex.Message, ex);
+        }
+
+        Assert.Equal("ok", afterValue);
     }
 
     public void Dispose()
