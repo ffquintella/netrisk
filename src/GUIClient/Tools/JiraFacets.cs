@@ -31,6 +31,15 @@ public static class JiraFacets
         IsJira(kind) && assetsEnabled;
 
     /// <summary>
+    /// Whether the Assets object-type picker has a schema to load types from. Passing
+    /// <see cref="CanLoadAssetSchemas"/> is necessary but not sufficient — the picker also needs the
+    /// operator to have picked a schema from the dropdown. The object-type button used to fail this
+    /// second check the same way as the first, by returning with no toast, so clicking it before a
+    /// schema was selected looked exactly like a dead button.
+    /// </summary>
+    public static bool HasAssetsSchemaSelected(int? schemaId) => schemaId is not null;
+
+    /// <summary>
     /// The settings the Assets tab saves. Service Management is switched off where it is not
     /// supported, so a Data Center row stored with it on — whose tab offers no way to untick it —
     /// does not trip the server's save-time refusal on every Assets save.

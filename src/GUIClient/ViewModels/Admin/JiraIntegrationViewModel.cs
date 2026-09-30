@@ -602,8 +602,15 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadObjectTypesAsync()
     {
-        if (!JiraFacets.CanLoadAssetSchemas(_provider, Settings.AssetsEnabled)
-            || Settings.AssetsSchemaId is not { } schemaId) return;
+        if (!JiraFacets.CanLoadAssetSchemas(_provider, Settings.AssetsEnabled)) return;
+
+        if (!JiraFacets.HasAssetsSchemaSelected(Settings.AssetsSchemaId))
+        {
+            Toasts.Error(Localizer["SelectAnAssetsSchemaFirstMSG"]);
+            return;
+        }
+
+        var schemaId = Settings.AssetsSchemaId!.Value;
 
         await LiveReadAsync(async () =>
         {

@@ -62,4 +62,17 @@ public class JiraFacetsTest
     {
         Assert.Equal(expected, JiraFacets.CanLoadAssetSchemas(kind, assetsEnabled));
     }
+
+    /// <summary>
+    /// The object-type button called into the live API only when a schema id was already selected,
+    /// but returned silently otherwise — no toast, no log line — so it looked identical to a dead
+    /// button when clicked before a schema was chosen.
+    /// </summary>
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(1, true)]
+    public void ObjectTypesLoadOnlyOnceASchemaIsSelected(int? schemaId, bool expected)
+    {
+        Assert.Equal(expected, JiraFacets.HasAssetsSchemaSelected(schemaId));
+    }
 }

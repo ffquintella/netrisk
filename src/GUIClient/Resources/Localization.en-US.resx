@@ -2967,6 +2967,9 @@
   <data name="SelectAConnectionFirstMSG" xml:space="preserve">
     <value>Select a connection first.</value>
   </data>
+  <data name="SelectAnAssetsSchemaFirstMSG" xml:space="preserve">
+    <value>Select an Assets schema first.</value>
+  </data>
   <data name="PreviewNeedsAFindingMSG" xml:space="preserve">
     <value>Enter the id of a finding to render the templates against.</value>
   </data>
