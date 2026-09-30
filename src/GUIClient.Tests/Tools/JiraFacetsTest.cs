@@ -45,4 +45,21 @@ public class JiraFacetsTest
         Assert.Equal(expected, saved.JsmEnabled);
         Assert.True(saved.AssetsEnabled);
     }
+
+    /// <summary>
+    /// The schema/object-type refresh buttons used to fire on <c>IsJira</c> alone, so unchecking
+    /// "Enable Assets" did not stop a click from spending the connection's credential against Jira's
+    /// live Assets API for a facet the operator had just switched off.
+    /// </summary>
+    [Theory]
+    [InlineData(IssueTrackerProviderKind.Jira, true, true)]
+    [InlineData(IssueTrackerProviderKind.Jira, false, false)]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, true, true)]
+    [InlineData(IssueTrackerProviderKind.JiraDataCenter, false, false)]
+    [InlineData(IssueTrackerProviderKind.GitHub, true, false)]
+    public void AssetSchemasLoadOnlyForAJiraConnectionWithAssetsEnabled(IssueTrackerProviderKind kind,
+        bool assetsEnabled, bool expected)
+    {
+        Assert.Equal(expected, JiraFacets.CanLoadAssetSchemas(kind, assetsEnabled));
+    }
 }

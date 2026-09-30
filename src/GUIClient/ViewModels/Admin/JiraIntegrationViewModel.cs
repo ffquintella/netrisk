@@ -590,7 +590,7 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadSchemasAsync()
     {
-        if (!IsJira) return;
+        if (!JiraFacets.CanLoadAssetSchemas(_provider, Settings.AssetsEnabled)) return;
 
         await LiveReadAsync(async () =>
         {
@@ -602,7 +602,8 @@ public class JiraIntegrationViewModel : ViewModelBase
 
     private async Task LoadObjectTypesAsync()
     {
-        if (!IsJira || Settings.AssetsSchemaId is not { } schemaId) return;
+        if (!JiraFacets.CanLoadAssetSchemas(_provider, Settings.AssetsEnabled)
+            || Settings.AssetsSchemaId is not { } schemaId) return;
 
         await LiveReadAsync(async () =>
         {

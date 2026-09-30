@@ -443,6 +443,13 @@ public class IntegrationsRestService(IRestService restService)
 
             if (response.StatusCode == HttpStatusCode.NoContent) return fallback;
 
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                throw new DataNotFoundException(route, route, new Exception("Not found"));
+
+            if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity
+                or HttpStatusCode.Conflict or HttpStatusCode.BadGateway)
+                throw new InvalidHttpRequestException(RefusalMessage(response, route), route, "GET");
+
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error calling {Route}: {Status}", route, response.StatusCode);
@@ -477,6 +484,10 @@ public class IntegrationsRestService(IRestService restService)
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 throw new DataNotFoundException(route, route, new Exception("Not found"));
+
+            if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity
+                or HttpStatusCode.Conflict or HttpStatusCode.BadGateway)
+                throw new InvalidHttpRequestException(RefusalMessage(response, route), route, "GET");
 
             if (response.StatusCode != HttpStatusCode.OK)
                 throw new InvalidHttpRequestException($"Error calling {route}", route, "GET");

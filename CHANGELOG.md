@@ -12,6 +12,10 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Show the server's actual refusal reason on a failed integration GET (which connection, which credential, which upstream error) instead of a generic "Error calling {route}" for every status code (T221)
+- Stop the Jira Assets schema and object-type refresh buttons from calling Jira while "Enable Assets" is unchecked (T221)
+
 ## [2.22.7] - 2026-09-29
 
 ### Added

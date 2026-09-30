@@ -21,6 +21,16 @@ public static class JiraFacets
         kind == IssueTrackerProviderKind.Jira;
 
     /// <summary>
+    /// Whether the Assets schema and object-type pickers may spend a live call against the tracker.
+    ///
+    /// The refresh button used to fire on <see cref="IsJira"/> alone, so unchecking "Enable Assets"
+    /// did nothing to stop it: every click still spent the connection's credential against Jira's
+    /// Assets API for a facet the operator had just switched off.
+    /// </summary>
+    public static bool CanLoadAssetSchemas(IssueTrackerProviderKind kind, bool assetsEnabled) =>
+        IsJira(kind) && assetsEnabled;
+
+    /// <summary>
     /// The settings the Assets tab saves. Service Management is switched off where it is not
     /// supported, so a Data Center row stored with it on — whose tab offers no way to untick it —
     /// does not trip the server's save-time refusal on every Assets save.

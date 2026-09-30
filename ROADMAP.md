@@ -281,6 +281,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 - [x] T85 Link an imported Assets object back to its Jira page by object key
 - [x] T220 Import Jira Assets from Jira Data Center connections through the instance's own Assets REST API (S34)
   - note: tries /rest/assets/1.0 then /rest/insight/1.0 on a 404; verified against Atlassian's published reference and fixtures only, not a live Data Center instance
+- [x] T221 Surface the server's actual refusal on a failed integration read instead of a generic "Error calling {route}", and stop the Assets schema/object-type refresh from firing while "Enable Assets" is unchecked
 
 ## Track 5 — Native Packaging & Release Engineering
 

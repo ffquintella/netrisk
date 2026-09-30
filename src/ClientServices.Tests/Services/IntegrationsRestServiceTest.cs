@@ -409,6 +409,56 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         await Assert.ThrowsAnyAsync<Exception>(() => _service.GetJiraFieldsAsync(1));
     }
 
+    /// <summary>
+    /// A GET refused with a body — the connection is not a Jira connection, the workspace could not
+    /// be discovered, the upstream tracker rejected the call — used to collapse to a bare
+    /// "Error calling /Jira/1/assets/schemas" regardless of status code: <c>GetAsync</c> never read
+    /// the response body the way <c>SendAsync</c>/<c>DeleteAsync</c> already did. The operator saw the
+    /// route, never the reason, for every GET-based integration failure.
+    /// </summary>
+    [Fact]
+    public async Task ARefusedAssetSchemaReadSurfacesTheServersReasonRatherThanTheRoute()
+    {
+        const string reason = "Connection 'Security Jira' is a GitHub connection. Service Management "
+                              + "and Assets are Jira features.";
+
+        _backend.On(Method.Get, "/Jira/1/assets/schemas",
+            $$"""{"error":"invalid_parameter","parameterName":"connectionId","message":"{{reason}}"}""",
+            HttpStatusCode.BadRequest);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => _service.GetAssetSchemasAsync(1));
+
+        Assert.Contains(reason, thrown.Message);
+        Assert.DoesNotContain("Error calling", thrown.Message);
+    }
+
+    [Fact]
+    public async Task ARefusedJiraReadOnTheRealClientAlsoSurfacesTheReason()
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+
+        backend.On(Method.Get, "/Jira/1/assets/schemas",
+            """{"error":"upstream_failure","provider":"Jira Assets","message":"The site reported no Assets workspace."}""",
+            HttpStatusCode.BadGateway);
+
+        var service = ResolveWith<IIntegrationsService>(backend);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => service.GetAssetSchemasAsync(1));
+
+        Assert.Contains("no Assets workspace", thrown.Message);
+    }
+
+    /// <summary>A 404 on a GET is a distinct, nameable failure — not a fallback and not a generic error.</summary>
+    [Fact]
+    public async Task AnUnknownConnectionOnAnAssetReadIsNotFound()
+    {
+        _backend.OnStatus(Method.Get, "/Jira/404/assets/schemas", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _service.GetAssetSchemasAsync(404));
+    }
+
     // --- 4.1 notification channels -----------------------------------------------------------
 
     [Fact]
@@ -805,6 +855,20 @@ public class IntegrationsRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Get, "/FindingIssues/preview", HttpStatusCode.NotFound);
 
         await Assert.ThrowsAsync<DataNotFoundException>(() => _service.PreviewIssueAsync(1, 404));
+    }
+
+    [Fact]
+    public async Task ARefusedPreviewSurfacesTheServersReasonRatherThanTheRoute()
+    {
+        _backend.On(Method.Get, "/FindingIssues/preview",
+            """{"error":"invalid_parameter","parameterName":"connectionId","message":"Connection 'Security Jira' is a GitHub connection."}""",
+            HttpStatusCode.BadRequest);
+
+        var thrown = await Assert.ThrowsAsync<InvalidHttpRequestException>(
+            () => _service.PreviewIssueAsync(1, 42));
+
+        Assert.Contains("is a GitHub connection", thrown.Message);
+        Assert.DoesNotContain("Error calling", thrown.Message);
     }
 
     [Fact]
