@@ -133,4 +133,11 @@ public interface IAuthenticationService
     public FaceToken? GetFaceToken();
 
     event EventHandler? AuthenticationSucceeded;
+
+    /// <summary>
+    /// Raised when a previously-authenticated session is discarded because the server rejected the
+    /// token — e.g. it expired while the machine was asleep. Not raised by an explicit
+    /// <see cref="Logout"/>, which exits the app rather than needing an in-place recovery.
+    /// </summary>
+    event EventHandler? SessionExpired;
 }

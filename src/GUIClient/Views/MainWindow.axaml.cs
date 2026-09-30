@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
 using GUIClient.ViewModels;
@@ -29,7 +30,13 @@ namespace GUIClient.Views
             get => _localizer;
             set => _localizer = value;
         }
-        
+
+        // A token that expires mid-session (e.g. across a machine sleep/hibernate) used to leave the
+        // app stuck resending a rejected token with no way back short of quitting. This re-shows the
+        // login dialog in place instead. Guarded because every REST service that gets a 401 calls
+        // DiscardAuthenticationToken independently, so several can fire in a short burst.
+        private bool _showingSessionExpiredLogin = false;
+
         public MainWindow()
         {
             var localizationService = GetService<ILocalizationService>();
@@ -41,15 +48,36 @@ namespace GUIClient.Views
                 throw new DIException("Error getting localizer service");
             }
             _localizer = localizer;
-            
+
             DataContext = new MainWindowViewModel();
-            
+
             InitializeComponent();
-            
-            
+
+            var authenticationService = GetService<IAuthenticationService>();
+            authenticationService.SessionExpired += OnSessionExpired;
+            Closed += (_, _) => authenticationService.SessionExpired -= OnSessionExpired;
+
             #if DEBUG
             #endif
-            
+
+        }
+
+        private void OnSessionExpired(object? sender, EventArgs e)
+        {
+            Dispatcher.UIThread.Post(async () =>
+            {
+                if (_showingSessionExpiredLogin) return;
+                _showingSessionExpiredLogin = true;
+                try
+                {
+                    var dialog = new LoginWindow();
+                    await dialog.ShowDialog(this);
+                }
+                finally
+                {
+                    _showingSessionExpiredLogin = false;
+                }
+            });
         }
         
         public void InitializeComponent()

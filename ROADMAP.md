@@ -244,6 +244,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
   - note: a SCIM group maps onto a NetRisk role; `active:false` revokes live sessions on the next request
 - [x] T70 Support WebAuthn/FIDO2 hardware authentication for admin accounts
   - note: registers as an independent second factor alongside FaceID, not merged into one MFA registry
+- [x] T223 Recover the desktop client's session in place when its token is rejected mid-use (e.g. expired across a machine sleep/hibernate), instead of leaving it stuck resending the same rejected token with no way back but quitting
 
 ### [M18] Trend Micro Vision One Integration
 > outcome: Asset, risk, vulnerability and posture synchronization with Trend Micro Vision One.

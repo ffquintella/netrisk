@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.22.9] - 2026-09-30
+
+### Fixed
+- Recover the desktop client's session in place when the server rejects its token mid-use — e.g. after it expires across a machine sleep/hibernate — instead of leaving the app stuck resending the same rejected token with no way back but quitting (T223)
+
 ## [2.22.8] - 2026-09-30
 
 ### Fixed

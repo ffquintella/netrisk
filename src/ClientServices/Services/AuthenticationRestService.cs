@@ -433,11 +433,31 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         return false;
     }
 
+    /// <summary>
+    /// Drops a session the server has rejected.
+    ///
+    /// Used to only clear the persisted LiteDB values, leaving <see cref="IsAuthenticated"/> and
+    /// <see cref="AuthenticationCredential"/> stale in memory — so after the token expired (e.g.
+    /// across a machine sleep/hibernate) every subsequent call kept resending the same rejected
+    /// token, kept 401'ing, and the app had no path back to a login screen short of Logout (which
+    /// exits) or a restart. Clearing the in-memory state too makes <see cref="RestService.GetClient"/>
+    /// build an unauthenticated client on the very next call, and <see cref="SessionExpired"/> lets
+    /// the GUI offer re-authentication in place.
+    /// </summary>
     public void DiscardAuthenticationToken()
     {
+        var wasAuthenticated = IsAuthenticated;
+
         _mutableConfigurationService.SetConfigurationValue("IsAuthenticate", "false");
         _mutableConfigurationService.RemoveConfigurationValue("AuthToken");
         _mutableConfigurationService.RemoveConfigurationValue("AuthTokenTime");
+
+        IsAuthenticated = false;
+        _authenticationVerified = false;
+        AuthenticationCredential.AuthenticationType = AuthenticationType.None;
+        AuthenticationCredential.JWTToken = null;
+
+        if (wasAuthenticated) SessionExpired?.Invoke(this, EventArgs.Empty);
     }
     public int DoServerAuthentication(string user, string password)
     {
@@ -644,4 +664,6 @@ public class AuthenticationRestService: RestServiceBase, IAuthenticationService
         if(AuthenticationSucceeded != null) AuthenticationSucceeded(this, new EventArgs());
     }
     public event EventHandler? AuthenticationSucceeded;
+
+    public event EventHandler? SessionExpired;
 }
