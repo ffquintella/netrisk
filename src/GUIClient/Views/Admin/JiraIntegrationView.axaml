@@ -278,6 +278,7 @@
         <!-- environment, active state) with a dry run before anything is written.        -->
         <!-- ============================================================================= -->
         <TabItem Header="{Binding StrAssets}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="10">
                 <WrapPanel Grid.Row="0">
                     <CheckBox IsChecked="{Binding Settings.AssetsEnabled}" Margin="0 0 20 0">
@@ -518,7 +519,7 @@
                         <TextBlock Text="{Binding StrImportedObjects}" Classes="header2"
                                    Margin="0 8 0 0"/>
                         <DataGrid ItemsSource="{Binding ImportedObjects}" IsReadOnly="True"
-                                  MinHeight="140">
+                                  MinHeight="140" MaxHeight="420">
                             <DataGrid.Columns>
                                 <!-- The object key links out to its page on the Jira site. The route
                                      is keyed on the *key* (ITSM-88) and not the numeric id, per
@@ -563,6 +564,7 @@
                     </StackPanel>
                 </Grid>
             </Grid>
+            </ScrollViewer>
         </TabItem>
     </TabControl>
 </UserControl>

@@ -63,6 +63,31 @@ public class CommentsRestService: RestServiceBase, ICommentsService
         }
     }
 
+    public async Task<List<Comment>> GetHostCommentsAsync(int hostId)
+    {
+        using var client = RestService.GetReliableClient();
+        
+        var request = new RestRequest($"/Comments/host/{hostId}");
+        try
+        {
+            var response = await client.GetAsync<List<Comment>>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error listing host comments");
+                throw new InvalidHttpRequestException("Error listing host comments", $"/Comments/host/{hostId}", "GET");
+            }
+            
+            return response;
+            
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing host comments message:{Message}", ex.Message);
+            throw new RestComunicationException("Error listing host comments", ex);
+        }
+    }
+
     public async Task<Comment> CreateCommentAsync(Comment comment)
     {
         using var client = MutatingClient();

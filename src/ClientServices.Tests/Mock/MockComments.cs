@@ -22,6 +22,20 @@ public static class MockComments
                 ContentType = "application/json",
                 ContentLength = 2
             });
+
+        mockClient.ExecuteAsync(Arg.Is<RestRequest>(rq => rq.Resource == "/Comments/host/1"), Arg.Any<CancellationToken>())
+            .Returns(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK,
+                ResponseStatus = ResponseStatus.Completed,
+                Content = JsonSerializer.Serialize(new List<Comment>
+                {
+                    new() { Id = 10, Type = "Host", Text = "H1", HostId = 1, UserId = 1, CommenterName = "Name1" },
+                    new() { Id = 11, Type = "Host", Text = "H2", HostId = 1, UserId = 2, CommenterName = "Name2" }
+                }),
+                ContentType = "application/json",
+                ContentLength = 2
+            });
         
     }
     

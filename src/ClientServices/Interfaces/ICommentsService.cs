@@ -8,6 +8,8 @@ public interface ICommentsService
     
     public Task<List<Comment>> GetFixRequestCommentsAsync(int requestId);
     
+    public Task<List<Comment>> GetHostCommentsAsync(int hostId);
+    
     public Task<Comment> CreateCommentAsync(Comment comment);
     
 }

@@ -68,6 +68,33 @@ public class CommentsControllerTest : BaseControllerTest
     }
 
     [Fact]
+    public async Task TestGetHostComments()
+    {
+        _commentsService.GetHostCommentsAsync(7).Returns(new List<Comment>
+        {
+            new() { Id = 5, Type = "Host", HostId = 7, Text = "h" }
+        });
+
+        var result = await _controller.GetHostComments(7);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var list = Assert.IsType<List<Comment>>(ok.Value);
+        Assert.Equal(5, Assert.Single(list).Id);
+    }
+
+    [Fact]
+    public async Task TestCreateHostCommentIsAttributedToTheAuthenticatedUser()
+    {
+        var spoofed = new Comment { Type = "Host", HostId = 7, Text = "x", UserId = 12345, CommenterName = "n" };
+
+        await _controller.CreateAsync(spoofed);
+
+        await _commentsService.Received(1).CreateCommentsAsync(
+            Arg.Is<int?>(u => u != 12345), Arg.Any<DateTime>(), Arg.Any<int?>(), "Host", Arg.Any<bool>(),
+            Arg.Any<string>(), "x", Arg.Any<int?>(), Arg.Any<int?>(), Arg.Any<int?>(), 7);
+    }
+
+    [Fact]
     public async Task TestGetFixRequestComments()
     {
         var result = await _controller.Get(4);

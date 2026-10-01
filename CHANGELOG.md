@@ -12,6 +12,14 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.23.0] - 2026-10-01
+
+### Added
+- Show and add comments on a host in the Hosts view, via a new `GET /Comments/host/{id}` endpoint (T228)
+
+### Fixed
+- Scroll the Jira Assets admin tab so the imported-objects grid at the bottom is reachable (T229)
+
 ## [2.22.12] - 2026-10-01
 
 ### Fixed

@@ -34,4 +34,12 @@ public class CommentsRestServiceTest: BaseServiceTest
 
 
     }
+    [Fact]
+    public async Task TestGetHostComments()
+    {
+        var comments = await _commentsService.GetHostCommentsAsync(1);
+
+        Assert.Equal(2, comments.Count);
+        Assert.All(comments, c => Assert.Equal(1, c.HostId));
+    }
 }

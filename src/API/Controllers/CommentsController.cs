@@ -1,3 +1,4 @@
+using API.Security;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,13 +47,32 @@ public class CommentsController(
 
         var isAnonymous = comment.IsAnonymous;
 
-        return Ok(await CommentsService.CreateCommentsAsync(comment.UserId, DateTime.Now, comment.ReplyTo, comment.Type!, isAnonymous, 
+        // A host comment is attributed to the authenticated user, never to a client-supplied id.
+        var userId = comment.Type == "Host" ? user.Value : comment.UserId;
+
+        return Ok(await CommentsService.CreateCommentsAsync(userId, DateTime.Now, comment.ReplyTo, comment.Type!, isAnonymous, 
             comment.CommenterName!, comment.Text!, comment.FixRequestId, comment.RiskId, comment.VulnerabilityId, comment.HostId));
         
         //return Ok(await CommentsService.GetUserCommentsAsync(user.Value));
 
     }
     
+    /// <summary>
+    /// Get the comments left on a host
+    /// </summary>
+    /// <returns></returns>
+    [PermissionAuthorize("hosts")]
+    [HttpGet]
+    [Route("host/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Comment>))]
+    public async Task<ActionResult<List<Comment>>> GetHostComments(int id)
+    {
+        var user = GetUser();
+
+        Logger.Information("User:{UserValue} got host {HostId} comments", user.Value, id);
+        return Ok(await CommentsService.GetHostCommentsAsync(id));
+    }
+
     /// <summary>
     /// Get the user comments
     /// </summary>

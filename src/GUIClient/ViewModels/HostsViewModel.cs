@@ -49,6 +49,8 @@ public class HostsViewModel: ViewModelBase
     public string StrDetectionCount { get; } = Localizer["DetectionCount"] ;
     public string StrFixTeam { get; } = Localizer["FixTeam"] ;
     public string StrAnalyst { get; } = Localizer["Analyst"] ;
+    public string StrComments { get; } = Localizer["Comments"];
+    public string StrSend { get; } = Localizer["Send"];
 
     #endregion
 
@@ -73,11 +75,13 @@ public class HostsViewModel: ViewModelBase
                     {
                         SelectedHostsServices = new ObservableCollection<HostsService>(await HostsService.GetAllHostServiceAsync(value.Id));
                         SelectedHostsVulnerabilities = new ObservableCollection<Vulnerability>(await HostsService.GetAllHostVulnerabilitiesAsync(value.Id));
+                        await LoadCommentsAsync(value.Id);
                     }
                     else
                     {
                         SelectedHostsServices = new ();
                         SelectedHostsVulnerabilities = new ();
+                        HostComments = new ();
                     }
                     
                 });
@@ -127,6 +131,20 @@ public class HostsViewModel: ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _selectedHostsVulnerabilities, value);
         }
         
+        private ObservableCollection<Comment> _hostComments = new ();
+        public ObservableCollection<Comment> HostComments
+        {
+            get => _hostComments;
+            set => this.RaiseAndSetIfChanged(ref _hostComments, value);
+        }
+
+        private string _newComment = "";
+        public string NewComment
+        {
+            get => _newComment;
+            set => this.RaiseAndSetIfChanged(ref _newComment, value);
+        }
+
         private bool _showHostsFilter = false;
         
         public bool ShowHostsFilter
@@ -149,6 +167,7 @@ public class HostsViewModel: ViewModelBase
     private IMainWindowProvider MainWindowProvider { get; } = GetService<IMainWindowProvider>();
 
         private IHostsService HostsService { get; } = GetService<IHostsService>();
+        private ICommentsService CommentsService { get; } = GetService<ICommentsService>();
         private IDialogService DialogService { get; } = GetService<IDialogService>();
         private readonly IExportClientService _exportService;
 
@@ -175,6 +194,45 @@ public class HostsViewModel: ViewModelBase
     #endregion
     
     #region METHODS
+
+    private async Task LoadCommentsAsync(int hostId)
+    {
+        try
+        {
+            HostComments = new ObservableCollection<Comment>(await CommentsService.GetHostCommentsAsync(hostId));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("LoadCommentsAsync failed: {Message}", ex.Message);
+            HostComments = new();
+        }
+    }
+
+    public async void BtSendCommentClicked()
+    {
+        try
+        {
+            var text = NewComment?.Trim();
+            if (SelectedHost == null || SelectedHost.Id == 0 || string.IsNullOrEmpty(text)) return;
+
+            var user = AuthenticationService.AuthenticatedUserInfo;
+
+            var comment = await CommentsService.CreateCommentAsync(new Comment
+            {
+                Date = DateTime.Now,
+                UserId = user?.UserId,
+                CommenterName = user?.UserName,
+                Type = "Host",
+                HostId = SelectedHost.Id,
+                Text = text,
+                IsAnonymous = false
+            });
+
+            HostComments.Add(comment);
+            NewComment = "";
+        }
+        catch (Exception ex) { Logger.Error("BtSendCommentClicked failed: {Message}", ex.Message); }
+    }
 
     private async Task ExportAsync()
     {

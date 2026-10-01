@@ -674,6 +674,9 @@ specification declared read ✅ — lines that stay 🟡 or ❌ are named with t
   - note: precondition — Stage 9.12 (AI governance) must land first; the methodology requires the governance instrument before the use
 - [ ] T219 Move the BastionVault plugin onto BastionVault.IntegrationSdk, replacing the hand-written wire protocol (S35)
   - note: current plugin does not support KV v2 and misreads a v2 secret's nested `data.data`; four-stage migration with the 33 existing plugin tests as non-regression evidence
+- [x] T228 Let users read and add comments on a host from the Hosts view
+  - note: reuses the existing `comments.host_id` column; the comment is attributed server-side to the authenticated user
+- [x] T229 Make the Jira Assets admin tab scrollable so its imported-objects grid is reachable
 
 ## Specs
 

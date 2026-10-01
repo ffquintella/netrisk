@@ -33,6 +33,16 @@ public class CommentsService: ServiceBase, ICommentsService
         return comments;
     }
 
+    public async Task<List<Comment>> GetHostCommentsAsync(int hostId)
+    {
+        await using var dbContext = DalService.GetContext();
+
+        return await dbContext.Comments
+            .Where(c => c.Type == "Host" && c.HostId == hostId)
+            .OrderBy(c => c.Date).ThenBy(c => c.Id)
+            .ToListAsync();
+    }
+
     public async Task<List<Comment>> GetUserCommentsAsync(int userId)
     {
         await using var dbContext = DalService.GetContext();
@@ -64,6 +74,18 @@ public class CommentsService: ServiceBase, ICommentsService
         
         if(type == "Risk" && riskId == null)    
             throw new Exception("RiskId is required for Risk comments");
+
+        if (type == "Host")
+        {
+            if (hostId == null)
+                throw new Exception("HostId is required for Host comments");
+
+            if (string.IsNullOrWhiteSpace(text))
+                throw new Exception("Text is required for Host comments");
+
+            if (!await dbContext.Hosts.AnyAsync(h => h.Id == hostId))
+                throw new Exception("Host not found");
+        }
 
         if (type == "FixRequest")
         {

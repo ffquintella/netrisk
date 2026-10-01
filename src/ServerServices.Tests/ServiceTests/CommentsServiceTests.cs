@@ -111,5 +111,41 @@ public class CommentsServiceTests: BaseServiceTest
         Assert.Equal(3, all.Count);
 
     }
-    
+
+    [Fact]
+    public async Task TestCreateHostCommentIsListedForThatHostOnly()
+    {
+        await _commentsService.CreateCommentsAsync(1,
+            DateTime.Now, null, "Host", false, "Name", "Patched last night", null, null, null, 1);
+        await _commentsService.CreateCommentsAsync(1,
+            DateTime.Now, null, "Host", false, "Name", "Other host", null, null, null, 2);
+
+        var onHost1 = await _commentsService.GetHostCommentsAsync(1);
+
+        var comment = Assert.Single(onHost1);
+        Assert.Equal("Patched last night", comment.Text);
+        Assert.Equal(1, comment.HostId);
+    }
+
+    [Fact]
+    public async Task TestCreateHostCommentRequiresHostId()
+    {
+        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+            DateTime.Now, null, "Host", false, "Name", "Text", null, null, null, null));
+    }
+
+    [Fact]
+    public async Task TestCreateHostCommentRequiresText()
+    {
+        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+            DateTime.Now, null, "Host", false, "Name", "  ", null, null, null, 1));
+    }
+
+    [Fact]
+    public async Task TestCreateHostCommentRejectsUnknownHost()
+    {
+        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+            DateTime.Now, null, "Host", false, "Name", "Text", null, null, null, 99999));
+    }
+
 }

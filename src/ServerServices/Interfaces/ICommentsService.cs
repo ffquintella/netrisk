@@ -50,6 +50,14 @@ public interface ICommentsService
     
     
     /// <summary>
+    /// Gets all comments left on a host, oldest first
+    /// </summary>
+    /// <param name="hostId"></param>
+    /// <returns></returns>
+    public Task<List<Comment>> GetHostCommentsAsync(int hostId);
+
+
+    /// <summary>
     /// Return all the user comments
     /// </summary>
     /// <param name="userId"></param>
