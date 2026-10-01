@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.22.12] - 2026-10-01
+
+### Fixed
+- Allow a Jira Assets object search 120 s per page instead of 30 s, so a slow instance no longer stops an import part-way with "timed out after 30s" (T227)
+
 ## [2.22.11] - 2026-10-01
 
 ### Fixed

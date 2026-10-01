@@ -285,6 +285,44 @@ public class JiraAssetsDataCenterClientTest
         Assert.DoesNotContain("(no response body)", ex.Message);
     }
 
+    /// <summary>
+    /// A 100-object page with attributes is ~2 MB and Assets was seen taking over 30 s to build one,
+    /// which cut an import short ("timed out after 30s"). Searches get a longer allowance.
+    /// </summary>
+    [Fact]
+    public async Task AnObjectSearchGetsALongerTimeoutThanTheDefault()
+    {
+        _http.RuleFor("/rest/assets/1.0/aql/objects", SearchJson);
+
+        await _client.SearchAsync(Pat, "pat", null, "objectType = \"Server\"", 0, 100);
+
+        var request = Assert.Single(_http.Requests);
+        Assert.Equal(JiraAssetsClient.SearchTimeout, request.Timeout);
+        Assert.True(request.Timeout > TimeSpan.FromSeconds(30));
+    }
+
+    [Fact]
+    public async Task TheInsightFallbackOfASearchKeepsTheLongerTimeout()
+    {
+        _http.RuleFor("/rest/assets/1.0/", "", 404);
+        _http.RuleFor("/rest/insight/1.0/iql/objects", SearchJson);
+
+        await _client.SearchAsync(Pat, "pat", null, "objectType = \"Server\"", 0, 100);
+
+        Assert.Equal(2, _http.Requests.Count);
+        Assert.All(_http.Requests, r => Assert.Equal(JiraAssetsClient.SearchTimeout, r.Timeout));
+    }
+
+    [Fact]
+    public async Task MetadataReadsKeepTheDefaultTimeout()
+    {
+        _http.RuleFor("/rest/assets/1.0/objecttype/1/attributes", AttributesJson);
+
+        await _client.GetAttributesAsync(Pat, "pat", null, 1);
+
+        Assert.Equal(TimeSpan.FromSeconds(30), Assert.Single(_http.Requests).Timeout);
+    }
+
     [Fact]
     public async Task AMetadataReadThatFailsInTransitSaysWhyToo()
     {

@@ -28,7 +28,7 @@ internal static class JiraHttp
 
     internal static Task<OutboundHttpResponse> SendAsync(IOutboundHttpClient http,
         IssueTrackerConnection connection, string? token, string method, string url, string? body,
-        CancellationToken ct)
+        CancellationToken ct, TimeSpan? timeout = null)
     {
         return http.SendAsync(new OutboundHttpRequest
         {
@@ -39,7 +39,9 @@ internal static class JiraHttp
             {
                 ["Authorization"] = AuthHeader(connection, token),
                 ["Accept"] = "application/json"
-            }
+            },
+            // Null keeps the client's default; only a caller that knows its call is slow overrides it.
+            Timeout = timeout ?? TimeSpan.FromSeconds(30)
         }, ct);
     }
 

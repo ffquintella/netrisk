@@ -287,6 +287,8 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 - [x] T222 Tell the operator to pick an Assets schema when the object-type button is clicked before one is selected, instead of returning with no feedback
 - [x] T225 Show a toast confirming how many Assets object types were loaded, instead of the click's only visible effect being an edit-mode combo box the operator had to double-click a row to check
 - [x] T226 Report why a Jira Assets call failed in transit (timeout, dropped connection, oversized response) instead of "(no response body)"
+- [x] T227 Give a Jira Assets object search 120 s per page instead of 30 s, so a slow instance no longer cuts an import short
+  - note: found with T226 — the preview stopped at 700 and 900 objects with "timed out after 30s" while the same page answered in about 1 s from a workstation; 120 s is a ceiling chosen from that, not a measured p99
 
 ## Track 5 — Native Packaging & Release Engineering
 

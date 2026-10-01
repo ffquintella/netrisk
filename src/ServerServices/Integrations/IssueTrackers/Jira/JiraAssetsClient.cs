@@ -25,6 +25,13 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     /// <summary>Assets' AQL page size. Larger pages are accepted and then clamped by Assets.</summary>
     internal const int PageSize = 100;
 
+    /// <summary>
+    /// How long one page of an object search may take. A page of 100 servers with their attributes is
+    /// about 2 MB and Assets assembles it per request; on a loaded instance that has been seen to take
+    /// longer than the 30 s default, which stopped an import part-way with "timed out after 30s".
+    /// </summary>
+    internal static readonly TimeSpan SearchTimeout = TimeSpan.FromSeconds(120);
+
     public async Task<List<JiraObjectSchemaView>> GetSchemasAsync(IssueTrackerConnection connection,
         string? token, string? workspaceId, CancellationToken ct = default)
     {
@@ -127,11 +134,12 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
         // — so a quote or an ampersand in an object name cannot produce a different request.
         var response = dataCenter
             ? (await SendDataCenterAsync(connection, token,
-                root => DataCenterSearchPath(root, aql, startAt / size + 1, size), ct)).Response
+                root => DataCenterSearchPath(root, aql, startAt / size + 1, size), ct,
+                SearchTimeout)).Response
             : await JiraHttp.SendAsync(http, connection, token, "POST",
                 JiraHttp.AssetsUrl(RequireWorkspace(workspaceId),
                     $"/object/aql?startAt={startAt}&maxResults={size}&includeAttributes=true"),
-                JsonSerializer.Serialize(new { qlQuery = aql }), ct);
+                JsonSerializer.Serialize(new { qlQuery = aql }), ct, SearchTimeout);
 
         if (!response.IsSuccess)
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
@@ -370,17 +378,18 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
     /// credential against a second path is how Seraph's CAPTCHA gets tripped.
     /// </summary>
     private async Task<(OutboundHttpResponse Response, string Root)> SendDataCenterAsync(
-        IssueTrackerConnection connection, string? token, Func<string, string> path, CancellationToken ct)
+        IssueTrackerConnection connection, string? token, Func<string, string> path, CancellationToken ct,
+        TimeSpan? timeout = null)
     {
         var response = await JiraHttp.SendAsync(http, connection, token, "GET",
             JiraHttp.DataCenterAssetsUrl(connection, JiraDialect.DataCenterAssetsRoot,
-                path(JiraDialect.DataCenterAssetsRoot)), null, ct);
+                path(JiraDialect.DataCenterAssetsRoot)), null, ct, timeout);
 
         if (response.StatusCode != 404) return (response, JiraDialect.DataCenterAssetsRoot);
 
         return (await JiraHttp.SendAsync(http, connection, token, "GET",
             JiraHttp.DataCenterAssetsUrl(connection, JiraDialect.DataCenterInsightRoot,
-                path(JiraDialect.DataCenterInsightRoot)), null, ct), JiraDialect.DataCenterInsightRoot);
+                path(JiraDialect.DataCenterInsightRoot)), null, ct, timeout), JiraDialect.DataCenterInsightRoot);
     }
 
     private const string DataCenterNotFoundHint =
