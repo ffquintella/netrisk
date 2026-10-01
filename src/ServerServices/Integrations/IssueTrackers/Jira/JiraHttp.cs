@@ -202,6 +202,16 @@ internal static class JiraHttp
             _ => ConnectionTestResult.Fail($"{surface} answered HTTP {response.StatusCode}.")
         };
 
+    /// <summary>
+    /// What went wrong, for the message of a failed Assets call. A transport failure (status 0) has no
+    /// body — the cause is on <see cref="OutboundHttpResponse.TransportError"/> — so reading only the
+    /// body reported every timeout, dropped connection and oversized response as "(no response body)".
+    /// </summary>
+    internal static string FailureDetail(OutboundHttpResponse response) =>
+        response.StatusCode == 0 && !string.IsNullOrWhiteSpace(response.TransportError)
+            ? response.TransportError
+            : Excerpt(response.Body);
+
     internal static string Excerpt(string? body) =>
         string.IsNullOrWhiteSpace(body) ? "(no response body)"
             : body.Length <= 400 ? body.Trim() : body[..400].Trim() + "…";

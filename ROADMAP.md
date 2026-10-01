@@ -286,6 +286,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 - [x] T221 Surface the server's actual refusal on a failed integration read instead of a generic "Error calling {route}", and stop the Assets schema/object-type refresh from firing while "Enable Assets" is unchecked
 - [x] T222 Tell the operator to pick an Assets schema when the object-type button is clicked before one is selected, instead of returning with no feedback
 - [x] T225 Show a toast confirming how many Assets object types were loaded, instead of the click's only visible effect being an edit-mode combo box the operator had to double-click a row to check
+- [x] T226 Report why a Jira Assets call failed in transit (timeout, dropped connection, oversized response) instead of "(no response body)"
 
 ## Track 5 — Native Packaging & Release Engineering
 

@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.22.11] - 2026-10-01
+
+### Fixed
+- Say why a Jira Assets search or metadata read failed in transit (timeout, dropped connection, oversized response) instead of reporting "HTTP 0: (no response body)" (T226)
+
 ## [2.22.10] - 2026-09-30
 
 ### Added

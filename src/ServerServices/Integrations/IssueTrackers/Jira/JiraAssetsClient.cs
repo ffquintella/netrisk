@@ -135,7 +135,7 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
 
         if (!response.IsSuccess)
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
-                $"Assets refused the query (HTTP {response.StatusCode}): {JiraHttp.Excerpt(response.Body)}"
+                $"Assets refused the query (HTTP {response.StatusCode}): {JiraHttp.FailureDetail(response)}"
                 + (response.StatusCode == 400
                     ? $" — check the AQL: {aql}"
                     : string.Empty)
@@ -353,7 +353,7 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
 
         if (!response.IsSuccess)
             throw new Model.Exceptions.IntegrationRequestException("Jira Assets",
-                $"Could not read {what} (HTTP {response.StatusCode}): {JiraHttp.Excerpt(response.Body)}"
+                $"Could not read {what} (HTTP {response.StatusCode}): {JiraHttp.FailureDetail(response)}"
                 + (dataCenter && response.StatusCode == 404 ? DataCenterNotFoundHint : string.Empty));
 
         var document = JiraHttp.TryParse(response.Body);

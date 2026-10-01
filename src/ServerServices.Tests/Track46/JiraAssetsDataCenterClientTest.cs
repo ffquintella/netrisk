@@ -265,6 +265,56 @@ public class JiraAssetsDataCenterClientTest
             + "&page=1&resultPerPage=100&includeAttributes=true", _http.Requests[^1].Url);
     }
 
+    /// <summary>
+    /// A transport failure is status 0 with no body; the cause lives on <c>TransportError</c>. The search
+    /// used to report only the body, so a timeout read as "(no response body)" and nobody could tell it
+    /// from a dropped connection or an oversized page.
+    /// </summary>
+    [Fact]
+    public async Task ASearchThatFailsInTransitSaysWhyInsteadOfNoResponseBody()
+    {
+        _http.DefaultResponse = new OutboundHttpResponse
+        {
+            StatusCode = 0, TransportError = "The request timed out after 30s."
+        };
+
+        var ex = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => _client.SearchAsync(Pat, "pat", null, "objectType = \"Server\"", 900, 100));
+
+        Assert.Contains("The request timed out after 30s.", ex.Message);
+        Assert.DoesNotContain("(no response body)", ex.Message);
+    }
+
+    [Fact]
+    public async Task AMetadataReadThatFailsInTransitSaysWhyToo()
+    {
+        _http.DefaultResponse = new OutboundHttpResponse
+        {
+            StatusCode = 0, TransportError = "The response exceeded the 16777216 byte limit for this request."
+        };
+
+        var ex = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => _client.GetAttributesAsync(Pat, "pat", null, 1));
+
+        Assert.Contains("exceeded the 16777216 byte limit", ex.Message);
+    }
+
+    /// <summary>The body is still what an HTTP error reports; only the status-0 case changed.</summary>
+    [Fact]
+    public async Task AnHttpErrorStillReportsItsBody()
+    {
+        _http.DefaultResponse = new OutboundHttpResponse
+        {
+            StatusCode = 400, Body = "{\"errorMessages\":[\"bad aql\"]}"
+        };
+
+        var ex = await Assert.ThrowsAsync<IntegrationRequestException>(
+            () => _client.SearchAsync(Pat, "pat", null, "objectType = \"Server\"", 0, 100));
+
+        Assert.Contains("bad aql", ex.Message);
+        Assert.Contains("HTTP 400", ex.Message);
+    }
+
     [Fact]
     public async Task TheConnectionTestNamesTheRootThatAnswered()
     {
