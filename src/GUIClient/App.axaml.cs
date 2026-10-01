@@ -165,7 +165,15 @@ namespace GUIClient
                     EnableScreenshots = true,
                     EnableNavigation = true,
                     EnableEvents = true,
-                    EnableStateMutation = true
+                    EnableStateMutation = true,
+                    EnableMutationEvents = true,
+                    EnableEditing = true,
+                    EnableInput = true,
+                    EnableSelection = true,
+                    EnableValueInspection = true,
+                    EnableWaiting = true,
+                    EnableCommands = true,
+                    EnableFileOutput = true
                 }
             });
 #endif
