@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Skia" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" VersionOverride="14.2.1.201" />
     <PackageReference Include="ReactiveUI" />
   </ItemGroup>
   <ItemGroup>
