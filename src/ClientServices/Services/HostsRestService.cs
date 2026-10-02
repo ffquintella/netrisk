@@ -93,38 +93,122 @@ public class HostsRestService: RestServiceBase, IHostsService
 
     public async Task<List<Host>> GetFilteredAsync(int pageSize, int pageNumber, string? filter)
     {
+        var (items, _) = await GetFilteredAsync(pageSize, pageNumber, filter, IHostsService.DefaultSort);
+        return items;
+    }
+
+    public async Task<(List<Host> Items, int Total)> GetFilteredAsync(int pageSize, int pageNumber,
+        string? filter, string? sorts)
+    {
         using var client = RestService.GetClient();
         string cultureCode = CultureInfo.CurrentCulture.Name;
-        
+
         var request = new RestRequest($"/Hosts/Filtered");
-        
+
+        request.AddParameter("page", pageNumber);
+        request.AddParameter("pageSize", pageSize);
+        request.AddParameter("culture", cultureCode);
+
+        if (filter is { Length: > 0 }) request.AddParameter("filters", filter);
+        // Sorted by the server, so the order holds across pages; sorting each page here only
+        // ordered the hundred rows that happened to arrive.
+        if (sorts is { Length: > 0 }) request.AddParameter("sorts", sorts);
+
         try
         {
+            // GetAsync raises an HttpRequestException carrying the status for anything but a 2xx or
+            // a 404, so a rejected filter arrives in the catch below whichever client this is.
+            var response = await client.GetAsync(request);
 
-            request.AddParameter("page", pageNumber);
-            request.AddParameter("pageSize", pageSize);
-            request.AddParameter("culture", cultureCode);
-            
-            if (filter is { Length: > 0 }) request.AddParameter("filters", filter);
-            
-            var response = await client.GetAsync<List<Host>>(request);
+            if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Conflict)
+                throw new BadFilterException(filter ?? "", response.Content ?? "");
 
-            if (response == null)
+            if (response.StatusCode != HttpStatusCode.OK || string.IsNullOrWhiteSpace(response.Content))
             {
-                Logger.Error("Error listing hosts");
-                throw new InvalidHttpRequestException("Error listing hosts", "/Hosts", "GET");
+                Logger.Error("Error listing hosts: {Status}", response.StatusCode);
+                throw new InvalidHttpRequestException("Error listing hosts", "/Hosts/Filtered", "GET");
             }
-            
-            //_cachedHosts = response.OrderBy(h => h.HostName).ToList();
-            //_fullCache = true;
-            
-            return response.OrderBy(h => h.HostName).ToList();
-            
+
+            var hosts = JsonSerializer.Deserialize<List<Host>>(response.Content, JsonOptions)
+                        ?? throw new InvalidHttpRequestException("Error listing hosts", "/Hosts/Filtered", "GET");
+
+            return (hosts, ReadTotalCount(response, hosts.Count));
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Conflict)
+        {
+            throw new BadFilterException(filter ?? "", ex.Message);
         }
         catch (HttpRequestException ex)
         {
             Logger.Error("Error listing hosts message:{Message}", ex.Message);
             throw new RestComunicationException("Error listing hosts", ex);
+        }
+    }
+
+    /// <summary>
+    /// <c>X-Total-Count</c>, or the page's own row count when the header is missing or unreadable —
+    /// a lower bound that keeps "1–n of total" true rather than reporting zero hosts beside a full page.
+    /// </summary>
+    private static int ReadTotalCount(RestResponse response, int fallback)
+    {
+        var header = response.Headers?.FirstOrDefault(h =>
+            string.Equals(h.Name, "X-Total-Count", StringComparison.OrdinalIgnoreCase));
+
+        return int.TryParse(header?.Value?.ToString(), NumberStyles.None, CultureInfo.InvariantCulture,
+            out var total)
+            ? total
+            : fallback;
+    }
+
+    public Task<List<string>> GetEnvironmentsAsync() =>
+        GetJsonAsync<List<string>>("/Hosts/Environments", "host environments");
+
+    public Task<HostVulnerabilitySummaryDto> GetVulnerabilitySummaryAsync(int hostId) =>
+        GetJsonAsync<HostVulnerabilitySummaryDto>($"/Hosts/{hostId}/VulnerabilitySummary",
+            "host vulnerability summary");
+
+    public Task<List<AuditLog>> GetHistoryAsync(int hostId, int limit = 500) =>
+        GetJsonAsync<List<AuditLog>>($"/Hosts/{hostId}/History", "host history",
+            ("limit", limit.ToString(CultureInfo.InvariantCulture)));
+
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    /// <summary>
+    /// A read that must answer 200 with a body. A 404 is the host being gone or out of the user's
+    /// scope, and is reported as <see cref="DataNotFoundException"/>; RestSharp hands a 404 back as
+    /// a response rather than raising it, and the exception filter covers a client that does raise.
+    /// </summary>
+    private async Task<T> GetJsonAsync<T>(string route, string what, params (string Name, string Value)[] query)
+    {
+        using var client = RestService.GetReliableClient();
+
+        var request = new RestRequest(route);
+        foreach (var (name, value) in query) request.AddQueryParameter(name, value);
+
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                throw new DataNotFoundException("hosts", route);
+
+            if (response.StatusCode != HttpStatusCode.OK || string.IsNullOrWhiteSpace(response.Content))
+            {
+                Logger.Error("Error getting {What}: {Status}", what, response.StatusCode);
+                throw new InvalidHttpRequestException($"Error getting {what}", route, "GET");
+            }
+
+            return JsonSerializer.Deserialize<T>(response.Content, JsonOptions)
+                   ?? throw new InvalidHttpRequestException($"Error getting {what}", route, "GET");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            throw new DataNotFoundException("hosts", route, ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error getting {What} message:{Message}", what, ex.Message);
+            throw new RestComunicationException($"Error getting {what}", ex);
         }
     }
 

@@ -37,6 +37,11 @@ public class TrendMicroService(
     /// <summary>Value written to <c>hosts.external_provider</c> and <c>hosts.risk_score_source</c>.</summary>
     public const string ProviderName = "TrendMicroVisionOne";
 
+    /// <summary>
+    /// The <c>audit_logs.actor</c> of every host the inventory and risk-score syncs write (S38 §5.4).
+    /// </summary>
+    public const string ImportAuditActor = "Trend Micro import";
+
     // --- connections ------------------------------------------------------------------------
 
     public async Task<List<TrendMicroConnectionView>> GetConnectionsAsync(bool includeDisabled = true)
@@ -347,6 +352,7 @@ public class TrendMicroService(
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         var db = DalService.GetContext();
+        db.AuditActor = ImportAuditActor;
 
         try
         {
@@ -447,6 +453,7 @@ public class TrendMicroService(
         CancellationToken ct)
     {
         await using var db = DalService.GetContext();
+        db.AuditActor = ImportAuditActor;
 
         foreach (var device in devices)
         {
@@ -644,6 +651,7 @@ public class TrendMicroService(
         if (scores.Count == 0) return;
 
         await using var db = DalService.GetContext();
+        db.AuditActor = ImportAuditActor;
 
         // One read of this provider's hosts rather than a query per scored device. external_id carries
         // no index, so each of those queries was a full scan of hosts — 9,340 of them on the tenant

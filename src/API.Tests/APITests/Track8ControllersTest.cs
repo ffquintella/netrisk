@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Model.Governance;
+using ServerServices.Governance;
 using Xunit;
 using ApiMocks = API.Tests.Mock;
 
@@ -242,6 +243,24 @@ public class Track8ControllersTest : BaseControllerTest
         var result = await _auditTrail.GetForRecord(nameof(Risk), 1);
 
         Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    /// <summary>
+    /// Hosts are audited (S38 §5.4) but their trail is only served by <c>/Hosts/{id}/History</c>,
+    /// which checks the caller can see the host. This reader cannot — audit_logs has no entity id —
+    /// so it must refuse rather than hand a scoped caller another entity's host values.
+    /// </summary>
+    [Theory]
+    [InlineData("Host")]
+    [InlineData("HostsService")]
+    public async Task TestHostHistoryIsNotServedByTheGenericTrail(string entityType)
+    {
+        Assert.Contains(entityType, AuditTrailService.AuditedTypes);
+
+        var result = await _auditTrail.GetForRecord(entityType, 1);
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Contains("use_host_history", Json(bad.Value));
     }
 
     [Fact]

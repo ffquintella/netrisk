@@ -30,6 +30,13 @@ public class AuditTrailController(
     IReportsService reports)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
+    /// <summary>Audited types whose history only the hosts endpoint serves, scope-checked.</summary>
+    private static readonly HashSet<string> HostTrailTypes = new(StringComparer.Ordinal)
+    {
+        nameof(DAL.Entities.Host),
+        nameof(DAL.Entities.HostsService)
+    };
+
     /// <summary>The recorded changes to one governance record.</summary>
     [HttpGet]
     [Route("{entityType}/{entityId}")]
@@ -50,6 +57,18 @@ public class AuditTrailController(
                 error = "not_audited",
                 message = $"'{entityType}' is not in the audited scope.",
                 audited = AuditTrailService.AuditedTypes
+            });
+
+        // Host history is read through /Hosts/{id}/History, which looks the host up through the
+        // entity-scoped hosts set first. audit_logs has no entity id, so this reader cannot apply the
+        // caller's scope, and serving hosts here would let a scoped caller read another entity's host
+        // values out of the trail (S38 §5.4).
+        if (HostTrailTypes.Contains(entityType))
+            return BadRequest(new
+            {
+                error = "use_host_history",
+                message = $"'{entityType}' history is served by /Hosts/{{id}}/History.",
+                route = $"/Hosts/{entityId}/History"
             });
 
         return Ok(await auditTrail.GetForRecordAsync(entityType, entityId, limit));

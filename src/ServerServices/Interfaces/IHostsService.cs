@@ -130,4 +130,29 @@ public interface IHostsService
     /// <param name="hostId"></param>
     public List<Vulnerability> GetVulnerabilities (int hostId);
 
+    /// <summary>
+    /// The distinct, non-blank <c>environment</c> values of the hosts the caller can see, ordered —
+    /// the options of the Hosts view's environment facet (S38 §5.2).
+    /// </summary>
+    public Task<List<string>> GetEnvironmentsAsync();
+
+    /// <summary>
+    /// Open-vulnerability counts by severity for one host (S38 §5.3). "Open" is
+    /// <see cref="Model.Status.ClosedStatuses"/>; an unparsable severity counts as None.
+    /// </summary>
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The host does not exist or is
+    /// outside the caller's entity scope.</exception>
+    public Task<Model.DTO.HostVulnerabilitySummaryDto> GetVulnerabilitySummaryAsync(int hostId);
+
+    /// <summary>
+    /// The same summary for several hosts, computed with one grouped query. Hosts that do not exist
+    /// or that the caller cannot see are left out; the rest come back in the order asked, once each.
+    /// </summary>
+    /// <exception cref="ArgumentException">More than <see cref="MaxSummaryBatchSize"/> distinct ids.</exception>
+    public Task<List<Model.DTO.HostVulnerabilitySummaryDto>> GetVulnerabilitySummariesAsync(
+        IReadOnlyCollection<int> hostIds);
+
+    /// <summary>The most hosts one <see cref="GetVulnerabilitySummariesAsync"/> call accepts.</summary>
+    public const int MaxSummaryBatchSize = 500;
+
 }

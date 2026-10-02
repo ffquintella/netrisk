@@ -45,6 +45,15 @@ public class FindingIngestionService(
     /// <summary>Team assigned to hosts the importer creates, as the previous importer did.</summary>
     public const int DefaultHostTeamId = 2;
 
+    /// <summary>
+    /// The <c>audit_logs.actor</c> an import's host and service writes carry: the importer's name
+    /// plus "import" — <c>nessus</c> becomes <c>Nessus import</c>.
+    /// </summary>
+    public static string ImportAuditActor(string? importer) =>
+        string.IsNullOrWhiteSpace(importer)
+            ? "Scanner import"
+            : $"{char.ToUpperInvariant(importer.Trim()[0])}{importer.Trim()[1..]} import";
+
     public async Task<ImportReservation> BeginImportAsync(ImportIngestionRequest request)
     {
         // An already-used key short-circuits before the insert, which keeps the common retry case
@@ -146,6 +155,11 @@ public class FindingIngestionService(
         // finding belongs to one batch. Its tracker is cleared after each write, so the cache holds
         // ids rather than entities and nothing accumulates across a long import.
         await using var assetDb = DalService.GetContext();
+
+        // The host and service rows this import writes are attributed to the import in the
+        // field-level trail (S38 §5.4) rather than to "system" or to whoever uploaded the file; the
+        // trail's user id still records who that was.
+        assetDb.AuditActor = ImportAuditActor(request.Importer);
 
         var hostIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var serviceIds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

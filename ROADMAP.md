@@ -102,6 +102,30 @@ the previously logged 162 (a doubled log count). 102 were fixed and 4 waived wit
 - [x] T25 Phase D — converge risk/incident/IRP/device/entity workflows
 - [x] T26 Phase E — centralize navigation, window parenting and geometry persistence
 
+### [M51] Hosts View Redesign
+> outcome: The Hosts view is a header-plus-tabs master-detail whose panes resize, exposes criticality,
+> environment and owner, filters by status, team, criticality and environment, and shows a
+> field-level change history for every host.
+> spec: S38
+
+- [x] T230 Rebuild the Hosts view as header card + resizable tabbed detail (Vulnerabilities, Overview, Services, History, Comments) with persisted pane width and tab, facet filters and paging (S38)
+  - note: double-clicking a vulnerability is a no-op — the Vulnerabilities view can be navigated to but not opened on one finding — and the column chooser stays out of scope (S38 §8); the four low-use columns are in the grid with `IsVisible="False"`
+  - note: Reload now refreshes the current page and the environment facet with the filters kept, where it used to clear the search; the pane width is applied and saved from the view's code-behind because a `ColumnDefinition` cannot carry a binding
+  - note: verified by build, `LintUi` and `GUIClient.Tests` source scans only — the layout (splitters against star rows, tab restore, Ctrl+F focus) has not been observed in a running client
+- [x] T231 Render host services as icon chips on the Overview tab and as a full Services tab, and wire the History tab (S38)
+  - note: the per-service vulnerability count is computed from the host's own findings (`Vulnerability.HostServiceId`), because `GET /Hosts/{id}/Services` does not populate `HostsService.Vulnerabilities`
+  - note: History shows the host's rows only (service rows are not merged, S38 §8) and renders team ids, criticality levels and statuses by name; the list is reloaded with each selection, so a save from the edit dialog — which does not await its PUT — can appear one selection late
+- [x] T232 Expose host criticality, environment and owner in the detail view and edit dialog with tokenized criticality/severity pills (S38)
+  - note: the client has one (dark) theme, so the twelve `NrCriticality*` tokens alias Semi's dark palette with no light variant; `GUIClient.Tests` now references the Avalonia-free `Material.Icons` package so the service icon map is checked against the real `MaterialIconKind` enum
+- [x] T233 Allow filtering hosts by criticality, environment, owner, source and risk score, add the environments facet endpoint and total-count paging on the client (S38)
+  - note: `lastVerificationDate` is filterable too, and `criticality==null` selects the "Not set" hosts; only `source` has a translated alias (pt-BR `origem`), the other new columns answer to their invariant names
+- [x] T234 Record a field-level change history for hosts and expose it via `GET /Hosts/{id}/History` (S38)
+  - note: import actors are set where the import holds its own context — finding ingestion (`<Importer> import`, so Vision One findings read `Trendmicro-visionone import`), Jira Assets and the Trend Micro inventory/risk-score syncs; the legacy `/Vulnerabilities` Nessus importer writes hosts through `IHostsService`, which opens a context per call, so its rows carry the caller's login (or `system`) until that path takes an actor
+  - note: `HostsService` rows are recorded but not merged into the host's History (S38 §8) and the generic `/AuditTrail/{type}/{id}` reader refuses both host types, because `audit_logs` has no entity id to scope by
+  - note: a host inserted with a database-generated id has its create row recorded against the provisional key the interceptor sees before the insert (existing interceptor behaviour), so on MariaDB a host's History starts at its first edit
+- [x] T235 Add a per-host open-vulnerability severity summary endpoint feeding the header card (S38)
+  - note: "open" is the Master Dashboard's closed set, moved to `Model.Status.ClosedStatuses` so both read one definition; `Total` counts every finding on the host, `Open.Total` the open ones; the batch route has no client method yet because the list does not call it in this milestone
+
 ## Track 2 — GRC Core & Reporting Engine
 
 GRC core features, incident workflows, and data output templates. Detailed specifications:
@@ -719,3 +743,4 @@ specification declared read ✅ — lines that stay 🟡 or ❌ are named with t
 | S35 | BastionVault integration SDK migration design | docs/features/bastionvault-integration-sdk-migration.md |
 | S36 | Secret vaults | docs/features/secret-vaults.md |
 | S37 | Settings form rollout | roadmap/SETTINGS_FORM_ROLLOUT.md |
+| S38 | Hosts view redesign | docs/features/hosts-view-redesign.md |

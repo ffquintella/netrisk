@@ -5,43 +5,112 @@
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:converters="clr-namespace:GUIClient.Converters"
+             xmlns:hosts="clr-namespace:GUIClient.Tools.Hosts"
              xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:HostsViewModel" x:Class="GUIClient.Views.HostsView"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:DataType="viewModels:HostsViewModel" x:Class="GUIClient.Views.HostsView"
              Name="HostsViewUC">
-    
+
+    <!--
+        Hosts (S38): a faceted, paged list on the left; on the right a header card that never
+        scrolls over five tabs that take every remaining pixel. Both dividers drag, and the list's
+        width and the open tab are remembered per user.
+    -->
+
     <Design.DataContext>
         <viewModels:HostsViewModel/>
     </Design.DataContext>
 
-    <!-- IX-8: Ctrl+F reveals and focuses the search row. -->
+    <!-- IX-8 / S38 §6: Ctrl+F focuses the (always visible) search box. -->
     <UserControl.KeyBindings>
-        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFilterViewClicked}"/>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFocusSearchClicked}"/>
     </UserControl.KeyBindings>
-    
+
     <UserControl.Resources>
         <converters:IntStatusToStringConverter x:Key="IntStatusToStringConverter"/>
-        <converters:IntStatusToColorConverter x:Key="IntStatusToColorConverter"/>
-        <converters:TeamIdToTeamNameConverter x:Key="TeamIdToTeamNameConverter"/>
         <converters:IntStatusToMaterialIconkindConverter x:Key="IntStatusToMaterialIconkindConverter"/>
-        <converters:StringIdToImpactConverter x:Key="StringIdToImpactConverter"/>
-        <converters:AnalystIdToAnalystNameConverter x:Key="AnalystIdToAnalystNameConverter"/>
+        <converters:CriticalityToLabelConverter x:Key="CriticalityToLabelConverter"/>
+        <converters:CriticalityToClassConverter x:Key="CriticalityToClassConverter"/>
+        <converters:SeverityToClassConverter x:Key="SeverityToClassConverter"/>
+        <converters:ServiceToIconConverter x:Key="ServiceToIconConverter"/>
     </UserControl.Resources>
-    
-    <Grid ColumnDefinitions="Auto,1,*">
+
+    <Grid Name="HostsLayout">
+        <Grid.ColumnDefinitions>
+            <!-- Width is applied and remembered by the view (hostsView.leftPaneWidth); the bounds
+                 are HostsViewLayout.MinLeftPaneWidth / MaxLeftPaneWidth. -->
+            <ColumnDefinition Width="280" MinWidth="220" MaxWidth="520"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*" MinWidth="420"/>
+        </Grid.ColumnDefinitions>
+
         <!-- IX-4: visible busy indication while the view loads. -->
-        <progRing:ProgressRing Grid.Column="0" Grid.ColumnSpan="3" Width="80" Height="80"
+        <progRing:ProgressRing Grid.Column="0" Grid.ColumnSpan="3" Classes="busy" Width="80" Height="80"
                                IsActive="{Binding IsBusy}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="CornflowerBlue" ZIndex="1000"/>
+                               ZIndex="1000"/>
 
-        <!-- LEFT -->
-        <Grid RowDefinitions="Auto,*,Auto,Auto" MinWidth="200">
+        <!-- ===== LEFT: search, facets, list, paging, toolbar ========================== -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
             <TextBlock Grid.Row="0" Text="{Binding StrHosts}" Classes="header"/>
-            <!-- Hosts List -->
-            <ListBox Grid.Row="1"
+
+            <TextBox Grid.Row="1" Margin="4 6 4 2"
+                     Text="{Binding SearchText}"
+                     Watermark="{Binding StrSearchHosts}"
+                     behaviors:FocusOnSignal.Signal="{Binding SearchFocusSignal}"/>
+
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0 0 4 4">
+                <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label" Text="{Binding StrStatus}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="0" Grid.Column="1" Margin="5 2 0 2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding StatusOptions}"
+                          SelectedItem="{Binding SelectedStatusOption}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="hosts:FilterOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label" Text="{Binding StrTeam}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="5 2 0 2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding TeamOptions}"
+                          SelectedItem="{Binding SelectedTeamOption}"
+                          IsTextSearchEnabled="True">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="hosts:FilterOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label" Text="{Binding StrCriticality}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" Margin="5 2 0 2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding CriticalityOptions}"
+                          SelectedItem="{Binding SelectedCriticalityOption}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="hosts:FilterOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label" Text="{Binding StrEnvironment}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" Margin="5 2 0 2" HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding EnvironmentOptions}"
+                          SelectedItem="{Binding SelectedEnvironmentOption}"
+                          IsTextSearchEnabled="True">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="hosts:FilterOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+
+            <!-- Hosts list: criticality pill (a dash when unset), name, muted IP. -->
+            <ListBox Grid.Row="3"
                      SelectedItem="{Binding SelectedHost}"
                      ItemsSource="{Binding HostsList}">
                 <ListBox.ItemsPanel>
@@ -50,178 +119,437 @@
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding HostName}" />
+                    <DataTemplate x:DataType="entities:Host">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0" Classes="criticality" Margin="0 0 8 0"
+                                    Classes.c1="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c1}"
+                                    Classes.c2="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c2}"
+                                    Classes.c3="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c3}"
+                                    Classes.c4="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c4}"
+                                    Classes.c5="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c5}"
+                                    Classes.unset="{Binding Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=unset}"
+                                    ToolTip.Tip="{Binding Criticality, Converter={StaticResource CriticalityToLabelConverter}}">
+                                <TextBlock Text="{Binding Criticality, Converter={StaticResource CriticalityToLabelConverter}, ConverterParameter=short}"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding HostName}" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Classes="listSubtitle" Text="{Binding Ip}"/>
+                            </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <!-- Filter BOX -->
-            <TextBox Grid.Row="2" Text="{Binding SelectedHostsFilter}" IsVisible="{Binding ShowHostsFilter}"
-                     behaviors:FocusOnVisible.Enabled="True"/>
-            <!-- Host Control Bar -->
-            <Grid Grid.Row="3" ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto,Auto">
-                <Button Grid.Column="0" Name="BtAddHost"  Classes="subButton"
+
+            <!-- Paging: first–last of total, previous / next. -->
+            <Border Grid.Row="4" Classes="footer" Padding="6 3">
+                <Grid ColumnDefinitions="*,Auto,Auto" IsEnabled="{Binding IsPagingEnabled}">
+                    <TextBlock Grid.Column="0" Classes="listSubtitle" Text="{Binding StrPageRange}" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Classes="detailButton" Margin="0 0 4 0"
+                            Command="{Binding BtPreviousPageClicked}"
+                            IsEnabled="{Binding IsPreviousPageEnabled}"
+                            ToolTip.Tip="{Binding StrPrevious}">
+                        <avalonia:MaterialIcon Kind="ChevronLeft"/>
+                    </Button>
+                    <Button Grid.Column="2" Classes="detailButton"
+                            Command="{Binding BtNextPageClicked}"
+                            IsEnabled="{Binding IsNextPageEnabled}"
+                            ToolTip.Tip="{Binding StrNext}">
+                        <avalonia:MaterialIcon Kind="ChevronRight"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Toolbar. The magnifier toggle is gone: search is permanent (S38 §3.1). -->
+            <Grid Grid.Row="5" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="0 0 0 5">
+                <Button Grid.Column="0" Name="BtAddHost" Classes="subButton"
                         Command="{Binding BtAddHostClicked}"
-                >
+                        ToolTip.Tip="{Binding StrAdd}">
                     <avalonia:MaterialIcon Kind="Add"/>
                 </Button>
                 <Button Grid.Column="1" Name="BtEditHost" Classes="subButton type2"
                         Command="{Binding BtEditHostClicked}"
-                        IsEnabled="True"
-                       >
+                        IsEnabled="{Binding HasSelectedHost}"
+                        ToolTip.Tip="{Binding StrEdit}">
                     <avalonia:MaterialIcon Kind="Edit"/>
                 </Button>
-                <Button Grid.Column="2" Name="BtViewFilterRisk" Classes="subButton type2"
-                        Command="{Binding BtFilterViewClicked}">
-                    <avalonia:MaterialIcon Kind="Magnify"/>
-                </Button>
-                
-                <Button Grid.Column="4" Name="BtReloadHosts" Classes="subButton type2"
-                        Command="{Binding BtReloadHostsClicked}">
+                <Button Grid.Column="3" Name="BtReloadHosts" Classes="subButton type2"
+                        Command="{Binding BtReloadHostsClicked}"
+                        ToolTip.Tip="{Binding StrReload}">
                     <avalonia:MaterialIcon Kind="Reload"/>
                 </Button>
-                <Button Grid.Column="5" Name="BtDeleteHost" Classes="subButton type3"
-                        Command="{Binding BtDeleteHostClicked}">
+                <Button Grid.Column="4" Name="BtDeleteHost" Classes="subButton type3"
+                        Command="{Binding BtDeleteHostClicked}"
+                        IsEnabled="{Binding HasSelectedHost}"
+                        ToolTip.Tip="{Binding StrDelete}">
                     <avalonia:MaterialIcon Kind="Delete"/>
                 </Button>
-                <Button Grid.Column="6" Name="BtExport" Classes="subButton type2" Command="{Binding ExportCommand}">
+                <Button Grid.Column="5" Name="BtExport" Classes="subButton type2"
+                        Command="{Binding ExportCommand}"
+                        ToolTip.Tip="{Binding StrExport}">
                     <avalonia:MaterialIcon Kind="Export"/>
                 </Button>
             </Grid>
         </Grid>
-        <GridSplitter Grid.Column="1"  Margin="2 0 3 0"/>
-        <!-- RIGHT -->
-        <Grid Grid.Column="2" RowDefinitions="*, Auto, Auto" ColumnDefinitions="*, Auto">
-            <!-- HOST DETAIL -->
-            <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*">
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding StrDetails}" Classes="header"/>
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrId}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHost.Id}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrHostName}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHost.HostName}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrIp}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedHost.Ip}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrStatus}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="4" Grid.Column="1" 
-                           Text="{Binding SelectedHost.Status, 
-                           Converter={StaticResource IntStatusToStringConverter}}"
-                           Foreground="{Binding SelectedHost.Status, Converter={StaticResource IntStatusToColorConverter}}"
-                           Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrRegistrationDate}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedHost.RegistrationDate}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding StrResponsibleTeam}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="6" Grid.Column="1" 
-                           Text="{Binding SelectedHost.TeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"
-                           Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrFqdn}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedHost.Fqdn}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="8" Grid.Column="0" Text="{Binding StrMacAddress}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding SelectedHost.MacAddress}" Margin="5 10 0 0 "/>
-                <TextBlock Grid.Row="9" Grid.Column="0" Text="{Binding StrOperatingSystem}" Margin="10 10 0 0 "/>
-                <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding SelectedHost.Os}" Margin="5 10 0 0 "/>
-            </Grid>
-            <!-- HOST SERVICES -->
-            <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto, *" Width="150">
-                <TextBlock Grid.Row="0" Text="{Binding StrServices}" Classes="header"/>
-                <ListBox Grid.Row="1"  
-                         ItemsSource="{Binding SelectedHostsServices}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border CornerRadius="3" BorderThickness="3">
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{Binding Name}" />
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding #HostsViewUC.DataContext.StrPort}" />
-                                        <TextBlock Text="{Binding Port}" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                            
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-            <!-- HOST VULNERABILITIES -->
-            <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto, *" Height="250">
-                <TextBlock Grid.Row="0" Text="{Binding StrVulnerabilities}" Classes="header2"/>
-                <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedHostsVulnerabilities}">
 
-                    <DataGrid.Columns>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="ID" 
-                                        Binding="{Binding Id}"/>
-                    
-                    <DataGridTemplateColumn Header="{Binding StrStatus}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate DataType="entities:Vulnerability">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <avalonia:MaterialIcon Kind="{Binding Status, 
-                                    Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
-                                                           Foreground="{Binding Status, Converter={StaticResource IntStatusToColorConverter}}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrTitle}" 
-                                        Binding="{Binding Title}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrScore}" 
-                                        Binding="{Binding Score}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrImpact}" 
-                                        Binding="{Binding Severity, 
-                                        Converter={StaticResource StringIdToImpactConverter} }"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrFirstDetection}" 
-                                        Binding="{Binding FirstDetection}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrLastDetection}" 
-                                        Binding="{Binding LastDetection}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrDetectionCount}" 
-                                        Binding="{Binding DetectionCount}"/>
-                    
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrFixTeam}" 
-                                        Binding="{Binding FixTeamId, Converter={StaticResource TeamIdToTeamNameConverter}}"/>
-                    <DataGridTextColumn IsReadOnly="True" 
-                                        Header="{Binding StrAnalyst}" 
-                                        Binding="{Binding AnalystId, Converter={StaticResource AnalystIdToAnalystNameConverter}}"/>
+        <GridSplitter Grid.Column="1" Name="HostsListSplitter" Classes="horizontalSplitter" Margin="1 0"/>
 
-                </DataGrid.Columns>                    
-                </DataGrid>
-            </Grid>
-            <!-- HOST COMMENTS -->
-            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,Auto,Auto" Height="170">
-                <TextBlock Grid.Row="0" Text="{Binding StrComments}" Classes="header2"/>
-                <ListBox Grid.Row="1" ItemsSource="{Binding HostComments}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="entities:Comment">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="8" Opacity="0.7">
-                                    <TextBlock Text="{Binding CommenterName}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding Date}"/>
-                                </StackPanel>
-                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+        <!-- ===== RIGHT: header card + tabs ============================================ -->
+        <TextBlock Grid.Column="2" Classes="hint" Text="{Binding StrSelectHost}"
+                   IsVisible="{Binding HasNoSelectedHost}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <Grid Grid.Column="2" RowDefinitions="Auto,*" IsVisible="{Binding HasSelectedHost}">
+
+            <!-- Header card (S38 §3.2): Auto height, never scrolls. -->
+            <Border Grid.Row="0" Classes="card">
+                <StackPanel Spacing="3">
+                    <WrapPanel Orientation="Horizontal">
+                        <TextBlock Classes="title" Text="{Binding SelectedHost.HostName}" VerticalAlignment="Center"/>
+
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrStatus}" VerticalAlignment="Center" Margin="8 0">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <avalonia:MaterialIcon Kind="{Binding SelectedHost.Status, Converter={StaticResource IntStatusToMaterialIconkindConverter}}"
+                                                       Classes.success="{Binding IsSelectedHostActive}"
+                                                       Classes.warning="{Binding IsSelectedHostRetired}"/>
+                                <TextBlock Text="{Binding StrSelectedHostStatus}" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
-                    <TextBox Grid.Column="0" Text="{Binding NewComment}" Watermark="{Binding StrComments}"
-                             AcceptsReturn="False">
-                        <TextBox.KeyBindings>
-                            <KeyBinding Gesture="Enter" Command="{Binding BtSendCommentClicked}"/>
-                        </TextBox.KeyBindings>
-                    </TextBox>
-                    <Button Grid.Column="1" Classes="dialog1" Margin="5 0 0 0"
-                            Command="{Binding BtSendCommentClicked}">
-                        <TextBlock Text="{Binding StrSend}"/>
-                    </Button>
-                </Grid>
-            </Grid>
+                        </Border>
+
+                        <Border Classes="criticality" Margin="0 0 8 0"
+                                Classes.c1="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c1}"
+                                Classes.c2="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c2}"
+                                Classes.c3="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c3}"
+                                Classes.c4="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c4}"
+                                Classes.c5="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=c5}"
+                                Classes.unset="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToClassConverter}, ConverterParameter=unset}"
+                                ToolTip.Tip="{Binding StrCriticality}">
+                            <TextBlock Text="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToLabelConverter}, ConverterParameter=long}"/>
+                        </Border>
+
+                        <Border Classes="chip" Margin="0" IsVisible="{Binding HasSelectedHostEnvironment}"
+                                ToolTip.Tip="{Binding StrEnvironment}">
+                            <TextBlock Text="{Binding SelectedHost.Environment}"/>
+                        </Border>
+                    </WrapPanel>
+
+                    <TextBlock Classes="metric_detail" Text="{Binding StrSelectedHostAddressLine}"/>
+                    <TextBlock Classes="metric_detail" Text="{Binding StrSelectedHostOwnershipLine}"/>
+
+                    <!-- Open vulnerabilities by severity, from GET /Hosts/{id}/VulnerabilitySummary. -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 4 0 0">
+                        <TextBlock Classes="metric_detail" Text="{Binding StrOpenVulnerabilities}" VerticalAlignment="Center"/>
+                        <Border Classes="severity s4">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding StrCritical}"/>
+                                <TextBlock Text="{Binding OpenCritical}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="severity s3">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding StrHigh}"/>
+                                <TextBlock Text="{Binding OpenHigh}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="severity s2">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding StrMedium}"/>
+                                <TextBlock Text="{Binding OpenMedium}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Classes="severity s1">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding StrLow}"/>
+                                <TextBlock Text="{Binding OpenLow}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Tabs (S38 §3.3): fill the remaining height; the open one is remembered. -->
+            <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+
+                <!-- 0 — Vulnerabilities (default): needs-action-first order, low-use columns hidden. -->
+                <TabItem Header="{Binding StrVulnerabilities}">
+                    <DataGrid ItemsSource="{Binding SelectedHostVulnerabilities}"
+                              SelectedItem="{Binding SelectedVulnerability}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrId}" Binding="{Binding Id}"
+                                                IsVisible="False" Width="80" MinWidth="60" MaxWidth="120"/>
+
+                            <DataGridTemplateColumn Header="{Binding StrStatus}" SortMemberPath="Status"
+                                                    Width="70" MinWidth="60" MaxWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="hosts:HostVulnerabilityRow">
+                                        <Border Classes="tooltip" HorizontalAlignment="Center"
+                                                ToolTip.Tip="{Binding Status, Converter={StaticResource IntStatusToStringConverter}}">
+                                            <avalonia:MaterialIcon Kind="{Binding Status, Converter={StaticResource IntStatusToMaterialIconkindConverter}}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="{Binding StrSeverity}" SortMemberPath="SeverityRank"
+                                                    Width="110" MinWidth="90" MaxWidth="160">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="hosts:HostVulnerabilityRow">
+                                        <Border Classes="severity" Margin="4 2"
+                                                Classes.s0="{Binding Severity, Converter={StaticResource SeverityToClassConverter}, ConverterParameter=s0}"
+                                                Classes.s1="{Binding Severity, Converter={StaticResource SeverityToClassConverter}, ConverterParameter=s1}"
+                                                Classes.s2="{Binding Severity, Converter={StaticResource SeverityToClassConverter}, ConverterParameter=s2}"
+                                                Classes.s3="{Binding Severity, Converter={StaticResource SeverityToClassConverter}, ConverterParameter=s3}"
+                                                Classes.s4="{Binding Severity, Converter={StaticResource SeverityToClassConverter}, ConverterParameter=s4}">
+                                            <TextBlock Text="{Binding SeverityLabel}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding Title}"
+                                                Width="3*" MinWidth="220"/>
+                            <DataGridTextColumn Header="{Binding StrScore}" Binding="{Binding Score}"
+                                                Width="80" MinWidth="60" MaxWidth="120"/>
+                            <DataGridTextColumn Header="{Binding StrLastDetection}" Binding="{Binding LastDetection}"
+                                                Width="*" MinWidth="130" MaxWidth="220"/>
+                            <DataGridTextColumn Header="{Binding StrFixTeam}" Binding="{Binding FixTeam}"
+                                                Width="*" MinWidth="120" MaxWidth="260"/>
+                            <DataGridTextColumn Header="{Binding StrFirstDetection}" Binding="{Binding FirstDetection}"
+                                                IsVisible="False" Width="*" MinWidth="130" MaxWidth="220"/>
+                            <DataGridTextColumn Header="{Binding StrDetectionCount}" Binding="{Binding DetectionCount}"
+                                                IsVisible="False" Width="90" MinWidth="70" MaxWidth="140"/>
+                            <DataGridTextColumn Header="{Binding StrAnalyst}" Binding="{Binding Analyst}"
+                                                IsVisible="False" Width="*" MinWidth="120" MaxWidth="260"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- 1 — Overview: details | splitter | service chips. -->
+                <TabItem Header="{Binding StrOverview}">
+                    <Grid Margin="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3*" MinWidth="260"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="2*" MinWidth="180"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
+                            <Grid ColumnDefinitions="Auto,*" Margin="0 0 8 0"
+                                  RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label" Text="{Binding StrId}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Id}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label" Text="{Binding StrHostName}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.HostName}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label" Text="{Binding StrIp}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Ip}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label" Text="{Binding StrFqdn}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Fqdn}"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Classes="form_label" Text="{Binding StrMacAddress}"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.MacAddress}"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Classes="form_label" Text="{Binding StrOperatingSystem}"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Os}"/>
+                                <TextBlock Grid.Row="6" Grid.Column="0" Classes="form_label" Text="{Binding StrOsVersion}"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.OsVersion}"/>
+                                <TextBlock Grid.Row="7" Grid.Column="0" Classes="form_label" Text="{Binding StrStatus}"/>
+                                <TextBlock Grid.Row="7" Grid.Column="1" Classes="form_text" Text="{Binding StrSelectedHostStatus}"/>
+                                <TextBlock Grid.Row="8" Grid.Column="0" Classes="form_label" Text="{Binding StrRegistrationDate}"/>
+                                <TextBlock Grid.Row="8" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.RegistrationDate}"/>
+                                <TextBlock Grid.Row="9" Grid.Column="0" Classes="form_label" Text="{Binding StrLastVerification}"/>
+                                <TextBlock Grid.Row="9" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.LastVerificationDate}"/>
+                                <TextBlock Grid.Row="10" Grid.Column="0" Classes="form_label" Text="{Binding StrSource}"/>
+                                <TextBlock Grid.Row="10" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Source}"/>
+                                <TextBlock Grid.Row="11" Grid.Column="0" Classes="form_label" Text="{Binding StrExternalId}"/>
+                                <TextBlock Grid.Row="11" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.ExternalId}"/>
+                                <TextBlock Grid.Row="12" Grid.Column="0" Classes="form_label" Text="{Binding StrExternalProvider}"/>
+                                <TextBlock Grid.Row="12" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.ExternalProvider}"/>
+                                <TextBlock Grid.Row="13" Grid.Column="0" Classes="form_label" Text="{Binding StrResponsibleTeam}"/>
+                                <TextBlock Grid.Row="13" Grid.Column="1" Classes="form_text" Text="{Binding StrSelectedHostTeam}"/>
+                                <TextBlock Grid.Row="14" Grid.Column="0" Classes="form_label" Text="{Binding StrOwner}"/>
+                                <TextBlock Grid.Row="14" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Owner}"/>
+                                <TextBlock Grid.Row="15" Grid.Column="0" Classes="form_label" Text="{Binding StrEnvironment}"/>
+                                <TextBlock Grid.Row="15" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Environment}"/>
+                                <TextBlock Grid.Row="16" Grid.Column="0" Classes="form_label" Text="{Binding StrCriticality}"/>
+                                <TextBlock Grid.Row="16" Grid.Column="1" Classes="form_text"
+                                           Text="{Binding SelectedHost.Criticality, Converter={StaticResource CriticalityToLabelConverter}, ConverterParameter=long}"/>
+                                <TextBlock Grid.Row="17" Grid.Column="0" Classes="form_label" Text="{Binding StrRiskScore}"/>
+                                <TextBlock Grid.Row="17" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.RiskScore}"/>
+                                <TextBlock Grid.Row="18" Grid.Column="0" Classes="form_label" Text="{Binding StrRiskScoreSource}"/>
+                                <TextBlock Grid.Row="18" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.RiskScoreSource}"/>
+                                <TextBlock Grid.Row="19" Grid.Column="0" Classes="form_label" Text="{Binding StrRiskScoreUpdatedAt}"/>
+                                <TextBlock Grid.Row="19" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.RiskScoreUpdatedAt}"/>
+                                <TextBlock Grid.Row="20" Grid.Column="0" Classes="form_label" Text="{Binding StrComment}"/>
+                                <TextBlock Grid.Row="20" Grid.Column="1" Classes="form_long_text" Text="{Binding SelectedHost.Comment}"/>
+                            </Grid>
+                        </ScrollViewer>
+
+                        <GridSplitter Grid.Column="1" Classes="horizontalSplitter"/>
+
+                        <Grid Grid.Column="2" RowDefinitions="Auto,*" Margin="8 0 0 0">
+                            <TextBlock Grid.Row="0" Classes="header3" Text="{Binding StrServices}"/>
+                            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding SelectedHostServices}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Classes="chipPanel" Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="hosts:HostServiceRow">
+                                                <Border Classes="chip" ToolTip.Tip="{Binding Protocol}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:MaterialIcon Kind="{Binding Converter={StaticResource ServiceToIconConverter}}"/>
+                                                        <TextBlock Text="{Binding ChipText}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Classes="hint" Text="{Binding StrNoServices}" IsVisible="{Binding HasNoServices}"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- 2 — Services: the full table. Read-only; service CRUD stays in the edit dialog. -->
+                <TabItem Header="{Binding StrServices}">
+                    <DataGrid ItemsSource="{Binding SelectedHostServices}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="44" MinWidth="40" MaxWidth="60" CanUserSort="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="hosts:HostServiceRow">
+                                        <avalonia:MaterialIcon HorizontalAlignment="Center"
+                                                               Kind="{Binding Converter={StaticResource ServiceToIconConverter}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}"
+                                                Width="2*" MinWidth="160"/>
+                            <DataGridTextColumn Header="{Binding StrProtocol}" Binding="{Binding Protocol}"
+                                                Width="*" MinWidth="90" MaxWidth="200"/>
+                            <DataGridTextColumn Header="{Binding StrPort}" Binding="{Binding Port}"
+                                                Width="90" MinWidth="70" MaxWidth="140"/>
+                            <DataGridTextColumn Header="{Binding StrVulnerabilities}" Binding="{Binding VulnerabilityCount}"
+                                                Width="*" MinWidth="110" MaxWidth="200"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+
+                <!-- 3 — History: who changed what, one group per save. -->
+                <TabItem Header="{Binding StrHistory}">
+                    <Grid RowDefinitions="Auto,*" Margin="4">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,*,Auto,Auto,Auto" Margin="0 0 0 6">
+                            <TextBlock Grid.Column="0" Classes="form_label" Text="{Binding StrField}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1" Margin="5 0" MinWidth="150" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding HistoryFieldOptions}"
+                                      SelectedItem="{Binding SelectedHistoryField}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="hosts:FilterOption">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrActor}" VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="3" Margin="5 0" MinWidth="150" HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding HistoryActorOptions}"
+                                      SelectedItem="{Binding SelectedHistoryActor}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="hosts:FilterOption">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrSince}" VerticalAlignment="Center"/>
+                            <DatePicker Grid.Column="5" Margin="5 0" SelectedDate="{Binding HistorySince}"/>
+                            <Button Grid.Column="6" Classes="subButton" Margin="0"
+                                    Command="{Binding BtClearHistorySinceClicked}"
+                                    ToolTip.Tip="{Binding StrClear}">
+                                <avalonia:MaterialIcon Kind="Close"/>
+                            </Button>
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding HistoryGroups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="hosts:HostHistoryEntry">
+                                        <Border Classes="outline" Padding="8 6" Margin="0 0 0 6">
+                                            <StackPanel>
+                                                <TextBlock Classes="form_label" Text="{Binding Header}"/>
+                                                <ItemsControl ItemsSource="{Binding Lines}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="hosts:HostHistoryLine">
+                                                            <Grid ColumnDefinitions="Auto,*">
+                                                                <TextBlock Grid.Column="0" Classes="form_text" MinWidth="180"
+                                                                           Text="{Binding Label}"/>
+                                                                <TextBlock Grid.Column="1" Classes="form_long_text"
+                                                                           Text="{Binding Detail}"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Grid.Row="1" Classes="hint" Text="{Binding StrHistoryEmpty}"
+                                   IsVisible="{Binding IsHistoryEmpty}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </TabItem>
+
+                <!-- 4 — Comments: the list fills the tab, the composer sits under it. -->
+                <TabItem Header="{Binding StrComments}">
+                    <Grid RowDefinitions="*,Auto" Margin="4">
+                        <ListBox Grid.Row="0" ItemsSource="{Binding HostComments}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="entities:Comment">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Classes="form_label" Text="{Binding CommenterName}"/>
+                                            <TextBlock Classes="listSubtitle" Text="{Binding Date}" VerticalAlignment="Bottom"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 6 0 0">
+                            <TextBox Grid.Column="0" Text="{Binding NewComment}" Watermark="{Binding StrComments}"
+                                     AcceptsReturn="False">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding BtSendCommentClicked}"/>
+                                </TextBox.KeyBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Classes="dialog1" Margin="5 0 0 0"
+                                    Command="{Binding BtSendCommentClicked}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <avalonia:MaterialIcon Kind="Send"/>
+                                    <TextBlock Text="{Binding StrSend}"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
         </Grid>
     </Grid>
 

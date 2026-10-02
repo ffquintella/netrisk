@@ -27,11 +27,55 @@ public interface IHostsService
     public Task<List<Host>> GetAllAsync();
     
     
+    /// <summary>The sort <see cref="GetFilteredAsync(int,int,string?)"/> asks the server for.</summary>
+    public const string DefaultSort = "hostName";
+
     /// <summary>
-    /// Get vulnerabilities filtered
+    /// One page of hosts, sorted by host name on the server. Kept for callers that do not page;
+    /// it is <see cref="GetFilteredAsync(int,int,string?,string?)"/> with <see cref="DefaultSort"/>,
+    /// minus the total.
     /// </summary>
-    /// <returns></returns>
     public Task<List<Host>> GetFilteredAsync(int pageSize, int pageNumber, string? filter);
+
+    /// <summary>
+    /// One page of hosts plus the number of hosts the filter matches across every page, read from
+    /// the server's <c>X-Total-Count</c> header (S38 §5.5).
+    /// </summary>
+    /// <param name="pageSize">Rows per page; the server clamps it.</param>
+    /// <param name="pageNumber">1-based page.</param>
+    /// <param name="filter">Sieve-syntax filter, e.g. <c>hostName@=web,status==42,criticality==5</c>.
+    /// Null or empty for none. Filterable: hostName, id, status, fqdn, ip, os, teamId,
+    /// registrationDate, criticality, environment, owner, source, riskScore, lastVerificationDate.</param>
+    /// <param name="sorts">Sieve-syntax sort, <c>-</c> prefix for descending (<c>-riskScore</c>).
+    /// Null or empty leaves the order to the server.</param>
+    /// <exception cref="Model.Exceptions.BadFilterException">The server rejected the filter or sort
+    /// (HTTP 400/409) — an unknown field or a malformed expression.</exception>
+    public Task<(List<Host> Items, int Total)> GetFilteredAsync(int pageSize, int pageNumber, string? filter,
+        string? sorts);
+
+    /// <summary>
+    /// The distinct, non-blank environment values of the hosts the user can see, ordered — the
+    /// environment facet's options (S38 §5.2).
+    /// </summary>
+    public Task<List<string>> GetEnvironmentsAsync();
+
+    /// <summary>
+    /// Open-vulnerability counts by severity for one host (S38 §5.3).
+    /// </summary>
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The host does not exist or the user
+    /// cannot see it.</exception>
+    public Task<HostVulnerabilitySummaryDto> GetVulnerabilitySummaryAsync(int hostId);
+
+    /// <summary>
+    /// The host's field-level change history, newest first (S38 §5.4). Rows sharing a
+    /// <see cref="AuditLog.CorrelationId"/> were written by one save. <see cref="AuditLog.User"/> is
+    /// never populated; <see cref="AuditLog.Actor"/> and <see cref="AuditLog.UserId"/> say who acted.
+    /// </summary>
+    /// <param name="hostId">The host.</param>
+    /// <param name="limit">At most this many rows, 1–5000.</param>
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The host does not exist or the user
+    /// cannot see it.</exception>
+    public Task<List<AuditLog>> GetHistoryAsync(int hostId, int limit = 500);
     
     /// <summary>
     /// Create a new host

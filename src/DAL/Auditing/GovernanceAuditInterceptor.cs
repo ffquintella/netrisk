@@ -11,7 +11,7 @@ namespace DAL.Auditing;
 
 /// <summary>
 /// Writes one <c>audit_logs</c> row per changed field on the risk-governance aggregate
-/// (Track 8 milestone 8.4.1).
+/// (Track 8 milestone 8.4.1) and on hosts and their services (S38, T234).
 ///
 /// This exists alongside — not instead of — the JSON <c>audit</c> table the context already writes.
 /// That table answers forensic questions with a blob per save; it cannot answer "who lowered this
@@ -21,6 +21,15 @@ namespace DAL.Auditing;
 /// trail over a vulnerability import would write millions of rows nobody reads. And the write is
 /// best-effort: an auditing failure logs and lets the business save through, exactly as the existing
 /// audit path does. An audit trail that can block a risk from being saved is a new outage source.
+///
+/// Hosts are in because "what changed on this host, and who or what changed it" is the question the
+/// Hosts view's History tab answers, and the scanner, CMDB and posture imports that rewrite
+/// criticality, owner, environment and risk score all save through here — so an import is
+/// attributed without any import having to remember to log. Vulnerabilities stay out for the reason
+/// above. Two host columns are ignored because every import pass stamps them whether or not anything
+/// else changed: <see cref="Host.LastVerificationDate"/> and <see cref="Host.RiskScoreUpdatedAt"/>.
+/// Recording them would bury the edits a person cares about under one row per host per scan; the
+/// risk score itself is still recorded when it moves.
 /// </summary>
 public class GovernanceAuditInterceptor : SaveChangesInterceptor
 {
@@ -46,18 +55,24 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(RiskAcceptance),
         nameof(RiskAppetite),
         nameof(RiskReviewCampaignItem),
-        nameof(EntityRiskReviewer)
+        nameof(EntityRiskReviewer),
+        nameof(Host),
+        nameof(HostsService)
     };
 
     /// <summary>
     /// Fields never worth a row: the primary key (already the row's subject) and the churn columns
     /// every save touches. A trail whose signal is buried under `last_update` changes is not read.
+    /// Matched by property name across every audited type; no two audited types share one of these
+    /// names with a different meaning.
     /// </summary>
     private static readonly HashSet<string> IgnoredFields = new(StringComparer.Ordinal)
     {
         nameof(Risk.LastUpdate),
         nameof(RiskScoring.ResidualUpdatedAt),
         nameof(RiskScoring.QuantComputedAt),
+        nameof(Host.LastVerificationDate),
+        nameof(Host.RiskScoreUpdatedAt),
         "UpdatedAt"
     };
 

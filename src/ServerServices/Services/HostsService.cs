@@ -1,9 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System.Globalization;
+using System.Linq.Expressions;
+using Contracts.Importers;
 using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model.DTO;
 using Model.Exceptions;
+using Model.Status;
 using Serilog;
 using ServerServices.Interfaces;
 
@@ -327,5 +331,98 @@ public class HostsService: ServiceBase, IHostsService
         dbService.Host = dbhost;
         dbContext.SaveChanges();
     }
-    
+
+    public async Task<List<string>> GetEnvironmentsAsync()
+    {
+        await using var dbContext = DalService.GetContext();
+
+        // Through the scoped Hosts set, so a caller sees only the environments of hosts they can
+        // see. Blank values are not an environment anybody can pick, so they are not offered.
+        return await dbContext.Hosts
+            .AsNoTracking()
+            .Where(h => h.Environment != null && h.Environment.Trim() != "")
+            .Select(h => h.Environment!)
+            .Distinct()
+            .OrderBy(e => e)
+            .ToListAsync();
+    }
+
+    public async Task<HostVulnerabilitySummaryDto> GetVulnerabilitySummaryAsync(int hostId)
+    {
+        var summaries = await GetVulnerabilitySummariesAsync([hostId]);
+
+        return summaries.Count == 1
+            ? summaries[0]
+            : throw new DataNotFoundException("hosts", hostId.ToString(), new Exception("Host not found"));
+    }
+
+    public async Task<List<HostVulnerabilitySummaryDto>> GetVulnerabilitySummariesAsync(
+        IReadOnlyCollection<int> hostIds)
+    {
+        ArgumentNullException.ThrowIfNull(hostIds);
+
+        var requested = hostIds.Distinct().ToList();
+
+        if (requested.Count > IHostsService.MaxSummaryBatchSize)
+            throw new ArgumentException(
+                $"At most {IHostsService.MaxSummaryBatchSize} hosts per summary request.", nameof(hostIds));
+
+        if (requested.Count == 0) return [];
+
+        await using var dbContext = DalService.GetContext();
+
+        // Visibility first, through the scoped Hosts set: a host outside the caller's entities is
+        // reported as absent rather than as a host with no findings.
+        var visible = (await dbContext.Hosts
+                .AsNoTracking()
+                .Where(h => requested.Contains(h.Id))
+                .Select(h => h.Id)
+                .ToListAsync())
+            .ToHashSet();
+
+        if (visible.Count == 0) return [];
+
+        // One grouped query for every host asked about. Grouping on the raw status and severity
+        // keeps the SQL a plain GROUP BY; the closed-set test and the severity parse run over the
+        // handful of groups that come back rather than over the findings themselves.
+        var visibleIds = visible.ToList();
+        var groups = await dbContext.Vulnerabilities
+            .AsNoTracking()
+            .Where(v => v.HostId != null && visibleIds.Contains(v.HostId.Value))
+            .GroupBy(v => new { HostId = v.HostId!.Value, v.Status, v.Severity })
+            .Select(g => new { g.Key.HostId, g.Key.Status, g.Key.Severity, Count = g.Count() })
+            .ToListAsync();
+
+        var summaries = visibleIds.ToDictionary(id => id, id => new HostVulnerabilitySummaryDto { HostId = id });
+
+        foreach (var group in groups)
+        {
+            var summary = summaries[group.HostId];
+            summary.Total += group.Count;
+
+            if (ClosedStatuses.IsClosed(group.Status)) continue;
+
+            switch (ParseSeverity(group.Severity))
+            {
+                case NormalizedSeverity.Critical: summary.Open.Critical += group.Count; break;
+                case NormalizedSeverity.High: summary.Open.High += group.Count; break;
+                case NormalizedSeverity.Medium: summary.Open.Medium += group.Count; break;
+                case NormalizedSeverity.Low: summary.Open.Low += group.Count; break;
+                default: summary.Open.None += group.Count; break;
+            }
+        }
+
+        return requested.Where(visible.Contains).Select(id => summaries[id]).ToList();
+    }
+
+    /// <summary>
+    /// <c>vulnerabilities.severity</c> is the importers' <see cref="NormalizedSeverity"/> written as
+    /// its number, "0" to "4". Anything else — blank, a word, an out-of-range number — is None, so a
+    /// malformed row is still counted somewhere instead of disappearing from the total.
+    /// </summary>
+    public static NormalizedSeverity ParseSeverity(string? severity) =>
+        int.TryParse(severity?.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var value)
+        && value is >= (int)NormalizedSeverity.None and <= (int)NormalizedSeverity.Critical
+            ? (NormalizedSeverity)value
+            : NormalizedSeverity.None;
 }

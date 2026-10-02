@@ -59,6 +59,7 @@ public sealed class StubRestBackend : IRestService, IDisposable
         public string Body = "";
         public string ContentType = "application/json";
         public Exception? Throws;
+        public Dictionary<string, string> Headers = new(StringComparer.OrdinalIgnoreCase);
     }
 
     public StubRestBackend()
@@ -175,6 +176,19 @@ public sealed class StubRestBackend : IRestService, IDisposable
     public StubRestBackend OnGet(string path, object body, HttpStatusCode status = HttpStatusCode.OK)
         => On(Method.Get, path, body, status);
 
+    /// <summary>
+    /// Adds a response header to a route configured earlier — <c>X-Total-Count</c> on a paged list,
+    /// which is how the list endpoints report the total beside a single page.
+    /// </summary>
+    public StubRestBackend WithHeader(Method method, string path, string name, string value)
+    {
+        if (!_routes.TryGetValue(Key(method, path), out var route))
+            throw new InvalidOperationException($"Configure {method} {path} before adding a header to it.");
+
+        route.Headers[name] = value;
+        return this;
+    }
+
     public StubRestBackend OnPost(string path, object body, HttpStatusCode status = HttpStatusCode.OK)
         => On(Method.Post, path, body, status);
 
@@ -219,10 +233,15 @@ public sealed class StubRestBackend : IRestService, IDisposable
 
             if (route.Throws != null) throw route.Throws;
 
-            return new HttpResponseMessage(route.Status)
+            var response = new HttpResponseMessage(route.Status)
             {
                 Content = new StringContent(route.Body, Encoding.UTF8, route.ContentType)
             };
+
+            foreach (var (name, value) in route.Headers)
+                response.Headers.TryAddWithoutValidation(name, value);
+
+            return response;
         }
     }
 

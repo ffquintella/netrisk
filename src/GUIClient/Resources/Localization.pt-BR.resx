@@ -3285,4 +3285,88 @@
   <data name="VaultPluginOptionsFailedMSG" xml:space="preserve">
     <value>O cofre não conseguiu listar os valores para este campo.</value>
   </data>
+    <data name="HostsSearchWatermark" xml:space="preserve">
+        <value>Buscar pelo nome do host</value>
+    </data>
+    <data name="Criticality" xml:space="preserve">
+        <value>Criticidade</value>
+    </data>
+    <data name="FilterAll" xml:space="preserve">
+        <value>Todos</value>
+    </data>
+    <data name="Retired" xml:space="preserve">
+        <value>Desativado</value>
+    </data>
+    <data name="HostsSelectHostMSG" xml:space="preserve">
+        <value>Selecione um host para ver os detalhes.</value>
+    </data>
+    <data name="OpenVulnerabilities" xml:space="preserve">
+        <value>Vulnerabilidades abertas</value>
+    </data>
+    <data name="Overview" xml:space="preserve">
+        <value>Visão geral</value>
+    </data>
+    <data name="History" xml:space="preserve">
+        <value>Histórico</value>
+    </data>
+    <data name="OsVersion" xml:space="preserve">
+        <value>Versão do SO</value>
+    </data>
+    <data name="LastVerificationDate" xml:space="preserve">
+        <value>Última verificação</value>
+    </data>
+    <data name="ExternalId" xml:space="preserve">
+        <value>Id externo</value>
+    </data>
+    <data name="ExternalProvider" xml:space="preserve">
+        <value>Provedor externo</value>
+    </data>
+    <data name="RiskScore" xml:space="preserve">
+        <value>Pontuação de risco</value>
+    </data>
+    <data name="RiskScoreSource" xml:space="preserve">
+        <value>Origem da pontuação de risco</value>
+    </data>
+    <data name="RiskScoreUpdatedAt" xml:space="preserve">
+        <value>Pontuação de risco atualizada em</value>
+    </data>
+    <data name="HostsNoServicesMSG" xml:space="preserve">
+        <value>Nenhum serviço registrado para este host.</value>
+    </data>
+    <data name="Since" xml:space="preserve">
+        <value>Desde</value>
+    </data>
+    <data name="HostHistoryEmptyMSG" xml:space="preserve">
+        <value>Nenhuma alteração registrada para este host ainda.</value>
+    </data>
+    <data name="HostsPageRangeMSG" xml:space="preserve">
+        <value>{0}–{1} de {2}</value>
+    </data>
+    <data name="CriticalityVeryLow" xml:space="preserve">
+        <value>Muito baixa</value>
+    </data>
+    <data name="CriticalityLow" xml:space="preserve">
+        <value>Baixa</value>
+    </data>
+    <data name="CriticalityMedium" xml:space="preserve">
+        <value>Média</value>
+    </data>
+    <data name="CriticalityHigh" xml:space="preserve">
+        <value>Alta</value>
+    </data>
+    <data name="CriticalityCritical" xml:space="preserve">
+        <value>Crítica</value>
+    </data>
+    <data name="CriticalityNotSet" xml:space="preserve">
+        <value>Não definida</value>
+    </data>
+    <data name="AuditActionCreate" xml:space="preserve">
+        <value>Criado</value>
+    </data>
+    <data name="AuditActionDelete" xml:space="preserve">
+        <value>Excluído</value>
+    </data>
+    <data name="AuditActionUpdate" xml:space="preserve">
+        <value>Alterado</value>
+    </data>
 </root>

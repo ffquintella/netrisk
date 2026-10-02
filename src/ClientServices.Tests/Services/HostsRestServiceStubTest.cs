@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
@@ -219,20 +220,96 @@ public class HostsRestServiceStubTest : BaseServiceTest
 
     // ------------------------------------------------------------ GetFilteredAsync
 
+    /// <summary>
+    /// The list overload asks the server to sort by host name (S38 §5.5) and keeps the order it is
+    /// given. It used to sort each page client-side, which ordered only the rows on that page — so
+    /// the server's order is now the one asserted, not an alphabetical re-sort of it.
+    /// </summary>
     [Fact]
-    public async Task TestGetFilteredAsyncSendsPagingCultureAndFilter()
+    public async Task TestGetFilteredAsyncSendsPagingCultureFilterAndTheHostNameSort()
     {
         _backend.OnGet("/Hosts/Filtered", new List<Host> { AHost(1, "zeta"), AHost(2, "alpha") });
 
         var hosts = await _service.GetFilteredAsync(10, 2, "HostName==alpha");
 
         Assert.Equal(2, hosts.Count);
-        Assert.Equal("alpha", hosts[0].HostName);
+        Assert.Equal(new[] { "zeta", "alpha" }, hosts.Select(h => h.HostName).ToArray());
         Assert.Equal("/Hosts/Filtered", _backend.LastRequest.Path);
         Assert.Contains("page=2", _backend.LastRequest.Query);
         Assert.Contains("pageSize=10", _backend.LastRequest.Query);
         Assert.Contains("culture=", _backend.LastRequest.Query);
         Assert.Contains("filters=", _backend.LastRequest.Query);
+        Assert.Contains("sorts=hostName", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestGetFilteredAsyncWithTotalReadsTheTotalCountHeader()
+    {
+        _backend.OnGet("/Hosts/Filtered", new List<Host> { AHost(1, "alpha"), AHost(2, "beta") })
+            .WithHeader(Method.Get, "/Hosts/Filtered", "X-Total-Count", "412");
+
+        var (items, total) = await _service.GetFilteredAsync(2, 1, "criticality==5", "-riskScore");
+
+        Assert.Equal(2, items.Count);
+        Assert.Equal(412, total);
+        Assert.Contains("sorts=-riskScore", _backend.LastRequest.Query);
+        Assert.Contains("filters=criticality==5", Uri.UnescapeDataString(_backend.LastRequest.Query));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task TestGetFilteredAsyncWithTotalOmitsAnEmptySort(string? sorts)
+    {
+        _backend.OnGet("/Hosts/Filtered", new List<Host> { AHost() })
+            .WithHeader(Method.Get, "/Hosts/Filtered", "X-Total-Count", "1");
+
+        await _service.GetFilteredAsync(10, 1, null, sorts);
+
+        Assert.DoesNotContain("sorts=", _backend.LastRequest.Query);
+    }
+
+    /// <summary>
+    /// A missing or garbled header falls back to the page's own count — a lower bound — rather than
+    /// to zero, which would render "1–100 of 0" beside a full page.
+    /// </summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("many")]
+    [InlineData("-3")]
+    public async Task TestGetFilteredAsyncWithTotalFallsBackToThePageCount(string? header)
+    {
+        _backend.OnGet("/Hosts/Filtered", new List<Host> { AHost(1), AHost(2), AHost(3) });
+        if (header != null) _backend.WithHeader(Method.Get, "/Hosts/Filtered", "X-Total-Count", header);
+
+        var (_, total) = await _service.GetFilteredAsync(10, 1, null, IHostsService.DefaultSort);
+
+        Assert.Equal(3, total);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Conflict)]
+    public async Task TestGetFilteredAsyncReportsARejectedFilterAsABadFilter(HttpStatusCode status)
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/Filtered", status);
+
+        var thrown = await Assert.ThrowsAsync<BadFilterException>(
+            () => _service.GetFilteredAsync(10, 1, "nope==1", null));
+        Assert.Equal("nope==1", thrown.Filter);
+    }
+
+    /// <summary>The production client raises before the status can be read; same outcome.</summary>
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Conflict)]
+    public async Task TestGetFilteredAsyncReportsARejectedFilterOnTheThrowingClient(HttpStatusCode status)
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+        var service = ResolveWith<IHostsService>(backend);
+        backend.OnStatus(Method.Get, "/Hosts/Filtered", status);
+
+        await Assert.ThrowsAsync<BadFilterException>(() => service.GetFilteredAsync(10, 1, "nope==1", null));
     }
 
     [Theory]
@@ -263,6 +340,134 @@ public class HostsRestServiceStubTest : BaseServiceTest
         _backend.OnStatus(Method.Get, "/Hosts/Filtered", HttpStatusCode.InternalServerError);
 
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetFilteredAsync(10, 1, null));
+    }
+
+    // ---------------------------------------------------- S38: environments, summary, history
+
+    [Fact]
+    public async Task TestGetEnvironmentsAsync()
+    {
+        _backend.OnGet("/Hosts/Environments", new List<string> { "Homolog", "Produção" });
+
+        var environments = await _service.GetEnvironmentsAsync();
+
+        Assert.Equal(new[] { "Homolog", "Produção" }, environments);
+        Assert.Equal("GET /Hosts/Environments", _backend.LastRequest.ToString());
+    }
+
+    [Fact]
+    public async Task TestGetEnvironmentsAsyncThrowsWhenTheServerRefuses()
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/Environments", HttpStatusCode.Forbidden);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetEnvironmentsAsync());
+    }
+
+    [Fact]
+    public async Task TestGetEnvironmentsAsyncWrapsATransportFailure()
+    {
+        _backend.OnTransportFailure(Method.Get, "/Hosts/Environments");
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetEnvironmentsAsync());
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryAsync()
+    {
+        _backend.OnGet("/Hosts/7/VulnerabilitySummary", new HostVulnerabilitySummaryDto
+        {
+            HostId = 7,
+            Open = new SeverityCountsDto { Critical = 2, High = 5, Medium = 11, Low = 3, None = 1 },
+            Total = 40
+        });
+
+        var summary = await _service.GetVulnerabilitySummaryAsync(7);
+
+        Assert.Equal(7, summary.HostId);
+        Assert.Equal(2, summary.Open.Critical);
+        Assert.Equal(5, summary.Open.High);
+        Assert.Equal(11, summary.Open.Medium);
+        Assert.Equal(3, summary.Open.Low);
+        Assert.Equal(1, summary.Open.None);
+        Assert.Equal(22, summary.Open.Total);
+        Assert.Equal(40, summary.Total);
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryAsyncOfAMissingHostIsNotFound()
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/9/VulnerabilitySummary", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _service.GetVulnerabilitySummaryAsync(9));
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryAsyncOfAMissingHostIsNotFoundOnTheThrowingClient()
+    {
+        using var backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+        var service = ResolveWith<IHostsService>(backend);
+        backend.OnStatus(Method.Get, "/Hosts/9/VulnerabilitySummary", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => service.GetVulnerabilitySummaryAsync(9));
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryAsyncWrapsAServerError()
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/9/VulnerabilitySummary", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetVulnerabilitySummaryAsync(9));
+    }
+
+    [Fact]
+    public async Task TestGetHistoryAsyncSendsTheLimitAndReadsTheRows()
+    {
+        _backend.OnGet("/Hosts/7/History", new List<AuditLog>
+        {
+            new()
+            {
+                Id = 2, EntityType = "Host", EntityId = 7, Field = "Owner", OldValue = "Ana",
+                NewValue = "Bruno", Action = DAL.Enums.AuditLogAction.Update, Actor = "Jira Assets import",
+                UserId = 4, OccurredAt = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc),
+                CorrelationId = "c0ffee"
+            }
+        });
+
+        var rows = await _service.GetHistoryAsync(7, 50);
+
+        var row = Assert.Single(rows);
+        Assert.Equal("Owner", row.Field);
+        Assert.Equal("Bruno", row.NewValue);
+        Assert.Equal("Jira Assets import", row.Actor);
+        Assert.Equal(DAL.Enums.AuditLogAction.Update, row.Action);
+        Assert.Equal("c0ffee", row.CorrelationId);
+        Assert.Equal("/Hosts/7/History", _backend.LastRequest.Path);
+        Assert.Contains("limit=50", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestGetHistoryAsyncDefaultsTheLimitTo500()
+    {
+        _backend.OnGet("/Hosts/7/History", new List<AuditLog>());
+
+        Assert.Empty(await _service.GetHistoryAsync(7));
+        Assert.Contains("limit=500", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestGetHistoryAsyncOfAMissingHostIsNotFound()
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/9/History", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _service.GetHistoryAsync(9));
+    }
+
+    [Fact]
+    public async Task TestGetHistoryAsyncRejectsAnEmptyOkAsInvalid()
+    {
+        _backend.OnStatus(Method.Get, "/Hosts/9/History", HttpStatusCode.OK);
+
+        await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.GetHistoryAsync(9));
     }
 
     // ------------------------------------------------------------------- Create

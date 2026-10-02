@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using API.Controllers;
 using API.Exceptions;
+using API.Security;
 using DAL.Entities;
+using DAL.Enums;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,20 +30,25 @@ namespace API.Tests.APITests;
 public class HostsControllerTest : BaseControllerTest
 {
     private readonly IHostsService _hostsService = Substitute.For<IHostsService>();
+    private readonly IAuditTrailService _auditTrail = Substitute.For<IAuditTrailService>();
     private readonly HostsController _controller;
 
     public HostsControllerTest()
     {
-        _controller = Build(_hostsService);
+        _controller = Build(_hostsService, _auditTrail);
     }
 
     /// <summary>
     /// Builds a controller over a caller supplied <see cref="IHostsService"/> double and gives it a
     /// live <see cref="ControllerContext"/> so actions that touch <c>Response</c> can run.
     /// </summary>
-    private static HostsController Build(IHostsService hostsService)
+    private static HostsController Build(IHostsService hostsService, IAuditTrailService? auditTrail = null)
     {
-        var controller = ResolveController<HostsController>(s => s.AddSingleton(hostsService));
+        var controller = ResolveController<HostsController>(s =>
+        {
+            s.AddSingleton(hostsService);
+            if (auditTrail != null) s.AddSingleton(auditTrail);
+        });
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()
@@ -686,6 +694,281 @@ public class HostsControllerTest : BaseControllerTest
         var result = controller.UpdateService(500, 1, SampleDto());
 
         var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    #endregion
+
+    // --- S38 (T233, T234, T235) ----------------------------------------------------------------
+
+    /// <summary>
+    /// The new routes sit under the controller's <c>hosts</c> permission, not a governance policy:
+    /// the Hosts view's users are not necessarily risk managers. None of them overrides it.
+    /// </summary>
+    [Theory]
+    [InlineData(nameof(HostsController.GetEnvironments))]
+    [InlineData(nameof(HostsController.GetVulnerabilitySummary))]
+    [InlineData(nameof(HostsController.GetVulnerabilitySummaries))]
+    [InlineData(nameof(HostsController.GetHistory))]
+    public void TestTheNewActionsInheritTheHostsPermission(string action)
+    {
+        var classPermission = Assert.Single(typeof(HostsController)
+            .GetCustomAttributes(typeof(PermissionAuthorizeAttribute), true)
+            .Cast<PermissionAuthorizeAttribute>());
+        Assert.Equal("hosts", classPermission.Permission);
+
+        var method = typeof(HostsController).GetMethod(action)!;
+        Assert.Empty(method.GetCustomAttributes(typeof(PermissionAuthorizeAttribute), true));
+        Assert.Empty(method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute), true));
+        Assert.Empty(method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true));
+    }
+
+    #region GetEnvironments
+
+    [Fact]
+    public async Task TestGetEnvironments()
+    {
+        _hostsService.GetEnvironmentsAsync().Returns(new List<string> { "Homolog", "Produção" });
+
+        var result = await _controller.GetEnvironments();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(new[] { "Homolog", "Produção" }, Assert.IsType<List<string>>(ok.Value));
+    }
+
+    [Fact]
+    public async Task TestGetEnvironmentsInternalError()
+    {
+        var (controller, service) = NewController();
+        service.GetEnvironmentsAsync().Returns<Task<List<string>>>(_ => throw new Exception("boom"));
+
+        var result = await controller.GetEnvironments();
+
+        var status = Assert.IsType<StatusCodeResult>(result.Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    #endregion
+
+    #region VulnerabilitySummary
+
+    private static HostVulnerabilitySummaryDto Summary(int hostId) => new()
+    {
+        HostId = hostId,
+        Open = new SeverityCountsDto { Critical = 2, High = 5, Medium = 11, Low = 3 },
+        Total = 30
+    };
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummary()
+    {
+        _hostsService.GetVulnerabilitySummaryAsync(1).Returns(Summary(1));
+
+        var result = await _controller.GetVulnerabilitySummary(1);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var summary = Assert.IsType<HostVulnerabilitySummaryDto>(ok.Value);
+        Assert.Equal(1, summary.HostId);
+        Assert.Equal(2, summary.Open.Critical);
+        Assert.Equal(21, summary.Open.Total);
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryNotFound()
+    {
+        _hostsService.GetVulnerabilitySummaryAsync(999)
+            .Returns<Task<HostVulnerabilitySummaryDto>>(_ => throw new DataNotFoundException("hosts", "999"));
+
+        var result = await _controller.GetVulnerabilitySummary(999);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummaryInternalError()
+    {
+        _hostsService.GetVulnerabilitySummaryAsync(500)
+            .Returns<Task<HostVulnerabilitySummaryDto>>(_ => throw new Exception("boom"));
+
+        var result = await _controller.GetVulnerabilitySummary(500);
+
+        var status = Assert.IsType<StatusCodeResult>(result.Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummariesParsesPipeSeparatedIds()
+    {
+        var (controller, service) = NewController();
+        service.GetVulnerabilitySummariesAsync(Arg.Any<IReadOnlyCollection<int>>())
+            .Returns(new List<HostVulnerabilitySummaryDto> { Summary(3), Summary(1) });
+
+        var result = await controller.GetVulnerabilitySummaries(" 3| 1 |3");
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(2, Assert.IsType<List<HostVulnerabilitySummaryDto>>(ok.Value).Count);
+        // Deduplicated, in the order given.
+        await service.Received(1).GetVulnerabilitySummariesAsync(
+            Arg.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 3, 1 })));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("1|x|3")]
+    [InlineData("1||3")]
+    [InlineData("0")]
+    [InlineData("-4")]
+    [InlineData("1,2")]
+    [InlineData("99999999999")]
+    public async Task TestGetVulnerabilitySummariesRejectsMalformedIds(string? ids)
+    {
+        var (controller, service) = NewController();
+
+        var result = await controller.GetVulnerabilitySummaries(ids);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        await service.DidNotReceive().GetVulnerabilitySummariesAsync(Arg.Any<IReadOnlyCollection<int>>());
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummariesRejectsMoreThanTheMaximum()
+    {
+        var (controller, service) = NewController();
+        var ids = string.Join("|", Enumerable.Range(1, IHostsService.MaxSummaryBatchSize + 1));
+
+        var result = await controller.GetVulnerabilitySummaries(ids);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        await service.DidNotReceive().GetVulnerabilitySummariesAsync(Arg.Any<IReadOnlyCollection<int>>());
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummariesAcceptsExactlyTheMaximum()
+    {
+        var (controller, service) = NewController();
+        service.GetVulnerabilitySummariesAsync(Arg.Any<IReadOnlyCollection<int>>())
+            .Returns(new List<HostVulnerabilitySummaryDto>());
+        var ids = string.Join("|", Enumerable.Range(1, IHostsService.MaxSummaryBatchSize));
+
+        var result = await controller.GetVulnerabilitySummaries(ids);
+
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task TestGetVulnerabilitySummariesInternalError()
+    {
+        var (controller, service) = NewController();
+        service.GetVulnerabilitySummariesAsync(Arg.Any<IReadOnlyCollection<int>>())
+            .Returns<Task<List<HostVulnerabilitySummaryDto>>>(_ => throw new Exception("boom"));
+
+        var result = await controller.GetVulnerabilitySummaries("1|2");
+
+        var status = Assert.IsType<StatusCodeResult>(result.Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    #endregion
+
+    #region GetHistory
+
+    private static AuditLog HistoryRow(int id) => new()
+    {
+        Id = id, EntityType = nameof(Host), EntityId = 1, Field = nameof(Host.Owner),
+        OldValue = "Ana", NewValue = "Bruno", Action = AuditLogAction.Update, UserId = 4,
+        Actor = "bruno", OccurredAt = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc),
+        CorrelationId = "c0ffee",
+        User = new User { Value = 4, Login = "bruno", Name = "Bruno", Email = "bruno@x.test", Salt = "pepper" }
+    };
+
+    [Fact]
+    public async Task TestGetHistoryReadsTheHostTrail()
+    {
+        _hostsService.GetById(1).Returns(SampleHost(1));
+        _auditTrail.GetForRecordAsync(nameof(Host), 1, 500)
+            .Returns(new List<AuditLog> { HistoryRow(2), HistoryRow(1) });
+
+        var result = await _controller.GetHistory(1);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var rows = Assert.IsType<List<AuditLog>>(ok.Value);
+        Assert.Equal(new[] { 2, 1 }, rows.Select(r => r.Id).ToArray());
+        Assert.Equal("Bruno", rows[0].NewValue);
+        Assert.Equal("bruno", rows[0].Actor);
+        Assert.Equal(4, rows[0].UserId);
+        Assert.Equal("c0ffee", rows[0].CorrelationId);
+        await _auditTrail.Received(1).GetForRecordAsync("Host", 1, 500);
+    }
+
+    /// <summary>
+    /// The trail's <c>Include(a => a.User)</c> loads the whole user row — email, salt, lockout. A
+    /// caller holding only <c>hosts</c> gets the actor name and user id, never that record.
+    /// </summary>
+    [Fact]
+    public async Task TestGetHistoryNeverReturnsTheUserRecord()
+    {
+        _hostsService.GetById(1).Returns(SampleHost(1));
+        _auditTrail.GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(new List<AuditLog> { HistoryRow(1) });
+
+        var result = await _controller.GetHistory(1);
+
+        var rows = Assert.IsType<List<AuditLog>>(Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.All(rows, r => Assert.Null(r.User));
+    }
+
+    [Fact]
+    public async Task TestGetHistoryPassesTheLimitThrough()
+    {
+        _hostsService.GetById(1).Returns(SampleHost(1));
+        _auditTrail.GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns(new List<AuditLog>());
+
+        var result = await _controller.GetHistory(1, HostsController.MaxHistoryLimit);
+
+        Assert.IsType<OkObjectResult>(result.Result);
+        await _auditTrail.Received(1).GetForRecordAsync("Host", 1, HostsController.MaxHistoryLimit);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(HostsController.MaxHistoryLimit + 1)]
+    public async Task TestGetHistoryRejectsAnOutOfRangeLimit(int limit)
+    {
+        var result = await _controller.GetHistory(1, limit);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        await _auditTrail.DidNotReceive().GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>());
+    }
+
+    /// <summary>
+    /// The host lookup goes through the entity-scoped hosts set, and audit_logs has no scope of its
+    /// own — so a host the caller cannot see must stop the request before the trail is read.
+    /// </summary>
+    [Fact]
+    public async Task TestGetHistoryOfAMissingOrOutOfScopeHostIsNotFoundAndDoesNotReadTheTrail()
+    {
+        _hostsService.GetById(999).Returns(_ => throw new DataNotFoundException("hosts", "999"));
+
+        var result = await _controller.GetHistory(999);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+        await _auditTrail.DidNotReceive().GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>());
+    }
+
+    [Fact]
+    public async Task TestGetHistoryInternalError()
+    {
+        _hostsService.GetById(1).Returns(SampleHost(1));
+        _auditTrail.GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>())
+            .Returns<Task<List<AuditLog>>>(_ => throw new Exception("boom"));
+
+        var result = await _controller.GetHistory(1);
+
+        var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
     }
 

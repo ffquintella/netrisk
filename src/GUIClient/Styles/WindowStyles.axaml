@@ -1,6 +1,7 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         >
     <Design.PreviewWith>
         <Border Padding="20">
@@ -609,6 +610,107 @@
     <Style Selector="Border.badge">
         <Setter Property="Background" Value="{DynamicResource NrAccentPrimary}"/>
         <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
+    <!-- ==================================================================================
+         CRITICALITY / SEVERITY PILLS AND SERVICE CHIPS (S38 §3.4, §3.5)
+
+         One colour language for "how bad". `Border.criticality` is a host's business
+         criticality (c1 Very low … c5 Critical, `unset` when the host has none);
+         `Border.severity` is a finding's severity (s0 None … s4 Critical) and reuses the same
+         five tokens one step up, so Critical is the same red in both. The pill always holds
+         its label as text — the fill reinforces, it never carries the meaning alone (§2.6).
+
+         The text colour is set on the TextBlock rather than on the Border because Border has
+         no Foreground, and DarkStyles' bare `TextBlock` selector would otherwise win over any
+         inherited value. This file is included after DarkStyles, so these selectors do.
+         ================================================================================== -->
+    <Style Selector="Border.criticality, Border.severity">
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Padding" Value="7 1"/>
+        <Setter Property="MinWidth" Value="22"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.criticality TextBlock, Border.severity TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticalityUnsetText}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.criticality.c1">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality1}"/>
+    </Style>
+    <Style Selector="Border.criticality.c1 TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality1Text}"/>
+    </Style>
+
+    <Style Selector="Border.criticality.c2, Border.severity.s1">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality2}"/>
+    </Style>
+    <Style Selector="Border.criticality.c2 TextBlock, Border.severity.s1 TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality2Text}"/>
+    </Style>
+
+    <Style Selector="Border.criticality.c3, Border.severity.s2">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality3}"/>
+    </Style>
+    <Style Selector="Border.criticality.c3 TextBlock, Border.severity.s2 TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality3Text}"/>
+    </Style>
+
+    <Style Selector="Border.criticality.c4, Border.severity.s3">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality4}"/>
+    </Style>
+    <Style Selector="Border.criticality.c4 TextBlock, Border.severity.s3 TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality4Text}"/>
+    </Style>
+
+    <Style Selector="Border.criticality.c5, Border.severity.s4">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality5}"/>
+    </Style>
+    <Style Selector="Border.criticality.c5 TextBlock, Border.severity.s4 TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality5Text}"/>
+    </Style>
+
+    <!-- The neutral end, named so a view can say it outright. Same values as the base rule
+         above: a pill with no modifier class already renders as unset. -->
+    <Style Selector="Border.criticality.unset, Border.severity.s0">
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+    </Style>
+
+    <!-- A read-only, system-generated value (a host's services, its environment): a Fluent 2
+         badge rather than a dismissible tag, so no close affordance and no truncation. -->
+    <Style Selector="Border.chip">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8 2"/>
+        <Setter Property="Margin" Value="0 0 4 4"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.chip avalonia|MaterialIcon">
+        <Setter Property="Width" Value="14"/>
+        <Setter Property="Height" Value="14"/>
+        <Setter Property="Margin" Value="0 0 4 0"/>
+    </Style>
+
+    <!-- The WrapPanel a run of chips flows in. `TabControl WrapPanel` above paints every WrapPanel
+         under a TabControl with the tab-strip surface, because that is how it reaches the header
+         row; a content panel inside a tab has to take the content surface back explicitly. -->
+    <Style Selector="WrapPanel.chipPanel">
+        <Setter Property="Background" Value="{DynamicResource NrSurfaceBase}"/>
+    </Style>
+
+    <!-- The busy ring over a list view (ui-standard §6.3). It used to be painted
+         Foreground="CornflowerBlue" inline in every view; this is the token-backed class. -->
+    <Style Selector="progRing|ProgressRing.busy">
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusInfo}"/>
     </Style>
 
     <!-- Content list — ListBox used as the main content list in a view -->

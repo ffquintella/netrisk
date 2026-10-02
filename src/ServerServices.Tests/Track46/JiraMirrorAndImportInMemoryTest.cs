@@ -438,6 +438,34 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
         });
     }
 
+    /// <summary>
+    /// S38 §5.4: what the import changed on the scanner's host reads back from the field-level trail
+    /// as the import's doing, field by field.
+    /// </summary>
+    [Fact]
+    public async Task TheImportsHostChangesAreRecordedUnderTheImportsName()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        Read(ctx =>
+        {
+            var rows = ctx.AuditLogs
+                .Where(a => a.EntityType == nameof(Host) && a.EntityId == 1 && a.Action == AuditLogAction.Update)
+                .ToList();
+
+            Assert.NotEmpty(rows);
+            Assert.All(rows, r => Assert.Equal(JiraIntegrationService.AssetsImportAuditActor, r.Actor));
+            Assert.Equal("Jira Assets import", JiraIntegrationService.AssetsImportAuditActor);
+
+            var environment = Assert.Single(rows, r => r.Field == nameof(Host.Environment));
+            Assert.Equal("Production", environment.NewValue);
+            Assert.Single(rows, r => r.Field == nameof(Host.Owner) && r.NewValue == "Alice Silva");
+        });
+    }
+
     [Fact]
     public async Task ASecondImportUpdatesTheSameHostRatherThanCreatingAnother()
     {

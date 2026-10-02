@@ -52,6 +52,10 @@
     <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
     <PackageVersion Include="Mapster" Version="10.0.13" />
+    <!-- The Avalonia-free enum package Material.Icons.Avalonia is built on, pinned to the same
+         release. GUIClient.Tests references it directly to prove the host service icon map
+         (GUIClient/Tools/Hosts/ServiceIconMap.cs) returns kinds that exist. -->
+    <PackageVersion Include="Material.Icons" Version="3.0.2" />
     <PackageVersion Include="Material.Icons.Avalonia" Version="3.0.2" />
     <PackageVersion Include="McMaster.NETCore.Plugins" Version="2.0.0" />
     <PackageVersion Include="MessageBox.Avalonia" Version="12.0.0" />

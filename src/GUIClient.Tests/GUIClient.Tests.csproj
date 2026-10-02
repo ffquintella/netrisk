@@ -18,6 +18,9 @@
          does, so the installer-written netrisk.ini overlay is proved rather than assumed. -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" />
+    <!-- MaterialIconKind only: a plain netstandard enum, no Avalonia. Lets the service icon map
+         below be compiled here and every kind it returns be checked against the real enum. -->
+    <PackageReference Include="Material.Icons" />
   </ItemGroup>
   <ItemGroup>
     <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that
@@ -70,6 +73,10 @@
     <!-- Which window a toast lands on. Deliberately Avalonia-free so the rule that keeps
          Administration's feedback out of the main window can be tested here. -->
     <Compile Include="..\GUIClient\Notifications\NotificationRouting.cs" LinkBase="Notifications" />
+    <!-- The Hosts view's pure half (S38): filter composition, paging, criticality/severity scales,
+         the service icon map, history grouping and layout persistence. The converters and the view
+         model are thin Avalonia wrappers over these. -->
+    <Compile Include="..\GUIClient\Tools\Hosts\*.cs" LinkBase="Tools/Hosts" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
   </ItemGroup>

@@ -20,11 +20,17 @@ namespace API.Controllers;
 public class HostsController: ApiBaseController
 {
     private IHostsService HostsService { get; }
+    private IAuditTrailService AuditTrail { get; }
+
+    /// <summary>The largest <c>limit</c> <see cref="GetHistory"/> accepts.</summary>
+    public const int MaxHistoryLimit = 5000;
+
     public HostsController(ILogger logger, IHttpContextAccessor httpContextAccessor,
-        IUsersService usersService, IHostsService hostsService)
+        IUsersService usersService, IHostsService hostsService, IAuditTrailService auditTrail)
         : base(logger, httpContextAccessor, usersService)
     {
         HostsService = hostsService;
+        AuditTrail = auditTrail;
     }
     
     
@@ -89,6 +95,188 @@ public class HostsController: ApiBaseController
         }
     }
     
+    /// <summary>
+    /// The distinct, non-blank environments of the hosts the caller can see, ordered — the Hosts
+    /// view's environment facet (S38 §5.2).
+    /// </summary>
+    [HttpGet]
+    [Route("Environments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<string>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<string>>> GetEnvironments()
+    {
+        var user = GetUser();
+
+        try
+        {
+            var environments = await HostsService.GetEnvironmentsAsync();
+            Logger.Information("User:{User} listed host environments", user.Value);
+            return Ok(environments);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while listing host environments: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Open-vulnerability counts by severity for several hosts (S38 §5.3), one grouped query.
+    /// <c>ids</c> is pipe-separated (<c>1|2|3</c>), at most
+    /// <see cref="IHostsService.MaxSummaryBatchSize"/> distinct ids. Hosts that do not exist or are
+    /// outside the caller's entity scope are left out of the answer.
+    /// </summary>
+    [HttpGet]
+    [Route("VulnerabilitySummary")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<HostVulnerabilitySummaryDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<HostVulnerabilitySummaryDto>>> GetVulnerabilitySummaries(
+        [FromQuery] string? ids)
+    {
+        var user = GetUser();
+
+        if (!TryParseIds(ids, out var hostIds, out var error)) return BadRequest(error);
+
+        try
+        {
+            var summaries = await HostsService.GetVulnerabilitySummariesAsync(hostIds);
+            Logger.Information("User:{User} read the vulnerability summary of {Count} host(s)",
+                user.Value, hostIds.Count);
+            return Ok(summaries);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while summarizing host vulnerabilities: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>Open-vulnerability counts by severity for one host (S38 §5.3).</summary>
+    [HttpGet]
+    [Route("{id}/VulnerabilitySummary")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HostVulnerabilitySummaryDto))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<HostVulnerabilitySummaryDto>> GetVulnerabilitySummary(int id)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var summary = await HostsService.GetVulnerabilitySummaryAsync(id);
+            Logger.Information("User:{User} read the vulnerability summary of host {Id}", user.Value, id);
+            return Ok(summary);
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while summarizing host:{Id} vulnerabilities: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// The field-level change history of one host, newest first (S38 §5.4) — the
+    /// <c>audit_logs</c> rows <c>GovernanceAuditInterceptor</c> writes for <see cref="Host"/>.
+    ///
+    /// The host is looked up first, through the entity-scoped hosts set: <c>audit_logs</c> carries
+    /// no entity id of its own, so that lookup is the only thing that stops a scoped caller reading
+    /// another entity's host values out of the trail. A host that is gone or out of scope is a 404.
+    /// The rows go out without their <see cref="AuditLog.User"/> navigation — the actor name and user
+    /// id identify who acted, and a whole user record is not this endpoint's to disclose.
+    /// </summary>
+    [HttpGet]
+    [Route("{id}/History")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AuditLog>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<AuditLog>>> GetHistory(int id, [FromQuery] int limit = 500)
+    {
+        var user = GetUser();
+
+        if (limit is < 1 or > MaxHistoryLimit)
+            return BadRequest($"limit must be between 1 and {MaxHistoryLimit}.");
+
+        try
+        {
+            HostsService.GetById(id);
+
+            var rows = await AuditTrail.GetForRecordAsync(nameof(Host), id, limit);
+            Logger.Information("User:{User} read the change history of host {Id}", user.Value, id);
+
+            return Ok(rows.Select(WithoutUser).ToList());
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("Host not found Id{Id} message: {Message}", id, ex.Message);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Unknown error while reading host:{Id} history: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static AuditLog WithoutUser(AuditLog row) => new()
+    {
+        Id = row.Id,
+        EntityType = row.EntityType,
+        EntityId = row.EntityId,
+        Field = row.Field,
+        OldValue = row.OldValue,
+        NewValue = row.NewValue,
+        Action = row.Action,
+        UserId = row.UserId,
+        Actor = row.Actor,
+        OccurredAt = row.OccurredAt,
+        CorrelationId = row.CorrelationId
+    };
+
+    /// <summary>
+    /// Parses <c>1|2|3</c>. Every token must be a positive integer: a typo is reported rather than
+    /// skipped, because a summary that silently drops a host reads as a host with no findings.
+    /// </summary>
+    private static bool TryParseIds(string? raw, out List<int> ids, out string error)
+    {
+        ids = [];
+        error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            error = "ids is required, pipe-separated (ids=1|2|3).";
+            return false;
+        }
+
+        var seen = new HashSet<int>();
+
+        foreach (var token in raw.Split('|'))
+        {
+            if (!int.TryParse(token.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var id) || id < 1)
+            {
+                error = $"'{token.Trim()}' is not a host id.";
+                return false;
+            }
+
+            if (seen.Add(id)) ids.Add(id);
+        }
+
+        if (ids.Count > IHostsService.MaxSummaryBatchSize)
+        {
+            error = $"At most {IHostsService.MaxSummaryBatchSize} host ids per request.";
+            return false;
+        }
+
+        return true;
+    }
+
     [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]

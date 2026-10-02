@@ -38,23 +38,11 @@ public class MasterDashboardService(ILogger logger, IDalService dalService)
     private DateTime _cachedAt = DateTime.MinValue;
 
     /// <summary>
-    /// Statuses that take a vulnerability or an incident out of the open population. Everything
-    /// not listed counts as open, so a status added later shows up on the dashboard as work
-    /// outstanding rather than silently vanishing.
+    /// Statuses that take a vulnerability or an incident out of the open population. The set lives
+    /// in <see cref="Model.Status.ClosedStatuses"/> so the per-host severity summary (S38) counts
+    /// "open" exactly as this dashboard does.
     /// </summary>
-    private static readonly HashSet<int> ClosedStatuses =
-    [
-        (int)IntStatus.Closed,
-        (int)IntStatus.NotRelevant,
-        (int)IntStatus.Rejected,
-        (int)IntStatus.Duplicated,
-        (int)IntStatus.Fixed,
-        (int)IntStatus.Solved,
-        (int)IntStatus.Retired,
-        (int)IntStatus.Deleted,
-        (int)IntStatus.Completed,
-        (int)IntStatus.Cancelled
-    ];
+    private static readonly IReadOnlySet<int> ClosedStatuses = Model.Status.ClosedStatuses.Values;
 
     /// <summary>
     /// Entity definitions that represent a business entity for multi-tenant scoping. Entities of

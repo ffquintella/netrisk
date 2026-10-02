@@ -7,10 +7,11 @@
         xmlns:converters="clr-namespace:GUIClient.Converters"
         xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
         xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:hosts="clr-namespace:GUIClient.Tools.Hosts"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:EditHostDialogViewModel" x:Class="GUIClient.Views.EditHostDialog"
         Width="900" 
-        Height="300"
+        Height="380"
         Title="{Binding StrTitle}">
     
     <Design.DataContext>
@@ -21,8 +22,8 @@
     </Window.Resources>
     
     <Grid RowDefinitions="Auto,*,Auto">
-        <TextBlock Grid.Row="0" Classes="header">Host Edit</TextBlock>
-        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrTitle}"/>
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrIp}"  Margin="10 10 5 0 "/>
             <TextBox TabIndex="1" Grid.Row="0" Grid.Column="1" Margin="0 5 0 0" Text="{Binding HostIp}" />
             <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrName}"  Margin="10 10 5 0 "/>
@@ -67,11 +68,31 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrComments}"  Margin="10 10 5 0 "/>
-            <TextBox TabIndex="7" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
+            <!-- S38 §3.5: business criticality (Not set, 1 Very low … 5 Critical), environment, owner. -->
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrCriticality}"  Margin="10 10 5 0 "/>
+            <ComboBox TabIndex="7" Grid.Row="3" Grid.Column="1" Margin=" 0 5 5 2"
+                      ItemsSource="{Binding CriticalityOptions}"
+                      SelectedItem="{Binding SelectedCriticality}"
+                      MinWidth="150">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="hosts:CriticalityOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding StrEnvironment}"  Margin="10 10 5 0 "/>
+            <TextBox TabIndex="8" Grid.Row="3" Grid.Column="3" Margin="0 5 10 0" MaxLength="64"
+                     Text="{Binding Environment}" />
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrOwner}"  Margin="10 10 5 0 "/>
+            <TextBox TabIndex="9" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Margin="0 5 10 0" MaxLength="255"
+                     Text="{Binding Owner}" />
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrComments}"  Margin="10 10 5 0 "/>
+            <TextBox TabIndex="10" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
                      Margin="0 5 10 0" Text="{Binding Comments}" />
-            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
-                <Button TabIndex="8" Classes="dialog1" Margin=" 0 10 5 10" 
+            <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button TabIndex="11" Classes="dialog1" Margin=" 0 10 5 10" 
                         IsEnabled="{Binding SaveEnabled}"
                         ToolTip.Tip="{Binding ValidationContext.Text}"
                         Command="{Binding BtSaveClicked}">
@@ -80,7 +101,7 @@
                         <TextBlock Text="{Binding StrSave}" />  
                     </StackPanel>
                 </Button>
-                <Button TabIndex="9" Classes="dialog2" Margin=" 0 10 5 10" 
+                <Button TabIndex="12" Classes="dialog2" Margin=" 0 10 5 10" 
                         Command="{Binding BtCancelClicked}">
                     <StackPanel Orientation="Horizontal">
                         <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />

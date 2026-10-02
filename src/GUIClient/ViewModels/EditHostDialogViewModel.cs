@@ -20,6 +20,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Tools.Network;
 using GUIClient.Interfaces;
+using GUIClient.Tools.Hosts;
 using System.Windows.Input;
 
 
@@ -40,6 +41,9 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         public string StrName => Localizer["Name"];
         public string StrOperatingSystem => Localizer["OperatingSystem"];
         public string StrStatus => Localizer["Status"];
+        public string StrCriticality => Localizer["Criticality"];
+        public string StrEnvironment => Localizer["Environment"];
+        public string StrOwner => Localizer["Owner"];
 
     #endregion
 
@@ -118,6 +122,44 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
             set => this.RaiseAndSetIfChanged(ref _host, value);
         }
         
+        /// <summary>Not set, then 1 Very low … 5 Critical (S38 §3.5).</summary>
+        public List<CriticalityOption> CriticalityOptions { get; } = CriticalityScale.EditableLevels
+            .Select(level => new CriticalityOption(level, level is null
+                ? Localizer[CriticalityScale.LabelKey(level)].Value
+                : level + " · " + Localizer[CriticalityScale.LabelKey(level)]))
+            .ToList();
+
+        private CriticalityOption? _selectedCriticality;
+
+        /// <summary>
+        /// The chosen level. "Not set" is a real option (Level null), so a null write here is the
+        /// ComboBox losing its selection when it re-templates, never the user's choice — ignored, or
+        /// it would silently clear a host's criticality on save.
+        /// </summary>
+        public CriticalityOption? SelectedCriticality
+        {
+            get => _selectedCriticality;
+            set
+            {
+                if (value is null) return;
+                this.RaiseAndSetIfChanged(ref _selectedCriticality, value);
+            }
+        }
+
+        private string _environment = string.Empty;
+        public string Environment
+        {
+            get => _environment;
+            set => this.RaiseAndSetIfChanged(ref _environment, value);
+        }
+
+        private string _owner = string.Empty;
+        public string Owner
+        {
+            get => _owner;
+            set => this.RaiseAndSetIfChanged(ref _owner, value);
+        }
+
         private string _comments = string.Empty;
         public string Comments
         {
@@ -159,6 +201,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         Statuses.Add(IntStatus.AwaitingFixVerification);
         Statuses.Add(IntStatus.NeedsFix);
         Statuses.Add(IntStatus.Ok);
+
+        _selectedCriticality = CriticalityOptions[0];
         
         _= InitializeAsync();
         
@@ -221,6 +265,9 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         Host.LastVerificationDate = DateTime.Now;
         Host.TeamId = SelectedTeam!.Value;
         Host.Fqdn = Fqdn;
+        Host.Criticality = SelectedCriticality?.Level;
+        Host.Environment = string.IsNullOrWhiteSpace(Environment) ? null : Environment.Trim();
+        Host.Owner = string.IsNullOrWhiteSpace(Owner) ? null : Owner.Trim();
 
         if (SelectedOsIndex != null)
         {
@@ -303,6 +350,10 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
             SelectedStatus = Statuses.FirstOrDefault(s => (short)s == parameter.Host?.Status);
             SelectedTeam = Teams.FirstOrDefault(t => t.Value == parameter.Host?.TeamId);
             Fqdn = parameter.Host?.Fqdn ?? string.Empty;
+            SelectedCriticality = CriticalityOptions.First(o =>
+                o.Level == CriticalityScale.Normalize(parameter.Host?.Criticality));
+            Environment = parameter.Host?.Environment ?? string.Empty;
+            Owner = parameter.Host?.Owner ?? string.Empty;
             
             if(parameter.Host != null && parameter.Host.Os != null)
                 switch (parameter.Host.Os.ToLower())

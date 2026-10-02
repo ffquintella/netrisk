@@ -12,6 +12,28 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.24.0] - 2026-10-02
+
+### Added
+- Allow filtering hosts by criticality, environment, owner, source, risk score and last verification date on `GET /Hosts/Filtered` (T233, S38)
+- Add `GET /Hosts/Environments`, listing the distinct environments of the hosts the caller can see, for the Hosts view facet (T233, S38)
+- Add `GET /Hosts/{id}/VulnerabilitySummary` and `GET /Hosts/VulnerabilitySummary?ids=`, counting a host's open vulnerabilities by severity with the same closed-status set as the Master Dashboard (T235, S38)
+- Record a field-level change history for hosts and their services, ignoring the last-verification and risk-score timestamps every import stamps, and expose it via `GET /Hosts/{id}/History` (T234, S38)
+- Attribute host changes made by a finding import, a Jira Assets import or a Trend Micro sync to that import in the change history (T234, S38)
+- Rebuild the desktop Hosts view as a header card over resizable Vulnerabilities, Overview, Services, History and Comments tabs, with a permanent search box, status/team/criticality/environment facets, paging, and a remembered list width and tab (T230, S38)
+- Show a host's services as icon chips on the Overview tab and as a Services table with a vulnerability count per service, and list its change history grouped by save with field, actor and date filters (T231, S38)
+- Show and edit a host's criticality, environment and owner, painting criticality and vulnerability severity from one tokenized five-step colour ramp (T232, S38)
+
+### Changed
+- Return the total host count with each filtered page on the desktop client and sort hosts by name on the server instead of within each page (T233, S38)
+- Order a host's vulnerabilities by severity and then most recent detection, and resolve their fix team and analyst names once per host instead of with a blocking request per cell (T230, S38)
+
+### Fixed
+- Load a selected host's details on the UI thread and discard responses for a host the user has already left, so a slow request no longer overwrites the panes of the host now selected (T230, S38)
+
+### Security
+- Serve host change history only through `GET /Hosts/{id}/History`, which checks the caller can see the host and omits the user record, and refuse host types on the generic audit-trail reader (T234, S38)
+
 ## [2.23.0] - 2026-10-01
 
 ### Added

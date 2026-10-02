@@ -27,9 +27,20 @@ public class HostFilteringEndToEndTest : InMemoryServiceTestBase
 
         Seed(ctx =>
         {
-            ctx.Hosts.Add(Host(1, "web-a", "10.0.0.1", "linux", (short)1));
-            ctx.Hosts.Add(Host(2, "web-b", "10.0.0.2", "linux", (short)2));
-            ctx.Hosts.Add(Host(3, "db-c", "10.0.0.3", "windows", (short)1));
+            var a = Host(1, "web-a", "10.0.0.1", "linux", (short)1);
+            a.Criticality = 5; a.Environment = "Produção"; a.Owner = "Ana"; a.Source = "nessus";
+            a.RiskScore = 80; a.LastVerificationDate = new DateTime(2026, 9, 1);
+
+            var b = Host(2, "web-b", "10.0.0.2", "linux", (short)2);
+            b.Criticality = 3; b.Environment = "Homolog"; b.Owner = "Bruno"; b.Source = "jira-assets";
+            b.RiskScore = 40; b.LastVerificationDate = new DateTime(2026, 6, 1);
+
+            // Host 3 carries none of the facet columns: the "Not set" case.
+            var c = Host(3, "db-c", "10.0.0.3", "windows", (short)1);
+
+            ctx.Hosts.Add(a);
+            ctx.Hosts.Add(b);
+            ctx.Hosts.Add(c);
         });
     }
 
@@ -202,10 +213,103 @@ public class HostFilteringEndToEndTest : InMemoryServiceTestBase
     /// The whitelist is the reason the mapper exists. A property that is not mapped must be
     /// rejected rather than silently ignored, or the filter surface is every public property.
     /// </summary>
-    [Fact]
-    public async Task Unmapped_property_is_rejected()
+    [Theory]
+    [InlineData("comment==x")]
+    [InlineData("properties@=x")]
+    [InlineData("macAddress==00:11")]
+    [InlineData("externalId==1042")]
+    public async Task Unmapped_property_is_rejected(string filter)
     {
+        // `source` was the example here until S38 put it on the whitelist; these stay off it.
         await Assert.ThrowsAnyAsync<Exception>(() => _svc.GetFiltredAsync(
-            new ListQuery { Filters = "source==manual" }));
+            new ListQuery { Filters = filter }));
+    }
+
+    // --- S38 §5.1: the Hosts view facets --------------------------------------------------------
+
+    [Theory]
+    [InlineData("criticality==5", new[] { 1 })]
+    [InlineData("criticality>=3", new[] { 1, 2 })]
+    [InlineData("environment==Produção", new[] { 1 })]
+    [InlineData("environment==Homolog", new[] { 2 })]
+    [InlineData("owner==Bruno", new[] { 2 })]
+    [InlineData("owner@=An", new[] { 1 })]
+    [InlineData("source==nessus", new[] { 1 })]
+    [InlineData("source==manual", new[] { 3 })]
+    [InlineData("riskScore>=50", new[] { 1 })]
+    [InlineData("riskScore<50", new[] { 2 })]
+    [InlineData("lastVerificationDate>=2026-08-01", new[] { 1 })]
+    [InlineData("lastVerificationDate<2026-08-01", new[] { 2 })]
+    public async Task A_facet_column_filters(string filter, int[] expected)
+    {
+        var ids = (await Ids(filter)).OrderBy(i => i).ToArray();
+        Assert.Equal(expected, ids);
+    }
+
+    /// <summary>The criticality facet's "Not set" option.</summary>
+    [Fact]
+    public async Task Criticality_null_selects_hosts_without_one()
+    {
+        var ids = (await Ids("criticality==null")).OrderBy(i => i).ToArray();
+        Assert.Equal(new[] { 3 }, ids);
+    }
+
+    /// <summary>The composed string the Hosts view sends: every facet ANDed with the search box.</summary>
+    [Fact]
+    public async Task Facets_compose_with_the_search_box()
+    {
+        var ids = await Ids("hostName@=web,status==1,teamId==2,criticality==5,environment==Produção");
+        Assert.Empty(ids);
+
+        ids = await Ids("hostName@=web,status==1,criticality==5,environment==Produção");
+        Assert.Equal(new[] { 1 }, ids);
+    }
+
+    /// <summary>
+    /// An environment containing the filter grammar's own separators (<c>,</c> and <c>|</c>) must
+    /// select exactly its host. The literal below is what <c>GUIClient.Tools.Hosts.HostsFilterComposer</c>
+    /// emits for the facet value <c>Prod, EU|A</c>; it is hard-coded because ServerServices.Tests
+    /// does not reference GUIClient (the composer's own test pins the same string on that side).
+    /// </summary>
+    [Fact]
+    public async Task Environment_with_filter_separators_selects_only_its_host()
+    {
+        Seed(ctx =>
+        {
+            var special = Host(4, "app-d", "10.0.0.4", "linux", (short)1);
+            special.Environment = "Prod, EU|A";
+
+            var plain = Host(5, "app-e", "10.0.0.5", "linux", (short)1);
+            plain.Environment = "Prod";
+
+            var sibling = Host(6, "app-f", "10.0.0.6", "linux", (short)1);
+            sibling.Environment = "Prod, EU|B";
+
+            ctx.Hosts.Add(special);
+            ctx.Hosts.Add(plain);
+            ctx.Hosts.Add(sibling);
+        });
+
+        var ids = await Ids(@"environment==Prod\, EU\|A");
+
+        Assert.Equal(new[] { 4 }, ids);
+    }
+
+    [Theory]
+    [InlineData("pt-BR")]
+    [InlineData("en-US")]
+    public async Task Facet_columns_filter_by_their_invariant_name_in_any_culture(string culture) =>
+        await InCulture(culture, async () =>
+        {
+            var ids = (await Ids("criticality==5,environment==Produção,owner==Ana,source==nessus"))
+                .ToArray();
+            Assert.Equal(new[] { 1 }, ids);
+        });
+
+    [Fact]
+    public async Task Facet_columns_sort()
+    {
+        Assert.Equal(new[] { 1, 2 }, (await Ids("riskScore>=0", sorts: "-riskScore")));
+        Assert.Equal(new[] { 2, 1 }, (await Ids("criticality>=1", sorts: "criticality")));
     }
 }

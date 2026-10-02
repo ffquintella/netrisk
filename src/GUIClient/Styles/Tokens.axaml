@@ -105,6 +105,34 @@
     <SolidColorBrush x:Key="NrStatusErrorText" Color="{DynamicResource SemiRed3Color}" />
     <SolidColorBrush x:Key="NrStatusInfo" Color="{DynamicResource SemiBlue5Color}" />
 
+    <!-- ===== Criticality / severity ramp (S38 §3.5) =========================================== -->
+
+    <!--
+        One colour language for "how bad": a host's business criticality (1 Very low … 5 Critical)
+        and a finding's severity (0 None … 4 Critical) are painted from the same five steps, so a
+        red pill means the same thing on the host list and in the vulnerabilities grid. Severity
+        maps onto the ramp as None → Unset, Low → 2, Medium → 3, High → 4, Critical → 5.
+
+        Every step is a Semi dark-palette alias, chosen bright enough to read as a filled pill on
+        every surface step (all ≥ 3:1 against SemiBackground2) and paired with a text token that
+        clears WCAG AA 4.5:1 on its own fill: black on the five warm/green steps (7.75, 11.86,
+        13.98, 9.37, 6.10 : 1) and white on the neutral grey (5.00 : 1). The pill always carries
+        its label as text; the colour is reinforcement, never the only signal (ui-standard §2.6).
+    -->
+    <SolidColorBrush x:Key="NrCriticality1" Color="{DynamicResource SemiGreen4Color}" />
+    <SolidColorBrush x:Key="NrCriticality2" Color="{DynamicResource SemiLime4Color}" />
+    <SolidColorBrush x:Key="NrCriticality3" Color="{DynamicResource SemiYellow4Color}" />
+    <SolidColorBrush x:Key="NrCriticality4" Color="{DynamicResource SemiOrange4Color}" />
+    <SolidColorBrush x:Key="NrCriticality5" Color="{DynamicResource SemiRed4Color}" />
+    <SolidColorBrush x:Key="NrCriticalityUnset" Color="{DynamicResource SemiGrey4Color}" />
+
+    <SolidColorBrush x:Key="NrCriticality1Text" Color="{DynamicResource SemiBlackColor}" />
+    <SolidColorBrush x:Key="NrCriticality2Text" Color="{DynamicResource SemiBlackColor}" />
+    <SolidColorBrush x:Key="NrCriticality3Text" Color="{DynamicResource SemiBlackColor}" />
+    <SolidColorBrush x:Key="NrCriticality4Text" Color="{DynamicResource SemiBlackColor}" />
+    <SolidColorBrush x:Key="NrCriticality5Text" Color="{DynamicResource SemiBlackColor}" />
+    <SolidColorBrush x:Key="NrCriticalityUnsetText" Color="{DynamicResource SemiWhiteColor}" />
+
     <!-- ===== Semi overrides ================================================================= -->
 
     <!--

@@ -16,7 +16,17 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
     {
         if (value is null) return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);;
 
-        if (value is ushort status && targetType.IsAssignableTo(typeof(MaterialIconKind)))
+        // Vulnerability.Status is a ushort; Host.Status is a short. Both carry the same IntStatus
+        // numbers, so the host header (S38 §6) reuses this table rather than growing a second one.
+        ushort? numeric = value switch
+        {
+            ushort u => u,
+            short s and >= 0 => (ushort)s,
+            int i and >= 0 and <= ushort.MaxValue => (ushort)i,
+            _ => null
+        };
+
+        if (numeric is { } status && targetType.IsAssignableTo(typeof(MaterialIconKind)))
         {
 
            
@@ -40,6 +50,8 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
                     return MaterialIconKind.FileDiscard;
                 case (ushort) IntStatus.Retired:
                     return MaterialIconKind.HourglassEmpty;
+                case (ushort) IntStatus.Active:
+                    return MaterialIconKind.CheckCircleOutline;
                 case (ushort) IntStatus.Duplicated:
                     return MaterialIconKind.ContentDuplicate;
                 case (ushort) IntStatus.Outdated:

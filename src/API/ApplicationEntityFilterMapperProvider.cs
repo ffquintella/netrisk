@@ -60,7 +60,15 @@ public class ApplicationEntityFilterMapperProvider(ILocalizationService localiza
             ("ip", h => h.Ip),
             ("os", h => h.Os),
             ("teamId", h => h.TeamId),
-            ("RegistrationDate", h => h.RegistrationDate));
+            ("RegistrationDate", h => h.RegistrationDate),
+            // The Hosts view facets and header (S38 §5.1). Columns the posture and CMDB imports
+            // already write; free text except criticality (1–5) and the 0–100 risk score.
+            ("criticality", h => h.Criticality),
+            ("environment", h => h.Environment),
+            ("owner", h => h.Owner),
+            ("source", h => h.Source),
+            ("riskScore", h => h.RiskScore),
+            ("lastVerificationDate", h => h.LastVerificationDate));
 
     /// <summary>
     /// Builds a mapper where each column answers to both its invariant name and its translation.

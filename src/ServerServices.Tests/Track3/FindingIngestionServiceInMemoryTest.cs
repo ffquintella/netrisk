@@ -90,6 +90,49 @@ public class FindingIngestionServiceInMemoryTest : InMemoryServiceTestBase
 
     // --- first import ------------------------------------------------------------------------
 
+    /// <summary>
+    /// S38 §5.4: the hosts and services an import creates are attributed to the import in the
+    /// field-level trail, and a re-import that only re-verifies them adds nothing to it.
+    /// </summary>
+    [Fact]
+    public async Task TestImportedHostsAreAttributedToTheImportAndARescanAddsNoHostRows()
+    {
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus), Request());
+
+        await using (var db = OpenContext())
+        {
+            var hostRows = db.AuditLogs.Where(a => a.EntityType == nameof(Host)).ToList();
+            Assert.Equal(2, hostRows.Count);
+            Assert.All(hostRows, r => Assert.Equal(AuditLogAction.Create, r.Action));
+            Assert.All(hostRows, r => Assert.Equal("Nessus import", r.Actor));
+
+            var serviceRows = db.AuditLogs.Where(a => a.EntityType == nameof(DAL.Entities.HostsService)).ToList();
+            Assert.Equal(2, serviceRows.Count);
+            Assert.All(serviceRows, r => Assert.Equal("Nessus import", r.Actor));
+        }
+
+        // The rescan moves last_verification_date on both hosts and nothing else.
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus, SecondImport),
+            Request(at: SecondImport));
+
+        await using (var db = OpenContext())
+        {
+            Assert.Equal(2, db.AuditLogs.Count(a => a.EntityType == nameof(Host)));
+            Assert.True(db.Hosts.All(h => h.LastVerificationDate == SecondImport));
+        }
+    }
+
+    [Theory]
+    [InlineData("nessus", "Nessus import")]
+    [InlineData("sarif", "Sarif import")]
+    [InlineData(" openvas ", "Openvas import")]
+    [InlineData("", "Scanner import")]
+    [InlineData(null, "Scanner import")]
+    public void TestImportAuditActor(string? importer, string expected)
+    {
+        Assert.Equal(expected, FindingIngestionService.ImportAuditActor(importer));
+    }
+
     [Fact]
     public async Task TestImportCreatesFindingsHostsAndServices()
     {

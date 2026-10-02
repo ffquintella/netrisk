@@ -354,6 +354,23 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(7, host.EntityId);
     }
 
+    /// <summary>S38 §5.4: the inventory sync's host writes carry the import as their actor.</summary>
+    [Fact]
+    public async Task InventorySyncAttributesItsHostWritesToTheImport()
+    {
+        var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
+
+        StubApi("""{"items":[{"id":"agent-1","name":"db-prod-01","ip":["10.0.0.5"]}]}""");
+
+        await _svc.SyncAsync(view.Id);
+
+        await using var db = OpenContext();
+        var row = Assert.Single(db.AuditLogs.Where(a => a.EntityType == nameof(Host)).ToList());
+        Assert.Equal(DAL.Enums.AuditLogAction.Create, row.Action);
+        Assert.Equal(TrendMicroService.ImportAuditActor, row.Actor);
+        Assert.Equal("Trend Micro import", row.Actor);
+    }
+
     [Fact]
     public async Task AResyncUpdatesTheSameHostRatherThanCreatingASecond()
     {

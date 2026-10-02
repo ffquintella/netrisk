@@ -30,6 +30,9 @@ namespace ServerServices.Integrations.IssueTrackers.Jira;
 /// </summary>
 public partial class JiraIntegrationService
 {
+    /// <summary>The <c>audit_logs.actor</c> of every host an Assets import creates or updates.</summary>
+    public const string AssetsImportAuditActor = "Jira Assets import";
+
     public async Task<AssetImportResult> ImportAssetsAsync(int connectionId, bool dryRun,
         int? userId = null)
     {
@@ -46,6 +49,9 @@ public partial class JiraIntegrationService
         var workspace = await AssetsWorkspaceAsync(connection, token, settings);
 
         await using var db = DalService.GetContext();
+
+        // Host writes from this run are attributed to the import in the field-level trail (S38 §5.4).
+        db.AuditActor = AssetsImportAuditActor;
 
         var mappings = await db.JiraObjectMappings
             .Include(m => m.AttributeMappings)
