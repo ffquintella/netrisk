@@ -101,7 +101,7 @@
     <PackageVersion Include="Serilog.Sinks.Spectre" Version="0.6.0" />
     <PackageVersion Include="SkiaDrawing" Version="1.0.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.HarfBuzz" Version="4.152.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
     <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
