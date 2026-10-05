@@ -33,10 +33,12 @@
 * [📐 MIGR-TI/IA — metodologia de referência](methodology/README.md)
   * [Sumário da metodologia](methodology/migr-ti-ia.md)
   * [Aderência do NetRisk à MIGR-TI/IA](methodology/migr-ti-ia-coverage.md)
+* [📊 ICR — Índice Consolidado de Risco](methodology/icr-indice-consolidado-de-risco.md)
 
 ## Features
 
 * [🔎 Scanner importers and finding ingestion](features/scanner-importers.md)
+* [📊 Visão Geral de Risco Cibernético — painel do ICR](features/risk-overview-dashboard.md)
 
 ## Release Engineering
 

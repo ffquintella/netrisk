@@ -13,7 +13,9 @@ developed and released independently or in mixed-milestone batches. For shipped 
 Tracks 1–8 are delivered as of 2.17.0 (37 milestones, 137 line items) and are kept below as the record
 of what was built and why — where delivered behaviour differs from the original specification, the
 task's `note:` says so rather than simply claiming the box. Track 9 is planned and does not reopen any
-of them.
+of them. Track 10 is planned too; its foundation milestone (M52) corrects defects found in Track 3, 4
+and 8 code while specifying the index, and each correction is its own task rather than an edit to a
+ticked box.
 
 Two categories of work deliberately stay outside milestone tracking:
 
@@ -690,6 +692,165 @@ started.** Does not reopen Track 8. Detailed specifications:
 **Track completion.** The track is done when the coverage analysis (S28) is re-run and the lines each
 specification declared read ✅ — lines that stay 🟡 or ❌ are named with the reason.
 
+## Track 10 — Consolidated Cyber Risk Index & Overview Dashboard
+
+One configurable-weight 0–100 index, the **ICR (Índice Consolidado de Risco)**, over the risk register
+and its management reviews, acceptances and campaigns, vulnerabilities, incidents, assessments, the
+CMDB, the entity and process map, Trend Micro Vision One, SecurityScorecard and Tenable — shown as a
+desktop "Cyber Risk Overview" with trend, contributing categories and set-based drill-down by unit,
+process, activity, application, asset class and source. Methodology (pt-BR):
+[docs/methodology/icr-indice-consolidado-de-risco.md](docs/methodology/icr-indice-consolidado-de-risco.md)
+(S39). Dashboard and configuration screens:
+[docs/features/risk-overview-dashboard.md](docs/features/risk-overview-dashboard.md) (S40). **Status:
+planned, nothing started.**
+
+> **The index monitors; it never decides.** MIGR-TI/IA gates A→D stay the decision path: no service on
+> that path reads the index (enforced by `IcrIsNotADecisionInputTest`), the index is never registered as
+> a KRI, and only a Gate A condition from M43 may floor the displayed value — always shown next to the
+> unfloored one. Weights live in versioned profiles approved with segregation of duties and an IT Risk
+> Committee reference, and a profile change is a marked discontinuity on the trend.
+
+> **Ordering.** M52 lands before any snapshot is published, and T236 lands before or with T237: giving
+> background jobs a real scope otherwise switches on the overwrite of quantitative risks. Interim mode
+> reaches scoped users only after the 8–12 week shadow pilot (T258) and after hierarchical entity scope
+> (T292), which changes authorization for the whole product and gets its own security review. Each
+> source added by M56–M57 enters as a new profile version with a discontinuity marker. M59 consumes
+> Track 9 and does not duplicate it.
+
+> **Product-owner decisions (2026-10-05).** A scope claim on a unit covers its subunits but never its
+> parent (T292); profiles are approved by the Risk Manager or Risk Administrator role (T293); Tenable
+> is integrated through Tenable Vulnerability Management cloud with a Tenable One licence, so Security
+> Center moves to the backlog (T269); Vision One CREM credits and API permissions are available
+> (T271–T273); the Master Dashboard is retired once the interim index is published (T294); at
+> publication only the risk team (Risk Analysts, Risk Managers and Risk Administrators) sees the index
+> (T293); band labels are bilingual, Portuguese and English, like the rest of the product (T260); and
+> entity risk context stays editable only with global scope, with unit-manager editing kept for when
+> unit managers use the product (T295).
+
+### [M52] ICR foundation: the data the index depends on
+> outcome: The nightly snapshot can read a trustworthy register, finding set and entity map — jobs see
+> data, quantitative risks are not overwritten, bands apply one way, a closed finding is closed
+> everywhere, and the entity context that moves weights is permissioned and audited.
+> spec: S39
+
+- [ ] T236 Stop the residual pass and the 2-hourly matrix recalculation from overwriting quantitative (`ScoringMethod = 3`) risks, landing before or with T237 (S39)
+- [ ] T237 Run background jobs with unrestricted entity scope and register the five scheduled-but-unregistered Track 8 jobs, with tests that every recurring job resolves and reads seeded rows (S39)
+  - note: found while specifying the index — the background principal carries no scope claim, so every Hangfire job reads `DenyAll`; the scheduled Vision One/SecurityScorecard syncs, the residual pass, campaigns and cadence currently see zero rows
+- [ ] T238 Apply risk bands through one `Faixa` function (inclusive lower bounds, reachable Very High) in `Tools`, replacing the three divergent evaluations (S39)
+- [ ] T239 Route desktop close/reject of findings through the finding lifecycle and backfill `status_id` for legacy-closed rows, so "open" means the same everywhere (S39)
+- [ ] T240 Backfill `risks.entity_id` from `risk_to_entity` and define scenario attribution as their deduplicated union (S39)
+- [ ] T241 Gate entity create/update/delete behind `entities_manage` and the risk-context properties behind `entity_risk_context` (writes require global scope), and add `Entity` and its properties to the field-level audit (S39, S40)
+- [ ] T242 Add `criticality` and `internetFacing` properties and an `activity` type under `businessProcess` in a new entity-configuration version (S39)
+- [ ] T292 Make entity scope hierarchical: a claim on an entity grants its descendants in the entity tree (`entities.parent`) and never its ancestors or siblings, for reads and for the write guard, with regression tests on every scoped record type (S39, S40)
+  - note: product-owner decision 2026-10-05; authorization-sensitive (Track 7 rules: regression test failing on the pre-fix code, behaviour observed at runtime); links held only in EAV properties (a process listing a unit in `organizationUnit`) do not grant access, so a process is visible to a unit's users when it is parented under that unit
+
+### [M53] ICR engine, versioned profiles and daily snapshots
+> outcome: A nightly job computes the ICR for every pre-computed node from an approved, versioned
+> profile and stores node and object rows; the API serves the overview, trend, drill-down,
+> contributions and change attribution with entity scope respected.
+> spec: S39
+> depends-on: M52
+
+- [ ] T243 Add the `risk_index_profiles`, `risk_index_snapshots` and `risk_index_object_days` tables and the `risk_index_view`, `risk_index_configure` and `risk_index_approve` permissions (S39, S40)
+- [ ] T293 Seed the Risk Manager and Risk Administrator roles where absent and grant them `risk_index_view`, `risk_index_configure`, `risk_index_approve` and `entity_risk_context`, and grant Risk Analyst `risk_index_view` and `risk_index_configure`, never the Administrator role (S39, S40)
+  - note: product-owner decision 2026-10-05 — the Risk Manager or Risk Administrator acts for the IT Risk Committee when approving profiles; only `Administrator` and `RiskAnalyst` are seeded today (`Data/1.sql:294-295`)
+- [ ] T244 Implement the ICR engine: anchors, max-plus-damped-remainder, power mean with tail floor and population quotas, conservative inclusion, headline, coverage, quality and ignorance interval (S39)
+- [ ] T245 Compute review credit and governance signals from reliable fields only — qualified reviews, acceptances by date, campaign decisions, tasks and SLA (S39)
+- [ ] T246 Resolve the entity closure (tree plus EAV process/application links, activities under processes) and set-based node membership with an "Unassigned" node (S39, S40)
+- [ ] T247 Add the 05:00 UTC `RiskIndexSnapshotJob` (node scope members, per-class daily values, discontinuity-marker detection), its retention job and the `IcrIsNotADecisionInputTest` allowlist (S39, S40)
+- [ ] T248 Compute Euler composition, indicator sensitivity and Aumann–Shapley change attribution per node (S39)
+- [ ] T249 Expose the read API for overview, categories, trend, drill-down nodes, objects, inventory, change attribution and governance indicators, with scope-aware partial results, per-module redaction, a scope- and permission-keyed cache and a budget for derived computations (S40)
+- [ ] T250 Expose the profile lifecycle API — draft, validation, 90-day sensitivity preview, submit, approval eligibility, segregated approval with an explicit (non-admin-implied) permission and committee reference, reject, retire with its own justification, and activation bridge (S39, S40)
+
+### [M54] Cyber Risk Overview dashboard
+> outcome: The desktop client shows one headline number with its band, trend, contributing categories,
+> asset-class tabs and drill-down by unit, process, activity, application, asset class and source,
+> with every point traceable to the objects and signals behind it.
+> spec: S40
+> depends-on: M53
+
+- [ ] T251 Add the Cyber Risk Overview module with the headline card — integer value, band label, unfloored value, quality and coverage, seals and chips — gated by `risk_index_view` (S40)
+- [ ] T252 Draw the trend with band areas, the EWMA line, floor shading and discontinuity markers over 30, 90 and 365 days (S40)
+- [ ] T253 Show the contributing categories and, per asset-class tab, the monthly category summary, top risk factors and attack-surface visibility (S40)
+- [ ] T254 Drill down by unit, process, activity, application, asset class, source, criticality and environment through a breadcrumb and an always-visible Explore panel with one drill state, with a node detail and object list (S40)
+- [ ] T255 Show "what moved", top contributions with "held by" and indicator sensitivity, and an object detail with factor readings and freshness (S40)
+- [ ] T256 Show inventory visibility per source (assessed, stale, presumed, not assessed), the always-visible data-quality strip with unassigned and default-criticality fractions, and the governance and review indicators shown beside the index (S40)
+- [ ] T257 Derive chart colours from theme tokens through a tested palette helper, since `LintUi` does not scan C# (S40)
+- [ ] T258 Approve a pilot profile, run the 8–12 week shadow pilot with backtesting, then approve the publication profile (as a rebaseline if calibration requires it) before publishing interim mode to the risk team (S39, S40)
+  - note: starts once T251–T253 and T259–T262 are done; the pilot profile is approved through the M55 screens (S40 §14.1)
+- [ ] T294 Retire the Master Dashboard (module, navigation entry, `GET /Dashboard/Master`, its service, DTOs, client service and tests) once the interim index is published to scoped users (S40)
+  - note: product-owner decision 2026-10-05; two dashboards with different numbers would confuse, and `PostureScore` is not methodology
+
+### [M55] ICR configuration screens
+> outcome: Weights and parameters change only through a validated draft profile with a sensitivity
+> preview and a segregated approval, and sources, vendor-to-entity mappings and entity risk context are
+> configured from the admin window.
+> spec: S40
+> depends-on: M53
+
+- [ ] T259 List profile versions with status, effective dates and a parameter diff between any two versions (S40)
+- [ ] T260 Edit a draft profile — category weights, grouped parameters, presets and bands with Portuguese and English labels — with inline validation including the joint tail lock (S40)
+- [ ] T261 Run and read the sensitivity preview (node deltas, band changes, Kendall τ, tornado, effective register weight) and submit with justification (S40)
+- [ ] T262 Approve or reject a submitted profile with server-computed segregation-of-duties checks, self-grant refusal, committee and board references, show the activation bridge, and suspend publication (S40)
+- [ ] T263 Configure enabled sources and freshness windows and map Vision One asset groups/tags and SecurityScorecard connections to entities (S40)
+- [ ] T264 Edit entity risk context — criticality, internet exposure, data classification and activities — under the dedicated permission, in all-or-nothing batches with change history (S40)
+
+### [M56] Tenable integration
+> outcome: Tenable Vulnerability Management (cloud, with the Tenable One licence) findings, assets,
+> VPR, EPSS, ACR and AES reach NetRisk through the export APIs, not only through `.nessus` uploads.
+> spec: S40
+> depends-on: M52
+
+- [ ] T265 Add a Tenable Vulnerability Management connection with vault-capable credentials that are never logged, the outbound-policy HTTP client, a test probe and a queued manual sync run by the jobs host with a heartbeat (S40)
+- [ ] T266 Sync findings incrementally through the vulnerability export API (VPR v2, EPSS, exploit maturity) into the finding pipeline (S40)
+- [ ] T267 Sync assets through the asset export API onto hosts by the identity chain, collecting ACR and AES as per-source readings that the index uses only when the approved profile enables them (S40)
+- [ ] T268 Attribute Tenable assets to entities through a tag-to-entity mapping, after T265 and T267 (S40)
+
+### [M57] Vision One and SecurityScorecard posture expansion
+> outcome: Vendor posture is kept per source with history, and Vision One's posture, asset groups,
+> internet-facing assets, identities, cloud assets, apps and alerts reach the index as scored objects
+> or reference indicators.
+> spec: S40
+> depends-on: M52
+
+- [ ] T270 Store vendor scores per source with history and stop writing `entities.cyber_risk_index` (S39, S40)
+- [ ] T271 Sync Vision One `securityPosture` and `assetGroups` as reference indicators (S40)
+- [ ] T272 Sync Vision One internet-facing FQDNs/IPs, accounts, cloud assets and local apps as scored objects (S40)
+- [ ] T273 Sync Vision One Workbench alerts as an attack-intensity indicator, not a scored factor (S40)
+- [ ] T274 Backfill SecurityScorecard score history, keep per-factor issue score impact, and store a missing factor as null rather than 0 (S40)
+- [ ] T275 Persist Vision One last-detect time, exploit attempts, global exploit activity and EPSS separately, and record a criticality source with precedence (S39, S40)
+- [ ] T276 Compute posture sync due-dates so a 24-hour interval syncs daily (S39)
+
+### [M58] Governance and asset data quality for the index
+> outcome: The review, incident, assessment and asset data the index reads with a documented
+> workaround is corrected at the source, so each workaround can be retired.
+> spec: S39
+
+- [ ] T277 Align the `MgmtReview` review and next-step constants with the seeded lookups (S39)
+- [ ] T278 Stamp management review dates in UTC on the server, route desktop reviews through `CreateReviewAsync`, and expose overdue reviews honouring acceptance expiry (S39)
+- [ ] T279 Add incident severity and a UTC resolved date, and audit incidents field by field (S39)
+- [ ] T280 Link assessment answers by option id, record submission time and score runs on the server (S39)
+- [ ] T281 Record a scan-only `last_assessed_at` on hosts and match finding hosts by external id before IP (S39)
+- [ ] T282 Add a host-to-entity assignment path with an explicit re-stamp policy, and a target application on code-scanner imports (S39)
+- [ ] T283 Audit the product inputs that move the index (`review_levels`, `risk_levels`, settings and SLA configurations) (S39)
+- [ ] T290 Persist the residual ALE mean (`risk_scoring.quant_residual_ale_mean`) so the monetary panel can show residual Σ E[L] (S39)
+  - note: the simulator already computes the residual mean (`QuantitativeRiskService.cs:122`) but only P10/P50/P90 are stored
+- [ ] T291 Import the Jira Assets internet-facing attribute onto hosts and the application-to-server relationship onto host–application links, so `m_net` reads CMDB evidence and the full-mode linkage chain can attribute hosts to applications (S39)
+
+### [M59] ICR full mode: consuming Track 9
+> outcome: The index runs in full mode — drill-down along the linkage chain, BIA criticality, KEV/EPSS,
+> the Gate A floor, Top Risks, portfolio P95/CVaR, KRIs and the third-party category — consuming each
+> Track 9 stage as delivered.
+> spec: S39
+> depends-on: M39, M40, M41, M42, M43, M44, M45, M46, M47, M48, M49
+
+- [ ] T284 Drill down by process, activity, IT service, data and asset through the M39 linkage chain, with criticality inheritance (S39)
+- [ ] T285 Consume BIA process criticality (M41) and the KEV/EPSS combined prioritisation (M42) (S39)
+  - note: data sensitivity for Δ_dados comes from the M49 catalogue when delivered (S39 §16)
+- [ ] T286 Apply the Gate A display floor from the M43 predicate and host the Top Risks list (S39, S40)
+- [ ] T287 Show portfolio P95/CVaR (M45), KRI and Gate B seals (M46), evidence confidence (M40) and the target level (M44) (S39, S40)
+- [ ] T288 Enable the third-party category from the M48 register, and committee approval and third-line read access from M47 (S39)
+
 ## Backlog
 
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
@@ -701,6 +862,12 @@ specification declared read ✅ — lines that stay 🟡 or ❌ are named with t
 - [x] T228 Let users read and add comments on a host from the Hosts view
   - note: reuses the existing `comments.host_id` column; the comment is attributed server-side to the authenticated user
 - [x] T229 Make the Jira Assets admin tab scrollable so its imported-objects grid is reachable
+- [ ] T269 Add Tenable Security Center as a second client behind the same normaliser (S40)
+  - note: moved from M56 on 2026-10-05 — the organisation uses Tenable Vulnerability Management cloud with Tenable One; kept for installations that run Security Center
+- [ ] T289 Add a read-only executive Cyber Risk Overview page to the RiskPortal (S40)
+  - note: the portal is Razor Pages over the API with no chart library; a page needs the S40 read API and inline SVG or a library vetted under S21
+- [ ] T295 Let unit managers edit the risk context (criticality, internet exposure, data classification) of entities in their own subtree, requiring global scope only for a process shared by more than one unit (S40)
+  - note: product-owner decision 2026-10-05 — not now, unit managers do not use the product yet; the write rule already lives in one policy (`RiskContextWritePolicy`) so this lands without an API or screen change
 
 ## Specs
 
@@ -744,3 +911,5 @@ specification declared read ✅ — lines that stay 🟡 or ❌ are named with t
 | S36 | Secret vaults | docs/features/secret-vaults.md |
 | S37 | Settings form rollout | roadmap/SETTINGS_FORM_ROLLOUT.md |
 | S38 | Hosts view redesign | docs/features/hosts-view-redesign.md |
+| S39 | ICR — consolidated risk index methodology | docs/methodology/icr-indice-consolidado-de-risco.md |
+| S40 | Cyber Risk Overview dashboard and ICR configuration screens | docs/features/risk-overview-dashboard.md |

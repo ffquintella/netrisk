@@ -25,6 +25,7 @@ These are placeholder stubs — contributions welcome.
 - [Issue-tracker synchronization](issue-tracker-sync.md)
 - [Jira Service Management & Assets](jira-service-management.md)
 - [Posture integrations: Trend Micro Vision One and SecurityScorecard](posture-integrations.md)
+- [Planned: Cyber Risk Overview dashboard and the ICR configuration screens](risk-overview-dashboard.md) — implements the [ICR methodology](../methodology/icr-indice-consolidado-de-risco.md)
 - [External secret vaults (BastionVault)](secret-vaults.md)
   - [Planned: moving the BastionVault plugin onto `BastionVault.IntegrationSdk`](bastionvault-integration-sdk-migration.md)
 - [Reports](reports.md)
