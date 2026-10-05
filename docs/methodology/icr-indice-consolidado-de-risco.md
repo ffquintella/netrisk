@@ -2124,7 +2124,8 @@ Chave única `uq_risk_index_object_days_date_profile_object_category`.
 3. **Vigente** (`risk_index_approve`):
    - o aprovador precisa ser **diferente do autor**, **sem bypass de administrador**, como na
      segregação de funções do Track 8 (8.3.2);
-   - o aprovador tem o papel **Gerente de Riscos** ou **Administrador de Riscos**, que representa o
+   - o aprovador tem o papel **Gerente de Riscos** ou **Administrador de Riscos** e recebe
+     `risk_index_approve` **por esse papel** (concessão direta ao usuário não aprova), que representa o
      Comitê de Risco de TI no sistema (decisão do product owner, 2026-10-05; papéis semeados quando
      ausentes pela T293), e **não é dono de primeira linha de unidade pontuada**: o sistema recusa quem detém `business_risk_review` (revisor de negócio de campanha),
      para que ninguém aprove os pesos que medem a própria unidade;

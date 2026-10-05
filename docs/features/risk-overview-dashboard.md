@@ -1387,6 +1387,7 @@ dois nunca divirjam.
 | `sod_author_cannot_approve` → "Quem criou ou editou o rascunho não pode aprová-lo." | Aprovador ≠ `created_by_id` e ≠ todo autor de linha de auditoria do rascunho; **sem bypass de administrador** (S39 §13.1) |
 | `sod_business_reviewer` → "Quem detém business_risk_review não aprova os pesos que medem a própria unidade." | Recusa quem tem `business_risk_review` no conjunto **explícito** (definição abaixo) ou é revisor nomeado em `entity_risk_reviewers` (S39 §13.1). A flag de administrador sozinha não conta como deter a permissão |
 | `approver_permission_not_explicit` → "A permissão risk_index_approve precisa estar concedida a você, não só pela flag de administrador." | Ver "permissão explícita" abaixo |
+| `approver_role_required` → "Só o Gerente de Riscos ou o Administrador de Riscos aprova perfis." | A `risk_index_approve` tem de vir de um **papel aprovador**: um papel listado na configuração `risk_index_approver_roles` (semeada com `RiskManager` e `RiskAdministrator` pela T293; a instalação que usa papéis próprios para essas funções os acrescenta ali). Concessão direta ao usuário ou por outro papel **não** basta (S39 §13.1) |
 | `sod_self_granted_approver` → "Sua permissão de aprovar foi concedida por você mesmo; peça a outro administrador." | A concessão vigente de `risk_index_approve` do aprovador (no papel ou direta) tem como autor, na trilha, o próprio aprovador |
 | `committee_ref_required` / `committee_attachment_required` → "Informe a decisão do Comitê de Risco de TI e anexe a ata." | S39 §13.1 |
 | `board_ref_required` → "As faixas mudaram (ou este é o primeiro perfil): informe a aprovação do Conselho/Reitoria." | S39 §4.5, §12.4 (§6.2.3) |
@@ -1395,9 +1396,10 @@ dois nunca divirjam.
 
 **Permissão explícita.** É explícita a permissão presente em
 `IPermissionsService.GetUserPermissionsAsync(user)`, **lida do banco** (papel ∪ concessões diretas ao
-usuário, `PermissionsService.cs:69-92`), ignorando a flag `Admin` e as claims do token. Na aprovação, o
-serviço grava a origem da concessão em `risk_index_profiles.approval_grant_source` (`role:{id}` ou
-`direct`, §7.1), que a auditoria do perfil registra. Para que "sem bypass de administrador" não se
+usuário, `PermissionsService.cs:69-92`), ignorando a flag `Admin` e as claims do token. Para aprovar, a
+permissão tem ainda de vir de um papel aprovador do usuário (`approver_role_required`, acima): uma
+concessão direta não basta. Na aprovação, o serviço grava em `risk_index_profiles.approval_grant_source`
+o papel aprovador que a sustentou (`role:{id}`, §7.1), que a auditoria do perfil registra. Para que "sem bypass de administrador" não se
 contorne com um Admin que se concede a permissão, aprova e a retira, a concessão e a revogação de
 `risk_index_approve`, `risk_index_configure`, `risk_index_view`, `entity_risk_context` e
 `business_risk_review` (no papel ou ao usuário) passam a gravar uma linha explícita em `audit_logs`
@@ -1699,7 +1701,7 @@ declare duas vezes):
 |---|---|---|
 | `risk_index_profiles` | `revision int NOT NULL DEFAULT 0` (token de concorrência do EF, `IsConcurrencyToken`, incrementado a cada `PUT`) | `If-Match` exato: `updated_at` tem precisão de segundo (§6.2.1) |
 | `risk_index_profiles` | `retire_justification TEXT NULL`, `retire_decision_ref varchar(200) NULL`, `retired_by_id int NULL` (`fk_risk_index_profiles_retired_by_id` → `users`) | A suspensão (Active → Retired sem sucessor) precisa de motivo e referência próprios sem sobrescrever `justification` e `committee_decision_ref`, que são a evidência da ativação (§6.4) |
-| `risk_index_profiles` | `approval_grant_source varchar(32) NULL` (`role:{id}` ou `direct`) | Proveniência da permissão explícita do aprovador (§6.4, §11.4) |
+| `risk_index_profiles` | `approval_grant_source varchar(32) NULL` (`role:{id}` do papel aprovador; concessão direta não aprova) | Proveniência da permissão explícita do aprovador (§6.4, §11.4) |
 
 **Acréscimos** desta especificação:
 
@@ -1806,7 +1808,7 @@ releases separadas, cada release toma o próximo número na ordem de merge; o co
 
 | Versão | Entrega | `Structure/{n}.sql` (sem transação; cada comando guardado) | `Data/{n}.sql` (DML numa transação) |
 |---|---|---|---|
-| **88** | M52 (T239, T240, T241) + T243 + acréscimos da §7.1–§7.3 ligados ao índice | `CREATE TABLE IF NOT EXISTS` das três tabelas da S39 §12.5 (com os acréscimos da §7.1) e de `risk_index_object_attributions`, `risk_index_node_members`, `risk_index_class_days`, `risk_index_bridges`, `risk_index_preview_requests`, `risk_index_annotations`, `entity_risk_context_notes`; `ALTER TABLE nr_files ADD COLUMN IF NOT EXISTS risk_index_profile_id …`; `CREATE INDEX IF NOT EXISTS …`; `ADD CONSTRAINT fk_… FOREIGN KEY IF NOT EXISTS (…)` | Linha de `__EFMigrationsHistory` com `ON DUPLICATE KEY UPDATE`; `INSERT IGNORE INTO permissions (key, name, description, order)` **sem id** para `risk_index_view`, `risk_index_configure`, `risk_index_approve`, `entity_risk_context` e `entities_manage` (a permissão de CRUD de entidades da T241), no padrão de `Data/81.sql:21-23`; `INSERT INTO settings … ('risk_index_publication', 'shadow') ON DUPLICATE KEY UPDATE value = value`; anotação "VPR v2 da Tenable" em 2026-07-01 por `INSERT … SELECT … WHERE NOT EXISTS`; os backfills da T239 e da T240, cujo predicado (`WHERE status_id = 1 AND …`, `WHERE entity_id IS NULL AND …`) já os torna reaplicáveis; `update settings set value = '88' where name = 'db_version'` dentro da transação |
+| **88** | M52 (T239, T240, T241) + T243 + acréscimos da §7.1–§7.3 ligados ao índice | `CREATE TABLE IF NOT EXISTS` das três tabelas da S39 §12.5 (com os acréscimos da §7.1) e de `risk_index_object_attributions`, `risk_index_node_members`, `risk_index_class_days`, `risk_index_bridges`, `risk_index_preview_requests`, `risk_index_annotations`, `entity_risk_context_notes`; `ALTER TABLE nr_files ADD COLUMN IF NOT EXISTS risk_index_profile_id …`; `CREATE INDEX IF NOT EXISTS …`; `ADD CONSTRAINT fk_… FOREIGN KEY IF NOT EXISTS (…)` | Linha de `__EFMigrationsHistory` com `ON DUPLICATE KEY UPDATE`; `INSERT IGNORE INTO permissions (key, name, description, order)` **sem id** para `risk_index_view`, `risk_index_configure`, `risk_index_approve`, `entity_risk_context` e `entities_manage` (a permissão de CRUD de entidades da T241), no padrão de `Data/81.sql:21-23`; `INSERT INTO settings … ('risk_index_publication', 'shadow') ON DUPLICATE KEY UPDATE value = value`; `INSERT INTO settings … ('risk_index_approver_roles', 'RiskManager,RiskAdministrator') ON DUPLICATE KEY UPDATE value = value` (papéis aprovadores, §6.4); anotação "VPR v2 da Tenable" em 2026-07-01 por `INSERT … SELECT … WHERE NOT EXISTS`; os backfills da T239 e da T240, cujo predicado (`WHERE status_id = 1 AND …`, `WHERE entity_id IS NULL AND …`) já os torna reaplicáveis; `update settings set value = '88' where name = 'db_version'` dentro da transação |
 | **89** | Armazenamento de fontes do M56 e do M57, entregue antes do primeiro dos dois | `CREATE TABLE IF NOT EXISTS` de `vendor_assets`, `vendor_scores`, `host_external_ids`, `vendor_entity_mappings`, `tenable_connections`, `security_scorecard_issue_summaries`; `ADD COLUMN IF NOT EXISTS` em `trendmicro_connections`, `securityscorecard_connections`, `security_scorecard_factors`, `hosts`, `vulnerabilities`, `integration_sync_logs` (`heartbeat_at`); `ALTER TABLE security_scorecard_factors MODIFY COLUMN score int(11) NULL` (idempotente por natureza: reaplicar converge); índices e FKs guardados | EF; `INSERT IGNORE INTO host_external_ids (host_id, provider, external_id, first_seen_at, last_seen_at, created_at) SELECT … FROM hosts WHERE external_id IS NOT NULL` (copia a identidade única de hoje); `db_version = 89` |
 
 Regras que valem para os dois: nenhum `ADD` guardado cujo nome uma ação irmã do mesmo `ALTER` remove;
@@ -1863,7 +1865,12 @@ partição por mês fica como alternativa se a medição da §12.7 estourar o or
   (`409` para erro do mapeador Gridify, `400` para filtro inválido, `X-Total-Count`).
 - **Cache** (`IRiskIndexReadCache`, `IMemoryCache` com limite de tamanho): chave = (endpoint, nó
   normalizado, data resolvida, `profile_id`, modo, **chave de escopo**, **chave de permissões**), onde a
-  chave de escopo é `global` ou o SHA-256 da lista ordenada de `entity_id` das claims, e a chave de
+  chave de escopo é `global` ou o SHA-256 da lista ordenada das entidades do **escopo expandido** (claims
+  mais descendentes pela T292) junto com a **revisão da hierarquia** de `IEntityHierarchy`, e não das
+  claims cruas: mover uma subárvore para fora da unidade do usuário muda a chave mesmo com as claims
+  iguais. Além disso, toda mutação da árvore (criação, troca de pai, exclusão de entidade) incrementa a
+  revisão e **despeja** as entradas do `IRiskIndexReadCache` (teste: subárvore movida para fora da
+  unidade deixa de aparecer na resposta seguinte do nó pai, sem esperar a validade do cache). A chave de
   permissões é o conjunto ordenado das permissões de módulo que a redação consulta (`riskmanagement`,
   `hosts`, `vulnerabilities`, `incident_management`, `assessments`, mais a flag Admin), porque duas
   pessoas com o mesmo escopo e permissões diferentes recebem cargas diferentes (§11.3). Snapshot oficial ou derivado:
@@ -2756,8 +2763,9 @@ Sem bypass de administrador (S39 §13.1): o aprovador não pode ser o autor nem 
 `entity_risk_reviewers`; e precisa ter `risk_index_approve` **explícita**, isto é, presente em
 `IPermissionsService.GetUserPermissionsAsync(user)` lido do banco (papel ∪ concessões diretas,
 `PermissionsService.cs:69-92`), ignorando a flag `Admin` e as claims do token, porque
-`PermissionAuthorizationHandler.cs:26-34` aprova qualquer permissão para o papel Admin. A origem da
-concessão vai para `approval_grant_source`; a concessão feita pelo próprio aprovador é recusada
+`PermissionAuthorizationHandler.cs:26-34` aprova qualquer permissão para o papel Admin; essa permissão
+tem de vir de um papel listado em `risk_index_approver_roles` (`approver_role_required`). O papel que a
+sustentou vai para `approval_grant_source`; a concessão feita pelo próprio aprovador é recusada
 (`sod_self_granted_approver`), o que exige que conceder e revogar essas permissões grave linha
 explícita em `audit_logs` (§6.4). Códigos de recusa e textos na §6.4; a elegibilidade é exposta antes
 do clique por `GET …/ApprovalEligibility` (§8.4).
@@ -3082,7 +3090,9 @@ cenário da Unidade X (S39 §11).
 26. A prévia mostra Δ por nó, mudanças de faixa, τ de Kendall, tornado, peso efetivo do registro e
     "média pura". (Cliente.)
 27. O autor ou um editor do rascunho não consegue aprovar; um Admin sem a permissão explícita recebe
-    `approver_permission_not_explicit`; quem tem `business_risk_review` recebe `sod_business_reviewer`;
+    `approver_permission_not_explicit`; quem tem `risk_index_approve` só por concessão direta ou por um
+    papel fora de `risk_index_approver_roles` recebe `approver_role_required`; quem tem
+    `business_risk_review` recebe `sod_business_reviewer`;
     quem concedeu a si mesmo `risk_index_approve` recebe `sod_self_granted_approver`; a aba Aprovação
     mostra essas checagens antes do clique, vindas de `ApprovalEligibility`. (`RiskIndexProfilesServiceTest`.)
 28. A aprovação exige a referência do comitê com anexo e, se as faixas mudaram ou é o primeiro perfil,
