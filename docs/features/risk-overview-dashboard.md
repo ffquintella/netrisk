@@ -1642,7 +1642,7 @@ existe em `Jira`). O layout espelha a aba de postura (`IntegrationsView.axaml:85
 | Produto | No M56, só **Vulnerability Management** (nuvem), que é o produto da organização, com licença Tenable One (decisão de 2026-10-05): URL fixa `https://cloud.tenable.com`, somente leitura, e o seletor fica oculto. **Security Center** entra com a T269 (backlog): URL https obrigatória, editável; destino privado permitido pela política de SSRF salvo `Integrations:BlockPrivateNetworks`, quando entra em `Integrations:AllowedPrivateHosts` (`OutboundUrlPolicy.cs:28-46`) |
 | Entidade padrão | Seletor de entidade; vazio = "Não atribuído", com `notice` "ativos sem regra de mapeamento ficarão em Não atribuído" |
 | Access key / secret key | Dois campos com o mesmo seletor de cofre do Vision One (`VaultSecretFieldState`); nunca devolvidos ao cliente (só `HasAccessKey`, `HasSecretKey` e as referências de cofre). O botão ⊘ (`Button.subButton`, `CloseCircleOutline`) marca `ClearAccessKey`/`ClearSecretKey` no `TenableConnectionUpsert` (§8.3); chave omitida sem a marca mantém a salva |
-| Intervalo | 1–168 h, padrão 24. O `TenableSyncJob` roda a cada 15 min e sincroniza a conexão quando `agora ≥ início da última execução + intervalo − 15 min` (contado do **início**, não do fim, para não repetir o defeito D-13 da T276; a tolerância de um tique impede o deslizamento diário), §9.1 |
+| Intervalo | 1–168 h, padrão 24. O `TenableSyncJob` roda a cada 15 min e sincroniza a conexão quando `agora ≥ next_due_at`. A cadência é **ancorada**: `next_due_at` começa no primeiro tique depois de salvar a conexão e avança **sempre a partir do próprio vencimento**, `next_due_at ← next_due_at + k·intervalo` com o menor `k` que o leva para depois de agora, nunca a partir do início ou do fim da execução. Assim o horário diário não desliza (nem para trás, nem para frente como no defeito D-13 da T276), e um atraso ou uma execução longa não acumulam execuções. Sincronização manual não move a âncora. §9.1 |
 | Achados / ativos | Liga o export de vulnerabilidades (T266) e o de ativos (T267) |
 | Coletar ACR / Coletar AES | **Só controlam a coleta**: com a opção ligada, a sincronização guarda `ratings.acr.score` e `ratings.aes.score` em `vendor_scores` (TenableAcr, TenableAes). A sincronização **nunca** grava `hosts.criticality` nem `hosts.criticality_source` a partir do ACR. O motor usa a leitura só quando TEN-ACR (criticidade, na precedência da S39 §5.1) ou TEN-AES (EXP.D) está em `fontes_habilitadas` do perfil do snapshot (§6.5), o que exige nova versão aprovada. Sem isso, nenhum `configuration` move o peso `w_o = m(crit)` (S39 §5.1, §4.6 e) sem rascunho, aprovação e a permissão de contexto (S39 I8). Exigem licença Tenable One ou Lumin, que a organização tem (2026-10-05); se a licença faltar numa instalação, os campos vêm vazios e a sincronização registra "ACR/AES ausentes: verifique a licença" (§15) |
 | Severidade mínima | Info, Baixa, Média, Alta, Crítica; padrão Baixa |
@@ -1825,7 +1825,7 @@ pontuadas:
 | `risk_index_object_days` | ≈ 35 mil (host em EXP e GOV; cenário em REG, GOV e CTL; entidade em AME e CTL) | 400 d | ≈ 14 milhões |
 | `risk_index_object_attributions` | ≈ 18 mil | 400 d | ≈ 7 milhões |
 | `risk_index_snapshots` | ≈ 3,7 mil (≈ 530 nós × 7 categorias) | 1825 d | ≈ 6,8 milhões |
-| `risk_index_node_members` | ≈ 5 mil (fecho) + as entidades de escopo dos objetos atribuídos | 400 d | ≈ 2–4 milhões |
+| `risk_index_node_members` | ≈ 5 mil (fecho) + as entidades de escopo dos objetos atribuídos | 1825 d (como o snapshot que ela autoriza) | ≈ 9–18 milhões |
 | `risk_index_class_days` | ≈ 8 mil (≈ 530 nós × 5 grupos × até 3 categorias) | 400 d | ≈ 3,2 milhões |
 | `vendor_scores` | só mudanças | 730 d | depende da volatilidade; tipicamente < 2 milhões |
 
@@ -2126,7 +2126,7 @@ public record RiskIndexProfileDto(int Id, int Version, string Name, string? Pres
     string? RetireJustification, string? RetireDecisionRef, string? RetiredBy, int Revision,
     bool HasSensitivityReport); // o relatório em si só por GET /{id}/Preview (§8.4)
 public record RiskIndexProfileCreateRequest(string Name, int? FromProfileId, string? Preset);
-public record RiskIndexProfileUpdateRequest(string Name, RiskIndexParameters Parameters);
+public record RiskIndexProfileUpdateRequest(string Name, RiskIndexMode Mode, RiskIndexParameters Parameters); // Mode: interino ou pleno; mudar em relação ao vigente aciona ModeChange (rebaseline)
 public record RiskIndexProfileDiffDto(int A, int B, IReadOnlyList<RiskIndexParameterChangeDto> Changes);
 public record RiskIndexParameterChangeDto(string Group, string Key, string? ValueA, string? ValueB, bool Changed);
 public record RiskIndexParameterSchemaDto(IReadOnlyList<RiskIndexParameterSchemaItemDto> Items);
@@ -2248,8 +2248,10 @@ referências e datas são configuração, legíveis com `risk_index_view` em qua
 `Approve` recusa com o código da primeira checagem que falha. `RiskIndexParameters` é o espelho tipado
 das chaves da S39 §12.2, serializado em `parameters`. As regras da S39 §12.4 e as leituras da §6.2.3
 ficam numa classe pura,
-`Model.RiskIndex.RiskIndexProfileRules.Validate(RiskIndexParameters draft, RiskIndexParameters? baseline,
-RiskIndexParameters? trimesterBaseline)`, usada pelo servidor (autoritativo) e pela GUI (validação ao
+`Model.RiskIndex.RiskIndexProfileRules.Validate(RiskIndexMode draftMode, RiskIndexParameters draft,
+RiskIndexMode? baselineMode, RiskIndexParameters? baseline, RiskIndexParameters? trimesterBaseline)`
+(o modo entra na validação para acionar `ModeChange`; o pleno só é aceito quando as fontes do Track 9
+que ele consome estão disponíveis, senão `400 full_mode_prerequisites_missing`), usada pelo servidor (autoritativo) e pela GUI (validação ao
 vivo), para que as duas nunca divirjam.
 
 ### 8.5 Entidades — acréscimos e mudanças no `EntitiesController`
@@ -2258,7 +2260,7 @@ vivo), para que as duas nunca divirjam.
 |---|---|---|---|---|
 | `GET /Entities/RiskContext` | `types` | `List<EntityRiskContextRowDto>` | `RequireValidUser` (o mapa já é visível a todo usuário) | — |
 | `PUT /Entities/RiskContext` | `EntityRiskContextBatchRequest` (justificativa e a lista de mudanças) | `EntityRiskContextBatchResultDto` | `[PermissionAuthorize("entity_risk_context")]` + escopo irrestrito (no serviço) | `400 field_not_supported_for_type`, `criticality_out_of_range`, `justification_too_short`, `empty_batch` (com o `entityId` da linha recusada em `details`); `403 risk_context_requires_global_scope`; `404` (entidade inexistente, com o id); `409 criticality_owned_by_bia` (quando o M41 fornecer) |
-| `GET /Entities/{id}/History` | `limit` (≤ 5000) | `List<AuditLog>` agrupável por `CorrelationId`, com a justificativa | `RequireValidUser` | `400 limit` |
+| `GET /Entities/{id}/History` | `limit` (≤ 5000) | `List<EntityHistoryEntryDto>` (data, tipo de mudança, propriedade, valor antigo e novo das propriedades de contexto e da árvore, login do autor, `CorrelationId`, justificativa do lote); **nunca** a entidade `AuditLog` nem a navegação `User` | `entity_risk_context` ou `entities_manage`, mais a entidade dentro do escopo do chamador (T292); o serviço checa o acesso **antes** de ler a trilha, como `HostsController.GetHistory` | `400 limit`; `403`; `404` (entidade inexistente ou fora do escopo) |
 | `POST /Entities` (existente) | — | — | **passa a** `[PermissionAuthorize("entities_manage")]` (T241) | **novo** `403 risk_context_requires_permission` se o corpo traz `criticality`, `internetFacing` ou `securityClassification` sem `entity_risk_context`; com a permissão, também exige escopo irrestrito (`403 risk_context_requires_global_scope`) |
 | `PUT /Entities/{id}` (existente) | — | — | **passa a** `[PermissionAuthorize("entities_manage")]` (T241) | **novo** `403 risk_context_requires_permission` se o corpo muda uma das três propriedades sem `entity_risk_context`; com a permissão, também exige escopo irrestrito |
 | `DELETE /Entities/{id}` (existente) | — | — | **passa a** `[PermissionAuthorize("entities_manage")]` (T241) | — |
@@ -2343,7 +2345,7 @@ Mapeamento de erros como em `DashboardRestService.cs:17-55`: 401 descarta o toke
 
 | Hora | Job | Novo? | Observação |
 |---|---|---|---|
-| a cada 15 min | `TenableSyncJob` | sim | `"*/15 * * * *"`. Em cada tique: consome os pedidos manuais `Queued` (§8.7) e sincroniza as conexões devidas (`agora ≥ início da última execução + intervalo − 15 min`, contado do início, §6.8). Com o intervalo padrão de 24 h, a primeira execução fixa o horário diário; recomenda-se dispará-la de madrugada (antes das 05:00) para que o snapshot leia o export do dia |
+| a cada 15 min | `TenableSyncJob` | sim | `"*/15 * * * *"`. Em cada tique: consome os pedidos manuais `Queued` (§8.7) e sincroniza as conexões devidas (`agora ≥ next_due_at`, cadência ancorada no vencimento, §6.8). Com o intervalo padrão de 24 h, a primeira execução fixa o horário diário; recomenda-se dispará-la de madrugada (antes das 05:00) para que o snapshot leia o export do dia |
 | 02:20 | `ResidualRiskCalculation` | não | (`JobsManager.cs:46-47`) |
 | 02:30 | `GovernanceRetention` | não | |
 | 02:40 | `RiskIndexRetentionJob` | sim | Único caminho de expurgo (S39 §9.1) |
@@ -2461,8 +2463,12 @@ legado não lido.
   para sobreviver a reinício: um pedido `Running` cujo `heartbeat_at` tem mais de 15 min (sem avanço,
   não "começou há muito") volta a `Queued` na passada seguinte, porque o Hangfire em memória perde o
   estado no reinício.
-- **Retenção.** Apaga em lotes de 10 mil: linhas de objeto, atribuições, membros de nó e
-  `risk_index_class_days` com mais de 400 dias; o `report` de pedidos de prévia encerrados há mais de 90
+- **Retenção.** Apaga em lotes de 10 mil: linhas de objeto, atribuições e `risk_index_class_days` com
+  mais de 400 dias; membros de nó só junto com o snapshot que autorizam (1825 dias), porque a leitura
+  oficial de um usuário com escopo compara as claims com eles (§11.3). Se, por qualquer motivo, um
+  snapshot não tem membros gravados, a leitura para quem não tem escopo global é **negada**
+  (`403 snapshot_membership_missing`), nunca tratada como conjunto vazio (teste com snapshot de mais de
+  400 dias); o `report` de pedidos de prévia encerrados há mais de 90
   dias (o relatório anexado ao perfil fica em `sensitivity_report`); snapshots com mais de 1825 dias; `vendor_scores` encerrados há mais de 730 dias. Anula
   `top_contributions` e `change_attribution` de snapshots com mais de 400 dias. Registra contagens.
 
@@ -2775,7 +2781,12 @@ do clique por `GET …/ApprovalEligibility` (§8.4).
 - **`IcrIsNotADecisionInputTest`** (`ServerServices.Tests`, T247): por reflexão sobre **todos os
   projetos não de teste de `src/netrisk.sln`**, exceto o `GUIClient` (coberto pela varredura de fonte
   abaixo, porque carregá-lo puxaria Avalonia), inspeciona campos, propriedades, parâmetros de
-  construtor e de método e tipos de retorno. A lista de assemblies vem da leitura do `.sln`, não de uma
+  construtor e de método e tipos de retorno **e o corpo dos métodos**: com `System.Reflection.Metadata`,
+  lê o IL de cada método e falha em qualquer referência de membro ou de tipo (`DbSet<RiskIndex…>`,
+  `RiskIndexSnapshots`, chamadas a `ServerServices.RiskIndex.*`, lambdas e métodos gerados de `async`/LINQ
+  incluídos) fora da allowlist. Um caso negativo com um tipo de fixture cujo **único** acesso ao ICR é
+  `db.RiskIndexSnapshots` dentro de um método, sem aparecer em assinatura, prova que a varredura o pega.
+  A lista de assemblies vem da leitura do `.sln`, não de uma
   lista escrita à mão, e o teste **falha** quando um assembly listado não pode ser carregado do
   diretório do teste: uma referência faltando aparece em vermelho, não como varredura mais estreita.
   Para isso o `ServerServices.Tests.csproj` ganha `ProjectReference` para `BackgroundJobs`,
@@ -3044,8 +3055,10 @@ cenário da Unidade X (S39 §11).
     `RiskOverviewDeltaColumnsNotSortableTest`.)
 11. O nó "Unidade X × Dispositivos" tem procedência "Oficial derivado" e o mesmo valor que o
     recálculo das linhas de objeto do dia. (`RiskIndexReadServiceTest`.)
-12. Um usuário com claim só na Unidade X (e não no Lab L1) vê "Parcial — visibilidade restrita", sem
-    tendência nem "o que mudou", e nenhuma contagem inclui objetos do Lab L1. (`RiskIndexReadServiceTest`;
+12. Um usuário com claim só na Unidade X vê o oficial da Unidade X, incluindo o Lab L1 (subunidade,
+    T292). Quando o fecho da Unidade X inclui um objeto fora da subárvore dela (por exemplo, uma
+    aplicação filha da Unidade Y ligada por `applications`), ele vê "Parcial — visibilidade restrita",
+    sem tendência nem "o que mudou", e nenhuma contagem inclui esse objeto. (`RiskIndexReadServiceTest`;
     cliente.)
 13. Um usuário escopado não recebe a manchete da organização (`403 org_requires_global_scope`) nem os
     indicadores de tenant fora do nó da conexão. (`RiskIndexControllerTest`.)

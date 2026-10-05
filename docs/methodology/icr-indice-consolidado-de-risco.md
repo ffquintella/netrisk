@@ -929,9 +929,10 @@ d_ref  = max( data_efetiva(m) : m revisão qualificada do risco )
 data_efetiva(m) = min( m.SubmissionDate , criação de m em audit_logs , agora )
 T      = cadencia_revisao[ Faixa(score de cadência ; limites_registro) ]     cópias aprovadas no perfil (§12.2)
          score de cadência = base_cadencia (padrão InherentRisk, como Data/80.sql:46); residual nulo ⇒ inerente
-a*     = última aceitação do risco sem sucessora (Status ≠ Renewed), válida ou não
-fim    = RevokedAt de a* ?? ExpiresAt de a*
-due    = min( d_ref + T , fim )      se a* existe e fim ≥ d_ref
+A      = aceitações do risco (qualquer status, incluindo as Renewed e as substituídas) com fim(a) ≥ d_ref
+fim(a) = RevokedAt de a ?? ExpiresAt de a
+fim    = min_{a ∈ A} fim(a)          o vencimento mais cedo depois da última revisão qualificada
+due    = min( d_ref + T , fim )      se A não é vazio
 due    = d_ref + T                   caso contrário
 cred   = 1                                         se agora ≤ due
 cred   = max( cred_min , 1 − λ·(agora − due)/T )   caso contrário          λ = 1,0 ; cred_min = 0
@@ -962,11 +963,16 @@ r_res nulo ⇒ r_eff = r_inh, rotulado "tratamento não avaliado"
   não. Por isso a data é limitada pela criação da linha em `audit_logs` (`MgmtReview` é tipo auditado)
   e pelo instante do snapshot: uma revisão com data futura não mantém `cred = 1` indefinidamente. A
   correção de raiz é carimbar no servidor (D-07).
-- **Vencimento pela aceitação.** O `ExpiresAt` (ou `RevokedAt`) da última aceitação **antecipa** o
+- **Vencimento pela aceitação.** O `ExpiresAt` (ou `RevokedAt`) de uma aceitação **antecipa** o
   vencimento enquanto não houver revisão qualificada posterior a ele, inclusive depois que a aceitação
   expirou: uma aceitação vencida sem nova revisão começa a perder crédito na data em que venceu, e não
-  ganha uma cadência inteira extra. Uma revisão qualificada posterior a `fim` tira a aceitação do
-  cálculo.
+  ganha uma cadência inteira extra. Vale o **vencimento mais cedo** entre todas as aceitações que
+  terminam depois da última revisão qualificada, inclusive as renovadas ou substituídas: renovar
+  (`RenewAsync`, cuja revisão gerada não é qualificada) não empurra o prazo para a frente. Exemplo:
+  `d_ref` = 2026-09-01, T = 90 d, inerente 8, residual 4, aceitação até 2026-10-01; em 2026-10-05,
+  `r_eff` ≈ 4,18. Renovar até 2026-12-01 mantém `fim` = 2026-10-01 e `r_eff` ≈ 4,18; só uma revisão
+  qualificada posterior a 2026-10-01 tira essa aceitação do cálculo. **Teste obrigatório:** renovar
+  ou substituir uma aceitação não baixa `R_{r,REG}` (I10).
 - **Faixa e cadência.** `Faixa` é a função única da §4.5, sobre o score 0–10 cru, com `≥` e Very High
   alcançável (D-02). Os valores usados são **cópias aprovadas no perfil** (`cadencia_revisao`,
   `limites_registro`, `base_cadencia`), para que uma edição em `review_levels`, `risk_levels` ou
@@ -1422,7 +1428,13 @@ A_na   = resíduo não resolvido ("efeito não atribuído")
 
 **Caminho:**
 
-- `x` reúne `R_{o,k}` e `w_o`. As cotas de população são fixas dentro de uma versão.
+- `x` reúne `R_{o,k}` e `w_o`. As cotas de população são fixas dentro de uma versão, mas a
+  **presença** de uma população também é interpolada: `q̃_g(θ) = q_g·π_g(θ) / Σ_h q_h·π_h(θ)`, com
+  `π_g = 1` para população presente nos dois dias, `θ` para a que **entra** (não existia em t−1) e
+  `1 − θ` para a que **sai**. Sem isso o caminho seria descontínuo: um único cenário de GOV com R = 0,6
+  vale 60, e o primeiro host limpo dá à população ativos a cota inteira de 0,5 para todo θ > 0,
+  baixando GOV para 50,45 sem gradiente que o capture. A parcela de `∂/∂π_g` é atribuída aos objetos
+  que trouxeram ou levaram a população, na proporção do peso, e o caso entra nos testes de atribuição.
 - Objeto que **entra** percorre `R(θ) = θ·R_o` e `w(θ) = θ·w_o`; objeto que **sai**, o inverso. Assim
   um objeto novo que passa a sustentar o piso recebe o efeito do piso continuamente.
 - Objeto que muda de conjunto (presumido ↔ avaliado, ou avaliado ↔ presumido em `2W`) é tratado como
