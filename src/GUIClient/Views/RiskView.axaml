@@ -267,6 +267,26 @@
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
+
+                        <!-- Stage 9.1 (S41 §7): the linkage chain, five levels always shown — a missing
+                             link reads "not informed" rather than disappearing. The Entity row above is
+                             the legacy field and stays. -->
+                        <StackPanel IsVisible="{Binding !!SelectedRiskChain}" Margin="0 5 0 0">
+                            <TextBlock Classes="header2" Text="{Binding StrLinkageChain}" HorizontalAlignment="Stretch"/>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrChainObjective}" Classes="label"/><TextBlock Text="{Binding ChainObjectiveSummary}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrChainProcess}" Classes="label"/><TextBlock Text="{Binding ChainProcessSummary}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrChainItService}" Classes="label"/><TextBlock Text="{Binding ChainItServiceSummary}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrChainData}" Classes="label"/><TextBlock Text="{Binding ChainDataSummary}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrChainAsset}" Classes="label"/><TextBlock Text="{Binding ChainAssetSummary}" Classes="formData"/></StackPanel>
+                            <Button Classes="type2" HorizontalAlignment="Left" Margin="0 5 0 0"
+                                    Command="{Binding BtEditChainClicked}"
+                                    IsEnabled="{Binding IsEditChainEnabled}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="LinkVariant" Width="20" Height="20" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding StrEditChain}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </StackPanel>
                     <!-- Incident Response PLAN -->
                     <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*">

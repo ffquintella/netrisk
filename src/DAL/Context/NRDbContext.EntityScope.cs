@@ -84,6 +84,9 @@ public partial class NRDbContext
         ConfigureDeferredSecuritySchema(modelBuilder);
         ApplyDeferredSecurityQueryFilters(modelBuilder);
 
+        // Track 9 Stage 9.1 — the risk linkage chain (S41). Its scope filter is below, with the
+        // other derived ones.
+        ConfigureRiskChain(modelBuilder);
 
 
         // The predicate is written inline rather than factored into a helper method: EF must be
@@ -116,6 +119,14 @@ public partial class NRDbContext
 
         modelBuilder.Entity<Mitigation>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        // Stage 9.1 (S41 §4.3). Two parents, both scoped: the risk, and — for a host link — the host.
+        // A scoped caller sees neither another entity's risk links nor the link from one of their own
+        // risks to a host they cannot see; the chain must not be a side door to either. Every chain
+        // query relies on this, and none of them calls IgnoreQueryFilters.
+        modelBuilder.Entity<RiskChainLink>().HasQueryFilter(e =>
+            ScopeIsUnrestricted
+            || (Risks.Any(r => r.Id == e.RiskId) && (e.HostId == null || Hosts.Any(h => h.Id == e.HostId))));
 
         modelBuilder.Entity<HostsService>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Hosts.Any(h => h.Id == e.HostId));

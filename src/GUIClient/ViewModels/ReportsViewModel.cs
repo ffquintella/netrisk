@@ -41,7 +41,24 @@ public class ReportsViewModel: ViewModelBase
     private ReportType? _selectedReport;
     public ReportType? SelectedReport {
         get => _selectedReport;
-        set => this.RaiseAndSetIfChanged(ref _selectedReport, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedReport, value);
+
+            // Loaded on first view rather than when the window opens: it is a server computation
+            // over the whole chain, and most visits to Reports are for another report.
+            if (value?.Id == CriticalProcessCoverageReportId)
+                _ = CriticalProcessCoverageViewModel.EnsureLoadedAsync();
+        }
+    }
+
+    /// <summary>Stage 9.1 (S41 §7): report 7, critical-process coverage.</summary>
+    public const int CriticalProcessCoverageReportId = 7;
+
+    private CriticalProcessCoverageViewModel _criticalProcessCoverageViewModel = new();
+    public CriticalProcessCoverageViewModel CriticalProcessCoverageViewModel {
+        get => _criticalProcessCoverageViewModel;
+        set => this.RaiseAndSetIfChanged(ref _criticalProcessCoverageViewModel, value);
     }
     
     private List<ReportType> _reportTypes = new();
@@ -101,6 +118,8 @@ public class ReportsViewModel: ViewModelBase
         ReportTypes.Add(new ReportType(3, Localizer["Impact vs Probability"], 4, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(4, Localizer["Entities Risks"], 5, MaterialIconKind.RateReview));
         ReportTypes.Add(new ReportType(5, Localizer["File Reports"], 6, MaterialIconKind.FileCabinet));
+        ReportTypes.Add(new ReportType(CriticalProcessCoverageReportId, Localizer["Critical process coverage"], 7,
+            MaterialIconKind.ShieldCheckOutline));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

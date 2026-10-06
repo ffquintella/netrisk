@@ -3369,4 +3369,136 @@
     <data name="AuditActionUpdate" xml:space="preserve">
         <value>Alterado</value>
     </data>
+    <data name="strategicObjective" xml:space="preserve">
+        <value>objetivo estratégico</value>
+    </data>
+    <data name="itService" xml:space="preserve">
+        <value>serviço de TI</value>
+    </data>
+    <data name="Strategic Objectives" xml:space="preserve">
+        <value>Objetivos Estratégicos</value>
+    </data>
+    <data name="Horizon" xml:space="preserve">
+        <value>Horizonte</value>
+    </data>
+    <data name="Technical Owner" xml:space="preserve">
+        <value>Dono Técnico</value>
+    </data>
+    <data name="Processes Served" xml:space="preserve">
+        <value>Processos Atendidos</value>
+    </data>
+    <data name="Data Handled" xml:space="preserve">
+        <value>Dados Tratados</value>
+    </data>
+    <data name="Application" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
+    <data name="team" xml:space="preserve">
+        <value>equipe</value>
+    </data>
+    <data name="LinkageChain" xml:space="preserve">
+        <value>Cadeia de ligação</value>
+    </data>
+    <data name="ChainLevelObjective" xml:space="preserve">
+        <value>Objetivo estratégico</value>
+    </data>
+    <data name="ChainLevelProcess" xml:space="preserve">
+        <value>Processo</value>
+    </data>
+    <data name="ChainLevelItService" xml:space="preserve">
+        <value>Serviço de TI</value>
+    </data>
+    <data name="ChainLevelData" xml:space="preserve">
+        <value>Dado</value>
+    </data>
+    <data name="ChainLevelAsset" xml:space="preserve">
+        <value>Ativo</value>
+    </data>
+    <data name="ChainNotInformed" xml:space="preserve">
+        <value>Não informado</value>
+    </data>
+    <data name="ChainHostRedacted" xml:space="preserve">
+        <value>Host (sem permissão)</value>
+    </data>
+    <data name="EditChain" xml:space="preserve">
+        <value>Editar cadeia de ligação</value>
+    </data>
+    <data name="ChainLevel" xml:space="preserve">
+        <value>Nível</value>
+    </data>
+    <data name="ChainTarget" xml:space="preserve">
+        <value>Alvo</value>
+    </data>
+    <data name="ChainOrigin" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="ChainOriginDeclared" xml:space="preserve">
+        <value>Declarado</value>
+    </data>
+    <data name="ChainOriginLegacy" xml:space="preserve">
+        <value>Legado</value>
+    </data>
+    <data name="ChainLinkedAt" xml:space="preserve">
+        <value>Vinculado em</value>
+    </data>
+    <data name="AddChainLink" xml:space="preserve">
+        <value>Adicionar vínculo</value>
+    </data>
+    <data name="RemoveChainLink" xml:space="preserve">
+        <value>Remover vínculo</value>
+    </data>
+    <data name="SearchHost" xml:space="preserve">
+        <value>Buscar hosts pelo nome</value>
+    </data>
+    <data name="SelectChainTarget" xml:space="preserve">
+        <value>Selecione um alvo</value>
+    </data>
+    <data name="ChainLegacyLinkHint" xml:space="preserve">
+        <value>Este vínculo vem do campo Entidade do risco. Remova-o lá, onde foi definido.</value>
+    </data>
+    <data name="ChainDemotedHint" xml:space="preserve">
+        <value>A entidade continua no campo Entidade do risco, então o vínculo foi mantido como Legado.</value>
+    </data>
+    <data name="RequiresHostsPermission" xml:space="preserve">
+        <value>Buscar hosts exige a permissão hosts. Aplicações continuam podendo ser vinculadas neste nível.</value>
+    </data>
+    <data name="Search" xml:space="preserve">
+        <value>Buscar</value>
+    </data>
+    <data name="Critical process coverage" xml:space="preserve">
+        <value>Cobertura de processos críticos</value>
+    </data>
+    <data name="CriticalProcessCoverageSummary" xml:space="preserve">
+        <value>{0} de {1} processos críticos cobertos ({2}%)</value>
+    </data>
+    <data name="CriticalProcessCoverageNotComputable" xml:space="preserve">
+        <value>Não calculável: nenhum processo ativo está marcado como crítico (criticidade 4 ou 5).</value>
+    </data>
+    <data name="ProcessesWithoutCriticality" xml:space="preserve">
+        <value>{0} processo(s) ativo(s) sem criticidade declarada, fora da contagem.</value>
+    </data>
+    <data name="CoverageScopeRestricted" xml:space="preserve">
+        <value>Resultado parcial: só os riscos das suas unidades de negócio entram na contagem.</value>
+    </data>
+    <data name="DirectRisks" xml:space="preserve">
+        <value>Riscos diretos</value>
+    </data>
+    <data name="InferredRisks" xml:space="preserve">
+        <value>Riscos inferidos</value>
+    </data>
+    <data name="Covered" xml:space="preserve">
+        <value>Coberto</value>
+    </data>
+    <data name="Yes" xml:space="preserve">
+        <value>Sim</value>
+    </data>
+    <data name="No" xml:space="preserve">
+        <value>Não</value>
+    </data>
+    <data name="ChainVia" xml:space="preserve">
+        <value>Via</value>
+    </data>
+    <data name="RisksOfSelectedProcess" xml:space="preserve">
+        <value>Riscos do processo selecionado</value>
+    </data>
 </root>

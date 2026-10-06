@@ -50,7 +50,10 @@ public static class MapsterConfiguration
             .Ignore(dest => dest.Entities)
             .Ignore(dest => dest.RiskCatalogs)
             .Ignore(dest => dest.Vulnerabilities)
-            .Ignore(dest => dest.IncidentResponsePlan!);
+            .Ignore(dest => dest.IncidentResponsePlan!)
+            // Stage 9.1: the chain is written only through RiskChainService and the legacy mirror. A
+            // risk adapted onto a tracked one must not carry an (always empty) link list with it.
+            .Ignore(dest => dest.ChainLinks);
 
         _ = TypeAdapterConfig<Category, Category>.NewConfig()
             .Ignore(dest => dest.Risks);

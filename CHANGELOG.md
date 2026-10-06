@@ -16,6 +16,21 @@ follow [SemVer](http://semver.org/).
 - Add the ICR methodology under docs/methodology/: a configurable-weight, review-aware 0–100 consolidated cyber-risk index over the register, findings, incidents, assessments, CMDB, entity map, Vision One, SecurityScorecard and Tenable (S39)
 - Add the specification of the Cyber Risk Overview dashboard, its drill-down and the ICR configuration screens (S40)
 - Add Track 10 — Consolidated Cyber Risk Index & Overview Dashboard to the roadmap as a planned track (M52, M53, M54, M55, M56, M57, M58, M59)
+- Add the Stage 9.1 linkage-chain specification: strategic objective and IT service entity types, per-level risk chain links that coexist with the legacy entity link, and a critical-process coverage metric (T143, S41)
+- Add the strategic objective entity type and let business processes point at the objectives they serve (T144, S41)
+- Add the IT service entity type, with a mandatory technical owner and the processes, applications and data it serves, and a declared 1–5 criticality on business processes (T145, S41)
+- Link a risk to any level of the objective → process → IT service → data → asset chain through `/RiskChain`, with direct and inferred node queries and host links that require the hosts permission (T146, S41)
+- Add `GET /RiskChain/Coverage/CriticalProcesses`, the share of active processes with criticality 4 or 5 covered by an open risk, directly or by inference (T147, S41)
+- Mirror the legacy risk entity link into the chain as Legacy links, copied on upgrade and kept in step by `PUT/DELETE /Risks/{id}/Entity`, and test traversal with a missing middle link (T148, S41)
+- Show a risk's linkage chain under its Entity row, five levels with "not informed" for the empty ones, and edit it in a dialog with a host search that requires the hosts permission (T146, S41)
+- Add report 7, Critical process coverage, with the covered share, the processes without a declared criticality, and the direct and inferred risks of each process (T147, S41)
+
+### Changed
+- Count a risk linked to an entity through the risk chain in the top-entities and entities-risks statistics, once even when the legacy entity link also points there (T146, S41)
+
+### Fixed
+- Stop counting an entity's own risks twice in the Entities Risks report (S41)
+- Translate the `Application` property label and the `team` entity type in the entity form in English and Portuguese (T145, S41)
 
 ## [2.24.0] - 2026-10-02
 

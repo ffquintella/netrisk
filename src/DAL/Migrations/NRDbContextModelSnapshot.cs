@@ -5686,6 +5686,73 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskChainLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChainLevel")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("chain_level");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int?>("HostId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("host_id");
+
+                    b.Property<int>("Origin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("origin");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_risk_chain_links_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_risk_chain_links_entity_id");
+
+                    b.HasIndex(new[] { "HostId" }, "idx_risk_chain_links_host_id");
+
+                    b.HasIndex(new[] { "RiskId", "EntityId" }, "uq_risk_chain_links_risk_id_entity_id")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "RiskId", "HostId" }, "uq_risk_chain_links_risk_id_host_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_chain_links", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_chain_links_one_target", "((`entity_id` IS NOT NULL) + (`host_id` IS NOT NULL)) = 1");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskGrouping", b =>
                 {
                     b.Property<int>("Value")
@@ -9376,6 +9443,42 @@ namespace DAL.Migrations
                     b.Navigation("Entity");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskChainLink", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_chain_links_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_risk_chain_links_entity_id");
+
+                    b.HasOne("DAL.Entities.Host", "Host")
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_risk_chain_links_host_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany("ChainLinks")
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_chain_links_risk_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Host");
+
+                    b.Navigation("Risk");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskReviewCampaign", b =>
                 {
                     b.HasOne("DAL.Entities.Entity", "Entity")
@@ -10035,6 +10138,8 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.Risk", b =>
                 {
                     b.Navigation("Acceptances");
+
+                    b.Navigation("ChainLinks");
 
                     b.Navigation("Comments");
 
