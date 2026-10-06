@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Add the ICR methodology under docs/methodology/: a configurable-weight, review-aware 0–100 consolidated cyber-risk index over the register, findings, incidents, assessments, CMDB, entity map, Vision One, SecurityScorecard and Tenable (S39)
+- Add the specification of the Cyber Risk Overview dashboard, its drill-down and the ICR configuration screens (S40)
+- Add Track 10 — Consolidated Cyber Risk Index & Overview Dashboard to the roadmap as a planned track (M52, M53, M54, M55, M56, M57, M58, M59)
+
 ## [2.24.0] - 2026-10-02
 
 ### Added
