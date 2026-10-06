@@ -57,6 +57,8 @@ public class IncidentsService(
 
     public async Task<Incident> CreateAsync(Incident incident, User user)
     {
+        EnsureKindDefined(incident);
+
         await using var dbContext = DalService.GetContext();
         
         incident.Id = 0;
@@ -204,6 +206,8 @@ public class IncidentsService(
     
     public async Task<Incident> UpdateAsync(Incident incident, User user)
     {
+        EnsureKindDefined(incident);
+
         await using var dbContext = DalService.GetContext();
         
         var existingIncident = await dbContext.Incidents.FirstOrDefaultAsync(x => x.Id == incident.Id);
@@ -223,6 +227,20 @@ public class IncidentsService(
 
         return incident;
 
+    }
+
+    /// <summary>
+    /// Stage 9.2 (S42 §5.4): an incident is an <c>Incident</c> or a <c>NearMiss</c>. Any other number
+    /// would be stored as a third kind nothing reads, and the record would silently stop counting as
+    /// either.
+    /// </summary>
+    private static void EnsureKindDefined(Incident incident)
+    {
+        ArgumentNullException.ThrowIfNull(incident);
+
+        if (!Enum.IsDefined(incident.Kind))
+            throw new InvalidParameterException(nameof(Incident.Kind),
+                $"Incident kind {(int)incident.Kind} is not one of Incident (1) or NearMiss (2).");
     }
 
     public async Task DeleteByIdAsync(int id)

@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.25.0] - 2026-10-06
+
 ### Added
 - Add the ICR methodology under docs/methodology/: a configurable-weight, review-aware 0–100 consolidated cyber-risk index over the register, findings, incidents, assessments, CMDB, entity map, Vision One, SecurityScorecard and Tenable (S39)
 - Add the specification of the Cyber Risk Overview dashboard, its drill-down and the ICR configuration screens (S40)
@@ -24,13 +26,25 @@ follow [SemVer](http://semver.org/).
 - Mirror the legacy risk entity link into the chain as Legacy links, copied on upgrade and kept in step by `PUT/DELETE /Risks/{id}/Entity`, and test traversal with a missing middle link (T148, S41)
 - Show a risk's linkage chain under its Entity row, five levels with "not informed" for the empty ones, and edit it in a dialog with a host search that requires the hosts permission (T146, S41)
 - Add report 7, Critical process coverage, with the covered share, the processes without a declared criticality, and the direct and inferred risks of each process (T147, S41)
+- Add the Stage 9.2 specification: four structured scenario fields, an evidence confidence level, standalone hypotheses, near misses and a duplicate-scenario warning (T149, S42)
+- Add optional cause/threat, vulnerability/condition, central event and consequences fields to risks, empty on existing risks, edited in a "Structured scenario" section of the risk editor and shown in the risk detail (T150, S42)
+- Add an evidence confidence level — confirmed, indicative or hypothesis — to risks, shown as "not declared" when empty, with a promoted pending risk starting as a hypothesis (T151, S42)
+- Register standalone hypotheses through `POST /Risks/Pending` and the pending-risks tab, filed under a business entity in the caller's scope, and promote them keeping their origin (`HYP-{id}`) and their author as the risk's submitter (T152, S42)
+- Record an incident as a near miss, independently of its threat category, in the incident editor and detail (T153, S42)
+- Warn before saving a risk whose central event and consequences match an existing risk's, through `POST /Risks/ScenarioDuplicates`, without ever blocking the save (T154, S42)
+- Test that a legacy risk with all four scenario fields empty stays editable, listable and scorable (T155, S42)
 
 ### Changed
 - Count a risk linked to an entity through the risk chain in the top-entities and entities-risks statistics, once even when the legacy entity link also points there (T146, S41)
+- Leave near misses out of the Master Dashboard's open-incident count and posture score (T153, S42)
+- Answer 400 instead of 500 when a saved risk's evidence confidence or an incident's kind is not a defined value (T151, T153, S42)
 
 ### Fixed
 - Stop counting an entity's own risks twice in the Entities Risks report (S41)
 - Translate the `Application` property label and the `team` entity type in the entity form in English and Portuguese (T145, S41)
+
+### Security
+- Scope the pending-risk queue by business entity: `GET /Risks/Pending` lists, and promote and dismiss find, only the caller's entities' rows, existing rows are filed under their assessment's entity on upgrade, and a promotion or hypothesis aimed at another entity answers 403 instead of 500 (T152, S42)
 
 ## [2.24.0] - 2026-10-02
 

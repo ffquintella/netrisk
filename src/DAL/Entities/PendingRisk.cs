@@ -3,13 +3,41 @@ using System.Collections.Generic;
 
 namespace DAL.Entities;
 
-public partial class PendingRisk
+public partial class PendingRisk : DAL.Interfaces.IEntityScoped
 {
     public int Id { get; set; }
 
-    public int AssessmentId { get; set; }
+    /// <summary>
+    /// The assessment that raised this row. NULL for a standalone hypothesis (Stage 9.2, S42 §4.2) —
+    /// the column was NOT NULL while an assessment answer was the only way in.
+    /// </summary>
+    public int? AssessmentId { get; set; }
 
-    public int AssessmentAnswerId { get; set; }
+    /// <summary>The answer that raised this row; NULL for a standalone hypothesis.</summary>
+    public int? AssessmentAnswerId { get; set; }
+
+    /// <summary>Assessment-raised or standalone (S42 §4.2). Every row older than the column is <c>Assessment</c>.</summary>
+    public Enums.PendingRiskOrigin Origin { get; set; } = Enums.PendingRiskOrigin.Assessment;
+
+    /// <summary>
+    /// Who registered a standalone hypothesis. NULL for assessment-raised rows, which carry no author.
+    /// A promoted standalone hypothesis becomes a risk submitted by this user, not by the triager
+    /// (S42 §5, "the promotion preserves origin and author").
+    /// </summary>
+    public int? SubmittedById { get; set; }
+
+    public virtual User? SubmittedBy { get; set; }
+
+    /// <summary>
+    /// The business entity the hypothesis belongs to (Stage 9.2, S42 §4.2) — the same scope column
+    /// risks carry, read by the same query filter and the same write guard. Before it the queue was the
+    /// one unscoped register: a hypothesis written in one unit was readable and promotable from every
+    /// other. Back-filled from the raising assessment's entity on upgrade; NULL is organization-wide,
+    /// visible only to an unrestricted caller, exactly as for a risk.
+    /// </summary>
+    public int? EntityId { get; set; }
+
+    public virtual Entity? Entity { get; set; }
 
     public byte[] Subject { get; set; } = null!;
 

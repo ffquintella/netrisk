@@ -48,6 +48,10 @@
     <!-- The linkage chain's pure half (Stage 9.1, S41 §7): the per-level summary of the risk detail,
          the edit dialog's rows and enable rules, and the coverage report's headline. -->
     <Compile Include="..\GUIClient\Tools\RiskChainSummary.cs" LinkBase="Tools" />
+    <!-- The structured scenario's pure half (Stage 9.2, S42 §7): how an empty field and an undeclared
+         confidence read, the computed localization keys, when the risk editor asks for duplicates
+         and how the warning lists them. -->
+    <Compile Include="..\GUIClient\Tools\RiskScenarioSummary.cs" LinkBase="Tools" />
     <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
          rule that keeps a raw entity id out of the appetite grid. -->
     <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />

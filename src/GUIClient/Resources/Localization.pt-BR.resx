@@ -3501,4 +3501,88 @@
     <data name="RisksOfSelectedProcess" xml:space="preserve">
         <value>Riscos do processo selecionado</value>
     </data>
+    <data name="StructuredScenario" xml:space="preserve">
+        <value>Cenário estruturado</value>
+    </data>
+    <data name="ScenarioTemplateHint" xml:space="preserve">
+        <value>Devido a [causa ou ameaça], explorando [vulnerabilidade ou condição] em [ativo ou atividade], pode ocorrer [evento central], afetando [processo ou objetivo] e causando [consequências].</value>
+    </data>
+    <data name="ScenarioCause" xml:space="preserve">
+        <value>Causa / ameaça</value>
+    </data>
+    <data name="ScenarioVulnerability" xml:space="preserve">
+        <value>Vulnerabilidade / condição</value>
+    </data>
+    <data name="ScenarioCentralEvent" xml:space="preserve">
+        <value>Evento central</value>
+    </data>
+    <data name="ScenarioConsequences" xml:space="preserve">
+        <value>Consequências</value>
+    </data>
+    <data name="ScenarioCauseHint" xml:space="preserve">
+        <value>A fonte de ameaça ou a causa</value>
+    </data>
+    <data name="ScenarioVulnerabilityHint" xml:space="preserve">
+        <value>A vulnerabilidade ou condição explorada</value>
+    </data>
+    <data name="ScenarioCentralEventHint" xml:space="preserve">
+        <value>O único evento que pode ocorrer</value>
+    </data>
+    <data name="ScenarioConsequencesHint" xml:space="preserve">
+        <value>O que ele causa se ocorrer</value>
+    </data>
+    <data name="EvidenceConfidence" xml:space="preserve">
+        <value>Confiança da evidência</value>
+    </data>
+    <data name="EvidenceConfidenceConfirmed" xml:space="preserve">
+        <value>Confirmada</value>
+    </data>
+    <data name="EvidenceConfidenceIndicative" xml:space="preserve">
+        <value>Indicativa</value>
+    </data>
+    <data name="EvidenceConfidenceHypothesis" xml:space="preserve">
+        <value>Hipótese</value>
+    </data>
+    <data name="EvidenceConfidenceNotDeclared" xml:space="preserve">
+        <value>Não declarada</value>
+    </data>
+    <data name="ScenarioDuplicateTitle" xml:space="preserve">
+        <value>Possível cenário duplicado</value>
+    </data>
+    <data name="ScenarioDuplicateMSG" xml:space="preserve">
+        <value>Estes riscos têm o mesmo evento central e as mesmas consequências:
+{0}
+
+Salvar mesmo assim?</value>
+    </data>
+    <data name="PendingOrigin" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="PendingOriginAssessment" xml:space="preserve">
+        <value>Avaliação</value>
+    </data>
+    <data name="PendingOriginStandalone" xml:space="preserve">
+        <value>Hipótese avulsa</value>
+    </data>
+    <data name="NewHypothesis" xml:space="preserve">
+        <value>Registrar uma hipótese</value>
+    </data>
+    <data name="HypothesisDescription" xml:space="preserve">
+        <value>Por que se suspeita?</value>
+    </data>
+    <data name="RegisterHypothesis" xml:space="preserve">
+        <value>Registrar</value>
+    </data>
+    <data name="HypothesisRegisteredMSG" xml:space="preserve">
+        <value>Hipótese registrada na fila de triagem.</value>
+    </data>
+    <data name="IncidentKind" xml:space="preserve">
+        <value>Tipo de registro</value>
+    </data>
+    <data name="IncidentKindIncident" xml:space="preserve">
+        <value>Incidente</value>
+    </data>
+    <data name="IncidentKindNearMiss" xml:space="preserve">
+        <value>Quase incidente (near miss)</value>
+    </data>
 </root>

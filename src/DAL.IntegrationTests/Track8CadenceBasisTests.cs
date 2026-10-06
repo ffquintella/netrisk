@@ -35,6 +35,14 @@ public class Track8CadenceBasisTests(MariaDbContainerFixture fixture)
         public EntityScope GetCurrentEntityScope() => EntityScope.Unrestricted;
     }
 
+    /// <summary>
+    /// The schema the EF model maps, not a literal. These tests read risks through a context, and a
+    /// pinned 82 went stale the moment Stage 9.2 (version 89) added columns to <c>risks</c>: every
+    /// query died with "Unknown column 'r.evidence_confidence'" (S42 §11, defect 2). The behaviour under
+    /// test only needs version 80's setting, which every later version keeps.
+    /// </summary>
+    private static int Schema => MariaDbContainerFixture.TargetSchemaVersion;
+
     private MgmtReviewsService NewService() =>
         new(Substitute.For<Serilog.ILogger>(), new ContainerDal(fixture));
 
@@ -46,7 +54,7 @@ public class Track8CadenceBasisTests(MariaDbContainerFixture fixture)
     /// </summary>
     private async Task SeedOneTreatedRiskAsync(string basis, DateTime submittedUtc)
     {
-        await fixture.InitializeNumberedSchemaAsync(82);
+        await fixture.InitializeNumberedSchemaAsync(Schema);
 
         await using var conn = new MySqlConnection(fixture.ConnectionString);
         await conn.OpenAsync();
@@ -114,7 +122,7 @@ public class Track8CadenceBasisTests(MariaDbContainerFixture fixture)
     [Fact]
     public async Task ARiskWithNoResidualScoreYetIsBandedByItsInherentScore()
     {
-        await fixture.InitializeNumberedSchemaAsync(82);
+        await fixture.InitializeNumberedSchemaAsync(Schema);
 
         await using (var conn = new MySqlConnection(fixture.ConnectionString))
         {

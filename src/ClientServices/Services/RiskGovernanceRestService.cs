@@ -125,6 +125,15 @@ public class RiskGovernanceRestService(IRestService restService)
         SendVoidAsync($"/Risks/Pending/{pendingId}/Dismiss", Method.Post,
             new PendingRiskDismissal { Reason = reason });
 
+    // --- Track 9 Stage 9.2 (S42) --------------------------------------------------------------
+
+    public Task<PendingRiskListing> CreateHypothesisAsync(HypothesisRequest request) =>
+        SendAsync<PendingRiskListing>("/Risks/Pending", Method.Post, request);
+
+    public Task<List<Model.Risks.Scenario.RiskScenarioDuplicate>> FindScenarioDuplicatesAsync(
+        Model.Risks.Scenario.RiskScenarioDuplicateQuery query) =>
+        SendAsync<List<Model.Risks.Scenario.RiskScenarioDuplicate>>("/Risks/ScenarioDuplicates", Method.Post, query);
+
     public Task RequestReviewAsync(int riskId, string reason) =>
         SendVoidAsync($"/Risks/{riskId}/RequestReview", Method.Post, new { reason });
 

@@ -268,6 +268,18 @@
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding !!HdRisk.Entity}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
 
+                        <!-- Stage 9.2 (S42 §7): the structured scenario and the evidence confidence. Every row
+                             is always shown; an empty field reads "not informed", which is what a legacy
+                             risk honestly is. -->
+                        <StackPanel Margin="0 5 0 0">
+                            <TextBlock Classes="header2" Text="{Binding StrStructuredScenario}" HorizontalAlignment="Stretch"/>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCause}" Classes="label"/><TextBlock Text="{Binding ScenarioCauseSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioVulnerability}" Classes="label"/><TextBlock Text="{Binding ScenarioVulnerabilitySummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCentralEvent}" Classes="label"/><TextBlock Text="{Binding ScenarioCentralEventSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioConsequences}" Classes="label"/><TextBlock Text="{Binding ScenarioConsequencesSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrEvidenceConfidence}" Classes="label"/><TextBlock Text="{Binding EvidenceConfidenceSummary}" Classes="formData"/></StackPanel>
+                        </StackPanel>
+
                         <!-- Stage 9.1 (S41 §7): the linkage chain, five levels always shown — a missing
                              link reads "not informed" rather than disappearing. The Entity row above is
                              the legacy field and stays. -->

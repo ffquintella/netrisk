@@ -24,8 +24,9 @@ namespace DAL.IntegrationTests;
 /// <c>Data/{n}.sql</c>, its replay, the race the unique index settles, the <c>CHECK</c>, and the
 /// cascades.
 ///
-/// The version number is read from <c>targetVersion</c>, never written here: the schema is built to
-/// n − 1, seeded, and n applied, so the test survives the version being renumbered on merge (S41 R4).
+/// The version number is never written here: the copy tests find the script that creates
+/// <c>risk_chain_links</c>, build the schema to n − 1, seed, and apply n, so they survive both the
+/// version being renumbered on merge (S41 R4) and a later version landing on top of it (S42 §11).
 /// The race and the CHECK are here because the in-memory provider enforces neither a unique index nor
 /// a check constraint; <c>RiskChainServiceInMemoryTest</c> can only reach those branches with a double.
 /// </summary>
@@ -33,7 +34,15 @@ namespace DAL.IntegrationTests;
 [Trait("Category", "Integration")]
 public class Track9RiskChainSchemaTests(MariaDbContainerFixture fixture)
 {
+    /// <summary>The schema the EF model maps — every test that goes through a context needs all of it.</summary>
     private static int N => MariaDbContainerFixture.TargetSchemaVersion;
+
+    /// <summary>
+    /// The version that created <c>risk_chain_links</c>, for the copy and replay tests. It was
+    /// <see cref="N"/> until Stage 9.2 took the next number; reading the target there made "apply n − 1,
+    /// seed, apply n" apply Stage 9.2's script and find no copy (S42 §11, defect 1).
+    /// </summary>
+    private static int C => MariaDbContainerFixture.VersionIntroducing("CREATE TABLE IF NOT EXISTS `risk_chain_links`");
 
     private const int Process = 10;
     private const int Unit = 100;
@@ -87,7 +96,7 @@ public class Track9RiskChainSchemaTests(MariaDbContainerFixture fixture)
     [Fact]
     public async Task TestTheUpgradeCopiesOnlyChainTypedLegacyRows()
     {
-        await fixture.InitializeNumberedSchemaAsync(N - 1);
+        await fixture.InitializeNumberedSchemaAsync(C - 1);
         await using var conn = await OpenAsync();
 
         await SeedEntityAsync(conn, Process, "businessProcess");
@@ -100,9 +109,9 @@ public class Track9RiskChainSchemaTests(MariaDbContainerFixture fixture)
         await ExecAsync(conn, "INSERT INTO `risk_to_entity` (`risk_id`,`entity_id`) VALUES " +
                               $"(1,{Process}),(1,{Unit}),(2,{Data}),(3,{App}),(4,{Service}),(5,{Unit});");
 
-        await ApplyVersionAsync(conn, N);
+        await ApplyVersionAsync(conn, C);
 
-        Assert.Equal(N.ToString(), (await CountAsync(conn,
+        Assert.Equal(C.ToString(), (await CountAsync(conn,
             "SELECT value FROM settings WHERE name = 'db_version'")).ToString());
 
         var rows = new System.Collections.Generic.List<(int Risk, int Entity, int Level, int Origin, bool NoAuthor, bool NoHost)>();
@@ -141,7 +150,7 @@ public class Track9RiskChainSchemaTests(MariaDbContainerFixture fixture)
     [Fact]
     public async Task TestReplayingTheVersionAddsNoDuplicate()
     {
-        await fixture.InitializeNumberedSchemaAsync(N - 1);
+        await fixture.InitializeNumberedSchemaAsync(C - 1);
         await using var conn = await OpenAsync();
 
         await SeedEntityAsync(conn, Process, "businessProcess");
@@ -149,12 +158,12 @@ public class Track9RiskChainSchemaTests(MariaDbContainerFixture fixture)
         await SeedRiskAsync(conn, 1);
         await ExecAsync(conn, $"INSERT INTO `risk_to_entity` (`risk_id`,`entity_id`) VALUES (1,{Process}),(1,{Objective});");
 
-        await ApplyVersionAsync(conn, N);
+        await ApplyVersionAsync(conn, C);
         Assert.Equal(2, await CountAsync(conn, "SELECT COUNT(*) FROM risk_chain_links"));
 
-        await ExecAsync(conn, $"UPDATE settings SET value = '{N - 1}' WHERE name = 'db_version';");
-        await ApplyVersionAsync(conn, N, "Structure");
-        await ApplyVersionAsync(conn, N, "Data");
+        await ExecAsync(conn, $"UPDATE settings SET value = '{C - 1}' WHERE name = 'db_version';");
+        await ApplyVersionAsync(conn, C, "Structure");
+        await ApplyVersionAsync(conn, C, "Data");
 
         Assert.Equal(2, await CountAsync(conn, "SELECT COUNT(*) FROM risk_chain_links"));
         Assert.Equal(1, await CountAsync(conn,

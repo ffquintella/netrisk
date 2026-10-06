@@ -199,7 +199,11 @@ public class IncidentsController(
             Logger.Information("User:{User} created new incident {id}", user.Value, inc.Id);
             return Created($"Incidents/{inc.Id}", inc);
         }
-        
+        catch (InvalidParameterException ex)
+        {
+            // Stage 9.2 (S42 §6): an undefined incident kind is the caller's error, not a 500.
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while creating incident: {Message}", ex.Message);
@@ -222,6 +226,10 @@ public class IncidentsController(
             var updated = await IncidentsService.UpdateAsync(incident, user);
             Logger.Information("User:{User} updated a incident {id}", user.Value, id);
             return Ok(updated);
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (DataNotFoundException)
         {

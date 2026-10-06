@@ -305,6 +305,28 @@ public interface IRisksService
     /// <summary>Drops a pending risk with a stated reason. The reason is mandatory.</summary>
     Task DismissPendingRiskAsync(int pendingRiskId, string reason, int actingUserId);
 
+    // --- Track 9 Stage 9.2 (S42) ------------------------------------------------------------------
+
+    /// <summary>
+    /// Registers a standalone hypothesis: a pending risk with <c>Origin = Standalone</c>, no
+    /// assessment, and <paramref name="actingUserId"/> as its author (T152, S42 §5.2). It joins the
+    /// same triage queue as the assessment-raised rows. Throws
+    /// <see cref="Model.Exceptions.InvalidParameterException"/> without a subject and
+    /// <see cref="Model.Exceptions.DataNotFoundException"/> for an unknown owner.
+    /// </summary>
+    Task<Model.Governance.PendingRiskListing> CreateHypothesisAsync(Model.Governance.HypothesisRequest request,
+        int actingUserId);
+
+    /// <summary>
+    /// The existing risks whose (central event, consequences) pair matches the given one under
+    /// <c>Tools.Risks.RiskScenarioMatcher</c> (T154, S42 §5.3), within the caller's entity scope,
+    /// any status, ordered by id. A warning source only — nothing refuses a save because of it.
+    /// Throws <see cref="Model.Exceptions.InvalidParameterException"/> when either half of the pair is
+    /// empty: half a pair matches nothing, and an empty answer would read as "no duplicate".
+    /// </summary>
+    Task<List<Model.Risks.Scenario.RiskScenarioDuplicate>> FindScenarioDuplicatesAsync(
+        Model.Risks.Scenario.RiskScenarioDuplicateQuery query);
+
     // --- Track 8 milestone 8.5.1: event-triggered review ----------------------------------------
 
     /// <summary>

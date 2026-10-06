@@ -74,6 +74,19 @@ public class EditRiskViewModel
     /// <summary>Header for the anchor text under each scale choice (Track 8 milestone 8.7.1).</summary>
     public string StrWhatThisLevelMeans { get; }
 
+    // Stage 9.2 (S42 §7): the structured scenario and the evidence confidence.
+    public string StrStructuredScenario { get; } = Localizer["StructuredScenario"];
+    public string StrScenarioTemplateHint { get; } = Localizer["ScenarioTemplateHint"];
+    public string StrScenarioCause { get; } = Localizer["ScenarioCause"];
+    public string StrScenarioVulnerability { get; } = Localizer["ScenarioVulnerability"];
+    public string StrScenarioCentralEvent { get; } = Localizer["ScenarioCentralEvent"];
+    public string StrScenarioConsequences { get; } = Localizer["ScenarioConsequences"];
+    public string StrScenarioCauseHint { get; } = Localizer["ScenarioCauseHint"];
+    public string StrScenarioVulnerabilityHint { get; } = Localizer["ScenarioVulnerabilityHint"];
+    public string StrScenarioCentralEventHint { get; } = Localizer["ScenarioCentralEventHint"];
+    public string StrScenarioConsequencesHint { get; } = Localizer["ScenarioConsequencesHint"];
+    public string StrEvidenceConfidence { get; } = Localizer["EvidenceConfidence"];
+
     #endregion
     
     #region PROPERTIES
@@ -248,6 +261,60 @@ public class EditRiskViewModel
         get => _value;
         set => this.RaiseAndSetIfChanged(ref _value, value);
     }
+
+    // --- Stage 9.2 (S42 §7): the four scenario fields and the confidence --------------------------
+    // Every one optional: a legacy risk opens with all of them empty and saves the same way (T155).
+
+    private string? _scenarioCause;
+    public string? ScenarioCause
+    {
+        get => _scenarioCause;
+        set => this.RaiseAndSetIfChanged(ref _scenarioCause, value);
+    }
+
+    private string? _scenarioVulnerability;
+    public string? ScenarioVulnerability
+    {
+        get => _scenarioVulnerability;
+        set => this.RaiseAndSetIfChanged(ref _scenarioVulnerability, value);
+    }
+
+    private string? _scenarioCentralEvent;
+    public string? ScenarioCentralEvent
+    {
+        get => _scenarioCentralEvent;
+        set => this.RaiseAndSetIfChanged(ref _scenarioCentralEvent, value);
+    }
+
+    private string? _scenarioConsequences;
+    public string? ScenarioConsequences
+    {
+        get => _scenarioConsequences;
+        set => this.RaiseAndSetIfChanged(ref _scenarioConsequences, value);
+    }
+
+    /// <summary>"Not declared" first, then the three levels — see <see cref="RiskScenarioSummary.ConfidenceChoices"/>.</summary>
+    public List<ChoiceOption<DAL.Enums.EvidenceConfidence?>> ConfidenceOptions { get; } =
+        RiskScenarioSummary.ConfidenceChoices
+            .Select(c => new ChoiceOption<DAL.Enums.EvidenceConfidence?>(c, Localizer[RiskScenarioSummary.ConfidenceKey(c)]))
+            .ToList();
+
+    private ChoiceOption<DAL.Enums.EvidenceConfidence?>? _selectedConfidence;
+
+    /// <summary>
+    /// Ignores the null a ComboBox writes back when it cannot resolve its value (first render, a
+    /// cleared ItemsSource): taken literally, that null would save a declared confidence as "not
+    /// declared" without anyone choosing it. "Not declared" is an option of its own, never null.
+    /// </summary>
+    public ChoiceOption<DAL.Enums.EvidenceConfidence?>? SelectedConfidence
+    {
+        get => _selectedConfidence;
+        set
+        {
+            if (value == null) return;
+            this.RaiseAndSetIfChanged(ref _selectedConfidence, value);
+        }
+    }
     
     private ObservableCollection<string> _entitiesNames = new ObservableCollection<string>();
     public ObservableCollection<string> EntitiesNames
@@ -321,6 +388,9 @@ public class EditRiskViewModel
     
     private OperationType _operationType;
     private readonly IRisksService _risksService;
+    private readonly IRiskGovernanceService _governanceService;
+    private string? _originalCentralEvent;
+    private string? _originalConsequences;
     private readonly IEntitiesService _entitiesService;
     private readonly IAuthenticationService _authenticationService;
     private readonly IUsersService _usersService;
@@ -352,7 +422,9 @@ public class EditRiskViewModel
         StrEntity = Localizer["Entity"];
         
         _risksService = GetService<IRisksService>();
+        _governanceService = GetService<IRiskGovernanceService>();
         _entitiesService = GetService<IEntitiesService>();
+        SelectedConfidence = ConfidenceOptions[0];
         _authenticationService = GetService<IAuthenticationService>();
         _usersService = GetService<IUsersService>();
         
@@ -545,6 +617,15 @@ public class EditRiskViewModel
             SelectedManager = UserListings.FirstOrDefault(ul => ul.Id == Risk.Manager);
             Notes = Risk.Notes;
 
+            ScenarioCause = Risk.ScenarioCause;
+            ScenarioVulnerability = Risk.ScenarioVulnerability;
+            ScenarioCentralEvent = Risk.ScenarioCentralEvent;
+            ScenarioConsequences = Risk.ScenarioConsequences;
+            SelectedConfidence = ConfidenceOptions.FirstOrDefault(o => o.Value == Risk.EvidenceConfidence)
+                                 ?? ConfidenceOptions[0];
+            _originalCentralEvent = Risk.ScenarioCentralEvent;
+            _originalConsequences = Risk.ScenarioConsequences;
+
             
             var sp = Probabilities!.FirstOrDefault(p => Math.Abs(p.Value - RiskScoring!.ClassicLikelihood) < 0.01);
             if (sp != null) SelectedProbability = sp;
@@ -572,6 +653,8 @@ public class EditRiskViewModel
     
     private async Task ExecuteSave()
     {
+        // Stage 9.2 (T154, S42 §7): a duplicate scenario is a warning the user answers, never a block.
+        if (!await ConfirmNoDuplicateScenarioAsync()) return;
 
         if(SelectedOwner != null)
             Risk.Owner = SelectedOwner.Id;
@@ -602,6 +685,12 @@ public class EditRiskViewModel
 
         
         Risk.Notes = Notes ?? "";
+
+        Risk.ScenarioCause = ScenarioCause;
+        Risk.ScenarioVulnerability = ScenarioVulnerability;
+        Risk.ScenarioCentralEvent = ScenarioCentralEvent;
+        Risk.ScenarioConsequences = ScenarioConsequences;
+        Risk.EvidenceConfidence = SelectedConfidence?.Value;
 
         Risk.Assessment = "";
         Risk.RiskCatalogMapping = "";
@@ -720,6 +809,51 @@ public class EditRiskViewModel
 
     }
     
+    /// <summary>
+    /// Asks the server for risks with the same (central event, consequences) pair and, if there are
+    /// any, whether to save anyway. True means "go ahead". A check that cannot run — no permission,
+    /// server unreachable — is not a reason to block the save: the warning is an aid, and the save
+    /// path never consults it (S42 §11, D6).
+    /// </summary>
+    private async Task<bool> ConfirmNoDuplicateScenarioAsync()
+    {
+        if (!RiskScenarioSummary.ShouldCheckDuplicates(_operationType == OperationType.Create,
+                _originalCentralEvent, _originalConsequences, ScenarioCentralEvent, ScenarioConsequences))
+            return true;
+
+        List<Model.Risks.Scenario.RiskScenarioDuplicate> duplicates;
+        try
+        {
+            duplicates = await _governanceService.FindScenarioDuplicatesAsync(new Model.Risks.Scenario.RiskScenarioDuplicateQuery
+            {
+                CentralEvent = ScenarioCentralEvent,
+                Consequences = ScenarioConsequences,
+                ExcludeRiskId = _operationType == OperationType.Edit ? Risk.Id : null
+            });
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning("Scenario duplicate check skipped: {Message}", ex.Message);
+            return true;
+        }
+
+        if (duplicates.Count == 0) return true;
+
+        var answer = await MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["ScenarioDuplicateTitle"],
+                ContentMessage = string.Format(Localizer["ScenarioDuplicateMSG"],
+                    RiskScenarioSummary.DuplicateLines(duplicates)),
+                Icon = Icon.Warning,
+                ButtonDefinitions = ButtonEnum.YesNo,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            })
+            .ShowAsync();
+
+        return answer == ButtonResult.Yes;
+    }
+
     private void ExecuteCancel() =>
         Close(new RiskDialogResult { Action = ResultActions.Cancel });
     

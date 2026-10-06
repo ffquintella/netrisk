@@ -91,7 +91,31 @@ public partial class Risk : DAL.Interfaces.IEntityScoped
     public DateTime? ReviewRequestedAt { get; set; }
 
     public string? ReviewRequestedReason { get; set; }
-    
+
+    // --- Stage 9.2 (S42 §4.1): the structured scenario ------------------------------------------
+    // "Due to [cause], exploiting [vulnerability or condition] in [asset], [central event] may occur,
+    // affecting [process/objective] and causing [consequences]." Four separate fields, every one
+    // optional: a legacy risk keeps all four NULL (no back-fill — S42 §3), and stays editable,
+    // listable and scorable. Subject, Assessment and Notes are unchanged.
+
+    /// <summary>The threat source or cause (<c>scenario_cause</c>).</summary>
+    public string? ScenarioCause { get; set; }
+
+    /// <summary>The vulnerability or condition the cause exploits (<c>scenario_vulnerability</c>).</summary>
+    public string? ScenarioVulnerability { get; set; }
+
+    /// <summary>The one central event of the scenario (<c>scenario_central_event</c>).</summary>
+    public string? ScenarioCentralEvent { get; set; }
+
+    /// <summary>The consequences if the central event occurs (<c>scenario_consequences</c>).</summary>
+    public string? ScenarioConsequences { get; set; }
+
+    /// <summary>
+    /// How well the scenario's evidence is established (<c>evidence_confidence</c>). NULL is "not
+    /// declared", never one of the three levels.
+    /// </summary>
+    public Enums.EvidenceConfidence? EvidenceConfidence { get; set; }
+
     public virtual ICollection<Entity> Entities { get; set; } = new List<Entity>();
     public virtual ICollection<RiskCatalog> RiskCatalogs { get; set; } = new List<RiskCatalog>();
     public virtual ICollection<Vulnerability> Vulnerabilities { get; set; } = new List<Vulnerability>();

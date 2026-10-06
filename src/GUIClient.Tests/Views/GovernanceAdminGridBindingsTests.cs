@@ -32,19 +32,20 @@ public class GovernanceAdminGridBindingsTests
     }
 
     [Fact]
-    public void TheAppetiteAndBreachGridsBindTheResolvedScopeLabel()
+    public void TheAppetiteBreachAndPendingGridsBindTheResolvedScopeLabel()
     {
         var view = View();
 
-        // Two columns, one per grid. Counting them means a grid added later cannot quietly reintroduce
-        // the id binding while this assertion still passes on the other one.
+        // Three columns, one per grid — the pending-risk queue joined them in Stage 9.2 (S42 §7), when
+        // hypotheses became entity-scoped. Counting them means a grid added later cannot quietly
+        // reintroduce the id binding while this assertion still passes on the others.
         var occurrences = 0;
         for (var at = view.IndexOf("Binding=\"{Binding EntityDisplay}\"", StringComparison.Ordinal);
              at >= 0;
              at = view.IndexOf("Binding=\"{Binding EntityDisplay}\"", at + 1, StringComparison.Ordinal))
             occurrences++;
 
-        Assert.Equal(2, occurrences);
+        Assert.Equal(3, occurrences);
     }
 
     [Fact]
@@ -57,6 +58,7 @@ public class GovernanceAdminGridBindingsTests
         // drift back to a bare id.
         Assert.Contains("EntityScopeLabel.Describe(appetite.EntityId, appetite.Entity?.DisplayName", rows);
         Assert.Contains("EntityScopeLabel.Describe(breach.EntityId, breach.EntityName", rows);
+        Assert.Contains("EntityScopeLabel.Describe(listing.EntityId, entityName", rows);
     }
 
     private static string GuiClientSourceRoot()

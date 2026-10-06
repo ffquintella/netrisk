@@ -10,9 +10,9 @@
         Title="{Binding StrRisk}"
         Name="EditRisk"
         Width="1200"
-        Height="800"
+        Height="960"
         MinWidth="900"
-        MinHeight="650">
+        MinHeight="780">
         
         <Design.DataContext>
                 <vm:EditRiskViewModel/>
@@ -220,10 +220,44 @@
                                         </StackPanel>
                                 </Panel>
                                 
-                                <!-- Bottom RISK DATA - Notes section that expands -->
-                                <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,*">
-                                        <TextBlock Grid.Row="0" Text="{Binding StrNotes}" Classes="label"/>
-                                        <TextBox Grid.Row="1"
+                                <!-- Bottom RISK DATA - the structured scenario (Stage 9.2, S42 §7), then the
+                                     Notes section that expands. The four fields and the confidence are all
+                                     optional: a legacy risk opens with them empty and saves unchanged. -->
+                                <Grid Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+                                        <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrStructuredScenario, Mode=OneTime}" HorizontalAlignment="Stretch"/>
+                                        <TextBlock Grid.Row="1" Classes="hint" Text="{Binding StrScenarioTemplateHint, Mode=OneTime}" TextWrapping="Wrap" Margin="5 0"/>
+                                        <Grid Grid.Row="2" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="5 0">
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrScenarioCause, Mode=OneTime}" Classes="label"/>
+                                                <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding ScenarioCause}"
+                                                         PlaceholderText="{Binding StrScenarioCauseHint, Mode=OneTime}"
+                                                         AcceptsReturn="True" TextWrapping="Wrap" Height="56" Margin="0 0 5 5"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StrScenarioVulnerability, Mode=OneTime}" Classes="label"/>
+                                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ScenarioVulnerability}"
+                                                         PlaceholderText="{Binding StrScenarioVulnerabilityHint, Mode=OneTime}"
+                                                         AcceptsReturn="True" TextWrapping="Wrap" Height="56" Margin="5 0 0 5"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrScenarioCentralEvent, Mode=OneTime}" Classes="label"/>
+                                                <TextBox Grid.Row="3" Grid.Column="0" Text="{Binding ScenarioCentralEvent}"
+                                                         PlaceholderText="{Binding StrScenarioCentralEventHint, Mode=OneTime}"
+                                                         AcceptsReturn="True" TextWrapping="Wrap" Height="56" Margin="0 0 5 5"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding StrScenarioConsequences, Mode=OneTime}" Classes="label"/>
+                                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding ScenarioConsequences}"
+                                                         PlaceholderText="{Binding StrScenarioConsequencesHint, Mode=OneTime}"
+                                                         AcceptsReturn="True" TextWrapping="Wrap" Height="56" Margin="5 0 0 5"/>
+                                        </Grid>
+                                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="5 0 5 5">
+                                                <TextBlock Text="{Binding StrEvidenceConfidence, Mode=OneTime}" Classes="label" VerticalAlignment="Center"/>
+                                                <ComboBox ItemsSource="{Binding ConfidenceOptions}"
+                                                          SelectedItem="{Binding SelectedConfidence}"
+                                                          MinWidth="200" Margin="5 0">
+                                                        <ComboBox.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                </DataTemplate>
+                                                        </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="4" Text="{Binding StrNotes}" Classes="label"/>
+                                        <TextBox Grid.Row="5"
                                                  Text="{Binding Notes}"
                                                  IsReadOnly="False"
                                                  AcceptsReturn="True"

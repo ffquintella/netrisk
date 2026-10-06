@@ -48,3 +48,29 @@ public sealed class AppetiteBreachRow(AppetiteBreachCount breach, string globalL
 
     public int Count { get; } = breach.Count;
 }
+
+/// <summary>
+/// One row of the pending-risk triage grid (8.5.2; origin column from Stage 9.2, S42 §7). A display
+/// model for the same reason as the rows above: the origin cell — "Assessment" or "Standalone
+/// hypothesis" — is localized, and a grid column cannot reach the localizer from a bare
+/// <see cref="PendingRiskListing"/>.
+/// </summary>
+public sealed class PendingRiskRow(PendingRiskListing listing, string originLabel, string? entityName,
+    string globalLabel)
+{
+    /// <summary>The row the promote and dismiss commands act on.</summary>
+    public PendingRiskListing Listing { get; } = listing;
+
+    public string Origin { get; } = originLabel;
+
+    /// <summary>The entity the hypothesis is filed under, "Global" for an organization-wide row (S42 §4.2).</summary>
+    public string EntityDisplay { get; } = EntityScopeLabel.Describe(listing.EntityId, entityName, globalLabel);
+
+    public int Id => Listing.Id;
+
+    public string Subject => Listing.Subject;
+
+    public float Score => Listing.Score;
+
+    public DAL.Enums.PendingRiskStatus Status => Listing.Status;
+}

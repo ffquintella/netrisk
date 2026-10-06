@@ -893,6 +893,7 @@ public class RisksController : ApiBaseController
     [Route("")]
     [Authorize(Policy = "RequireSubmitRisk")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Risk))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<Risk>> CreateAsync([FromBody] Risk? risk = null)
     {
@@ -913,6 +914,11 @@ public class RisksController : ApiBaseController
             if (crisk != null) return Created("risks/" + crisk.Id, crisk);
             
             return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+        catch (InvalidParameterException ex)
+        {
+            // Stage 9.2 (S42 §6): an undefined evidence confidence is the caller's error, not a 500.
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (UserNotAuthorizedException ex)
         {
@@ -955,6 +961,10 @@ public class RisksController : ApiBaseController
             Logger.Warning("Refused risk {Id} transition {From} -> {To}: {Message}", id, ex.FromState,
                 ex.ToState, ex.Message);
             return UnprocessableEntity(new { error = "invalid_transition", ex.FromState, ex.ToState, ex.Message });
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (Exception ex)
         {

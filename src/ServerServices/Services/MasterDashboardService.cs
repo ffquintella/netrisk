@@ -216,8 +216,12 @@ public class MasterDashboardService(ILogger logger, IDalService dalService)
     /// <summary>Open incidents grouped by entity.</summary>
     private static async Task<Dictionary<int, int>> ComputeIncidentGroupsAsync(DAL.Context.AuditableContext dbContext)
     {
+        // Stage 9.2 (S42 §5.4): a near miss is not an incident. Counting it here would make the posture
+        // score penalize an entity for reporting the events that did not happen — the reporting the
+        // methodology wants more of, not less.
         var rows = await dbContext.Incidents
             .AsNoTracking()
+            .Where(i => i.Kind != DAL.Enums.IncidentKind.NearMiss)
             .Select(i => new { i.EntityId, i.Status })
             .ToListAsync();
 
