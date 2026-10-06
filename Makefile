@@ -62,6 +62,10 @@ help:
 gui:
 	cd $(ROOT)/src/GUIClient && $(DOTNET) run -- --environment=$(ENV) $(ARGS)
 
+## gui-hml: run the desktop client against the homolog environment
+gui-hml:
+	cd $(ROOT)/src/GUIClient && $(DOTNET) run -- --environment=homolog $(ARGS)
+
 ## api: run the REST API
 api:
 	cd $(ROOT)/src/API && $(DOTNET) run $(ARGS)
@@ -139,6 +143,6 @@ docker-release:
 clean:
 	$(NUKE) Clean
 
-.PHONY: help gui api website jobs console build restore test coverage \
+.PHONY: help gui gui-hml api website jobs console build restore test coverage \
         nuke nuke-targets db-update migration-add migrations-list \
         docker-release clean
