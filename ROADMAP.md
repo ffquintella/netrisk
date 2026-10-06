@@ -542,8 +542,9 @@ exercised end to end against a real MariaDB and API.
 Aligns NetRisk with the **MIGR-TI/IA** reference methodology, documented in
 [docs/methodology/](docs/methodology/) and scoped by a phase-by-phase coverage analysis
 ([docs/methodology/migr-ti-ia-coverage.md](docs/methodology/migr-ti-ia-coverage.md), S28). Twelve stages,
-the fifteen prioritized gaps from that analysis's §12, grouped by dependency. **Status: planned, nothing
-started.** Does not reopen Track 8. Detailed specifications:
+the fifteen prioritized gaps from that analysis's §12, grouped by dependency. **Status: in progress —
+Stage 9.1 is implemented (T144–T148: schema version 88, `/RiskChain`, the coverage metric and their desktop
+screens); its runtime observations and human/security review are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -554,14 +555,20 @@ started.** Does not reopen Track 8. Detailed specifications:
 
 ### [M39] Stage 9.1 — The linkage chain: objective → process → IT service → data → asset
 > outcome: A risk traces to a strategic objective, not only to one generic entity. Closes gap 1.
-> spec: S27
+> spec: S27, S41
 
-- [ ] T143 Merge the Stage 9.1 specification (eleven sections, test plan reviewed)
-- [ ] T144 Model the strategic objective as a first-class entity
-- [ ] T145 Add an itService type to the entity schema (technical owner, processes served)
-- [ ] T146 Link risks to each optional, queryable link of the chain
-- [ ] T147 Compute a critical-process coverage metric counting only processes marked critical
-- [ ] T148 Test chain traversal with a missing middle link and legacy single-link coexistence
+- [x] T143 Merge the Stage 9.1 specification with all eleven sections (S41)
+  - note: not yet merged and not yet human- or security-reviewed — ticked at the user's request to start implementation; the reviewer agent's nine findings (2026-10-06) are addressed in the spec's first amendment
+- [x] T144 Model the strategic objective as a first-class entity
+  - note: `strategicObjective` entity type and `businessProcess.strategicObjectives` (schema 2.5); appears in EntitiesView through the configuration, with no view change
+- [x] T145 Add an itService type to the entity schema (technical owner, processes served)
+  - note: also adds `businessProcess.criticality` (shared with T242) and the `Application`/`team` labels found missing in all three resource files
+- [x] T146 Link risks to each optional, queryable link of the chain
+  - note: `risk_chain_links` (schema 88), `/RiskChain`, legacy mirroring, statistics union, the risk-detail chain block and EditRiskChainDialog; the S41 §8 runtime observations are still to be recorded on the PR
+- [x] T147 Compute a critical-process coverage metric counting only processes marked critical
+  - note: `GET /RiskChain/Coverage/CriticalProcesses` and report 7 "Critical process coverage"; the ratio is unrounded on the server and shown to one decimal
+- [x] T148 Test chain traversal with a missing middle link and legacy single-link coexistence
+  - note: S11, G2, K5, L1–L8 and the copy/replay/race cases of Track9RiskChainSchemaTests; the four runtime observations of S41 §8 are still to be recorded on the PR
 
 ### [M40] Stage 9.2 — Structured scenario, record discrimination and evidence confidence
 > outcome: Four scenario fields plus a confidence level make the Phase 2 quality rules machine-verifiable. Closes gap 2.
@@ -913,3 +920,4 @@ planned, nothing started.**
 | S38 | Hosts view redesign | docs/features/hosts-view-redesign.md |
 | S39 | ICR — consolidated risk index methodology | docs/methodology/icr-indice-consolidado-de-risco.md |
 | S40 | Cyber Risk Overview dashboard and ICR configuration screens | docs/features/risk-overview-dashboard.md |
+| S41 | Stage 9.1 — linkage chain specification | docs/roadmap/track9/9.1-linkage-chain.md |

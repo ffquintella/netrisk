@@ -1,0 +1,87 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:DataType="reports:CriticalProcessCoverageViewModel"
+             x:Class="GUIClient.Views.Reports.CriticalProcessCoverage">
+    <Design.DataContext>
+        <reports:CriticalProcessCoverageViewModel/>
+    </Design.DataContext>
+
+    <!-- Report 7 (Stage 9.1, S41 §7): critical-process coverage. "Covered" is a word, never a colour,
+         and "not computable" is its own state rather than 0 %. -->
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="5">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Margin="5 0 0 0" VerticalAlignment="Center"
+                        Command="{Binding BtReloadClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrReload}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <TextBlock Grid.Row="1" Classes="header2" Text="{Binding SummaryText}" Margin="0 5 0 0"/>
+            <TextBlock Grid.Row="2" Classes="header_detail" Text="{Binding WithoutCriticalityText}"
+                       IsVisible="{Binding HasProcessesWithoutCriticality}"/>
+            <TextBlock Grid.Row="3" Classes="header_detail" Text="{Binding StrCoverageScopeRestricted}"
+                       TextWrapping="Wrap" IsVisible="{Binding IsScopeRestricted}"/>
+
+            <DataGrid Grid.Row="4" Margin="0 5 0 0" MinHeight="200"
+                      ItemsSource="{Binding Rows}"
+                      SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrProcess, Mode=OneTime}"
+                                        Binding="{Binding ProcessName}" Width="2*" MinWidth="200"/>
+                    <DataGridTextColumn Header="{Binding StrCriticality, Mode=OneTime}"
+                                        Binding="{Binding Criticality}" Width="100"/>
+                    <DataGridTextColumn Header="{Binding StrDirectRisks, Mode=OneTime}"
+                                        Binding="{Binding DirectOpenRiskCount}" Width="*" MinWidth="110"/>
+                    <DataGridTextColumn Header="{Binding StrInferredRisks, Mode=OneTime}"
+                                        Binding="{Binding InferredOpenRiskCount}" Width="*" MinWidth="110"/>
+                    <DataGridTextColumn Header="{Binding StrCovered, Mode=OneTime}"
+                                        Binding="{Binding CoveredText}" Width="100"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="5" Classes="header2" Text="{Binding StrRisksOfSelectedProcess}" Margin="0 10 0 0"/>
+
+            <DataGrid Grid.Row="6" Margin="0 5 0 0" MinHeight="150"
+                      ItemsSource="{Binding SelectedProcessRisks}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrId, Mode=OneTime}"
+                                        Binding="{Binding RiskId}" Width="80"/>
+                    <DataGridTextColumn Header="{Binding StrSubject, Mode=OneTime}"
+                                        Binding="{Binding Subject}" Width="2*" MinWidth="200"/>
+                    <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
+                                        Binding="{Binding Status}" Width="*" MinWidth="100"/>
+                    <DataGridTextColumn Header="{Binding StrChainVia, Mode=OneTime}"
+                                        Binding="{Binding Via}" Width="*" MinWidth="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <progRing:ProgressRing Width="80" Height="80"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               ZIndex="1000"/>
+    </Panel>
+</UserControl>

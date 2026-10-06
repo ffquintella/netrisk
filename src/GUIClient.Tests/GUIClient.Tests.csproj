@@ -21,6 +21,9 @@
     <!-- MaterialIconKind only: a plain netstandard enum, no Avalonia. Lets the service icon map
          below be compiled here and every kind it returns be checked against the real enum. -->
     <PackageReference Include="Material.Icons" />
+    <!-- Reads API/EntitiesConfiguration.yaml with the deserializer settings EntitiesService uses, so
+         the entity-schema label and icon guards see the schema exactly as the client receives it. -->
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
   <ItemGroup>
     <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that
@@ -42,6 +45,9 @@
     <Compile Include="..\GUIClient\Tools\ScaleAnchorFormatter.cs" LinkBase="Tools" />
     <!-- The register list's inherent → residual line (8.2.3): also pure formatting. -->
     <Compile Include="..\GUIClient\Tools\RiskScoreSummary.cs" LinkBase="Tools" />
+    <!-- The linkage chain's pure half (Stage 9.1, S41 §7): the per-level summary of the risk detail,
+         the edit dialog's rows and enable rules, and the coverage report's headline. -->
+    <Compile Include="..\GUIClient\Tools\RiskChainSummary.cs" LinkBase="Tools" />
     <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
          rule that keeps a raw entity id out of the appetite grid. -->
     <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />

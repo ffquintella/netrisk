@@ -16,6 +16,7 @@ using DAL.Enums;
 using Tools.Helpers;
 
 using ServerServices.Filtering;
+using ServerServices.Governance;
 namespace ServerServices.Services;
 
 public class RisksService(
@@ -214,7 +215,11 @@ public class RisksService(
         
         risk.Entities.Add(entity);
 
-        context.SaveChanges();
+        // Stage 9.1 (S41 §5.4): mirror a chain-type entity into risk_chain_links as a Legacy link,
+        // in this same save, so the chain never misses what the legacy "Entity" field holds.
+        var mirror = RiskChainPersistence.MirrorAssociation(context, riskId, entity);
+
+        RiskChainPersistence.SaveWithMirror(context, mirror);
     }
 
     public void CleanRiskEntityAssociations(int riskId)
@@ -230,6 +235,10 @@ public class RisksService(
         }
         
         risk.Entities.Clear();
+
+        // Stage 9.1 (S41 §5.4): every Legacy link of the risk mirrored a row just cleared. Declared
+        // links — including ones promoted from Legacy — are the chain's own and stay.
+        RiskChainPersistence.MirrorRemoval(context, riskId, Array.Empty<int>());
 
         context.SaveChanges(); 
     }
@@ -254,6 +263,11 @@ public class RisksService(
         }
         
         risk.Entities.Remove(entity);
+
+        // Stage 9.1 (S41 §5.4): the mirror goes with the legacy row; a Declared link to the same
+        // entity does not.
+        RiskChainPersistence.MirrorRemoval(context, riskId,
+            risk.Entities.Select(e => e.Id).ToList());
 
         context.SaveChanges();
     }

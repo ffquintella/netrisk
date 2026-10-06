@@ -114,6 +114,8 @@ public static class ServicesBootstrapper
         services.AddTransient<IMitigationsService, MitigationsService>();
         services.AddTransient<ITeamsService, TeamsService>();
         services.AddTransient<IRisksService, RisksService>();
+        // Stage 9.1 (S41) — the risk linkage chain, beside the legacy entity link it coexists with.
+        services.AddTransient<IRiskChainService, ServerServices.Governance.RiskChainService>();
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<ILinksService, LinksService>();
         services.AddTransient<IRolesService, RolesService>();

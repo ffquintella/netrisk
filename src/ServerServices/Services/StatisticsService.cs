@@ -190,49 +190,91 @@ public class StatisticsService(ILogger logger, IDalService dalService)
     public async Task<List<RiskEntity>> GetRisksTopEntities(int count = 10, string? entityType = null)
     {
         await using var dbContext = DalService.GetContext();
-        
-        var query = dbContext.Risks.Include(r => r.Entities)
-            .Join(dbContext.RiskScorings,
-                risk => risk.Id,
-                riskScoring => riskScoring.Id,
-                (risk, riskScoring) => new
-                {
-                    Id = risk.Id,
-                    CalculatedRisk = riskScoring.CalculatedRisk,
-                    Status = risk.Status,
-                    risk.Owner,
-                    risk.Manager,
-                    risk.SubmissionDate,
-                    risk.LastUpdate,
-                    risk.Subject,
-                    Entities = risk.Entities
-                })
-            .SelectMany(e => e.Entities, (er, entity) => new
+
+        // Stage 9.1 (S41 §6, D10): the union of the legacy risk_to_entity rows and the entity links of
+        // the risk chain, deduplicated, so a link declared on the chain is not invisible here and a
+        // risk linked both ways is summed once. Both halves go through the scoped context — the Risk
+        // filter governs the first, the RiskChainLink filter the second.
+        var pairs = await RiskEntityPairsAsync(dbContext);
+
+        var riskIds = pairs.Select(p => p.RiskId).Distinct().ToList();
+        var scores = (await dbContext.RiskScorings.AsNoTracking()
+                .Where(s => riskIds.Contains(s.Id))
+                .Select(s => new { s.Id, s.CalculatedRisk })
+                .ToListAsync())
+            .ToDictionary(s => s.Id, s => s.CalculatedRisk);
+
+        var entityIds = pairs.Select(p => p.EntityId).Distinct().ToList();
+        var definitions = (await dbContext.Entities.AsNoTracking()
+                .Where(e => entityIds.Contains(e.Id))
+                .Select(e => new { e.Id, e.DefinitionName })
+                .ToListAsync())
+            .ToDictionary(e => e.Id, e => e.DefinitionName);
+
+        var names = (await dbContext.EntitiesProperties.AsNoTracking()
+                .Where(p => entityIds.Contains(p.Entity) && p.Type == "name")
+                .Select(p => new { p.Entity, p.Value })
+                .ToListAsync())
+            .GroupBy(p => p.Entity)
+            .ToDictionary(g => g.Key, g => g.First().Value);
+
+        // A risk with no scoring row is left out, as the inner join this replaced left it out.
+        var topEntities = pairs
+            .Where(p => scores.ContainsKey(p.RiskId) && definitions.ContainsKey(p.EntityId))
+            .Where(p => string.IsNullOrEmpty(entityType) || definitions[p.EntityId] == entityType)
+            .GroupBy(p => p.EntityId)
+            .Select(g => new RiskEntity
             {
-                Entity = entity,
-                CalculatedRisk = er.CalculatedRisk
-            });
-            
-            
-        if (!string.IsNullOrEmpty(entityType))
-        {
-            query = query.Where(e => e.Entity.DefinitionName == entityType);
-        }
-            
-        var topEntities = await query.GroupBy(e => e.Entity.Id)
-                .Select(g => new RiskEntity
-                {
-                    EntityId = g.Key,
-                    EntityType = g.First().Entity.DefinitionName,
-                    EntityName = dbContext.EntitiesProperties.FirstOrDefault(ep => ep.Entity == g.Key && ep.Type == "name")!.Value ?? "",
-                    TotalCalculatedRisk = g.Sum(re => re.CalculatedRisk)
-                })
-                .OrderByDescending(er => er.TotalCalculatedRisk)
-                .Take(count)
-                .ToListAsync();   
+                EntityId = g.Key,
+                EntityType = definitions[g.Key],
+                EntityName = names.GetValueOrDefault(g.Key) ?? "",
+                TotalCalculatedRisk = g.Sum(p => scores[p.RiskId])
+            })
+            .OrderByDescending(er => er.TotalCalculatedRisk)
+            .ThenBy(er => er.EntityId)
+            .Take(count)
+            .ToList();
 
         return topEntities;
 
+    }
+
+    /// <summary>
+    /// Every distinct (risk, entity) pair the caller can see: <c>risk_to_entity</c> ∪ the entity links of
+    /// <c>risk_chain_links</c> (Stage 9.1). Host links are not entities and are not included.
+    /// </summary>
+    private static async Task<List<(int RiskId, int EntityId)>> RiskEntityPairsAsync(DAL.Context.AuditableContext dbContext)
+    {
+        var legacy = await dbContext.Risks.AsNoTracking()
+            .SelectMany(r => r.Entities, (r, e) => new { RiskId = r.Id, EntityId = e.Id })
+            .ToListAsync();
+
+        var chain = await dbContext.RiskChainLinks.AsNoTracking()
+            .Where(l => l.EntityId != null)
+            .Select(l => new { l.RiskId, EntityId = l.EntityId!.Value })
+            .ToListAsync();
+
+        return legacy.Select(p => (p.RiskId, p.EntityId))
+            .Concat(chain.Select(p => (p.RiskId, p.EntityId)))
+            .Distinct()
+            .ToList();
+    }
+
+    /// <summary>The chain half of <see cref="RiskEntityPairsAsync"/>, keyed by entity.</summary>
+    private static Dictionary<int, HashSet<int>> ChainRisksByEntity(DAL.Context.AuditableContext dbContext) =>
+        dbContext.RiskChainLinks.AsNoTracking()
+            .Where(l => l.EntityId != null)
+            .Select(l => new { l.RiskId, EntityId = l.EntityId!.Value })
+            .ToList()
+            .GroupBy(l => l.EntityId)
+            .ToDictionary(g => g.Key, g => g.Select(l => l.RiskId).ToHashSet());
+
+    /// <summary>The risk ids linked to <paramref name="entity"/> by either route, each once.</summary>
+    private static HashSet<int> LinkedRiskIds(Entity entity, IReadOnlyDictionary<int, HashSet<int>> chainRisks)
+    {
+        var ids = entity.Risks.Select(r => r.Id).ToHashSet();
+        if (chainRisks.TryGetValue(entity.Id, out var chained)) ids.UnionWith(chained);
+        return ids;
     }
     
     public async Task<List<TopRisk>> GetRisksTopAsync(int topCount = 10)
@@ -443,27 +485,25 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         if(parentId == null)
             entities = dbContext.Entities
                 .Include(e => e.EntitiesProperties)
-                .Include(e => e.Risks)
                 .ToList();
         else
             entities = dbContext.Entities
                 .Include(e => e.EntitiesProperties)
-                .Include(e => e.Risks)
                 .Where(e => e.Parent == parentId).ToList();
 
-        
-        var scores = dbContext.RiskScorings.ToList();
+        // Stage 9.1 (S41 §6, D10): legacy rows ∪ chain entity links, each risk once per entity.
+        var chainRisks = ChainRisksByEntity(dbContext);
 
         foreach (var entity in entities)
         {
+            // GetChildEntitiesRiskScore sums the entity's own risks as well as its descendants'. Adding
+            // the own score here first, as this used to, counted every entity's own risks twice.
             var eres = new ValueNameType()
             {
                 Name = entity.EntitiesProperties.FirstOrDefault(p => p.Type == "name")?.Value + "",
-                Value = scores.Where(s => entity.Risks.Select(r=> r.Id).Contains(s.Id)).Select(s => s.CalculatedRisk).Sum(),
+                Value = GetChildEntitiesRiskScore(entity.Id, chainRisks),
                 Type = entity.DefinitionName
             };
-            
-            eres.Value += GetChildEntitiesRiskScore(entity.Id);
             
             result.Add(eres);
         }
@@ -471,7 +511,7 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         return result.OrderByDescending(r=> r.Value).Take(topCount).ToList();
     }
 
-    private float GetChildEntitiesRiskScore(int id)
+    private float GetChildEntitiesRiskScore(int id, IReadOnlyDictionary<int, HashSet<int>> chainRisks)
     {
         float totalScore = 0;
         using var dbContext = DalService.GetContext();
@@ -490,10 +530,11 @@ public class StatisticsService(ILogger logger, IDalService dalService)
         foreach (var echild in entity.InverseParentNavigation)
         {
 
-            totalScore += GetChildEntitiesRiskScore(echild.Id);
+            totalScore += GetChildEntitiesRiskScore(echild.Id, chainRisks);
         }
         
-        totalScore += scores.Where(s => entity.Risks.Select(r => r.Id).Contains(s.Id)).Select(s => s.CalculatedRisk)
+        var linked = LinkedRiskIds(entity, chainRisks);
+        totalScore += scores.Where(s => linked.Contains(s.Id)).Select(s => s.CalculatedRisk)
             .Sum();
 
         return totalScore;

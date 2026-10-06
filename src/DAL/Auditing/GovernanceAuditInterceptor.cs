@@ -57,7 +57,12 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(RiskReviewCampaignItem),
         nameof(EntityRiskReviewer),
         nameof(Host),
-        nameof(HostsService)
+        nameof(HostsService),
+
+        // Stage 9.1 (S41 §4.3): who linked a risk to which objective, process, service, data or
+        // asset, and every promotion or demotion between Declared and Legacy. Recorded here; the
+        // per-risk trail does not display it yet (S41 §3, negative scope).
+        nameof(RiskChainLink)
     };
 
     /// <summary>

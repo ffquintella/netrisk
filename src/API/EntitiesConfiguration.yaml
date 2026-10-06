@@ -1,5 +1,5 @@
 ---
-version: 2.4
+version: 2.5
 definitions:
   organization:
     isRoot: True
@@ -390,3 +390,104 @@ definitions:
         maxSize: -1
         nullable: False
         defaultValue: ""
+      strategicObjectives:
+        type: Definition(strategicObjective)
+        label: Strategic Objectives
+        multiple: True
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+      criticality:
+        type: Integer
+        label: Criticality
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+  strategicObjective:
+    isRoot: True
+    iconKind: BullseyeArrow
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      horizon:
+        type: String
+        label: Horizon
+        multiple: False
+        maxSize: 64
+        nullable: True
+        defaultValue: ""
+      isActive:
+        type: Boolean
+        label: Is Active
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "True"
+  itService:
+    isRoot: True
+    iconKind: ServerNetwork
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      technicalOwner:
+        type: Definition(person)
+        label: Technical Owner
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: ""
+      processes:
+        type: Definition(businessProcess)
+        label: Processes Served
+        multiple: True
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+      applications:
+        type: Definition(application)
+        label: applications
+        multiple: True
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+      data:
+        type: Definition(organizationData)
+        label: Data Handled
+        multiple: True
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+      isActive:
+        type: Boolean
+        label: Is Active
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "True"

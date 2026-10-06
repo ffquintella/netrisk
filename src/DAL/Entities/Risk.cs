@@ -98,4 +98,12 @@ public partial class Risk : DAL.Interfaces.IEntityScoped
 
     /// <summary>Formal, expiring acceptances of this risk (Track 8 milestone 8.1).</summary>
     public virtual ICollection<RiskAcceptance> Acceptances { get; set; } = new List<RiskAcceptance>();
+
+    /// <summary>
+    /// The risk's links to the linkage chain (Stage 9.1, S41 §4.3). Never serialized: no existing query
+    /// includes it, and the chain is read through <c>/RiskChain</c>, so the payload of <c>GET /Risks</c>
+    /// stays exactly what it was.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public virtual ICollection<RiskChainLink> ChainLinks { get; set; } = new List<RiskChainLink>();
 }

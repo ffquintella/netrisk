@@ -88,6 +88,11 @@
                                     ConverterParameter=6}">
                         <reports:VulnerabilitiesByTime DataContext="{Binding VulnerabilitiesByTimeViewModel}"/>
                     </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=7}">
+                        <reports:CriticalProcessCoverage DataContext="{Binding CriticalProcessCoverageViewModel}"/>
+                    </Panel>
                 </Grid>
             </ScrollViewer>
     </SplitView>

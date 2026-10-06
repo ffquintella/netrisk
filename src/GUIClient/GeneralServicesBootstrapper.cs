@@ -116,6 +116,10 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IRiskGovernanceService>(sp => new RiskGovernanceRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.1 (S41): the risk linkage chain and the critical-process coverage metric.
+        services.AddTransient<IRiskChainService>(sp => new RiskChainRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

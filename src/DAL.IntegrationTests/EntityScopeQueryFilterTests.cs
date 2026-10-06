@@ -174,4 +174,46 @@ public class EntityScopeQueryFilterTests(MariaDbContainerFixture fixture)
         var untouched = await admin.Risks.AsNoTracking().FirstAsync(r => r.Id == 2);
         Assert.Equal("risk in B", untouched.Subject);
     }
+
+    /// <summary>
+    /// Stage 9.1 (S41 §4.3): a chain link is visible only when its risk is, and — for a host link —
+    /// when its host is too, and both halves of that rule run in the database. Risk 1 (A) links to a
+    /// process, to host 1 (A) and to host 2 (B); risk 2 (B) links to the process.
+    /// </summary>
+    [Fact]
+    public async Task RiskChainLinksAreScopedByTheirRiskAndTheirHostInSql()
+    {
+        await SeedTwoEntitiesAsync();
+
+        await using (var conn = new MySqlConnection(fixture.ConnectionString))
+        {
+            await conn.OpenAsync();
+            await MariaDbContainerFixture.ExecAsync(conn, "SET FOREIGN_KEY_CHECKS = 0;");
+            await MariaDbContainerFixture.ExecAsync(conn,
+                "INSERT INTO `entities` (`Id`,`DefinitionName`,`DefinitionVersion`,`CreatedBy`,`UpdatedBy`,`Status`) " +
+                "VALUES (10,'businessProcess','2.5',1,1,'active');");
+            await MariaDbContainerFixture.ExecAsync(conn,
+                "INSERT INTO `hosts` (`Id`,`HostName`,`Source`,`entity_id`) VALUES " +
+                $"(1,'h-a','test',{EntityA}),(2,'h-b','test',{EntityB});");
+            await MariaDbContainerFixture.ExecAsync(conn,
+                "INSERT INTO `risk_chain_links` (`id`,`risk_id`,`chain_level`,`entity_id`,`host_id`,`origin`,`created_at`) VALUES " +
+                "(1,1,2,10,NULL,1,UTC_TIMESTAMP()),(2,1,5,NULL,1,1,UTC_TIMESTAMP())," +
+                "(3,1,5,NULL,2,1,UTC_TIMESTAMP()),(4,2,2,10,NULL,1,UTC_TIMESTAMP());");
+            await MariaDbContainerFixture.ExecAsync(conn, "SET FOREIGN_KEY_CHECKS = 1;");
+        }
+
+        await using var scoped = fixture.NewScopedContext(EntityA);
+
+        var visible = await scoped.RiskChainLinks.AsNoTracking().OrderBy(l => l.Id).Select(l => l.Id).ToListAsync();
+        Assert.Equal([1, 2], visible);
+
+        // Translated, not evaluated on the client: both parents' predicates are in the SQL.
+        var sql = scoped.RiskChainLinks.AsNoTracking().ToQueryString();
+        Assert.Contains("risks", sql, System.StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("hosts", sql, System.StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("EXISTS", sql, System.StringComparison.OrdinalIgnoreCase);
+
+        await using var admin = fixture.NewContext();
+        Assert.Equal(4, await admin.RiskChainLinks.AsNoTracking().CountAsync());
+    }
 }

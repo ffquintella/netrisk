@@ -24,6 +24,8 @@ using Model.DTO;
 using Model.File;
 using Model.Governance;
 using Model.Risks;
+using Model.Risks.Chain;
+using RiskChainLevel = DAL.Enums.RiskChainLevel;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -115,6 +117,17 @@ public class RiskViewModel: ViewModelBase
     public string StrTotalScore { get; } = Localizer["TotalScore"] + ": ";
     public string StrNoIRPFound { get; } = Localizer["NoIRPFound"] ;
     public string StrApproved { get; } = Localizer["Approved"] + ": ";
+
+    // Stage 9.1 (S41 §7) — the linkage chain block under the Entity row.
+    public string StrLinkageChain { get; } = Localizer["LinkageChain"];
+    public string StrChainObjective { get; } = Localizer["ChainLevelObjective"] + ":";
+    public string StrChainProcess { get; } = Localizer["ChainLevelProcess"] + ":";
+    public string StrChainItService { get; } = Localizer["ChainLevelItService"] + ":";
+    public string StrChainData { get; } = Localizer["ChainLevelData"] + ":";
+    public string StrChainAsset { get; } = Localizer["ChainLevelAsset"] + ":";
+    public string StrChainNotInformed { get; } = Localizer["ChainNotInformed"];
+    public string StrChainHostRedacted { get; } = Localizer["ChainHostRedacted"];
+    public string StrEditChain { get; } = Localizer["EditChain"];
     
     
     #endregion
@@ -339,6 +352,8 @@ public class RiskViewModel: ViewModelBase
                     SelectedRiskSubmissionDate = value.SubmissionDate;
                     SelectedVulnerabilityPage = 1;
 
+                    await LoadSelectedRiskChainAsync(value.Id);
+
                 }
                 else
                 {
@@ -353,6 +368,7 @@ public class RiskViewModel: ViewModelBase
                     SelectedRiskSubmissionDate = null;
                     IrpDate = null;
                     IrpIsApproved = false;
+                    SelectedRiskChain = null;
                 }
 
                 ProcessLifecycleButtons();
@@ -363,6 +379,7 @@ public class RiskViewModel: ViewModelBase
             });
             
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
+            this.RaisePropertyChanged(nameof(IsEditChainEnabled));
         }
     }
     
@@ -402,6 +419,43 @@ public class RiskViewModel: ViewModelBase
 
     /// <summary>True when a business review campaign has ranked this risk (8.6.5).</summary>
     public bool HasBusinessRank => SelectedRisk?.BusinessRank is not null;
+
+    private RiskChainDto? _selectedRiskChain;
+
+    /// <summary>
+    /// The selected risk's linkage chain (Stage 9.1, S41 §7), or null when it could not be read — the
+    /// block is then hidden rather than claiming every level is "not informed".
+    /// </summary>
+    public RiskChainDto? SelectedRiskChain
+    {
+        get => _selectedRiskChain;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedRiskChain, value);
+            this.RaisePropertyChanged(nameof(ChainObjectiveSummary));
+            this.RaisePropertyChanged(nameof(ChainProcessSummary));
+            this.RaisePropertyChanged(nameof(ChainItServiceSummary));
+            this.RaisePropertyChanged(nameof(ChainDataSummary));
+            this.RaisePropertyChanged(nameof(ChainAssetSummary));
+        }
+    }
+
+    public string ChainObjectiveSummary => ChainSummary(RiskChainLevel.Objective);
+    public string ChainProcessSummary => ChainSummary(RiskChainLevel.Process);
+    public string ChainItServiceSummary => ChainSummary(RiskChainLevel.ItService);
+    public string ChainDataSummary => ChainSummary(RiskChainLevel.Data);
+    public string ChainAssetSummary => ChainSummary(RiskChainLevel.Asset);
+
+    private string ChainSummary(RiskChainLevel level) =>
+        RiskChainSummary.ForLevel(SelectedRiskChain, level, StrChainNotInformed, StrChainHostRedacted);
+
+    /// <summary>
+    /// A risk is selected and the user is in the audience of <c>RequireRiskmanagement</c> — the
+    /// <c>riskmanagement</c> permission or the <c>Administrator</c> role — the policy every chain
+    /// endpoint carries.
+    /// </summary>
+    public bool IsEditChainEnabled =>
+        SelectedRisk is not null && RiskChainAccess.CanEditChain(AutenticationService.AuthenticatedUserInfo);
     
     private IReadOnlyDictionary<int, RiskScorePair> _scoreSummaries =
         new Dictionary<int, RiskScorePair>();
@@ -635,6 +689,9 @@ public class RiskViewModel: ViewModelBase
 
     /// <summary>Opens the Track 8 governance record for the selected risk.</summary>
     public ReactiveCommand<RxVoid, RxVoid> BtGovernanceClicked { get; }
+
+    /// <summary>Opens the Stage 9.1 linkage-chain editor for the selected risk.</summary>
+    public ReactiveCommand<RxVoid, RxVoid> BtEditChainClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtNewFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtMitigationFilterClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtReviewFilterClicked { get; }
@@ -739,6 +796,8 @@ public class RiskViewModel: ViewModelBase
     private IDialogService DialogService { get; } = GetService<IDialogService>();
 
     private IRiskGovernanceService RiskGovernanceService { get; } = GetService<IRiskGovernanceService>();
+
+    private IRiskChainService RiskChainService { get; } = GetService<IRiskChainService>();
 
     private IIncidentResponsePlansService _incidentResponsePlansService = GetService<IIncidentResponsePlansService>();
     
@@ -863,6 +922,7 @@ public class RiskViewModel: ViewModelBase
         BtCloseRiskClicked = ReactiveCommand.CreateFromTask(ExecuteCloseRiskAsync);
         BtReopenRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReopenRiskAsync);
         BtGovernanceClicked = ReactiveCommand.CreateFromTask(ShowGovernanceDialogAsync);
+        BtEditChainClicked = ReactiveCommand.CreateFromTask(ShowEditChainDialogAsync);
         BtReloadRiskClicked = ReactiveCommand.CreateFromTask(ExecuteReloadRiskAsync);
         BtNewFilterClicked = ReactiveCommand.Create(ApplyNewFilter);
         BtMitigationFilterClicked = ReactiveCommand.Create(ApplyMitigationFilter);
@@ -1153,6 +1213,47 @@ public class RiskViewModel: ViewModelBase
         if (result is null or { AcceptanceChanged: false, ScoresChanged: false }) return;
 
         await ExecuteReloadRiskAsync();
+    }
+
+    /// <summary>
+    /// Reads the selected risk's chain (Stage 9.1). A failure — a user outside the
+    /// <c>riskmanagement</c> audience gets 403 — hides the block instead of failing the whole detail.
+    /// </summary>
+    private async Task LoadSelectedRiskChainAsync(int riskId)
+    {
+        try
+        {
+            var chain = await RiskChainService.GetRiskChainAsync(riskId);
+
+            // The user may have moved on while the chain was loading; a late answer must not paint
+            // another risk's chain under this one.
+            SelectedRiskChain = SelectedRisk?.Id == riskId ? chain : SelectedRiskChain;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not load the linkage chain of risk {Id}: {Message}", riskId, ex.Message);
+            if (SelectedRisk?.Id == riskId) SelectedRiskChain = null;
+        }
+    }
+
+    /// <summary>
+    /// Opens the chain editor (Stage 9.1, S41 §7). Edits there are saved immediately, so the result
+    /// only says whether the block has to be re-read.
+    /// </summary>
+    private async Task ShowEditChainDialogAsync()
+    {
+        if (SelectedRisk == null || !IsEditChainEnabled) return;
+
+        var riskId = SelectedRisk.Id;
+
+        var result = await DialogService
+            .ShowDialogAsync<EditRiskChainDialogResult, EditRiskChainDialogParameter>(
+                nameof(EditRiskChainDialogViewModel),
+                new EditRiskChainDialogParameter { RiskId = riskId, RiskSubject = SelectedRisk.Subject });
+
+        if (result is not { Changed: true }) return;
+
+        await LoadSelectedRiskChainAsync(riskId);
     }
 
     private Task ExecuteAddReviewAsync() => ShowMgmtReviewDialogAsync(OperationType.Create);
