@@ -95,6 +95,18 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
+
+                    <!-- Stage 9.2 (T153, S42 §7): incident or near miss, beside the threat category. -->
+                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding StrIncidentKind}" Classes="form_label" />
+                    <ComboBox Grid.Row="0" Grid.Column="5" ItemsSource="{Binding KindOptions}"
+                              Width="180"
+                              SelectedItem="{Binding SelectedKind}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReportedBy}" Classes="form_label" />
                     <AutoCompleteBox Grid.Row="1" Grid.Column="1" Width="180"  

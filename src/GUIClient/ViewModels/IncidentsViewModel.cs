@@ -38,6 +38,12 @@ public class IncidentsViewModel: ViewModelBase
     public string StrLastUpdate { get; } = Localizer["LastUpdate"]+ ":";
     public string StrUpdatedBy { get; } = Localizer["UpdatedBy"]+ ":";
     public string StrMetada { get; } = Localizer["Metadata"];
+    public string StrIncidentKind { get; } = Localizer["IncidentKind"] + ":";
+
+    /// <summary>"Incident" or "Near miss" for the selected record (Stage 9.2, T153, S42 §7).</summary>
+    public string SelectedIncidentKind => SelectedIncident is null
+        ? string.Empty
+        : Localizer[RiskScenarioSummary.KindKey(SelectedIncident.Kind)];
     public string StrReport { get; } = Localizer["Report"]+ ":";
     public string StrImpact { get; } = Localizer["Impact"]+ ":";
     public string StrCause { get; } = Localizer["Cause"]+ ":";
@@ -87,6 +93,7 @@ public class IncidentsViewModel: ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedIncident, value);
+            this.RaisePropertyChanged(nameof(SelectedIncidentKind));
             _ = LoadAttachmentsAsync();
             _ = LoadIncidentResponsePlansAsync();
         }

@@ -58,6 +58,7 @@ public class EditIncidentViewModel
     public string StrDuration => Localizer["Duration"] + " (" + Localizer["Hours"] + ")" + ":";
     public string StrStatus => Localizer["Status"] + ":";
     public string StrCategory => Localizer["Category"] + ":";
+    public string StrIncidentKind => Localizer["IncidentKind"] + ":";
     public string StrReportedBy => Localizer["ReportedBy"] + ":";
     public string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
     public string StrAssignedTo => Localizer["Assigned to"] + ":";
@@ -293,6 +294,27 @@ public class EditIncidentViewModel
     }
     
     public List<IncidentCategory> Categories { get; } = IncidentCategories.GetCategories(Localizer);
+
+    /// <summary>Incident or near miss (Stage 9.2, T153, S42 §7) — orthogonal to the category.</summary>
+    public List<ChoiceOption<DAL.Enums.IncidentKind>> KindOptions { get; } = RiskScenarioSummary.KindChoices
+        .Select(k => new ChoiceOption<DAL.Enums.IncidentKind>(k, Localizer[RiskScenarioSummary.KindKey(k)]))
+        .ToList();
+
+    /// <summary>
+    /// Read from and written to the incident itself, like <see cref="SelectedCategory"/>; the null a
+    /// ComboBox writes back when it cannot resolve its value is ignored, so it cannot turn a near miss
+    /// back into an incident.
+    /// </summary>
+    public ChoiceOption<DAL.Enums.IncidentKind>? SelectedKind
+    {
+        get => KindOptions.Find(x => x.Value == Incident.Kind) ?? KindOptions[0];
+        set
+        {
+            if (value == null) return;
+            Incident.Kind = value.Value;
+            this.RaisePropertyChanged();
+        }
+    }
     
     public IncidentCategory SelectedCategory
     {
@@ -952,6 +974,7 @@ public class EditIncidentViewModel
             
             SelectedStatus = StatusItems.Find(x => x.IntStatus == Incident.Status) ?? StatusItems.FirstOrDefault(x => x.IntStatus == (int)IntStatus.Active)!;
             SelectedCategory = Categories.Find(x => x.DbName == Incident.Category) ?? Categories.FirstOrDefault(x => x.DbName == "not_specified")!;
+            this.RaisePropertyChanged(nameof(SelectedKind));
             
             ReportDate = new DateTimeOffset(Incident.ReportDate);
             Duration = Convert.ToDecimal(Incident.Duration!.Value.TotalHours);

@@ -128,6 +128,14 @@ public class RiskViewModel: ViewModelBase
     public string StrChainNotInformed { get; } = Localizer["ChainNotInformed"];
     public string StrChainHostRedacted { get; } = Localizer["ChainHostRedacted"];
     public string StrEditChain { get; } = Localizer["EditChain"];
+
+    // Stage 9.2 (S42 §7) — the structured scenario block, also under the Entity row.
+    public string StrStructuredScenario { get; } = Localizer["StructuredScenario"];
+    public string StrScenarioCause { get; } = Localizer["ScenarioCause"] + ":";
+    public string StrScenarioVulnerability { get; } = Localizer["ScenarioVulnerability"] + ":";
+    public string StrScenarioCentralEvent { get; } = Localizer["ScenarioCentralEvent"] + ":";
+    public string StrScenarioConsequences { get; } = Localizer["ScenarioConsequences"] + ":";
+    public string StrEvidenceConfidence { get; } = Localizer["EvidenceConfidence"] + ":";
     
     
     #endregion
@@ -380,8 +388,22 @@ public class RiskViewModel: ViewModelBase
             
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
             this.RaisePropertyChanged(nameof(IsEditChainEnabled));
+            this.RaisePropertyChanged(nameof(ScenarioCauseSummary));
+            this.RaisePropertyChanged(nameof(ScenarioVulnerabilitySummary));
+            this.RaisePropertyChanged(nameof(ScenarioCentralEventSummary));
+            this.RaisePropertyChanged(nameof(ScenarioConsequencesSummary));
+            this.RaisePropertyChanged(nameof(EvidenceConfidenceSummary));
         }
     }
+
+    // Stage 9.2 (S42 §7): an empty field reads "not informed" — the same words as an empty chain
+    // level — rather than disappearing, so a legacy risk shows plainly that its scenario was never
+    // structured. NULL confidence reads "not declared".
+    public string ScenarioCauseSummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioCause, StrChainNotInformed);
+    public string ScenarioVulnerabilitySummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioVulnerability, StrChainNotInformed);
+    public string ScenarioCentralEventSummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioCentralEvent, StrChainNotInformed);
+    public string ScenarioConsequencesSummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioConsequences, StrChainNotInformed);
+    public string EvidenceConfidenceSummary => Localizer[RiskScenarioSummary.ConfidenceKey(SelectedRisk?.EvidenceConfidence)];
     
     private float _totalRiskScore;
     

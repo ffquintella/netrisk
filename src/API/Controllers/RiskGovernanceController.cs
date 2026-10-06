@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Model.Exceptions;
 using Model.Governance;
+using Model.Risks.Scenario;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
 
@@ -440,6 +441,12 @@ public class RiskGovernanceController(
         {
             return NotFound();
         }
+        catch (DAL.Exceptions.EntityScopeViolationException)
+        {
+            // Stage 9.2 (S42 §6): a write into an entity outside the caller's scope is the
+            // EntityScopeViolationMiddleware's 403 — swallowed by the catch-all below, it was a 500.
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Unknown error promoting pending risk {Id}", pendingId);
@@ -477,10 +484,89 @@ public class RiskGovernanceController(
         {
             return NotFound();
         }
+        catch (DAL.Exceptions.EntityScopeViolationException)
+        {
+            // Stage 9.2 (S42 §6): a write into an entity outside the caller's scope is the
+            // EntityScopeViolationMiddleware's 403 — swallowed by the catch-all below, it was a 500.
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "Unknown error dismissing pending risk {Id}", pendingId);
             return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    // --- Track 9 Stage 9.2 (S42) --------------------------------------------------------------
+
+    /// <summary>
+    /// Registers a standalone hypothesis in the pending-risk queue (T152, S42 §6) — one that no
+    /// assessment answer raised. Same audience as promoting and dismissing: whoever may submit risks.
+    /// </summary>
+    [HttpPost]
+    [Route("Pending")]
+    [Authorize(Policy = "RequireSubmitRisk")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(PendingRiskListing))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PendingRiskListing>> CreateHypothesis([FromBody] HypothesisRequest? request = null)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var created = await risksService.CreateHypothesisAsync(request ?? new HypothesisRequest(), user.Value);
+
+            Logger.Information("User:{User} registered standalone hypothesis {Pending}", user.Value, created.Id);
+
+            return Created($"Risks/Pending/{created.Id}", created);
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (DAL.Exceptions.EntityScopeViolationException)
+        {
+            // Stage 9.2 (S42 §6): a write into an entity outside the caller's scope is the
+            // EntityScopeViolationMiddleware's 403 — swallowed by the catch-all below, it was a 500.
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error registering a standalone hypothesis");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// The existing risks whose (central event, consequences) pair matches the one about to be saved
+    /// (T154, S42 §6). A warning source, never a refusal: no create or save path consults it.
+    ///
+    /// <c>RequireRiskmanagement</c>, the audience of <c>GET /Risks</c>, because the answer is a list
+    /// of risk subjects — a caller who may not list risks must not be able to enumerate them by
+    /// guessing scenarios (S42 §11, D8). The caller's entity scope applies inside the query.
+    /// </summary>
+    [HttpPost]
+    [Route("ScenarioDuplicates")]
+    [Authorize(Policy = "RequireRiskmanagement")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<RiskScenarioDuplicate>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<List<RiskScenarioDuplicate>>> FindScenarioDuplicates(
+        [FromBody] RiskScenarioDuplicateQuery? query = null)
+    {
+        GetUser();
+
+        try
+        {
+            return Ok(await risksService.FindScenarioDuplicatesAsync(query ?? new RiskScenarioDuplicateQuery()));
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
     }
 

@@ -88,6 +88,9 @@ public partial class NRDbContext
         // other derived ones.
         ConfigureRiskChain(modelBuilder);
 
+        // Track 9 Stage 9.2 — structured scenario, evidence confidence, standalone hypotheses and
+        // near misses (S42). Its one new filter, on pending_risks, is below with the others.
+        ConfigureRiskScenario(modelBuilder);
 
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
@@ -104,6 +107,13 @@ public partial class NRDbContext
             ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
 
         modelBuilder.Entity<Assessment>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        // Stage 9.2 (S42 §4.2): the hypothesis queue. It was the one register with no scope at all —
+        // harmless while only legacy-migrated rows lived there, not once POST /Risks/Pending let any
+        // submitter write free text into it. Same rule as a risk, so triage reads, promotes and
+        // dismisses only what the caller could see as a risk.
+        modelBuilder.Entity<PendingRisk>().HasQueryFilter(e =>
             ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
 
         // Records that carry no entity_id of their own but belong to one that does. Without these

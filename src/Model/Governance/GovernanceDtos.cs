@@ -119,6 +119,48 @@ public class PendingRiskPromotion
     public int? Likelihood { get; set; }
 
     public int? Impact { get; set; }
+
+    // --- Stage 9.2 (S42 §6): the structured scenario the promoted risk starts with --------------
+
+    public string? ScenarioCause { get; set; }
+
+    public string? ScenarioVulnerability { get; set; }
+
+    public string? ScenarioCentralEvent { get; set; }
+
+    public string? ScenarioConsequences { get; set; }
+
+    /// <summary>
+    /// The promoted risk's evidence confidence. When omitted the risk is promoted as
+    /// <see cref="EvidenceConfidence.Hypothesis"/>: promotion moves a hypothesis into the register, it
+    /// does not by itself produce evidence (S42 §11, D5).
+    /// </summary>
+    public EvidenceConfidence? EvidenceConfidence { get; set; }
+}
+
+/// <summary>
+/// A standalone hypothesis — a pending risk registered directly rather than raised by an assessment
+/// answer (Stage 9.2, T152, S42 §6). It enters the same triage queue and is promoted or dismissed the
+/// same way.
+/// </summary>
+public class HypothesisRequest
+{
+    /// <summary>Required; what the hypothesis is about.</summary>
+    public string? Subject { get; set; }
+
+    /// <summary>Why someone suspects it — stored as the pending risk's comment.</summary>
+    public string? Description { get; set; }
+
+    public int? OwnerId { get; set; }
+
+    public string? AffectedAssets { get; set; }
+
+    /// <summary>
+    /// The business entity the hypothesis is filed under (S42 §5.4). Must be within the caller's
+    /// scope. Omitted: a caller scoped to one entity gets that one, a caller scoped to several must
+    /// name it, and an unrestricted caller files an organization-wide hypothesis.
+    /// </summary>
+    public int? EntityId { get; set; }
 }
 
 /// <summary>
@@ -131,9 +173,20 @@ public class PendingRiskListing
 {
     public int Id { get; set; }
 
-    public int AssessmentId { get; set; }
+    /// <summary>NULL for a standalone hypothesis (Stage 9.2, S42 §6).</summary>
+    public int? AssessmentId { get; set; }
 
-    public int AssessmentAnswerId { get; set; }
+    /// <summary>NULL for a standalone hypothesis.</summary>
+    public int? AssessmentAnswerId { get; set; }
+
+    /// <summary>Assessment-raised or standalone (S42 §6).</summary>
+    public PendingRiskOrigin Origin { get; set; } = PendingRiskOrigin.Assessment;
+
+    /// <summary>The author of a standalone hypothesis; NULL for an assessment-raised row.</summary>
+    public int? SubmittedById { get; set; }
+
+    /// <summary>The business entity the row is scoped to; NULL is organization-wide (S42 §4.2).</summary>
+    public int? EntityId { get; set; }
 
     public string Subject { get; set; } = string.Empty;
 

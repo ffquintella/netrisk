@@ -544,7 +544,9 @@ Aligns NetRisk with the **MIGR-TI/IA** reference methodology, documented in
 ([docs/methodology/migr-ti-ia-coverage.md](docs/methodology/migr-ti-ia-coverage.md), S28). Twelve stages,
 the fifteen prioritized gaps from that analysis's §12, grouped by dependency. **Status: in progress —
 Stage 9.1 is implemented (T144–T148: schema version 88, `/RiskChain`, the coverage metric and their desktop
-screens); its runtime observations and human/security review are pending.** Does not reopen Track 8. Detailed specifications:
+screens); Stage 9.2 is implemented (T150–T155: schema version 89, the structured scenario, evidence confidence,
+standalone hypotheses, near misses and the duplicate warning); the runtime observations and human/security review
+of both are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -572,16 +574,24 @@ screens); its runtime observations and human/security review are pending.** Does
 
 ### [M40] Stage 9.2 — Structured scenario, record discrimination and evidence confidence
 > outcome: Four scenario fields plus a confidence level make the Phase 2 quality rules machine-verifiable. Closes gap 2.
-> spec: S27
+> spec: S27, S42
 
-- [ ] T149 Merge the Stage 9.2 specification
-- [ ] T150 Split cause/threat, vulnerability/condition, central event and consequences into separate fields
-- [ ] T151 Add an evidence confidence level (confirmed / indicative / hypothesis)
-- [ ] T152 Support standalone hypothesis records, not only ones originating from an assessment answer
-- [ ] T153 Distinguish a near miss from an incident
-- [ ] T154 Add duplicate-risk detection on (central event, consequence) as a warning, not a block
+- [x] T149 Merge the Stage 9.2 specification
+  - note: written as S42 with all eleven sections in the same change as the implementation, and ticked with it as the M40 delivery brief asked (as T143 was for M39) — not yet merged and not yet human- or security-reviewed
+- [x] T150 Split cause/threat, vulnerability/condition, central event and consequences into separate fields
+  - note: four nullable `text` columns on `risks` (schema 89), an editor section with the methodology's template sentence and a detail block; optional by design (S42 D2)
+- [x] T151 Add an evidence confidence level (confirmed / indicative / hypothesis)
+  - note: `risks.evidence_confidence`, NULL reads "not declared"; a promoted pending risk starts as Hypothesis unless the triager says otherwise
+- [x] T152 Support standalone hypothesis records, not only ones originating from an assessment answer
+  - note: `POST /Risks/Pending` (origin Standalone, author recorded) and a form on the pending-risks tab; promotion writes `HYP-{id}` and makes the author the submitter
+  - note: the queue is entity-scoped (S42 amendment 2): `pending_risks.entity_id`, back-filled from the raising assessment; list, promote and dismiss go through the model's query filter, a new hypothesis is filed under an entity in the caller's scope, and a cross-entity write is a 403 rather than a 500 — the desktop risk editor still blanks `reference_id` on its next save (pre-existing, S42 §11 defect 4), so the durable link is `pending_risks.promoted_risk_id`
+- [x] T153 Distinguish a near miss from an incident
+  - note: `incidents.kind`, orthogonal to the threat category; only the Master Dashboard stops counting near misses as open incidents — IRP automation, notifications and exports are unchanged (S42 D9)
+- [x] T154 Add duplicate-risk detection on (central event, consequence) as a warning, not a block
   - note: deliberately out of scope — back-filling the four fields from existing free text; legacy risks keep them null
-- [ ] T155 Test that a legacy risk with all four fields null stays editable, listable and scorable
+  - note: `POST /Risks/ScenarioDuplicates` under `RequireRiskmanagement`, exact match after normalising case, accents, spacing and trailing punctuation; the risk editor asks before saving and a failed check never blocks the save
+- [x] T155 Test that a legacy risk with all four fields null stays editable, listable and scorable
+  - note: E1–E3 of `RiskScenarioInMemoryTest`; the five runtime observations of S42 §8 are still to be recorded on the PR
 
 ### [M41] Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies
 > outcome: Continuity fields that flag 4, Gate A and the restoration metric depend on. Closes gap 4.
@@ -921,3 +931,4 @@ planned, nothing started.**
 | S39 | ICR — consolidated risk index methodology | docs/methodology/icr-indice-consolidado-de-risco.md |
 | S40 | Cyber Risk Overview dashboard and ICR configuration screens | docs/features/risk-overview-dashboard.md |
 | S41 | Stage 9.1 — linkage chain specification | docs/roadmap/track9/9.1-linkage-chain.md |
+| S42 | Stage 9.2 — structured scenario, record discrimination and evidence confidence specification | docs/roadmap/track9/9.2-structured-scenario.md |

@@ -629,8 +629,10 @@ public class RisksService(
     
     public async Task<Risk?> CreateRiskAsync(Risk risk)
     {
+        NormalizeScenario(risk);
+
         await using var contex = dalService.GetContext();
-        
+
         risk.Id = 0;
         risk.SubmissionDate = DateTime.Now;
         risk.LastUpdate = DateTime.Now;
@@ -876,6 +878,10 @@ public class RisksService(
     {
         ArgumentNullException.ThrowIfNull(risk);
 
+        // Before any read: an invalid confidence is the caller's error whatever the row holds. All four
+        // scenario fields NULL is valid — that is every legacy risk (T155, S42 §8 E1).
+        NormalizeScenario(risk);
+
         await using var context = dalService.GetContext();
 
         var dbRisk = await context.Risks
@@ -917,22 +923,27 @@ public class RisksService(
         var rows = await query.OrderByDescending(p => p.SubmissionDate).ThenByDescending(p => p.Id)
             .ToListAsync();
 
-        return rows.Select(p => new PendingRiskListing
-        {
-            Id = p.Id,
-            AssessmentId = p.AssessmentId,
-            AssessmentAnswerId = p.AssessmentAnswerId,
-            Subject = DecodeSubject(p.Subject),
-            Score = p.Score,
-            OwnerId = p.Owner,
-            AffectedAssets = p.AffectedAssets,
-            Comment = p.Comment,
-            SubmissionDate = p.SubmissionDate,
-            Status = p.Status,
-            PromotedRiskId = p.PromotedRiskId,
-            DismissalReason = p.DismissalReason
-        }).ToList();
+        return rows.Select(ToListing).ToList();
     }
+
+    private static PendingRiskListing ToListing(PendingRisk p) => new()
+    {
+        Id = p.Id,
+        AssessmentId = p.AssessmentId,
+        AssessmentAnswerId = p.AssessmentAnswerId,
+        Origin = p.Origin,
+        SubmittedById = p.SubmittedById,
+        EntityId = p.EntityId,
+        Subject = DecodeSubject(p.Subject),
+        Score = p.Score,
+        OwnerId = p.Owner,
+        AffectedAssets = p.AffectedAssets,
+        Comment = p.Comment,
+        SubmissionDate = p.SubmissionDate,
+        Status = p.Status,
+        PromotedRiskId = p.PromotedRiskId,
+        DismissalReason = p.DismissalReason
+    };
 
     public async Task<Risk> PromotePendingRiskAsync(int pendingRiskId, PendingRiskPromotion edits,
         int actingUserId)
@@ -958,6 +969,21 @@ public class RisksService(
                 "The promoted risk needs a subject. The assessment answer did not carry one, so it has " +
                 "to be supplied here.");
 
+        // Stage 9.2 (S42 §11, D5): promotion moves a hypothesis into the register; it does not by
+        // itself produce evidence, so the risk starts as a Hypothesis unless the triager says otherwise.
+        var confidence = edits.EvidenceConfidence ?? EvidenceConfidence.Hypothesis;
+        EnsureDefined(confidence);
+
+        // The origin survives the promotion (S42 §5.2): an assessment row keeps the ASMT reference it
+        // always had, a standalone hypothesis gets HYP-{id}, and its author — not the triager — is the
+        // risk's submitter. The triager stays on the pending row (triaged_by_id).
+        var referenceId = pending.Origin == PendingRiskOrigin.Standalone
+            ? $"HYP-{pending.Id}"
+            : $"ASMT-{pending.AssessmentId}-{pending.AssessmentAnswerId}";
+        var submittedBy = pending.Origin == PendingRiskOrigin.Standalone && pending.SubmittedById != null
+            ? pending.SubmittedById.Value
+            : actingUserId;
+
         // The category and source are required FKs on `risks`, so a promotion that does not name
         // them takes whatever the register's first rows are rather than failing on a constraint.
         var categoryId = edits.CategoryId ?? await context.Categories.Select(c => c.Value).FirstOrDefaultAsync();
@@ -968,20 +994,29 @@ public class RisksService(
             Status = "New",
             StatusId = DAL.Enums.RiskStatus.New,
             Subject = subject,
-            ReferenceId = $"ASMT-{pending.AssessmentId}-{pending.AssessmentAnswerId}",
+            ReferenceId = referenceId,
             Category = categoryId,
             Source = sourceId,
             Owner = edits.OwnerId ?? pending.Owner,
             Manager = edits.ManagerId,
-            SubmittedBy = actingUserId,
-            EntityId = edits.EntityId,
+            SubmittedBy = submittedBy,
+            // The risk lands where the hypothesis was filed unless the triager moves it; either way
+            // the context's write guard refuses an entity outside the caller's scope (S42 §5.4).
+            EntityId = edits.EntityId ?? pending.EntityId,
             Assessment = pending.Comment ?? string.Empty,
             Notes = edits.Notes ?? pending.Comment ?? string.Empty,
             SubmissionDate = DateTime.UtcNow,
             LastUpdate = DateTime.UtcNow,
             RiskCatalogMapping = string.Empty,
-            ThreatCatalogMapping = string.Empty
+            ThreatCatalogMapping = string.Empty,
+            ScenarioCause = edits.ScenarioCause,
+            ScenarioVulnerability = edits.ScenarioVulnerability,
+            ScenarioCentralEvent = edits.ScenarioCentralEvent,
+            ScenarioConsequences = edits.ScenarioConsequences,
+            EvidenceConfidence = confidence
         };
+
+        NormalizeScenario(risk);
 
         context.Risks.Add(risk);
         await context.SaveChangesAsync();
@@ -1040,6 +1075,152 @@ public class RisksService(
         pending.TriagedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
+    }
+
+    // --- Track 9 Stage 9.2 (S42): hypotheses and the structured scenario --------------------------
+
+    public async Task<PendingRiskListing> CreateHypothesisAsync(HypothesisRequest request, int actingUserId)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            throw new InvalidParameterException(nameof(request.Subject),
+                "A hypothesis needs a subject: the triage queue lists it by subject, and promotion uses it " +
+                "as the risk's subject.");
+
+        await using var context = dalService.GetContext();
+
+        if (request.OwnerId != null && !await context.Users.AnyAsync(u => u.Value == request.OwnerId.Value))
+            throw new DataNotFoundException("local", "user",
+                new Exception($"User with id {request.OwnerId} not found"));
+
+        var entityId = await ResolveHypothesisEntityAsync(context, request.EntityId);
+
+        // Same table, same queue, same triage as an assessment-raised row; what differs is the origin,
+        // the author, and the absence of an assessment (S42 §5.2). The score is 0 because no
+        // questionnaire produced one — promotion scores the risk from the likelihood and impact chosen
+        // then, exactly as it does for an assessment row.
+        var pending = new PendingRisk
+        {
+            Origin = PendingRiskOrigin.Standalone,
+            AssessmentId = null,
+            AssessmentAnswerId = null,
+            SubmittedById = actingUserId,
+            Subject = System.Text.Encoding.UTF8.GetBytes(request.Subject.Trim()),
+            Score = 0,
+            Owner = request.OwnerId,
+            AffectedAssets = string.IsNullOrWhiteSpace(request.AffectedAssets) ? null : request.AffectedAssets.Trim(),
+            Comment = request.Description?.Trim() ?? string.Empty,
+            SubmissionDate = DateTime.UtcNow,
+            Status = PendingRiskStatus.Pending,
+            EntityId = entityId
+        };
+
+        context.PendingRisks.Add(pending);
+        await context.SaveChangesAsync();
+
+        return ToListing(pending);
+    }
+
+    public async Task<List<Model.Risks.Scenario.RiskScenarioDuplicate>> FindScenarioDuplicatesAsync(
+        Model.Risks.Scenario.RiskScenarioDuplicateQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var key = Tools.Risks.RiskScenarioMatcher.Key(query.CentralEvent, query.Consequences);
+        if (key is null)
+            throw new InvalidParameterException(
+                string.IsNullOrWhiteSpace(query.CentralEvent) ? nameof(query.CentralEvent) : nameof(query.Consequences),
+                "A duplicate is defined on the (central event, consequences) pair. Half a pair matches " +
+                "nothing, and answering with an empty list would read as \"no duplicate\".");
+
+        await using var context = dalService.GetContext();
+
+        // The scoped context: a scoped caller is warned only about risks they can see, so the check
+        // cannot be used to learn the subjects of another entity's risks. Only rows with both halves
+        // filled can match — a legacy risk with NULL fields is never anyone's duplicate (S42 §8 D3).
+        // Normalization (accents, case, whitespace) is not translatable to SQL, so the candidates are
+        // matched in memory; for a register of thousands of risks this is a few kilobytes (S42 §11, R2).
+        var rows = context.Risks.AsNoTracking()
+            .Where(r => r.ScenarioCentralEvent != null && r.ScenarioConsequences != null);
+
+        if (query.ExcludeRiskId is { } excluded) rows = rows.Where(r => r.Id != excluded);
+
+        var candidates = await rows
+            .Select(r => new { r.Id, r.Subject, r.Status, r.ScenarioCentralEvent, r.ScenarioConsequences })
+            .ToListAsync();
+
+        return candidates
+            .Where(r => Tools.Risks.RiskScenarioMatcher.Key(r.ScenarioCentralEvent, r.ScenarioConsequences) == key)
+            .OrderBy(r => r.Id)
+            .Select(r => new Model.Risks.Scenario.RiskScenarioDuplicate
+            {
+                RiskId = r.Id,
+                Subject = r.Subject,
+                Status = r.Status,
+                CentralEvent = r.ScenarioCentralEvent,
+                Consequences = r.ScenarioConsequences
+            })
+            .ToList();
+    }
+
+    /// <summary>
+    /// Where a new hypothesis is filed (S42 §5.4), checked before anything is written:
+    /// a named entity must exist and be within the caller's scope; with none named, a caller scoped
+    /// to exactly one entity gets it, a caller scoped to several must choose, and an unrestricted
+    /// caller files it organization-wide. The context's write guard enforces the same rule again on
+    /// save — this is what turns it into a clear error before the row exists.
+    /// </summary>
+    private static async Task<int?> ResolveHypothesisEntityAsync(DAL.Context.AuditableContext context, int? requested)
+    {
+        var scope = context.EntityScope;
+
+        if (requested is null)
+        {
+            if (scope.IsUnrestricted) return null;
+            if (scope.EntityIds.Count == 1) return scope.EntityIds[0];
+            if (scope.EntityIds.Count == 0)
+                throw new DAL.Exceptions.EntityScopeViolationException(nameof(PendingRisk), null, scope.ToString());
+
+            throw new InvalidParameterException(nameof(HypothesisRequest.EntityId),
+                "You hold more than one business entity, so the hypothesis has to say which one it is " +
+                "filed under — otherwise nobody scoped to that entity could triage it.");
+        }
+
+        if (!await context.Entities.AnyAsync(e => e.Id == requested.Value))
+            throw new DataNotFoundException("local", "entities",
+                new Exception($"Entity with id {requested} not found"));
+
+        if (!scope.Allows(requested))
+            throw new DAL.Exceptions.EntityScopeViolationException(nameof(PendingRisk), requested, scope.ToString());
+
+        return requested;
+    }
+
+    /// <summary>
+    /// The write-side rules of the structured scenario (S42 §5.1), applied by every path that writes a
+    /// risk's scenario: a blank field is stored as NULL — so "how many risks have a central event" counts
+    /// text, not whitespace — and the evidence confidence must be one of the three levels or NULL. No
+    /// field is required: a risk with all four NULL is valid, which is what keeps legacy risks editable.
+    /// </summary>
+    private static void NormalizeScenario(Risk risk)
+    {
+        risk.ScenarioCause = Blank(risk.ScenarioCause);
+        risk.ScenarioVulnerability = Blank(risk.ScenarioVulnerability);
+        risk.ScenarioCentralEvent = Blank(risk.ScenarioCentralEvent);
+        risk.ScenarioConsequences = Blank(risk.ScenarioConsequences);
+
+        if (risk.EvidenceConfidence is { } confidence) EnsureDefined(confidence);
+
+        static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+    }
+
+    private static void EnsureDefined(EvidenceConfidence confidence)
+    {
+        if (!Enum.IsDefined(confidence))
+            throw new InvalidParameterException(nameof(Risk.EvidenceConfidence),
+                $"Evidence confidence {(int)confidence} is not one of Confirmed (1), Indicative (2) or " +
+                "Hypothesis (3). Leave it empty when no level has been declared.");
     }
 
     // --- Track 8 milestone 8.5.1: event-triggered review ---------------------------------------

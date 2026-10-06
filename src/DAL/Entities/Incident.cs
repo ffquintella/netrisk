@@ -30,7 +30,13 @@ public class Incident : DAL.Interfaces.IEntityScoped
     public int? EntityId { get; set; }
     public virtual Entity? Entity { get; set; }
 
-    public string Category { get; set; } = "not_specified";    
+    public string Category { get; set; } = "not_specified";
+
+    /// <summary>
+    /// Incident or near miss (Stage 9.2, S42 §4.3) — orthogonal to <see cref="Category"/>, which is the
+    /// threat type. Defaults to <c>Incident</c>, so a client that never sends it keeps today's meaning.
+    /// </summary>
+    public DAL.Enums.IncidentKind Kind { get; set; } = DAL.Enums.IncidentKind.Incident;
     public DateTime ReportDate { get; set; } = DateTime.Now;
     public User? AssignedTo { get; set; }
     public int? AssignedToId { get; set; }

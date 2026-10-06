@@ -81,6 +81,18 @@ public interface IRiskGovernanceService
 
     Task DismissPendingRiskAsync(int pendingId, string reason);
 
+    // --- Track 9 Stage 9.2 (S42) --------------------------------------------------------------
+
+    /// <summary>Registers a standalone hypothesis in the pending-risk queue (<c>POST /Risks/Pending</c>, T152).</summary>
+    Task<PendingRiskListing> CreateHypothesisAsync(HypothesisRequest request);
+
+    /// <summary>
+    /// The existing risks with the same (central event, consequences) pair
+    /// (<c>POST /Risks/ScenarioDuplicates</c>, T154). A warning source: the caller decides.
+    /// </summary>
+    Task<List<Model.Risks.Scenario.RiskScenarioDuplicate>> FindScenarioDuplicatesAsync(
+        Model.Risks.Scenario.RiskScenarioDuplicateQuery query);
+
     Task RequestReviewAsync(int riskId, string reason);
 
     Task<List<Risk>> GetReviewRequestedAsync();

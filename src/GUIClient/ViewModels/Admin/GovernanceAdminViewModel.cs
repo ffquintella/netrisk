@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using DAL.Enums;
+using GUIClient.Tools;
 using Model.DTO;
 using Model.Governance;
 using ReactiveUI;
@@ -54,6 +55,12 @@ public class GovernanceAdminViewModel : ViewModelBase
     public string StrWorkflowViolationsMsg { get; } = Localizer["WorkflowViolationsMSG"];
     public string StrPendingRisksMsg { get; } = Localizer["PendingRisksMSG"];
     public string StrReviewersMsg { get; } = Localizer["EntityRiskReviewersMSG"];
+
+    // Stage 9.2 (S42 §7): the origin column and the standalone hypothesis form.
+    public string StrOrigin { get; } = Localizer["PendingOrigin"];
+    public string StrNewHypothesis { get; } = Localizer["NewHypothesis"];
+    public string StrHypothesisDescription { get; } = Localizer["HypothesisDescription"];
+    public string StrRegisterHypothesis { get; } = Localizer["RegisterHypothesis"];
 
     #endregion
 
@@ -138,14 +145,45 @@ public class GovernanceAdminViewModel : ViewModelBase
 
     public ObservableCollection<AppetiteBreachRow> AboveAppetite { get; } = [];
 
-    public ObservableCollection<PendingRiskListing> PendingRisks { get; } = [];
+    public ObservableCollection<PendingRiskRow> PendingRisks { get; } = [];
 
-    private PendingRiskListing? _selectedPendingRisk;
+    private PendingRiskRow? _selectedPendingRisk;
 
-    public PendingRiskListing? SelectedPendingRisk
+    public PendingRiskRow? SelectedPendingRisk
     {
         get => _selectedPendingRisk;
         set => this.RaiseAndSetIfChanged(ref _selectedPendingRisk, value);
+    }
+
+    private string? _hypothesisSubject;
+
+    /// <summary>The subject of a standalone hypothesis about to be registered (T152).</summary>
+    public string? HypothesisSubject
+    {
+        get => _hypothesisSubject;
+        set => this.RaiseAndSetIfChanged(ref _hypothesisSubject, value);
+    }
+
+    private int? _hypothesisEntityId;
+
+    /// <summary>
+    /// The entity the hypothesis is filed under (S42 §5.4). Left empty, the server files it under the
+    /// caller's only entity, asks a caller with several to choose, or files it organization-wide for an
+    /// unrestricted caller.
+    /// </summary>
+    public int? HypothesisEntityId
+    {
+        get => _hypothesisEntityId;
+        set => this.RaiseAndSetIfChanged(ref _hypothesisEntityId, value);
+    }
+
+    private string? _hypothesisDescription;
+
+    /// <summary>Why it is suspected — stored as the pending risk's comment.</summary>
+    public string? HypothesisDescription
+    {
+        get => _hypothesisDescription;
+        set => this.RaiseAndSetIfChanged(ref _hypothesisDescription, value);
     }
 
     private string? _triageReason;
@@ -209,6 +247,7 @@ public class GovernanceAdminViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtDeleteAppetiteClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtPromotePendingClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDismissPendingClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtRegisterHypothesisClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAppointReviewerClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtRemoveReviewerClicked { get; }
 
@@ -221,6 +260,8 @@ public class GovernanceAdminViewModel : ViewModelBase
         BtDeleteAppetiteClicked = ReactiveCommand.CreateFromTask(DeleteAppetiteAsync);
         BtPromotePendingClicked = ReactiveCommand.CreateFromTask(PromotePendingAsync);
         BtDismissPendingClicked = ReactiveCommand.CreateFromTask(DismissPendingAsync);
+        BtRegisterHypothesisClicked = ReactiveCommand.CreateFromTask(RegisterHypothesisAsync,
+            this.WhenAnyValue(x => x.HypothesisSubject, subject => !string.IsNullOrWhiteSpace(subject)));
         BtAppointReviewerClicked = ReactiveCommand.CreateFromTask(AppointReviewerAsync);
         BtRemoveReviewerClicked = ReactiveCommand.CreateFromTask(RemoveReviewerAsync);
     }
@@ -230,8 +271,9 @@ public class GovernanceAdminViewModel : ViewModelBase
         await WithBusyAsync(async () =>
         {
             await LoadAppetitesAsync();
-            await LoadPendingRisksAsync();
+            // Entities first: the pending-risk rows name the entity each hypothesis is filed under.
             await LoadEntitiesAndUsersAsync();
+            await LoadPendingRisksAsync();
             await LoadViolationsAsync();
         });
     }
@@ -291,7 +333,32 @@ public class GovernanceAdminViewModel : ViewModelBase
         var pending = await GovernanceService.GetPendingRisksAsync();
 
         PendingRisks.Clear();
-        foreach (var row in pending) PendingRisks.Add(row);
+        foreach (var row in pending)
+            PendingRisks.Add(new PendingRiskRow(row, Localizer[RiskScenarioSummary.OriginKey(row.Origin)],
+                Entities.FirstOrDefault(e => e.Id == row.EntityId)?.DisplayName, StrGlobal));
+    }
+
+    /// <summary>
+    /// Registers a standalone hypothesis (Stage 9.2, T152) — one no assessment answer raised — into
+    /// this same queue, where it is promoted or dismissed like any other row.
+    /// </summary>
+    private async Task RegisterHypothesisAsync()
+    {
+        if (string.IsNullOrWhiteSpace(HypothesisSubject)) return;
+
+        await RunAsync(Localizer["HypothesisRegisteredMSG"], async () =>
+        {
+            await GovernanceService.CreateHypothesisAsync(new HypothesisRequest
+            {
+                Subject = HypothesisSubject,
+                Description = HypothesisDescription,
+                EntityId = HypothesisEntityId
+            });
+
+            HypothesisSubject = null;
+            HypothesisDescription = null;
+            await LoadPendingRisksAsync();
+        });
     }
 
     private async Task PromotePendingAsync()
@@ -303,9 +370,9 @@ public class GovernanceAdminViewModel : ViewModelBase
             await GovernanceService.PromotePendingRiskAsync(SelectedPendingRisk.Id,
                 new PendingRiskPromotion
                 {
-                    Subject = SelectedPendingRisk.Subject,
-                    Notes = SelectedPendingRisk.Comment,
-                    OwnerId = SelectedPendingRisk.OwnerId
+                    Subject = SelectedPendingRisk.Listing.Subject,
+                    Notes = SelectedPendingRisk.Listing.Comment,
+                    OwnerId = SelectedPendingRisk.Listing.OwnerId
                 });
 
             await LoadPendingRisksAsync();

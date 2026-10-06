@@ -179,6 +179,31 @@ public class MariaDbContainerFixture : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// The number of the one <c>Structure/{n}.sql</c> whose text contains <paramref name="marker"/> —
+    /// the version that introduced a given table or column.
+    ///
+    /// For a test of one stage's copy or replay ("apply n − 1, seed, apply n"). Reading
+    /// <see cref="TargetSchemaVersion"/> for that only works until the next version merges: Stage 9.1's
+    /// test did, and broke the moment Stage 9.2 took 89 (S42 §11, defect 1). The marker survives both a
+    /// renumbering on merge and a later version landing on top.
+    /// </summary>
+    public static int VersionIntroducing(string marker)
+    {
+        var matches = Directory.GetFiles(Path.Combine(RepoDbDir(), "Structure"), "*.sql")
+            .Where(path => int.TryParse(Path.GetFileNameWithoutExtension(path), out _))
+            .Where(path => File.ReadAllText(path).Contains(marker, StringComparison.Ordinal))
+            .Select(path => int.Parse(Path.GetFileNameWithoutExtension(path)))
+            .OrderBy(v => v)
+            .ToList();
+
+        return matches.Count == 1
+            ? matches[0]
+            : throw new InvalidOperationException(
+                $"Expected exactly one Structure script containing '{marker}', found {matches.Count}: " +
+                string.Join(", ", matches));
+    }
+
     /// <summary>Absolute path to <c>src/ConsoleClient/DB</c>, resolved from this source file's location.</summary>
     public static string RepoDbDir([CallerFilePath] string thisFile = "")
     {
