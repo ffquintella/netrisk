@@ -12,6 +12,9 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Upgrade ReactiveUI 24.2.0 → 25.0.1 and ReactiveUI.Avalonia 12.1.2 → 12.1.3, moving the desktop client's validation rules onto `WhenAnyValueUnsafe` because ReactiveUI 25's build-time bindings cannot serve a generic helper and would have made every rule throw at run time
+
 ## [2.27.0] - 2026-10-07
 
 ### Added

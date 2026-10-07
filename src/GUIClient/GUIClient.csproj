@@ -80,8 +80,9 @@
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="System.Drawing.Common" />
-    <!-- ReactiveUI 24 ships its own Rx primitives (RxVoid / ReactiveUI.Primitives) and no longer
-         brings System.Reactive or DynamicData transitively. Both are still used directly here:
+    <!-- Since ReactiveUI 24 (and still in 25) ReactiveUI ships its own Rx primitives (RxVoid /
+         ReactiveUI.Primitives) and brings neither System.Reactive nor DynamicData transitively.
+         Both are used directly here:
          System.Reactive for Observable/Subject/Throttle, DynamicData for its Kernel extension
          methods (IndexOf, AddRange). So both are now explicit rather than incidental. -->
     <PackageReference Include="DynamicData" />

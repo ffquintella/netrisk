@@ -9,7 +9,7 @@ namespace GUIClient.Validation;
 /// The declaration surface for view-model validation. Deliberately mirrors the
 /// <c>ReactiveUI.Validation</c> API these call sites were originally written against, so
 /// the rules read the same, but the implementation is in-tree (see <see cref="ValidationContext"/>)
-/// rather than a package that has not been rebuilt for ReactiveUI 24.
+/// rather than a package that has not been rebuilt for ReactiveUI 24 or later.
 /// </summary>
 public static class ValidationExtensions
 {
@@ -24,8 +24,16 @@ public static class ValidationExtensions
         string message)
         where TViewModel : class, IReactiveObject, IValidatableViewModel
     {
+        // Must stay WhenAnyValueUnsafe. Since ReactiveUI 25, WhenAnyValue is ReactiveUI.Binding's: a source
+        // generator writes one dispatch per call site at build time, and it cannot write one here, where the
+        // view-model is a type parameter and the property a runtime argument (RXUIBIND016 / RXUIBIND021). The
+        // plain call compiles and then throws InvalidOperationException, so every rule — and every Save button
+        // gated on one — would fail. The Unsafe twin walks the expression by reflection, which is what
+        // ReactiveUI 24's WhenAnyValue did for every call, so the rules observe exactly what they did before.
+        // It is marked [RequiresUnreferencedCode]; the shipped client is published untrimmed (build/Build.cs,
+        // build/Build.Installers.cs), so the reflection has every member it needs.
         var stream = viewModel
-            .WhenAnyValue(property)
+            .WhenAnyValueUnsafe(property)
             .Select(value =>
             {
                 try
