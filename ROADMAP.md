@@ -595,7 +595,7 @@ of both are pending.** Does not reopen Track 8. Detailed specifications:
 
 ### [M41] Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies
 > outcome: Continuity fields that flag 4, Gate A and the restoration metric depend on. Closes gap 4.
-> spec: S27
+> spec: S27, S43
 
 - [ ] T156 Merge the Stage 9.3 specification
 - [ ] T157 Declare MTPD/MAO, RTO and RPO on the process and the IT service, plus process criticality
@@ -932,3 +932,4 @@ planned, nothing started.**
 | S40 | Cyber Risk Overview dashboard and ICR configuration screens | docs/features/risk-overview-dashboard.md |
 | S41 | Stage 9.1 — linkage chain specification | docs/roadmap/track9/9.1-linkage-chain.md |
 | S42 | Stage 9.2 — structured scenario, record discrimination and evidence confidence specification | docs/roadmap/track9/9.2-structured-scenario.md |
+| S43 | Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies specification | docs/roadmap/track9/9.3-bia-continuity.md |
