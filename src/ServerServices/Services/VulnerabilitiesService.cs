@@ -92,6 +92,7 @@ public class VulnerabilitiesService(
     public Vulnerability Create(Vulnerability vulnerability)
     {
         EnsureValidSourceType(vulnerability);
+        ClearExploitationSignals(vulnerability);
         vulnerability.Id = 0;
         using var dbContext = DalService.GetContext();
 
@@ -104,6 +105,7 @@ public class VulnerabilitiesService(
     public async Task<Vulnerability> CreateAsync(Vulnerability vulnerability)
     {
         EnsureValidSourceType(vulnerability);
+        ClearExploitationSignals(vulnerability);
         vulnerability.Id = 0;
         await using var dbContext = DalService.GetContext();
 
@@ -129,7 +131,8 @@ public class VulnerabilitiesService(
         var actions = dbVulnerability.Actions.ToList();
 
         vulnerability.Actions = actions;
-        
+
+        KeepExploitationSignals(dbVulnerability, vulnerability);
         vulnerability.Adapt(dbVulnerability);
         
         dbContext.SaveChanges();
@@ -169,7 +172,8 @@ public class VulnerabilitiesService(
             {
                 risk.Vulnerabilities = null!;
             }
-                
+
+            KeepExploitationSignals(dbVulnerability, vulnerability);
             vulnerability.Adapt(dbVulnerability);
                 
             await dbContext.SaveChangesAsync();
@@ -183,6 +187,36 @@ public class VulnerabilitiesService(
             }
         }
 
+    }
+
+    /// <summary>
+    /// The EPSS columns belong to the synchronization (Stage 9.4, T162, S45 §4.1): a new finding starts
+    /// with none, whatever the body said, and the next sync fills them.
+    /// </summary>
+    private static void ClearExploitationSignals(Vulnerability? vulnerability)
+    {
+        if (vulnerability == null) return;
+
+        vulnerability.EpssScore = null;
+        vulnerability.EpssPercentile = null;
+        vulnerability.EpssSource = null;
+        vulnerability.EpssCve = null;
+        vulnerability.EpssAsOf = null;
+        vulnerability.EpssUpdatedAt = null;
+    }
+
+    /// <summary>
+    /// An edit keeps the stored EPSS columns (S45 §2): <c>Adapt</c> copies every property of the body, so a
+    /// client that does not know the columns would erase them, and one that does could forge them.
+    /// </summary>
+    private static void KeepExploitationSignals(Vulnerability stored, Vulnerability incoming)
+    {
+        incoming.EpssScore = stored.EpssScore;
+        incoming.EpssPercentile = stored.EpssPercentile;
+        incoming.EpssSource = stored.EpssSource;
+        incoming.EpssCve = stored.EpssCve;
+        incoming.EpssAsOf = stored.EpssAsOf;
+        incoming.EpssUpdatedAt = stored.EpssUpdatedAt;
     }
 
     /// <summary>

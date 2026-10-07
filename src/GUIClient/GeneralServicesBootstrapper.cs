@@ -129,6 +129,11 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IContinuityService>(sp => new ContinuityRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.4 (S45): exploitation signals — KEV, EPSS, ATT&CK and the prioritization. The
+        // desktop surface that uses it is T302.
+        services.AddTransient<IExploitationSignalsService>(sp => new ExploitationSignalsRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

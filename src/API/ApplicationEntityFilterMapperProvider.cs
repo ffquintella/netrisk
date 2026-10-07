@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq.Expressions;
 using DAL.Entities;
 using Gridify;
@@ -34,7 +35,20 @@ public class ApplicationEntityFilterMapperProvider(ILocalizationService localiza
         return new GridifyMapper<T>();
     }
 
-    private static IGridifyMapper<Vulnerability> VulnerabilityMapper(IStringLocalizer localizer) =>
+    private static IGridifyMapper<Vulnerability> VulnerabilityMapper(IStringLocalizer localizer)
+    {
+        var mapper = VulnerabilityColumns(localizer);
+
+        // Stage 9.4 (T162, S45 §6): the effective EPSS reading, filterable and sortable. A probability is
+        // fractional, and Gridify parses a value with the request's culture — under pt-BR "0.1" is not a
+        // number and "0,1" splits the filter — so these two parse the value invariantly.
+        AddInvariantNumber(mapper, localizer, "epss", v => v.EpssScore);
+        AddInvariantNumber(mapper, localizer, "epssPercentile", v => v.EpssPercentile);
+
+        return mapper;
+    }
+
+    private static IGridifyMapper<Vulnerability> VulnerabilityColumns(IStringLocalizer localizer) =>
         Build<Vulnerability>(localizer,
             ("title", v => v.Title),
             ("id", v => v.Id),
@@ -50,6 +64,27 @@ public class ApplicationEntityFilterMapperProvider(ILocalizationService localiza
             ("source", v => v.ImportSource),
             ("technology", v => v.Technology),
             ("hostname", v => v.Host!.HostName));
+
+    /// <summary>
+    /// A fractional column whose filter value is parsed in the invariant culture (a dot as the decimal
+    /// separator) whatever the request's culture. A value that is not a number is a
+    /// <see cref="GridifyFilteringException"/>, which the list endpoints answer with 400.
+    /// </summary>
+    private static void AddInvariantNumber<T>(IGridifyMapper<T> mapper, IStringLocalizer localizer, string name,
+        Expression<Func<T, object?>> selector)
+    {
+        object Parse(string value) =>
+            double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                ? number
+                : throw new GridifyFilteringException(
+                    $"'{value}' is not a number for {name}: use a dot as the decimal separator, e.g. {name}>=0.1.");
+
+        var localized = localizer[name].Value;
+        if (!string.Equals(localized, name, StringComparison.OrdinalIgnoreCase))
+            mapper.AddMap(localized, selector, Parse);
+
+        mapper.AddMap(name, selector, Parse);
+    }
 
     private static IGridifyMapper<Host> HostMapper(IStringLocalizer localizer) =>
         Build<Host>(localizer,

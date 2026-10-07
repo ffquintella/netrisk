@@ -12,6 +12,24 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.29.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.4 specification: CISA KEV, first-class EPSS and MITRE ATT&CK, declaring the EPSS convergence rule and the rule that a KEV entry is never silently delisted (T161, S45)
+- Store EPSS on every finding as `vulnerabilities.epss_*` columns, filterable and sortable as `epss` with a dot as the decimal separator in every culture, fed by a daily FIRST.org sync and by Vision One, with both readings kept per CVE in `epss_scores` and FIRST's winning whichever arrives last (T162, S45)
+- Synchronize the CISA KEV catalogue daily into `kev_entries` with its listing date, due date, ransomware use and required action, recording every run, failed ones included, in `exploitation_signal_syncs` (T163, S45)
+- Associate MITRE ATT&CK techniques with a finding and with a risk scenario through `/ExploitationSignals/Vulnerabilities/{id}/Techniques` and `/ExploitationSignals/Risks/{id}/Techniques`, the risk side in the governance audit trail (T164, S45)
+- Prioritize open findings P1–P4 or Undetermined by combining exploitation evidence — KEV, scanner-observed exploitation, EPSS ≥ 0.10, a public exploit — with impact from CVSS or severity through `GET /ExploitationSignals/Prioritized`, and report the time to remediate KEV findings (T165, S45)
+
+### Changed
+- Keep the sync-owned EPSS columns out of `POST` and `PUT /Vulnerabilities`, which no longer set or overwrite them (T162, S45)
+
+### Fixed
+- Record the EPSS score Vision One delivers instead of dropping it into a tool-fields bag that was never persisted (T162, S45)
+
+### Security
+- Read the KEV and EPSS feeds only from the job host, through the SSRF-guarded outbound client and from HTTPS URLs set in deployment configuration, and let neither an unavailable nor a malformed catalogue delist a KEV entry (T166, T167, S45)
+
 ## [2.28.1] - 2026-10-07
 
 ### Fixed

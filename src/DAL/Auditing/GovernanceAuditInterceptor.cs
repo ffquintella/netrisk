@@ -69,7 +69,12 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // voiding.
         nameof(BusinessImpactAnalysis),
         nameof(BiaDependency),
-        nameof(RestorationTest)
+        nameof(RestorationTest),
+
+        // Stage 9.4 (S45 §4.6): the ATT&CK techniques of a risk scenario, like its chain links. The
+        // finding-side associations, the KEV catalogue and the EPSS readings are not audited: Vulnerability
+        // is not either, and a 1 500-row catalogue would bury the trail.
+        nameof(RiskAttackTechnique)
     };
 
     /// <summary>

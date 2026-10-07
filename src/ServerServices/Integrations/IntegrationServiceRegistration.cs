@@ -142,5 +142,11 @@ public static class IntegrationServiceRegistration
         services.AddTransient<ITrendMicroService, TrendMicroService>();
         services.AddTransient<ISecurityScorecardClient, SecurityScorecardClient>();
         services.AddTransient<ISecurityScorecardService, SecurityScorecardService>();
+
+        // Track 9 Stage 9.4 (S45) — exploitation signals. In the shared graph for the reason this file
+        // exists: the job host runs the KEV and EPSS syncs, the Vision One sync above records its EPSS
+        // through the same service whichever host runs it, and the API reads what they wrote.
+        services.AddTransient<IExploitationSignalsSyncService, ExploitationSignals.ExploitationSignalsSyncService>();
+        services.AddTransient<IExploitationSignalsService, ExploitationSignals.ExploitationSignalsService>();
     }
 }

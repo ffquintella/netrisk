@@ -10,8 +10,12 @@ using DAL.Enums;
 using JetBrains.Annotations;
 using Model.Exceptions;
 using Model.Integrations;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using ServerServices.Integrations;
 using ServerServices.Integrations.TrendMicro;
 using ServerServices.Interfaces;
+using ServerServices.Services;
 using ServerServices.Tests.ServiceTests;
 using Xunit;
 
@@ -621,6 +625,78 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal("agent-1:CVE-2026-1111", critical.ToolUniqueId);
         Assert.NotNull(critical.SlaDueDate);
         Assert.NotNull(critical.DedupKey);
+    }
+
+    /// <summary>
+    /// Stage 9.4 (T162, S45 §2, §8 S10) — Vision One's EPSS used to go into <c>ToolFields</c>, which is never
+    /// persisted. It is now recorded per CVE as a <c>VisionOne</c> reading and projected onto the finding.
+    /// </summary>
+    [Fact]
+    public async Task VisionOnesEpssIsRecordedAndProjectedOntoTheFinding()
+    {
+        var view = await ConnectionAsync();
+
+        StubApi(
+            devices: """{"items":[{"id":"agent-1","name":"db-prod-01"},{"id":"agent-2","name":"web-01"}]}""",
+            vulnerable: """
+                {"items":[
+                  {"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111","severity":"high","epssScore":0.42},
+                                                 {"id":"CVE-2026-2222","severity":"low"}]},
+                  {"id":"agent-2","cveRecords":[{"id":"CVE-2026-1111","severity":"high","epssScore":0.42}]}]}
+                """);
+
+        await _svc.SyncAsync(view.Id);
+
+        await using var db = OpenContext();
+
+        var reading = db.EpssScores.Single();
+        Assert.Equal(("CVE-2026-1111", EpssSource.VisionOne, 0.42), (reading.CveId, reading.Source, reading.Score));
+        Assert.Null(reading.Percentile);
+
+        var withEpss = db.Vulnerabilities.Where(v => v.EpssScore != null).ToList();
+        Assert.Equal(2, withEpss.Count);
+        Assert.All(withEpss, v => Assert.Equal((0.42, EpssSource.VisionOne, "CVE-2026-1111"),
+            (v.EpssScore!.Value, v.EpssSource!.Value, v.EpssCve)));
+        Assert.Null(db.Vulnerabilities.Single(v => v.Cves!.Contains("CVE-2026-2222")).EpssScore);
+    }
+
+    /// <summary>
+    /// Stage 9.4 (S45 §6) — recording the EPSS readings is after ingestion and must not fail the posture
+    /// sync: when it throws, the findings are still ingested and the result reports no error.
+    /// </summary>
+    [Fact]
+    public async Task AFailureRecordingEpssDoesNotFailThePostureSync()
+    {
+        var exploitationSignals = Substitute.For<IExploitationSignalsSyncService>();
+        exploitationSignals
+            .RecordVisionOneEpssAsync(Arg.Any<IReadOnlyDictionary<string, double>>(), Arg.Any<DateTime>(),
+                Arg.Any<System.Threading.CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("epss_scores is locked"));
+
+        var service = new TrendMicroService(
+            GetService<Serilog.ILogger>(), GetService<IDalService>(), GetService<ISecretProtector>(),
+            GetService<ISecretResolver>(), GetService<ITrendMicroClient>(), GetService<IFindingIngestionService>(),
+            GetService<IFindingLifecycleService>(), GetService<IIntegrationSyncTracker>(), exploitationSignals);
+
+        var view = await ConnectionAsync();
+
+        StubApi(
+            devices: """{"items":[{"id":"agent-1","name":"db-prod-01"}]}""",
+            vulnerable: """
+                {"items":[{"id":"agent-1","cveRecords":[{"id":"CVE-2026-1111","severity":"high","epssScore":0.42}]}]}
+                """);
+
+        var result = await service.SyncAsync(view.Id);
+
+        await exploitationSignals.Received(1).RecordVisionOneEpssAsync(
+            Arg.Is<IReadOnlyDictionary<string, double>>(d => d["CVE-2026-1111"] == 0.42),
+            Arg.Any<DateTime>(), Arg.Any<System.Threading.CancellationToken>());
+        Assert.Equal((1, 0), (result.FindingsCreated, result.Errors));
+        Assert.NotNull(result.ImportId);
+
+        await using var db = OpenContext();
+        Assert.Single(db.Vulnerabilities);
+        Assert.Empty(db.EpssScores);
     }
 
     [Fact]

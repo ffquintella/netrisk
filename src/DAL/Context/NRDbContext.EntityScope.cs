@@ -104,6 +104,11 @@ public partial class NRDbContext
         // files carry their own entity_id and the answers inherit the run's scope, so no new filter.
         ConfigureAssessmentEvidence(modelBuilder);
 
+        // Track 9 Stage 9.4 — exploitation signals (S45). The EPSS columns are on vulnerabilities, so
+        // the vulnerability filter covers them; the catalogue tables are public per-CVE data; the two
+        // ATT&CK association tables get their filters below, through their parent.
+        ConfigureExploitationSignals(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -164,6 +169,15 @@ public partial class NRDbContext
 
         modelBuilder.Entity<FixRequest>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
+
+        // Stage 9.4 (S45 §4.5): the ATT&CK techniques of a finding and of a risk scenario are visible
+        // exactly when their parent is. Every technique query relies on this; none calls
+        // IgnoreQueryFilters.
+        modelBuilder.Entity<VulnerabilityAttackTechnique>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
+
+        modelBuilder.Entity<RiskAttackTechnique>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
 
         // A further step removed: these hang off a run, which hangs off the assessment that
         // carries the entity_id.

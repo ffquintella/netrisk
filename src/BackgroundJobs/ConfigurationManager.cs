@@ -117,6 +117,11 @@ public static class ConfigurationManager
         services.AddScoped<BackgroundJobs.Jobs.Integrations.SecurityScorecardSyncJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.IntegrationSyncReaperJob>();
 
+        // Track 9 Stage 9.4 (S45) — the CISA KEV and FIRST EPSS syncs. Their service comes from
+        // AddTrack4Integrations above, the same registration the API reads through.
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.KevCatalogueSyncJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Integrations.EpssSyncJob>();
+
         ConfigureHangFire(services);
 
     }

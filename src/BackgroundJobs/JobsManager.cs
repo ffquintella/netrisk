@@ -101,6 +101,17 @@ public static class JobsManager
         RecurringJob
             .AddOrUpdate<IntegrationSyncReaperJob>("IntegrationSyncReaper",
                 x => x.Run(), "10 * * * *");
+
+        // Track 9 Stage 9.4 (S45 §6) — the public exploitation-signal feeds. At 05:00 and 05:20: after the
+        // posture syncs above, so a finding imported overnight gets its KEV status and EPSS the same night,
+        // and before the 06:00 expiry pass and the 07:00 SLA digest. The two never start in the same minute.
+        RecurringJob
+            .AddOrUpdate<KevCatalogueSyncJob>(KevCatalogueSyncJob.JobId,
+                x => x.Run(), KevCatalogueSyncJob.Cron);
+
+        RecurringJob
+            .AddOrUpdate<EpssSyncJob>(EpssSyncJob.JobId,
+                x => x.Run(), EpssSyncJob.Cron);
     }
 
     /// <summary>

@@ -28,7 +28,8 @@ public class TrendMicroService(
     ITrendMicroClient client,
     IFindingIngestionService ingestion,
     IFindingLifecycleService lifecycle,
-    IIntegrationSyncTracker tracker)
+    IIntegrationSyncTracker tracker,
+    IExploitationSignalsSyncService exploitationSignals)
     : ServiceBase(logger, dalService), ITrendMicroService
 {
     /// <summary>The importer name Vision One findings are recorded under, and their dedup identity.</summary>
@@ -735,6 +736,8 @@ public class TrendMicroService(
             ScanDate = DateTime.UtcNow
         };
 
+        var epssByCve = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var vulnerability in vulnerabilities)
         {
             var device = byId.GetValueOrDefault(vulnerability.DeviceId);
@@ -769,8 +772,13 @@ public class TrendMicroService(
 
             finding.Cves.Add(vulnerability.CveId);
 
-            if (vulnerability.EpssScore != null)
-                finding.ToolFields["epss"] = vulnerability.EpssScore.Value.ToString("0.0000");
+            // Stage 9.4 (T162, S45 §2): this value used to go into ToolFields, which is never persisted —
+            // Vision One's EPSS was read and dropped. It is now recorded per CVE after ingestion. The same
+            // CVE on several devices carries the same score; the highest wins if they ever disagree.
+            if (vulnerability.EpssScore is { } epss && !string.IsNullOrWhiteSpace(vulnerability.CveId))
+                epssByCve[vulnerability.CveId] = epssByCve.TryGetValue(vulnerability.CveId, out var seen)
+                    ? Math.Max(seen, epss)
+                    : epss;
 
             if (vulnerability.MitigationStatus != null)
                 finding.ToolFields["mitigationStatus"] = vulnerability.MitigationStatus;
@@ -807,10 +815,40 @@ public class TrendMicroService(
         result.FindingsCreated += import.NewCount;
         result.FindingsUpdated += import.UpdatedCount;
 
+        await RecordEpssAsync(epssByCve, run, ct);
+
         if (connection.VirtualPatchClosesFinding)
             await ApplyVirtualPatchPolicyAsync(vulnerabilities, result, run, ct);
         else
             result.VirtualPatchesApplied = 0;
+    }
+
+    /// <summary>
+    /// Records the EPSS readings this sync carried as <c>VisionOne</c> readings and re-projects the findings
+    /// with those CVEs (Stage 9.4, T162, S45 §4.7). The two EPSS sources converge by the declared precedence,
+    /// so a Vision One reading never overrides FIRST's whichever sync runs last.
+    ///
+    /// A failure here is logged as an error and does not fail the posture sync: the findings are already
+    /// ingested, and the nightly EPSS sync re-projects every finding anyway.
+    /// </summary>
+    private async Task RecordEpssAsync(Dictionary<string, double> epssByCve, IntegrationSyncRun run,
+        CancellationToken ct)
+    {
+        if (epssByCve.Count == 0) return;
+
+        try
+        {
+            await run.StepAsync("epss", $"Recording EPSS for {epssByCve.Count} CVE(s).", ct: ct);
+
+            var changed = await exploitationSignals.RecordVisionOneEpssAsync(epssByCve, DateTime.UtcNow, ct);
+
+            Logger.Information("Vision One EPSS: {Cves} CVE(s) recorded, {Findings} finding(s) re-projected",
+                epssByCve.Count, changed);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Logger.Error(ex, "Recording the Vision One EPSS readings failed; the findings were ingested");
+        }
     }
 
     /// <summary>

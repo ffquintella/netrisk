@@ -554,8 +554,10 @@ the fifteen prioritized gaps from that analysis's §12, grouped by dependency. *
 Stage 9.1 is implemented (T144–T148: schema version 88, `/RiskChain`, the coverage metric and their desktop
 screens); Stage 9.2 is implemented (T150–T155: schema version 89, the structured scenario, evidence confidence,
 standalone hypotheses, near misses and the duplicate warning); Stage 9.3 is implemented (T156–T160: schema version
-90, business impact analysis, cascading dependencies, restoration tests and the weighted continuity threat); the
-runtime observations and human/security review of all three are pending.** Does not reopen Track 8. Detailed specifications:
+90, business impact analysis, cascading dependencies, restoration tests and the weighted continuity threat); Stage 9.4
+is implemented on the server and the REST client (T161–T167: schema version 93, the CISA KEV and FIRST EPSS syncs,
+ATT&CK techniques and the exploitation prioritization; its desktop surface is T302); the runtime observations and
+human/security review of all four are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -619,16 +621,24 @@ runtime observations and human/security review of all three are pending.** Does 
 
 ### [M42] Stage 9.4 — Exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK
 > outcome: The Phase 3 prioritization signals reach NetRisk as first-class data, not only via Vision One. Closes gap 6.
-> spec: S27
+> spec: S27, S45
 
-- [ ] T161 Merge the Stage 9.4 specification
-- [ ] T162 Promote EPSS from a tool-fields bag to a column on vulnerabilities, with its own sync
-- [ ] T163 Synchronize the CISA KEV catalogue with listing date and deadline
-- [ ] T164 Associate MITRE ATT&CK techniques to the finding and the risk scenario
-- [ ] T165 Combine the Phase 3 signals into a prioritization with CVSS as an input
-- [ ] T166 Synchronize outbound through IOutboundHttpClient under the SSRF policy
+- [x] T161 Merge the Stage 9.4 specification
+  - note: written as S45 with all eleven sections in the same change as the implementation, as T149 was for M40 — not yet merged and not yet human- or security-reviewed; the new outbound integration needs the ESI's sign-off (S45 §11)
+- [x] T162 Promote EPSS from a tool-fields bag to a column on vulnerabilities, with its own sync
+  - note: six `vulnerabilities.epss_*` columns (schema 93, the `epss_score` S40 §7.3 reserved) and `epss_scores` per CVE and source; Vision One's EPSS was read and never persisted (S45 §2) and is now recorded; the columns are sync-owned, so `POST`/`PUT /Vulnerabilities` no longer write them; `epss` filters parse invariantly whatever the request culture
+- [x] T163 Synchronize the CISA KEV catalogue with listing date and deadline
+  - note: `kev_entries` and the `exploitation_signal_syncs` run log, daily at 05:00; rows are never deleted, and a valid catalogue that shrinks past max(5, 1 %) holds its delistings (S45 §4.8)
+- [x] T164 Associate MITRE ATT&CK techniques to the finding and the risk scenario
+  - note: by identifier, validated by shape, with no synchronized ATT&CK catalogue (the STIX bundle exceeds the outbound size cap); API and REST client only — the desktop editors are T302
+- [x] T165 Combine the Phase 3 signals into a prioritization with CVSS as an input
+  - note: P1–P4 or Undetermined from exploitation (KEV, scanner-observed, EPSS ≥ 0.10, public exploit) × impact (CVSS ≥ 7.0 or severity), computed on read, plus the KEV remediation-time metric; P1 is not Gate A (Stage 9.5), and neither process criticality nor compensating controls are inputs yet (S45 §3)
+- [x] T166 Synchronize outbound through IOutboundHttpClient under the SSRF policy
   - note: deliberately out of scope — exposure, required privileges and blast radius (topology modelling); stays ❌ in the coverage analysis
-- [ ] T167 Test that an unavailable/malformed KEV catalogue never silently de-lists a KEV item, and two EPSS sources converge by a declared rule
+  - note: HTTPS-only feed URLs from deployment configuration (`ExploitationSignals:*`), job host only — no "sync now" endpoint; EPSS in batches of 50, stopping at the first failure
+- [x] T167 Test that an unavailable/malformed KEV catalogue never silently de-lists a KEV item, and two EPSS sources converge by a declared rule
+  - note: KP2, KR4/KR5, S2 and E4, S8 (FIRST before Vision One, both orders); Track9ExploitationSignalsSchemaTests Q1–Q4 need Docker and were not run here; the S45 §8 runtime observations are still to be recorded on the PR
+- [ ] T302 Add the Stage 9.4 desktop surface: the EPSS column and filter in the vulnerability grid, the exploitation-signals panel, the ATT&CK technique editors on findings and risks, and the prioritization and KEV-remediation reports (S45)
 
 ### [M43] Stage 9.5 — The eleven mandatory flags and Gate A
 > outcome: Gate A, non-discretionary in the methodology, becomes implementable via queryable flags. Closes gap 3.
@@ -952,3 +962,4 @@ planned, nothing started.**
 | S42 | Stage 9.2 — structured scenario, record discrimination and evidence confidence specification | docs/roadmap/track9/9.2-structured-scenario.md |
 | S43 | Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies specification | docs/roadmap/track9/9.3-bia-continuity.md |
 | S44 | Comment and evidence per answer in an assessment run | docs/features/assessment-answer-evidence.md |
+| S45 | Stage 9.4 — exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK specification | docs/roadmap/track9/9.4-exploitation-signals.md |

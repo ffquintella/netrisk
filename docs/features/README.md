@@ -14,6 +14,7 @@ These are placeholder stubs — contributions welcome.
 - [Risk governance, approval workflows and the business review portal](risk-governance.md)
 - [Business impact analysis and continuity: MTPD/MAO, RTO, RPO, dependencies, restoration tests](business-continuity.md)
 - [Vulnerability Management](vulnerability-management.md)
+  - [Exploitation signals: CISA KEV, EPSS, MITRE ATT&CK and the prioritization](exploitation-signals.md)
 - [Scanner importers and finding ingestion](scanner-importers.md)
 - [Incident Management](incident-management.md)
 - [Incident Response Plans](incident-response-plans.md)

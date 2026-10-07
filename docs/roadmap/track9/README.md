@@ -6,7 +6,8 @@ da etapa. Regra completa e justificativa:
 
 Especificações escritas: [9.1 — Cadeia de ligação](9.1-linkage-chain.md) (S41);
 [9.2 — Cenário estruturado, discriminação de registros e confiança da evidência](9.2-structured-scenario.md) (S42);
-[9.3 — BIA: MTPD/MAO, RTO, RPO e dependências em cascata](9.3-bia-continuity.md) (S43). Uma etapa cuja
+[9.3 — BIA: MTPD/MAO, RTO, RPO e dependências em cascata](9.3-bia-continuity.md) (S43);
+[9.4 — Sinais de exploração: CISA KEV, EPSS de primeira classe e MITRE ATT&CK](9.4-exploitation-signals.md) (S45). Uma etapa cuja
 especificação não está aqui não pode ter PR de implementação aberto, e seu item no
 [ROADMAP.md](../../../ROADMAP.md) não pode ser marcado.
 
