@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.27.0] - 2026-10-07
+
+### Added
+- Classify a vulnerability as Server or Application with a "Vulnerability source" selector in the vulnerability form, stored as `vulnerabilities.source_type` with existing findings left "Not classified" and an undeclared value refused with 400 (T296)
+
 ## [2.26.0] - 2026-10-07
 
 ### Added

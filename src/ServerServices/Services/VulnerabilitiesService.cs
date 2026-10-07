@@ -1,6 +1,7 @@
 ﻿using Mapster;
 using DAL;
 using DAL.Entities;
+using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Serilog;
@@ -90,6 +91,7 @@ public class VulnerabilitiesService(
 
     public Vulnerability Create(Vulnerability vulnerability)
     {
+        EnsureValidSourceType(vulnerability);
         vulnerability.Id = 0;
         using var dbContext = DalService.GetContext();
 
@@ -101,6 +103,7 @@ public class VulnerabilitiesService(
 
     public async Task<Vulnerability> CreateAsync(Vulnerability vulnerability)
     {
+        EnsureValidSourceType(vulnerability);
         vulnerability.Id = 0;
         await using var dbContext = DalService.GetContext();
 
@@ -114,6 +117,7 @@ public class VulnerabilitiesService(
     {
         if(vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
         if(vulnerability.Id == 0) throw new ArgumentException("Vulnerability id cannot be 0");
+        EnsureValidSourceType(vulnerability);
         
         using var dbContext = DalService.GetContext();
         
@@ -133,7 +137,10 @@ public class VulnerabilitiesService(
 
     public async Task UpdateAsync(Vulnerability vulnerability)
     {
-        
+        // Outside the try below, which logs and swallows: an undeclared classification is the
+        // caller's error and must reach the caller rather than read as a silent successful update.
+        if (vulnerability != null) EnsureValidSourceType(vulnerability);
+
         try
         {
             if (vulnerability == null) throw new ArgumentNullException(nameof(vulnerability));
@@ -176,6 +183,20 @@ public class VulnerabilitiesService(
             }
         }
 
+    }
+
+    /// <summary>
+    /// Rejects a <see cref="Vulnerability.SourceType"/> that is not a declared member (GitHub #79). The
+    /// API binds the enum from a number and System.Text.Json accepts any integer for an enum, so without
+    /// this an undeclared value would be stored and read back as a classification no screen can show.
+    /// </summary>
+    private static void EnsureValidSourceType(Vulnerability vulnerability)
+    {
+        if (vulnerability != null && !vulnerability.SourceType.IsDefined())
+            throw new InvalidParameterException(nameof(Vulnerability.SourceType),
+                $"Unknown vulnerability source type {(int)vulnerability.SourceType}; expected " +
+                $"{(int)VulnerabilitySourceType.Unknown} (Unknown), {(int)VulnerabilitySourceType.Server} (Server) " +
+                $"or {(int)VulnerabilitySourceType.Application} (Application).");
     }
 
     public void AssociateRisks(int id, List<int> riskIds)

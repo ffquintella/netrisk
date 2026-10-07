@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using API.Controllers;
 using API.Exceptions;
 using DAL.Entities;
+using DAL.Enums;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
     private const int NotFoundId = 999;
     private const int ErrorId = 500;
     private const int InnerErrorId = 501;
+    private const int InvalidSourceTypeId = 502;
 
     private readonly IVulnerabilitiesService _vulnerabilitiesService = Substitute.For<IVulnerabilitiesService>();
     private readonly IRisksService _risksService = Substitute.For<IRisksService>();
@@ -80,11 +82,15 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
             .Returns(_ => throw new Exception("outer", new Exception("inner")));
         _vulnerabilitiesService.Create(Arg.Is<Vulnerability>(v => v.Title == "create-boom"))
             .Returns(_ => throw new Exception("boom"));
+        _vulnerabilitiesService.Create(Arg.Is<Vulnerability>(v => v.Title == "create-invalid-source"))
+            .Returns(_ => throw new InvalidParameterException(nameof(Vulnerability.SourceType), "bad source type"));
 
         _vulnerabilitiesService.When(x => x.Update(Arg.Is<Vulnerability>(v => v.Id == ErrorId)))
             .Do(_ => throw new Exception("boom"));
         _vulnerabilitiesService.When(x => x.Update(Arg.Is<Vulnerability>(v => v.Id == InnerErrorId)))
             .Do(_ => throw new Exception("outer", new Exception("inner")));
+        _vulnerabilitiesService.When(x => x.Update(Arg.Is<Vulnerability>(v => v.Id == InvalidSourceTypeId)))
+            .Do(_ => throw new InvalidParameterException(nameof(Vulnerability.SourceType), "bad source type"));
 
         _vulnerabilitiesService.When(x => x.UpdateStatus(NotFoundId, Arg.Any<ushort>()))
             .Do(_ => throw new DataNotFoundException("vulnerability", NotFoundId.ToString()));
@@ -345,6 +351,20 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
     }
 
     [Fact]
+    public void TestGetOneReturnsTheSourceType()
+    {
+        var service = Substitute.For<IVulnerabilitiesService>();
+        var stored = NewVulnerability(OkId);
+        stored.SourceType = VulnerabilitySourceType.Application;
+        service.GetById(OkId, Arg.Any<bool>()).Returns(stored);
+
+        var result = Build(service).GetOne(OkId, includeDetails: true);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Equal(VulnerabilitySourceType.Application, Assert.IsType<Vulnerability>(ok.Value).SourceType);
+    }
+
+    [Fact]
     public void TestGetOneNotFound()
     {
         Assert.IsType<NotFoundResult>(_controller.GetOne(NotFoundId).Result);
@@ -406,6 +426,48 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         var result = _controller.Create(new Vulnerability { Title = "create-boom" });
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    // GitHub #79 — the server/application classification travels through create unchanged, and a value
+    // the service refuses is the caller's error (400), not the server's (500).
+
+    [Theory]
+    [InlineData(VulnerabilitySourceType.Unknown)]
+    [InlineData(VulnerabilitySourceType.Server)]
+    [InlineData(VulnerabilitySourceType.Application)]
+    public void TestCreatePassesTheSourceTypeThrough(VulnerabilitySourceType sourceType)
+    {
+        var result = _controller.Create(new Vulnerability { Title = "classified", SourceType = sourceType });
+
+        var created = Assert.IsType<CreatedResult>(result.Result);
+        Assert.Equal(sourceType, Assert.IsType<Vulnerability>(created.Value).SourceType);
+        _vulnerabilitiesService.Received(1).Create(Arg.Is<Vulnerability>(v => v.SourceType == sourceType));
+    }
+
+    [Fact]
+    public void TestCreateReturnsBadRequestOnAnInvalidSourceType()
+    {
+        var result = _controller.Create(new Vulnerability
+        {
+            Title = "create-invalid-source", SourceType = (VulnerabilitySourceType)7
+        });
+
+        var bad = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Contains("SourceType", System.Text.Json.JsonSerializer.Serialize(bad.Value));
+    }
+
+    [Fact]
+    public void TestTheCreateBodyBindsTheSourceTypeFromItsNumber()
+    {
+        // The wire format the desktop client sends: System.Text.Json web defaults, enum as a number.
+        var body = System.Text.Json.JsonSerializer.Deserialize<Vulnerability>(
+            "{\"title\":\"From JSON\",\"sourceType\":2}",
+            new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))!;
+
+        var result = _controller.Create(body);
+
+        var created = Assert.IsType<CreatedResult>(result.Result);
+        Assert.Equal(VulnerabilitySourceType.Application, Assert.IsType<Vulnerability>(created.Value).SourceType);
     }
 
     // ---------------- ImportNessusVulnerabilities ----------------
@@ -472,6 +534,31 @@ public class VulnerabilitiesControllerTest : BaseControllerTest, IDisposable
         Assert.Null(vulnerability.FixTeam);
         Assert.Null(vulnerability.Host);
         _vulnerabilitiesService.Received(1).Update(vulnerability);
+    }
+
+    [Theory]
+    [InlineData(VulnerabilitySourceType.Server)]
+    [InlineData(VulnerabilitySourceType.Application)]
+    public void TestUpdatePassesTheSourceTypeThrough(VulnerabilitySourceType sourceType)
+    {
+        var vulnerability = NewVulnerability(OkId);
+        vulnerability.SourceType = sourceType;
+
+        var result = _controller.Update(OkId, vulnerability);
+
+        Assert.IsType<OkResult>(result.Result);
+        _vulnerabilitiesService.Received(1).Update(Arg.Is<Vulnerability>(v => v.SourceType == sourceType));
+    }
+
+    [Fact]
+    public void TestUpdateReturnsBadRequestOnAnInvalidSourceType()
+    {
+        var vulnerability = NewVulnerability(InvalidSourceTypeId);
+        vulnerability.SourceType = (VulnerabilitySourceType)7;
+
+        var result = _controller.Update(InvalidSourceTypeId, vulnerability);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
     [Fact]

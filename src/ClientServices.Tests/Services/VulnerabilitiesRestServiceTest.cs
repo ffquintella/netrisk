@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -10,6 +11,7 @@ using ClientServices.Interfaces;
 using ClientServices.Services;
 using ClientServices.Tests.Mock;
 using DAL.Entities;
+using DAL.Enums;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Model.Exceptions;
@@ -439,6 +441,82 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Get, "/Vulnerabilities/Find", HttpStatusCode.InternalServerError);
 
         await Assert.ThrowsAsync<RestComunicationException>(() => _service.FindAsync("boom"));
+    }
+
+    // ------------------------------------- SourceType (GitHub #79) round trip
+
+    /// <summary>The <c>sourceType</c> member of a recorded JSON body, read the way the API binds it.</summary>
+    private static int SentSourceType(string body)
+    {
+        using var json = JsonDocument.Parse(body);
+        var member = json.RootElement.EnumerateObject()
+            .Single(p => string.Equals(p.Name, nameof(Vulnerability.SourceType), StringComparison.OrdinalIgnoreCase));
+        return member.Value.GetInt32();
+    }
+
+    [Fact]
+    public async Task TestCreateAsyncSendsAndReturnsTheSourceType()
+    {
+        var saved = Vuln(99, "Created");
+        saved.SourceType = VulnerabilitySourceType.Server;
+        _backend.OnPost("/Vulnerabilities", saved);
+
+        var draft = Vuln(0, "Created");
+        draft.SourceType = VulnerabilitySourceType.Server;
+        var created = await _service.CreateAsync(draft);
+
+        Assert.Equal((int)VulnerabilitySourceType.Server, SentSourceType(_backend.LastRequest.Body));
+        Assert.Equal(VulnerabilitySourceType.Server, created.SourceType);
+    }
+
+    [Fact]
+    public async Task TestGetOneAsyncReadsTheSourceType()
+    {
+        var stored = Vuln(41, "Classified");
+        stored.SourceType = VulnerabilitySourceType.Application;
+        _backend.OnGet("/Vulnerabilities/41", stored);
+
+        var result = await _service.GetOneAsync(41);
+
+        Assert.Equal(VulnerabilitySourceType.Application, result.SourceType);
+    }
+
+    [Fact]
+    public void TestGetOneReadsAMissingSourceTypeAsUnknown()
+    {
+        // A server older than this change omits the member entirely.
+        _backend.OnContent(Method.Get, "/Vulnerabilities/42", "{\"id\":42,\"title\":\"Legacy\"}", "application/json");
+
+        var result = _service.GetOne(42);
+
+        Assert.Equal(VulnerabilitySourceType.Unknown, result.SourceType);
+    }
+
+    [Fact]
+    public async Task TestUpdateAsyncSendsTheSourceType()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/43", "", HttpStatusCode.OK);
+        _backend.On(Method.Post, "/Vulnerabilities/43/RisksAssociate", "", HttpStatusCode.OK);
+
+        var vulnerability = Vuln(43, "Reclassified");
+        vulnerability.SourceType = VulnerabilitySourceType.Application;
+
+        await _service.UpdateAsync(vulnerability);
+
+        Assert.Equal("PUT /Vulnerabilities/43", _backend.Requests[0].ToString());
+        Assert.Equal((int)VulnerabilitySourceType.Application, SentSourceType(_backend.Requests[0].Body));
+    }
+
+    [Fact]
+    public async Task TestUpdateAsyncWrapsARejectedSourceTypeAndSkipsTheAssociation()
+    {
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/44", HttpStatusCode.BadRequest);
+
+        var vulnerability = Vuln(44, "Bogus");
+        vulnerability.SourceType = (VulnerabilitySourceType)7;
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.UpdateAsync(vulnerability));
+        Assert.False(_backend.Sent(Method.Post, "/Vulnerabilities/44/RisksAssociate"));
     }
 
     // ------------------------------------------------------------- UpdateAsync

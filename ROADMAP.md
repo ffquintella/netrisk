@@ -891,6 +891,8 @@ planned, nothing started.**
   - note: the portal is Razor Pages over the API with no chart library; a page needs the S40 read API and inline SVG or a library vetted under S21
 - [ ] T295 Let unit managers edit the risk context (criticality, internet exposure, data classification) of entities in their own subtree, requiring global scope only for a process shared by more than one unit (S40)
   - note: product-owner decision 2026-10-05 — not now, unit managers do not use the product yet; the write rule already lives in one policy (`RiskContextWritePolicy`) so this lands without an API or screen change
+- [x] T296 Classify a vulnerability as Server or Application from the vulnerability form (GitHub #79)
+  - note: `vulnerabilities.source_type` (db_version 91), NOT NULL DEFAULT 0 = Unknown, so existing rows read "Not classified" rather than a guessed class; importers do not set it yet and the vulnerabilities grid and filter do not show it
 
 ## Specs
 

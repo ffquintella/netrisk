@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using DAL.Entities;
+using DAL.Enums;
 using GUIClient.Models;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -26,6 +27,7 @@ using MsBox.Avalonia.Enums;
 using GUIClient.Interfaces;
 using System.Windows.Input;
 using Tools.String;
+using GUIClient.Tools;
 
 namespace GUIClient.ViewModels;
 
@@ -51,6 +53,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         public string StrDetails { get; } = Localizer["Details"];
         public string StrClassification { get; } = Localizer["Classification"];
         public string StrAddComputer { get; } = Localizer["AddComputer"];
+        public string StrVulnerabilitySource { get; } = Localizer["VulnerabilitySource"];
         
     #endregion
     
@@ -289,6 +292,22 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         get => _selectedUser;
         set => this.RaiseAndSetIfChanged(ref _selectedUser, value);
     }
+
+    /// <summary>
+    /// The "Vulnerability source" choices (GitHub #79): not classified, server, application. Built once,
+    /// so a re-selection always finds the same instances.
+    /// </summary>
+    public List<ChoiceOption<VulnerabilitySourceType>> SourceTypeOptions { get; } =
+        VulnerabilitySourceSummary.Choices
+            .Select(c => new ChoiceOption<VulnerabilitySourceType>(c, Localizer[VulnerabilitySourceSummary.Key(c)]))
+            .ToList();
+
+    private ChoiceOption<VulnerabilitySourceType>? _selectedSourceType;
+    public ChoiceOption<VulnerabilitySourceType>? SelectedSourceType
+    {
+        get => _selectedSourceType;
+        set => this.RaiseAndSetIfChanged(ref _selectedSourceType, value);
+    }
     
     
     #endregion
@@ -337,6 +356,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
     #region CONSTRUCTOR 
     public EditVulnerabilitiesDialogViewModel()
     {
+        SelectedSourceType = VulnerabilitySourceSummary.OptionFor(SourceTypeOptions, VulnerabilitySourceType.Unknown);
+
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         BtAddHostClicked = ReactiveCommand.Create(ExecuteAddHost);
         BtCancelClicked = ReactiveCommand.Create(() => Close(new VulnerabilityDialogResult()
@@ -453,6 +474,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             SelectedTechnology = Technologies.FirstOrDefault(t => t.Name == Vulnerability?.Technology);
             SelectedHost = Hosts.FirstOrDefault(h => h.Id == Vulnerability?.HostId);
             SelectedApplication = Applications.FirstOrDefault(a => a.Id == Vulnerability?.EntityId);
+            SelectedSourceType = VulnerabilitySourceSummary.OptionFor(SourceTypeOptions,
+                Vulnerability?.SourceType ?? VulnerabilitySourceType.Unknown);
         
             if(SelectedHost != null) SelectedHostName = SelectedHost?.HostName + " (" + SelectedHost?.Id +")" ?? "";
             else SelectedHostName = "";
@@ -544,6 +567,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
         if (Operation == OperationType.Create) Vulnerability.Status = (ushort) IntStatus.New;
         Vulnerability.Severity = SelectedImpact!.Key.ToString();
         Vulnerability.Technology = SelectedTechnology!.Name;
+        Vulnerability.SourceType = SelectedSourceType?.Value ?? VulnerabilitySourceType.Unknown;
         //if(SelectedApplication != null) Vulnerability.EntityId = SelectedApplication.Id;
         
         if (LabelIdParser.TryParseTrailingId(SelectedHostName, out var hostId))

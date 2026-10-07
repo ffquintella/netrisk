@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Entities;
+using DAL.Enums;
 using JetBrains.Annotations;
 using Model.Exceptions;
 using ServerServices.Interfaces;
@@ -95,6 +96,90 @@ public class VulnerabilitiesServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Throws<ArgumentNullException>(() => _svc.Update(null!));
         Assert.Throws<ArgumentException>(() => _svc.Update(NewVuln(0)));
         Assert.Throws<DataNotFoundException>(() => _svc.Update(NewVuln(777)));
+    }
+
+    // ---- GitHub #79: the server/application classification ----
+
+    [Fact]
+    public void TestCreateWithoutASourceTypeStoresUnknown()
+    {
+        var created = _svc.Create(NewVuln(0, "Unclassified"));
+
+        Assert.Equal(VulnerabilitySourceType.Unknown, _svc.GetById(created.Id).SourceType);
+    }
+
+    [Theory]
+    [InlineData(VulnerabilitySourceType.Server)]
+    [InlineData(VulnerabilitySourceType.Application)]
+    public async Task TestCreateRoundTripsTheSourceType(VulnerabilitySourceType sourceType)
+    {
+        var vulnerability = NewVuln(0, "Classified");
+        vulnerability.SourceType = sourceType;
+        var created = _svc.Create(vulnerability);
+
+        var asyncVulnerability = NewVuln(0, "Classified async");
+        asyncVulnerability.SourceType = sourceType;
+        var createdAsync = await _svc.CreateAsync(asyncVulnerability);
+
+        Assert.Equal(sourceType, _svc.GetById(created.Id).SourceType);
+        Assert.Equal(sourceType, (await _svc.GetByIdAsync(createdAsync.Id)).SourceType);
+    }
+
+    [Fact]
+    public async Task TestUpdateChangesTheSourceType()
+    {
+        Seed(ctx =>
+        {
+            ctx.Vulnerabilities.Add(NewVuln(1, "Sync"));
+            ctx.Vulnerabilities.Add(NewVuln(2, "Async"));
+        });
+
+        var sync = NewVuln(1, "Sync");
+        sync.SourceType = VulnerabilitySourceType.Server;
+        _svc.Update(sync);
+
+        var viaAsync = NewVuln(2, "Async");
+        viaAsync.SourceType = VulnerabilitySourceType.Application;
+        await _svc.UpdateAsync(viaAsync);
+
+        Assert.Equal(VulnerabilitySourceType.Server, _svc.GetById(1).SourceType);
+        Assert.Equal(VulnerabilitySourceType.Application, _svc.GetById(2).SourceType);
+
+        // …and back: an analyst can withdraw a classification.
+        var reset = NewVuln(1, "Sync");
+        reset.SourceType = VulnerabilitySourceType.Unknown;
+        _svc.Update(reset);
+        Assert.Equal(VulnerabilitySourceType.Unknown, _svc.GetById(1).SourceType);
+    }
+
+    [Fact]
+    public async Task TestCreateRejectsAnUndeclaredSourceType()
+    {
+        var vulnerability = NewVuln(0, "Bogus");
+        vulnerability.SourceType = (VulnerabilitySourceType)7;
+
+        var ex = Assert.Throws<InvalidParameterException>(() => _svc.Create(vulnerability));
+        Assert.Equal(nameof(Vulnerability.SourceType), ex.ParameterName);
+        await Assert.ThrowsAsync<InvalidParameterException>(() => _svc.CreateAsync(vulnerability));
+
+        Assert.Empty(_svc.GetAll());
+    }
+
+    [Fact]
+    public async Task TestUpdateRejectsAnUndeclaredSourceType()
+    {
+        Seed(ctx => ctx.Vulnerabilities.Add(NewVuln(1, "Before")));
+
+        var bogus = NewVuln(1, "After");
+        bogus.SourceType = (VulnerabilitySourceType)(-1);
+
+        Assert.Throws<InvalidParameterException>(() => _svc.Update(bogus));
+        // UpdateAsync logs and swallows its other failures; this one must reach the caller.
+        await Assert.ThrowsAsync<InvalidParameterException>(() => _svc.UpdateAsync(bogus));
+
+        var stored = _svc.GetById(1);
+        Assert.Equal("Before", stored.Title);
+        Assert.Equal(VulnerabilitySourceType.Unknown, stored.SourceType);
     }
 
     [Fact]

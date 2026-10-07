@@ -239,6 +239,7 @@ public partial class VulnerabilitiesController: ApiBaseController
     [HttpPost]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Vulnerability> Create([FromBody] Vulnerability newVulnerability)
     {
@@ -251,6 +252,14 @@ public partial class VulnerabilitiesController: ApiBaseController
             Logger.Information("User:{User} created a new vulnerability: {Id}", user.Value, vulnerability.Id);
             
             return Created($"/Vulnerabilities/{vulnerability.Id}",vulnerability);
+        }
+        
+        catch (InvalidParameterException ex)
+        {
+            // An undeclared source type (GitHub #79) is the caller's error, not the server's.
+            Logger.Warning("User:{User} sent an invalid vulnerability {Parameter}: {Message}",
+                user.Value, ex.ParameterName, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         
         catch (Exception ex)
@@ -306,6 +315,7 @@ public partial class VulnerabilitiesController: ApiBaseController
     [HttpPut]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Vulnerability))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public ActionResult<Vulnerability> Update(int id, [FromBody] Vulnerability vulnerability)
     {
@@ -326,6 +336,13 @@ public partial class VulnerabilitiesController: ApiBaseController
             Logger.Information("User:{User} updated a new vulnerability: {Id}", user.Value, vulnerability.Id);
             
             return Ok();
+        }
+        
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid vulnerability {Parameter}: {Message}",
+                user.Value, ex.ParameterName, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         
         catch (Exception ex)

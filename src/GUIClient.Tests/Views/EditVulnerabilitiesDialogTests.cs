@@ -103,6 +103,7 @@ public class EditVulnerabilitiesDialogTests
 
     [Theory]
     [InlineData("Resources/Localization.resx")]
+    [InlineData("Resources/Localization.en-US.resx")]
     [InlineData("Resources/Localization.pt-BR.resx")]
     public void EveryLocalizationKeyTheDialogAsksForExists(string resource)
     {
@@ -121,6 +122,58 @@ public class EditVulnerabilitiesDialogTests
         Assert.True(missing.Count == 0,
             $"{resource} is missing keys the vulnerability dialog asks for (the Localizer echoes the "
             + "key back as the label): " + string.Join(", ", missing));
+    }
+
+    /// <summary>
+    /// GitHub #79 — the form carries a labelled "Vulnerability source" selector bound to the view model's
+    /// options and selection, and the label is a localized string rather than literal copy.
+    /// </summary>
+    [Fact]
+    public void TheFormHasALabelledVulnerabilitySourceSelector()
+    {
+        var view = WindowElement();
+        AvaloniaNamespace(view, out var avalonia);
+
+        var combo = Assert.Single(view.Descendants(avalonia + "ComboBox"),
+            box => (string?) box.Attribute("ItemsSource") == "{Binding SourceTypeOptions}");
+        Assert.Equal("{Binding SelectedSourceType}", (string?) combo.Attribute("SelectedItem"));
+
+        // Its label sits in the same grid cell row, in the label column.
+        var label = Assert.Single(view.Descendants(avalonia + "TextBlock"),
+            text => (string?) text.Attribute("Text") == "{Binding StrVulnerabilitySource}");
+        Assert.Equal((string?) combo.Attribute("Grid.Row"), (string?) label.Attribute("Grid.Row"));
+        Assert.Equal("0", (string?) label.Attribute("Grid.Column"));
+        Assert.Equal("form_label", (string?) label.Attribute("Classes"));
+        Assert.Same(label.Parent, combo.Parent);
+    }
+
+    /// <summary>
+    /// GitHub #79 — the selection reaches the entity that is saved, and a stored value is shown when the
+    /// dialog opens on an existing vulnerability. Scanned as text for the reason in the class summary.
+    /// </summary>
+    [Fact]
+    public void TheViewModelLoadsAndSavesTheSourceType()
+    {
+        var source = File.ReadAllText(Path.Combine(GuiClientSourceRoot(), ViewModel));
+
+        Assert.Matches(@"Vulnerability\.SourceType\s*=\s*SelectedSourceType\?\.Value", source);
+        Assert.Matches(@"SelectedSourceType\s*=\s*VulnerabilitySourceSummary\.OptionFor\(\s*SourceTypeOptions,\s*Vulnerability\?\.SourceType",
+            source);
+    }
+
+    /// <summary>Adding the selector renumbered the tab order; no two controls may share a stop.</summary>
+    [Fact]
+    public void EveryTabIndexIsUnique()
+    {
+        var duplicates = WindowElement().Descendants()
+            .Select(element => (string?) element.Attribute("TabIndex"))
+            .Where(index => index is not null)
+            .GroupBy(index => index)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToList();
+
+        Assert.True(duplicates.Count == 0, "Duplicate TabIndex values: " + string.Join(", ", duplicates));
     }
 
     private static XElement WindowElement() =>

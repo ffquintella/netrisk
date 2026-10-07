@@ -3897,4 +3897,16 @@ Salvar mesmo assim?</value>
     <data name="VoidedLine" xml:space="preserve">
         <value>Anulado: {0}</value>
     </data>
+    <data name="VulnerabilitySource" xml:space="preserve">
+        <value>Origem da vulnerabilidade</value>
+    </data>
+    <data name="VulnerabilitySourceUnknown" xml:space="preserve">
+        <value>Não classificada</value>
+    </data>
+    <data name="VulnerabilitySourceServer" xml:space="preserve">
+        <value>Servidor</value>
+    </data>
+    <data name="VulnerabilitySourceApplication" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
 </root>

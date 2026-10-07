@@ -52,6 +52,9 @@
          confidence read, the computed localization keys, when the risk editor asks for duplicates
          and how the warning lists them. -->
     <Compile Include="..\GUIClient\Tools\RiskScenarioSummary.cs" LinkBase="Tools" />
+    <!-- The vulnerability editor's "Vulnerability source" selector (GitHub #79): the computed keys, the
+         order of the choices and which choice a stored value shows. Uses ChoiceOption from the file above. -->
+    <Compile Include="..\GUIClient\Tools\VulnerabilitySourceSummary.cs" LinkBase="Tools" />
     <!-- The continuity screens' pure half (Stage 9.3, S43 §7): durations, the computed keys, the threat
          headline, the parameter form's validation and who sees what. The parameter bounds are compiled in
          from Tools so the form and the server share one definition. -->

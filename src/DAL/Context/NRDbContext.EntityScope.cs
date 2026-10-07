@@ -96,6 +96,10 @@ public partial class NRDbContext
         // (S43). No scope filter: processes and services carry no scope column (S43 §11, D12).
         ConfigureContinuity(modelBuilder);
 
+        // GitHub #79 — whether a vulnerability is in a server or in an application. A column on
+        // vulnerabilities, so the vulnerability scope filter below already covers it.
+        ConfigureVulnerabilityClassification(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
