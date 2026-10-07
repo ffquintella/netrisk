@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NetRisk is a cross-platform risk/vulnerability/incident management application built on .NET 10 (see [global.json](global.json)). The codebase is split across a REST API, a desktop GUI (Avalonia), a website, background jobs, a console client, and a plugin system.
 
+## Required Skills
+
+- **`agent-router`** — invoke it **before starting any task** to implement, fix, refactor, test, review, investigate, document or plan, even when the task looks small (it may answer "inline"). It decides which agent, model and effort level handle the work, and whether to delegate at all. Follow its routing instead of choosing an agent ad hoc.
+- **`fgv-desenvolvimento-seguro`** (secure programming — FGV's NRM development norm and the G-002 guide) — invoke it when writing, reviewing or designing code, and always when the task touches authentication, authorization, passwords, cryptography, logging/audit, personal data (LGPD), integrations, dependency updates or a security incident. It complements the [Security Conventions (Track 7)](#security-conventions-track-7) below; where both apply, follow the stricter rule.
+
 ## Build & Packaging (Nuke)
 
 Builds are driven by [Nuke](https://nuke.build/). The root bootstrappers (`build.sh` / `build.cmd` / `build.ps1`) will install the SDK if needed and forward arguments to the Nuke project at `build/build.csproj`. The Nuke target class is `build/Build.cs`.
