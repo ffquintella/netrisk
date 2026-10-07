@@ -124,6 +124,8 @@ public static class ServicesBootstrapper
         services.AddTransient<IRolesService, RolesService>();
         services.AddTransient<ISettingsService, SettingsService>();
         services.AddTransient<IFilesService, FilesService>();
+        // GitHub #80 (S44) — a comment and evidence files on each answer of an assessment run.
+        services.AddTransient<IAssessmentRunEvidenceService, AssessmentRunEvidenceService>();
         services.AddTransient<IFaceIDService, FaceIDService>();
         services.AddTransient<IFixRequestsService, FixRequestsService>();
         services.AddTransient<IEntitiesService, EntitiesService>();

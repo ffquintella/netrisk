@@ -41,6 +41,9 @@ public class FilesServiceMock: IFilesService
         };
     }
 
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser,
+        long maxBytes) => CompleteChunkedUpload(file, fileId, totalChunks, creatingUser);
+
     public string GetUploadDirectory()
     {
         return "/tmp/dir1";

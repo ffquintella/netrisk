@@ -13,7 +13,8 @@ namespace ServerServices.Security;
 ///
 /// Track 7 left this open with a stated reason: an attachment is reachable through six different
 /// parents — a risk, a mitigation, an incident, an incident response plan, an IRP execution or task,
-/// and a risk acceptance — each with its own permission rules, and inventing that model inside a
+/// and a risk acceptance (and, since GitHub #80, an assessment answer) — each with its own permission
+/// rules, and inventing that model inside a
 /// hardening pass would have been a guess at product behaviour. The model is now this:
 ///
 /// <list type="number">
@@ -42,6 +43,12 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
 
     /// <summary>Finding acceptances are part of the vulnerability register, as in Track 3.</summary>
     public const string AcceptancePermission = "vulnerabilities";
+
+    /// <summary>
+    /// Evidence on an assessment answer (GitHub #80, S44 D4): the permission behind
+    /// <c>RequireAssessmentAccess</c>, which gates the runs themselves.
+    /// </summary>
+    public const string AssessmentPermission = "assessments";
 
     public async Task EnsureCanReadAsync(NrFile file, User user)
     {
@@ -109,6 +116,15 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
             file.IncidentResponsePlanTaskId is not null ||
             file.IncidentResponsePlanTaskExecutionId is not null)
             return IncidentResponsePlanPermission;
+
+        if (file.AssessmentRunAnswerId is not null)
+        {
+            // The answer is read through its scope filter (answer -> run -> assessment entity), so an
+            // answer outside the caller's entities — or a dangling FK — grants nothing, exactly as a
+            // missing mitigation does above.
+            var visible = await db.AssessmentRunAnswers.AnyAsync(a => a.Id == file.AssessmentRunAnswerId.Value);
+            return visible ? AssessmentPermission : null;
+        }
 
         return null;
     }

@@ -3902,4 +3902,31 @@ Save anyway?</value>
     <data name="VulnerabilitySourceApplication" xml:space="preserve">
         <value>Application</value>
     </data>
+    <data name="AnswerCommentWatermark" xml:space="preserve">
+        <value>Explain this answer (optional)</value>
+    </data>
+    <data name="Evidence" xml:space="preserve">
+        <value>Evidence</value>
+    </data>
+    <data name="AttachEvidence" xml:space="preserve">
+        <value>Attach evidence</value>
+    </data>
+    <data name="EvidenceEmptyMSG" xml:space="preserve">
+        <value>The selected file is empty and cannot be attached as evidence.</value>
+    </data>
+    <data name="EvidenceTooLargeMSG" xml:space="preserve">
+        <value>The selected file is larger than 20 MB, the limit for evidence.</value>
+    </data>
+    <data name="EvidenceLimitReachedMSG" xml:space="preserve">
+        <value>This answer already has 10 evidence files, the maximum. Remove one before attaching another.</value>
+    </data>
+    <data name="EvidenceRunSubmittedMSG" xml:space="preserve">
+        <value>This run has been submitted; its comments and evidence can no longer be changed.</value>
+    </data>
+    <data name="EvidenceNotUploaderMSG" xml:space="preserve">
+        <value>Only the person who attached this evidence, or an administrator, can remove it.</value>
+    </data>
+    <data name="ErrorDownloadingFileMSG" xml:space="preserve">
+        <value>Error downloading the file. Please try again.</value>
+    </data>
 </root>

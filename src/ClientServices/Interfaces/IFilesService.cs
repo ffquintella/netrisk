@@ -76,4 +76,17 @@ public interface IFilesService
     /// <param name="chunk"></param>
     /// <returns></returns>
     public Task CreateChunkAsync(FileChunk chunk);
+
+    /// <summary>
+    /// The allowed file type a file is uploaded as, from its extension: the type whose name matches the
+    /// extension's MIME type, else the server's generic download type.
+    /// </summary>
+    /// <exception cref="ClientServices.Exceptions.TypeNotAllowedException">The server allows neither.</exception>
+    public Task<FileType> ResolveUploadTypeAsync(string fileName);
+
+    /// <summary>
+    /// Stages <paramref name="content"/> on the server in chunks under a fresh upload id, for an endpoint
+    /// that completes the upload (<c>/Files/local/complete</c>, or the assessment evidence endpoint).
+    /// </summary>
+    public Task<StagedUpload> StageUploadAsync(byte[] content);
 }

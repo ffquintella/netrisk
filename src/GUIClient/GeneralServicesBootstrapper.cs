@@ -59,6 +59,11 @@ public class GeneralServicesBootstrapper
         services.AddSingleton<IAssessmentsService>(sp => new AssessmentsRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // GitHub #80 (S44) — the comment and evidence on each answer of an assessment run.
+        services.AddSingleton<IAssessmentEvidenceService>(sp => new AssessmentEvidenceRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IFilesService>()));
+
         services.AddSingleton<IRestService>(sp => new RestService(
             sp.GetRequiredService<ILoggerFactory>(),
             sp.GetRequiredService<ServerConfiguration>(),

@@ -40,7 +40,26 @@ public class FilesController: ApiBaseController
         _env = env;
         _fileAccess = fileAccess;
     }
-    
+
+    /// <summary>
+    /// GitHub #80 (S44 D4): evidence on an assessment answer is created and deleted only through
+    /// <see cref="AssessmentRunEvidenceController"/>, which knows whether the run is still open, the
+    /// per-answer limit and the evidence size cap. These generic routes know none of that, so a file
+    /// that is — or would become — assessment evidence is refused here rather than half-validated.
+    /// </summary>
+    public const string AssessmentEvidenceRouteError = "assessment_evidence_route";
+
+    private ActionResult AssessmentEvidenceRefused(User user, string operation)
+    {
+        Logger.Warning("User:{User} tried to {Operation} assessment evidence through the generic files route",
+            user.Value, operation);
+        return BadRequest(new
+        {
+            error = AssessmentEvidenceRouteError,
+            Message = "Assessment evidence is managed through /Assessments/runs/{runId}/questions/{questionId}/evidence."
+        });
+    }
+
     [HttpGet]
     [Authorize(Policy = "RequireAdminOnly")]
     [Route("")]
@@ -112,9 +131,11 @@ public class FilesController: ApiBaseController
         var user = GetUser();
         //if(!user.Admin) return Unauthorized("Only admins can list all files");
 
+        if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "create");
+
         try
         {
-            
+
             var newFile = _filesService.Create(file, user);
             Logger.Information("User:{User} created a new file", user.Value);
             
@@ -189,6 +210,8 @@ public class FilesController: ApiBaseController
     {
         var user = GetUser();
 
+        if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "upload");
+
         try
         {
             var newFile = _filesService.CompleteChunkedUpload(file, fileId, totalChunks, user);
@@ -230,6 +253,10 @@ public class FilesController: ApiBaseController
 
         var user = GetUser();
         if(!user.Admin && file.User != user.Value) return Unauthorized("Only admins and owners can update files");
+
+        // Moving a file onto an answer here would skip every evidence check; the service also refuses
+        // to rewrite a file that already is evidence (InvalidOperationException, answered 400 below).
+        if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "update");
 
         try
         {
@@ -273,7 +300,10 @@ public class FilesController: ApiBaseController
             var file = _filesService.GetByUniqueName(name);
             
             if(!user.Admin && file.User != user.Value) return Unauthorized("Only admins and owners can delete files");
-            
+
+            // Deleting evidence here would bypass the submitted-run rule (S44 D6).
+            if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "delete");
+
             _filesService.DeleteByUniqueName(name);
             Logger.Information("User:{User} deleted file:{FileId}", user.Value, file.Id);
             

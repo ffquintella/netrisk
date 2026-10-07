@@ -144,37 +144,44 @@
                                 MinWidth="700" MinHeight="240" Margin="0 5 0 0">
                         <TabItem Header="{Binding StrDescription}">
                             <TextBox Text="{Binding Incident.Description}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrReport}">
                             <TextBox Text="{Binding Incident.Report}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrCause}">
                             <TextBox Text="{Binding Incident.Cause}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrImpact}">
                             <TextBox Text="{Binding Incident.Impact}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrSolution}">
                             <TextBox Text="{Binding Incident.Solution}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrRecommendations}">
                             <TextBox Text="{Binding Incident.Recommendations}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                         <TabItem Header="{Binding StrNotes}">
                             <TextBox Text="{Binding Incident.Notes}" TextWrapping="WrapWithOverflow"
-                                     AcceptsReturn="True" MinHeight="200"
+                                     AcceptsReturn="True" MinHeight="200" MaxHeight="260"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                         </TabItem>
                     </TabControl>

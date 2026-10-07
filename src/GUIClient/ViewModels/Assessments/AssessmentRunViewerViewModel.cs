@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -11,6 +12,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -50,6 +52,10 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     public string StrPage => Localizer["Page"];
     public string StrSubmit => Localizer["Commit"];
     public string StrPreview => Localizer["Preview"];
+    public string StrComment => Localizer["Comment"];
+    public string StrCommentWatermark => Localizer["AnswerCommentWatermark"];
+    public string StrEvidence => Localizer["Evidence"];
+    public string StrAttachEvidence => Localizer["AttachEvidence"];
 
     #endregion
 
@@ -57,6 +63,8 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
     private IAssessmentsService AssessmentsService { get; } = GetService<IAssessmentsService>();
     private IVulnerabilitiesService VulnerabilitiesService { get; } = GetService<IVulnerabilitiesService>();
+    private IAssessmentEvidenceService EvidenceService { get; } = GetService<IAssessmentEvidenceService>();
+    private IFilesService FilesService { get; } = GetService<IFilesService>();
 
     #endregion
 
@@ -178,8 +186,14 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     private readonly Dictionary<int, string> _selectedAnswerText = new();   // questionId -> answer text
     private readonly HashSet<int> _answeredQuestions = new();
 
+    // GitHub #80 (S44): the comment and evidence of each answer, kept here because the question rows
+    // are rebuilt on every page change.
+    private readonly Dictionary<int, string?> _commentByQuestion = new();   // questionId -> comment
+    private readonly Dictionary<int, List<AssessmentAnswerEvidence>> _evidenceByQuestion = new();
+
     private readonly object _pendingLock = new();
     private readonly Dictionary<int, string> _pendingSaves = new();         // questionId -> answer content json
+    private readonly Dictionary<int, string?> _pendingComments = new();     // questionId -> comment
     private readonly Subject<Unit> _saveSignal = new();
     private IDisposable? _saveSubscription;
 
@@ -246,11 +260,17 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             var drafts = await AssessmentsService.GetDraftAnswersAsync(_run!.Id) ?? new List<AssessmentRunAnswer>();
             foreach (var draft in drafts)
             {
+                // A row may carry only a comment or evidence (S44 D3): restore the comment, but such a
+                // row is not an answer.
+                if (!string.IsNullOrEmpty(draft.Comment)) _commentByQuestion[draft.AssessmentQuestionId] = draft.Comment;
+
                 var text = DecodeAnswerText(draft.AnswerContentJson);
                 if (string.IsNullOrEmpty(text)) continue;
                 _selectedAnswerText[draft.AssessmentQuestionId] = text;
                 _answeredQuestions.Add(draft.AssessmentQuestionId);
             }
+
+            await LoadEvidenceAsync();
         }
 
         BuildPages();
@@ -349,7 +369,17 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
                 if (match != null) item.SetSelectedAnswerSilently(match);
             }
 
+            // The comment and evidence of the answer (GitHub #80, S44).
+            if (_commentByQuestion.TryGetValue(question.Id, out var savedComment))
+                item.SetCommentSilently(savedComment);
+            item.CanEditComment = AssessmentEvidenceSummary.CanEditComment(IsReadOnly);
+            item.ConfigureEvidence(AssessmentEvidenceSummary.CanAttach(IsPreview, IsReadOnly), AttachEvidenceAsync);
+            if (_evidenceByQuestion.TryGetValue(question.Id, out var evidence))
+                foreach (var file in evidence)
+                    item.Evidence.Add(NewEvidenceItem(file));
+
             item.AnswerChanged += OnAnswerChanged;
+            item.CommentChanged += OnCommentChanged;
             items.Add(item);
         }
 
@@ -512,18 +542,63 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         _saveSignal.OnNext(Unit.Default);
     }
 
+    private void OnCommentChanged(AssessmentRunQuestionViewModel item, string? comment)
+    {
+        if (IsReadOnly) return;
+
+        _commentByQuestion[item.QuestionId] = comment;
+
+        // Preview keeps what was typed while the page is open, but never persists.
+        if (IsPreview) return;
+
+        lock (_pendingLock)
+        {
+            _pendingComments[item.QuestionId] = comment;
+        }
+
+        _saveSignal.OnNext(Unit.Default);
+    }
+
+    /// <summary>
+    /// Saves the pending comments (GitHub #80, S44). A failure is logged and not retried: the text stays
+    /// on screen, and the next edit queues it again.
+    /// </summary>
+    private async Task<bool> FlushCommentsAsync(Dictionary<int, string?> comments)
+    {
+        var anySaved = false;
+        foreach (var (questionId, comment) in comments)
+        {
+            try
+            {
+                await EvidenceService.SaveCommentAsync(_run!.Id, questionId, comment);
+                anySaved = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error saving the comment on assessment run {RunId}, question {QuestionId}: {Error}",
+                    _run!.Id, questionId, ex.GetType().Name);
+            }
+        }
+
+        return anySaved;
+    }
+
     private async Task FlushPendingAsync()
     {
         if (IsPreview || _run is null) return;
 
         Dictionary<int, string> toSave;
+        Dictionary<int, string?> comments;
         lock (_pendingLock)
         {
-            if (_pendingSaves.Count == 0) return;
+            if (_pendingSaves.Count == 0 && _pendingComments.Count == 0) return;
             toSave = new Dictionary<int, string>(_pendingSaves);
             _pendingSaves.Clear();
+            comments = new Dictionary<int, string?>(_pendingComments);
+            _pendingComments.Clear();
         }
 
+        // Both writes upsert the same (run, question) row, so neither order loses the other's value.
         var anySaved = false;
         foreach (var (questionId, content) in toSave)
         {
@@ -531,7 +606,17 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             if (result != null) anySaved = true;
         }
 
-        if (!anySaved) return;
+        var anyCommentSaved = comments.Count > 0 && await FlushCommentsAsync(comments);
+
+        if (!anySaved)
+        {
+            if (!anyCommentSaved) return;
+            _runChanged = true;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+                SavedAtText = $"{Localizer["SavedAt"]} {DateTime.Now:HH:mm}");
+            return;
+        }
+
         _runChanged = true;
 
         await Dispatcher.UIThread.InvokeAsync(async () =>
@@ -603,6 +688,150 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         {
             Logger.Error("Error persisting assessment run state: {0}", ex.Message);
         }
+    }
+
+    #endregion
+
+    #region EVIDENCE
+
+    /// <summary>The run's evidence, grouped by question. A failure leaves the lists empty rather than closing the viewer.</summary>
+    private async Task LoadEvidenceAsync()
+    {
+        _evidenceByQuestion.Clear();
+        if (_run is null) return;
+
+        try
+        {
+            var evidence = await EvidenceService.GetRunEvidenceAsync(_run.Id);
+            foreach (var group in evidence.GroupBy(e => e.QuestionId))
+                _evidenceByQuestion[group.Key] = group.ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error loading the evidence of assessment run {RunId}: {Error}", _run.Id, ex.GetType().Name);
+        }
+    }
+
+    private AssessmentEvidenceItemViewModel NewEvidenceItem(AssessmentAnswerEvidence evidence) =>
+        new(evidence, AssessmentEvidenceSummary.CanAttach(IsPreview, IsReadOnly),
+            DownloadEvidenceAsync, DeleteEvidenceAsync);
+
+    private async Task AttachEvidenceAsync(AssessmentRunQuestionViewModel question)
+    {
+        if (_run is null || !AssessmentEvidenceSummary.CanAttach(IsPreview, IsReadOnly)) return;
+
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var picked = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Localizer["AttachEvidence"],
+            AllowMultiple = false
+        });
+        if (picked.Count == 0) return;
+
+        var path = picked[0].Path;
+
+        // The same limits the server enforces, checked first so the assessor is told why at once.
+        long size;
+        try
+        {
+            size = new FileInfo(path.LocalPath).Length;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error reading the picked evidence file: {Error}", ex.GetType().Name);
+            await ShowErrorAsync(AssessmentEvidenceSummary.UploadFailedKey);
+            return;
+        }
+
+        var rejection = AssessmentEvidenceSummary.UploadRejectionKey(size, question.Evidence.Count);
+        if (rejection is not null)
+        {
+            await ShowErrorAsync(rejection);
+            return;
+        }
+
+        try
+        {
+            var created = await EvidenceService.UploadEvidenceAsync(_run.Id, question.QuestionId, path);
+
+            if (!_evidenceByQuestion.TryGetValue(question.QuestionId, out var list))
+                _evidenceByQuestion[question.QuestionId] = list = new List<AssessmentAnswerEvidence>();
+            list.Add(created);
+
+            await Dispatcher.UIThread.InvokeAsync(() => question.Evidence.Add(NewEvidenceItem(created)));
+            _runChanged = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error attaching evidence to assessment run {RunId}, question {QuestionId}: {Error}",
+                _run.Id, question.QuestionId, ex.GetType().Name);
+            await ShowErrorAsync(AssessmentEvidenceSummary.FailureKey(ex.Message));
+        }
+    }
+
+    private async Task DownloadEvidenceAsync(AssessmentEvidenceItemViewModel item)
+    {
+        var storageProvider = StorageProviderAccessor.Current;
+        if (storageProvider == null) return;
+
+        var extension = FilesService.ConvertTypeToExtension(item.Type);
+        var target = await storageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Localizer["SaveDocumentMSG"],
+            DefaultExtension = extension,
+            SuggestedFileName = Path.GetFileNameWithoutExtension(item.Name) + extension
+        });
+        if (target == null) return;
+
+        try
+        {
+            await FilesService.DownloadFileAsync(item.Evidence.UniqueName, target.Path);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error downloading assessment evidence: {Error}", ex.GetType().Name);
+            await ShowErrorAsync(AssessmentEvidenceSummary.DownloadFailedKey);
+        }
+    }
+
+    private async Task DeleteEvidenceAsync(AssessmentEvidenceItemViewModel item)
+    {
+        if (_run is null || !AssessmentEvidenceSummary.CanAttach(IsPreview, IsReadOnly)) return;
+        if (!await ConfirmationDialog.ConfirmDeleteAsync(item.Name)) return;
+
+        var questionId = item.Evidence.QuestionId;
+        try
+        {
+            await EvidenceService.DeleteEvidenceAsync(_run.Id, questionId, item.Evidence.UniqueName);
+
+            if (_evidenceByQuestion.TryGetValue(questionId, out var list))
+                list.RemoveAll(e => e.UniqueName == item.Evidence.UniqueName);
+
+            var row = CurrentQuestions.FirstOrDefault(q => q.QuestionId == questionId);
+            if (row is not null)
+                await Dispatcher.UIThread.InvokeAsync(() => row.Evidence.Remove(item));
+            _runChanged = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Error deleting evidence from assessment run {RunId}, question {QuestionId}: {Error}",
+                _run.Id, questionId, ex.GetType().Name);
+            await ShowErrorAsync(AssessmentEvidenceSummary.DeleteFailureKey(ex.Message));
+        }
+    }
+
+    private async Task ShowErrorAsync(string messageKey)
+    {
+        await MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Error"],
+                ContentMessage = Localizer[messageKey],
+                Icon = Icon.Error,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            }).ShowAsync();
     }
 
     #endregion

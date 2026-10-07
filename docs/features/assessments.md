@@ -35,9 +35,25 @@ Questionnaire-style evaluations reused across multiple runs. Each assessment has
 | GET/PUT/DELETE | `/assessments/{id}/Runs/{runId}` | Manage run |
 | GET/POST/DELETE | `/assessments/{id}/Runs/{runId}/Answers` | Run responses |
 
+### Comment and evidence per answer
+
+Each answer of a run can carry a comment and up to 10 evidence files (GitHub #80, T297) — design and
+limits in [assessment-answer-evidence.md](assessment-answer-evidence.md) (S44).
+[`AssessmentRunEvidenceController`](../../src/API/Controllers/AssessmentRunEvidenceController.cs),
+same `RequireAssessmentAccess` policy:
+
+| Verb | Route | Purpose |
+|------|-------|---------|
+| PUT | `/Assessments/runs/{runId}/questions/{questionId}/comment` | Set or clear the comment |
+| GET | `/Assessments/runs/{runId}/evidence` | Every evidence file of the run |
+| POST | `/Assessments/runs/{runId}/questions/{questionId}/evidence` | Complete a chunked upload as evidence |
+| DELETE | `/Assessments/runs/{runId}/questions/{questionId}/evidence/{uniqueName}` | Remove one file (uploader or admin) |
+
 ## Client
 
-[`AssessmentsRestService`](../../src/ClientServices/Services/AssessmentsRestService.cs).
+[`AssessmentsRestService`](../../src/ClientServices/Services/AssessmentsRestService.cs);
+[`AssessmentEvidenceRestService`](../../src/ClientServices/Services/AssessmentEvidenceRestService.cs) for
+the comment and evidence of each answer.
 
 ## Capabilities
 
@@ -50,6 +66,11 @@ Questionnaire-style evaluations reused across multiple runs. Each assessment has
 
 - `AssessmentsControllerTest` (API.Tests)
 - `AssessmentsServiceTest` (ServerServices.Tests)
+- Comment and evidence: `AssessmentRunEvidenceControllerTest`, `FilesControllerAssessmentEvidenceTest`
+  (API.Tests); `AssessmentRunEvidenceServiceInMemoryTest`, `AssessmentEvidenceFilesTest`
+  (ServerServices.Tests); `AssessmentEvidenceRestServiceTest` (ClientServices.Tests);
+  `AssessmentEvidenceSummaryTest` (GUIClient.Tests); `AssessmentAnswerEvidenceSchemaTests`
+  (DAL.IntegrationTests)
 
 ## Common Exceptions
 

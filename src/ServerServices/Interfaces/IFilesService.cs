@@ -48,6 +48,15 @@ public interface IFilesService
     public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser);
 
     /// <summary>
+    /// <see cref="CompleteChunkedUpload(NrFile,string,int,User)"/> with a size bound: the staged chunks
+    /// are measured on disk before anything is reassembled, and an upload that is empty or larger than
+    /// <paramref name="maxBytes"/> is refused with <see cref="Model.Exceptions.InvalidParameterException"/>
+    /// (parameter <c>file</c>). The staged chunks are removed either way.
+    /// </summary>
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser,
+        long maxBytes);
+
+    /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>

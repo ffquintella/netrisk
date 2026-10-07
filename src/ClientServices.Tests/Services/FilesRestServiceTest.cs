@@ -504,6 +504,58 @@ public class FilesRestServiceTest : BaseServiceTest, IDisposable
         Assert.Contains("\"type\":\"18\"", _backend.Requests[3].Body, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// GitHub #80 (S44 D4): evidence has its own endpoint, which the generic completion refuses — and
+    /// there is no FK here to set — so the generic upload refuses it before reading or sending anything.
+    /// </summary>
+    [Fact]
+    public async Task TestUploadFileAsyncRefusesAssessmentEvidence()
+    {
+        var source = WriteTempFile("badge.png", "x"u8.ToArray());
+
+        await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.UploadFileAsync(source, 50, 3, FileCollectionType.AssessmentRunAnswerFile));
+
+        Assert.Empty(_backend.Requests);
+    }
+
+    // ---------------------------------------------------------- StageUploadAsync (GitHub #80)
+
+    [Fact]
+    public async Task TestStageUploadAsyncSendsOneChunkPerFiveMegabytes()
+    {
+        _backend.OnGet("/Files/local/id", "\"local-file-9\"");
+        _backend.OnPost("/Files/local/chunk", "\"ok\"");
+
+        var staged = await _service.StageUploadAsync(new byte[5 * 1024 * 1024 + 1]);
+
+        Assert.Equal(new StagedUpload("local-file-9", 2), staged);
+        Assert.Equal(3, _backend.Requests.Count);
+        Assert.Contains("\"chunkNumber\":2", _backend.Requests[2].Body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("\"totalChunks\":2", _backend.Requests[2].Body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task TestStageUploadAsyncFailsWhenAChunkIsRefused()
+    {
+        _backend.OnGet("/Files/local/id", "\"local-file-9\"");
+        _backend.OnStatus(Method.Post, "/Files/local/chunk", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.StageUploadAsync("x"u8.ToArray()));
+    }
+
+    [Theory]
+    [InlineData("/tmp/notes.txt", 1)]
+    [InlineData("/tmp/archive.zip", 18)]
+    public async Task TestResolveUploadTypeAsyncPicksTheAllowedTypeOrTheFallback(string fileName, int expected)
+    {
+        _backend.OnGet("/Files/Types", AllowedTypes());
+
+        var type = await _service.ResolveUploadTypeAsync(fileName);
+
+        Assert.Equal(expected, type.Value);
+    }
+
     [Fact]
     public async Task TestUploadFileAsyncRejectsATypeThatIsNotAllowedAtAll()
     {

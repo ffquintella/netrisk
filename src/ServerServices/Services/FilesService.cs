@@ -177,6 +177,14 @@ public class FilesService: ServiceBase, IFilesService
     }
 
     public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser)
+        => CompleteChunkedUploadCore(file, fileId, totalChunks, creatingUser, maxBytes: null);
+
+    public FileListing CompleteChunkedUpload(NrFile file, string fileId, int totalChunks, User creatingUser,
+        long maxBytes)
+        => CompleteChunkedUploadCore(file, fileId, totalChunks, creatingUser, maxBytes);
+
+    private FileListing CompleteChunkedUploadCore(NrFile file, string fileId, int totalChunks, User creatingUser,
+        long? maxBytes)
     {
         var uploadPath = UploadPathFor(fileId);
         var finalFilePath = CombinedPathFor(fileId);
@@ -187,10 +195,24 @@ public class FilesService: ServiceBase, IFilesService
                 throw new DataNotFoundException("file-chunks", fileId,
                     new Exception($"No chunks found for file {fileId}"));
 
-            var receivedChunks = Directory.GetFiles(uploadPath, "*.part").Length;
+            var stagedChunks = Directory.GetFiles(uploadPath, "*.part");
+            var receivedChunks = stagedChunks.Length;
             if (receivedChunks != totalChunks)
                 throw new DataNotFoundException("file-chunks", fileId,
                     new Exception($"Expected {totalChunks} chunks but found {receivedChunks} for file {fileId}"));
+
+            // GitHub #80 (S44 D5): a bounded upload is measured on disk, before anything is
+            // reassembled or read into memory, so an oversized one costs the server a directory listing
+            // rather than a buffer of its size. The finally below still removes the staged chunks.
+            if (maxBytes is not null)
+            {
+                var stagedBytes = stagedChunks.Sum(path => new FileInfo(path).Length);
+                if (stagedBytes == 0)
+                    throw new InvalidParameterException("file", "The upload is empty.");
+                if (stagedBytes > maxBytes.Value)
+                    throw new InvalidParameterException("file",
+                        $"The file is {stagedBytes} bytes; the limit is {maxBytes.Value} bytes.");
+            }
 
             // Reassemble the chunks (1-based, in order) into the final file and load its content.
             CombineChunks(fileId, totalChunks);
@@ -300,6 +322,11 @@ public class FilesService: ServiceBase, IFilesService
         
         if(dbFile.Id != file.Id) throw new InvalidOperationException("Cannot change id of file");
 
+        // GitHub #80 (S44 D4): assessment evidence is managed only by the assessment evidence service,
+        // which knows whether the run is still open. A generic save would rewrite its content or move it.
+        if (dbFile.AssessmentRunAnswerId is not null || file.AssessmentRunAnswerId is not null)
+            throw new InvalidOperationException("Assessment evidence cannot be changed through the files service");
+
         file.Adapt(dbFile);
         dbContext.SaveChanges();
     }
@@ -330,6 +357,14 @@ public class FilesService: ServiceBase, IFilesService
         if (file.RiskAcceptanceId is not null)
             return context.RiskAcceptances.Where(a => a.Id == file.RiskAcceptanceId.Value)
                 .Select(a => a.EntityId).FirstOrDefault();
+
+        // GitHub #80 (S44 D7): evidence on an assessment answer belongs to the assessment's entity — the
+        // scope the run and answer filters already follow — not to the entity the run assessed.
+        if (file.AssessmentRunAnswerId is not null)
+            return context.AssessmentRunAnswers.Where(a => a.Id == file.AssessmentRunAnswerId.Value)
+                .Join(context.AssessmentRuns, a => a.AssessmentRunId, r => r.Id, (a, r) => r.AssessmentId)
+                .Join(context.Assessments, assessmentId => assessmentId, s => s.Id, (_, s) => s.EntityId)
+                .FirstOrDefault();
 
         return null;
     }
@@ -467,6 +502,19 @@ public class FilesService: ServiceBase, IFilesService
                     }).ToListAsync();
                 break;
             
+            case FileCollectionType.AssessmentRunAnswerFile:
+                result = await dbContext.NrFiles.Where(f => f.AssessmentRunAnswerId == baseId).Join(dbContext.FileTypes, file => file.Type,
+                    fileType => fileType.Value.ToString(),
+                    (file, fileType) => new FileListing()
+                    {
+                        Name = file.Name,
+                        UniqueName = file.UniqueName,
+                        Type = fileType.Name,
+                        Timestamp = file.Timestamp,
+                        OwnerId = file.User
+                    }).ToListAsync();
+                break;
+
             case FileCollectionType.IncidentFile:
                 result = await dbContext.NrFiles.Where(f => f.IncidentId == baseId).Join(dbContext.FileTypes, file => file.Type,
                     fileType => fileType.Value.ToString(),

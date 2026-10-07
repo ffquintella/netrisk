@@ -55,6 +55,9 @@
     <!-- The vulnerability editor's "Vulnerability source" selector (GitHub #79): the computed keys, the
          order of the choices and which choice a stored value shows. Uses ChoiceOption from the file above. -->
     <Compile Include="..\GUIClient\Tools\VulnerabilitySourceSummary.cs" LinkBase="Tools" />
+    <!-- The run viewer's comment and evidence controls (GitHub #80, S44): when they are offered, which
+         message a picked file is refused with before upload and what a server refusal reads as. -->
+    <Compile Include="..\GUIClient\Tools\AssessmentEvidenceSummary.cs" LinkBase="Tools" />
     <!-- The continuity screens' pure half (Stage 9.3, S43 §7): durations, the computed keys, the threat
          headline, the parameter form's validation and who sees what. The parameter bounds are compiled in
          from Tools so the form and the server share one definition. -->

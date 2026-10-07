@@ -100,6 +100,10 @@ public partial class NRDbContext
         // vulnerabilities, so the vulnerability scope filter below already covers it.
         ConfigureVulnerabilityClassification(modelBuilder);
 
+        // GitHub #80 — a comment and evidence files on each answer of an assessment run (S44). The
+        // files carry their own entity_id and the answers inherit the run's scope, so no new filter.
+        ConfigureAssessmentEvidence(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>

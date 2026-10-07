@@ -20,6 +20,7 @@ These are placeholder stubs — contributions welcome.
 - [Entity Management](entity-management.md)
 - [Computer Management](computer-management.md)
 - [Assessments](assessments.md)
+  - [Comment and evidence per answer in an assessment run](assessment-answer-evidence.md)
 - [Authentication](authentication.md)
 - [Enterprise authentication: SSO, SCIM and WebAuthn](enterprise-authentication.md)
 - [Notification channels](notification-channels.md)

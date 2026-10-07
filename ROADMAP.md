@@ -893,6 +893,8 @@ planned, nothing started.**
   - note: product-owner decision 2026-10-05 — not now, unit managers do not use the product yet; the write rule already lives in one policy (`RiskContextWritePolicy`) so this lands without an API or screen change
 - [x] T296 Classify a vulnerability as Server or Application from the vulnerability form (GitHub #79)
   - note: `vulnerabilities.source_type` (db_version 91), NOT NULL DEFAULT 0 = Unknown, so existing rows read "Not classified" rather than a guessed class; importers do not set it yet and the vulnerabilities grid and filter do not show it
+- [x] T297 Let an assessor attach a comment and evidence files to each answer of an assessment run (GitHub #80) (S44)
+  - note: `assessment_run_answers.comment` and `nr_files.assessment_run_answer_id` (db_version 92); up to 10 files of 20 MiB per answer, read-only once the run is submitted; the declared file type is checked against `file_types` but the content is not sniffed, and the legacy answers grid under the runs list shows neither the comment nor the evidence
 
 ## Specs
 
@@ -941,3 +943,4 @@ planned, nothing started.**
 | S41 | Stage 9.1 — linkage chain specification | docs/roadmap/track9/9.1-linkage-chain.md |
 | S42 | Stage 9.2 — structured scenario, record discrimination and evidence confidence specification | docs/roadmap/track9/9.2-structured-scenario.md |
 | S43 | Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies specification | docs/roadmap/track9/9.3-bia-continuity.md |
+| S44 | Comment and evidence per answer in an assessment run | docs/features/assessment-answer-evidence.md |

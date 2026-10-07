@@ -12,6 +12,14 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.28.0] - 2026-10-07
+
+### Added
+- Attach a comment and evidence files to each answer of an assessment run from the run viewer, stored as `assessment_run_answers.comment` and `nr_files.assessment_run_answer_id`, up to 10 files of 20 MiB per answer and read-only once the run is submitted (T297, S44)
+
+### Security
+- Refuse assessment evidence on the generic `/Files` create, upload, update and delete routes with 400 `assessment_evidence_route`, and require the `assessments` permission plus a visible answer to download it (T297, S44)
+
 ## [2.27.0] - 2026-10-07
 
 ### Added

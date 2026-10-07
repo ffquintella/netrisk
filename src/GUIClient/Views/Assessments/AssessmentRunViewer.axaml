@@ -21,6 +21,7 @@
     <Window.Resources>
         <converters:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter"/>
         <converters:BoolToIndentConverter x:Key="BoolToIndentConverter"/>
+        <converters:TypeToIconConverter x:Key="TypeToIconConverter"/>
     </Window.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="10">
@@ -85,6 +86,52 @@
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
+
+                                            <!-- GitHub #80 (S44): the assessor's comment on this answer -->
+                                            <TextBlock Margin="0 6 0 0"
+                                                       Text="{Binding $parent[ItemsControl].DataContext.StrComment}"/>
+                                            <TextBox Text="{Binding Comment, Mode=TwoWay}"
+                                                     AcceptsReturn="True" TextWrapping="Wrap"
+                                                     MinHeight="48" MaxHeight="160"
+                                                     MaxLength="{Binding CommentMaxLength}"
+                                                     IsReadOnly="{Binding !CanEditComment}"
+                                                     PlaceholderText="{Binding $parent[ItemsControl].DataContext.StrCommentWatermark}"/>
+
+                                            <!-- ... and the evidence files that substantiate it -->
+                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 6 0 0">
+                                                <TextBlock VerticalAlignment="Center"
+                                                           Text="{Binding $parent[ItemsControl].DataContext.StrEvidence}"/>
+                                                <Button Classes="type2"
+                                                        Command="{Binding AttachEvidenceCommand}"
+                                                        IsVisible="{Binding CanAttachEvidence}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <avalonia:MaterialIcon Kind="Paperclip"/>
+                                                        <TextBlock Text="{Binding $parent[ItemsControl].DataContext.StrAttachEvidence}"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                            <ItemsControl ItemsSource="{Binding Evidence}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="assessments:AssessmentEvidenceItemViewModel">
+                                                        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0 2">
+                                                            <avalonia:MaterialIcon Width="15" Height="15"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Kind="{Binding Type, Converter={StaticResource TypeToIconConverter}}"/>
+                                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center"
+                                                                       TextWrapping="Wrap"/>
+                                                            <Button Classes="subButton"
+                                                                    Command="{Binding DownloadCommand}">
+                                                                <avalonia:MaterialIcon Kind="Download"/>
+                                                            </Button>
+                                                            <Button Classes="subButton"
+                                                                    Command="{Binding DeleteCommand}"
+                                                                    IsVisible="{Binding CanDelete}">
+                                                                <avalonia:MaterialIcon Kind="Delete"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>

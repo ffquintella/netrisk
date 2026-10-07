@@ -3909,4 +3909,31 @@ Salvar mesmo assim?</value>
     <data name="VulnerabilitySourceApplication" xml:space="preserve">
         <value>Aplicação</value>
     </data>
+    <data name="AnswerCommentWatermark" xml:space="preserve">
+        <value>Explique esta resposta (opcional)</value>
+    </data>
+    <data name="Evidence" xml:space="preserve">
+        <value>Evidências</value>
+    </data>
+    <data name="AttachEvidence" xml:space="preserve">
+        <value>Anexar evidência</value>
+    </data>
+    <data name="EvidenceEmptyMSG" xml:space="preserve">
+        <value>O arquivo selecionado está vazio e não pode ser anexado como evidência.</value>
+    </data>
+    <data name="EvidenceTooLargeMSG" xml:space="preserve">
+        <value>O arquivo selecionado tem mais de 20 MB, o limite para evidências.</value>
+    </data>
+    <data name="EvidenceLimitReachedMSG" xml:space="preserve">
+        <value>Esta resposta já tem 10 evidências, o máximo. Remova uma antes de anexar outra.</value>
+    </data>
+    <data name="EvidenceRunSubmittedMSG" xml:space="preserve">
+        <value>Esta execução já foi enviada; seus comentários e evidências não podem mais ser alterados.</value>
+    </data>
+    <data name="EvidenceNotUploaderMSG" xml:space="preserve">
+        <value>Somente quem anexou esta evidência, ou um administrador, pode removê-la.</value>
+    </data>
+    <data name="ErrorDownloadingFileMSG" xml:space="preserve">
+        <value>Erro ao baixar o arquivo. Por favor, tente novamente.</value>
+    </data>
 </root>

@@ -187,19 +187,15 @@ public class FilesRestService: RestServiceBase, IFilesService
             throw new ArgumentException("Uri is not a file", nameof(filePath));
 
         
+        // Evidence on an assessment answer has its own endpoint, which the generic completion route
+        // refuses (GitHub #80, S44 D4) — and it has no FK below to set anyway.
+        if (type == FileCollectionType.AssessmentRunAnswerFile)
+            throw new ArgumentException("Assessment evidence is uploaded through IAssessmentEvidenceService",
+                nameof(type));
+
         var content = await File.ReadAllBytesAsync(filePath.LocalPath);
 
-        var extension = "";
-        if (Path.HasExtension(filePath.AbsolutePath)) extension = Path.GetExtension(filePath.AbsolutePath);
-
-
-        var atypes = await GetAllowedTypesAsync();
-        
-        var ftype = ConvertExtensionToType(extension);
-
-        var typeObj =atypes.FirstOrDefault(ft => ft.Name == ftype) ?? atypes.FirstOrDefault(at => at.Value == 18);
-        
-        if(typeObj == null) throw new TypeNotAllowedException($"File {ftype} not allowed");
+        var typeObj = await ResolveUploadTypeAsync(filePath.AbsolutePath);
 
         // Metadata only — the content is streamed separately as chunks and reassembled server-side.
         var newFile = new DAL.Entities.NrFile()
@@ -235,8 +231,54 @@ public class FilesRestService: RestServiceBase, IFilesService
         }
 
         // Upload the content in chunks, then finalize so the server reassembles it, creates the
-        // DB record and associates it with the target entity. Sending the file as small chunks
-        // keeps each request well under the server's request-body limit.
+        // DB record and associates it with the target entity.
+        var staged = await StageUploadAsync(content);
+
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Files/local/complete");
+        request.AddQueryParameter("fileId", staged.FileId);
+        request.AddQueryParameter("totalChunks", staged.TotalChunks.ToString());
+        request.AddJsonBody(newFile);
+
+        try
+        {
+            var response = await client.PostAsync<FileListing>(request);
+            if (response == null)
+            {
+                Logger.Error("Error finalizing chunked file upload");
+                throw new RestComunicationException($"Error adding file");
+            }
+
+            return response;
+
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error finalizing chunked file upload message: {Message}", ex.Message);
+            throw new RestComunicationException("Error adding file", ex);
+        }
+    }
+
+    public async Task<FileType> ResolveUploadTypeAsync(string fileName)
+    {
+        var extension = Path.HasExtension(fileName) ? Path.GetExtension(fileName) : "";
+
+        var atypes = await GetAllowedTypesAsync();
+
+        var ftype = ConvertExtensionToType(extension);
+
+        var typeObj = atypes.FirstOrDefault(ft => ft.Name == ftype) ?? atypes.FirstOrDefault(at => at.Value == 18);
+
+        if (typeObj == null) throw new TypeNotAllowedException($"File {ftype} not allowed");
+
+        return typeObj;
+    }
+
+    public async Task<StagedUpload> StageUploadAsync(byte[] content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+
+        // Sending the file as small chunks keeps each request well under the server's request-body limit.
         var fileId = await GetLocalIdAsync();
 
         var totalChunks = (int)Math.Ceiling((double)content.Length / UploadChunkSize);
@@ -258,29 +300,7 @@ public class FilesRestService: RestServiceBase, IFilesService
             });
         }
 
-        using var client = RestService.GetClient();
-        var request = new RestRequest("/Files/local/complete");
-        request.AddQueryParameter("fileId", fileId);
-        request.AddQueryParameter("totalChunks", totalChunks.ToString());
-        request.AddJsonBody(newFile);
-
-        try
-        {
-            var response = await client.PostAsync<FileListing>(request);
-            if (response == null)
-            {
-                Logger.Error("Error finalizing chunked file upload");
-                throw new RestComunicationException($"Error adding file");
-            }
-
-            return response;
-
-        }
-        catch (HttpRequestException ex)
-        {
-            Logger.Error("Error finalizing chunked file upload message: {Message}", ex.Message);
-            throw new RestComunicationException("Error adding file", ex);
-        }
+        return new StagedUpload(fileId, totalChunks);
     }
 
     public async Task<NrFile> GetByIdAsync(int id)
