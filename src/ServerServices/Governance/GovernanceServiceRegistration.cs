@@ -35,6 +35,10 @@ public static class GovernanceServiceRegistration
         services.TryAddTransient<IContinuityService, ContinuityService>();
         services.AddTransient<IRiskFlagsService, RiskFlagsService>();
 
+        // Stage 9.6 (S47) — treatment economics: Gate C, the target level and Gate D. It consults Gate A through the
+        // flags service and the appetite through the workflow service, so it sits after both are registered.
+        services.AddTransient<ITreatmentEconomicsService, TreatmentEconomicsService>();
+
         // 8.3 — enforcement. Everything else consults this, so it goes in first.
         services.AddTransient<IRiskWorkflowService, RiskWorkflowService>();
         services.AddTransient<IRiskAppetitesService, RiskAppetitesService>();

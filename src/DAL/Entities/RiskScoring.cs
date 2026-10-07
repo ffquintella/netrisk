@@ -70,6 +70,13 @@ public partial class RiskScoring
     public double? QuantResidualAleP90 { get; set; }
 
     /// <summary>
+    /// The <em>mean</em> of the residual run — the "E[L] after" of Gate C (Stage 9.6, S47 §4.4). Null when there
+    /// was no residual run, and on every row computed before schema 95: the residual median is never a stand-in
+    /// for it, because the median year of a low-frequency risk has no loss at all.
+    /// </summary>
+    public double? QuantResidualAleMean { get; set; }
+
+    /// <summary>
     /// The loss-exceedance curve as JSON — an array of <c>{ loss, probability }</c> points. Cached
     /// rather than recomputed per request: the simulation is ten thousand iterations and the curve
     /// changes only when an input does.

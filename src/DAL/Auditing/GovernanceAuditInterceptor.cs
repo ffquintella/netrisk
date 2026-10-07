@@ -80,7 +80,13 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // including a derived flag reverting when its basis is lost, which must never be silent — and every
         // Phase 4 decision, the automatic Gate A ones included.
         nameof(RiskFlag),
-        nameof(RiskDecision)
+        nameof(RiskDecision),
+
+        // Stage 9.6 (S47 §4.10): the treatment option and monetary cost Gate C computes against, the
+        // dependencies Gate D schedules by, and the target level — who set each, and every change.
+        nameof(MitigationEconomics),
+        nameof(MitigationDependency),
+        nameof(RiskTarget)
     };
 
     /// <summary>

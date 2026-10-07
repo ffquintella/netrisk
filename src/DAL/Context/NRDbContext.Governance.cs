@@ -139,6 +139,8 @@ public partial class NRDbContext
             entity.Property(e => e.QuantResidualAleP10).HasColumnName("quant_residual_ale_p10");
             entity.Property(e => e.QuantResidualAleP50).HasColumnName("quant_residual_ale_p50");
             entity.Property(e => e.QuantResidualAleP90).HasColumnName("quant_residual_ale_p90");
+            // Stage 9.6 (S47 §4.4): the residual mean — Gate C's E[L] after.
+            entity.Property(e => e.QuantResidualAleMean).HasColumnName("quant_residual_ale_mean");
             entity.Property(e => e.QuantLossExceedanceCurve).HasColumnName("quant_loss_exceedance_curve")
                 .HasColumnType("text");
             entity.Property(e => e.QuantSeed).HasColumnName("quant_seed").HasColumnType("int(11)");
@@ -343,6 +345,23 @@ public partial class NRDbContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .HasConstraintName("fk_mitigation_tasks_created_by_id")
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Stage 9.6 (S47 §4.4, §4.8): the acceptance criterion and the completion evidence of Phase 5,
+            // with who recorded the evidence and when — both stamped by the server.
+            entity.Property(e => e.AcceptanceCriterion).HasColumnName("acceptance_criterion").HasColumnType("text");
+            entity.Property(e => e.CompletionEvidence).HasColumnName("completion_evidence").HasColumnType("text");
+            entity.Property(e => e.CompletionEvidenceAt).HasColumnName("completion_evidence_at")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CompletionEvidenceById).HasColumnName("completion_evidence_by_id")
+                .HasColumnType("int(11)");
+
+            entity.HasIndex(e => e.CompletionEvidenceById, "idx_mitigation_tasks_completion_evidence_by_id");
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(e => e.CompletionEvidenceById)
+                .HasConstraintName("fk_mitigation_tasks_completion_evidence_by_id")
                 .OnDelete(DeleteBehavior.SetNull);
         });
     }

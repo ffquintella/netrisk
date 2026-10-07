@@ -558,8 +558,10 @@ standalone hypotheses, near misses and the duplicate warning); Stage 9.3 is impl
 is implemented on the server and the REST client (T161–T167: schema version 93, the CISA KEV and FIRST EPSS syncs,
 ATT&CK techniques and the exploitation prioritization; its desktop surface is T302); Stage 9.5 is implemented on the
 server, the job host and the REST client (T168–T173: schema version 94, the eleven flags with their origins, Gate A
-ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is T303); the
-runtime observations and human/security review of all five are pending.** Does not reopen Track 8. Detailed specifications:
+ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is T303); Stage 9.6 is
+implemented on the server and the REST client (T174–T181: schema version 95, the four treatment options, the monetary
+cost beside the ordinal scale, Gate C, Gate D, the target level and task completion evidence; its desktop surface is
+T304); the runtime observations and human/security review of all six are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -663,16 +665,26 @@ runtime observations and human/security review of all five are pending.** Does n
 
 ### [M44] Stage 9.6 — Treatment economics: monetary cost, Gates C and D, the full option set
 > outcome: Gate C gets a calculation; Gate D gets portfolio selection under constraints. Closes gaps 7, 10, part of 13.
-> spec: S27
+> spec: S27, S47
+> depends-on: M43
 
-- [ ] T174 Merge the Stage 9.6 specification
-- [ ] T175 Add monetary control cost alongside the existing ordinal MitigationCost scale
-- [ ] T176 Implement Gate C: E[L before] − E[L after] > total cost, citing Gordon–Loeb as a reference, not a fixed 37% rule
-- [ ] T177 Implement Gate D: portfolio selection under budget, people, dependencies and deadline
-- [ ] T178 Add avoid and transfer/share as treatment types alongside reduce and accept
-- [ ] T179 Add completion evidence and an acceptance criterion on MitigationTask
-- [ ] T180 Add a target risk level to the register
-- [ ] T181 Test that a mitigation with no monetary cost enters Gate C as not-assessable, and Gate D preserves tail/systemic risks at moderate E[L]
+- [x] T174 Merge the Stage 9.6 specification
+  - note: written as S47 with all eleven sections in the same change as the implementation, as T149, T161 and T168 were — not yet merged and not yet human- or security-reviewed; declares Gate A ahead of C and D (accept refused, C informational, D's first tier) and that neither C nor D relaxes Gate B
+- [x] T175 Add monetary control cost alongside the existing ordinal MitigationCost scale
+  - note: `mitigation_economics` (schema 95), one row per mitigation rather than columns on `mitigations`, because `PUT /Mitigations` copies the whole payload (S47 D1); one-time, annual, annual side effects and horizon as an all-or-nothing block — a missing cost is never zero; no currency, as the FAIR inputs have none (D7)
+- [x] T176 Implement Gate C: E[L before] − E[L after] > total cost, citing Gordon–Loeb as a reference, not a fixed 37% rule
+  - note: on the annual means — `risk_scoring.quant_residual_ale_mean` is new and recorded only by computations from schema 95 on, so older analyses read "residual mean not recorded" until recomputed, never the median (S47 R1); Gordon–Loeb (1/e) is reported and never decides (D3)
+- [x] T177 Implement Gate D: portfolio selection under budget, people, dependencies and deadline
+  - note: `POST /TreatmentEconomics/Portfolio`, computed and never stored; a layered greedy selection (Gate A, then flags 6/8, then Gate C by ratio), not an exact optimizer (D5); people capacity is a period total, not a schedule (D6); flags are read as persisted (S46 R3); no portfolio approval (Stage 9.9) and no correlated aggregation (Stage 9.7)
+- [x] T178 Add avoid and transfer/share as treatment types alongside reduce and accept
+  - note: a typed `treatment_option` beside the editable `planning_strategy` labels, which are not mapped (D2); transfer/share needs a counterparty; "accept" is a planning declaration that creates no acceptance and is refused while Gate A holds
+- [x] T179 Add completion evidence and an acceptance criterion on MitigationTask
+  - note: completing a task now requires evidence (no existing client completes tasks); null leaves the new fields unchanged (D12); evidence is text — a file attachment per task is out of scope
+- [x] T180 Add a target risk level to the register
+  - note: `risk_targets` (score and/or annual E[L], date, rationale), compared with the residual and the appetite on read; a target above the appetite is flagged, not refused (D9); API and REST client only — the desktop surface is T304
+- [x] T181 Test that a mitigation with no monetary cost enters Gate C as not-assessable, and Gate D preserves tail/systemic risks at moderate E[L]
+  - note: GC3, E3, PD1, PD2 and PF1 (making a missing cost zero, or dropping the protected tier, fails them); Track9TreatmentEconomicsSchemaTests Q1–Q3 need Docker and were not run here; the S47 §8 runtime observations are still to be recorded on the PR
+- [ ] T304 Add the Stage 9.6 desktop surface: the treatment option, monetary cost, estimates and prerequisites with Gate C on the mitigation editor, the target level on the risk detail, the acceptance criterion and completion evidence on treatment tasks, and the portfolio selection screen (S47)
 
 ### [M45] Stage 9.7 — Tail statistics and portfolio: P95, CVaR, aggregation and correlation
 > outcome: The tail statistic appetite compares against, and the portfolio sum Phase 7 needs, exist. Closes gap 9.
@@ -973,3 +985,4 @@ planned, nothing started.**
 | S44 | Comment and evidence per answer in an assessment run | docs/features/assessment-answer-evidence.md |
 | S45 | Stage 9.4 — exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK specification | docs/roadmap/track9/9.4-exploitation-signals.md |
 | S46 | Stage 9.5 — the eleven mandatory flags and Gate A specification | docs/roadmap/track9/9.5-flags-gate-a.md |
+| S47 | Stage 9.6 — treatment economics: monetary cost, Gates C and D, the four options specification | docs/roadmap/track9/9.6-treatment-economics.md |

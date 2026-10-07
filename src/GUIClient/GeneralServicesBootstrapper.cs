@@ -139,6 +139,11 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IRiskFlagsService>(sp => new RiskFlagsRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.6 (S47): treatment economics — the option and monetary cost, Gate C, the target level and
+        // Gate D. The desktop surface that uses it is T304.
+        services.AddTransient<ITreatmentEconomicsService>(sp => new TreatmentEconomicsRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

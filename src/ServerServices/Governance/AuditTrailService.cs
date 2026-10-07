@@ -52,6 +52,13 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
         // visible on the risk's own trail and not only in the table.
         var flagIds = await db.RiskFlags.Where(f => f.RiskId == riskId).Select(f => f.Id).ToListAsync();
         var decisionIds = await db.RiskDecisions.Where(d => d.RiskId == riskId).Select(d => d.Id).ToListAsync();
+        // Stage 9.6 (S47 §4.10): the treatment option and cost Gate C computes against, the dependencies Gate D
+        // schedules by, and the target level.
+        var economicsIds = await db.MitigationEconomics.Where(e => mitigationIds.Contains(e.MitigationId))
+            .Select(e => e.Id).ToListAsync();
+        var dependencyIds = await db.MitigationDependencies.Where(d => mitigationIds.Contains(d.MitigationId))
+            .Select(d => d.Id).ToListAsync();
+        var targetIds = await db.RiskTargets.Where(t => t.RiskId == riskId).Select(t => t.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a =>
@@ -63,7 +70,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(RiskAcceptance) && acceptanceIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskReviewCampaignItem) && campaignItemIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskFlag) && flagIds.Contains(a.EntityId)) ||
-                (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)))
+                (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(MitigationEconomics) && economicsIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(MitigationDependency) && dependencyIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)))
             .Include(a => a.User)
             .OrderByDescending(a => a.OccurredAt)
             .ThenByDescending(a => a.Id)
@@ -97,6 +107,12 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
         var flagIds = await db.RiskFlags.Where(f => riskIds.Contains(f.RiskId)).Select(f => f.Id).ToListAsync();
         var decisionIds = await db.RiskDecisions.Where(d => riskIds.Contains(d.RiskId)).Select(d => d.Id)
             .ToListAsync();
+        // Stage 9.6 (S47 §4.10): the economics, dependencies and targets travel with the evidence pack.
+        var economicsIds = await db.MitigationEconomics.Where(e => mitigationIds.Contains(e.MitigationId))
+            .Select(e => e.Id).ToListAsync();
+        var dependencyIds = await db.MitigationDependencies.Where(d => mitigationIds.Contains(d.MitigationId))
+            .Select(d => d.Id).ToListAsync();
+        var targetIds = await db.RiskTargets.Where(t => riskIds.Contains(t.RiskId)).Select(t => t.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a => a.OccurredAt >= fromUtc && a.OccurredAt <= toUtc)
@@ -110,6 +126,9 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(RiskReviewCampaignItem) && campaignItemIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskFlag) && flagIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(MitigationEconomics) && economicsIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(MitigationDependency) && dependencyIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)) ||
                 a.EntityType == nameof(RiskAppetite))
             .Include(a => a.User)
             .OrderBy(a => a.OccurredAt)

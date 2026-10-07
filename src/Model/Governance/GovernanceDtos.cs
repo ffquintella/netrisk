@@ -97,6 +97,19 @@ public class MitigationTaskRequest
     public DateTime? DueDate { get; set; }
 
     public MitigationTaskStatus? Status { get; set; }
+
+    /// <summary>
+    /// What has to be true for the task to count as done (Stage 9.6, S47 §4.8), ≤ 4 000. On update, null leaves
+    /// the stored value as it is and blank clears it — a client that does not know the field cannot erase it.
+    /// </summary>
+    public string? AcceptanceCriterion { get; set; }
+
+    /// <summary>
+    /// The evidence the task was done (S47 §4.8), ≤ 4 000. Moving a task to Completed requires it, sent now or
+    /// already stored; on update null leaves it as it is, and it cannot be cleared from a completed task. Who
+    /// recorded it and when are stamped by the server.
+    /// </summary>
+    public string? CompletionEvidence { get; set; }
 }
 
 /// <summary>The edits applied while promoting a pending risk into the register (8.5.2).</summary>
@@ -431,6 +444,9 @@ public class QuantitativeRiskResult
     public double? ResidualP50 { get; set; }
 
     public double? ResidualP90 { get; set; }
+
+    /// <summary>The mean of the residual run — Gate C's E[L] after (Stage 9.6, S47 §4.4); null without a residual run.</summary>
+    public double? ResidualMean { get; set; }
 
     public List<LossExceedancePointDto> LossExceedanceCurve { get; set; } = [];
 

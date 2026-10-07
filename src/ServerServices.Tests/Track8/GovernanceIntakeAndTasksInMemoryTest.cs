@@ -133,10 +133,11 @@ public class GovernanceIntakeAndTasksInMemoryTest : InMemoryServiceTestBase
 
         Assert.Null(created.CompletedAt);
 
+        // Stage 9.6 (S47 §4.8): completing now requires completion evidence; the assertions are unchanged.
         var completed = await _tasks.UpdateAsync(new MitigationTaskRequest
         {
             Id = created.Id, MitigationId = 1, Title = "Patch the appliance", OwnerId = 2,
-            Status = MitigationTaskStatus.Completed
+            Status = MitigationTaskStatus.Completed, CompletionEvidence = "Firmware 4.2 installed, change 1201"
         }, 1);
 
         Assert.NotNull(completed.CompletedAt);
@@ -172,7 +173,7 @@ public class GovernanceIntakeAndTasksInMemoryTest : InMemoryServiceTestBase
         await _tasks.UpdateAsync(new MitigationTaskRequest
         {
             Id = done.Id, MitigationId = 1, Title = "Done", OwnerId = 2,
-            Status = MitigationTaskStatus.Completed
+            Status = MitigationTaskStatus.Completed, CompletionEvidence = "Change 1202"
         }, 1);
 
         var due = await _tasks.GetDueOrOverdueAsync(new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc), 0);

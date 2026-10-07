@@ -12,6 +12,20 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.31.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.6 specification: monetary cost beside the ordinal scale, Gate C on the expected-loss means with Gordon–Loeb as a reference and not a rule, Gate D portfolio selection preserving tail and systemic risks, the four treatment options, the target level and task evidence, with Gate A ahead of both gates (T174, S47)
+- Declare a monetary cost on a mitigation — one-time, annual, annual side effects and amortization horizon — beside the unchanged ordinal cost scale, through `/TreatmentEconomics/Mitigations/{id}` (T175, S47)
+- Compute Gate C on every mitigation as expected annual loss avoided against annualized total cost, reporting a mitigation without a monetary cost, without a quantitative analysis or without a residual mean as not assessable rather than passing or failing it (T176, T181, S47)
+- Record the mean of the residual Monte Carlo run in `risk_scoring.quant_residual_ale_mean` and return it as `ResidualMean`, so Gate C never reads the residual median (T176, S47)
+- Select a treatment portfolio through `POST /TreatmentEconomics/Portfolio` under a budget, people capacity, dependencies between treatments and a deadline, taking Gate A treatments first and tail (flag 8) and systemic (flag 6) treatments ahead of the economic ranking, and flagging Gate A and protected shortfalls and unfunded risks above appetite (T177, T181, S47)
+- Declare avoid, reduce, transfer/share (with its counterparty) or accept as a mitigation's treatment option, refusing accept with `422 gate_a_non_discretionary` while Gate A holds (T178, S47)
+- Set a target risk level on a risk — score and/or annual expected loss, date and rationale — compared with the current residual and the risk appetite through `/TreatmentEconomics/Risks/{id}` (T180, S47)
+
+### Changed
+- Require completion evidence to complete a mitigation task, record who recorded it and when, add an acceptance criterion to every task, and leave both fields unchanged when an update omits them (T179, S47)
+
 ## [2.30.0] - 2026-10-07
 
 ### Added

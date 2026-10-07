@@ -113,6 +113,10 @@ public partial class NRDbContext
         // risk and get their filters below, through it.
         ConfigureRiskFlags(modelBuilder);
 
+        // Track 9 Stage 9.6 — treatment economics (S47). The economics and the dependencies hang off the
+        // mitigation, the target off the risk; their filters are below.
+        ConfigureTreatmentEconomics(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -190,6 +194,19 @@ public partial class NRDbContext
             ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
 
         modelBuilder.Entity<RiskDecision>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        // Stage 9.6 (S47 §4.10): a mitigation's economics and dependencies are visible exactly when the
+        // dependent mitigation is (which is when its risk is); a risk's target exactly when the risk is. A
+        // dependency may name a prerequisite the caller cannot see — the service never lets that caller add
+        // one, and never deletes one it cannot see.
+        modelBuilder.Entity<MitigationEconomics>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Mitigations.Any(m => m.Id == e.MitigationId));
+
+        modelBuilder.Entity<MitigationDependency>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Mitigations.Any(m => m.Id == e.MitigationId));
+
+        modelBuilder.Entity<RiskTarget>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
 
         // A further step removed: these hang off a run, which hangs off the assessment that

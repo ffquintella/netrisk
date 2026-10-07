@@ -99,6 +99,9 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         scoring.QuantResidualAleP10 = residual?.P10;
         scoring.QuantResidualAleP50 = residual?.P50;
         scoring.QuantResidualAleP90 = residual?.P90;
+        // Stage 9.6 (S47 §4.4): the residual *mean* — Gate C's E[L] after. The median above is no substitute: the
+        // median year of a low-frequency risk has no loss, so a median benefit is zero exactly where it matters.
+        scoring.QuantResidualAleMean = residual?.Mean;
         scoring.QuantSeed = seed;
         scoring.QuantComputedAt = DateTime.UtcNow;
         scoring.QuantLossExceedanceCurve = JsonSerializer.Serialize(
@@ -165,6 +168,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             ResidualP10 = scoring.QuantResidualAleP10,
             ResidualP50 = scoring.QuantResidualAleP50,
             ResidualP90 = scoring.QuantResidualAleP90,
+            ResidualMean = scoring.QuantResidualAleMean,
             LossExceedanceCurve = curve,
             MappedScore = scoring.CalculatedRisk,
             MappedRiskLevel = BandName(scoring.QuantAleMean ?? 0, thresholds),
@@ -266,6 +270,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         ResidualP10 = residual?.P10,
         ResidualP50 = residual?.P50,
         ResidualP90 = residual?.P90,
+        ResidualMean = residual?.Mean,
         LossExceedanceCurve = inherent.LossExceedanceCurve
             .Select(p => new LossExceedancePointDto { Loss = p.Loss, Probability = p.Probability })
             .ToList(),

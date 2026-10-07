@@ -42,6 +42,24 @@ public class MitigationTask
     /// </summary>
     public int? LastNotifiedDaysBefore { get; set; }
 
+    /// <summary>
+    /// What has to be true for the task to count as done (Stage 9.6, S47 §4.8) — MIGR-TI/IA Phase 5's
+    /// "critério de aceite".
+    /// </summary>
+    public string? AcceptanceCriterion { get; set; }
+
+    /// <summary>
+    /// The evidence the task was done — a description, a reference, a link (S47 §4.8). Completing a task
+    /// requires it; a task completed before schema 95 reads as "completed without evidence".
+    /// </summary>
+    public string? CompletionEvidence { get; set; }
+
+    /// <summary>UTC. Stamped by the server when the evidence is recorded, never sent by a client.</summary>
+    public DateTime? CompletionEvidenceAt { get; set; }
+
+    /// <summary>Who recorded the evidence. Stamped by the server.</summary>
+    public int? CompletionEvidenceById { get; set; }
+
     public virtual Mitigation? Mitigation { get; set; }
 
     public virtual User? Owner { get; set; }
