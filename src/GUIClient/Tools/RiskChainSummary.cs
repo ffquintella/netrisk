@@ -139,8 +139,10 @@ public sealed class RiskChainLinkRow
 /// <summary>One critical process in the coverage report, with "covered" as text rather than colour.</summary>
 public sealed class CriticalProcessCoverageRow
 {
-    public CriticalProcessCoverageRow(CriticalProcessCoverageRowDto row, string yes, string no)
+    public CriticalProcessCoverageRow(CriticalProcessCoverageRowDto row, string yes, string no,
+        string? criticalitySource = null)
     {
+        CriticalitySourceText = criticalitySource ?? string.Empty;
         ProcessId = row.ProcessId;
         ProcessName = row.ProcessName;
         Criticality = row.Criticality;
@@ -157,6 +159,9 @@ public sealed class CriticalProcessCoverageRow
     public int InferredOpenRiskCount { get; }
     public bool Covered { get; }
     public string CoveredText { get; }
+
+    /// <summary>Where the criticality comes from (Stage 9.3): "BIA" or "declared, not BIA".</summary>
+    public string CriticalitySourceText { get; }
 }
 
 /// <summary>One risk of the process selected in the coverage report, with the node it came through.</summary>

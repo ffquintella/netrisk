@@ -545,8 +545,9 @@ Aligns NetRisk with the **MIGR-TI/IA** reference methodology, documented in
 the fifteen prioritized gaps from that analysis's §12, grouped by dependency. **Status: in progress —
 Stage 9.1 is implemented (T144–T148: schema version 88, `/RiskChain`, the coverage metric and their desktop
 screens); Stage 9.2 is implemented (T150–T155: schema version 89, the structured scenario, evidence confidence,
-standalone hypotheses, near misses and the duplicate warning); the runtime observations and human/security review
-of both are pending.** Does not reopen Track 8. Detailed specifications:
+standalone hypotheses, near misses and the duplicate warning); Stage 9.3 is implemented (T156–T160: schema version
+90, business impact analysis, cascading dependencies, restoration tests and the weighted continuity threat); the
+runtime observations and human/security review of all three are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -597,11 +598,16 @@ of both are pending.** Does not reopen Track 8. Detailed specifications:
 > outcome: Continuity fields that flag 4, Gate A and the restoration metric depend on. Closes gap 4.
 > spec: S27, S43
 
-- [ ] T156 Merge the Stage 9.3 specification
-- [ ] T157 Declare MTPD/MAO, RTO and RPO on the process and the IT service, plus process criticality
-- [ ] T158 Model dependencies with cascading effect
-- [ ] T159 Add restoration-test records comparable against the declared RTO/RPO
-- [ ] T160 Test that a declared RTO with no restoration test reads as unverified, not met; cyclic dependencies don't recurse forever
+- [x] T156 Merge the Stage 9.3 specification
+  - note: S43 with all eleven sections, amended 2026-10-07 with the user's answers (unverified counts at a configurable weight; validity configurable; self-attestation visible only; global-scope writes); merged in bfcd84cd before the implementation — human and security review of the implementation still pending
+- [x] T157 Declare MTPD/MAO, RTO and RPO on the process and the IT service, plus process criticality
+  - note: `business_impact_analyses` (schema 90), `PUT/DELETE /Continuity/Subjects/{id}/Bia` under `bia_manage` and global scope; process criticality is derived from the MTPD and wins over the declared property in the coverage metric (S43 D4) — blocking edits of the declared property stays with T241
+- [x] T158 Model dependencies with cascading effect
+  - note: `bia_dependencies`; cycles are accepted and reported, never refused (S43 D7); the requirement is not additive along the chain (D8); third-party dependencies wait for Stage 9.10
+- [x] T159 Add restoration-test records comparable against the declared RTO/RPO
+  - note: insert-only `restoration_tests` with void, the verification against the latest valid test, the weighted threat (unverified = 0.5 by default) and report 8; validity and weight are audited `settings` rows editable by administrators only
+- [x] T160 Test that a declared RTO with no restoration test reads as unverified, not met; cyclic dependencies don't recurse forever
+  - note: V1, P1, C7–C9 (a ring of 10 000 nodes), T7 and PC5 plus Track9ContinuitySchemaTests Q1–Q8, which need Docker and were not run here; the S43 §8 runtime observations are still to be recorded on the PR
 
 ### [M42] Stage 9.4 — Exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK
 > outcome: The Phase 3 prioritization signals reach NetRisk as first-class data, not only via Vision One. Closes gap 6.

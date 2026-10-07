@@ -4,7 +4,7 @@ namespace Model.Risks.Chain;
 /// The Phase 7 "critical-process coverage" metric (Stage 9.1, S41 §6):
 /// <c>GET /RiskChain/Coverage/CriticalProcesses</c>.
 ///
-/// Only active processes whose declared <c>criticality</c> is 4 or 5 enter the denominator. A
+/// Only active processes whose effective criticality (BIA MTPD first, S43) is 4 or 5 enter the denominator. A
 /// process with no criticality, or one outside 1–5, is counted in
 /// <see cref="ProcessesWithoutCriticality"/> — visible, and not silently "not critical". A process is
 /// covered when at least one open risk is linked to it directly or by inference.
@@ -47,6 +47,12 @@ public class CriticalProcessCoverageRowDto
     public string ProcessName { get; set; } = string.Empty;
 
     public int Criticality { get; set; }
+
+    /// <summary>
+    /// Where <see cref="Criticality"/> comes from (Stage 9.3, S43 §4.6): the BIA's MTPD when declared,
+    /// which wins, or the declared entity property.
+    /// </summary>
+    public Model.Continuity.CriticalitySource CriticalitySource { get; set; } = Model.Continuity.CriticalitySource.Declared;
 
     /// <summary>Open risks linked to the process itself.</summary>
     public int DirectOpenRiskCount { get; set; }

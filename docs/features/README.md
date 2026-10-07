@@ -12,6 +12,7 @@ These are placeholder stubs — contributions welcome.
 
 - [Risk Management](risk-management.md)
 - [Risk governance, approval workflows and the business review portal](risk-governance.md)
+- [Business impact analysis and continuity: MTPD/MAO, RTO, RPO, dependencies, restoration tests](business-continuity.md)
 - [Vulnerability Management](vulnerability-management.md)
 - [Scanner importers and finding ingestion](scanner-importers.md)
 - [Incident Management](incident-management.md)

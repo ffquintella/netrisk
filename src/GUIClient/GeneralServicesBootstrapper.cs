@@ -120,6 +120,10 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IRiskChainService>(sp => new RiskChainRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.3 (S43): business impact analysis, cascading dependencies, restoration tests.
+        services.AddTransient<IContinuityService>(sp => new ContinuityRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

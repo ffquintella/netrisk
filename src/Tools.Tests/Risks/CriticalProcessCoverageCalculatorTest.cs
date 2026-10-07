@@ -36,11 +36,13 @@ public class CriticalProcessCoverageCalculatorTest
         new(id, definition, parent, properties.Append(P("name", $"{definition}-{id}")));
 
     private static Model.Risks.Chain.CriticalProcessCoverageDto Compute(IEnumerable<RiskChainNode> nodes,
-        IEnumerable<(int RiskId, int EntityId)> links, IEnumerable<int>? open = null, bool restricted = false)
+        IEnumerable<(int RiskId, int EntityId)> links, IEnumerable<int>? open = null, bool restricted = false,
+        IReadOnlyDictionary<int, int>? biaMtpd = null)
     {
         var linkList = links.ToList();
         var openSet = (open ?? linkList.Select(l => l.RiskId)).ToHashSet();
-        return CriticalProcessCoverageCalculator.Compute(new RiskChainGraph(nodes), linkList, openSet, Now, restricted);
+        return CriticalProcessCoverageCalculator.Compute(new RiskChainGraph(nodes), linkList, openSet, Now, restricted,
+            biaMtpd);
     }
 
     /// <summary>K1 — only critical processes enter: criticalities 5, 4 and 2, all with risks, give a
@@ -212,5 +214,57 @@ public class CriticalProcessCoverageCalculatorTest
     {
         Assert.True(Compute([], [], restricted: true).IsScopeRestricted);
         Assert.False(Compute([], [], restricted: false).IsScopeRestricted);
+    }
+
+    // --- Stage 9.3 (S43 §8, K9–K12): the effective criticality ---------------------------------
+
+    /// <summary>K9 — a BIA MTPD of two hours makes a process declared 2 critical, with source BIA.</summary>
+    [Fact]
+    public void TestK9_ABiaMtpdMakesALowDeclaredProcessCritical()
+    {
+        var result = Compute([Process(10, "2")], [(1, 10)], biaMtpd: new Dictionary<int, int> { [10] = 120 });
+
+        var row = Assert.Single(result.Rows);
+        Assert.Equal(5, row.Criticality);
+        Assert.Equal(Model.Continuity.CriticalitySource.Bia, row.CriticalitySource);
+        Assert.Equal(1, result.CriticalProcessCount);
+    }
+
+    /// <summary>K10 — a process declared 5 with an MTPD of ten days is not critical: the BIA wins.</summary>
+    [Fact]
+    public void TestK10_ALongBiaMtpdOverridesAHighDeclaredCriticality()
+    {
+        var result = Compute([Process(10, "5")], [(1, 10)], biaMtpd: new Dictionary<int, int> { [10] = 14_400 });
+
+        Assert.Empty(result.Rows);
+        Assert.Equal(0, result.CriticalProcessCount);
+        Assert.Null(result.CoverageRatio);
+        Assert.Equal(0, result.ProcessesWithoutCriticality);
+    }
+
+    /// <summary>K11 — a process with no MTPD in the map (a BIA with only RTO/RPO, or none) falls back
+    /// to its declared criticality, with source Declared.</summary>
+    [Fact]
+    public void TestK11_WithoutAnMtpdTheDeclaredCriticalityApplies()
+    {
+        var result = Compute([Process(10, "4"), Process(11, "5")], [(1, 10)],
+            biaMtpd: new Dictionary<int, int> { [11] = 60 });
+
+        var declared = result.Rows.Single(r => r.ProcessId == 10);
+        Assert.Equal(4, declared.Criticality);
+        Assert.Equal(Model.Continuity.CriticalitySource.Declared, declared.CriticalitySource);
+        Assert.Equal(Model.Continuity.CriticalitySource.Bia, result.Rows.Single(r => r.ProcessId == 11).CriticalitySource);
+    }
+
+    /// <summary>K12 — neither an MTPD nor a valid declared criticality: "without criticality", outside
+    /// the denominator; an MTPD alone is enough to leave that group.</summary>
+    [Fact]
+    public void TestK12_NeitherMtpdNorDeclaredIsWithoutCriticality()
+    {
+        var result = Compute([Process(10, null), Process(11, "abc"), Process(12, null)], [],
+            biaMtpd: new Dictionary<int, int> { [12] = 3_000 });
+
+        Assert.Equal(2, result.ProcessesWithoutCriticality);
+        Assert.Equal(0, result.CriticalProcessCount);
     }
 }

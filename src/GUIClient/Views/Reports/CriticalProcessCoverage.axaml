@@ -47,6 +47,8 @@
                                         Binding="{Binding ProcessName}" Width="2*" MinWidth="200"/>
                     <DataGridTextColumn Header="{Binding StrCriticality, Mode=OneTime}"
                                         Binding="{Binding Criticality}" Width="100"/>
+                    <DataGridTextColumn Header="{Binding StrCriticalitySource, Mode=OneTime}"
+                                        Binding="{Binding CriticalitySourceText}" Width="*" MinWidth="140"/>
                     <DataGridTextColumn Header="{Binding StrDirectRisks, Mode=OneTime}"
                                         Binding="{Binding DirectOpenRiskCount}" Width="*" MinWidth="110"/>
                     <DataGridTextColumn Header="{Binding StrInferredRisks, Mode=OneTime}"

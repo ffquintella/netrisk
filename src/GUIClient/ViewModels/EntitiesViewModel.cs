@@ -65,6 +65,9 @@ public class EntitiesViewModel: ViewModelBase
         }
     }
     
+    /// <summary>Stage 9.3 (S43 §7): the continuity block under the form, for processes and IT services.</summary>
+    public ContinuityPanelViewModel ContinuityPanelViewModel { get; } = new();
+
     private bool _isSearchVisible;
     
     public bool IsSearchVisible
@@ -657,6 +660,9 @@ public class EntitiesViewModel: ViewModelBase
         
         _entityPanel.Children.Clear();
         _entityPanel.Children.Add(entityForm);
+
+        _ = ContinuityPanelViewModel.LoadAsync(entity.Id, entity.DefinitionName,
+            entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value ?? "#" + entity.Id);
     }
 
     private void LoadTree(List<Entity> rootEntities)

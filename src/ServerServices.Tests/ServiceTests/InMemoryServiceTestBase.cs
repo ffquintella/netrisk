@@ -77,6 +77,7 @@ public abstract class InMemoryServiceTestBase
         services.AddTransient<IUsersService, UsersService>();
         services.AddTransient<IRisksService, RisksService>();
         services.AddTransient<IRiskChainService, RiskChainService>();
+        services.AddTransient<IContinuityService, ContinuityService>();
         services.AddTransient<IVulnerabilitiesService, VulnerabilitiesService>();
         services.AddTransient<IEntitiesService, EntitiesService>();
         services.AddTransient<IHostsService, HostsService>();

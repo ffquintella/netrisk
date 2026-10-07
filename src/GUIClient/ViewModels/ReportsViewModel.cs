@@ -49,11 +49,22 @@ public class ReportsViewModel: ViewModelBase
             // over the whole chain, and most visits to Reports are for another report.
             if (value?.Id == CriticalProcessCoverageReportId)
                 _ = CriticalProcessCoverageViewModel.EnsureLoadedAsync();
+            if (value?.Id == RestorationVerificationReportId)
+                _ = RestorationVerificationViewModel.EnsureLoadedAsync();
         }
     }
 
     /// <summary>Stage 9.1 (S41 §7): report 7, critical-process coverage.</summary>
     public const int CriticalProcessCoverageReportId = 7;
+
+    /// <summary>Stage 9.3 (S43 §7): report 8, restoration tested vs declared RTO/RPO.</summary>
+    public const int RestorationVerificationReportId = 8;
+
+    private RestorationVerificationViewModel _restorationVerificationViewModel = new();
+    public RestorationVerificationViewModel RestorationVerificationViewModel {
+        get => _restorationVerificationViewModel;
+        set => this.RaiseAndSetIfChanged(ref _restorationVerificationViewModel, value);
+    }
 
     private CriticalProcessCoverageViewModel _criticalProcessCoverageViewModel = new();
     public CriticalProcessCoverageViewModel CriticalProcessCoverageViewModel {
@@ -120,6 +131,8 @@ public class ReportsViewModel: ViewModelBase
         ReportTypes.Add(new ReportType(5, Localizer["File Reports"], 6, MaterialIconKind.FileCabinet));
         ReportTypes.Add(new ReportType(CriticalProcessCoverageReportId, Localizer["Critical process coverage"], 7,
             MaterialIconKind.ShieldCheckOutline));
+        ReportTypes.Add(new ReportType(RestorationVerificationReportId, Localizer["Restoration tested vs declared RTO/RPO"], 8,
+            MaterialIconKind.DatabaseRefresh));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

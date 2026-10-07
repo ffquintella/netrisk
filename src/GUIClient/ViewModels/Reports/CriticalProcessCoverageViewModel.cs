@@ -28,6 +28,7 @@ public class CriticalProcessCoverageViewModel : ReportsViewModelBase
     public string StrCoverageScopeRestricted { get; } = Localizer["CoverageScopeRestricted"];
     public string StrProcess { get; } = Localizer["ChainLevelProcess"];
     public string StrCriticality { get; } = Localizer["Criticality"];
+    public string StrCriticalitySource { get; } = Localizer["CriticalitySource"];
     public string StrDirectRisks { get; } = Localizer["DirectRisks"];
     public string StrInferredRisks { get; } = Localizer["InferredRisks"];
     public string StrCovered { get; } = Localizer["Covered"];
@@ -120,7 +121,9 @@ public class CriticalProcessCoverageViewModel : ReportsViewModelBase
                 var coverage = await ChainService.GetCriticalProcessCoverageAsync();
 
                 Rows.Clear();
-                foreach (var row in coverage.Rows) Rows.Add(new CriticalProcessCoverageRow(row, StrYes, StrNo));
+                foreach (var row in coverage.Rows)
+                    Rows.Add(new CriticalProcessCoverageRow(row, StrYes, StrNo,
+                        Localizer[ContinuitySummary.SourceKey(row.CriticalitySource)]));
 
                 Coverage = coverage;
                 SelectedRow = null;

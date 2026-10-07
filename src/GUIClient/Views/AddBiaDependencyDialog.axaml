@@ -1,0 +1,65 @@
+<dialogs:DialogWindowBase x:TypeArguments="results:ContinuityDialogResult"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+        xmlns:dialogs="clr-namespace:GUIClient.ViewModels.Dialogs"
+        xmlns:results="clr-namespace:GUIClient.ViewModels.Dialogs.Results"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="300"
+        x:DataType="viewModels:AddBiaDependencyDialogViewModel"
+        x:Class="GUIClient.Views.AddBiaDependencyDialog"
+        Title="{Binding StrTitle}"
+        Width="560" SizeToContent="Height"
+        MinWidth="480"
+        WindowStartupLocation="CenterOwner">
+
+    <Design.DataContext>
+        <viewModels:AddBiaDependencyDialogViewModel/>
+    </Design.DataContext>
+
+    <!-- Stage 9.3 (S43 §7): the selected node depends on the provider picked here. -->
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="10">
+            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Classes="header" Text="{Binding StrTitle}"/>
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="header_detail" Text="{Binding EntityName}" TextWrapping="Wrap"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label" Text="{Binding StrProvider}" VerticalAlignment="Center"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" Margin="5" HorizontalAlignment="Stretch"
+                      ItemsSource="{Binding Providers}"
+                      SelectedItem="{Binding SelectedProvider, Mode=TwoWay}"
+                      PlaceholderText="{Binding StrProvider}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="viewModels:ContinuityProviderOption">
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label" Text="{Binding StrDescription}" VerticalAlignment="Center"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Margin="5" MaxLength="500" Text="{Binding Description}"/>
+
+            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+                <Button Classes="dialog1" Command="{Binding BtAddClicked}" IsEnabled="{Binding IsAddEnabled}" Margin="0 0 10 0">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Plus" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrAdd}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="dialog2" Command="{Binding BtCancelClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrCancel}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <progRing:ProgressRing Width="80" Height="80"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               ZIndex="1000"/>
+    </Panel>
+</dialogs:DialogWindowBase>

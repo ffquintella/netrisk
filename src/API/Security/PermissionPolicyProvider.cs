@@ -70,6 +70,20 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
                        (c.Type == "Permission" && c.Value == "riskmanagement")));
                return Task.FromResult(policy.Build())!;
             }
+            case "RequireContinuityRead":
+            {
+               // Stage 9.3 (S43 §6, D11): the exact union of the RequireRiskmanagement audience (the
+               // Administrator role or riskmanagement) and the two continuity write audiences (the Admin
+               // role or bia_manage / restoration_test_record), so whoever sees the risk register sees
+               // the flag 4 basis, and whoever writes continuity data reads what they wrote.
+               // ContinuityAuthorizationTest evaluates this policy, accepted and denied.
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
+                       (c.Type == "Permission" && (c.Value == "riskmanagement" || c.Value == "bia_manage"
+                                                   || c.Value == "restoration_test_record"))));
+               return Task.FromResult(policy.Build())!;
+            }
             case "RequireSubmitRisk":
             {
                policy.Requirements.Add(new ClaimsAuthorizationRequirement("Permission", new []{"submit_risks"}));

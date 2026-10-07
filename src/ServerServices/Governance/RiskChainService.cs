@@ -342,9 +342,16 @@ public class RiskChainService(ILogger logger, IDalService dalService)
                 .ToListAsync())
             .ToHashSet();
 
+        // Stage 9.3 (S43 §4.6): a process's criticality comes from its BIA's MTPD when declared, which
+        // wins over the declared entity property.
+        var biaMtpd = await db.BusinessImpactAnalyses.AsNoTracking()
+            .Where(b => b.MtpdMinutes != null)
+            .Select(b => new { b.EntityId, Mtpd = b.MtpdMinutes!.Value })
+            .ToDictionaryAsync(b => b.EntityId, b => b.Mtpd);
+
         return CriticalProcessCoverageCalculator.Compute(graph,
             links.Select(l => (l.RiskId, l.EntityId)), open, DateTime.UtcNow,
-            isScopeRestricted: !db.EntityScope.IsUnrestricted);
+            isScopeRestricted: !db.EntityScope.IsUnrestricted, biaMtpdByProcess: biaMtpd);
     }
 
     // --- helpers -----------------------------------------------------------------------------

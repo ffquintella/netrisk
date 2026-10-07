@@ -12,6 +12,24 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.26.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.3 specification: MTPD/MAO, RTO and RPO on processes and IT services, cascading dependencies, restoration tests, a weighted continuity threat and two audited parameters (T156, S43)
+- Declare a business impact analysis — MTPD/MAO, RTO and RPO in minutes — on a business process or IT service through `PUT /Continuity/Subjects/{id}/Bia`, under the new `bia_manage` permission and global scope, with an effective process criticality derived from the MTPD (T157, S43)
+- Declare which processes and services depend on which through `/Continuity/Subjects/{id}/Dependencies`, and compute the cascade — dependents, providers, the requirement they impose, conflicts and dependency cycles — without ever recursing forever (T158, S43)
+- Record restoration tests, insert-only and voidable with a reason, under the new `restoration_test_record` permission, and verify each declared RTO/RPO against the latest valid test, with a declared objective and no test reading as unverified rather than met (T159, T160, S43)
+- Expose a weighted continuity threat per process and service, unverified items at a configurable weight of 0.5 of a confirmed one, as the basis of flag 4 (T159, S43)
+- Add `GET /Continuity/Metrics/RestorationVerification` and report 8, restoration tested vs declared RTO/RPO, for every process and service and for critical processes (T159, S43)
+- Add a "Continuity (BIA)" block under business processes and IT services in Entities, with the BIA editor, the dependency picker and the restoration-test list (T157, T158, T159, S43)
+- Add the restoration-test validity (default 365 days) and the unverified-threat weight (default 0.5) as administrator-only parameters on the Governance administration tab, with every change audited (T159, S43)
+
+### Changed
+- Decide a critical process by its BIA's MTPD when declared, ahead of the declared criticality, in the critical-process coverage metric and report, which now show where each criticality comes from (T157, S43)
+
+### Security
+- Audit the continuity parameters by key in the governance trail without auditing the settings table, so the backup password never reaches it (T159, S43)
+
 ## [2.25.0] - 2026-10-06
 
 ### Added

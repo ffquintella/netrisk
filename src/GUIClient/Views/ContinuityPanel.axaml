@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="420"
+             x:DataType="viewModels:ContinuityPanelViewModel"
+             x:Class="GUIClient.Views.ContinuityPanel">
+    <Design.DataContext>
+        <viewModels:ContinuityPanelViewModel/>
+    </Design.DataContext>
+
+    <!-- Stage 9.3 (S43 §7): the continuity block of a business process or IT service. Every state is
+         text, never colour; the buttons follow the caller flags the server computes. -->
+    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="5">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Classes="header2" Text="{Binding StrContinuity}" HorizontalAlignment="Stretch"/>
+                <Button Grid.Column="1" Classes="type2" Margin="5 0 0 0"
+                        Command="{Binding BtEditBiaClicked}" IsEnabled="{Binding CanManageBia}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Pencil" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrEditBia}"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Classes="operation" Margin="5 0 0 0"
+                        Command="{Binding BtDeleteBiaClicked}" IsEnabled="{Binding IsDeleteBiaEnabled}"
+                        ToolTip.Tip="{Binding StrDeleteBia}">
+                    <material:MaterialIcon Kind="Delete"/>
+                </Button>
+                <Button Grid.Column="3" Classes="type3" Margin="5 0 0 0"
+                        Command="{Binding BtRestorationTestsClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="DatabaseRefresh" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRestorationTests}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrMtpd}" Classes="label"/><TextBlock Text="{Binding MtpdText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrRto}" Classes="label"/><TextBlock Text="{Binding RtoText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrRpo}" Classes="label"/><TextBlock Text="{Binding RpoText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrAssessedAt}" Classes="label"/><TextBlock Text="{Binding AssessedAtText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrEffectiveCriticality}" Classes="label"/><TextBlock Text="{Binding CriticalityText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrRtoVerification}" Classes="label"/><TextBlock Text="{Binding RtoVerificationText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrRpoVerification}" Classes="label"/><TextBlock Text="{Binding RpoVerificationText}" Classes="formData"/></StackPanel>
+            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrContinuityThreat}" Classes="label"/><TextBlock Text="{Binding ThreatText}" Classes="formData"/></StackPanel>
+            <TextBlock Classes="header_detail" Text="{Binding ThreatItemsText}" TextWrapping="Wrap" IsVisible="{Binding HasThreatItems}"/>
+
+            <TextBlock Classes="header2" Text="{Binding StrCascadeConflicts}" Margin="0 5 0 0" IsVisible="{Binding HasCascadeText}"/>
+            <TextBlock Classes="header_detail" Text="{Binding CascadeText}" TextWrapping="Wrap" IsVisible="{Binding HasCascadeText}"/>
+
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0 5 0 0">
+                <TextBlock Grid.Column="0" Classes="header2" Text="{Binding StrDependsOn}"/>
+                <Button Grid.Column="1" Classes="operation" Margin="5 0 0 0"
+                        Command="{Binding BtAddDependencyClicked}" IsEnabled="{Binding CanManageBia}"
+                        ToolTip.Tip="{Binding StrAddDependency}">
+                    <material:MaterialIcon Kind="Plus"/>
+                </Button>
+                <Button Grid.Column="2" Classes="operation" Margin="5 0 0 0"
+                        Command="{Binding BtRemoveDependencyClicked}" IsEnabled="{Binding IsRemoveDependencyEnabled}"
+                        ToolTip.Tip="{Binding StrRemoveDependency}">
+                    <material:MaterialIcon Kind="LinkVariantOff"/>
+                </Button>
+            </Grid>
+            <DataGrid Margin="0 5 0 0" MinHeight="90" MaxHeight="200"
+                      ItemsSource="{Binding Dependencies}"
+                      SelectedItem="{Binding SelectedDependency, Mode=TwoWay}"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserResizeColumns="True" CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrDependencyDirection, Mode=OneTime}"
+                                        Binding="{Binding DirectionText}" Width="*" MinWidth="130"/>
+                    <DataGridTextColumn Header="{Binding StrName, Mode=OneTime}"
+                                        Binding="{Binding OtherName}" Width="2*" MinWidth="160"/>
+                    <DataGridTextColumn Header="{Binding StrDescription, Mode=OneTime}"
+                                        Binding="{Binding Description}" Width="2*" MinWidth="160"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

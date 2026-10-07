@@ -11,9 +11,10 @@ namespace Tools.Risks;
 /// The rules, each held by a test in <c>CriticalProcessCoverageCalculatorTest</c>:
 /// <list type="bullet">
 /// <item>Only <b>active</b> processes enter at all; an inactive one is neither counted nor reported.</item>
-/// <item>A process is critical when its declared <c>criticality</c> is 4 or 5. Absent, empty,
-/// non-numeric or outside 1–5 is "without criticality" — counted in its own figure, never silently
-/// treated as "not critical", and outside the denominator.</item>
+/// <item>A process is critical when its <b>effective</b> criticality is 4 or 5 (Stage 9.3, S43 §4.6):
+/// the one its BIA's MTPD maps to when declared, which wins, else the declared <c>criticality</c>.
+/// Neither — absent, empty, non-numeric or outside 1–5 with no MTPD — is "without criticality", counted
+/// in its own figure, never silently treated as "not critical", and outside the denominator.</item>
 /// <item>A critical process is covered when at least one <b>open</b> risk is linked to it directly or
 /// to a node below it. A risk linked both ways counts once, as direct.</item>
 /// <item>No critical process at all gives a null ratio — "not computable" — never 0 % or 100 %.</item>
@@ -27,7 +28,8 @@ public static class CriticalProcessCoverageCalculator
         IEnumerable<(int RiskId, int EntityId)> entityLinks,
         IReadOnlySet<int> openRiskIds,
         DateTime computedAtUtc,
-        bool isScopeRestricted)
+        bool isScopeRestricted,
+        IReadOnlyDictionary<int, int>? biaMtpdByProcess = null)
     {
         var risksByNode = new Dictionary<int, HashSet<int>>();
 
@@ -53,7 +55,9 @@ public static class CriticalProcessCoverageCalculator
                 continue;
             if (!IsActive(process)) continue;
 
-            var criticality = ParseCriticality(process.Value(RiskChainSchema.CriticalityProperty));
+            var (criticality, source) = Continuity.ProcessCriticality.Resolve(
+                biaMtpdByProcess is not null && biaMtpdByProcess.TryGetValue(process.Id, out var mtpd) ? mtpd : (int?)null,
+                process.Value(RiskChainSchema.CriticalityProperty));
 
             if (criticality is null)
             {
@@ -78,6 +82,7 @@ public static class CriticalProcessCoverageCalculator
                 ProcessId = process.Id,
                 ProcessName = process.Name ?? string.Empty,
                 Criticality = criticality.Value,
+                CriticalitySource = source ?? Model.Continuity.CriticalitySource.Declared,
                 DirectOpenRiskCount = direct.Count,
                 InferredOpenRiskCount = inferred.Count,
                 Covered = direct.Count + inferred.Count > 0

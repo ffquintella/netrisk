@@ -579,6 +579,55 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.BiaDependency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("DependentEntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("dependent_entity_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("ProviderEntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("provider_entity_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_bia_dependencies_created_by_id");
+
+                    b.HasIndex(new[] { "ProviderEntityId" }, "idx_bia_dependencies_provider_entity_id");
+
+                    b.HasIndex(new[] { "DependentEntityId", "ProviderEntityId" }, "uq_bia_dependencies_dependent_entity_id_provider_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("bia_dependencies", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_bia_dependencies_not_self", "`dependent_entity_id` <> `provider_entity_id`");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.BiometricTransaction", b =>
                 {
                     b.Property<int>("Id")
@@ -648,6 +697,78 @@ namespace DAL.Migrations
 
                     b.ToTable("biometric_transactions", (string)null);
 
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.BusinessImpactAnalysis", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssessedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("assessed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int?>("MtpdMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("mtpd_minutes");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("RpoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("rpo_minutes");
+
+                    b.Property<int?>("RtoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("rto_minutes");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_business_impact_analyses_created_by_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_business_impact_analyses_updated_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "uq_business_impact_analyses_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("business_impact_analyses", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_business_impact_analyses_declared", "`mtpd_minutes` IS NOT NULL OR `rto_minutes` IS NOT NULL OR `rpo_minutes` IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_business_impact_analyses_non_negative", "(`mtpd_minutes` IS NULL OR `mtpd_minutes` >= 0) AND (`rto_minutes` IS NULL OR `rto_minutes` >= 0) AND (`rpo_minutes` IS NULL OR `rpo_minutes` >= 0)");
+
+                            t.HasCheckConstraint("ck_business_impact_analyses_rto_within_mtpd", "`rto_minutes` IS NULL OR `mtpd_minutes` IS NULL OR `rto_minutes` <= `mtpd_minutes`");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
@@ -5202,6 +5323,95 @@ namespace DAL.Migrations
                     b.ToTable("report_template_versions", (string)null);
                 });
 
+            modelBuilder.Entity("DAL.Entities.RestorationTest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AchievedRpoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("achieved_rpo_minutes");
+
+                    b.Property<int?>("AchievedRtoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("achieved_rto_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DeclaredRpoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("declared_rpo_minutes");
+
+                    b.Property<int?>("DeclaredRtoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("declared_rto_minutes");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EvidenceReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("evidence_reference");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("outcome");
+
+                    b.Property<int?>("RecordedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("recorded_by_id");
+
+                    b.Property<DateTime>("TestedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("tested_at");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("VoidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voided_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "EntityId", "TestedAt" }, "idx_restoration_tests_entity_id_tested_at");
+
+                    b.HasIndex(new[] { "RecordedById" }, "idx_restoration_tests_recorded_by_id");
+
+                    b.HasIndex(new[] { "VoidedById" }, "idx_restoration_tests_voided_by_id");
+
+                    b.ToTable("restoration_tests", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_restoration_tests_measured", "`outcome` <> 1 OR `achieved_rto_minutes` IS NOT NULL OR `achieved_rpo_minutes` IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_restoration_tests_non_negative", "(`achieved_rto_minutes` IS NULL OR `achieved_rto_minutes` >= 0) AND (`achieved_rpo_minutes` IS NULL OR `achieved_rpo_minutes` >= 0)");
+
+                            t.HasCheckConstraint("ck_restoration_tests_void_complete", "(`voided_at` IS NULL) = (`void_reason` IS NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.Review", b =>
                 {
                     b.Property<int>("Value")
@@ -8211,6 +8421,35 @@ namespace DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DAL.Entities.BiaDependency", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_bia_dependencies_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Dependent")
+                        .WithMany()
+                        .HasForeignKey("DependentEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bia_dependencies_dependent_entity_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Provider")
+                        .WithMany()
+                        .HasForeignKey("ProviderEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bia_dependencies_provider_entity_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Dependent");
+
+                    b.Navigation("Provider");
+                });
+
             modelBuilder.Entity("DAL.Entities.BiometricTransaction", b =>
                 {
                     b.HasOne("DAL.Entities.FaceIDUser", "FaceIdUser")
@@ -8228,6 +8467,34 @@ namespace DAL.Migrations
                     b.Navigation("FaceIdUser");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.BusinessImpactAnalysis", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_business_impact_analyses_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_business_impact_analyses_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_business_impact_analyses_updated_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("UpdatedBy");
                 });
 
             modelBuilder.Entity("DAL.Entities.Comment", b =>
@@ -9328,6 +9595,34 @@ namespace DAL.Migrations
                         .HasConstraintName("fk_report_template_versions_template");
 
                     b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RestorationTest", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_restoration_tests_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_restoration_tests_recorded_by_id");
+
+                    b.HasOne("DAL.Entities.User", "VoidedBy")
+                        .WithMany()
+                        .HasForeignKey("VoidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_restoration_tests_voided_by_id");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("VoidedBy");
                 });
 
             modelBuilder.Entity("DAL.Entities.RevokedToken", b =>

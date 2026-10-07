@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:DataType="reports:RestorationVerificationViewModel"
+             x:Class="GUIClient.Views.Reports.RestorationVerification">
+    <Design.DataContext>
+        <reports:RestorationVerificationViewModel/>
+    </Design.DataContext>
+
+    <!-- Report 8 (Stage 9.3, S43 §7): restoration tested vs declared RTO/RPO. Statuses are words, never
+         colours; "not computable" is its own state; a subject without a BIA is counted apart. -->
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="5">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Margin="5 0 0 0" VerticalAlignment="Center"
+                        Command="{Binding BtReloadClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrReload}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <TextBlock Grid.Row="1" Classes="header2" Text="{Binding StrAllSubjects}" Margin="0 5 0 0"/>
+            <TextBlock Grid.Row="2" Classes="header_detail" Text="{Binding AllRtoText}"/>
+            <TextBlock Grid.Row="3" Classes="header_detail" Text="{Binding AllRpoText}"/>
+            <TextBlock Grid.Row="4" Classes="header_detail" Text="{Binding WithoutBiaText}"/>
+
+            <TextBlock Grid.Row="5" Classes="header2" Text="{Binding StrCriticalProcesses}" Margin="0 5 0 0"/>
+            <StackPanel Grid.Row="6">
+                <TextBlock Classes="header_detail" Text="{Binding CriticalRtoText}"/>
+                <TextBlock Classes="header_detail" Text="{Binding CriticalRpoText}"/>
+                <TextBlock Classes="header_detail" Text="{Binding ThreatenedText}" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <DataGrid Grid.Row="7" Margin="0 10 0 0" MinHeight="220"
+                      ItemsSource="{Binding Rows}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrName, Mode=OneTime}" Binding="{Binding Name}" Width="2*" MinWidth="180"/>
+                    <DataGridTextColumn Header="{Binding StrSubjectType, Mode=OneTime}" Binding="{Binding Type}" Width="*" MinWidth="110"/>
+                    <DataGridTextColumn Header="{Binding StrEffectiveCriticality, Mode=OneTime}" Binding="{Binding Criticality}" Width="*" MinWidth="90"/>
+                    <DataGridTextColumn Header="{Binding StrRto, Mode=OneTime}" Binding="{Binding Rto}" Width="*" MinWidth="90"/>
+                    <DataGridTextColumn Header="{Binding StrRtoVerification, Mode=OneTime}" Binding="{Binding RtoStatus}" Width="*" MinWidth="110"/>
+                    <DataGridTextColumn Header="{Binding StrRpo, Mode=OneTime}" Binding="{Binding Rpo}" Width="*" MinWidth="90"/>
+                    <DataGridTextColumn Header="{Binding StrRpoVerification, Mode=OneTime}" Binding="{Binding RpoStatus}" Width="*" MinWidth="110"/>
+                    <DataGridTextColumn Header="{Binding StrCascadeConflicts, Mode=OneTime}" Binding="{Binding Conflicts}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrContinuityThreat, Mode=OneTime}" Binding="{Binding Threat}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <progRing:ProgressRing Width="80" Height="80"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               ZIndex="1000"/>
+    </Panel>
+</UserControl>

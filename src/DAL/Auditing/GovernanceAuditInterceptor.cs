@@ -62,7 +62,27 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // Stage 9.1 (S41 §4.3): who linked a risk to which objective, process, service, data or
         // asset, and every promotion or demotion between Declared and Legacy. Recorded here; the
         // per-risk trail does not display it yet (S41 §3, negative scope).
-        nameof(RiskChainLink)
+        nameof(RiskChainLink),
+
+        // Stage 9.3 (S43 §4.4): the continuity objectives that set process criticality and the flag 4
+        // basis, the dependencies the cascade reads, and the restoration-test evidence — including its
+        // voiding.
+        nameof(BusinessImpactAnalysis),
+        nameof(BiaDependency),
+        nameof(RestorationTest)
+    };
+
+    /// <summary>
+    /// The <c>settings</c> rows audited, by key (S43 §4.4, D18). <see cref="Setting"/> is deliberately
+    /// <b>not</b> in <see cref="AuditedTypes"/>: that table also holds the backup password, and auditing
+    /// the type would copy it into <c>audit_logs</c>. Only the keys listed here are recorded — the
+    /// product parameters that change a governance result. T283 extends this list rather than adding a
+    /// second mechanism.
+    /// </summary>
+    public static readonly HashSet<string> AuditedSettingNames = new(StringComparer.Ordinal)
+    {
+        ContinuitySettingKeys.RestorationTestValidityDays,
+        ContinuitySettingKeys.UnverifiedThreatWeight
     };
 
     /// <summary>
@@ -114,9 +134,17 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
             foreach (var entry in context.ChangeTracker.Entries().ToList())
             {
                 if (entry.Entity is AuditLog) continue;
-                if (!AuditedTypes.Contains(entry.Entity.GetType().Name)) continue;
                 if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
                     continue;
+
+                if (entry.Entity is Setting setting)
+                {
+                    if (AuditedSettingNames.Contains(setting.Name))
+                        rows.AddRange(SettingRowsFor(entry, setting, userId, actor, correlationId, occurredAt));
+                    continue;
+                }
+
+                if (!AuditedTypes.Contains(entry.Entity.GetType().Name)) continue;
 
                 rows.AddRange(RowsFor(entry, userId, actor, correlationId, occurredAt));
             }
@@ -167,6 +195,37 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
                         AuditLogAction.Update, userId, actor, correlationId, occurredAt);
                 }
 
+                break;
+        }
+    }
+
+    /// <summary>
+    /// A setting's key is its name, not an integer, so the row names the parameter in
+    /// <see cref="AuditLog.Field"/> and leaves <see cref="AuditLog.EntityId"/> at 0 (S43 §4.4).
+    /// </summary>
+    private static IEnumerable<AuditLog> SettingRowsFor(EntityEntry entry, Setting setting, int? userId,
+        string actor, string correlationId, DateTime occurredAt)
+    {
+        var value = entry.Property(nameof(Setting.Value));
+
+        switch (entry.State)
+        {
+            case EntityState.Added:
+                yield return New(nameof(Setting), 0, setting.Name, null, setting.Value, AuditLogAction.Create,
+                    userId, actor, correlationId, occurredAt);
+                break;
+
+            case EntityState.Deleted:
+                yield return New(nameof(Setting), 0, setting.Name, value.OriginalValue as string, null,
+                    AuditLogAction.Delete, userId, actor, correlationId, occurredAt);
+                break;
+
+            case EntityState.Modified:
+                var oldValue = value.OriginalValue as string;
+                if (string.Equals(oldValue, setting.Value, StringComparison.Ordinal)) break;
+
+                yield return New(nameof(Setting), 0, setting.Name, oldValue, setting.Value, AuditLogAction.Update,
+                    userId, actor, correlationId, occurredAt);
                 break;
         }
     }

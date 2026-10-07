@@ -92,6 +92,10 @@ public partial class NRDbContext
         // near misses (S42). Its one new filter, on pending_risks, is below with the others.
         ConfigureRiskScenario(modelBuilder);
 
+        // Track 9 Stage 9.3 — business impact analysis, continuity dependencies and restoration tests
+        // (S43). No scope filter: processes and services carry no scope column (S43 §11, D12).
+        ConfigureContinuity(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>

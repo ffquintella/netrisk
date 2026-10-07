@@ -52,6 +52,11 @@
          confidence read, the computed localization keys, when the risk editor asks for duplicates
          and how the warning lists them. -->
     <Compile Include="..\GUIClient\Tools\RiskScenarioSummary.cs" LinkBase="Tools" />
+    <!-- The continuity screens' pure half (Stage 9.3, S43 §7): durations, the computed keys, the threat
+         headline, the parameter form's validation and who sees what. The parameter bounds are compiled in
+         from Tools so the form and the server share one definition. -->
+    <Compile Include="..\GUIClient\Tools\ContinuitySummary.cs" LinkBase="Tools" />
+    <Compile Include="..\Tools\Continuity\ContinuitySettings.cs" LinkBase="Tools/Continuity" />
     <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
          rule that keeps a raw entity id out of the appetite grid. -->
     <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />

@@ -3522,4 +3522,316 @@ Save anyway?</value>
     <data name="IncidentKindNearMiss" xml:space="preserve">
         <value>Near miss</value>
     </data>
+    <data name="AchievedRpo" xml:space="preserve">
+        <value>RPO achieved</value>
+    </data>
+    <data name="AchievedRto" xml:space="preserve">
+        <value>RTO achieved</value>
+    </data>
+    <data name="AddDependency" xml:space="preserve">
+        <value>Add dependency</value>
+    </data>
+    <data name="AddDependencyTitle" xml:space="preserve">
+        <value>Add a continuity dependency</value>
+    </data>
+    <data name="AllSubjects" xml:space="preserve">
+        <value>All processes and services</value>
+    </data>
+    <data name="BiaAbsent" xml:space="preserve">
+        <value>Absent</value>
+    </data>
+    <data name="BiaAssessedAt" xml:space="preserve">
+        <value>Analysis date</value>
+    </data>
+    <data name="BiaNotes" xml:space="preserve">
+        <value>Notes</value>
+    </data>
+    <data name="BiaSavedMSG" xml:space="preserve">
+        <value>Business impact analysis saved.</value>
+    </data>
+    <data name="CascadeConflictLine" xml:space="preserve">
+        <value>{0} {1} exceeds the {2} required by {3}</value>
+    </data>
+    <data name="CascadeConflicts" xml:space="preserve">
+        <value>Cascade</value>
+    </data>
+    <data name="CircularDependency" xml:space="preserve">
+        <value>Circular dependency with: {0}</value>
+    </data>
+    <data name="Continuity" xml:space="preserve">
+        <value>Continuity (BIA)</value>
+    </data>
+    <data name="ContinuitySettings" xml:space="preserve">
+        <value>Continuity parameters</value>
+    </data>
+    <data name="ContinuitySettingsSaved" xml:space="preserve">
+        <value>Continuity parameters saved.</value>
+    </data>
+    <data name="ContinuityThreat" xml:space="preserve">
+        <value>Continuity threat</value>
+    </data>
+    <data name="CriticalProcesses" xml:space="preserve">
+        <value>Critical processes</value>
+    </data>
+    <data name="CriticalityNotDeclared" xml:space="preserve">
+        <value>No criticality</value>
+    </data>
+    <data name="CriticalitySource" xml:space="preserve">
+        <value>Criticality source</value>
+    </data>
+    <data name="CriticalitySourceBia" xml:space="preserve">
+        <value>BIA</value>
+    </data>
+    <data name="CriticalitySourceDeclared" xml:space="preserve">
+        <value>declared, not BIA</value>
+    </data>
+    <data name="DeclaredAtRecord" xml:space="preserve">
+        <value>Declared RTO / RPO</value>
+    </data>
+    <data name="DeclaredCriticalityIgnored" xml:space="preserve">
+        <value>declared {0} ignored: the BIA sets it</value>
+    </data>
+    <data name="DeleteBia" xml:space="preserve">
+        <value>Delete the BIA</value>
+    </data>
+    <data name="DeleteBiaConfirm" xml:space="preserve">
+        <value>The process or service returns to "no BIA". Its dependencies and restoration tests are kept.</value>
+    </data>
+    <data name="DependedOnBy" xml:space="preserve">
+        <value>Depended on by</value>
+    </data>
+    <data name="DependencyDescription" xml:space="preserve">
+        <value>Description</value>
+    </data>
+    <data name="DependencyDirection" xml:space="preserve">
+        <value>Direction</value>
+    </data>
+    <data name="DependencyProvider" xml:space="preserve">
+        <value>Depends on</value>
+    </data>
+    <data name="DependsOn" xml:space="preserve">
+        <value>Depends on</value>
+    </data>
+    <data name="DurationDaysFormat" xml:space="preserve">
+        <value>{0} d</value>
+    </data>
+    <data name="DurationHoursFormat" xml:space="preserve">
+        <value>{0} h</value>
+    </data>
+    <data name="DurationMinutesFormat" xml:space="preserve">
+        <value>{0} min</value>
+    </data>
+    <data name="DurationUnit" xml:space="preserve">
+        <value>Unit</value>
+    </data>
+    <data name="EditBia" xml:space="preserve">
+        <value>Edit the BIA</value>
+    </data>
+    <data name="EditBiaTitle" xml:space="preserve">
+        <value>Business impact analysis</value>
+    </data>
+    <data name="EffectiveCriticality" xml:space="preserve">
+        <value>Criticality</value>
+    </data>
+    <data name="EvidenceReference" xml:space="preserve">
+        <value>Evidence</value>
+    </data>
+    <data name="InvalidDuration" xml:space="preserve">
+        <value>A duration is a whole number of minutes, from 0 to 365 days.</value>
+    </data>
+    <data name="LastTestOn" xml:space="preserve">
+        <value>last test {0}</value>
+    </data>
+    <data name="Mtpd" xml:space="preserve">
+        <value>MTPD/MAO</value>
+    </data>
+    <data name="MtpdHint" xml:space="preserve">
+        <value>Maximum tolerable period of disruption: after this the impact is unacceptable.</value>
+    </data>
+    <data name="NothingDeclared" xml:space="preserve">
+        <value>Declare at least one of MTPD/MAO, RTO and RPO.</value>
+    </data>
+    <data name="NothingMeasured" xml:space="preserve">
+        <value>A successful test measures the time to restore, the data lost, or both.</value>
+    </data>
+    <data name="RecordTest" xml:space="preserve">
+        <value>Record a test</value>
+    </data>
+    <data name="RecordedBy" xml:space="preserve">
+        <value>Recorded by</value>
+    </data>
+    <data name="RemoveDependency" xml:space="preserve">
+        <value>Remove dependency</value>
+    </data>
+    <data name="RequirementWithoutObjective" xml:space="preserve">
+        <value>A dependent requires an {0} this node does not declare</value>
+    </data>
+    <data name="Restoration tested vs declared RTO/RPO" xml:space="preserve">
+        <value>Restoration tested vs declared RTO/RPO</value>
+    </data>
+    <data name="RestorationTestRecordedMSG" xml:space="preserve">
+        <value>Restoration test recorded.</value>
+    </data>
+    <data name="RestorationTestValidityDays" xml:space="preserve">
+        <value>Restoration test validity (days)</value>
+    </data>
+    <data name="RestorationTestValidityDaysHint" xml:space="preserve">
+        <value>From 1 to 1095 days. A test older than this no longer verifies the RTO/RPO.</value>
+    </data>
+    <data name="RestorationTests" xml:space="preserve">
+        <value>Restoration tests</value>
+    </data>
+    <data name="RestorationTestsTitle" xml:space="preserve">
+        <value>Restoration tests</value>
+    </data>
+    <data name="RestorationVerificationNotComputable" xml:space="preserve">
+        <value>{0}: not computable — nothing declared</value>
+    </data>
+    <data name="RestorationVerificationSummary" xml:space="preserve">
+        <value>{0}: {1} of {2} declared met ({3}%)</value>
+    </data>
+    <data name="Rpo" xml:space="preserve">
+        <value>RPO</value>
+    </data>
+    <data name="RpoHint" xml:space="preserve">
+        <value>Recovery point objective: the window of data that may be lost.</value>
+    </data>
+    <data name="RpoVerification" xml:space="preserve">
+        <value>RPO verification</value>
+    </data>
+    <data name="Rto" xml:space="preserve">
+        <value>RTO</value>
+    </data>
+    <data name="RtoExceedsMtpd" xml:space="preserve">
+        <value>The RTO cannot exceed the MTPD/MAO.</value>
+    </data>
+    <data name="RtoHint" xml:space="preserve">
+        <value>Recovery time objective: within how long it must be back.</value>
+    </data>
+    <data name="RtoVerification" xml:space="preserve">
+        <value>RTO verification</value>
+    </data>
+    <data name="SettingFallbackApplied" xml:space="preserve">
+        <value>Stored value invalid, default in force: {0}</value>
+    </data>
+    <data name="SubjectType" xml:space="preserve">
+        <value>Type</value>
+    </data>
+    <data name="SubjectsWithoutBia" xml:space="preserve">
+        <value>Without a BIA: {0}</value>
+    </data>
+    <data name="TestOutcome" xml:space="preserve">
+        <value>Result</value>
+    </data>
+    <data name="TestOutcomeFailed" xml:space="preserve">
+        <value>Failed</value>
+    </data>
+    <data name="TestOutcomeSucceeded" xml:space="preserve">
+        <value>Succeeded</value>
+    </data>
+    <data name="TestedAt" xml:space="preserve">
+        <value>Tested at</value>
+    </data>
+    <data name="TestedAtInFuture" xml:space="preserve">
+        <value>A test cannot be recorded before it is run.</value>
+    </data>
+    <data name="ThreatConfirmedWeight" xml:space="preserve">
+        <value>Confirmed — weight {0}</value>
+    </data>
+    <data name="ThreatItemLine" xml:space="preserve">
+        <value>{0} ({1}, via {2})</value>
+    </data>
+    <data name="ThreatNone" xml:space="preserve">
+        <value>None</value>
+    </data>
+    <data name="ThreatReasonCascadeConflict" xml:space="preserve">
+        <value>Looser than its dependents require</value>
+    </data>
+    <data name="ThreatReasonNotMet" xml:space="preserve">
+        <value>Not met in a test</value>
+    </data>
+    <data name="ThreatReasonProviderExceedsRequirement" xml:space="preserve">
+        <value>A provider declares more than required</value>
+    </data>
+    <data name="ThreatReasonProviderNotMet" xml:space="preserve">
+        <value>A provider was not met in a test</value>
+    </data>
+    <data name="ThreatReasonProviderObjectiveAbsent" xml:space="preserve">
+        <value>A provider declares nothing</value>
+    </data>
+    <data name="ThreatReasonProviderUnverified" xml:space="preserve">
+        <value>A provider is unverified</value>
+    </data>
+    <data name="ThreatReasonRequirementWithoutObjective" xml:space="preserve">
+        <value>Required by a dependent but not declared</value>
+    </data>
+    <data name="ThreatReasonUnverified" xml:space="preserve">
+        <value>Unverified</value>
+    </data>
+    <data name="ThreatUnverifiedWeight" xml:space="preserve">
+        <value>Unverified — weight {0}</value>
+    </data>
+    <data name="ThreatenedCriticalProcessesSummary" xml:space="preserve">
+        <value>Threatened critical processes: {0} confirmed, {1} unverified only, weighted {2}</value>
+    </data>
+    <data name="TightestDependentMtpd" xml:space="preserve">
+        <value>Tightest dependent MTPD: {0} ({1})</value>
+    </data>
+    <data name="UnitDays" xml:space="preserve">
+        <value>days</value>
+    </data>
+    <data name="UnitHours" xml:space="preserve">
+        <value>hours</value>
+    </data>
+    <data name="UnitMinutes" xml:space="preserve">
+        <value>minutes</value>
+    </data>
+    <data name="UnverifiedThreatWeight" xml:space="preserve">
+        <value>Weight of an unverified threat</value>
+    </data>
+    <data name="UnverifiedThreatWeightHint" xml:space="preserve">
+        <value>From 0.01 to 1.00, two decimal places. 0.50 makes an unverified RTO/RPO count half of a confirmed threat.</value>
+    </data>
+    <data name="VerificationAbsent" xml:space="preserve">
+        <value>Absent</value>
+    </data>
+    <data name="VerificationMet" xml:space="preserve">
+        <value>Met</value>
+    </data>
+    <data name="VerificationNotMet" xml:space="preserve">
+        <value>Not met</value>
+    </data>
+    <data name="VerificationReasonExceeded" xml:space="preserve">
+        <value>the test took longer</value>
+    </data>
+    <data name="VerificationReasonNoTest" xml:space="preserve">
+        <value>no test</value>
+    </data>
+    <data name="VerificationReasonNotMeasured" xml:space="preserve">
+        <value>not measured</value>
+    </data>
+    <data name="VerificationReasonRestorationFailed" xml:space="preserve">
+        <value>the restoration failed</value>
+    </data>
+    <data name="VerificationReasonStale" xml:space="preserve">
+        <value>test expired</value>
+    </data>
+    <data name="VerificationUnverified" xml:space="preserve">
+        <value>Unverified</value>
+    </data>
+    <data name="VoidReason" xml:space="preserve">
+        <value>Reason (10 to 500 characters)</value>
+    </data>
+    <data name="VoidReasonHint" xml:space="preserve">
+        <value>Voiding a test needs a reason of at least 10 characters.</value>
+    </data>
+    <data name="VoidTest" xml:space="preserve">
+        <value>Void the test</value>
+    </data>
+    <data name="Voided" xml:space="preserve">
+        <value>Voided</value>
+    </data>
+    <data name="VoidedLine" xml:space="preserve">
+        <value>Voided: {0}</value>
+    </data>
 </root>

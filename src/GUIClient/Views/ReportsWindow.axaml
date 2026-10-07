@@ -93,6 +93,11 @@
                                     ConverterParameter=7}">
                         <reports:CriticalProcessCoverage DataContext="{Binding CriticalProcessCoverageViewModel}"/>
                     </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=8}">
+                        <reports:RestorationVerification DataContext="{Binding RestorationVerificationViewModel}"/>
+                    </Panel>
                 </Grid>
             </ScrollViewer>
     </SplitView>

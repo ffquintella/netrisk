@@ -62,6 +62,13 @@ public class GovernanceAdminViewModel : ViewModelBase
     public string StrHypothesisDescription { get; } = Localizer["HypothesisDescription"];
     public string StrRegisterHypothesis { get; } = Localizer["RegisterHypothesis"];
 
+    // Stage 9.3 (S43 §4.7, §7): the two continuity parameters.
+    public string StrContinuitySettings { get; } = Localizer["ContinuitySettings"];
+    public string StrRestorationTestValidityDays { get; } = Localizer["RestorationTestValidityDays"];
+    public string StrRestorationTestValidityDaysHint { get; } = Localizer["RestorationTestValidityDaysHint"];
+    public string StrUnverifiedThreatWeight { get; } = Localizer["UnverifiedThreatWeight"];
+    public string StrUnverifiedThreatWeightHint { get; } = Localizer["UnverifiedThreatWeightHint"];
+
     #endregion
 
     #region SERVICES
@@ -71,6 +78,8 @@ public class GovernanceAdminViewModel : ViewModelBase
     private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
 
     private IUsersService UsersService { get; } = GetService<IUsersService>();
+
+    private IContinuityService ContinuityService { get; } = GetService<IContinuityService>();
 
     #endregion
 
@@ -250,8 +259,110 @@ public class GovernanceAdminViewModel : ViewModelBase
     public ReactiveCommand<RxVoid, RxVoid> BtRegisterHypothesisClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAppointReviewerClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtRemoveReviewerClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtSaveContinuitySettingsClicked { get; }
 
     #endregion
+
+    // --- Stage 9.3 continuity parameters ------------------------------------------------------
+
+    private int? _savedValidityDays;
+    private decimal? _savedWeight;
+
+    private decimal? _validityDays;
+    /// <summary>Whole days, 1–1 095; a NumericUpDown value, hence decimal.</summary>
+    public decimal? ValidityDays
+    {
+        get => _validityDays;
+        set { this.RaiseAndSetIfChanged(ref _validityDays, value); RevalidateContinuitySettings(); }
+    }
+
+    private decimal? _unverifiedWeight;
+    public decimal? UnverifiedWeight
+    {
+        get => _unverifiedWeight;
+        set { this.RaiseAndSetIfChanged(ref _unverifiedWeight, value); RevalidateContinuitySettings(); }
+    }
+
+    private string _continuitySettingsNotice = string.Empty;
+    /// <summary>The error of the form, or the keys whose stored value was invalid and read as the default.</summary>
+    public string ContinuitySettingsNotice
+    {
+        get => _continuitySettingsNotice;
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _continuitySettingsNotice, value);
+            this.RaisePropertyChanged(nameof(HasContinuitySettingsNotice));
+        }
+    }
+
+    public bool HasContinuitySettingsNotice => !string.IsNullOrEmpty(ContinuitySettingsNotice);
+
+    /// <summary>The audience of RequireAdminOnly; the server decides anyway.</summary>
+    public bool CanEditContinuitySettings { get; }
+
+    private bool _isSaveContinuitySettingsEnabled;
+    public bool IsSaveContinuitySettingsEnabled
+    {
+        get => _isSaveContinuitySettingsEnabled;
+        private set => this.RaiseAndSetIfChanged(ref _isSaveContinuitySettingsEnabled, value);
+    }
+
+    private int? ValidityDaysValue => ValidityDays is { } d && decimal.Truncate(d) == d && d is >= int.MinValue and <= int.MaxValue
+        ? (int)d
+        : null;
+
+    private void RevalidateContinuitySettings()
+    {
+        var error = ContinuitySummary.SettingsErrorKey(ValidityDaysValue, UnverifiedWeight);
+        var changed = ValidityDaysValue != _savedValidityDays || UnverifiedWeight != _savedWeight;
+
+        if (error is not null) ContinuitySettingsNotice = Localizer[error];
+        else if (ContinuitySettingsNotice != _fallbackNotice) ContinuitySettingsNotice = _fallbackNotice;
+
+        IsSaveContinuitySettingsEnabled = CanEditContinuitySettings && error is null && changed;
+    }
+
+    private string _fallbackNotice = string.Empty;
+
+    private void ApplyContinuitySettings(Model.Continuity.ContinuitySettingsDto settings)
+    {
+        _savedValidityDays = settings.RestorationTestValidityDays;
+        _savedWeight = settings.UnverifiedThreatWeight;
+        _fallbackNotice = settings.FallbackApplied.Count == 0
+            ? string.Empty
+            : string.Format(System.Globalization.CultureInfo.CurrentCulture, Localizer["SettingFallbackApplied"],
+                string.Join(", ", settings.FallbackApplied));
+        ContinuitySettingsNotice = _fallbackNotice;
+        ValidityDays = settings.RestorationTestValidityDays;
+        UnverifiedWeight = settings.UnverifiedThreatWeight;
+    }
+
+    private async Task LoadContinuitySettingsAsync()
+    {
+        try
+        {
+            ApplyContinuitySettings(await ContinuityService.GetSettingsAsync());
+        }
+        catch (Exception ex)
+        {
+            // The other tabs stay usable when this read is refused or fails.
+            Logger.Warning("Could not load the continuity parameters: {Message}", ex.Message);
+        }
+    }
+
+    private async Task SaveContinuitySettingsAsync()
+    {
+        if (!IsSaveContinuitySettingsEnabled) return;
+
+        var request = new Model.Continuity.ContinuitySettingsRequest
+        {
+            RestorationTestValidityDays = ValidityDaysValue,
+            UnverifiedThreatWeight = UnverifiedWeight
+        };
+
+        await RunAsync(Localizer["ContinuitySettingsSaved"], async () =>
+            ApplyContinuitySettings(await ContinuityService.SaveSettingsAsync(request)));
+    }
 
     public GovernanceAdminViewModel()
     {
@@ -264,6 +375,8 @@ public class GovernanceAdminViewModel : ViewModelBase
             this.WhenAnyValue(x => x.HypothesisSubject, subject => !string.IsNullOrWhiteSpace(subject)));
         BtAppointReviewerClicked = ReactiveCommand.CreateFromTask(AppointReviewerAsync);
         BtRemoveReviewerClicked = ReactiveCommand.CreateFromTask(RemoveReviewerAsync);
+        BtSaveContinuitySettingsClicked = ReactiveCommand.CreateFromTask(SaveContinuitySettingsAsync);
+        CanEditContinuitySettings = ContinuityAccess.CanEditSettings(AuthenticationService.AuthenticatedUserInfo);
     }
 
     public async Task InitializeAsync()
@@ -275,6 +388,7 @@ public class GovernanceAdminViewModel : ViewModelBase
             await LoadEntitiesAndUsersAsync();
             await LoadPendingRisksAsync();
             await LoadViolationsAsync();
+            await LoadContinuitySettingsAsync();
         });
     }
 
