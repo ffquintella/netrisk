@@ -13,6 +13,7 @@ using ServerServices.Services;
 using Tools.ExploitationSignals;
 using Tools.Risks;
 using Tools.RiskFlags;
+using Tools.TailRisk;
 
 namespace ServerServices.Governance;
 
@@ -42,9 +43,15 @@ public class RiskFlagsService(
     public const int DefaultTopRisks = 10;
     public const string GateARule = "gate_a_non_discretionary";
 
-    /// <summary>The codes whose derived half this stage computes (S46 §4.5).</summary>
+    /// <summary>
+    /// The codes whose derived half is computed (S46 §4.5) — flag 8 from the inherent tail since Stage 9.7
+    /// (S48 §4.8, D7).
+    /// </summary>
     public static readonly IReadOnlyList<RiskFlagCode> DerivableCodes =
-        [RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData];
+    [
+        RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData,
+        RiskFlagCode.LowProbabilityCatastrophic
+    ];
 
     private const string StatusClosed = RiskWorkflowService.StatusClosed;
     private const string BasisFoundNote = "Derived basis found.";
@@ -709,6 +716,12 @@ public class RiskFlagsService(
         public Dictionary<int, (string? Name, int? LevelId)> Data { get; } = new();
         public Dictionary<int, (string? Name, bool Sensitive)> Levels { get; } = new();
 
+        /// <summary>Stage 9.7: the inherent tail of each risk — probability of loss, loss-year mean, iterations, seed.</summary>
+        public Dictionary<int, (double Probability, double? Conditional, int Iterations, int Seed)> InherentTail { get; } = new();
+
+        public TailFlagThresholds TailThresholds { get; set; } =
+            new(TailFlagThresholds.DefaultMaxAnnualProbability, QuantitativeRiskService.DefaultBandThresholds[^1]);
+
         public Dictionary<RiskFlagCode, DerivedBasis> BasesFor(int riskId)
         {
             var bases = new Dictionary<RiskFlagCode, DerivedBasis>();
@@ -717,6 +730,11 @@ public class RiskFlagsService(
                 bases[RiskFlagCode.KnownExploitation] = new DerivedBasis(string.Join("; ", kev
                     .OrderBy(k => k.Cve, StringComparer.Ordinal).ThenBy(k => k.FindingId)
                     .Select(k => $"KEV {k.Cve} on finding #{k.FindingId}")), null);
+
+            // Flag 8 (S48 §4.8): a rare loss year that is catastrophic when it comes, on the inherent run.
+            if (InherentTail.TryGetValue(riskId, out var tail) &&
+                TailFlag.Basis(tail.Probability, tail.Conditional, tail.Iterations, tail.Seed, TailThresholds) is { } tailBasis)
+                bases[RiskFlagCode.LowProbabilityCatastrophic] = new DerivedBasis(tailBasis, null);
 
             var linked = LinkedEntitiesByRisk.GetValueOrDefault(riskId);
             if (linked is null || linked.Count == 0) return bases;
@@ -789,6 +807,18 @@ public class RiskFlagsService(
             if (!world.KevByRisk.TryGetValue(finding.RiskId, out var list)) world.KevByRisk[finding.RiskId] = list = [];
             if (!list.Contains((finding.FindingId, cve))) list.Add((finding.FindingId, cve));
         }
+
+        // Flag 8 (S48 §4.8) — the inherent tail statistics and the two thresholds, read before the early returns below.
+        var tails = riskId is { } tailRisk
+            ? db.RiskTailStatistics.AsNoTracking().Where(t => t.RiskId == tailRisk && t.Run == TailRun.Inherent)
+            : db.RiskTailStatistics.AsNoTracking().Where(t => t.Run == TailRun.Inherent && risks.Any(r => r.Id == t.RiskId));
+
+        foreach (var tail in await tails
+                     .Select(t => new { t.RiskId, t.ProbabilityOfLoss, t.ConditionalLoss, t.Iterations, t.Seed })
+                     .ToListAsync())
+            world.InherentTail[tail.RiskId] = (tail.ProbabilityOfLoss, tail.ConditionalLoss, tail.Iterations, tail.Seed);
+
+        if (world.InherentTail.Count > 0) world.TailThresholds = await TailRiskService.ReadTailFlagThresholdsAsync(db);
 
         // Flags 4 and 5 — the entity targets of the risk's chain links.
         var links = riskId is { } one

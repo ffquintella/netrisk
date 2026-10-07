@@ -115,5 +115,7 @@ Everything is entity-scoped: another unit's mitigations and risks are not found.
 
 - The desktop screens (cost and option editors, Gate C on the mitigation, the target on the risk, task evidence and the
   portfolio screen) are **T304**; this release ships the API and the REST client.
-- Tail is the declared flag 8 until Stage 9.7 derives it from P95/CVaR; there is no monetary appetite until M45/M46.
+- Since Stage 9.7 flag 8 is also derived from the inherent tail and Gate D protects it either way
+  ([tail statistics](tail-statistics-portfolio.md)); the target E[L] is not compared with the appetite's monetary
+  tolerances.
 - Evidence is text (a description, a reference, a link); attaching a file per task is not part of this stage.

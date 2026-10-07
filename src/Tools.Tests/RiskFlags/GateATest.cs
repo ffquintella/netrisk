@@ -85,8 +85,13 @@ public class GateATest
         Assert.Equal(RiskFlagDerivation.Kev, RiskFlagCatalogue.Find(RiskFlagCode.KnownExploitation)!.Derivation);
         Assert.Equal(RiskFlagDerivation.Bia, RiskFlagCatalogue.Find(RiskFlagCode.CriticalProcessContinuity)!.Derivation);
         Assert.Equal(RiskFlagDerivation.DataClassification, RiskFlagCatalogue.Find(RiskFlagCode.SensitiveData)!.Derivation);
+        // Stage 9.7 (S48 §4.8, D7): flag 8 became derivable from the inherent tail, and no longer names a later stage.
+        Assert.Equal(RiskFlagDerivation.TailStatistics,
+            RiskFlagCatalogue.Find(RiskFlagCode.LowProbabilityCatastrophic)!.Derivation);
+        Assert.Null(RiskFlagCatalogue.Find(RiskFlagCode.LowProbabilityCatastrophic)!.DerivableIn);
         Assert.Equal(
-            [RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData],
+            [RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData,
+             RiskFlagCode.LowProbabilityCatastrophic],
             RiskFlagCatalogue.All.Where(d => d.Derivation != RiskFlagDerivation.None).Select(d => d.Code));
 
         // Flag 11 is declarable only here and names the stage that derives it.

@@ -12,6 +12,21 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.32.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.7 specification: P95 and CVaR with confidence intervals, the loss magnitude by form of loss, portfolio aggregation by Gaussian copula with a positive-semidefinite correlation check, which statistic is summable, and Gate B on the tail after Gate A and the ordinal ceiling (T182, S48)
+- Store E[L], P95 and CVaR95 with 95 % confidence intervals, the probability of a loss year and the mean loss of a loss year for the inherent and residual run of every quantitative analysis in `risk_tail_statistics`, and return them with the analysis and through `GET /TailRisk/Risks/{id}` (T183, S48)
+- Decompose a risk's loss magnitude into response, recovery, productivity, revenue, liability, fine (with its legal basis) and reputation through `/TailRisk/Risks/{id}/LossComponents`, reporting each component's contribution to the expected loss and to the CVaR95 (T184, S48)
+- Declare a 0–1 correlation between two risk scenarios through `/TailRisk/Correlations`, refusing one that would leave the correlation matrix not positive semidefinite with `422 correlation_not_positive_semidefinite` (T185, S48)
+- Aggregate a portfolio's annual losses under the declared correlations through `POST /TailRisk/Portfolio`, with E[L], P95 and CVaR95 and their intervals, the sums of the individual statistics, each risk's share of the portfolio CVaR and the risks not quantified, reproducible from its seed (T185, T187, S48)
+- Set monetary tail tolerances per scenario and per portfolio on a risk appetite through `/RiskAppetites/{id}/TailLimits`, and report Gate B on the tail as not configured, not assessable, within or exceeding tolerance in `GET /Risks/{id}/Appetite` (T186, S48)
+- Derive flag 8 "low probability, catastrophic impact" from the inherent tail of a quantitative analysis, reverting it with an audit-trail entry when its basis is lost (T186, S48)
+
+### Changed
+- Refuse to accept or renew a risk whose tail exceeds the appetite's tolerance with `422 risk_appetite_tail_tolerance`, checked after Gate A and the unchanged ordinal ceiling (T186, S48)
+- Refuse a quantitative analysis of more than 100 000 iterations, and one whose magnitude range contradicts the envelope of the risk's declared loss components, with `400 invalid_parameter` (T183, T184, S48)
+
 ## [2.31.0] - 2026-10-07
 
 ### Added

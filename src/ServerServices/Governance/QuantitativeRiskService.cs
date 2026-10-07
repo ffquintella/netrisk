@@ -1,12 +1,15 @@
 using System.Text.Json;
 using DAL.Entities;
+using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
+using Model.TailRisk;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using Tools.Risks;
+using Tools.TailRisk;
 
 namespace ServerServices.Governance;
 
@@ -58,6 +61,13 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
                 "The loss-magnitude range has to run minimum ≤ most likely ≤ maximum, with no negative " +
                 "values.");
 
+        // Stage 9.7 (S48 §4.3): a ceiling on the iterations. There was none, and the bootstrap of the tail intervals
+        // multiplies the cost of every iteration; below the floor the simulator still raises the count, as it did.
+        if (input.Iterations > TailRiskLimits.MaxIterations)
+            throw new InvalidParameterException(nameof(input.Iterations),
+                $"At most {TailRiskLimits.MaxIterations:N0} iterations; the tail statistics are already stable at " +
+                $"the default {MonteCarloRiskSimulator.DefaultIterations:N0}.");
+
         await using var db = DalService.GetContext();
 
         var risk = await db.Risks.FirstOrDefaultAsync(r => r.Id == riskId)
@@ -71,11 +81,30 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             db.RiskScorings.Add(scoring);
         }
 
-        var iterations = input.Iterations ?? await ReadIntSettingAsync(db, IterationsSetting,
-            MonteCarloRiskSimulator.DefaultIterations);
+        var iterations = Math.Clamp(input.Iterations ?? await ReadIterationsSettingAsync(db),
+            TailRiskLimits.MinIterations, TailRiskLimits.MaxIterations);
         var seed = input.Seed ?? 20260826;
 
-        var inherent = MonteCarloRiskSimulator.Run(frequency, magnitude, iterations, seed);
+        // Stage 9.7 (S48 §4.4): with loss components declared, each event's loss is the sum of the components, and
+        // the single range has to be their envelope — a magnitude declared two ways that disagree is refused, never
+        // silently overridden by either.
+        var components = await db.RiskLossComponents.Where(c => c.RiskId == riskId)
+            .OrderBy(c => c.Component).ToListAsync();
+
+        IReadOnlyList<CalibratedRange> ranges = [magnitude];
+        if (components.Count > 0)
+        {
+            var envelope = Envelope(components);
+            if (!SameRange(envelope, magnitude))
+                throw new InvalidParameterException(nameof(input.LossMagnitudeMostLikely),
+                    "This risk's loss magnitude is declared by component, so the single range has to be their " +
+                    $"envelope ({envelope.Min:N0} / {envelope.MostLikely:N0} / {envelope.Max:N0}). Edit the components " +
+                    "through /TailRisk/Risks/{id}/LossComponents, or delete them to go back to a single range.");
+
+            ranges = components.Select(c => new CalibratedRange(c.LossMin, c.LossMostLikely, c.LossMax)).ToList();
+        }
+
+        var inherent = MonteCarloRiskSimulator.Run(frequency, ranges, iterations, seed);
 
         // The residual run differs only in the mitigation's effectiveness, so the two numbers are
         // comparable by construction — which is what makes the before/after a control-ROI statement
@@ -83,7 +112,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         var effectiveness = await EffectiveMitigationAsync(db, risk, scoring);
         LossExposureResult? residual = null;
         if (effectiveness > 0)
-            residual = MonteCarloRiskSimulator.Run(frequency, magnitude, iterations, seed, effectiveness);
+            residual = MonteCarloRiskSimulator.Run(frequency, ranges, iterations, seed, effectiveness);
 
         scoring.ScoringMethod = QuantitativeScoringMethod;
         scoring.QuantLefMin = frequency.Min;
@@ -134,6 +163,22 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             LastUpdate = DateTime.UtcNow
         });
 
+        // Stage 9.7 (S48 §4.2): the tail statistics, in their own table — never in risk_scoring, whose whole payload a
+        // PUT /Risks/{id}/Scoring copies (S48 D1). Same save, so a stored statistic always describes stored inputs.
+        var computedAt = scoring.QuantComputedAt!.Value;
+        var tailRows = await db.RiskTailStatistics.Include(t => t.Components).Where(t => t.RiskId == riskId)
+            .ToListAsync();
+
+        WriteTail(db, tailRows, riskId, TailRun.Inherent, inherent, frequency, magnitude, components, 0, computedAt);
+
+        if (residual is not null)
+            WriteTail(db, tailRows, riskId, TailRun.Residual, residual, frequency, magnitude, components, effectiveness,
+                computedAt);
+        else if (tailRows.FirstOrDefault(t => t.Run == TailRun.Residual) is { } stale)
+            // No residual run any more (the effectiveness went to zero): Gate B must not read a residual that no
+            // longer exists, so it falls back to the inherent run, as the score does.
+            db.RiskTailStatistics.Remove(stale);
+
         await db.SaveChangesAsync();
 
         Logger.Information(
@@ -141,7 +186,10 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             "mapped to {Score:F2}", riskId, inherent.Mean, inherent.P50, inherent.P90,
             scoring.CalculatedRisk);
 
-        return Build(riskId, scoring, inherent, residual, thresholds);
+        var stored = await db.RiskTailStatistics.AsNoTracking().Include(t => t.Components)
+            .Where(t => t.RiskId == riskId).ToListAsync();
+
+        return Build(riskId, scoring, inherent, residual, thresholds, stored);
     }
 
     public async Task<QuantitativeRiskResult?> GetAsync(int riskId)
@@ -158,9 +206,17 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             : JsonSerializer.Deserialize<List<LossExceedancePointDto>>(scoring.QuantLossExceedanceCurve)
               ?? [];
 
+        var tails = await db.RiskTailStatistics.AsNoTracking().Include(t => t.Components)
+            .Where(t => t.RiskId == riskId).ToListAsync();
+        var inherentTail = tails.FirstOrDefault(t => t.Run == TailRun.Inherent);
+
         return new QuantitativeRiskResult
         {
             RiskId = riskId,
+            InherentTail = inherentTail is null ? null : TailStatisticsMapping.ToDto(inherentTail),
+            ResidualTail = tails.FirstOrDefault(t => t.Run == TailRun.Residual) is { } residualTail
+                ? TailStatisticsMapping.ToDto(residualTail)
+                : null,
             InherentP10 = scoring.QuantAleP10 ?? 0,
             InherentP50 = scoring.QuantAleP50 ?? 0,
             InherentP90 = scoring.QuantAleP90 ?? 0,
@@ -177,6 +233,33 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         };
     }
 
+    public async Task<QuantitativeRiskResult?> RecomputeAsync(int riskId)
+    {
+        await using var db = DalService.GetContext();
+
+        var scoring = await db.RiskScorings.AsNoTracking().FirstOrDefaultAsync(s => s.Id == riskId);
+        if (scoring?.QuantLefMostLikely is null) return null;
+
+        // With components declared the magnitude is their envelope (S48 §4.4) — which is what keeps a recomputation
+        // after the components changed from being refused as a disagreement with the previous envelope.
+        var components = await db.RiskLossComponents.AsNoTracking().Where(c => c.RiskId == riskId).ToListAsync();
+        var magnitude = components.Count > 0
+            ? Envelope(components)
+            : new CalibratedRange(scoring.QuantLossMin ?? 0, scoring.QuantLossMostLikely ?? 0,
+                scoring.QuantLossMax ?? scoring.QuantLossMostLikely ?? 0);
+
+        return await ComputeAndSaveAsync(riskId, new QuantitativeRiskInput
+        {
+            LossEventFrequencyMin = scoring.QuantLefMin ?? 0,
+            LossEventFrequencyMostLikely = scoring.QuantLefMostLikely.Value,
+            LossEventFrequencyMax = scoring.QuantLefMax ?? scoring.QuantLefMostLikely.Value,
+            LossMagnitudeMin = magnitude.Min,
+            LossMagnitudeMostLikely = magnitude.MostLikely,
+            LossMagnitudeMax = magnitude.Max,
+            Seed = scoring.QuantSeed
+        });
+    }
+
     public async Task<int> RecomputeAllAsync()
     {
         await using var db = DalService.GetContext();
@@ -190,21 +273,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
 
         foreach (var id in ids)
         {
-            var scoring = await db.RiskScorings.FirstOrDefaultAsync(s => s.Id == id);
-            if (scoring?.QuantLefMostLikely is null) continue;
-
-            await ComputeAndSaveAsync(id, new QuantitativeRiskInput
-            {
-                LossEventFrequencyMin = scoring.QuantLefMin ?? 0,
-                LossEventFrequencyMostLikely = scoring.QuantLefMostLikely.Value,
-                LossEventFrequencyMax = scoring.QuantLefMax ?? scoring.QuantLefMostLikely.Value,
-                LossMagnitudeMin = scoring.QuantLossMin ?? 0,
-                LossMagnitudeMostLikely = scoring.QuantLossMostLikely ?? 0,
-                LossMagnitudeMax = scoring.QuantLossMax ?? scoring.QuantLossMostLikely ?? 0,
-                Seed = scoring.QuantSeed
-            });
-
-            recomputed++;
+            if (await RecomputeAsync(id) is not null) recomputed++;
         }
 
         return recomputed;
@@ -260,9 +329,15 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
     }
 
     private static QuantitativeRiskResult Build(int riskId, RiskScoring scoring, LossExposureResult inherent,
-        LossExposureResult? residual, IReadOnlyList<double> thresholds) => new()
+        LossExposureResult? residual, IReadOnlyList<double> thresholds, IReadOnlyList<RiskTailStatistics> tails) => new()
     {
         RiskId = riskId,
+        InherentTail = tails.FirstOrDefault(t => t.Run == TailRun.Inherent) is { } inherentTail
+            ? TailStatisticsMapping.ToDto(inherentTail)
+            : null,
+        ResidualTail = tails.FirstOrDefault(t => t.Run == TailRun.Residual) is { } residualTail
+            ? TailStatisticsMapping.ToDto(residualTail)
+            : null,
         InherentP10 = inherent.P10,
         InherentP50 = inherent.P50,
         InherentP90 = inherent.P90,
@@ -294,21 +369,35 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
             new ResidualRiskContext(risk, scoring, mitigation, controls));
     }
 
-    private static async Task<int> ReadIntSettingAsync(DAL.Context.AuditableContext db, string key,
-        int fallback)
+    /// <summary>
+    /// The configured iteration count, clamped to the range the tail statistics accept (S48 §4.3) — an
+    /// administrator's 10⁶ would otherwise turn the nightly recomputation into hours of bootstrap.
+    /// </summary>
+    public static async Task<int> ReadIterationsSettingAsync(DAL.Context.AuditableContext db)
     {
-        var setting = await db.Settings.FirstOrDefaultAsync(s => s.Name == key);
-        return setting?.Value is not null && int.TryParse(setting.Value, out var value) && value > 0
-            ? value
-            : fallback;
+        var setting = await db.Settings.FirstOrDefaultAsync(s => s.Name == IterationsSetting);
+        var value = setting?.Value is not null && int.TryParse(setting.Value, out var parsed) && parsed > 0
+            ? parsed
+            : MonteCarloRiskSimulator.DefaultIterations;
+
+        return Math.Clamp(value, TailRiskLimits.MinIterations, TailRiskLimits.MaxIterations);
     }
 
     private static async Task<double[]> ReadBandThresholdsAsync(DAL.Context.AuditableContext db)
     {
         var setting = await db.Settings.FirstOrDefaultAsync(s => s.Name == BandThresholdsSetting);
-        if (setting?.Value is null) return DefaultBandThresholds;
+        return ParseBandThresholds(setting?.Value);
+    }
 
-        var parsed = setting.Value
+    /// <summary>
+    /// The three ascending band thresholds of a <c>quantitative_band_thresholds</c> value, or the defaults when it is
+    /// missing or malformed. Public so the flag 8 derivation reads the same top threshold the score mapping does.
+    /// </summary>
+    public static double[] ParseBandThresholds(string? value)
+    {
+        if (value is null) return DefaultBandThresholds;
+
+        var parsed = value
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(part => double.TryParse(part, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var value)
@@ -322,5 +411,85 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
         // A malformed setting falls back rather than producing a silently wrong band: three
         // ascending numbers is the contract, and two of them would map High onto Very High.
         return parsed.Length == 3 ? parsed : DefaultBandThresholds;
+    }
+
+    // --- Stage 9.7: the tail statistics -------------------------------------------------------------
+
+    /// <summary>The envelope of the components: Σ minimum, Σ most likely, Σ maximum (S48 §4.4).</summary>
+    public static CalibratedRange Envelope(IEnumerable<RiskLossComponent> components)
+    {
+        var list = components.ToList();
+        return new CalibratedRange(list.Sum(c => c.LossMin), list.Sum(c => c.LossMostLikely), list.Sum(c => c.LossMax));
+    }
+
+    /// <summary>Equal within a relative 10⁻⁹ — a range read back from a double column and re-sent is the same range.</summary>
+    private static bool SameRange(CalibratedRange a, CalibratedRange b)
+    {
+        static bool Close(double x, double y) => Math.Abs(x - y) <= 1e-9 * Math.Max(1, Math.Max(Math.Abs(x), Math.Abs(y)));
+        return Close(a.Min, b.Min) && Close(a.MostLikely, b.MostLikely) && Close(a.Max, b.Max);
+    }
+
+    /// <summary>Upserts one run's tail row and replaces its component rows (S48 §4.2, §4.4.1).</summary>
+    private static void WriteTail(DAL.Context.AuditableContext db, List<RiskTailStatistics> rows, int riskId, TailRun run,
+        LossExposureResult result, CalibratedRange frequency, CalibratedRange magnitude,
+        IReadOnlyList<RiskLossComponent> components, double effectiveness, DateTime computedAt)
+    {
+        var row = rows.FirstOrDefault(t => t.Run == run);
+        if (row is null)
+        {
+            row = new RiskTailStatistics { RiskId = riskId, Run = run, CreatedAt = computedAt };
+            db.RiskTailStatistics.Add(row);
+            rows.Add(row);
+        }
+        else
+        {
+            row.UpdatedAt = computedAt;
+            foreach (var old in row.Components.ToList()) db.RiskTailComponents.Remove(old);
+            row.Components.Clear();
+        }
+
+        var envelope = components.Count > 0 ? Envelope(components) : magnitude;
+        var tail = result.Tail;
+
+        row.Iterations = result.Iterations;
+        row.Seed = result.Seed;
+        row.ConfidenceLevel = (decimal)TailStatisticsCalculator.ConfidenceLevel;
+        row.LefMin = frequency.Min;
+        row.LefMostLikely = frequency.MostLikely;
+        row.LefMax = frequency.Max;
+        row.MagnitudeMin = envelope.Min;
+        row.MagnitudeMostLikely = envelope.MostLikely;
+        row.MagnitudeMax = envelope.Max;
+        row.MagnitudeSource = components.Count > 0 ? MagnitudeSource.Components : MagnitudeSource.SingleRange;
+        row.MitigationEffectiveness = effectiveness;
+        row.ExpectedLoss = tail.ExpectedLoss;
+        row.ExpectedLossCiLow = tail.ExpectedLossCiLow;
+        row.ExpectedLossCiHigh = tail.ExpectedLossCiHigh;
+        row.P95 = tail.P95;
+        row.P95CiLow = tail.P95CiLow;
+        row.P95CiHigh = tail.P95CiHigh;
+        row.Cvar95 = tail.Cvar95;
+        row.Cvar95CiLow = tail.Cvar95CiLow;
+        row.Cvar95CiHigh = tail.Cvar95CiHigh;
+        row.ProbabilityOfLoss = tail.ProbabilityOfLoss;
+        row.ConditionalLoss = tail.ConditionalLoss;
+        row.ComputedAt = computedAt;
+
+        if (components.Count == 0) return;
+
+        foreach (var share in result.ComponentContributions)
+        {
+            var component = components[share.Index];
+            row.Components.Add(new RiskTailComponent
+            {
+                Component = component.Component,
+                LossMin = component.LossMin,
+                LossMostLikely = component.LossMostLikely,
+                LossMax = component.LossMax,
+                ExpectedLoss = share.ExpectedLoss,
+                Cvar95 = share.Cvar95,
+                CreatedAt = computedAt
+            });
+        }
     }
 }

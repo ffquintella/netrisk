@@ -1,4 +1,5 @@
 using DAL.Enums;
+using Model.TailRisk;
 
 namespace Model.Governance;
 
@@ -65,6 +66,12 @@ public class AppetiteEvaluation
 
     /// <summary>A sentence the GUI and the portal can show verbatim.</summary>
     public string Explanation { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gate B on the tail (Stage 9.7, S48 §4.7): the appetite's monetary tolerances against the risk's E[L], P95 and
+    /// CVaR95. Additive — every field above keeps its meaning, and the ordinal ceiling is still checked first.
+    /// </summary>
+    public TailAppetiteEvaluation Tail { get; set; } = new();
 }
 
 /// <summary>
@@ -447,6 +454,13 @@ public class QuantitativeRiskResult
 
     /// <summary>The mean of the residual run — Gate C's E[L] after (Stage 9.6, S47 §4.4); null without a residual run.</summary>
     public double? ResidualMean { get; set; }
+
+    /// <summary>Stage 9.7 (S48 §4.2): E[L], P95 and CVaR95 with confidence intervals of the inherent run; null before
+    /// schema 96 until the analysis is recomputed.</summary>
+    public TailStatisticsDto? InherentTail { get; set; }
+
+    /// <summary>The same for the residual run; null without one.</summary>
+    public TailStatisticsDto? ResidualTail { get; set; }
 
     public List<LossExceedancePointDto> LossExceedanceCurve { get; set; } = [];
 

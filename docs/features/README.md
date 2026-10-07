@@ -14,6 +14,7 @@ These are placeholder stubs — contributions welcome.
 - [Risk governance, approval workflows and the business review portal](risk-governance.md)
   - [Mandatory flags, Gate A and Top Risks](risk-flags-gate-a.md)
   - [Treatment economics: monetary cost, Gates C and D, target level](treatment-economics.md)
+  - [Tail statistics and portfolio: P95, CVaR, loss decomposition, correlation and Gate B](tail-statistics-portfolio.md)
 - [Business impact analysis and continuity: MTPD/MAO, RTO, RPO, dependencies, restoration tests](business-continuity.md)
 - [Vulnerability Management](vulnerability-management.md)
   - [Exploitation signals: CISA KEV, EPSS, MITRE ATT&CK and the prioritization](exploitation-signals.md)

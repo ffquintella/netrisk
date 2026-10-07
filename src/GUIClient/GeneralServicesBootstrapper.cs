@@ -144,6 +144,11 @@ public class GeneralServicesBootstrapper
         services.AddTransient<ITreatmentEconomicsService>(sp => new TreatmentEconomicsRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.7 (S48): tail statistics and portfolio — the tail of a risk, its loss components, the
+        // declared correlations, the portfolio aggregation and the appetite's monetary tolerances.
+        services.AddTransient<ITailRiskService>(sp => new TailRiskRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

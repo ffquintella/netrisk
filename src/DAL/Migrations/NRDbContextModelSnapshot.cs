@@ -6284,6 +6284,86 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskAppetiteTailLimit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppetiteId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("appetite_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("MaxPortfolioCvar95")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_portfolio_cvar95");
+
+                    b.Property<decimal?>("MaxPortfolioExpectedLoss")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_portfolio_expected_loss");
+
+                    b.Property<decimal?>("MaxPortfolioP95")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_portfolio_p95");
+
+                    b.Property<decimal?>("MaxScenarioCvar95")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_scenario_cvar95");
+
+                    b.Property<decimal?>("MaxScenarioExpectedLoss")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_scenario_expected_loss");
+
+                    b.Property<decimal?>("MaxScenarioP95")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_scenario_p95");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("rationale");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_risk_appetite_tail_limits_updated_by_id");
+
+                    b.HasIndex(new[] { "AppetiteId" }, "uq_risk_appetite_tail_limits_appetite_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_appetite_tail_limits", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_appetite_tail_limits_any", "`max_scenario_expected_loss` IS NOT NULL OR `max_scenario_p95` IS NOT NULL OR `max_scenario_cvar95` IS NOT NULL OR `max_portfolio_expected_loss` IS NOT NULL OR `max_portfolio_p95` IS NOT NULL OR `max_portfolio_cvar95` IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_risk_appetite_tail_limits_non_negative", "(`max_scenario_expected_loss` IS NULL OR `max_scenario_expected_loss` >= 0) AND (`max_scenario_p95` IS NULL OR `max_scenario_p95` >= 0) AND (`max_scenario_cvar95` IS NULL OR `max_scenario_cvar95` >= 0) AND (`max_portfolio_expected_loss` IS NULL OR `max_portfolio_expected_loss` >= 0) AND (`max_portfolio_p95` IS NULL OR `max_portfolio_p95` >= 0) AND (`max_portfolio_cvar95` IS NULL OR `max_portfolio_cvar95` >= 0)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskAttackTechnique", b =>
                 {
                     b.Property<int>("Id")
@@ -6438,6 +6518,67 @@ namespace DAL.Migrations
                     b.ToTable("risk_chain_links", null, t =>
                         {
                             t.HasCheckConstraint("ck_risk_chain_links_one_target", "((`entity_id` IS NOT NULL) + (`host_id` IS NOT NULL)) = 1");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCorrelation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Coefficient")
+                        .HasPrecision(4, 3)
+                        .HasColumnType("decimal(4,3)")
+                        .HasColumnName("coefficient");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Rationale")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("rationale");
+
+                    b.Property<int>("RiskAId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_a_id");
+
+                    b.Property<int>("RiskBId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_b_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskBId" }, "idx_risk_correlations_risk_b_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_risk_correlations_updated_by_id");
+
+                    b.HasIndex(new[] { "RiskAId", "RiskBId" }, "uq_risk_correlations_risk_a_id_risk_b_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_correlations", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_correlations_coefficient", "`coefficient` >= 0 AND `coefficient` <= 1");
+
+                            t.HasCheckConstraint("ck_risk_correlations_order", "`risk_a_id` < `risk_b_id`");
                         });
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
@@ -6659,6 +6800,73 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "Value" }, "risk_levels_value_idx");
 
                     b.ToTable("risk_levels", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskLossComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Basis")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("basis");
+
+                    b.Property<int>("Component")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("component");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<double>("LossMax")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_max");
+
+                    b.Property<double>("LossMin")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_min");
+
+                    b.Property<double>("LossMostLikely")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_most_likely");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_risk_loss_components_updated_by_id");
+
+                    b.HasIndex(new[] { "RiskId", "Component" }, "uq_risk_loss_components_risk_id_component")
+                        .IsUnique();
+
+                    b.ToTable("risk_loss_components", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_loss_components_component", "`component` >= 1 AND `component` <= 7");
+
+                            t.HasCheckConstraint("ck_risk_loss_components_fine_basis", "`component` <> 6 OR `basis` IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_risk_loss_components_range", "`loss_min` >= 0 AND `loss_min` <= `loss_most_likely` AND `loss_most_likely` <= `loss_max`");
+                        });
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -6996,6 +7204,203 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "LastUpdate" }, "rsh_last_update_idx");
 
                     b.ToTable("risk_scoring_history", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskTailComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Component")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("component");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<double>("Cvar95")
+                        .HasColumnType("double")
+                        .HasColumnName("cvar95");
+
+                    b.Property<double>("ExpectedLoss")
+                        .HasColumnType("double")
+                        .HasColumnName("expected_loss");
+
+                    b.Property<double>("LossMax")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_max");
+
+                    b.Property<double>("LossMin")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_min");
+
+                    b.Property<double>("LossMostLikely")
+                        .HasColumnType("double")
+                        .HasColumnName("loss_most_likely");
+
+                    b.Property<int>("TailStatisticsId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("tail_statistics_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "TailStatisticsId", "Component" }, "uq_risk_tail_components_tail_statistics_id_component")
+                        .IsUnique();
+
+                    b.ToTable("risk_tail_components", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_tail_components_component", "`component` >= 1 AND `component` <= 7");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskTailStatistics", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ComputedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("computed_at");
+
+                    b.Property<double?>("ConditionalLoss")
+                        .HasColumnType("double")
+                        .HasColumnName("conditional_loss");
+
+                    b.Property<decimal>("ConfidenceLevel")
+                        .HasPrecision(4, 3)
+                        .HasColumnType("decimal(4,3)")
+                        .HasColumnName("confidence_level");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<double>("Cvar95")
+                        .HasColumnType("double")
+                        .HasColumnName("cvar95");
+
+                    b.Property<double>("Cvar95CiHigh")
+                        .HasColumnType("double")
+                        .HasColumnName("cvar95_ci_high");
+
+                    b.Property<double>("Cvar95CiLow")
+                        .HasColumnType("double")
+                        .HasColumnName("cvar95_ci_low");
+
+                    b.Property<double>("ExpectedLoss")
+                        .HasColumnType("double")
+                        .HasColumnName("expected_loss");
+
+                    b.Property<double>("ExpectedLossCiHigh")
+                        .HasColumnType("double")
+                        .HasColumnName("expected_loss_ci_high");
+
+                    b.Property<double>("ExpectedLossCiLow")
+                        .HasColumnType("double")
+                        .HasColumnName("expected_loss_ci_low");
+
+                    b.Property<int>("Iterations")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("iterations");
+
+                    b.Property<double>("LefMax")
+                        .HasColumnType("double")
+                        .HasColumnName("lef_max");
+
+                    b.Property<double>("LefMin")
+                        .HasColumnType("double")
+                        .HasColumnName("lef_min");
+
+                    b.Property<double>("LefMostLikely")
+                        .HasColumnType("double")
+                        .HasColumnName("lef_most_likely");
+
+                    b.Property<double>("MagnitudeMax")
+                        .HasColumnType("double")
+                        .HasColumnName("magnitude_max");
+
+                    b.Property<double>("MagnitudeMin")
+                        .HasColumnType("double")
+                        .HasColumnName("magnitude_min");
+
+                    b.Property<double>("MagnitudeMostLikely")
+                        .HasColumnType("double")
+                        .HasColumnName("magnitude_most_likely");
+
+                    b.Property<int>("MagnitudeSource")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("magnitude_source");
+
+                    b.Property<double>("MitigationEffectiveness")
+                        .HasColumnType("double")
+                        .HasColumnName("mitigation_effectiveness");
+
+                    b.Property<double>("P95")
+                        .HasColumnType("double")
+                        .HasColumnName("p95");
+
+                    b.Property<double>("P95CiHigh")
+                        .HasColumnType("double")
+                        .HasColumnName("p95_ci_high");
+
+                    b.Property<double>("P95CiLow")
+                        .HasColumnType("double")
+                        .HasColumnName("p95_ci_low");
+
+                    b.Property<double>("ProbabilityOfLoss")
+                        .HasColumnType("double")
+                        .HasColumnName("probability_of_loss");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("Run")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("run");
+
+                    b.Property<int>("Seed")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("seed");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskId", "Run" }, "uq_risk_tail_statistics_risk_id_run")
+                        .IsUnique();
+
+                    b.ToTable("risk_tail_statistics", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_tail_statistics_iterations", "`iterations` >= 1000 AND `iterations` <= 100000");
+
+                            t.HasCheckConstraint("ck_risk_tail_statistics_magnitude_source", "`magnitude_source` >= 1 AND `magnitude_source` <= 2");
+
+                            t.HasCheckConstraint("ck_risk_tail_statistics_mitigation_effectiveness", "`mitigation_effectiveness` >= 0 AND `mitigation_effectiveness` <= 1");
+
+                            t.HasCheckConstraint("ck_risk_tail_statistics_probability_of_loss", "`probability_of_loss` >= 0 AND `probability_of_loss` <= 1");
+
+                            t.HasCheckConstraint("ck_risk_tail_statistics_run", "`run` >= 1 AND `run` <= 2");
+                        });
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -10603,6 +11008,26 @@ namespace DAL.Migrations
                     b.Navigation("Entity");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskAppetiteTailLimit", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskAppetite", "Appetite")
+                        .WithMany()
+                        .HasForeignKey("AppetiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_appetite_tail_limits_appetite_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_appetite_tail_limits_updated_by_id");
+
+                    b.Navigation("Appetite");
+
+                    b.Navigation("UpdatedBy");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskAttackTechnique", b =>
                 {
                     b.HasOne("DAL.Entities.User", "CreatedBy")
@@ -10659,6 +11084,35 @@ namespace DAL.Migrations
                     b.Navigation("Risk");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskCorrelation", b =>
+                {
+                    b.HasOne("DAL.Entities.Risk", "RiskA")
+                        .WithMany()
+                        .HasForeignKey("RiskAId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_correlations_risk_a_id");
+
+                    b.HasOne("DAL.Entities.Risk", "RiskB")
+                        .WithMany()
+                        .HasForeignKey("RiskBId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_correlations_risk_b_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_correlations_updated_by_id");
+
+                    b.Navigation("RiskA");
+
+                    b.Navigation("RiskB");
+
+                    b.Navigation("UpdatedBy");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskDecision", b =>
                 {
                     b.HasOne("DAL.Entities.User", "DecidedBy")
@@ -10697,6 +11151,26 @@ namespace DAL.Migrations
                     b.Navigation("DeclaredBy");
 
                     b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskLossComponent", b =>
+                {
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_loss_components_risk_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_loss_components_updated_by_id");
+
+                    b.Navigation("Risk");
+
+                    b.Navigation("UpdatedBy");
                 });
 
             modelBuilder.Entity("DAL.Entities.RiskReviewCampaign", b =>
@@ -10754,6 +11228,30 @@ namespace DAL.Migrations
                     b.Navigation("Risk");
 
                     b.Navigation("RiskAcceptance");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskTailComponent", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskTailStatistics", "TailStatistics")
+                        .WithMany("Components")
+                        .HasForeignKey("TailStatisticsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_tail_components_tail_statistics_id");
+
+                    b.Navigation("TailStatistics");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskTailStatistics", b =>
+                {
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_tail_statistics_risk_id");
+
+                    b.Navigation("Risk");
                 });
 
             modelBuilder.Entity("DAL.Entities.RiskTarget", b =>
@@ -11416,6 +11914,11 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.RiskReviewCampaign", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskTailStatistics", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("DAL.Entities.Role", b =>

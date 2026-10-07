@@ -9,7 +9,8 @@ Especificações escritas: [9.1 — Cadeia de ligação](9.1-linkage-chain.md) (
 [9.3 — BIA: MTPD/MAO, RTO, RPO e dependências em cascata](9.3-bia-continuity.md) (S43);
 [9.4 — Sinais de exploração: CISA KEV, EPSS de primeira classe e MITRE ATT&CK](9.4-exploitation-signals.md) (S45);
 [9.5 — As onze flags obrigatórias e o Portão A](9.5-flags-gate-a.md) (S46);
-[9.6 — Economia do tratamento: custo monetário, Portões C e D, as quatro opções](9.6-treatment-economics.md) (S47). Uma etapa cuja
+[9.6 — Economia do tratamento: custo monetário, Portões C e D, as quatro opções](9.6-treatment-economics.md) (S47);
+[9.7 — Estatística de cauda e portfólio: P95, CVaR, agregação e correlação](9.7-tail-statistics-portfolio.md) (S48). Uma etapa cuja
 especificação não está aqui não pode ter PR de implementação aberto, e seu item no
 [ROADMAP.md](../../../ROADMAP.md) não pode ser marcado.
 

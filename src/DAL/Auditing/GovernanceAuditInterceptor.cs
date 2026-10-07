@@ -86,7 +86,14 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // dependencies Gate D schedules by, and the target level — who set each, and every change.
         nameof(MitigationEconomics),
         nameof(MitigationDependency),
-        nameof(RiskTarget)
+        nameof(RiskTarget),
+
+        // Stage 9.7 (S48 §4.9): the inputs people declare — the loss components, the correlations between
+        // scenarios and the monetary tolerances of the appetite. The computed tail statistics are not audited:
+        // they are recomputed nightly and would bury the trail; the change that matters, flag 8, is a RiskFlag.
+        nameof(RiskLossComponent),
+        nameof(RiskCorrelation),
+        nameof(RiskAppetiteTailLimit)
     };
 
     /// <summary>
@@ -99,7 +106,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
     public static readonly HashSet<string> AuditedSettingNames = new(StringComparer.Ordinal)
     {
         ContinuitySettingKeys.RestorationTestValidityDays,
-        ContinuitySettingKeys.UnverifiedThreatWeight
+        ContinuitySettingKeys.UnverifiedThreatWeight,
+
+        // Stage 9.7 (S48 §4.8): the two thresholds that derive flag 8.
+        TailRiskSettingKeys.TailFlagMaxAnnualProbability,
+        TailRiskSettingKeys.TailFlagCatastrophicLoss
     };
 
     /// <summary>

@@ -561,7 +561,9 @@ server, the job host and the REST client (T168–T173: schema version 94, the el
 ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is T303); Stage 9.6 is
 implemented on the server and the REST client (T174–T181: schema version 95, the four treatment options, the monetary
 cost beside the ordinal scale, Gate C, Gate D, the target level and task completion evidence; its desktop surface is
-T304); the runtime observations and human/security review of all six are pending.** Does not reopen Track 8. Detailed specifications:
+T304); Stage 9.7 is implemented on the server and the REST client (T182–T187: schema version 96, P95 and CVaR with
+confidence intervals, the loss magnitude by form of loss, the correlated portfolio aggregation, Gate B on the tail and
+flag 8 derived; its desktop surface is T305); the runtime observations and human/security review of all seven are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -688,14 +690,22 @@ T304); the runtime observations and human/security review of all six are pending
 
 ### [M45] Stage 9.7 — Tail statistics and portfolio: P95, CVaR, aggregation and correlation
 > outcome: The tail statistic appetite compares against, and the portfolio sum Phase 7 needs, exist. Closes gap 9.
-> spec: S27
+> spec: S27, S48
+> depends-on: M43, M44
 
-- [ ] T182 Merge the Stage 9.7 specification
-- [ ] T183 Compute and store P95 and CVaR with confidence intervals
-- [ ] T184 Decompose loss magnitude into response, recovery, productivity, revenue, liability, fine and reputation
-- [ ] T185 Aggregate portfolio exposure with declared correlation between scenarios
-- [ ] T186 Compare appetite against P95/CVaR (Gate B)
-- [ ] T187 Test that CVaR of a low-frequency scenario is not zero, and a zero-correlation portfolio sum is not the sum of individual P95s
+- [x] T182 Merge the Stage 9.7 specification
+  - note: written as S48 with all eleven sections in the same change as the implementation, as T149, T161, T168 and T174 were — not yet merged and not yet human- or security-reviewed; declares which statistic is summable (E[L] yes, P95 no in either direction, CVaR subadditive), that Gate B on the tail comes after Gate A and the unchanged ordinal ceiling, and that flag 8 becomes derivable (S48 D7)
+- [x] T183 Compute and store P95 and CVaR with confidence intervals
+  - note: `risk_tail_statistics` (schema 96), one row per risk and run, not columns on `risk_scoring`, which `PUT /Risks/{id}/Scoring` copies whole (S48 D1; that pre-existing defect, S47 R3, is not fixed); P95 by the shared interpolated percentile with an order-statistic interval, CVaR95 by Acerbi–Tasche with a seeded 1 000-replicate bootstrap, E[L] with a central-limit interval — Monte Carlo error only, not the uncertainty of the ranges (D2); iterations now capped at 100 000; rows appear on the first recomputation after the upgrade
+- [x] T184 Decompose loss magnitude into response, recovery, productivity, revenue, liability, fine and reputation
+  - note: `risk_loss_components`, per-event ranges sampled independently within an event (D3), a fine needs its legal basis; contributions to E[L] and, by Euler allocation, to CVaR95 per run; the single range becomes their envelope and a contradicting one is refused; a run without components is unchanged bit for bit (MC1)
+- [x] T185 Aggregate portfolio exposure with declared correlation between scenarios
+  - note: `risk_correlations` (0–1, D5), validated positive semidefinite organisation-wide and never repaired (D6); `POST /TailRisk/Portfolio` by Gaussian copula and rank reordering (Iman–Conover, D4), computed and never stored; no declaration = independence, said; Σ CVaR shown as the bound under any dependence; the copula has no asymptotic tail dependence (R2)
+- [x] T186 Compare appetite against P95/CVaR (Gate B)
+  - note: `risk_appetite_tail_limits` per appetite (scenario and portfolio E[L]/P95/CVaR95, admin only); `AppetiteEvaluation.Tail` with an explicit not-assessable state; acceptance and renewal refused with `422 risk_appetite_tail_tolerance` after Gate A and the unchanged ordinal ceiling; not assessable does not refuse (D12); Gate B by KRI stays with T191; flag 8 derived from the inherent tail (probability of a loss year ≤ 10 %, mean loss of a loss year ≥ the top band threshold) with the S46 reversion trail
+- [x] T187 Test that CVaR of a low-frequency scenario is not zero, and a zero-correlation portfolio sum is not the sum of individual P95s
+  - note: TS2, Q2 (P95 = 0, CVaR95 > 0), PA1, PA2 (below and above Σ P95), PA6/P5 (seed reproduces the aggregate) and GB4 (moving the tail check before the ceiling fails it); Track9TailRiskSchemaTests Q1–Q3 need Docker and were not run here; the S48 §8 runtime observations are still to be recorded on the PR
+- [ ] T305 Add the Stage 9.7 desktop surface: loss components and their contributions in the quantitative editor, the tail and Gate B on the risk detail, the correlation editor, the tail tolerances in the appetite administration, and the portfolio screen (S48)
 
 ### [M46] Stage 9.8 — KRIs, mandatory reassessment triggers and the methodology's metrics
 > outcome: A first-class KRI record and the six mandatory reassessment triggers of Phase 7 exist. Closes gap 5.
@@ -986,3 +996,4 @@ planned, nothing started.**
 | S45 | Stage 9.4 — exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK specification | docs/roadmap/track9/9.4-exploitation-signals.md |
 | S46 | Stage 9.5 — the eleven mandatory flags and Gate A specification | docs/roadmap/track9/9.5-flags-gate-a.md |
 | S47 | Stage 9.6 — treatment economics: monetary cost, Gates C and D, the four options specification | docs/roadmap/track9/9.6-treatment-economics.md |
+| S48 | Stage 9.7 — tail statistics and portfolio: P95, CVaR, aggregation and correlation specification | docs/roadmap/track9/9.7-tail-statistics-portfolio.md |

@@ -59,6 +59,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
         var dependencyIds = await db.MitigationDependencies.Where(d => mitigationIds.Contains(d.MitigationId))
             .Select(d => d.Id).ToListAsync();
         var targetIds = await db.RiskTargets.Where(t => t.RiskId == riskId).Select(t => t.Id).ToListAsync();
+        // Stage 9.7 (S48 §4.9): the loss components and the correlations the tail statistics are computed from.
+        var componentIds = await db.RiskLossComponents.Where(c => c.RiskId == riskId).Select(c => c.Id).ToListAsync();
+        var correlationIds = await db.RiskCorrelations.Where(c => c.RiskAId == riskId || c.RiskBId == riskId)
+            .Select(c => c.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a =>
@@ -73,7 +77,9 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(MitigationEconomics) && economicsIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(MitigationDependency) && dependencyIds.Contains(a.EntityId)) ||
-                (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)))
+                (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskLossComponent) && componentIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCorrelation) && correlationIds.Contains(a.EntityId)))
             .Include(a => a.User)
             .OrderByDescending(a => a.OccurredAt)
             .ThenByDescending(a => a.Id)
@@ -113,6 +119,12 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
         var dependencyIds = await db.MitigationDependencies.Where(d => mitigationIds.Contains(d.MitigationId))
             .Select(d => d.Id).ToListAsync();
         var targetIds = await db.RiskTargets.Where(t => riskIds.Contains(t.RiskId)).Select(t => t.Id).ToListAsync();
+        // Stage 9.7 (S48 §4.9): the loss components and correlations travel with the pack, and the appetite's tail
+        // tolerances with the appetite.
+        var componentIds = await db.RiskLossComponents.Where(c => riskIds.Contains(c.RiskId)).Select(c => c.Id)
+            .ToListAsync();
+        var correlationIds = await db.RiskCorrelations
+            .Where(c => riskIds.Contains(c.RiskAId) || riskIds.Contains(c.RiskBId)).Select(c => c.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a => a.OccurredAt >= fromUtc && a.OccurredAt <= toUtc)
@@ -129,7 +141,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(MitigationEconomics) && economicsIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(MitigationDependency) && dependencyIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)) ||
-                a.EntityType == nameof(RiskAppetite))
+                (a.EntityType == nameof(RiskLossComponent) && componentIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCorrelation) && correlationIds.Contains(a.EntityId)) ||
+                a.EntityType == nameof(RiskAppetite) ||
+                a.EntityType == nameof(RiskAppetiteTailLimit))
             .Include(a => a.User)
             .OrderBy(a => a.OccurredAt)
             .ThenBy(a => a.Id)

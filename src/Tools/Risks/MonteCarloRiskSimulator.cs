@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tools.TailRisk;
 
 namespace Tools.Risks;
 
@@ -44,6 +45,41 @@ public sealed class LossExposureResult
     public int Seed { get; init; }
 
     public int Iterations { get; init; }
+
+    /// <summary>The 95th percentile — the same interpolated estimator as P10/P50/P90 (Stage 9.7, S48 §4.3).</summary>
+    public double P95 { get; init; }
+
+    /// <summary>
+    /// E[L], P95 and CVaR95 with their 95 % confidence intervals, the annual probability of a loss and the mean loss of
+    /// a loss year (Stage 9.7, S48 §4.3).
+    /// </summary>
+    public TailStatistics Tail { get; init; } = null!;
+
+    /// <summary>
+    /// Each magnitude component's contribution to the mean and, by Euler allocation, to the CVaR95, in the order the
+    /// components were passed (S48 §4.4). One entry for a single-range run, equal to the whole.
+    /// </summary>
+    public IReadOnlyList<ComponentContribution> ComponentContributions { get; init; } = [];
+}
+
+/// <summary>One magnitude component's share of a run: of the mean annual loss and of the CVaR95 (S48 §4.4).</summary>
+public readonly record struct ComponentContribution(int Index, double ExpectedLoss, double Cvar95);
+
+/// <summary>
+/// The raw outcome of a simulation, in iteration order: the annual loss of every simulated year and, per magnitude
+/// component, the part of it that component produced (S48 §4.4, §4.6).
+/// </summary>
+public sealed class LossSample
+{
+    /// <summary>Annual losses, iteration order (not sorted).</summary>
+    public double[] Losses { get; init; } = [];
+
+    /// <summary>Per component, the annual loss it produced, iteration order. They add up to <see cref="Losses"/>.</summary>
+    public double[][] ComponentLosses { get; init; } = [];
+
+    public int Seed { get; init; }
+
+    public int Iterations { get; init; }
 }
 
 /// <summary>
@@ -84,14 +120,61 @@ public static class MonteCarloRiskSimulator
     /// method differing only in this argument.
     /// </param>
     public static LossExposureResult Run(CalibratedRange frequency, CalibratedRange magnitude,
+        int iterations = DefaultIterations, int seed = 20260826, double mitigationEffectiveness = 0) =>
+        Run(frequency, [magnitude], iterations, seed, mitigationEffectiveness);
+
+    /// <summary>
+    /// Runs the simulation with the loss magnitude decomposed into components (Stage 9.7, S48 §4.4): each event's loss
+    /// is the sum of one independent PERT draw per component. With a single component this is exactly
+    /// <see cref="Run(CalibratedRange, CalibratedRange, int, int, double)"/> — the same draws in the same order.
+    /// </summary>
+    public static LossExposureResult Run(CalibratedRange frequency, IReadOnlyList<CalibratedRange> magnitudeComponents,
         int iterations = DefaultIterations, int seed = 20260826, double mitigationEffectiveness = 0)
     {
+        var sample = Simulate(frequency, magnitudeComponents, iterations, seed, mitigationEffectiveness);
+
+        var losses = (double[])sample.Losses.Clone();
+        Array.Sort(losses);
+
+        var tail = TailStatisticsCalculator.Compute(losses, TailStatisticsCalculator.BootstrapSeed(seed));
+        var shares = TailContributions.Euler(sample.Losses, sample.ComponentLosses, TailStatisticsCalculator.TailLevel);
+
+        return new LossExposureResult
+        {
+            P10 = Percentile(losses, 0.10),
+            P50 = Percentile(losses, 0.50),
+            P90 = Percentile(losses, 0.90),
+            P95 = tail.P95,
+            Mean = losses.Average(),
+            LossExceedanceCurve = BuildCurve(losses),
+            Seed = seed,
+            Iterations = sample.Iterations,
+            Tail = tail,
+            ComponentContributions = sample.ComponentLosses
+                .Select((component, index) => new ComponentContribution(index, component.Average(), shares[index]))
+                .ToList()
+        };
+    }
+
+    /// <summary>
+    /// The simulation itself, unsorted (S48 §4.6): what <see cref="Run(CalibratedRange, IReadOnlyList{CalibratedRange}, int, int, double)"/>
+    /// summarises, and what the portfolio aggregation reorders. The draw order is the Track 8 one — frequency, event
+    /// count, then the magnitude of each event, component by component — so one component reproduces the original
+    /// stream exactly.
+    /// </summary>
+    public static LossSample Simulate(CalibratedRange frequency, IReadOnlyList<CalibratedRange> magnitudeComponents,
+        int iterations = DefaultIterations, int seed = 20260826, double mitigationEffectiveness = 0)
+    {
+        ArgumentNullException.ThrowIfNull(magnitudeComponents);
+
         if (!frequency.IsValid)
             throw new ArgumentException("The loss-event frequency range is not ordered min ≤ most likely ≤ max, " +
                                         "or contains a negative value.", nameof(frequency));
-        if (!magnitude.IsValid)
+        if (magnitudeComponents.Count == 0)
+            throw new ArgumentException("At least one loss-magnitude range is required.", nameof(magnitudeComponents));
+        if (magnitudeComponents.Any(m => !m.IsValid))
             throw new ArgumentException("The loss-magnitude range is not ordered min ≤ most likely ≤ max, " +
-                                        "or contains a negative value.", nameof(magnitude));
+                                        "or contains a negative value.", nameof(magnitudeComponents));
         if (mitigationEffectiveness is < 0 or > 1)
             throw new ArgumentException("Mitigation effectiveness is a fraction between 0 and 1.",
                 nameof(mitigationEffectiveness));
@@ -101,6 +184,8 @@ public static class MonteCarloRiskSimulator
         var random = new Random(seed);
         var retained = 1.0 - mitigationEffectiveness;
         var losses = new double[iterations];
+        var components = new double[magnitudeComponents.Count][];
+        for (var c = 0; c < components.Length; c++) components[c] = new double[iterations];
 
         for (var i = 0; i < iterations; i++)
         {
@@ -108,23 +193,20 @@ public static class MonteCarloRiskSimulator
             var events = SamplePoisson(random, lambda);
 
             var total = 0.0;
-            for (var e = 0; e < events; e++) total += SamplePert(random, magnitude) * retained;
+            for (var e = 0; e < events; e++)
+            {
+                for (var c = 0; c < components.Length; c++)
+                {
+                    var loss = SamplePert(random, magnitudeComponents[c]) * retained;
+                    total += loss;
+                    components[c][i] += loss;
+                }
+            }
 
             losses[i] = total;
         }
 
-        Array.Sort(losses);
-
-        return new LossExposureResult
-        {
-            P10 = Percentile(losses, 0.10),
-            P50 = Percentile(losses, 0.50),
-            P90 = Percentile(losses, 0.90),
-            Mean = losses.Average(),
-            LossExceedanceCurve = BuildCurve(losses),
-            Seed = seed,
-            Iterations = iterations
-        };
+        return new LossSample { Losses = losses, ComponentLosses = components, Seed = seed, Iterations = iterations };
     }
 
     /// <summary>
@@ -219,7 +301,7 @@ public static class MonteCarloRiskSimulator
     }
 
     /// <summary>Box–Muller. One of the pair is discarded, which costs nothing at this scale.</summary>
-    private static double SampleStandardNormal(Random random)
+    public static double SampleStandardNormal(Random random)
     {
         var u1 = NextNonZeroDouble(random);
         var u2 = random.NextDouble();

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
 using Model.RiskFlags;
+using Model.TailRisk;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -124,6 +125,10 @@ public class RiskAcceptancesService(
         if (appetite.ExceedsCeiling)
             throw new RuleBrokenException(appetite.Explanation, "risk_appetite_ceiling");
 
+        // Stage 9.7 (S48 §4.7.2): Gate B on the tail, after the ordinal ceiling, which keeps its rule and its order.
+        // Not assessable (no tail statistics) does not refuse — the ceiling above still governs (S48 D12).
+        EnsureTailWithinTolerance(appetite);
+
         var acceptance = new RiskAcceptance
         {
             Name = string.IsNullOrWhiteSpace(request.Name)
@@ -196,6 +201,8 @@ public class RiskAcceptancesService(
         var appetite = await workflow.EvaluateAppetiteAsync(riskId);
         if (appetite.ExceedsCeiling)
             throw new RuleBrokenException(appetite.Explanation, "risk_appetite_ceiling");
+
+        EnsureTailWithinTolerance(appetite);
 
         previous.Status = RiskAcceptanceStatus.Renewed;
         previous.UpdatedAt = DateTime.UtcNow;
@@ -442,5 +449,19 @@ public class RiskAcceptancesService(
         risk.ReviewRequestedAt = DateTime.UtcNow;
         risk.ReviewRequestedReason = reason;
         risk.LastUpdate = DateTime.UtcNow;
+    }
+
+    /// <summary>The rule name of a refusal by Gate B on the tail (Stage 9.7, S48 §4.7.2).</summary>
+    public const string TailToleranceRule = "risk_appetite_tail_tolerance";
+
+    /// <summary>Refuses an acceptance whose tail exceeds the appetite's monetary tolerance (S48 §4.7.2).</summary>
+    private void EnsureTailWithinTolerance(AppetiteEvaluation appetite)
+    {
+        if (appetite.Tail.State != TailAppetiteState.ExceedsTolerance) return;
+
+        Logger.Warning("Refused acceptance: the tail exceeds the appetite's tolerance ({Explanation})",
+            appetite.Tail.Explanation);
+
+        throw new RuleBrokenException(appetite.Tail.Explanation, TailToleranceRule);
     }
 }

@@ -21,6 +21,12 @@ public interface IQuantitativeRiskService
     /// <summary>The cached result, or null when the risk has never been scored quantitatively.</summary>
     Task<QuantitativeRiskResult?> GetAsync(int riskId);
 
+    /// <summary>
+    /// Re-runs one risk's analysis from its stored inputs — the frequency, the seed and, when loss components are
+    /// declared, their envelope (Stage 9.7, S48 §4.4) — or returns null when it has none.
+    /// </summary>
+    Task<QuantitativeRiskResult?> RecomputeAsync(int riskId);
+
     /// <summary>Re-runs every quantitatively scored risk. Used by the calculation job.</summary>
     Task<int> RecomputeAllAsync();
 }

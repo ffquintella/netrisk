@@ -13,7 +13,13 @@ public enum RiskFlagDerivation
     Bia = 3,
 
     /// <summary>The security classification of the data the risk is linked to.</summary>
-    DataClassification = 4
+    DataClassification = 4,
+
+    /// <summary>
+    /// The tail statistics of the risk's inherent Monte Carlo run (Stage 9.7, S48 §4.8): a low annual probability of
+    /// loss and a catastrophic mean loss of a loss year.
+    /// </summary>
+    TailStatistics = 5
 }
 
 /// <summary>The decisions Gate A is evaluated for (S46 §4.7).</summary>

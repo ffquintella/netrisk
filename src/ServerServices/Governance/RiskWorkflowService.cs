@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
 using Model.RiskFlags;
+using Model.TailRisk;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -217,6 +218,12 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
 
         var appetite = await ResolveAppetiteAsync(db, risk.EntityId);
 
+        // Stage 9.7 (S48 §4.7.2): Gate B on the tail, beside — never instead of — the ordinal ceiling below. The
+        // residual run where it exists, the inherent otherwise: the same rule as the score.
+        var tailRows = await db.RiskTailStatistics.AsNoTracking().Where(t => t.RiskId == riskId).ToListAsync();
+        var governing = TailStatisticsMapping.Governing(tailRows);
+        var statistics = governing is null ? null : TailStatisticsMapping.ToStatistics(governing);
+
         if (appetite is null)
             return new AppetiteEvaluation
             {
@@ -224,14 +231,19 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
                 ResidualScore = residual,
                 Explanation = "No risk appetite is configured, so no acceptance is gated. Define one in " +
                               "Administration → Risk appetite to make the ceiling and the dual-approval " +
-                              "threshold take effect."
+                              "threshold take effect.",
+                Tail = Tools.TailRisk.TailAppetite.EvaluateScenario(null, null, null, governing?.Run, statistics)
             };
+
+        var limits = await db.RiskAppetiteTailLimits.AsNoTracking().FirstOrDefaultAsync(l => l.AppetiteId == appetite.Id);
 
         var exceedsCeiling = residual is not null && residual > appetite.MaxAcceptableResidual;
         var requiresDual = residual is not null && residual > appetite.DualApprovalThreshold;
 
         return new AppetiteEvaluation
         {
+            Tail = Tools.TailRisk.TailAppetite.EvaluateScenario(appetite.Id, appetite.EntityId,
+                TailStatisticsMapping.ScenarioLimits(limits), governing?.Run, statistics),
             AppetiteConfigured = true,
             AppetiteId = appetite.Id,
             EntityId = appetite.EntityId,

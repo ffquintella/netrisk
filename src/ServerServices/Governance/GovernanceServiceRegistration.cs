@@ -39,6 +39,10 @@ public static class GovernanceServiceRegistration
         // flags service and the appetite through the workflow service, so it sits after both are registered.
         services.AddTransient<ITreatmentEconomicsService, TreatmentEconomicsService>();
 
+        // Stage 9.7 (S48) — tail statistics, the loss components, correlations, the portfolio aggregation and the
+        // appetite's tail tolerances. Gate B on the tail itself lives in the workflow service, beside the ceiling.
+        services.AddTransient<ITailRiskService, TailRiskService>();
+
         // 8.3 — enforcement. Everything else consults this, so it goes in first.
         services.AddTransient<IRiskWorkflowService, RiskWorkflowService>();
         services.AddTransient<IRiskAppetitesService, RiskAppetitesService>();

@@ -117,6 +117,10 @@ public partial class NRDbContext
         // mitigation, the target off the risk; their filters are below.
         ConfigureTreatmentEconomics(modelBuilder);
 
+        // Track 9 Stage 9.7 — tail statistics and portfolio (S48). Components and statistics hang off the risk,
+        // a correlation off both its risks, the tail limits off the appetite; their filters are below.
+        ConfigureTailRisk(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -208,6 +212,26 @@ public partial class NRDbContext
 
         modelBuilder.Entity<RiskTarget>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        // Stage 9.7 (S48 §4.9): a risk's loss components and tail statistics are visible exactly when the risk is,
+        // a statistic's components exactly when the statistic is. A correlation needs BOTH risks visible — one
+        // visible end would otherwise reveal that a hidden risk exists and how it moves. The tail limits follow
+        // the appetite they belong to. The validity check of a new correlation reads unscoped on purpose (S48 §4.5).
+        modelBuilder.Entity<RiskLossComponent>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskTailStatistics>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskTailComponent>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskTailStatistics.Any(s => s.Id == e.TailStatisticsId));
+
+        modelBuilder.Entity<RiskCorrelation>().HasQueryFilter(e =>
+            ScopeIsUnrestricted
+            || (Risks.Any(r => r.Id == e.RiskAId) && Risks.Any(r => r.Id == e.RiskBId)));
+
+        modelBuilder.Entity<RiskAppetiteTailLimit>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskAppetites.Any(a => a.Id == e.AppetiteId));
 
         // A further step removed: these hang off a run, which hangs off the assessment that
         // carries the entity_id.
