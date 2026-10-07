@@ -153,7 +153,7 @@ public class AssessmentEvidenceFilesTest : InMemoryServiceTestBase
         stored.Name = "renamed.png";
         stored.AssessmentRunAnswerId = null;
 
-        Assert.Throws<InvalidOperationException>(() => files.Save(stored));
+        Assert.Throws<InvalidOperationException>(() => files.Save(stored, Uploader));
         Assert.Equal("photo.png", files.GetByUniqueName(created.UniqueName).Name);
     }
 
@@ -167,7 +167,7 @@ public class AssessmentEvidenceFilesTest : InMemoryServiceTestBase
 
         stored.AssessmentRunAnswerId = 50;
 
-        Assert.Throws<InvalidOperationException>(() => files.Save(stored));
+        Assert.Throws<InvalidOperationException>(() => files.Save(stored, Uploader));
         Assert.Null(files.GetByUniqueName(created.UniqueName).AssessmentRunAnswerId);
     }
 

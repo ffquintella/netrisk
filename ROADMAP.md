@@ -430,6 +430,14 @@ fixes" rather than quietly corrected. Detailed specifications:
 - [x] T112 Harden token issuance, session lifetime, lockout and FaceID liveness (NR-2026-001/002/008/010/012)
 - [x] T113 Standardize secret storage and document a per-secret rotation procedure (S22)
   - note: found committed expired dev certificates with password "pass" (NR-2026-003); history not rewritten, a Release build now refuses to start with them
+- [x] T298 Authorize the `/Files` write routes against the stored file and the parent record, never the request body (NR-2026-034, NR-2026-035)
+  - note: delivered after this milestone's 2.17.0, on 2026-10-07; not observed against a running API and MariaDB, only end to end over the EF in-memory provider; the chunk-staging routes still do not bind an upload id to the user who staged it
+- [x] T299 Resolve and validate the file type before `FilesService.Create` persists, so an unknown type is a 400 and stores nothing instead of a stored file and a 500
+  - note: regression found in the T298 rework; delivered on 2026-10-07 after this milestone's 2.17.0
+- [x] T300 Delete a file in the daily cleanup only when it has no parent of any kind, no report and is older than a grace period, instead of when its risk and mitigation are null
+  - note: the old rule deleted incident, response-plan, risk-acceptance and assessment-evidence attachments and report PDFs every night; delivered on 2026-10-07; covered over the EF in-memory provider, not against MariaDB
+- [x] T301 Merge a user's own permissions into the role's without `Parallel.ForEach` on a shared `List<T>`, so a permission check can no longer lose entries or throw (NR-2026-036)
+  - note: the race is probabilistic, so its regression test repeats the merge 25 times over 1,950 items; delivered on 2026-10-07, covered over the EF in-memory provider
 
 ### [M30] Data Protection & Transport Security
 > outcome: Data is protected in transit and at rest.

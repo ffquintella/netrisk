@@ -125,21 +125,28 @@ public class FilesController: ApiBaseController
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<NrFile>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<FileListing> CreateFile([FromBody] NrFile file)
+    public async Task<ActionResult<FileListing>> CreateFile([FromBody] NrFile file)
     {
 
         var user = GetUser();
-        //if(!user.Admin) return Unauthorized("Only admins can list all files");
 
         if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "create");
 
         try
         {
+            // Finding NR-2026-035: the caller has to be able to write to the parent the body names. The
+            // service then ignores every other identity field in the body (owner, entity, id).
+            await _fileAccess.EnsureCanAttachAsync(file, user);
 
             var newFile = _filesService.Create(file, user);
             Logger.Information("User:{User} created a new file", user.Value);
-            
+
             return Created("Files/" + newFile.UniqueName, newFile);
+        }
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid file on create: {Message}", user.Value, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (UserNotAuthorizedException ex)
         {
@@ -205,7 +212,7 @@ public class FilesController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(FileListing))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<FileListing> CompleteLocalFile([FromBody] NrFile file,
+    public async Task<ActionResult<FileListing>> CompleteLocalFile([FromBody] NrFile file,
         [FromQuery] string fileId, [FromQuery] int totalChunks)
     {
         var user = GetUser();
@@ -214,6 +221,11 @@ public class FilesController: ApiBaseController
 
         try
         {
+            // Finding NR-2026-035: checked before the chunks are reassembled and read into memory, so a
+            // refused attach costs a query rather than a buffer the size of the upload. The staged chunks
+            // of a refused upload are left for TmpCleanup, as an abandoned upload's are.
+            await _fileAccess.EnsureCanAttachAsync(file, user);
+
             var newFile = _filesService.CompleteChunkedUpload(file, fileId, totalChunks, user);
             Logger.Information("User:{User} created a new file via chunked upload", user.Value);
 
@@ -252,25 +264,46 @@ public class FilesController: ApiBaseController
     {
 
         var user = GetUser();
-        if(!user.Admin && file.User != user.Value) return Unauthorized("Only admins and owners can update files");
 
         // Moving a file onto an answer here would skip every evidence check; the service also refuses
         // to rewrite a file that already is evidence (InvalidOperationException, answered 400 below).
         if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "update");
 
+        // The route names the file being updated; a body describing a different one is a malformed
+        // request, not a second way to address a file.
+        if (!string.Equals(name, file.UniqueName, StringComparison.Ordinal))
+            return BadRequest(new { error = "invalid_parameter", ParameterName = "name",
+                Message = "The route and the body name different files." });
+
         try
         {
-            
-            _filesService.Save(file);
+            // Finding NR-2026-034: ownership used to be checked here against file.User from the request
+            // body — the caller's own claim. The service now checks the stored row's owner and copies the
+            // name only, so the decision cannot be skipped by a caller and the body cannot reach anything
+            // else.
+            _filesService.Save(file, user);
             Logger.Information("User:{User} updated file:{FileId}", user.Value, file.Id);
-            
+
             return Ok();
         }
         catch (UserNotAuthorizedException ex)
         {
-            Logger.Warning("The user {UserName} is not authorized to update this file: {FileId} message: {Message}", 
+            Logger.Warning("The user {UserName} is not authorized to update this file: {FileId} message: {Message}",
                 user.Name, file.Id, ex.Message);
             return this.Unauthorized();
+        }
+        catch (DataNotFoundException ex)
+        {
+            // Same answer as a refusal, as on the read routes: otherwise the status tells a caller which
+            // id/unique-name pairs exist.
+            Logger.Warning("The user {UserName} tried to update a file that was not found: {FileId} message: {Message}",
+                user.Name, file.Id, ex.Message);
+            return this.Unauthorized();
+        }
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid file update: {Message}", user.Value, ex.Message);
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
         }
         catch (InvalidOperationException ex)
         {

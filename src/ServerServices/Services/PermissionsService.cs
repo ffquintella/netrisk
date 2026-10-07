@@ -73,7 +73,7 @@ public class PermissionsService(
         if (user.RoleId > 0)
         {
             var rolePermissions = await rolesService.GetRolePermissionsAsync(user.RoleId);
-            permissions = rolePermissions;
+            permissions.AddRange(rolePermissions);
         }
         
         await using var dbContext = _dalService!.GetContext();
@@ -84,10 +84,13 @@ public class PermissionsService(
         
         var userPermissions = dbuser.Permissions.Select(p=>p.Key).ToList();
         
-        Parallel.ForEach(userPermissions, up =>
-        {
-            if(!permissions.Contains(up)) permissions.Add(up);
-        });
+        // Sequential on purpose: this is a handful of strings, so Parallel.ForEach gained nothing, and
+        // adding to a List<T> from several threads drops entries (an authorization check then wrongly
+        // denies) or throws. The set keeps the old "role first, then the user's extras, no duplicates"
+        // order without the quadratic Contains.
+        var seen = new HashSet<string>(permissions);
+        foreach (var up in userPermissions)
+            if (seen.Add(up)) permissions.Add(up);
         
         return permissions;
     }

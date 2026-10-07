@@ -15,6 +15,7 @@ reconstructed at release time from memory.
 | 2026-08-26 | pre-2.16.3 | 3 | 7 | 19 | 3 | 2 | **34** | 0 | Track 7 audit opens the register: every finding raised at once |
 | 2026-08-26 | pre-2.16.3 | 0 | 0 | 4 | 1 | 0 | **5** | 4 | Same day, after remediation: 25 fixed, 4 accepted |
 | 2026-08-26 | pre-2.17.0 | 0 | 0 | 0 | 0 | 0 | **0** | 4 | Track 8 closes the five deferred findings (008b, 017, 025, 028, 032); 027 stays accepted with its mitigation implemented |
+| 2026-10-07 | after 2.28.0 | 0 | 0 | 0 | 0 | 0 | **0** | 4 | NR-2026-034 and 035 (High, `/Files` write path) raised in review and fixed in the same change (T298); tests in `FilesWriteAuthorizationTest` and `FileWriteAuthorizationInMemoryTest` |
 
 ```
 Open findings, by severity

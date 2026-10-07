@@ -9,10 +9,15 @@ mitigation for NR-2026-027, which remains accepted because .NET offers no way to
 Zero open is not zero risk — it means every finding *this* audit raised has been dispositioned, not
 that nothing is left to find.
 
+**2026-10-07:** two more, NR-2026-034 and NR-2026-035 (High), were raised in review of the `/Files`
+write path — an update that trusted the owner named in its own body, and uploads attached to any
+parent and entity the body named — and fixed in the same change (T298), with regression tests
+confirmed failing on the pre-fix behaviour. None is open.
+
 | Document | What it is | When to read it |
 |---|---|---|
 | [THREAT_MODEL.md](THREAT_MODEL.md) | Assets, six trust boundaries, STRIDE per boundary, control mapping, accepted risks | Before designing anything that crosses a tier |
-| [FINDINGS.md](FINDINGS.md) | The findings register — 34 findings, how each was established, the fix and its test | To see what was wrong, what fixed it, and what is accepted |
+| [FINDINGS.md](FINDINGS.md) | The findings register — 36 findings, how each was established, the fix and its test | To see what was wrong, what fixed it, and what is accepted |
 | [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) | OWASP ASVS Level 2, requirement by requirement, with evidence | To check whether a specific control exists |
 | [baseline-2026-08-26.md](baseline-2026-08-26.md) | What was actually run, and what it produced | To tell measurement from assertion |
 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Dependency scanning, SBOM, submodule provenance and review procedure | Before bumping a dependency or a submodule |

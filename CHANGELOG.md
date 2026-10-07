@@ -12,6 +12,17 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.28.1] - 2026-10-07
+
+### Fixed
+- Refuse a file of an unknown type with 400 before anything is saved on `POST /Files` and `POST /Files/local/complete`, instead of storing the file and answering 500 (T299)
+- Stop the daily `FileCleanup` job from deleting attachments of incidents, incident response plans, risk acceptances and assessment answers and report PDFs: a file is now removed only when it has no parent of any kind, no report, and is older than 24 hours (T300)
+- Stop the permission merge in `PermissionsService.GetUserPermissionsAsync` adding to a shared list from `Parallel.ForEach`, which could drop a user's permission (a wrongful 401/403) or throw on every authorization check (T301)
+
+### Security
+- Authorize `PUT /Files/{name}` against the stored file's owner instead of the owner named in the request body, and let it change the file name only, so content, owner, parent and entity can no longer be rewritten by anyone who knows a file's id and unique name (T298)
+- Require write access to the parent record, visible in the caller's entity scope, before `POST /Files` or `POST /Files/local/complete` attaches a file, refuse a file naming more than one parent with 400, and always derive the file's entity from its parent instead of the request body (T298)
+
 ## [2.28.0] - 2026-10-07
 
 ### Added

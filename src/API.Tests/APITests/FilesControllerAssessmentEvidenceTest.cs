@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Threading.Tasks;
 using API.Controllers;
 using API.Tests.Mock;
 using DAL.Entities;
@@ -56,17 +57,17 @@ public class FilesControllerAssessmentEvidenceTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestCreateRefusesEvidence()
+    public async Task TestCreateRefusesEvidence()
     {
-        AssertRefused(_controller.CreateFile(EvidenceFile()).Result);
+        AssertRefused((await _controller.CreateFile(EvidenceFile())).Result);
 
         _files.DidNotReceiveWithAnyArgs().Create(default!, default!);
     }
 
     [Fact]
-    public void TestCompletingAnUploadRefusesEvidence()
+    public async Task TestCompletingAnUploadRefusesEvidence()
     {
-        AssertRefused(_controller.CompleteLocalFile(EvidenceFile(), "upload-1", 1).Result);
+        AssertRefused((await _controller.CompleteLocalFile(EvidenceFile(), "upload-1", 1)).Result);
 
         _files.DidNotReceiveWithAnyArgs().CompleteChunkedUpload(default!, default!, default, default!);
         _files.DidNotReceiveWithAnyArgs().CompleteChunkedUpload(default!, default!, default, default!, default);
@@ -77,7 +78,7 @@ public class FilesControllerAssessmentEvidenceTest : BaseControllerTest
     {
         AssertRefused(_controller.SaveFile("u-7", EvidenceFile()).Result);
 
-        _files.DidNotReceiveWithAnyArgs().Save(default!);
+        _files.DidNotReceiveWithAnyArgs().Save(default!, default!);
     }
 
     [Fact]

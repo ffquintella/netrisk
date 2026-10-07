@@ -92,7 +92,7 @@ public class FilesServiceMock: IFilesService
         };
     }
 
-    public void Save(NrFile file)
+    public void Save(NrFile file, User user)
     {
         Console.WriteLine("File Saved");
     }

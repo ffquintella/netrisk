@@ -142,12 +142,12 @@ public class FilesControllerTest : BaseControllerTest
     #region CreateFile
 
     [Fact]
-    public void TestCreateFile()
+    public async Task TestCreateFile()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.Create(incoming, Arg.Any<User>()).Returns(MakeListing("unique-1"));
 
-        var result = _controller.CreateFile(incoming);
+        var result = await _controller.CreateFile(incoming);
 
         var createdResult = Assert.IsType<CreatedResult>(result.Result);
         var listing = Assert.IsType<FileListing>(createdResult.Value);
@@ -157,25 +157,25 @@ public class FilesControllerTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestCreateFileUnauthorizedWhenServiceRejects()
+    public async Task TestCreateFileUnauthorizedWhenServiceRejects()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.Create(incoming, Arg.Any<User>())
             .Returns<FileListing>(_ => throw new UserNotAuthorizedException("testUser", 1, "create files"));
 
-        var result = _controller.CreateFile(incoming);
+        var result = await _controller.CreateFile(incoming);
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestCreateFileReturns500OnError()
+    public async Task TestCreateFileReturns500OnError()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.Create(incoming, Arg.Any<User>())
             .Returns<FileListing>(_ => throw new Exception("boom"));
 
-        var result = _controller.CreateFile(incoming);
+        var result = await _controller.CreateFile(incoming);
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
@@ -235,13 +235,13 @@ public class FilesControllerTest : BaseControllerTest
     #region CompleteLocalFile
 
     [Fact]
-    public void TestCompleteLocalFile()
+    public async Task TestCompleteLocalFile()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.CompleteChunkedUpload(incoming, "upload-1", 2, Arg.Any<User>())
             .Returns(MakeListing("unique-1"));
 
-        var result = _controller.CompleteLocalFile(incoming, "upload-1", 2);
+        var result = await _controller.CompleteLocalFile(incoming, "upload-1", 2);
 
         var createdResult = Assert.IsType<CreatedResult>(result.Result);
         var listing = Assert.IsType<FileListing>(createdResult.Value);
@@ -251,38 +251,38 @@ public class FilesControllerTest : BaseControllerTest
     }
 
     [Fact]
-    public void TestCompleteLocalFileUnauthorizedWhenServiceRejects()
+    public async Task TestCompleteLocalFileUnauthorizedWhenServiceRejects()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.CompleteChunkedUpload(incoming, "upload-1", 2, Arg.Any<User>())
             .Returns<FileListing>(_ => throw new UserNotAuthorizedException("testUser", 1, "create files"));
 
-        var result = _controller.CompleteLocalFile(incoming, "upload-1", 2);
+        var result = await _controller.CompleteLocalFile(incoming, "upload-1", 2);
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Fact]
-    public void TestCompleteLocalFileMissingChunksReturns400()
+    public async Task TestCompleteLocalFileMissingChunksReturns400()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.CompleteChunkedUpload(incoming, "upload-1", 2, Arg.Any<User>())
             .Returns<FileListing>(_ => throw new DataNotFoundException("chunks", "upload-1"));
 
-        var result = _controller.CompleteLocalFile(incoming, "upload-1", 2);
+        var result = await _controller.CompleteLocalFile(incoming, "upload-1", 2);
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status400BadRequest, statusResult.StatusCode);
     }
 
     [Fact]
-    public void TestCompleteLocalFileReturns500OnError()
+    public async Task TestCompleteLocalFileReturns500OnError()
     {
         var incoming = MakeFile(0, "unique-1");
         _filesService.CompleteChunkedUpload(incoming, "upload-1", 2, Arg.Any<User>())
             .Returns<FileListing>(_ => throw new Exception("boom"));
 
-        var result = _controller.CompleteLocalFile(incoming, "upload-1", 2);
+        var result = await _controller.CompleteLocalFile(incoming, "upload-1", 2);
 
         var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
@@ -300,14 +300,14 @@ public class FilesControllerTest : BaseControllerTest
         var result = _controller.SaveFile("unique-1", file);
 
         Assert.IsType<OkResult>(result.Result);
-        _filesService.Received(1).Save(file);
+        _filesService.Received(1).Save(file, Arg.Any<User>());
     }
 
     [Fact]
     public void TestSaveFileUnauthorizedWhenServiceRejects()
     {
         var file = MakeFile(3, "unique-1");
-        _filesService.When(x => x.Save(file))
+        _filesService.When(x => x.Save(file, Arg.Any<User>()))
             .Do(_ => throw new UserNotAuthorizedException("testUser", 1, "update files"));
 
         var result = _controller.SaveFile("unique-1", file);
@@ -319,7 +319,7 @@ public class FilesControllerTest : BaseControllerTest
     public void TestSaveFileBadRequestOnInvalidOperation()
     {
         var file = MakeFile(3, "unique-1");
-        _filesService.When(x => x.Save(file)).Do(_ => throw new InvalidOperationException("bad state"));
+        _filesService.When(x => x.Save(file, Arg.Any<User>())).Do(_ => throw new InvalidOperationException("bad state"));
 
         var result = _controller.SaveFile("unique-1", file);
 
@@ -330,7 +330,7 @@ public class FilesControllerTest : BaseControllerTest
     public void TestSaveFileReturns500OnError()
     {
         var file = MakeFile(3, "unique-1");
-        _filesService.When(x => x.Save(file)).Do(_ => throw new Exception("boom"));
+        _filesService.When(x => x.Save(file, Arg.Any<User>())).Do(_ => throw new Exception("boom"));
 
         var result = _controller.SaveFile("unique-1", file);
 

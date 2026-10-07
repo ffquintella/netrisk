@@ -89,6 +89,108 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
     }
 
     /// <summary>
+    /// Attaching to a risk acceptance needs the permission its own write routes demand
+    /// (<c>RiskAcceptancesController</c>), not the read permission: an acceptance is evidence of a
+    /// decision, and adding to it is changing it.
+    /// </summary>
+    public const string AcceptanceWritePermission = "vulnerabilities_update";
+
+    /// <summary>
+    /// The write-side counterpart of <see cref="EnsureCanReadAsync"/> (security finding NR-2026-035).
+    ///
+    /// Before this, <c>POST /Files</c> and <c>POST /Files/local/complete</c> attached a file to whatever
+    /// parent the request body named, and stamped it with whatever <c>entity_id</c> the body carried:
+    /// any authenticated user could plant a file on another entity's risk or incident, where it showed
+    /// up in that record's attachment list to everyone allowed to read it. The rule is the read rule
+    /// applied to the parent rather than to a stored file:
+    ///
+    /// <list type="number">
+    /// <item>A file names at most one parent. The check below is for one record; a second FK would hang
+    /// the file off a record nobody checked.</item>
+    /// <item>The parent has to be visible to the caller — it exists and it is inside their entity scope
+    /// (the Track 2.3 query filter does the scoping). Administrators included: a dangling FK is not a
+    /// permission question. Missing and out-of-scope are refused identically, so the route does not
+    /// tell a caller which ids exist in another entity.</item>
+    /// <item>Then the parent's permission, exactly as for reads — with risk acceptances requiring
+    /// <see cref="AcceptanceWritePermission"/> — and the same risk-relationship fallback, because the
+    /// owner, manager or submitter of a risk can edit it without the blanket permission.</item>
+    /// </list>
+    ///
+    /// A file with no parent passes: <see cref="EnsureCanReadAsync"/> shows it to its uploader only.
+    /// </summary>
+    public async Task EnsureCanAttachAsync(NrFile file, User user)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(user);
+
+        var parents = FileParents.Declared(file);
+        if (parents.Count == 0) return;
+
+        if (parents.Count > 1)
+            throw new InvalidParameterException("file", "An attachment belongs to exactly one parent record.");
+
+        var parent = parents[0];
+
+        await using var db = DalService.GetContext();
+
+        if (!await IsVisibleAsync(db, parent))
+        {
+            Logger.Warning(
+                "Refused attaching a file to {ParentKind} {ParentId} for user {User}: the parent does not " +
+                "exist in the caller's entity scope", parent.Kind, parent.Id, user.Value);
+
+            throw new UserNotAuthorizedException(user.Name, user.Value, "files");
+        }
+
+        if (user.Admin) return;
+
+        var required = WritePermissionFor(parent.Kind);
+
+        var held = await permissions.GetUserPermissionsAsync(user);
+        if (held.Any(p => string.Equals(p, required, StringComparison.OrdinalIgnoreCase))) return;
+
+        if (required == RiskPermission && await IsRelatedToRiskAsync(db, file, user.Value)) return;
+
+        Logger.Warning("Refused attaching a file to {ParentKind} {ParentId} for user {User}: {Permission} required",
+            parent.Kind, parent.Id, user.Value, required);
+
+        throw new UserNotAuthorizedException(user.Name, user.Value, required);
+    }
+
+    private static string WritePermissionFor(FileParents.Kind kind) => kind switch
+    {
+        FileParents.Kind.Risk or FileParents.Kind.Mitigation => RiskPermission,
+        FileParents.Kind.RiskAcceptance => AcceptanceWritePermission,
+        FileParents.Kind.Incident => IncidentPermission,
+        FileParents.Kind.IncidentResponsePlan or FileParents.Kind.IncidentResponsePlanExecution
+            or FileParents.Kind.IncidentResponsePlanTask
+            or FileParents.Kind.IncidentResponsePlanTaskExecution => IncidentResponsePlanPermission,
+        FileParents.Kind.AssessmentRunAnswer => AssessmentPermission,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+    };
+
+    /// <summary>
+    /// Whether the parent exists as the caller sees the database. Risks, mitigations, acceptances,
+    /// incidents and assessment answers carry query filters, so this is also the entity-scope check;
+    /// incident response plans are not entity-scoped, so for them it is an existence check.
+    /// </summary>
+    private static Task<bool> IsVisibleAsync(AuditableContext db, FileParents.Parent parent) => parent.Kind switch
+    {
+        FileParents.Kind.Risk => db.Risks.AnyAsync(r => r.Id == parent.Id),
+        FileParents.Kind.Mitigation => db.Mitigations.AnyAsync(m => m.Id == parent.Id),
+        FileParents.Kind.RiskAcceptance => db.RiskAcceptances.AnyAsync(a => a.Id == parent.Id),
+        FileParents.Kind.Incident => db.Incidents.AnyAsync(i => i.Id == parent.Id),
+        FileParents.Kind.IncidentResponsePlan => db.IncidentResponsePlans.AnyAsync(p => p.Id == parent.Id),
+        FileParents.Kind.IncidentResponsePlanExecution =>
+            db.IncidentResponsePlanExecutions.AnyAsync(e => e.Id == parent.Id),
+        FileParents.Kind.IncidentResponsePlanTask => db.IncidentResponsePlanTasks.AnyAsync(t => t.Id == parent.Id),
+        FileParents.Kind.IncidentResponsePlanTaskExecution =>
+            db.IncidentResponsePlanTaskExecutions.AnyAsync(e => e.Id == parent.Id),
+        FileParents.Kind.AssessmentRunAnswer => db.AssessmentRunAnswers.AnyAsync(a => a.Id == parent.Id),
+        _ => throw new ArgumentOutOfRangeException(nameof(parent), parent.Kind, null)
+    };
+
+    /// <summary>
     /// The permission the file's parent is gated on, or null when it has no parent.
     ///
     /// Checked in the order the attachment columns were added, which is also least-to-most specific:

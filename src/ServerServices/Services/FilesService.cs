@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Mapster;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +7,7 @@ using Model.Exceptions;
 using Model.File;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using Tools;
 using Tools.Helpers;
 using Tools.Security;
@@ -259,35 +259,88 @@ public class FilesService: ServiceBase, IFilesService
         return file;
     }
 
+    /// <summary>
+    /// The longest name the <c>nr_files.name</c> column takes; a longer one is cut rather than refused,
+    /// as it always has been on create.
+    /// </summary>
+    private const int MaxNameLength = 99;
+
+    private static string NormalizeName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new InvalidParameterException("name", "A file needs a name.");
+
+        return name.Length > MaxNameLength ? name.Substring(0, MaxNameLength) : name;
+    }
+
     public FileListing Create(NrFile file, User creatingUser)
     {
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(creatingUser);
+
+        // Finding NR-2026-035: the parent the caller was authorized against is the only parent the file
+        // may carry. A second FK would attach it to a record nobody checked.
+        if (FileParents.Declared(file).Count > 1)
+            throw new InvalidParameterException("file", "An attachment belongs to exactly one parent record.");
+
+        var name = NormalizeName(file.Name);
+        var content = file.Content ?? [];
+
         // Track 7 finding NR-2026-017: the unique name is the only thing standing between a user and
         // somebody else's attachment, because Files/{name} has no per-file ownership check. It used
         // to be SHA-1 of the (known) file name plus 15 characters from a predictable generator. A
         // 256-bit CSPRNG token makes the capability itself unguessable, which is what that download
         // route actually relies on until a per-file ACL exists.
         var hash = HashTool.CreateSha256(RandomGenerator.RandomToken(32));
-        
+
         using var context = DalService.GetContext();
-        file.Id = 0;
-        file.Timestamp = DateTime.Now;
-        file.User = creatingUser.Value;
-        file.UniqueName = hash;
+
+        // The type is resolved and checked before anything is persisted: it used to be looked up only
+        // after SaveChanges, so an unknown type stored the file and then failed with a 500.
+        var fileTypeName = context.FileTypes.AsEnumerable()
+            .FirstOrDefault(ft => ft.Value.ToString() == file.Type)?.Name;
+        if (fileTypeName is null)
+            throw new InvalidParameterException("type", "The file type is not recognised.");
+
+        // Finding NR-2026-035: the row is built from the fields a caller may choose — a name, a type, a
+        // view and one parent — instead of adding the request body. The body is a whole NrFile, so it
+        // also carries the id, the owner, the entity and, through the navigation properties, entire
+        // Incident, Entity or Report graphs that EF would insert along with it (and a navigation to a
+        // new Entity would overrule any EntityId set below). Size is measured, not declared.
+        var row = new NrFile
+        {
+            Name = name,
+            Type = file.Type,
+            ViewType = file.ViewType,
+            Content = content,
+            Size = content.Length,
+            Timestamp = DateTime.Now,
+            User = creatingUser.Value,
+            UniqueName = hash,
+            RiskId = file.RiskId,
+            MitigationId = file.MitigationId,
+            RiskAcceptanceId = file.RiskAcceptanceId,
+            IncidentId = file.IncidentId,
+            IncidentResponsePlanId = file.IncidentResponsePlanId,
+            IncidentResponsePlanExecutionId = file.IncidentResponsePlanExecutionId,
+            IncidentResponsePlanTaskId = file.IncidentResponsePlanTaskId,
+            IncidentResponsePlanTaskExecutionId = file.IncidentResponsePlanTaskExecutionId,
+            AssessmentRunAnswerId = file.AssessmentRunAnswerId
+        };
 
         // Track 8 / finding NR-2026-017: stamp the attachment with the business entity of whatever
         // it hangs off, so the Track 2.3 query filter can do its job. A file whose parent carries no
         // entity keeps a null, which the filter treats as visible — the honest outcome, since the
-        // parent itself is not scoped either.
-        file.EntityId ??= ResolveEntityId(context, file);
+        // parent itself is not scoped either. Always derived (NR-2026-035): it used to be
+        // `??=`, so an entity_id in the request body won and filed the attachment under any entity
+        // the caller named.
+        row.EntityId = ResolveEntityId(context, row);
 
-        if (file.Name.Length >= 100) file.Name = file.Name.Substring(0, 99);
-        
-        
         try
         {
-            var newFile = context.NrFiles.Add(file);
+            var newFile = context.NrFiles.Add(row);
             context.SaveChanges();
-            
+
             //_mapper.Map<File,FileListing>(newFile.Entity);
 
             var newFileObj = newFile.Entity;
@@ -298,7 +351,7 @@ public class FilesService: ServiceBase, IFilesService
                 UniqueName = newFileObj.UniqueName,
                 OwnerId = newFileObj.User,
                 Timestamp = newFileObj.Timestamp,
-                Type = GetFileTypes().FirstOrDefault(ft => ft.Value.ToString() == newFileObj.Type)!.Name
+                Type = fileTypeName
             };
 
 
@@ -311,23 +364,43 @@ public class FilesService: ServiceBase, IFilesService
         }
     }
 
-    public void Save(NrFile file)
+    /// <summary>
+    /// Renames a file — the one change an update may make (security finding NR-2026-034).
+    ///
+    /// Before this, the controller authorized the call against <c>file.User</c> <em>from the request
+    /// body</em> and this method then <c>Adapt</c>-ed the whole body onto the stored row, so anybody who
+    /// knew a file's id and unique name could claim to own it and, in the same request, replace its
+    /// content, take its ownership, move it to another parent and re-stamp its entity. Now the authority
+    /// is the stored row's owner, checked here so no caller can skip it, and the only field copied is the
+    /// name: content is written by an upload, the owner and timestamp by the server, and the parent and
+    /// entity by <see cref="Create"/> — none of them is something a rename should be able to reach.
+    /// </summary>
+    public void Save(NrFile file, User user)
     {
+        ArgumentNullException.ThrowIfNull(file);
+        ArgumentNullException.ThrowIfNull(user);
+
         using var dbContext = DalService.GetContext();
-        var dbFile = dbContext.NrFiles.FirstOrDefault(f=> f.Id == file.Id);
-        
-        if(dbFile == null) throw new DataNotFoundException("file", file.Id.ToString());
-        
-        if(dbFile.UniqueName != file.UniqueName) throw new InvalidOperationException("Cannot change unique name of file");
-        
-        if(dbFile.Id != file.Id) throw new InvalidOperationException("Cannot change id of file");
+
+        // Located by id *and* unique name: the unique name is the capability, and a mismatch is the same
+        // "not found" as a missing id, so the route does not confirm which ids exist.
+        var dbFile = dbContext.NrFiles.FirstOrDefault(f => f.Id == file.Id && f.UniqueName == file.UniqueName);
+
+        if (dbFile == null) throw new DataNotFoundException("file", file.Id.ToString());
+
+        if (!user.Admin && dbFile.User != user.Value)
+        {
+            Logger.Warning("Refused updating file {FileId} for user {User}: only its owner or an administrator may",
+                dbFile.Id, user.Value);
+            throw new UserNotAuthorizedException(user.Name, user.Value, "files");
+        }
 
         // GitHub #80 (S44 D4): assessment evidence is managed only by the assessment evidence service,
         // which knows whether the run is still open. A generic save would rewrite its content or move it.
         if (dbFile.AssessmentRunAnswerId is not null || file.AssessmentRunAnswerId is not null)
             throw new InvalidOperationException("Assessment evidence cannot be changed through the files service");
 
-        file.Adapt(dbFile);
+        dbFile.Name = NormalizeName(file.Name);
         dbContext.SaveChanges();
     }
 

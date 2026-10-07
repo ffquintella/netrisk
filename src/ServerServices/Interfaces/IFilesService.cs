@@ -95,18 +95,31 @@ public interface IFilesService
     public void DeleteByUniqueName(string name);
     
     /// <summary>
-    /// Creates a new file
+    /// Creates a new file.
+    ///
+    /// Only the name, type, view type, content and one parent FK are taken from <paramref name="file"/>;
+    /// the id, owner, timestamp, unique name, size and <c>entity_id</c> are set by the server, the entity
+    /// always derived from the parent (finding NR-2026-035). It does <b>not</b> decide whether the caller
+    /// may attach to that parent — call <see cref="IFileAccessAuthorizer.EnsureCanAttachAsync"/> first.
+    /// Throws <see cref="Model.Exceptions.InvalidParameterException"/> for a blank name or more than one
+    /// parent.
     /// </summary>
     /// <param name="file">the file object</param>
     /// <param name="creatingUser">The user creating the file</param>
     /// <returns></returns>
     public FileListing Create(NrFile file, User creatingUser);
-    
+
     /// <summary>
-    /// Updates a file
+    /// Renames a file — the only change an update may make (finding NR-2026-034).
+    ///
+    /// The file is located by <c>Id</c> and <c>UniqueName</c> together
+    /// (<see cref="Model.Exceptions.DataNotFoundException"/> when they do not match a stored row), and
+    /// <paramref name="user"/> has to be the stored row's owner or an administrator
+    /// (<see cref="Model.Exceptions.UserNotAuthorizedException"/>) — never the owner the body claims.
+    /// Every other field in <paramref name="file"/> is ignored. Assessment evidence is refused with
+    /// <see cref="InvalidOperationException"/>.
     /// </summary>
-    /// <param name="file"></param>
-    public void Save(NrFile file);
+    public void Save(NrFile file, User user);
     
     
     /// <summary>

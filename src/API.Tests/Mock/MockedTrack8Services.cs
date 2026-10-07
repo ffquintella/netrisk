@@ -681,9 +681,29 @@ public static class MockedFileAccessAuthorizer
     /// <summary>Files whose id or user is this are refused, so the 401 branch has a fixture.</summary>
     public const int ForbiddenFileId = 4242;
 
+    /// <summary>
+    /// A parent record the caller may not attach to (finding NR-2026-035): a file naming this id in any
+    /// parent column is refused by <c>EnsureCanAttachAsync</c>.
+    /// </summary>
+    public const int ForbiddenParentId = 4343;
+
     public static IFileAccessAuthorizer Create()
     {
         var service = Substitute.For<IFileAccessAuthorizer>();
+
+        service.EnsureCanAttachAsync(Arg.Any<NrFile>(), Arg.Any<User>()).Returns(call =>
+        {
+            var file = call.ArgAt<NrFile>(0);
+            var user = call.ArgAt<User>(1);
+
+            var parents = ServerServices.Security.FileParents.Declared(file);
+            if (parents.Count > 1)
+                throw new InvalidParameterException("file", "An attachment belongs to exactly one parent record.");
+            if (parents.Any(p => p.Id == ForbiddenParentId))
+                throw new UserNotAuthorizedException(user.Name, user.Value, "files");
+
+            return Task.CompletedTask;
+        });
 
         service.EnsureCanReadAsync(Arg.Any<NrFile>(), Arg.Any<User>()).Returns(call =>
         {

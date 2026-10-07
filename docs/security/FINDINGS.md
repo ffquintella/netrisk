@@ -4,6 +4,10 @@
 > **Updated 2026-08-26 (Track 8):** the five findings Track 7 left open — NR-2026-008b, 017, 025, 028,
 > 032 — are closed, each with a named regression test. NR-2026-027 remains accepted; its proposed
 > mitigation is now implemented. No finding is open.
+> **Updated 2026-10-07:** NR-2026-034 and NR-2026-035 (High, the `/Files` write path) raised in review
+> and fixed in the same change (T298), each with regression tests confirmed failing on the pre-fix
+> behaviour. No finding is open.
+> **Updated 2026-10-07:** NR-2026-036 (Medium, racy permission merge) raised and fixed (T301).
 > Severity by the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) — likelihood × impact, stated per finding rather than asserted.
 > Method and boundaries: [THREAT_MODEL.md](THREAT_MODEL.md) · Requirement-by-requirement checklist: [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) · Burn-down: [BURN_DOWN.md](BURN_DOWN.md)
 
@@ -36,11 +40,11 @@ the reason stated — the same discipline the product's own risk-acceptance feat
 | Severity | Total | Fixed | Open | Accepted |
 |---|---|---|---|---|
 | Critical | 3 | 3 | 0 | 0 |
-| High | 7 | 7 | 0 | 0 |
+| High | 9 | 9 | 0 | 0 |
 | Medium | 19 | 18 | 0 | 1 |
 | Low | 3 | 2 | 0 | 1 |
 | Informational | 2 | 0 | 0 | 2 |
-| **Total** | **34** | **30** | **0** | **4** |
+| **Total** | **36** | **32** | **0** | **4** |
 
 **Open:** none.
 **Accepted:** NR-2026-024, NR-2026-027, NR-2026-029, NR-2026-030.
@@ -51,6 +55,10 @@ no in-process sandbox, so a loaded plugin still runs with the API's full authori
 there is the mitigation the entry proposed, publisher verification before load, which changes the
 trust decision without confining anything. It is recorded as a mitigated acceptance rather than a
 fix.
+
+NR-2026-034 and NR-2026-035 were not raised by the Track 7 audit. They were found in review of the
+`/Files` write path on 2026-10-07 — the read side had been fixed by NR-2026-017, the write side had not
+been looked at — and are recorded in § "Raised after Track 8" below.
 
 ---
 
@@ -771,6 +779,134 @@ what the code now does.
 
 ---
 
+## Raised after Track 8
+
+### NR-2026-034 — A file update trusted the owner named in its own request body *(High, fixed)*
+* **Tier:** API, ServerServices · [`src/ServerServices/Services/FilesService.cs`](../../src/ServerServices/Services/FilesService.cs) `Save` · [`src/API/Controllers/FilesController.cs`](../../src/API/Controllers/FilesController.cs) `SaveFile` · **Task:** T298
+* **Severity:** High (likelihood: medium — the caller needs a file's id and unique name, and both are
+  handed out by the attachment listings of any record they can read; impact: high — the content of a
+  document other users download, its owner, its parent and its entity, all rewritten in one request).
+* **Established by reading the code**, then by
+  `FilesWriteAuthorizationTest.TestANonOwnerClaimingOwnershipInTheBodyIsRefusedAndNothingChanges`,
+  which received `OkResult` and found the content overwritten when run against the pre-fix behaviour.
+* **What was wrong.** `PUT /Files/{name}` authorized with `!user.Admin && file.User != user.Value`,
+  where `file` was the request body — so the check compared the caller with the caller's own claim.
+  `FilesService.Save` then ran `file.Adapt(dbFile)`, copying every field of the body onto the stored
+  row: `content`, `name`, `type`, `user`, `entity_id` and every parent FK. Only the id and unique name
+  were compared. Taking ownership also unlocked `DELETE /Files/{name}`, which checks the stored owner.
+* **Fix.** The decision moved into the service, where no caller can skip it: `Save(NrFile, User)`
+  locates the row by id *and* unique name, refuses anyone but the stored row's owner or an
+  administrator (`UserNotAuthorizedException`), keeps the GitHub #80 refusal of assessment evidence,
+  and copies the **name only**. Nothing in the product calls this route to change anything else —
+  content is written by an upload, owner and timestamp by the server, parent and entity by `Create` —
+  so a rename is the whole contract. The controller is thin: it also refuses a body that names a
+  different file from the route (400), and answers "no such id / wrong unique name" with the same 401
+  as a refusal, so the route does not confirm which ids exist.
+* **Regression tests:**
+  [`API.Tests/APITests/FilesWriteAuthorizationTest.cs`](../../src/API.Tests/APITests/FilesWriteAuthorizationTest.cs)
+  — the real controller over the real service on an in-memory database, because the defect was the
+  *combination* of the two halves and a test that mocks either cannot see it:
+  `TestANonOwnerClaimingOwnershipInTheBodyIsRefusedAndNothingChanges`,
+  `TestTheOwnerRenamesAndTheRestOfTheBodyIsIgnored`, `TestAnAdministratorCanRenameAnotherUsersFile`,
+  `TestAssessmentEvidenceIsStillRefusedByTheGenericSave`, `TestAWrongUniqueNameAnswersLikeARefusal`,
+  `TestTheRouteAndTheBodyMustNameTheSameFile`; and
+  [`ServerServices.Tests/Track8/FileWriteAuthorizationInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/FileWriteAuthorizationInMemoryTest.cs)
+  — `TestANonOwnerCannotSaveAnotherUsersFileByClaimingOwnershipInTheBody`,
+  `TestTheOwnerCanRenameButNothingElse`, `TestAnAdministratorCanRenameAnyFile`,
+  `TestAMismatchedUniqueNameIsNotFound`, `TestABlankRenameIsRefused`. All but the evidence-guard test
+  were **confirmed to fail on the pre-fix behaviour**, by re-running them against a scratch copy with
+  the fix reverted.
+* **Not observed at runtime:** the API was not run against MariaDB for this change. The controller-to-
+  database path is exercised end to end over the EF in-memory provider.
+
+### NR-2026-035 — An upload attached to any parent and any entity the request body named *(High, fixed)*
+* **Tier:** API, ServerServices · [`src/ServerServices/Security/FileAccessAuthorizer.cs`](../../src/ServerServices/Security/FileAccessAuthorizer.cs) `EnsureCanAttachAsync` · [`src/ServerServices/Services/FilesService.cs`](../../src/ServerServices/Services/FilesService.cs) `Create` · **Task:** T298
+* **Severity:** High (likelihood: high — parent ids are sequential integers and no permission was
+  needed; impact: medium-high — a cross-entity write into risks, incidents and response plans the
+  caller cannot read, and an arbitrary-row insert through the body's navigation properties).
+* **Established by reading the code**, then by
+  `FilesWriteAuthorizationTest.TestCreatingOnARiskWithoutWriteAccessIsRefusedAndNothingIsStored` and
+  `FileWriteAuthorizationInMemoryTest.TestCreateDoesNotInsertANavigationGraphFromTheBody`, both
+  failing against the pre-fix behaviour (`CreatedResult`; a new `entities` row inserted).
+* **What was wrong, three ways.**
+  1. `POST /Files` and `POST /Files/local/complete` never asked whether the caller could write to the
+     parent the body named (`risk_id`, `mitigation_id`, `incident_id`, the four IRP columns,
+     `risk_acceptance_id`). NR-2026-017 gave reads a per-parent check; writes had none.
+  2. `FilesService.Create` did `file.EntityId ??= ResolveEntityId(...)`, so an `entity_id` in the body
+     won over the parent's — filing the attachment under any entity the caller chose.
+  3. `Create` added the request body itself to the context. An `NrFile` carries navigations
+     (`Entity`, `Incident`, `IncidentResponsePlan`, `RiskAcceptance`, `Reports`, …), and EF inserts
+     whatever graph is attached — a new business entity, in the test — and a navigation to an added
+     principal overrides any FK set beside it.
+* **Fix.**
+  * `IFileAccessAuthorizer.EnsureCanAttachAsync` is the write-side counterpart of
+    `EnsureCanReadAsync`, called by both routes before anything is created — on the chunked route,
+    before the chunks are reassembled. A file names **at most one** parent (two would let a caller
+    allowed on one record hang the file off another), the parent has to be **visible** in the
+    caller's entity scope (missing and out-of-scope are one 401, administrators included — a dangling
+    FK is not a permission question), and then the parent's permission applies exactly as for reads,
+    with the risk owner/manager/submitter fallback — except a risk acceptance, which needs
+    `vulnerabilities_update`, the permission its own write routes demand. A parentless upload passes:
+    the read rule shows it to its uploader only.
+  * `FilesService.Create` builds the row from an allowlist — name, type, view type, content, one
+    parent FK — and sets id, owner, timestamp, unique name, measured size and `entity_id` itself, the
+    entity **always** derived from the parent. It refuses a second parent and a blank name on its own,
+    so those hold for every caller, not only the two routes.
+  * The parent columns are listed once, in `ServerServices.Security.FileParents`, for the read rule,
+    the write rule and the service alike.
+  * The check lives in the authorizer and is called by the controller, not by `FilesService`, for the
+    reason NR-2026-017 recorded: the files service is a singleton in the job host, which has no user
+    and no permissions service, and folding the check in would have meant a bypass parameter.
+    `Create` documents that the caller must authorize first. The only other caller, the assessment
+    evidence service (GitHub #80), sits behind `RequireAssessmentAccess` — the same `assessments`
+    permission this rule would require — and loads the run through the entity scope.
+* **Regression tests:**
+  [`API.Tests/APITests/FilesWriteAuthorizationTest.cs`](../../src/API.Tests/APITests/FilesWriteAuthorizationTest.cs)
+  — `TestCreatingOnARiskWithoutWriteAccessIsRefusedAndNothingIsStored`,
+  `TestCreateIgnoresTheBodysEntityAndOwnerAndDerivesThemFromTheParentAndTheCaller`,
+  `TestCreatingOnAnotherEntitysRiskIsRefusedEvenWithThePermission`,
+  `TestCreatingAFileWithTwoParentsIsABadRequest`,
+  `TestCompletingAnUploadOnAnIncidentWithoutWriteAccessIsRefusedAndNothingIsStored` (with real staged
+  chunks, so the pre-fix code really did complete it), and
+  `TestCompletingAnUploadWithWriteAccessStoresItUnderTheParentsEntity`; plus
+  `TestAParentlessUploadIsStillCreated`, which must not break. And
+  [`ServerServices.Tests/Track8/FileWriteAuthorizationInMemoryTest.cs`](../../src/ServerServices.Tests/Track8/FileWriteAuthorizationInMemoryTest.cs)
+  for the rule case by case — refused without the risk permission, through a mitigation, outside the
+  caller's scope, on a missing parent even for an administrator, with two parents, with the
+  acceptance *read* permission; allowed with the permission, for the risk owner, for an
+  administrator, with no parent; each parent's own permission; and `Create` ignoring the body's
+  entity, owner, size and navigation graph. 19 of its 23 cases, and 11 of the API test's 13, were
+  **confirmed to fail on the pre-fix behaviour**; the rest are the allowed paths that must survive.
+* **Not observed at runtime:** as for NR-2026-034.
+* **Residual, stated:** the chunk-staging routes (`GET /Files/local/id`, `POST /Files/local/chunk`) do
+  not bind an upload id to the user who staged it. The id is a server-issued random GUID, so another
+  user's in-flight upload is not reachable without it, but the binding is not enforced.
+
+### NR-2026-036 — The permission merge added to a shared list from `Parallel.ForEach` *(Medium, fixed)*
+* **Tier:** ServerServices · [`src/ServerServices/Services/PermissionsService.cs`](../../src/ServerServices/Services/PermissionsService.cs) `GetUserPermissionsAsync` · **Task:** T301
+* **Severity:** Medium (likelihood: low-medium — it needs a user holding several direct permissions and
+  is timing-dependent; impact: medium — it sits under every permission check, `FileAccessAuthorizer`
+  included). The failure is **fail-closed**: a lost `Add` makes a permitted user be refused, a torn
+  resize throws. It cannot grant a permission the user does not hold.
+* **What was wrong.** The user's own permission keys were merged into the role's `List<string>` with
+  `Parallel.ForEach(..., up => { if (!permissions.Contains(up)) permissions.Add(up); })`. `List<T>` is
+  not thread-safe, so concurrent adds overwrite each other's slot or fault during a resize, and the
+  `Contains` check raced with the adds, so duplicates were possible too. The loop is a few string
+  comparisons; parallelism bought nothing.
+* **Fix.** A sequential merge with a `HashSet<string>` — role permissions first, then the user's extras
+  in their stored order, no duplicates, exactly the old result set — and the role's list is copied
+  instead of aliased.
+* **Regression tests:**
+  [`ServerServices.Tests/ServiceTests/PermissionsMergeConcurrencyInMemoryTest.cs`](../../src/ServerServices.Tests/ServiceTests/PermissionsMergeConcurrencyInMemoryTest.cs)
+  — `TestMergedPermissionsAreCompleteAndDuplicateFreeUnderRepeatedCalls`,
+  `TestRolePermissionsComeFirstThenTheUsersExtrasInOrder`,
+  `TestUserWithoutRoleGetsOnlyOwnPermissions`, `TestUserHasPermissionFindsAnExtraAtTheEndOfALargeSet`.
+  The first two were **observed failing on the pre-fix code in 3 of 3 runs**, but a race test is
+  inherently probabilistic: it makes the failure very likely, it cannot prove it on every run.
+* **Not observed at runtime:** only over the EF in-memory provider.
+
+---
+
 ## Triage into milestones 7.2–7.5
 
 Every finding above is assigned, per §7.1.3.
@@ -778,7 +914,7 @@ Every finding above is assigned, per §7.1.3.
 | Milestone | Findings |
 |---|---|
 | **7.2** Dependency & supply chain | NR-2026-031 (SBOM). Baseline scan: `dotnet list package --vulnerable --include-transitive` reported **no** vulnerable package across all 33 projects on 2026-08-26 — see [baseline-2026-08-26.md](baseline-2026-08-26.md). |
-| **7.3** AuthN/AuthZ & secrets | NR-2026-001, 002, 003, 007, 008, 008b, 009, 010, 012, 018, 025, 028, 033 |
+| **7.3** AuthN/AuthZ & secrets | NR-2026-001, 002, 003, 007, 008, 008b, 009, 010, 012, 018, 025, 028, 033, 034, 035 |
 | **7.4** Data protection & transport | NR-2026-004, 005, 011, 013, 014, 015, 016, 019, 020, 026, 032 |
 | **7.5** Continuous security | The gates that keep the above from recurring: `security.yml` (CodeQL, gitleaks, vulnerable-dependency, submodule provenance), [SECURITY.md](../../SECURITY.md), [TRIAGE_SLA.md](TRIAGE_SLA.md), [BURN_DOWN.md](BURN_DOWN.md) |
 | **Risk-accepted** | NR-2026-024, 029, 030 (informational/low, reasons stated), NR-2026-027 (documented acceptance; the proposed provenance mitigation was implemented in Track 8 and the acceptance still stands) |

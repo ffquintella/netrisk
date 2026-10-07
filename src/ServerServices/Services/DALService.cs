@@ -144,7 +144,7 @@ public class DalService : IDalService
         return optionsBuilder;
     }
     
-    public AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false)
+    public virtual AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false)
     {
         var optionsBuilder = GetDbContextOptionsBuilder();
 
