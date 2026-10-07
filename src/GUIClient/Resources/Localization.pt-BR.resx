@@ -1521,6 +1521,9 @@
     <data name="securityClassificationLevel" xml:space="preserve">
         <value>nível de classificação de segurança</value>
     </data>
+    <data name="sensitiveClassification" xml:space="preserve">
+        <value>sensível (flag 5)</value>
+    </data>
     <data name="organizationData" xml:space="preserve">
         <value>dados da organização</value>
     </data>

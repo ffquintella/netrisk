@@ -149,6 +149,33 @@ public class ContinuityService(ILogger logger, IDalService dalService)
         return metric;
     }
 
+    public async Task<List<CriticalProcessThreatDto>> GetCriticalProcessThreatsAsync()
+    {
+        await using var db = DalService.GetContext();
+        var world = await LoadWorldAsync(db);
+
+        var result = new List<CriticalProcessThreatDto>();
+
+        foreach (var process in world.Graph.Nodes.Values
+                     .Where(n => n.IsActive && n.IsCriticalProcess)
+                     .OrderBy(n => n.EntityId))
+        {
+            var threat = world.Threat(process.EntityId);
+            if (!threat.IsThreatened) continue;
+
+            result.Add(new CriticalProcessThreatDto
+            {
+                EntityId = process.EntityId,
+                Name = process.Name,
+                ThreatWeight = threat.ThreatWeight,
+                Confirmed = threat.Items.Any(i => i.Class == ContinuityThreatClass.Confirmed),
+                ProviderEntityIds = world.Graph.Providers(process.EntityId).Keys.OrderBy(id => id).ToList()
+            });
+        }
+
+        return result;
+    }
+
     public async Task<ContinuitySettingsDto> GetSettingsAsync()
     {
         await using var db = DalService.GetContext();

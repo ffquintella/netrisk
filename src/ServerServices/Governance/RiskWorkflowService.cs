@@ -2,6 +2,7 @@ using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
+using Model.RiskFlags;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -24,7 +25,7 @@ namespace ServerServices.Governance;
 /// distinct top-band approver is required, and above the ceiling the acceptance is refused.</item>
 /// </list>
 /// </summary>
-public class RiskWorkflowService(ILogger logger, IDalService dalService)
+public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFlagsService flags)
     : ServiceBase(logger, dalService), IRiskWorkflowService
 {
     public const string StateMachineSetting = "risk_workflow_state_machine_enforced";
@@ -49,6 +50,12 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService)
     public async Task EnsureTransitionAllowedAsync(int riskId, string fromStatus, string toStatus)
     {
         if (string.Equals(fromStatus, toStatus, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Stage 9.5 (S46 §4.7): Gate A before the switch that turns the state machine off. Closing is
+        // discarding, and a non-discretionary condition is not something a configuration row may waive.
+        if (string.Equals(toStatus, StatusClosed, StringComparison.OrdinalIgnoreCase))
+            await flags.EnsureGateAAllowsAsync(riskId, GateAAction.Close);
+
         if (!await IsEnabledAsync(StateMachineSetting, defaultValue: true)) return;
 
         await using var db = DalService.GetContext();
@@ -131,22 +138,11 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService)
         if (risk is null)
             throw new DataNotFoundException("local", "risks", new Exception($"Risk with id {riskId} not found"));
 
-        var conflicts = new List<string>();
-        if (risk.SubmittedBy == actingUserId) conflicts.Add("submitted it");
-        if (risk.Owner == actingUserId) conflicts.Add("own it");
-        if (risk.Manager == actingUserId) conflicts.Add("manage it");
+        var conflicts = SegregationConflicts(risk, actingUserId);
 
         if (conflicts.Count == 0) return;
 
-        // "submitted it, own it and manage it" rather than a comma-joined list. The message is shown
-        // verbatim to a business reviewer in the portal, and all three conflicts firing at once is the
-        // common case, not the rare one.
-        var relation = conflicts.Count switch
-        {
-            1 => conflicts[0],
-            2 => $"{conflicts[0]} and {conflicts[1]}",
-            _ => $"{string.Join(", ", conflicts.Take(conflicts.Count - 1))} and {conflicts[^1]}"
-        };
+        var relation = DescribeRelation(conflicts);
 
         if (!string.IsNullOrWhiteSpace(overrideReason))
         {
@@ -171,6 +167,38 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService)
             "makes the approval mean anything.",
             "segregation_of_duties");
     }
+
+    /// <summary>
+    /// How <paramref name="actingUserId"/> relates to the risk — "submitted it", "own it", "manage it" — or
+    /// an empty list. Shared with the Gate A flag withdrawal (S46 §4.6), so the two maker-checker rules can
+    /// never disagree about who counts as the risk's own people.
+    /// </summary>
+    public static List<string> SegregationConflicts(Risk risk, int actingUserId)
+    {
+        ArgumentNullException.ThrowIfNull(risk);
+
+        var conflicts = new List<string>();
+        if (risk.SubmittedBy == actingUserId) conflicts.Add("submitted it");
+        if (risk.Owner == actingUserId) conflicts.Add("own it");
+        if (risk.Manager == actingUserId) conflicts.Add("manage it");
+        return conflicts;
+    }
+
+    /// <summary>
+    /// "submitted it, own it and manage it" rather than a comma-joined list. The message is shown
+    /// verbatim to a business reviewer in the portal, and all three conflicts firing at once is the
+    /// common case, not the rare one.
+    /// </summary>
+    public static string DescribeRelation(IReadOnlyList<string> conflicts) => conflicts.Count switch
+    {
+        0 => string.Empty,
+        1 => conflicts[0],
+        2 => $"{conflicts[0]} and {conflicts[1]}",
+        _ => $"{string.Join(", ", conflicts.Take(conflicts.Count - 1))} and {conflicts[^1]}"
+    };
+
+    public Task EnsureGateAAllowsAsync(int riskId, GateAAction action) =>
+        flags.EnsureGateAAllowsAsync(riskId, action);
 
     public async Task<AppetiteEvaluation> EvaluateAppetiteAsync(int riskId)
     {

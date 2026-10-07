@@ -72,5 +72,14 @@ public enum NotificationEventType
     /// finding. Folding the two together would mean a subscription for "our SLA" also firing for
     /// somebody else's service-desk goal, which are different audiences.
     /// </summary>
-    JsmSlaBreached = 17
+    JsmSlaBreached = 17,
+
+    // --- Track 9 Stage 9.5 (the eleven flags and Gate A) ----------------------------------------
+
+    /// <summary>
+    /// A risk reached a non-discretionary (Gate A) condition, or somebody recorded "act immediately" on
+    /// it (S46 §4.8). Distinct from <see cref="RiskEscalated"/>, which is a business reviewer handing one
+    /// risk to a named approver: this one goes to whoever manages risk, and is never digest material.
+    /// </summary>
+    RiskGateAEscalated = 18
 }

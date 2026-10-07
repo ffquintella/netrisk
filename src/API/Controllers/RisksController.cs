@@ -814,6 +814,15 @@ public class RisksController : ApiBaseController
 
             return UnprocessableEntity(new { error = "invalid_transition", ex.FromState, ex.ToState, ex.Message });
         }
+        catch (RuleBrokenException ex)
+        {
+            // Stage 9.5 (S46 §4.7): Gate A refuses closing a risk carrying a non-discretionary condition. The
+            // closure row is removed again for the same reason as above.
+            Logger.Warning("Refused closing risk {Id}: {Rule}", riskId, ex.RuleName);
+            if (_risksService.ClosureExists(riskId)) _risksService.DeleteRiskClosure(riskId);
+
+            return UnprocessableEntity(new { error = ex.RuleName, ex.Message });
+        }
         catch (DataNotFoundException dnfe)
         {
             return NotFound($"Risk not found:{dnfe.Message}");
@@ -962,6 +971,12 @@ public class RisksController : ApiBaseController
                 ex.ToState, ex.Message);
             return UnprocessableEntity(new { error = "invalid_transition", ex.FromState, ex.ToState, ex.Message });
         }
+        catch (RuleBrokenException ex)
+        {
+            // Stage 9.5 (S46 §4.7): saving a risk as Closed while Gate A holds.
+            Logger.Warning("Refused saving risk {Id}: {Rule}", id, ex.RuleName);
+            return UnprocessableEntity(new { error = ex.RuleName, ex.Message });
+        }
         catch (InvalidParameterException ex)
         {
             return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
@@ -1003,6 +1018,12 @@ public class RisksController : ApiBaseController
             _risksService.DeleteRisk(id);
 
             return Ok();
+        }
+        catch (RuleBrokenException ex)
+        {
+            // Stage 9.5 (S46 §4.7): a risk carrying a Gate A condition is not deleted.
+            Logger.Warning("Refused deleting risk {Id}: {Rule}", id, ex.RuleName);
+            return UnprocessableEntity(new { error = ex.RuleName, ex.Message });
         }
         catch (Exception ex)
         {

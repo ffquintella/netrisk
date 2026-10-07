@@ -74,7 +74,13 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // Stage 9.4 (S45 §4.6): the ATT&CK techniques of a risk scenario, like its chain links. The
         // finding-side associations, the KEV catalogue and the EPSS readings are not audited: Vulnerability
         // is not either, and a 1 500-row catalogue would bury the trail.
-        nameof(RiskAttackTechnique)
+        nameof(RiskAttackTechnique),
+
+        // Stage 9.5 (S46 §4.10): every declaration, withdrawal and derived change of a mandatory flag —
+        // including a derived flag reverting when its basis is lost, which must never be silent — and every
+        // Phase 4 decision, the automatic Gate A ones included.
+        nameof(RiskFlag),
+        nameof(RiskDecision)
     };
 
     /// <summary>

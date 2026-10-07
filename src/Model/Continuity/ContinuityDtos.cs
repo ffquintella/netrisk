@@ -264,6 +264,25 @@ public class ContinuityThreatDto
     public decimal UnverifiedWeight { get; set; }
 }
 
+/// <summary>
+/// An active critical process whose recovery objectives are threatened, and everything it depends on —
+/// the flag 4 basis of Stage 9.5 (S46 §4.5).
+/// </summary>
+public class CriticalProcessThreatDto
+{
+    public int EntityId { get; set; }
+
+    public string? Name { get; set; }
+
+    /// <summary>The node's threat weight (S43 D16): 1.0 when any item is confirmed, the configured weight when only unverified.</summary>
+    public decimal ThreatWeight { get; set; }
+
+    public bool Confirmed { get; set; }
+
+    /// <summary>The transitive providers of the process, ascending.</summary>
+    public List<int> ProviderEntityIds { get; set; } = new();
+}
+
 public class ContinuityThreatItemDto
 {
     public ContinuityThreatReason Reason { get; set; }

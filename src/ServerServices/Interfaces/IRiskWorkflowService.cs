@@ -1,5 +1,6 @@
 using DAL.Entities;
 using Model.Governance;
+using Model.RiskFlags;
 
 namespace ServerServices.Interfaces;
 
@@ -32,6 +33,14 @@ public interface IRiskWorkflowService
     /// </param>
     Task EnsureSegregationOfDutiesAsync(int riskId, int actingUserId, string action,
         string? overrideReason = null);
+
+    /// <summary>
+    /// Gate A (Stage 9.5, S46 §4.7): re-derives the risk's flags and refuses <paramref name="action"/> with
+    /// <see cref="Model.Exceptions.RuleBrokenException"/> <c>gate_a_non_discretionary</c> when a
+    /// non-discretionary condition holds. The first merit check of acceptance, renewal, closure and deletion —
+    /// before segregation of duties, band authority and the appetite (Gate B). No break-glass.
+    /// </summary>
+    Task EnsureGateAAllowsAsync(int riskId, GateAAction action);
 
     /// <summary>
     /// The appetite in force for a risk and what it implies. Never throws: the caller decides

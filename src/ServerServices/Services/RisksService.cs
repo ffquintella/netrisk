@@ -752,6 +752,11 @@ public class RisksService(
         {
             var dbRisk = context.Risks.FirstOrDefault(r => r.Id == id);
             if (dbRisk == null) throw new DataNotFoundException("simplerisk",$"Unable to find risk with id:{id}");
+
+            // Stage 9.5 (S46 §4.7): deleting is the most final way of discarding a risk, so a Gate A
+            // condition refuses it like it refuses an acceptance or a closure.
+            AsyncHelper.RunSync(() => workflow.EnsureGateAAllowsAsync(id, Model.RiskFlags.GateAAction.Delete));
+
             context.Risks.Remove(dbRisk);
             context.SaveChanges();
         }

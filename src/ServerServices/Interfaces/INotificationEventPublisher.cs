@@ -82,6 +82,15 @@ public interface INotificationEventPublisher
     /// <summary>A reviewer escalated a risk (<c>risk.escalated</c>, 8.6.4).</summary>
     Task RiskEscalatedAsync(Risk risk, double? score, int escalatedToUserId, string? note);
 
+    // --- Track 9 Stage 9.5 (the eleven flags and Gate A) ----------------------------------------
+
+    /// <summary>
+    /// A risk reached a Gate A condition, or somebody recorded "act immediately" on it
+    /// (<c>risk.gate_a</c>, S46 §4.8). <paramref name="conditions"/> is the human-readable list of what
+    /// holds — empty for a declared act-immediately decision without Gate A.
+    /// </summary>
+    Task RiskGateAEscalatedAsync(Risk risk, double? score, IReadOnlyList<string> conditions, string reason);
+
     // --- Track 4.6 (Jira Service Management) ----------------------------------------------------
 
     /// <summary>

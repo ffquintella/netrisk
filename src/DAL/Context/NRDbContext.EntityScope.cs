@@ -109,6 +109,10 @@ public partial class NRDbContext
         // ATT&CK association tables get their filters below, through their parent.
         ConfigureExploitationSignals(modelBuilder);
 
+        // Track 9 Stage 9.5 — the eleven mandatory flags and Gate A (S46). Both tables hang off the
+        // risk and get their filters below, through it.
+        ConfigureRiskFlags(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -177,6 +181,15 @@ public partial class NRDbContext
             ScopeIsUnrestricted || Vulnerabilities.Any(v => v.Id == e.VulnerabilityId));
 
         modelBuilder.Entity<RiskAttackTechnique>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        // Stage 9.5 (S46 §4.2–4.3): a risk's flags and decisions are visible exactly when the risk is.
+        // The derivation reads through an unscoped context on purpose (S46 D9); every read a caller
+        // makes relies on these.
+        modelBuilder.Entity<RiskFlag>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskDecision>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
 
         // A further step removed: these hang off a run, which hangs off the assessment that

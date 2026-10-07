@@ -1,5 +1,5 @@
 ---
-version: 2.5
+version: 2.6
 definitions:
   organization:
     isRoot: True
@@ -195,6 +195,15 @@ definitions:
         maxSize: -1
         nullable: False
         defaultValue: "Parent"
+      # Stage 9.5 (S46 §4.4, D16): data classified at a level marked sensitive derives flag 5 on every
+      # risk linked to it through the chain. Nullable, so every existing level keeps saving and reads False.
+      sensitive:
+        type: Boolean
+        label: sensitiveClassification
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: "False"
   organizationData:
     isRoot: False
     iconKind: FileDocumentOutline

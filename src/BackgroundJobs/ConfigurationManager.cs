@@ -122,6 +122,10 @@ public static class ConfigurationManager
         services.AddScoped<BackgroundJobs.Jobs.Integrations.KevCatalogueSyncJob>();
         services.AddScoped<BackgroundJobs.Jobs.Integrations.EpssSyncJob>();
 
+        // Track 9 Stage 9.5 (S46) — the nightly reconciliation of the derived flags. Its service comes from
+        // AddTrack8Governance above, the same one the API's Gate A uses.
+        services.AddScoped<BackgroundJobs.Jobs.Governance.RiskFlagsDerivationJob>();
+
         ConfigureHangFire(services);
 
     }

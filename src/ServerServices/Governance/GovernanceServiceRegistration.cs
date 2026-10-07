@@ -28,6 +28,13 @@ public static class GovernanceServiceRegistration
         services.TryAddEnumerable(ServiceDescriptor
             .Transient<IResidualRiskStrategy, MitigationPercentResidualStrategy>());
 
+        // Stage 9.5 (S46) — the eleven flags and Gate A. The workflow engine consults it, so every host
+        // that enforces the workflow enforces Gate A too. Its continuity dependency (the flag 4 basis) is
+        // added only if the host has not registered one: the API registers it itself, the job host and the
+        // console did not, and resolving the workflow there must not fail.
+        services.TryAddTransient<IContinuityService, ContinuityService>();
+        services.AddTransient<IRiskFlagsService, RiskFlagsService>();
+
         // 8.3 — enforcement. Everything else consults this, so it goes in first.
         services.AddTransient<IRiskWorkflowService, RiskWorkflowService>();
         services.AddTransient<IRiskAppetitesService, RiskAppetitesService>();

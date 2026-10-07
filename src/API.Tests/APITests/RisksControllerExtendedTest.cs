@@ -914,6 +914,28 @@ public class RisksControllerExtendedTest : BaseControllerTest
         _risksService.Received().DeleteRiskClosure(2);
     }
 
+    /// <summary>
+    /// Stage 9.5 (S46 §6, G7 at the API boundary): a Gate A refusal of the close is 422 with the rule name,
+    /// and the closure row already written is removed again, exactly as for a refused transition.
+    /// </summary>
+    [Fact]
+    public async Task TestCloseRiskRefusedByGateARemovesTheClosureAgain()
+    {
+        var closure = new Closure { RiskId = 2, CloseReason = 1, Note = "done", UserId = 1 };
+
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 2))
+            .Returns(_ => Task.FromException(new RuleBrokenException(
+                "This risk cannot be closed: it carries a non-discretionary (Gate A) condition.",
+                "gate_a_non_discretionary")));
+        _risksService.ClosureExists(2).Returns(true);
+
+        var result = await _controller.CloseRisk(2, closure);
+
+        var unprocessable = Assert.IsType<UnprocessableEntityObjectResult>(result.Result);
+        Assert.Contains("gate_a_non_discretionary", System.Text.Json.JsonSerializer.Serialize(unprocessable.Value));
+        _risksService.Received().DeleteRiskClosure(2);
+    }
+
     [Fact]
     public async Task TestCloseRiskMismatchedRiskId()
     {
@@ -1030,6 +1052,32 @@ public class RisksControllerExtendedTest : BaseControllerTest
 
         var unprocessable = Assert.IsType<UnprocessableEntityObjectResult>(result);
         Assert.Contains("invalid_transition", System.Text.Json.JsonSerializer.Serialize(unprocessable.Value));
+    }
+
+    /// <summary>Stage 9.5 (S46 §6): saving a risk as Closed while Gate A holds is 422, not 500.</summary>
+    [Fact]
+    public async Task TestSaveRefusedByGateAIs422()
+    {
+        var risk = NewRisk(994, "Closed");
+
+        _risksService.SaveRiskAsync(Arg.Is<Risk>(r => r.Id == 994))
+            .Returns(_ => Task.FromException(new RuleBrokenException("Gate A.", "gate_a_non_discretionary")));
+
+        var result = await _controller.Save(994, risk);
+
+        var unprocessable = Assert.IsType<UnprocessableEntityObjectResult>(result);
+        Assert.Contains("gate_a_non_discretionary", System.Text.Json.JsonSerializer.Serialize(unprocessable.Value));
+    }
+
+    /// <summary>Stage 9.5 (S46 §6, G8 at the API boundary): deleting a risk with a Gate A condition is 422, not 500.</summary>
+    [Fact]
+    public void TestDeleteRefusedByGateAIs422()
+    {
+        _risksService.When(s => s.DeleteRisk(993))
+            .Do(_ => throw new RuleBrokenException("Gate A.", "gate_a_non_discretionary"));
+
+        var unprocessable = Assert.IsType<UnprocessableEntityObjectResult>(_controller.Delete(993));
+        Assert.Contains("gate_a_non_discretionary", System.Text.Json.JsonSerializer.Serialize(unprocessable.Value));
     }
 
     [Fact]

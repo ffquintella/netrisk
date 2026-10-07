@@ -50,6 +50,12 @@ public static class JobsManager
             .AddOrUpdate<GovernanceRetentionJob>("GovernanceRetention",
                 x => x.Run(), "30 2 * * *");
 
+        // Stage 9.5 (S46 §4.6): the derived flags after the KEV/EPSS syncs (05:00, 05:20) and before the
+        // expiry passes, so a Gate A onset is escalated before anything reads the register that morning.
+        RecurringJob
+            .AddOrUpdate<RiskFlagsDerivationJob>(RiskFlagsDerivationJob.JobId,
+                x => x.Run(), RiskFlagsDerivationJob.Cron);
+
         RecurringJob
             .AddOrUpdate<RiskAcceptanceExpiryPass>("RiskLevelAcceptanceExpiry",
                 x => x.Run(), "15 6 * * *");

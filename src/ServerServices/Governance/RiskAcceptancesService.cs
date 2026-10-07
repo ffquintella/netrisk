@@ -3,6 +3,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
+using Model.RiskFlags;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -104,9 +105,13 @@ public class RiskAcceptancesService(
 
         var authorizerId = request.AuthorizingManagerId ?? actingUserId;
 
-        // Order matters. Segregation of duties is checked before authority: telling someone they
-        // lack a permission when the real problem is that it is their own risk sends them to ask for
-        // the permission, which is the wrong fix.
+        // Order matters. Gate A first (Stage 9.5, S46 §4.7, D7): it says nobody may accept this risk, so
+        // it outranks every check about who is asking — and it precedes the appetite (Gate B) below, which
+        // is the order the methodology gives the gates. Then segregation of duties before authority:
+        // telling someone they lack a permission when the real problem is that it is their own risk sends
+        // them to ask for the permission, which is the wrong fix.
+        await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.Accept);
+
         await workflow.EnsureSegregationOfDutiesAsync(riskId, authorizerId, "accept",
             request.SegregationOverrideReason);
 
@@ -176,6 +181,9 @@ public class RiskAcceptancesService(
 
         var riskId = previous.RiskId.Value;
         var authorizerId = request.AuthorizingManagerId ?? actingUserId;
+
+        // Gate A before everything else, as on creation: a renewal is a new acceptance (S46 §4.7).
+        await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.RenewAcceptance);
 
         await workflow.EnsureSegregationOfDutiesAsync(riskId, authorizerId, "renew the acceptance of",
             request.SegregationOverrideReason);

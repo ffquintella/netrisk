@@ -556,8 +556,10 @@ screens); Stage 9.2 is implemented (T150–T155: schema version 89, the structur
 standalone hypotheses, near misses and the duplicate warning); Stage 9.3 is implemented (T156–T160: schema version
 90, business impact analysis, cascading dependencies, restoration tests and the weighted continuity threat); Stage 9.4
 is implemented on the server and the REST client (T161–T167: schema version 93, the CISA KEV and FIRST EPSS syncs,
-ATT&CK techniques and the exploitation prioritization; its desktop surface is T302); the runtime observations and
-human/security review of all four are pending.** Does not reopen Track 8. Detailed specifications:
+ATT&CK techniques and the exploitation prioritization; its desktop surface is T302); Stage 9.5 is implemented on the
+server, the job host and the REST client (T168–T173: schema version 94, the eleven flags with their origins, Gate A
+ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is T303); the
+runtime observations and human/security review of all five are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
 > **Two gates apply to every stage.** Gate 1 — a complete, reviewed specification (eleven required
@@ -642,15 +644,22 @@ human/security review of all four are pending.** Does not reopen Track 8. Detail
 
 ### [M43] Stage 9.5 — The eleven mandatory flags and Gate A
 > outcome: Gate A, non-discretionary in the methodology, becomes implementable via queryable flags. Closes gap 3.
-> spec: S27
+> spec: S27, S46
 > depends-on: M41, M42
 
-- [ ] T168 Merge the Stage 9.5 specification, declaring the origin of each of the eleven flags
-- [ ] T169 Model the eleven flags as queryable fields
-- [ ] T170 Refuse to discard a risk carrying a non-discretionary flag, with notified escalation (Gate A)
-- [ ] T171 Distinguish an "act immediately" decision from high severity
-- [ ] T172 Build a "Top Risks" executive list carrying trend, confidence and next decision
-- [ ] T173 Test that a derived flag reverts with an audit-trail entry, and that Gate A precedes Gate B
+- [x] T168 Merge the Stage 9.5 specification, declaring the origin of each of the eleven flags
+  - note: written as S46 with all eleven sections in the same change as the implementation, as T149 and T161 were — not yet merged and not yet human- or security-reviewed; origins: flag 3 derived from KEV, flag 4 from the BIA, flag 5 from data classification (a new `sensitive` mark on the classification level, entity schema 2.6), all three also declarable; 1, 2 and 6–10 declared; 11 declarable only until Stage 9.12
+- [x] T169 Model the eleven flags as queryable fields
+  - note: one `risk_flags` row per risk and flag (schema 94) rather than columns on `risks`, because `PUT /Risks` copies the whole payload (S46 D1); declared and derived halves, set = either; queryable through `GET /RiskFlags/Flagged` and `/RiskFlags/Risks/{id}`; the derived half is reconciled nightly at 05:40, on refresh and before every Gate A evaluation
+- [x] T170 Refuse to discard a risk carrying a non-discretionary flag, with notified escalation (Gate A)
+  - note: Gate A = flag 1, 2 or 3, or the declared condition "no legitimate acceptance" (code 12, from S39 PA-1); flag 4 is not Gate A at any weight (S46 D5); refuses acceptance, renewal, campaign/portal acceptance, closure (even with the state machine off), deletion and non-immediate decisions with `422 gate_a_non_discretionary`; no break-glass (D8); a Gate A onset records the automatic decision, marks the risk for review and raises `risk.gate_a` once; management reviews themselves are not gated (S46 §3, defect 1)
+- [x] T171 Distinguish an "act immediately" decision from high severity
+  - note: `risk_decisions` (insert-only) with the four Phase 4 decisions; act-immediately is forced by Gate A, notified when declared, and never derived from the score
+- [x] T172 Build a "Top Risks" executive list carrying trend, confidence and next decision
+  - note: `GET /RiskFlags/TopRisks` (1–50): Gate A, act immediately, business rank, E[L]; the ordinal score only breaks ties; API and REST client only — the desktop screen is T303
+- [x] T173 Test that a derived flag reverts with an audit-trail entry, and that Gate A precedes Gate B
+  - note: R1–R3 and G1–G10 of `RiskFlagsServiceInMemoryTest`/`GateAInMemoryTest` (moving Gate A after the appetite fails G1, G4 and G9); Track9RiskFlagsSchemaTests Q1–Q3 need Docker and were not run here; the S46 §8 runtime observations are still to be recorded on the PR
+- [ ] T303 Add the Stage 9.5 desktop surface: the flag and decision editor on the risk, the flag column and filter in the register, and the Top Risks screen (S46)
 
 ### [M44] Stage 9.6 — Treatment economics: monetary cost, Gates C and D, the full option set
 > outcome: Gate C gets a calculation; Gate D gets portfolio selection under constraints. Closes gaps 7, 10, part of 13.
@@ -963,3 +972,4 @@ planned, nothing started.**
 | S43 | Stage 9.3 — BIA: MTPD/MAO, RTO, RPO and cascading dependencies specification | docs/roadmap/track9/9.3-bia-continuity.md |
 | S44 | Comment and evidence per answer in an assessment run | docs/features/assessment-answer-evidence.md |
 | S45 | Stage 9.4 — exploitation signals: CISA KEV, first-class EPSS and MITRE ATT&CK specification | docs/roadmap/track9/9.4-exploitation-signals.md |
+| S46 | Stage 9.5 — the eleven mandatory flags and Gate A specification | docs/roadmap/track9/9.5-flags-gate-a.md |

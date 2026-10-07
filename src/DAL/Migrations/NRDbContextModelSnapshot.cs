@@ -6292,6 +6292,159 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskDecision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("DecidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("decided_at");
+
+                    b.Property<int?>("DecidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("decided_by_id");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("decision");
+
+                    b.Property<DateTime?>("EscalatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("escalated_at");
+
+                    b.Property<string>("GateAConditions")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("gate_a_conditions");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("source");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "DecidedById" }, "idx_risk_decisions_decided_by_id");
+
+                    b.HasIndex(new[] { "RiskId", "DecidedAt" }, "idx_risk_decisions_risk_id_decided_at");
+
+                    b.ToTable("risk_decisions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_decisions_decision", "`decision` >= 1 AND `decision` <= 4");
+
+                            t.HasCheckConstraint("ck_risk_decisions_source", "`source` >= 1 AND `source` <= 2");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskFlag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Declared")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("declared");
+
+                    b.Property<DateTime?>("DeclaredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("declared_at");
+
+                    b.Property<int?>("DeclaredById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("declared_by_id");
+
+                    b.Property<string>("DeclaredReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("declared_reason");
+
+                    b.Property<bool>("Derived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("derived");
+
+                    b.Property<string>("DerivedBasis")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("derived_basis");
+
+                    b.Property<DateTime?>("DerivedChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("derived_changed_at");
+
+                    b.Property<string>("DerivedNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("derived_note");
+
+                    b.Property<decimal?>("DerivedWeight")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)")
+                        .HasColumnName("derived_weight");
+
+                    b.Property<int>("Flag")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("flag");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "DeclaredById" }, "idx_risk_flags_declared_by_id");
+
+                    b.HasIndex(new[] { "Flag" }, "idx_risk_flags_flag");
+
+                    b.HasIndex(new[] { "RiskId", "Flag" }, "uq_risk_flags_risk_id_flag")
+                        .IsUnique();
+
+                    b.ToTable("risk_flags", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_flags_flag", "`flag` >= 1 AND `flag` <= 12");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskGrouping", b =>
                 {
                     b.Property<int>("Value")
@@ -10225,6 +10378,46 @@ namespace DAL.Migrations
                     b.Navigation("Entity");
 
                     b.Navigation("Host");
+
+                    b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskDecision", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "DecidedBy")
+                        .WithMany()
+                        .HasForeignKey("DecidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_decisions_decided_by_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_decisions_risk_id");
+
+                    b.Navigation("DecidedBy");
+
+                    b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskFlag", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "DeclaredBy")
+                        .WithMany()
+                        .HasForeignKey("DeclaredById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_flags_declared_by_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_flags_risk_id");
+
+                    b.Navigation("DeclaredBy");
 
                     b.Navigation("Risk");
                 });

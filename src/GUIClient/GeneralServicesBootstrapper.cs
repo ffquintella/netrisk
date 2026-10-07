@@ -134,6 +134,11 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IExploitationSignalsService>(sp => new ExploitationSignalsRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.5 (S46): the eleven flags, Gate A, the Phase 4 decision and Top Risks. The desktop
+        // surface that uses it is T303.
+        services.AddTransient<IRiskFlagsService>(sp => new RiskFlagsRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

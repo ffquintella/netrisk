@@ -48,6 +48,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
             .ToListAsync();
         var campaignItemIds = await db.RiskReviewCampaignItems.Where(i => i.RiskId == riskId)
             .Select(i => i.Id).ToListAsync();
+        // Stage 9.5 (S46 §4.10): the flags and the Phase 4 decisions, so a derived flag reverting is
+        // visible on the risk's own trail and not only in the table.
+        var flagIds = await db.RiskFlags.Where(f => f.RiskId == riskId).Select(f => f.Id).ToListAsync();
+        var decisionIds = await db.RiskDecisions.Where(d => d.RiskId == riskId).Select(d => d.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a =>
@@ -57,7 +61,9 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(MitigationTask) && taskIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(MgmtReview) && reviewIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskAcceptance) && acceptanceIds.Contains(a.EntityId)) ||
-                (a.EntityType == nameof(RiskReviewCampaignItem) && campaignItemIds.Contains(a.EntityId)))
+                (a.EntityType == nameof(RiskReviewCampaignItem) && campaignItemIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskFlag) && flagIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)))
             .Include(a => a.User)
             .OrderByDescending(a => a.OccurredAt)
             .ThenByDescending(a => a.Id)
@@ -86,6 +92,11 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
             .ToListAsync();
         var campaignItemIds = await db.RiskReviewCampaignItems.Where(i => riskIds.Contains(i.RiskId))
             .Select(i => i.Id).ToListAsync();
+        // Stage 9.5 (S46 §4.6, §4.10): a withdrawn Gate A declaration is the only way such a risk becomes
+        // acceptable again, so its written reason travels with the evidence pack.
+        var flagIds = await db.RiskFlags.Where(f => riskIds.Contains(f.RiskId)).Select(f => f.Id).ToListAsync();
+        var decisionIds = await db.RiskDecisions.Where(d => riskIds.Contains(d.RiskId)).Select(d => d.Id)
+            .ToListAsync();
 
         return await db.AuditLogs
             .Where(a => a.OccurredAt >= fromUtc && a.OccurredAt <= toUtc)
@@ -97,6 +108,8 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(MgmtReview) && reviewIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskAcceptance) && acceptanceIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskReviewCampaignItem) && campaignItemIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskFlag) && flagIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskDecision) && decisionIds.Contains(a.EntityId)) ||
                 a.EntityType == nameof(RiskAppetite))
             .Include(a => a.User)
             .OrderBy(a => a.OccurredAt)

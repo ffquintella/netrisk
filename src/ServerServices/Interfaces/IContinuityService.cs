@@ -45,6 +45,13 @@ public interface IContinuityService
     /// <summary>The Phase 7 metric "restoration tested vs declared RTO/RPO".</summary>
     Task<RestorationVerificationMetricDto> GetRestorationVerificationMetricAsync();
 
+    /// <summary>
+    /// Every active critical process whose RTO/RPO is threatened (weight &gt; 0), with the transitive closure of
+    /// its providers — the flag 4 basis Stage 9.5 derives from (S46 §4.5). Organisation-wide, like every read
+    /// here: processes and services carry no scope column.
+    /// </summary>
+    Task<List<CriticalProcessThreatDto>> GetCriticalProcessThreatsAsync();
+
     /// <summary>The two parameters in force; a missing or invalid row reads as the default.</summary>
     Task<ContinuitySettingsDto> GetSettingsAsync();
 

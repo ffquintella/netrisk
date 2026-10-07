@@ -57,7 +57,12 @@ public static class NotificationCatalog
         new(NotificationEventType.RiskReviewCampaignOverdue, "riskreview.campaign_overdue",
             "A periodic business risk review passed its due date.", false, false),
         new(NotificationEventType.RiskEscalated, "risk.escalated",
-            "A business reviewer escalated a risk to a named senior approver.", true, false)
+            "A business reviewer escalated a risk to a named senior approver.", true, false),
+
+        // Stage 9.5 (S46 §4.8). Not digest-recommended: Gate A means "act immediately", and a digest
+        // delivered tomorrow morning is the opposite of that.
+        new(NotificationEventType.RiskGateAEscalated, "risk.gate_a",
+            "A risk reached a non-discretionary (Gate A) condition or was decided 'act immediately'.", false, false)
     ];
 
     /// <summary>The wire name for an event type, or its enum name when the catalog does not list it.</summary>

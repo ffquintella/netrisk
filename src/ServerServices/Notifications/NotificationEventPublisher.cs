@@ -384,6 +384,30 @@ public class NotificationEventPublisher(
             OccurredAt = DateTime.UtcNow
         });
 
+    public Task RiskGateAEscalatedAsync(Risk risk, double? score, IReadOnlyList<string> conditions, string reason) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskGateAEscalated,
+            // The highest severity regardless of the score: Gate A is non-discretionary precisely because
+            // a low ordinal score must not make a human-safety or active-exploitation risk wait (S46 D11).
+            Severity = 4,
+            Title = conditions.Count > 0
+                ? $"Gate A — act immediately: {risk.Subject}"
+                : $"Act immediately: {risk.Subject}",
+            Body = Shorten(reason, 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Gate A", conditions.Count > 0 ? string.Join("; ", conditions) : "—"),
+                new NotificationField("Score", Format(score))
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
     public Task JsmSlaBreachedAsync(string issueKey, string? summary, string metricName,
         string? requestUrl, string? reporter, long? remainingMs) =>
         SafeDispatch(new NotificationMessage

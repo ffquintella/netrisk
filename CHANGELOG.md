@@ -12,6 +12,22 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.30.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.5 specification: the eleven mandatory flags with the origin of each, Gate A ahead of the risk appetite with no break-glass, the act-immediately decision and the Top Risks list (T168, S46)
+- Record the eleven mandatory flags on every risk in `risk_flags`, each declared with a written reason or derived — flag 3 from CISA KEV, flag 4 from the BIA, flag 5 from a new `sensitive` mark on security classification levels — and query them through `/RiskFlags` (T169, S46)
+- Reconcile the derived flags nightly at 05:40, on demand and before every Gate A check, reverting a flag whose basis is lost to false with an entry in the audit trail (T169, T173, S46)
+- Refuse to accept, renew, close or delete a risk carrying a Gate A condition — flag 1, 2 or 3, or "no legitimate acceptance" — with `422 gate_a_non_discretionary`, checked before segregation of duties and the risk appetite, and escalate each Gate A onset with an automatic act-immediately decision, a review request and the new `risk.gate_a` notification (T170, T173, S46)
+- Record the four Phase 4 decisions in an insert-only log, where "act immediately" is escalated and notified whatever the risk's score and is never set by a severity band (T171, S46)
+- List the executive Top Risks through `GET /RiskFlags/TopRisks`, ordered by Gate A, act-immediately, business rank and expected loss, with trend, evidence confidence, owner and next decision on each row (T172, S46)
+
+### Changed
+- Answer `422` instead of `500` when `PUT /Risks/{id}`, `POST /Risks/{id}/Closure` or `DELETE /Risks/{id}` is refused by Gate A, removing the closure row the refused close had written (T170, S46)
+
+### Security
+- Gate withdrawing a Gate A declaration behind the management-review policy and segregation of duties with no override, and export its written reason in the governance evidence pack (T170, S46)
+
 ## [2.29.0] - 2026-10-07
 
 ### Added
