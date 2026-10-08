@@ -388,6 +388,7 @@ public class UsersController: ApiBaseController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [API.Security.ThirdLineSelfService("Changes the caller's own password, and only theirs: the route id must be the caller.", RouteUserKey = "id")]
     public ActionResult<string> ChangePassword(int id, [FromBody] ChangePasswordRequest? changePasswordRequest)
     {
         if (changePasswordRequest == null)

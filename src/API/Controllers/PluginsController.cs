@@ -165,6 +165,7 @@ public class PluginsController(
     [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("enable/{pluginName}")]
+    [API.Security.StateChangingGet("Enables a plugin: a GET that writes.")]
     public async Task<ActionResult> EnablePlugin(string pluginName)
     {
         if(! await PluginsService.PluginExistsAsync(pluginName))
@@ -180,6 +181,7 @@ public class PluginsController(
     [Authorize(Policy = "RequireAdminOnly")]
     [HttpGet]
     [Route("disable/{pluginName}")]
+    [API.Security.StateChangingGet("Disables a plugin: a GET that writes.")]
     public async Task<ActionResult> DisablePlugin(string pluginName)
     {
         if(! await PluginsService.PluginExistsAsync(pluginName))

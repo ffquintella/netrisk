@@ -24,6 +24,8 @@ public class DefaultPolicyProvider: IAuthorizationPolicyProvider
         //policy.AddAuthenticationSchemes("headerSelector", "BasicAuthentication", "Bearer", "saml2.cookies", "saml2");
         policy.RequireAuthenticatedUser();
         policy.Requirements.Add(new ValidUserRequirement());
+        // Stage 9.9 (S50 §4.7): the default and fallback policies carry the third line's read-only rule too.
+        policy.Requirements.Add(ThirdLineReadOnlyRequirement.Instance);
         return Task.FromResult(policy.Build())!;
     }
 

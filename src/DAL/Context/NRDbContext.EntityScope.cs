@@ -121,6 +121,27 @@ public partial class NRDbContext
         // a correlation off both its risks, the tail limits off the appetite; their filters are below.
         ConfigureTailRisk(modelBuilder);
 
+        // Track 9 Stage 9.8 — KRIs and reassessment triggers (S49). The KRI carries its own entity; readings hang off
+        // it, links and triggers off the risk, an event off its triggers or its KRI; their filters are below.
+        ConfigureMonitoring(modelBuilder);
+
+        // Track 9 Stage 9.9 — archival, backtesting and the risk committee (S50). Archives and committee decisions hang
+        // off the risk, backtests off the incident, a committee carries its own entity; their filters are below.
+        ConfigureDecisionCycle(modelBuilder);
+
+        // Track 9 Stage 9.10 — the third-party register (S51). The third party carries its own entity; everything it
+        // declares hangs off it, answers off their assessment, components off their SBOM; their filters are below.
+        ConfigureThirdParties(modelBuilder);
+
+        // Track 9 Stage 9.11 — the LGPD data catalogue (S52). The catalogue, the RIPDs and the requirements describe the
+        // entity map, which has no scope, and are the organization's (S52 D10); only the risk links carry the risk's scope,
+        // and their filter is below.
+        ConfigureDataCatalogue(modelBuilder);
+
+        // Track 9 Stage 9.12 — AI governance (S53). The model carries its own entity, like a third party; its data links,
+        // readings and overrides follow it, a risk link follows the risk and the model; their filters are below.
+        ConfigureAiGovernance(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -232,6 +253,115 @@ public partial class NRDbContext
 
         modelBuilder.Entity<RiskAppetiteTailLimit>().HasQueryFilter(e =>
             ScopeIsUnrestricted || RiskAppetites.Any(a => a.Id == e.AppetiteId));
+
+        // Stage 9.8 (S49 §4.11). A KRI with no entity is the organization's and every reader of the register sees it
+        // (S49 R4) — unlike a risk with no entity, which is unassigned. Writing one is still refused to a scoped caller by
+        // the write guard, because Kri is IEntityScoped and a null entity is outside every scope. Readings follow their
+        // KRI; links and triggers follow their risk. An event is visible through a trigger the caller can see, or through
+        // its KRI. Gate B reads a risk's KRIs unscoped on purpose, after checking the risk is visible (S49 D6).
+        modelBuilder.Entity<Kri>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || e.EntityId == null || ScopeEntityIds.Contains(e.EntityId.Value));
+
+        modelBuilder.Entity<KriReading>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Kris.Any(k => k.Id == e.KriId));
+
+        modelBuilder.Entity<KriRisk>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskReassessmentTrigger>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<ReassessmentEvent>().HasQueryFilter(e =>
+            ScopeIsUnrestricted
+            || RiskReassessmentTriggers.Any(t => t.EventId == e.Id)
+            || (e.KriId != null && Kris.Any(k => k.Id == e.KriId)));
+
+        // Stage 9.9 (S50 §4.8). An archive, its conditions and reviews follow the risk. A backtest follows its
+        // incident; its links follow the backtest *and* the risk, so a reader sees only the risks they may see — the
+        // outcome itself is computed unscoped once the incident is known visible, so it never depends on who asks
+        // (S50 D7). A committee with no entity is the organization's and every reader sees it, like a KRI; members
+        // follow the committee, decisions follow the risk, votes follow the decision.
+        modelBuilder.Entity<RiskArchive>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskArchiveCondition>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskArchives.Any(a => a.Id == e.ArchiveId));
+
+        modelBuilder.Entity<RiskArchiveReview>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskArchives.Any(a => a.Id == e.ArchiveId));
+
+        modelBuilder.Entity<IncidentBacktest>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Incidents.Any(i => i.Id == e.IncidentId));
+
+        modelBuilder.Entity<IncidentBacktestRisk>().HasQueryFilter(e =>
+            ScopeIsUnrestricted
+            || (IncidentBacktests.Any(b => b.Id == e.BacktestId) && Risks.Any(r => r.Id == e.RiskId)));
+
+        modelBuilder.Entity<RiskCommittee>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || e.EntityId == null || ScopeEntityIds.Contains(e.EntityId.Value));
+
+        modelBuilder.Entity<RiskCommitteeMember>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskCommittees.Any(c => c.Id == e.CommitteeId));
+
+        modelBuilder.Entity<RiskCommitteeDecision>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        modelBuilder.Entity<RiskCommitteeVote>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || RiskCommitteeDecisions.Any(d => d.Id == e.DecisionId));
+
+        // Stage 9.10 (S51 §4.10). A third party with no entity is the organization's and every reader sees it, like a KRI or
+        // a committee; writing one is refused to a scoped caller by the write guard, because ThirdParty is IEntityScoped.
+        // Everything it declares follows it; answers follow their assessment, components their SBOM. The concentration is
+        // computed unscoped once the reader's third parties are known (S51 D8), so it never depends on who asks.
+        modelBuilder.Entity<ThirdParty>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || e.EntityId == null || ScopeEntityIds.Contains(e.EntityId.Value));
+
+        modelBuilder.Entity<ThirdPartyLink>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdParties.Any(t => t.Id == e.ThirdPartyId));
+
+        modelBuilder.Entity<ThirdPartySubprocessor>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdParties.Any(t => t.Id == e.ThirdPartyId));
+
+        modelBuilder.Entity<ThirdPartyDataLocation>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdParties.Any(t => t.Id == e.ThirdPartyId));
+
+        modelBuilder.Entity<ThirdPartyAssessment>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdParties.Any(t => t.Id == e.ThirdPartyId));
+
+        modelBuilder.Entity<ThirdPartyAssessmentAnswer>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdPartyAssessments.Any(a => a.Id == e.AssessmentId));
+
+        modelBuilder.Entity<ThirdPartySbom>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdParties.Any(t => t.Id == e.ThirdPartyId));
+
+        modelBuilder.Entity<ThirdPartySbomComponent>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || ThirdPartySboms.Any(s => s.Id == e.SbomId));
+
+        // Stage 9.11 (S52 §4.10). A risk's legal requirements are visible exactly when the risk is. The catalogue, the RIPDs
+        // and the requirements themselves are the organization's — every write to them needs global scope, checked by the
+        // service — and the in-use count of a requirement is taken unscoped, so a link the caller cannot see still counts.
+        modelBuilder.Entity<RiskLegalRequirement>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Risks.Any(r => r.Id == e.RiskId));
+
+        // Stage 9.12 (S53 §4.8). A model with no entity is the organization's and every reader sees it, like a third party;
+        // writing one is refused to a scoped caller by the write guard, because AiModel is IEntityScoped, and the service
+        // checks the model's own entity before any write on what hangs off it. Data links, readings and overrides follow the
+        // model. A risk link needs BOTH the risk and the model visible — one visible end must not reveal the other. Flag 11
+        // is derived through an unscoped context on purpose (S46 D9), so it never depends on who asks.
+        modelBuilder.Entity<AiModel>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || e.EntityId == null || ScopeEntityIds.Contains(e.EntityId.Value));
+
+        modelBuilder.Entity<AiModelDataLink>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || AiModels.Any(m => m.Id == e.ModelId));
+
+        modelBuilder.Entity<AiModelMetricReading>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || AiModels.Any(m => m.Id == e.ModelId));
+
+        modelBuilder.Entity<AiModelOverride>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || AiModels.Any(m => m.Id == e.ModelId));
+
+        modelBuilder.Entity<AiModelRisk>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (Risks.Any(r => r.Id == e.RiskId) && AiModels.Any(m => m.Id == e.ModelId)));
 
         // A further step removed: these hang off a run, which hangs off the assessment that
         // carries the entity_id.

@@ -224,15 +224,23 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
         var governing = TailStatisticsMapping.Governing(tailRows);
         var statistics = governing is null ? null : TailStatisticsMapping.ToStatistics(governing);
 
+        // Stage 9.8 (S49 §4.8): Gate B by indicator — the KRIs linked to the risk, read unscoped now that the risk is
+        // known to be visible, so the gate never depends on who asks (S49 D6). Independent of the appetite row: the
+        // KRI carries its own tolerance (D5).
+        Model.Monitoring.IndicatorAppetiteEvaluation indicators;
+        await using (var unscoped = DalService.GetContext(withIdentity: false, bypassEntityScope: true))
+            indicators = await MonitoringService.EvaluateIndicatorsAsync(unscoped, riskId, DateTime.UtcNow);
+
         if (appetite is null)
             return new AppetiteEvaluation
             {
                 AppetiteConfigured = false,
                 ResidualScore = residual,
-                Explanation = "No risk appetite is configured, so no acceptance is gated. Define one in " +
-                              "Administration → Risk appetite to make the ceiling and the dual-approval " +
-                              "threshold take effect.",
-                Tail = Tools.TailRisk.TailAppetite.EvaluateScenario(null, null, null, governing?.Run, statistics)
+                Explanation = "No risk appetite is configured, so neither the ceiling nor the tail gates an " +
+                              "acceptance. Define one in Administration → Risk appetite to make the ceiling and the " +
+                              "dual-approval threshold take effect.",
+                Tail = Tools.TailRisk.TailAppetite.EvaluateScenario(null, null, null, governing?.Run, statistics),
+                Indicators = indicators
             };
 
         var limits = await db.RiskAppetiteTailLimits.AsNoTracking().FirstOrDefaultAsync(l => l.AppetiteId == appetite.Id);
@@ -244,6 +252,7 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
         {
             Tail = Tools.TailRisk.TailAppetite.EvaluateScenario(appetite.Id, appetite.EntityId,
                 TailStatisticsMapping.ScenarioLimits(limits), governing?.Run, statistics),
+            Indicators = indicators,
             AppetiteConfigured = true,
             AppetiteId = appetite.Id,
             EntityId = appetite.EntityId,

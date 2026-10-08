@@ -18,16 +18,16 @@ Related: [Risk governance](risk-governance.md) · [Business continuity](business
 | # | Flag | Origin | Gate A |
 |---|---|---|---|
 | 1 | Life, health or human safety | declared | **yes** |
-| 2 | Legal/regulatory obligation or LGPD | declared (derivable from the LGPD catalogue in Stage 9.11) | **yes** |
+| 2 | Legal/regulatory obligation or LGPD | declared — Stage 9.11 keeps it declared, because a derived Gate A condition would be lifted by whoever edits the catalogue; the risk's [legal requirements and data findings](lgpd-data-catalogue.md) are evidence for it (S52 D7) | **yes** |
 | 3 | Known exploitation (CISA KEV) or active attack | **derived** from KEV — an open finding linked to the risk has a CVE listed in [`kev_entries`](exploitation-signals.md) — and declarable for an active attack | **yes** |
 | 4 | Critical process with RTO/RPO threatened | **derived** from the [BIA](business-continuity.md) — the risk is chain-linked to an active critical process, or to something it depends on, whose continuity-threat weight is above 0 — and declarable. The weight (1.0 confirmed, the configured weight when only unverified) is shown beside it | no, at any weight |
-| 5 | Sensitive personal data, large volume or strategic research | **derived** from data classification — the risk is chain-linked to `organizationData` classified at a `securityClassificationLevel` marked **sensitive** — and declarable | no |
+| 5 | Sensitive personal data, large volume or strategic research | **derived** from data classification — the risk is chain-linked to `organizationData` classified at a `securityClassificationLevel` marked **sensitive**, or catalogued in the [LGPD data catalogue](lgpd-data-catalogue.md) as sensitive personal data, a large volume of personal data or strategic research (Stage 9.11) — and declarable | no |
 | 6 | Systemic risk or single point of failure | declared | no |
-| 7 | Concentration in a third party, cloud or identity | declared (third-party register, Stage 9.10) | no |
+| 7 | Concentration in a third party, cloud or identity | declared — Stage 9.10 keeps it declared; the third-party register's [concentration](third-party-register.md) is evidence for it (S51 D11) | no |
 | 8 | Low probability, catastrophic impact | declared (tail statistics, Stage 9.7) | no |
-| 9 | Emerging risk or rapid growth | declared (KRIs, Stage 9.8) | no |
+| 9 | Emerging risk or rapid growth | declared — Stage 9.8 keeps it declared; a linked KRI's series is evidence for it (S49 D13) | no |
 | 10 | High uncertainty or weak evidence | declared; evidence confidence sits beside it | no |
-| 11 | AI risk | declarable only, until Stage 9.12 | no |
+| 11 | AI risk: discrimination, hallucination, prompt injection, drift | **derived** from the [AI model inventory](ai-governance.md) — the risk is linked to an inventoried model that is not retired; retiring the model or removing the link reverts it with the system's trail (Stage 9.12, S53) — and declarable | no |
 | — | Risk without legitimate acceptance | declared — a Phase 4 Gate A condition, not one of the eleven | **yes** |
 
 A flag is **set** when it is declared **or** derived. A declaration never suppresses a derivation, so a KEV

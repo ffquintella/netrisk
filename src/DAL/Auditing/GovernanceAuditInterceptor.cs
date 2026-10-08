@@ -93,7 +93,62 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // they are recomputed nightly and would bury the trail; the change that matters, flag 8, is a RiskFlag.
         nameof(RiskLossComponent),
         nameof(RiskCorrelation),
-        nameof(RiskAppetiteTailLimit)
+        nameof(RiskAppetiteTailLimit),
+
+        // Stage 9.8 (S49 §4.11): the indicator and its tolerance — who relaxed it —, every reading and every voiding,
+        // who linked and unlinked an indicator from a risk (unlinking removes a gate), who declared each reassessment
+        // event, and each trigger that put a risk back in front of somebody.
+        nameof(Kri),
+        nameof(KriReading),
+        nameof(KriRisk),
+        nameof(ReassessmentEvent),
+        nameof(RiskReassessmentTrigger),
+
+        // Stage 9.9 (S50 §4.8): who archived a risk and why, the conditions that reopen it, every quarterly review and
+        // every reopening — by whom or by which event; who matched an incident to which risks (the backtest is the
+        // evidence the "unforeseen" rate is computed from); and the committee — its required approvals, who sits on it,
+        // every decision submitted to it and every vote.
+        nameof(RiskArchive),
+        nameof(RiskArchiveCondition),
+        nameof(RiskArchiveReview),
+        nameof(IncidentBacktest),
+        nameof(IncidentBacktestRisk),
+        nameof(RiskCommittee),
+        nameof(RiskCommitteeMember),
+        nameof(RiskCommitteeDecision),
+        nameof(RiskCommitteeVote),
+
+        // Stage 9.10 (S51 §4.10): the supplier record — its contract, SLA, contracted RTO/RPO, right to audit and exit
+        // plan —, what it supplies or processes, its sub-processors and data locations, every HECVAT recorded, replaced
+        // (through the assessment's answers_updated_at) or voided, and every SBOM imported or removed. Not the answers
+        // nor the SBOM components: up to two thousand and ten thousand rows per upload would bury the trail (S51 D12).
+        nameof(ThirdParty),
+        nameof(ThirdPartyLink),
+        nameof(ThirdPartySubprocessor),
+        nameof(ThirdPartyDataLocation),
+        nameof(ThirdPartyAssessment),
+        nameof(ThirdPartySbom),
+
+        // Stage 9.11 (S52 §4.10): the catalogue of each data record — its personal-data category, every purpose with its
+        // legal basis, retention, location and transfer —, every legal requirement and who linked one to a risk, and every
+        // RIPD with what it covers, its approval and its retirement. The catalogue describes kinds of data, so no row here
+        // carries a data subject's value.
+        nameof(LegalRequirement),
+        nameof(DataCatalogueEntry),
+        nameof(DataCataloguePurpose),
+        nameof(DataCatalogueLocation),
+        nameof(Dpia),
+        nameof(DpiaLink),
+        nameof(RiskLegalRequirement),
+
+        // Stage 9.12 (S53 §4.8): the model inventory — purpose, vendor, version, status, risk tier, oversight, owner, and every
+        // retirement —, the data each model uses, every metric reading and every voiding, every human override with its author
+        // and reason, and who linked a model to a risk (the link derives flag 11).
+        nameof(AiModel),
+        nameof(AiModelDataLink),
+        nameof(AiModelMetricReading),
+        nameof(AiModelOverride),
+        nameof(AiModelRisk)
     };
 
     /// <summary>

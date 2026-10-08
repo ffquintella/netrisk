@@ -24,6 +24,433 @@ namespace DAL.Migrations
             MySqlModelBuilderExtensions.HasCharSet(modelBuilder, "utf8mb4");
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("DAL.Entities.AiModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateTime?>("DataDeclaredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("data_declared_at");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int?>("HumanOversight")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("human_oversight");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.Property<int>("MaxEvaluationAgeDays")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("max_evaluation_age_days");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("OwnerId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("RetireReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("retire_reason");
+
+                    b.Property<DateTime?>("RetiredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retired_at");
+
+                    b.Property<int?>("RetiredById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("retired_by_id");
+
+                    b.Property<int?>("RiskTier")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_tier");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("source");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("version");
+
+                    b.Property<DateTime?>("VersionSince")
+                        .HasColumnType("datetime")
+                        .HasColumnName("version_since");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_ai_models_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_ai_models_entity_id");
+
+                    b.HasIndex(new[] { "OwnerId" }, "idx_ai_models_owner_id");
+
+                    b.HasIndex(new[] { "RetiredById" }, "idx_ai_models_retired_by_id");
+
+                    b.HasIndex(new[] { "Status" }, "idx_ai_models_status");
+
+                    b.HasIndex(new[] { "ThirdPartyId" }, "idx_ai_models_third_party_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_ai_models_updated_by_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_ai_models_name")
+                        .IsUnique();
+
+                    b.ToTable("ai_models", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_models_human_oversight", "`human_oversight` IS NULL OR (`human_oversight` >= 1 AND `human_oversight` <= 3)");
+
+                            t.HasCheckConstraint("ck_ai_models_kind", "`kind` >= 1 AND `kind` <= 7");
+
+                            t.HasCheckConstraint("ck_ai_models_max_evaluation_age_days", "`max_evaluation_age_days` >= 1 AND `max_evaluation_age_days` <= 1096");
+
+                            t.HasCheckConstraint("ck_ai_models_retired", "(`status` = 4 AND `retired_at` IS NOT NULL AND `retire_reason` IS NOT NULL) OR (`status` <> 4 AND `retired_at` IS NULL)");
+
+                            t.HasCheckConstraint("ck_ai_models_risk_tier", "`risk_tier` IS NULL OR (`risk_tier` >= 1 AND `risk_tier` <= 3)");
+
+                            t.HasCheckConstraint("ck_ai_models_source", "`source` >= 1 AND `source` <= 3");
+
+                            t.HasCheckConstraint("ck_ai_models_status", "`status` >= 1 AND `status` <= 4");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelDataLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("model_id");
+
+                    b.Property<int>("Usage")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("data_usage");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_ai_model_data_links_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_ai_model_data_links_entity_id");
+
+                    b.HasIndex(new[] { "ModelId", "EntityId", "Usage" }, "uq_ai_model_data_links_model_id_entity_id_data_usage")
+                        .IsUnique();
+
+                    b.ToTable("ai_model_data_links", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_model_data_links_data_usage", "`data_usage` >= 1 AND `data_usage` <= 5");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelMetricReading", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EvidenceReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("evidence_reference");
+
+                    b.Property<DateTime>("MeasuredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("measured_at");
+
+                    b.Property<string>("Method")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("method");
+
+                    b.Property<int>("Metric")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("metric");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("model_id");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("model_version");
+
+                    b.Property<int?>("OverrideCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("override_count");
+
+                    b.Property<DateTime?>("PeriodEnd")
+                        .HasColumnType("datetime")
+                        .HasColumnName("period_end");
+
+                    b.Property<DateTime?>("PeriodStart")
+                        .HasColumnType("datetime")
+                        .HasColumnName("period_start");
+
+                    b.Property<int?>("RecordedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("recorded_by_id");
+
+                    b.Property<int?>("SampleSize")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("sample_size");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)")
+                        .HasColumnName("value");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("VoidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voided_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ModelId", "Metric", "MeasuredAt" }, "idx_ai_model_metric_readings_model_id_metric_measured_at");
+
+                    b.HasIndex(new[] { "RecordedById" }, "idx_ai_model_metric_readings_recorded_by_id");
+
+                    b.HasIndex(new[] { "VoidedById" }, "idx_ai_model_metric_readings_voided_by_id");
+
+                    b.ToTable("ai_model_metric_readings", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_metric", "`metric` >= 1 AND `metric` <= 6");
+
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_override_rate", "(`metric` = 6 AND `period_start` IS NOT NULL AND `sample_size` IS NOT NULL AND `override_count` IS NOT NULL AND `override_count` >= 0 AND `override_count` <= `sample_size`) OR (`metric` <> 6 AND `override_count` IS NULL)");
+
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_period", "(`period_start` IS NULL AND `period_end` IS NULL) OR (`period_start` IS NOT NULL AND `period_end` IS NOT NULL AND `period_end` > `period_start`)");
+
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_sample_size", "`sample_size` IS NULL OR `sample_size` >= 1");
+
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_value", "`value` >= 0 AND (`metric` = 5 OR `value` <= 1)");
+
+                            t.HasCheckConstraint("ck_ai_model_metric_readings_void", "(`voided_at` IS NULL AND `void_reason` IS NULL) OR (`voided_at` IS NOT NULL AND `void_reason` IS NOT NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelOverride", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("HumanDecision")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("human_decision");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("model_id");
+
+                    b.Property<string>("ModelOutput")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("model_output");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("model_version");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("reason");
+
+                    b.Property<int?>("RecordedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("recorded_by_id");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("VoidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voided_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ModelId", "OccurredAt" }, "idx_ai_model_overrides_model_id_occurred_at");
+
+                    b.HasIndex(new[] { "RecordedById" }, "idx_ai_model_overrides_recorded_by_id");
+
+                    b.HasIndex(new[] { "VoidedById" }, "idx_ai_model_overrides_voided_by_id");
+
+                    b.ToTable("ai_model_overrides", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ai_model_overrides_void", "(`voided_at` IS NULL AND `void_reason` IS NULL) OR (`voided_at` IS NOT NULL AND `void_reason` IS NOT NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("ModelId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("model_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_ai_model_risks_created_by_id");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_ai_model_risks_risk_id");
+
+                    b.HasIndex(new[] { "ModelId", "RiskId" }, "uq_ai_model_risks_model_id_risk_id")
+                        .IsUnique();
+
+                    b.ToTable("ai_model_risks", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.ApiKey", b =>
                 {
                     b.Property<uint>("Id")
@@ -1105,6 +1532,390 @@ namespace DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("custom_risk_model_values", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCatalogueEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("DataCategories")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("data_categories");
+
+                    b.Property<string>("DataSubjects")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("data_subjects");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<bool?>("InternationalTransfer")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("international_transfer");
+
+                    b.Property<bool?>("InvolvesMinors")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("involves_minors");
+
+                    b.Property<bool>("LargeVolume")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("large_volume");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("PersonalData")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("personal_data");
+
+                    b.Property<string>("RetentionBasis")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("retention_basis");
+
+                    b.Property<int?>("RetentionPeriodMonths")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("retention_period_months");
+
+                    b.Property<int?>("RetentionRequirementId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("retention_requirement_id");
+
+                    b.Property<DateTime?>("RetentionReviewDueAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retention_review_due_at");
+
+                    b.Property<DateTime?>("RetentionReviewedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retention_reviewed_at");
+
+                    b.Property<string>("RetentionTrigger")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("retention_trigger");
+
+                    b.Property<bool>("StrategicResearch")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("strategic_research");
+
+                    b.Property<int?>("TransferMechanism")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("transfer_mechanism");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_data_catalogue_entries_created_by_id");
+
+                    b.HasIndex(new[] { "RetentionRequirementId" }, "idx_data_catalogue_entries_retention_requirement_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_data_catalogue_entries_updated_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "uq_data_catalogue_entries_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("data_catalogue_entries", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_data_catalogue_entries_personal_data", "`personal_data` IS NULL OR (`personal_data` >= 1 AND `personal_data` <= 4)");
+
+                            t.HasCheckConstraint("ck_data_catalogue_entries_retention_period", "`retention_period_months` IS NULL OR (`retention_period_months` >= 0 AND `retention_period_months` <= 1200)");
+
+                            t.HasCheckConstraint("ck_data_catalogue_entries_transfer_mechanism", "`transfer_mechanism` IS NULL OR (`transfer_mechanism` >= 1 AND `transfer_mechanism` <= 12)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCatalogueLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("EntryId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entry_id");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("region");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_data_catalogue_locations_created_by_id");
+
+                    b.HasIndex(new[] { "EntryId", "Country", "Purpose" }, "uq_data_catalogue_locations_entry_id_country_purpose")
+                        .IsUnique();
+
+                    b.ToTable("data_catalogue_locations", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_data_catalogue_locations_purpose", "`purpose` >= 1 AND `purpose` <= 4");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCataloguePurpose", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BasisReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("basis_reference");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("EntryId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entry_id");
+
+                    b.Property<int?>("LegalBasis")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("legal_basis");
+
+                    b.Property<int?>("LegalRequirementId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("legal_requirement_id");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("purpose");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_data_catalogue_purposes_created_by_id");
+
+                    b.HasIndex(new[] { "LegalRequirementId" }, "idx_data_catalogue_purposes_legal_requirement_id");
+
+                    b.HasIndex(new[] { "EntryId", "Purpose" }, "uq_data_catalogue_purposes_entry_id_purpose")
+                        .IsUnique();
+
+                    b.ToTable("data_catalogue_purposes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_data_catalogue_purposes_legal_basis", "`legal_basis` IS NULL OR (`legal_basis` >= 1 AND `legal_basis` <= 18)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Dpia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("approved_at");
+
+                    b.Property<int?>("ApprovedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("approved_by_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("DocumentReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("document_reference");
+
+                    b.Property<DateTime?>("NextReviewDueAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("next_review_due_at");
+
+                    b.Property<DateTime?>("PerformedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("performed_at");
+
+                    b.Property<int?>("ResidualRisk")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("residual_risk");
+
+                    b.Property<string>("RetireReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("retire_reason");
+
+                    b.Property<DateTime?>("RetiredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retired_at");
+
+                    b.Property<int?>("RetiredById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("retired_by_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text")
+                        .HasColumnName("summary");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ApprovedById" }, "idx_dpias_approved_by_id");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_dpias_created_by_id");
+
+                    b.HasIndex(new[] { "RetiredById" }, "idx_dpias_retired_by_id");
+
+                    b.HasIndex(new[] { "Status" }, "idx_dpias_status");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_dpias_updated_by_id");
+
+                    b.ToTable("dpias", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_dpias_approved", "`status` <> 2 OR `approved_at` IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_dpias_residual_risk", "`residual_risk` IS NULL OR (`residual_risk` >= 1 AND `residual_risk` <= 3)");
+
+                            t.HasCheckConstraint("ck_dpias_retired", "(`status` = 3 AND `retired_at` IS NOT NULL AND `retire_reason` IS NOT NULL) OR (`status` <> 3 AND `retired_at` IS NULL)");
+
+                            t.HasCheckConstraint("ck_dpias_status", "`status` >= 1 AND `status` <= 3");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DpiaLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("DpiaId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("dpia_id");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_dpia_links_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_dpia_links_entity_id");
+
+                    b.HasIndex(new[] { "DpiaId", "EntityId" }, "uq_dpia_links_dpia_id_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("dpia_links", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_dpia_links_kind", "`kind` >= 1 AND `kind` <= 2");
+                        });
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -2543,6 +3354,89 @@ namespace DAL.Migrations
                         .HasAnnotation("MySql:FullTextIndex", true);
 
                     b.ToTable("incidents", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IncidentBacktest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AssessedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("assessed_at");
+
+                    b.Property<int?>("AssessedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("assessed_by_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("IncidentId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("incident_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "AssessedById" }, "idx_incident_backtests_assessed_by_id");
+
+                    b.HasIndex(new[] { "IncidentId" }, "uq_incident_backtests_incident_id")
+                        .IsUnique();
+
+                    b.ToTable("incident_backtests", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IncidentBacktestRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BacktestId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("backtest_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_incident_backtest_risks_risk_id");
+
+                    b.HasIndex(new[] { "BacktestId", "RiskId" }, "uq_incident_backtest_risks_backtest_id_risk_id")
+                        .IsUnique();
+
+                    b.ToTable("incident_backtest_risks", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -4139,6 +5033,297 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.Kri", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("direction");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("MaxReadingAgeDays")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("max_reading_age_days");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("OwnerId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime?>("RetiredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retired_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("ToleranceRationale")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("tolerance_rationale");
+
+                    b.Property<decimal>("ToleranceThreshold")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("tolerance_threshold");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("unit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.Property<decimal?>("WarningThreshold")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("warning_threshold");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_kris_entity_id");
+
+                    b.HasIndex(new[] { "OwnerId" }, "idx_kris_owner_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_kris_updated_by_id");
+
+                    b.ToTable("kris", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_kris_category", "`category` >= 1 AND `category` <= 4");
+
+                            t.HasCheckConstraint("ck_kris_direction", "`direction` >= 1 AND `direction` <= 2");
+
+                            t.HasCheckConstraint("ck_kris_max_reading_age_days", "`max_reading_age_days` >= 1 AND `max_reading_age_days` <= 366");
+
+                            t.HasCheckConstraint("ck_kris_warning_side", "`warning_threshold` IS NULL OR (`direction` = 1 AND `warning_threshold` < `tolerance_threshold`) OR (`direction` = 2 AND `warning_threshold` > `tolerance_threshold`)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.KriReading", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("KriId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kri_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTime>("ObservedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("observed_at");
+
+                    b.Property<int?>("RecordedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("recorded_by_id");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("value");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("VoidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voided_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "KriId", "ObservedAt" }, "idx_kri_readings_kri_id_observed_at");
+
+                    b.HasIndex(new[] { "RecordedById" }, "idx_kri_readings_recorded_by_id");
+
+                    b.HasIndex(new[] { "VoidedById" }, "idx_kri_readings_voided_by_id");
+
+                    b.ToTable("kri_readings", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_kri_readings_void", "(`voided_at` IS NULL AND `void_reason` IS NULL) OR (`voided_at` IS NOT NULL AND `void_reason` IS NOT NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.KriRisk", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("KriId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kri_id");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_kri_risks_created_by_id");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_kri_risks_risk_id");
+
+                    b.HasIndex(new[] { "KriId", "RiskId" }, "uq_kri_risks_kri_id_risk_id")
+                        .IsUnique();
+
+                    b.ToTable("kri_risks", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LegalRequirement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("reference");
+
+                    b.Property<int?>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_legal_requirements_created_by_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId" }, "idx_legal_requirements_third_party_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_legal_requirements_updated_by_id");
+
+                    b.HasIndex(new[] { "Code" }, "uq_legal_requirements_code")
+                        .IsUnique();
+
+                    b.ToTable("legal_requirements", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_legal_requirements_kind", "`kind` >= 1 AND `kind` <= 4");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.Likelihood", b =>
                 {
                     b.Property<string>("Definition")
@@ -5520,6 +6705,90 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ReassessmentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DeclaredById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("declared_by_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("IncidentId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("incident_id");
+
+                    b.Property<DateTime?>("KriBreachEndedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("kri_breach_ended_at");
+
+                    b.Property<int?>("KriId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kri_id");
+
+                    b.Property<int?>("KriReadingId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kri_reading_id");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("origin");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<int>("TriggerType")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("trigger_type");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "DeclaredById" }, "idx_reassessment_events_declared_by_id");
+
+                    b.HasIndex(new[] { "KriId" }, "idx_reassessment_events_kri_id");
+
+                    b.HasIndex(new[] { "IncidentId" }, "uq_reassessment_events_incident_id")
+                        .IsUnique();
+
+                    b.HasIndex(new[] { "KriReadingId" }, "uq_reassessment_events_kri_reading_id")
+                        .IsUnique();
+
+                    b.ToTable("reassessment_events", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reassessment_events_incident_type", "`incident_id` IS NULL OR `trigger_type` = 3");
+
+                            t.HasCheckConstraint("ck_reassessment_events_kri_origin", "(`origin` = 2 AND `kri_id` IS NOT NULL AND `kri_reading_id` IS NOT NULL AND `trigger_type` = 6) OR (`origin` = 1 AND `kri_id` IS NULL AND `kri_reading_id` IS NULL AND `kri_breach_ended_at` IS NULL)");
+
+                            t.HasCheckConstraint("ck_reassessment_events_origin", "`origin` >= 1 AND `origin` <= 2");
+
+                            t.HasCheckConstraint("ck_reassessment_events_trigger_type", "`trigger_type` >= 1 AND `trigger_type` <= 6");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.Report", b =>
                 {
                     b.Property<int>("Id")
@@ -6364,6 +7633,214 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ArchivedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("archived_at");
+
+                    b.Property<int?>("ArchivedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("archived_by_id");
+
+                    b.Property<int?>("ClosureId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("closure_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Justification")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)")
+                        .HasColumnName("justification");
+
+                    b.Property<DateTime?>("LastReviewedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_reviewed_at");
+
+                    b.Property<DateTime>("NextReviewDueAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("next_review_due_at");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("previous_status");
+
+                    b.Property<int?>("ReopenEventId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("reopen_event_id");
+
+                    b.Property<int?>("ReopenOrigin")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("reopen_origin");
+
+                    b.Property<string>("ReopenReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("reopen_reason");
+
+                    b.Property<DateTime?>("ReopenedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("reopened_at");
+
+                    b.Property<int?>("ReopenedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("reopened_by_id");
+
+                    b.Property<DateTime?>("ReviewNotifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("review_notified_at");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ArchivedById" }, "idx_risk_archives_archived_by_id");
+
+                    b.HasIndex(new[] { "ClosureId" }, "idx_risk_archives_closure_id");
+
+                    b.HasIndex(new[] { "ReopenEventId" }, "idx_risk_archives_reopen_event_id");
+
+                    b.HasIndex(new[] { "ReopenedById" }, "idx_risk_archives_reopened_by_id");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_risk_archives_risk_id");
+
+                    b.HasIndex(new[] { "Status", "NextReviewDueAt" }, "idx_risk_archives_status_next_review_due_at");
+
+                    b.ToTable("risk_archives", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_archives_reopen_origin", "`reopen_origin` IS NULL OR (`reopen_origin` >= 1 AND `reopen_origin` <= 3)");
+
+                            t.HasCheckConstraint("ck_risk_archives_reopened", "(`status` = 1 AND `reopened_at` IS NULL AND `reopen_origin` IS NULL) OR (`status` = 2 AND `reopened_at` IS NOT NULL AND `reopen_origin` IS NOT NULL AND `reopen_reason` IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_risk_archives_status", "`status` >= 1 AND `status` <= 2");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskArchiveCondition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArchiveId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("archive_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("TriggerType")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("trigger_type");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ArchiveId", "TriggerType" }, "uq_risk_archive_conditions_archive_id_trigger_type")
+                        .IsUnique();
+
+                    b.ToTable("risk_archive_conditions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_archive_conditions_trigger_type", "`trigger_type` >= 1 AND `trigger_type` <= 6");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskArchiveReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArchiveId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("archive_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("NextReviewDueAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("next_review_due_at");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("note");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("outcome");
+
+                    b.Property<DateTime>("ReviewedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("reviewed_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ArchiveId" }, "idx_risk_archive_reviews_archive_id");
+
+                    b.HasIndex(new[] { "ReviewedById" }, "idx_risk_archive_reviews_reviewed_by_id");
+
+                    b.ToTable("risk_archive_reviews", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_archive_reviews_next_due", "(`outcome` = 1 AND `next_review_due_at` IS NOT NULL) OR (`outcome` = 2 AND `next_review_due_at` IS NULL)");
+
+                            t.HasCheckConstraint("ck_risk_archive_reviews_outcome", "`outcome` >= 1 AND `outcome` <= 2");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskAttackTechnique", b =>
                 {
                     b.Property<int>("Id")
@@ -6518,6 +7995,278 @@ namespace DAL.Migrations
                     b.ToTable("risk_chain_links", null, t =>
                         {
                             t.HasCheckConstraint("ck_risk_chain_links_one_target", "((`entity_id` IS NOT NULL) + (`host_id` IS NOT NULL)) = 1");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommittee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Mandate")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("mandate");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RequiredApprovals")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("required_approvals");
+
+                    b.Property<DateTime?>("RetiredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("retired_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_risk_committees_entity_id");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_risk_committees_updated_by_id");
+
+                    b.ToTable("risk_committees", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_committees_required_approvals", "`required_approvals` >= 2 AND `required_approvals` <= 50");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeDecision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcceptanceId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("acceptance_id");
+
+                    b.Property<string>("BusinessJustification")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("business_justification");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("closed_at");
+
+                    b.Property<int>("CommitteeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("committee_id");
+
+                    b.Property<string>("CompensatingControls")
+                        .HasColumnType("text")
+                        .HasColumnName("compensating_controls");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("MinutesReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("minutes_reference");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime>("OpenedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("opened_at");
+
+                    b.Property<int?>("OpenedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("opened_by_id");
+
+                    b.Property<int?>("RenewsAcceptanceId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("renews_acceptance_id");
+
+                    b.Property<int>("RequiredApprovals")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("required_approvals");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("version");
+
+                    b.Property<string>("WithdrawalReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("withdrawal_reason");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "AcceptanceId" }, "idx_risk_committee_decisions_acceptance_id");
+
+                    b.HasIndex(new[] { "CommitteeId" }, "idx_risk_committee_decisions_committee_id");
+
+                    b.HasIndex(new[] { "OpenedById" }, "idx_risk_committee_decisions_opened_by_id");
+
+                    b.HasIndex(new[] { "RenewsAcceptanceId" }, "idx_risk_committee_decisions_renews_acceptance_id");
+
+                    b.HasIndex(new[] { "RiskId", "Status" }, "idx_risk_committee_decisions_risk_id_status");
+
+                    b.ToTable("risk_committee_decisions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_committee_decisions_closed", "(`status` = 1 AND `closed_at` IS NULL) OR (`status` <> 1 AND `closed_at` IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_risk_committee_decisions_kind", "`kind` >= 1 AND `kind` <= 2");
+
+                            t.HasCheckConstraint("ck_risk_committee_decisions_required_approvals", "`required_approvals` >= 2 AND `required_approvals` <= 50");
+
+                            t.HasCheckConstraint("ck_risk_committee_decisions_status", "`status` >= 1 AND `status` <= 4");
+
+                            t.HasCheckConstraint("ck_risk_committee_decisions_withdrawn", "`status` <> 4 OR `withdrawal_reason` IS NOT NULL");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CommitteeId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("committee_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_risk_committee_members_created_by_id");
+
+                    b.HasIndex(new[] { "UserId" }, "idx_risk_committee_members_user_id");
+
+                    b.HasIndex(new[] { "CommitteeId", "UserId" }, "uq_risk_committee_members_committee_id_user_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_committee_members", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CastAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("cast_at");
+
+                    b.Property<int>("Choice")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("choice");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DecisionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("decision_id");
+
+                    b.Property<int?>("VoterId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voter_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "VoterId" }, "idx_risk_committee_votes_voter_id");
+
+                    b.HasIndex(new[] { "DecisionId", "VoterId" }, "uq_risk_committee_votes_decision_id_voter_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_committee_votes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_risk_committee_votes_choice", "`choice` >= 1 AND `choice` <= 3");
                         });
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
@@ -6770,6 +8519,52 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskLegalRequirement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("LegalRequirementId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("legal_requirement_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_risk_legal_requirements_created_by_id");
+
+                    b.HasIndex(new[] { "LegalRequirementId" }, "idx_risk_legal_requirements_legal_requirement_id");
+
+                    b.HasIndex(new[] { "RiskId", "LegalRequirementId" }, "uq_risk_legal_requirements_risk_id_legal_requirement_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_legal_requirements", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskLevel", b =>
                 {
                     b.Property<string>("Color")
@@ -6867,6 +8662,45 @@ namespace DAL.Migrations
 
                             t.HasCheckConstraint("ck_risk_loss_components_range", "`loss_min` >= 0 AND `loss_min` <= `loss_most_likely` AND `loss_most_likely` <= `loss_max`");
                         });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskReassessmentTrigger", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("event_id");
+
+                    b.Property<DateTime>("RaisedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("raised_at");
+
+                    b.Property<int>("RiskId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("risk_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "RiskId" }, "idx_risk_reassessment_triggers_risk_id");
+
+                    b.HasIndex(new[] { "EventId", "RiskId" }, "uq_risk_reassessment_triggers_event_id_risk_id")
+                        .IsUnique();
+
+                    b.ToTable("risk_reassessment_triggers", (string)null);
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
@@ -8524,6 +10358,646 @@ namespace DAL.Migrations
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ThirdParty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuditClauseReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("audit_clause_reference");
+
+                    b.Property<DateTime?>("ContractEnd")
+                        .HasColumnType("datetime")
+                        .HasColumnName("contract_end");
+
+                    b.Property<string>("ContractReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("contract_reference");
+
+                    b.Property<DateTime?>("ContractStart")
+                        .HasColumnType("datetime")
+                        .HasColumnName("contract_start");
+
+                    b.Property<int?>("ContractedRpoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("contracted_rpo_minutes");
+
+                    b.Property<int?>("ContractedRtoMinutes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("contracted_rto_minutes");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("DataPortability")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("data_portability");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("ExitPlan")
+                        .HasColumnType("text")
+                        .HasColumnName("exit_plan");
+
+                    b.Property<DateTime?>("ExitPlanReviewedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("exit_plan_reviewed_at");
+
+                    b.Property<DateTime?>("ExitPlanTestedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("exit_plan_tested_at");
+
+                    b.Property<bool>("IsCloudProvider")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_cloud_provider");
+
+                    b.Property<bool>("IsIdentityProvider")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_identity_provider");
+
+                    b.Property<string>("LegalName")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("legal_name");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("OwnerId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<bool?>("ProcessesPersonalData")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("processes_personal_data");
+
+                    b.Property<bool?>("RightToAudit")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("right_to_audit");
+
+                    b.Property<decimal?>("SlaAvailabilityPercent")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)")
+                        .HasColumnName("sla_availability_percent");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("SubprocessorsDeclaredAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("subprocessors_declared_at");
+
+                    b.Property<string>("TaxId")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("tax_id");
+
+                    b.Property<DateTime?>("TerminatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("terminated_at");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("updated_by_id");
+
+                    b.Property<int?>("VulnerabilityFixDays")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("vulnerability_fix_days");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("website");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_third_parties_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_third_parties_entity_id");
+
+                    b.HasIndex(new[] { "OwnerId" }, "idx_third_parties_owner_id");
+
+                    b.HasIndex(new[] { "Status" }, "idx_third_parties_status");
+
+                    b.HasIndex(new[] { "UpdatedById" }, "idx_third_parties_updated_by_id");
+
+                    b.HasIndex(new[] { "Name" }, "uq_third_parties_name")
+                        .IsUnique();
+
+                    b.ToTable("third_parties", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_parties_contract_dates", "`contract_start` IS NULL OR `contract_end` IS NULL OR `contract_end` >= `contract_start`");
+
+                            t.HasCheckConstraint("ck_third_parties_non_negative", "(`contracted_rto_minutes` IS NULL OR `contracted_rto_minutes` >= 0) AND (`contracted_rpo_minutes` IS NULL OR `contracted_rpo_minutes` >= 0) AND (`vulnerability_fix_days` IS NULL OR `vulnerability_fix_days` >= 0)");
+
+                            t.HasCheckConstraint("ck_third_parties_sla_availability", "`sla_availability_percent` IS NULL OR (`sla_availability_percent` > 0 AND `sla_availability_percent` <= 100)");
+
+                            t.HasCheckConstraint("ck_third_parties_status", "`status` >= 1 AND `status` <= 4");
+
+                            t.HasCheckConstraint("ck_third_parties_terminated", "(`status` = 4 AND `terminated_at` IS NOT NULL) OR (`status` <> 4 AND `terminated_at` IS NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyAssessment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AnswersUpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("answers_updated_at");
+
+                    b.Property<int?>("AnswersUpdatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("answers_updated_by_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("EvidenceReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("evidence_reference");
+
+                    b.Property<int>("ExpectedQuestionCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("expected_question_count");
+
+                    b.Property<string>("FrameworkVersion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("framework_version");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("responded_at");
+
+                    b.Property<int>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("datetime")
+                        .HasColumnName("valid_until");
+
+                    b.Property<int>("Variant")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("variant");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTime?>("VoidedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("voided_at");
+
+                    b.Property<int?>("VoidedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("voided_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "AnswersUpdatedById" }, "idx_third_party_assessments_answers_updated_by_id");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_third_party_assessments_created_by_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId" }, "idx_third_party_assessments_third_party_id");
+
+                    b.HasIndex(new[] { "VoidedById" }, "idx_third_party_assessments_voided_by_id");
+
+                    b.ToTable("third_party_assessments", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_party_assessments_expected_question_count", "`expected_question_count` >= 1 AND `expected_question_count` <= 2000");
+
+                            t.HasCheckConstraint("ck_third_party_assessments_variant", "`variant` >= 1 AND `variant` <= 4");
+
+                            t.HasCheckConstraint("ck_third_party_assessments_voided", "(`voided_at` IS NULL AND `void_reason` IS NULL) OR (`voided_at` IS NOT NULL AND `void_reason` IS NOT NULL)");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyAssessmentAnswer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Answer")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("answer");
+
+                    b.Property<int>("AssessmentId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("assessment_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("Critical")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("critical");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("PreferredAnswer")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("preferred_answer");
+
+                    b.Property<string>("QuestionId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("question_id");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "AssessmentId", "QuestionId" }, "uq_third_party_assessment_answers_assessment_id_question_id")
+                        .IsUnique();
+
+                    b.ToTable("third_party_assessment_answers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_party_assessment_answers_answer", "`answer` >= 1 AND `answer` <= 4");
+
+                            t.HasCheckConstraint("ck_third_party_assessment_answers_preferred_answer", "`preferred_answer` IS NULL OR (`preferred_answer` >= 1 AND `preferred_answer` <= 2)");
+
+                            t.HasCheckConstraint("ck_third_party_assessment_answers_weight", "`weight` >= 1 AND `weight` <= 100");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyDataLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("region");
+
+                    b.Property<int>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_third_party_data_locations_created_by_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId", "Country", "Purpose" }, "uq_third_party_data_locations_third_party_id_country_purpose")
+                        .IsUnique();
+
+                    b.ToTable("third_party_data_locations", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_party_data_locations_purpose", "`purpose` >= 1 AND `purpose` <= 4");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("kind");
+
+                    b.Property<int>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_third_party_links_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_third_party_links_entity_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId", "EntityId" }, "uq_third_party_links_third_party_id_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("third_party_links", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_party_links_kind", "`kind` >= 1 AND `kind` <= 3");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySbom", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComponentCount")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("component_count");
+
+                    b.Property<string>("ComponentName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("component_name");
+
+                    b.Property<string>("ComponentVersion")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("component_version");
+
+                    b.Property<string>("DocumentSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("document_sha256");
+
+                    b.Property<int>("DocumentSizeBytes")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("document_size_bytes");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("format");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("serial_number");
+
+                    b.Property<string>("SpecVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("spec_version");
+
+                    b.Property<int>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<int?>("UploadedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("uploaded_by_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "UploadedById" }, "idx_third_party_sboms_uploaded_by_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId", "DocumentSha256" }, "uq_third_party_sboms_third_party_id_document_sha256")
+                        .IsUnique();
+
+                    b.ToTable("third_party_sboms", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_third_party_sboms_counts", "`document_size_bytes` >= 0 AND `component_count` >= 0");
+
+                            t.HasCheckConstraint("ck_third_party_sboms_format", "`format` >= 1 AND `format` <= 2");
+                        });
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySbomComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("License")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("license");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Purl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("purl");
+
+                    b.Property<int>("SbomId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("sbom_id");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "Name" }, "idx_third_party_sbom_components_name");
+
+                    b.HasIndex(new[] { "SbomId" }, "idx_third_party_sbom_components_sbom_id");
+
+                    b.ToTable("third_party_sbom_components", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySubprocessor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(2)
+                        .HasColumnType("varchar(2)")
+                        .HasColumnName("country");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<bool>("ProcessesPersonalData")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("processes_personal_data");
+
+                    b.Property<string>("Service")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("service");
+
+                    b.Property<int?>("SubprocessorThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("subprocessor_third_party_id");
+
+                    b.Property<int>("ThirdPartyId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("third_party_id");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_third_party_subprocessors_created_by_id");
+
+                    b.HasIndex(new[] { "SubprocessorThirdPartyId" }, "idx_third_party_subprocessors_subprocessor_third_party_id");
+
+                    b.HasIndex(new[] { "ThirdPartyId", "Name" }, "uq_third_party_subprocessors_third_party_id_name")
+                        .IsUnique();
+
+                    b.ToTable("third_party_subprocessors", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.TrendMicroConnection", b =>
                 {
                     b.Property<int>("Id")
@@ -9379,6 +11853,171 @@ namespace DAL.Migrations
                     b.ToTable("vulnerabilities_to_actions", (string)null);
                 });
 
+            modelBuilder.Entity("DAL.Entities.AiModel", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_models_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_models_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_models_owner_id");
+
+                    b.HasOne("DAL.Entities.User", "RetiredBy")
+                        .WithMany()
+                        .HasForeignKey("RetiredById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_models_retired_by_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany()
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ai_models_third_party_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_models_updated_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("RetiredBy");
+
+                    b.Navigation("ThirdParty");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelDataLink", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_data_links_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_data_links_entity_id");
+
+                    b.HasOne("DAL.Entities.AiModel", "Model")
+                        .WithMany("DataLinks")
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_data_links_model_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Model");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelMetricReading", b =>
+                {
+                    b.HasOne("DAL.Entities.AiModel", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_metric_readings_model_id");
+
+                    b.HasOne("DAL.Entities.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_metric_readings_recorded_by_id");
+
+                    b.HasOne("DAL.Entities.User", "VoidedBy")
+                        .WithMany()
+                        .HasForeignKey("VoidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_metric_readings_voided_by_id");
+
+                    b.Navigation("Model");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("VoidedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelOverride", b =>
+                {
+                    b.HasOne("DAL.Entities.AiModel", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_overrides_model_id");
+
+                    b.HasOne("DAL.Entities.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_overrides_recorded_by_id");
+
+                    b.HasOne("DAL.Entities.User", "VoidedBy")
+                        .WithMany()
+                        .HasForeignKey("VoidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_overrides_voided_by_id");
+
+                    b.Navigation("Model");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("VoidedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.AiModelRisk", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ai_model_risks_created_by_id");
+
+                    b.HasOne("DAL.Entities.AiModel", "Model")
+                        .WithMany()
+                        .HasForeignKey("ModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_risks_model_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ai_model_risks_risk_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Model");
+
+                    b.Navigation("Risk");
+                });
+
             modelBuilder.Entity("DAL.Entities.ApiToken", b =>
                 {
                     b.HasOne("DAL.Entities.User", "CreatedBy")
@@ -9682,6 +12321,154 @@ namespace DAL.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Vulnerability");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCatalogueEntry", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_data_catalogue_entries_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_data_catalogue_entries_entity_id");
+
+                    b.HasOne("DAL.Entities.LegalRequirement", "RetentionRequirement")
+                        .WithMany()
+                        .HasForeignKey("RetentionRequirementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_data_catalogue_entries_retention_requirement_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_data_catalogue_entries_updated_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("RetentionRequirement");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCatalogueLocation", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_data_catalogue_locations_created_by_id");
+
+                    b.HasOne("DAL.Entities.DataCatalogueEntry", "Entry")
+                        .WithMany("Locations")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_data_catalogue_locations_entry_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entry");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCataloguePurpose", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_data_catalogue_purposes_created_by_id");
+
+                    b.HasOne("DAL.Entities.DataCatalogueEntry", "Entry")
+                        .WithMany("Purposes")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_data_catalogue_purposes_entry_id");
+
+                    b.HasOne("DAL.Entities.LegalRequirement", "LegalRequirement")
+                        .WithMany()
+                        .HasForeignKey("LegalRequirementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_data_catalogue_purposes_legal_requirement_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entry");
+
+                    b.Navigation("LegalRequirement");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Dpia", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dpias_approved_by_id");
+
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dpias_created_by_id");
+
+                    b.HasOne("DAL.Entities.User", "RetiredBy")
+                        .WithMany()
+                        .HasForeignKey("RetiredById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dpias_retired_by_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dpias_updated_by_id");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("RetiredBy");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DpiaLink", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_dpia_links_created_by_id");
+
+                    b.HasOne("DAL.Entities.Dpia", "Dpia")
+                        .WithMany("Links")
+                        .HasForeignKey("DpiaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_dpia_links_dpia_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_dpia_links_entity_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Dpia");
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("DAL.Entities.EntitiesProperty", b =>
@@ -9988,6 +12775,47 @@ namespace DAL.Migrations
                     b.Navigation("ReportedByUser");
 
                     b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IncidentBacktest", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "AssessedBy")
+                        .WithMany()
+                        .HasForeignKey("AssessedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_incident_backtests_assessed_by_id");
+
+                    b.HasOne("DAL.Entities.Incident", "Incident")
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_incident_backtests_incident_id");
+
+                    b.Navigation("AssessedBy");
+
+                    b.Navigation("Incident");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IncidentBacktestRisk", b =>
+                {
+                    b.HasOne("DAL.Entities.IncidentBacktest", "Backtest")
+                        .WithMany("Risks")
+                        .HasForeignKey("BacktestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_incident_backtest_risks_backtest_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_incident_backtest_risks_risk_id");
+
+                    b.Navigation("Backtest");
+
+                    b.Navigation("Risk");
                 });
 
             modelBuilder.Entity("DAL.Entities.IncidentResponsePlan", b =>
@@ -10382,6 +13210,117 @@ namespace DAL.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("DAL.Entities.Kri", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kris_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kris_owner_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kris_updated_by_id");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.KriReading", b =>
+                {
+                    b.HasOne("DAL.Entities.Kri", "Kri")
+                        .WithMany()
+                        .HasForeignKey("KriId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_kri_readings_kri_id");
+
+                    b.HasOne("DAL.Entities.User", "RecordedBy")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kri_readings_recorded_by_id");
+
+                    b.HasOne("DAL.Entities.User", "VoidedBy")
+                        .WithMany()
+                        .HasForeignKey("VoidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kri_readings_voided_by_id");
+
+                    b.Navigation("Kri");
+
+                    b.Navigation("RecordedBy");
+
+                    b.Navigation("VoidedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.KriRisk", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_kri_risks_created_by_id");
+
+                    b.HasOne("DAL.Entities.Kri", "Kri")
+                        .WithMany()
+                        .HasForeignKey("KriId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_kri_risks_kri_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_kri_risks_risk_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Kri");
+
+                    b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LegalRequirement", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_legal_requirements_created_by_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany()
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_legal_requirements_third_party_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_legal_requirements_updated_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("ThirdParty");
+
+                    b.Navigation("UpdatedBy");
+                });
+
             modelBuilder.Entity("DAL.Entities.Message", b =>
                 {
                     b.HasOne("DAL.Entities.User", "User")
@@ -10750,6 +13689,41 @@ namespace DAL.Migrations
                     b.Navigation("SubmittedBy");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ReassessmentEvent", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "DeclaredBy")
+                        .WithMany()
+                        .HasForeignKey("DeclaredById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_reassessment_events_declared_by_id");
+
+                    b.HasOne("DAL.Entities.Incident", "Incident")
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_reassessment_events_incident_id");
+
+                    b.HasOne("DAL.Entities.Kri", "Kri")
+                        .WithMany()
+                        .HasForeignKey("KriId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_reassessment_events_kri_id");
+
+                    b.HasOne("DAL.Entities.KriReading", "KriReading")
+                        .WithMany()
+                        .HasForeignKey("KriReadingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_reassessment_events_kri_reading_id");
+
+                    b.Navigation("DeclaredBy");
+
+                    b.Navigation("Incident");
+
+                    b.Navigation("Kri");
+
+                    b.Navigation("KriReading");
+                });
+
             modelBuilder.Entity("DAL.Entities.Report", b =>
                 {
                     b.HasOne("DAL.Entities.User", "Creator")
@@ -11028,6 +14002,82 @@ namespace DAL.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskArchive", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "ArchivedBy")
+                        .WithMany()
+                        .HasForeignKey("ArchivedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_archives_archived_by_id");
+
+                    b.HasOne("DAL.Entities.Closure", "Closure")
+                        .WithMany()
+                        .HasForeignKey("ClosureId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_archives_closure_id");
+
+                    b.HasOne("DAL.Entities.ReassessmentEvent", "ReopenEvent")
+                        .WithMany()
+                        .HasForeignKey("ReopenEventId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_archives_reopen_event_id");
+
+                    b.HasOne("DAL.Entities.User", "ReopenedBy")
+                        .WithMany()
+                        .HasForeignKey("ReopenedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_archives_reopened_by_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_archives_risk_id");
+
+                    b.Navigation("ArchivedBy");
+
+                    b.Navigation("Closure");
+
+                    b.Navigation("ReopenEvent");
+
+                    b.Navigation("ReopenedBy");
+
+                    b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskArchiveCondition", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskArchive", "Archive")
+                        .WithMany("Conditions")
+                        .HasForeignKey("ArchiveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_archive_conditions_archive_id");
+
+                    b.Navigation("Archive");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskArchiveReview", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskArchive", "Archive")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ArchiveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_archive_reviews_archive_id");
+
+                    b.HasOne("DAL.Entities.User", "ReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("ReviewedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_archive_reviews_reviewed_by_id");
+
+                    b.Navigation("Archive");
+
+                    b.Navigation("ReviewedBy");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskAttackTechnique", b =>
                 {
                     b.HasOne("DAL.Entities.User", "CreatedBy")
@@ -11082,6 +14132,119 @@ namespace DAL.Migrations
                     b.Navigation("Host");
 
                     b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommittee", b =>
+                {
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committees_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committees_updated_by_id");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeDecision", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskAcceptance", "Acceptance")
+                        .WithMany()
+                        .HasForeignKey("AcceptanceId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committee_decisions_acceptance_id");
+
+                    b.HasOne("DAL.Entities.RiskCommittee", "Committee")
+                        .WithMany()
+                        .HasForeignKey("CommitteeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_committee_decisions_committee_id");
+
+                    b.HasOne("DAL.Entities.User", "OpenedBy")
+                        .WithMany()
+                        .HasForeignKey("OpenedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committee_decisions_opened_by_id");
+
+                    b.HasOne("DAL.Entities.RiskAcceptance", "RenewsAcceptance")
+                        .WithMany()
+                        .HasForeignKey("RenewsAcceptanceId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committee_decisions_renews_acceptance_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_committee_decisions_risk_id");
+
+                    b.Navigation("Acceptance");
+
+                    b.Navigation("Committee");
+
+                    b.Navigation("OpenedBy");
+
+                    b.Navigation("RenewsAcceptance");
+
+                    b.Navigation("Risk");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeMember", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskCommittee", "Committee")
+                        .WithMany("Members")
+                        .HasForeignKey("CommitteeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_committee_members_committee_id");
+
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committee_members_created_by_id");
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_committee_members_user_id");
+
+                    b.Navigation("Committee");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeVote", b =>
+                {
+                    b.HasOne("DAL.Entities.RiskCommitteeDecision", "Decision")
+                        .WithMany("Votes")
+                        .HasForeignKey("DecisionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_committee_votes_decision_id");
+
+                    b.HasOne("DAL.Entities.User", "Voter")
+                        .WithMany()
+                        .HasForeignKey("VoterId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_committee_votes_voter_id");
+
+                    b.Navigation("Decision");
+
+                    b.Navigation("Voter");
                 });
 
             modelBuilder.Entity("DAL.Entities.RiskCorrelation", b =>
@@ -11153,6 +14316,35 @@ namespace DAL.Migrations
                     b.Navigation("Risk");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskLegalRequirement", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_risk_legal_requirements_created_by_id");
+
+                    b.HasOne("DAL.Entities.LegalRequirement", "LegalRequirement")
+                        .WithMany()
+                        .HasForeignKey("LegalRequirementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_legal_requirements_legal_requirement_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_legal_requirements_risk_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("LegalRequirement");
+
+                    b.Navigation("Risk");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskLossComponent", b =>
                 {
                     b.HasOne("DAL.Entities.Risk", "Risk")
@@ -11171,6 +14363,27 @@ namespace DAL.Migrations
                     b.Navigation("Risk");
 
                     b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskReassessmentTrigger", b =>
+                {
+                    b.HasOne("DAL.Entities.ReassessmentEvent", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_reassessment_triggers_event_id");
+
+                    b.HasOne("DAL.Entities.Risk", "Risk")
+                        .WithMany()
+                        .HasForeignKey("RiskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_risk_reassessment_triggers_risk_id");
+
+                    b.Navigation("Event");
+
+                    b.Navigation("Risk");
                 });
 
             modelBuilder.Entity("DAL.Entities.RiskReviewCampaign", b =>
@@ -11434,6 +14647,198 @@ namespace DAL.Migrations
                     b.Navigation("Vulnerability");
                 });
 
+            modelBuilder.Entity("DAL.Entities.ThirdParty", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_parties_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_parties_entity_id");
+
+                    b.HasOne("DAL.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_parties_owner_id");
+
+                    b.HasOne("DAL.Entities.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_parties_updated_by_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyAssessment", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "AnswersUpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("AnswersUpdatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_assessments_answers_updated_by_id");
+
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_assessments_created_by_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany()
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_assessments_third_party_id");
+
+                    b.HasOne("DAL.Entities.User", "VoidedBy")
+                        .WithMany()
+                        .HasForeignKey("VoidedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_assessments_voided_by_id");
+
+                    b.Navigation("AnswersUpdatedBy");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("ThirdParty");
+
+                    b.Navigation("VoidedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyAssessmentAnswer", b =>
+                {
+                    b.HasOne("DAL.Entities.ThirdPartyAssessment", "Assessment")
+                        .WithMany("Answers")
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_assessment_answers_assessment_id");
+
+                    b.Navigation("Assessment");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyDataLocation", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_data_locations_created_by_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany("DataLocations")
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_data_locations_third_party_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("ThirdParty");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyLink", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_links_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_links_entity_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany("Links")
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_links_third_party_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("ThirdParty");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySbom", b =>
+                {
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany()
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_sboms_third_party_id");
+
+                    b.HasOne("DAL.Entities.User", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_sboms_uploaded_by_id");
+
+                    b.Navigation("ThirdParty");
+
+                    b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySbomComponent", b =>
+                {
+                    b.HasOne("DAL.Entities.ThirdPartySbom", "Sbom")
+                        .WithMany("Components")
+                        .HasForeignKey("SbomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_sbom_components_sbom_id");
+
+                    b.Navigation("Sbom");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySubprocessor", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_third_party_subprocessors_created_by_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "SubprocessorThirdParty")
+                        .WithMany()
+                        .HasForeignKey("SubprocessorThirdPartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_third_party_subprocessors_subprocessor_third_party_id");
+
+                    b.HasOne("DAL.Entities.ThirdParty", "ThirdParty")
+                        .WithMany("Subprocessors")
+                        .HasForeignKey("ThirdPartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_third_party_subprocessors_third_party_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("SubprocessorThirdParty");
+
+                    b.Navigation("ThirdParty");
+                });
+
             modelBuilder.Entity("DAL.Entities.TrendMicroConnection", b =>
                 {
                     b.HasOne("DAL.Entities.Entity", "Entity")
@@ -11686,6 +15091,11 @@ namespace DAL.Migrations
                         .HasConstraintName("fk_vul_act_1");
                 });
 
+            modelBuilder.Entity("DAL.Entities.AiModel", b =>
+                {
+                    b.Navigation("DataLinks");
+                });
+
             modelBuilder.Entity("DAL.Entities.Assessment", b =>
                 {
                     b.Navigation("AssessmentAnswers");
@@ -11717,6 +15127,18 @@ namespace DAL.Migrations
             modelBuilder.Entity("DAL.Entities.Category", b =>
                 {
                     b.Navigation("Risks");
+                });
+
+            modelBuilder.Entity("DAL.Entities.DataCatalogueEntry", b =>
+                {
+                    b.Navigation("Locations");
+
+                    b.Navigation("Purposes");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Dpia", b =>
+                {
+                    b.Navigation("Links");
                 });
 
             modelBuilder.Entity("DAL.Entities.Entity", b =>
@@ -11781,6 +15203,11 @@ namespace DAL.Migrations
                     b.Navigation("Actions");
 
                     b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("DAL.Entities.IncidentBacktest", b =>
+                {
+                    b.Navigation("Risks");
                 });
 
             modelBuilder.Entity("DAL.Entities.IncidentResponsePlan", b =>
@@ -11911,6 +15338,23 @@ namespace DAL.Migrations
                     b.Navigation("Findings");
                 });
 
+            modelBuilder.Entity("DAL.Entities.RiskArchive", b =>
+                {
+                    b.Navigation("Conditions");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommittee", b =>
+                {
+                    b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("DAL.Entities.RiskCommitteeDecision", b =>
+                {
+                    b.Navigation("Votes");
+                });
+
             modelBuilder.Entity("DAL.Entities.RiskReviewCampaign", b =>
                 {
                     b.Navigation("Items");
@@ -11943,6 +15387,25 @@ namespace DAL.Migrations
                     b.Navigation("Hosts");
 
                     b.Navigation("Vulnerabilities");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdParty", b =>
+                {
+                    b.Navigation("DataLocations");
+
+                    b.Navigation("Links");
+
+                    b.Navigation("Subprocessors");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartyAssessment", b =>
+                {
+                    b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("DAL.Entities.ThirdPartySbom", b =>
+                {
+                    b.Navigation("Components");
                 });
 
             modelBuilder.Entity("DAL.Entities.User", b =>

@@ -71,6 +71,7 @@ public class WebAuthnController(
     [Route("register/begin")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WebAuthnCeremonyOptions))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [API.Security.ThirdLineSelfService("Enrols a hardware factor for the caller's own account — the MFA every user must be able to set up.")]
     public Task<ActionResult<WebAuthnCeremonyOptions>> BeginRegistration(
         [FromBody] BeginRegistrationRequest? request)
     {
@@ -84,6 +85,7 @@ public class WebAuthnController(
     [HttpPost]
     [Route("register/complete")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WebAuthnRegistrationResult))]
+    [API.Security.ThirdLineSelfService("Completes the caller's own hardware-factor enrolment begun above.")]
     public Task<ActionResult<WebAuthnRegistrationResult>> CompleteRegistration(
         [FromBody] CompleteCeremonyRequest request)
     {

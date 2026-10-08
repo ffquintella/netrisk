@@ -36,6 +36,10 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
         else policy.AddAuthenticationSchemes("headerSelector", "BasicAuthentication", "Bearer");
         policy.RequireAuthenticatedUser();
         policy.Requirements.Add(new ValidUserRequirement());
+
+        // Stage 9.9 (S50 §4.7): on every policy this provider builds — permission, legacy and new alike — so no
+        // endpoint can be written without it. The third line is refused any write; nobody else is affected.
+        policy.Requirements.Add(ThirdLineReadOnlyRequirement.Instance);
         
         if (policyName.StartsWith(POLICY_PREFIX, StringComparison.OrdinalIgnoreCase))
         {
@@ -82,6 +86,53 @@ internal class PermissionPolicyProvider : IAuthorizationPolicyProvider
                        (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
                        (c.Type == "Permission" && (c.Value == "riskmanagement" || c.Value == "bia_manage"
                                                    || c.Value == "restoration_test_record"))));
+               return Task.FromResult(policy.Build())!;
+            }
+            case "RequireAssuranceEvidence":
+            {
+               // Stage 9.9 (S50 §4.7, §6): the governance evidence pack — administrators, as before, and the third line,
+               // whose assurance is exactly this export. RequireAdminOnly does not admit it: the auditor is not an
+               // administrator, and an auditor granted the Admin role would be refused every write anyway.
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
+                       (c.Type == "Permission" && c.Value == Model.DecisionCycle.ThirdLineAssurance.PermissionKey)));
+               return Task.FromResult(policy.Build())!;
+            }
+            case "RequireThirdPartyRead":
+            {
+               // Stage 9.10 (S51 §6): the third-party register is read by the risk register's audience (the
+               // Administrator role or riskmanagement — the third line included, through its seeded riskmanagement)
+               // and by whoever manages it (the Admin role or third_party_manage), so a vendor manager reads what they
+               // write. ThirdPartiesAuthorizationTest evaluates this policy, accepted and denied.
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
+                       (c.Type == "Permission" && (c.Value == "riskmanagement" || c.Value == "third_party_manage"))));
+               return Task.FromResult(policy.Build())!;
+            }
+            case "RequireDataCatalogueRead":
+            {
+               // Stage 9.11 (S52 §6, D14): the LGPD data catalogue is read by the risk register's audience (the
+               // Administrator role or riskmanagement — the third line included, through its seeded riskmanagement) and by
+               // whoever maintains it (the Admin role or data_catalogue_manage), so the DPO's office reads what it writes.
+               // DataCatalogueAuthorizationTest evaluates this policy, accepted and denied.
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
+                       (c.Type == "Permission" && (c.Value == "riskmanagement" || c.Value == "data_catalogue_manage"))));
+               return Task.FromResult(policy.Build())!;
+            }
+            case "RequireAiGovernanceRead":
+            {
+               // Stage 9.12 (S53 §6, D10): the AI model inventory is read by the risk register's audience (the
+               // Administrator role or riskmanagement — the third line included, through its seeded riskmanagement) and by
+               // whoever maintains it (the Admin role or ai_governance_manage), so the AI governance office reads what it
+               // writes. AiGovernanceAuthorizationTest evaluates this policy, accepted and denied.
+               policy.RequireAssertion(context =>
+                   context.User.HasClaim(c =>
+                       (c.Type == ClaimTypes.Role && (c.Value == "Admin" || c.Value == "Administrator")) ||
+                       (c.Type == "Permission" && (c.Value == "riskmanagement" || c.Value == "ai_governance_manage"))));
                return Task.FromResult(policy.Build())!;
             }
             case "RequireSubmitRisk":

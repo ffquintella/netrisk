@@ -12,14 +12,23 @@ public enum RiskFlagDerivation
     /// <summary>The business impact analysis (Stage 9.3, M41) over the critical processes the risk reaches.</summary>
     Bia = 3,
 
-    /// <summary>The security classification of the data the risk is linked to.</summary>
+    /// <summary>
+    /// The classification of the data the risk is linked to: the security classification level marked sensitive (Stage
+    /// 9.5), or the LGPD data catalogue's marking (Stage 9.11, S52 §4.8).
+    /// </summary>
     DataClassification = 4,
 
     /// <summary>
     /// The tail statistics of the risk's inherent Monte Carlo run (Stage 9.7, S48 §4.8): a low annual probability of
     /// loss and a catastrophic mean loss of a loss year.
     /// </summary>
-    TailStatistics = 5
+    TailStatistics = 5,
+
+    /// <summary>
+    /// The AI model inventory (Stage 9.12, S53 §4.6): the risk is linked to an inventoried model that is not retired — an AI
+    /// component's risk in the same register.
+    /// </summary>
+    AiModelInventory = 6
 }
 
 /// <summary>The decisions Gate A is evaluated for (S46 §4.7).</summary>

@@ -60,9 +60,21 @@ public static class JobsManager
             .AddOrUpdate<RiskAcceptanceExpiryPass>("RiskLevelAcceptanceExpiry",
                 x => x.Run(), "15 6 * * *");
 
+        // Stage 9.8 (S49 §4.10): every KRI, after the expiry passes and before the cadence sweep, so a breach seen
+        // overnight has flagged its risks for review by the time the 07:30 message goes out.
+        RecurringJob
+            .AddOrUpdate<KriEvaluationJob>(KriEvaluationJob.JobId,
+                x => x.Run(), KriEvaluationJob.Cron);
+
+        // Stage 9.9 (S50 §4.2): the archives due for their quarterly review, after the KRI evaluation (which may reopen
+        // one) and before the cadence sweep.
+        RecurringJob
+            .AddOrUpdate<RiskArchiveReviewJob>(RiskArchiveReviewJob.JobId,
+                x => x.Run(), RiskArchiveReviewJob.Cron);
+
         RecurringJob
             .AddOrUpdate<RiskReviewCadenceJob>("RiskReviewCadence",
-                x => x.Run(), "30 7 * * *");
+                x => x.Run(), RiskReviewCadenceJob.Cron);
 
         RecurringJob
             .AddOrUpdate<RiskReviewCampaignJob>("RiskReviewCampaigns",

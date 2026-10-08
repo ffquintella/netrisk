@@ -72,6 +72,13 @@ public class AppetiteEvaluation
     /// CVaR95. Additive — every field above keeps its meaning, and the ordinal ceiling is still checked first.
     /// </summary>
     public TailAppetiteEvaluation Tail { get; set; } = new();
+
+    /// <summary>
+    /// Gate B by indicator (Stage 9.8, S49 §4.8): the KRIs linked to the risk against their tolerances. Additive and
+    /// checked last, after the ceiling and the tail. Independent of <see cref="AppetiteConfigured"/>: a KRI carries its
+    /// own tolerance (S49 D5), so a risk with no appetite row is still gated by its indicators.
+    /// </summary>
+    public Model.Monitoring.IndicatorAppetiteEvaluation Indicators { get; set; } = new();
 }
 
 /// <summary>

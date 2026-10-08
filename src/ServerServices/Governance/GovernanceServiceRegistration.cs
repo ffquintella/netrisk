@@ -43,6 +43,38 @@ public static class GovernanceServiceRegistration
         // appetite's tail tolerances. Gate B on the tail itself lives in the workflow service, beside the ceiling.
         services.AddTransient<ITailRiskService, TailRiskService>();
 
+        // Stage 9.8 (S49) — KRIs and the mandatory reassessment triggers, and the methodology's metrics panel. Gate B by
+        // indicator itself lives in the workflow service, beside the ceiling and the tail; the job host resolves the
+        // monitoring service for the nightly evaluation. The panel composes the Stage 9.1 coverage, added here only if
+        // the host has not registered it (the API does; the job host and the console do not).
+        services.AddTransient<IMonitoringService, MonitoringService>();
+        services.TryAddTransient<IRiskChainService, RiskChainService>();
+        services.AddTransient<IMethodologyMetricsService, MethodologyMetricsService>();
+
+        // Stage 9.9 (S50) — the archive and its reopening conditions (the monitoring service reopens an archive through
+        // it, and the job host resolves it for the quarterly-review notice), incident backtesting (which the metrics
+        // panel's M9 composes), and the risk committee, which creates its acceptances through the acceptances service.
+        services.AddTransient<IRiskArchiveService, RiskArchiveService>();
+        services.AddTransient<IBacktestingService, BacktestingService>();
+        services.AddTransient<IRiskCommitteesService, RiskCommitteesService>();
+
+        // Stage 9.10 (S51) — the third-party register: HECVAT, SBOM, sub-processors, data location, contract terms and the
+        // concentration by supplier, cloud and identity, which the metrics panel's M8 composes. It reads the continuity
+        // graph through the continuity service registered above.
+        services.AddTransient<IThirdPartiesService, ThirdPartiesService>();
+
+        // Stage 9.11 (S52) — the LGPD data catalogue: legal basis by purpose, retention, location, international transfer,
+        // the RIPD and the legal requirements of the register. No job resolves it: an expired retention signals and never
+        // deletes (S52 D5, D17). The nightly flag reconciliation reads the catalogue's tables for flag 5, through
+        // RiskFlagsService, and writes nothing to them.
+        services.AddTransient<IDataCatalogueService, DataCatalogueService>();
+
+        // Stage 9.12 (S53) — AI governance: the model inventory, the data each model uses (read against the catalogue above),
+        // the metric readings and human overrides, and the register's risks that involve a model. The metrics panel's M10
+        // composes it. It takes no decision service: governance, never use (S53 D1). The nightly flag reconciliation reads
+        // the risk links for flag 11, through RiskFlagsService, and writes nothing to the inventory.
+        services.AddTransient<IAiGovernanceService, AiGovernanceService>();
+
         // 8.3 — enforcement. Everything else consults this, so it goes in first.
         services.AddTransient<IRiskWorkflowService, RiskWorkflowService>();
         services.AddTransient<IRiskAppetitesService, RiskAppetitesService>();

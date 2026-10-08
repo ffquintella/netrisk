@@ -94,6 +94,7 @@ public class FaceIDController: ApiBaseController
     [HttpGet]
     [Authorize(Policy = "RequireAdminOnly")]
     [Route("enable/{userId}")]
+    [API.Security.StateChangingGet("Enables FaceID for a user: a GET that writes.")]
     public async Task<ActionResult> EnableUser(int userId)
     {
         try
@@ -134,6 +135,7 @@ public class FaceIDController: ApiBaseController
     [HttpGet]
     [Authorize(Policy = "RequireAdminOnly")]
     [Route("disable/{userId}")]
+    [API.Security.StateChangingGet("Disables FaceID for a user: a GET that writes.")]
     public async Task<ActionResult> DisableUser(int userId)
     {
         
@@ -248,6 +250,7 @@ public class FaceIDController: ApiBaseController
     [HttpPost]
     [Authorize(Policy = "RequireValidUser")]
     [Route("transactions/{userId}/commit")]
+    [API.Security.ThirdLineSelfService("Completes the caller's own biometric ceremony, which reading incidents needs when FaceID is on; the route user must be the caller.", RouteUserKey = "userId")]
     public async Task<ActionResult<FaceToken>> CommitTransaction(int userId, [FromBody] FaceTransactionData faceTData, [FromQuery] string transactionObjectType = "", [FromQuery] string? transactionObjectId = null)
     {
         try
@@ -274,6 +277,7 @@ public class FaceIDController: ApiBaseController
     [HttpPost]
     [Authorize(Policy = "RequireValidUser")]
     [Route("transactions/validate/{transactionId}")]
+    [API.Security.ThirdLineSelfService("Validates the caller's own biometric token; it reads the signed-in account, never a route user.")]
     public async Task<ActionResult<bool>> ValidateTransactionToken(string transactionId, [FromBody] FaceToken token)
     {
         try

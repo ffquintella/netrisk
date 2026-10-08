@@ -63,6 +63,31 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
         var componentIds = await db.RiskLossComponents.Where(c => c.RiskId == riskId).Select(c => c.Id).ToListAsync();
         var correlationIds = await db.RiskCorrelations.Where(c => c.RiskAId == riskId || c.RiskBId == riskId)
             .Select(c => c.Id).ToListAsync();
+        // Stage 9.8 (S49 §4.11): who linked or unlinked an indicator — unlinking removes a gate — and each
+        // reassessment trigger raised on the risk.
+        var kriLinkIds = await db.KriRisks.Where(l => l.RiskId == riskId).Select(l => l.Id).ToListAsync();
+        var triggerIds = await db.RiskReassessmentTriggers.Where(t => t.RiskId == riskId).Select(t => t.Id)
+            .ToListAsync();
+        // Stage 9.9 (S50 §4.8): the archive — its conditions, reviews and reopening —, the incidents matched to the risk
+        // by backtesting, and the committee decisions on it with their votes.
+        var archiveIds = await db.RiskArchives.Where(a => a.RiskId == riskId).Select(a => a.Id).ToListAsync();
+        var archiveConditionIds = await db.RiskArchiveConditions.Where(c => archiveIds.Contains(c.ArchiveId))
+            .Select(c => c.Id).ToListAsync();
+        var archiveReviewIds = await db.RiskArchiveReviews.Where(r => archiveIds.Contains(r.ArchiveId))
+            .Select(r => r.Id).ToListAsync();
+        var backtestLinkIds = await db.IncidentBacktestRisks.Where(l => l.RiskId == riskId).Select(l => l.Id)
+            .ToListAsync();
+        var committeeDecisionIds = await db.RiskCommitteeDecisions.Where(d => d.RiskId == riskId).Select(d => d.Id)
+            .ToListAsync();
+        var committeeVoteIds = await db.RiskCommitteeVotes.Where(v => committeeDecisionIds.Contains(v.DecisionId))
+            .Select(v => v.Id).ToListAsync();
+        // Stage 9.11 (S52 §4.10): who linked a legal requirement, and its note — the register's "requirements" group. Resolved
+        // from the current links, so an unlinking stays in audit_logs and is not reached here (S52 R11, S51 R5).
+        var requirementLinkIds = await db.RiskLegalRequirements.Where(l => l.RiskId == riskId).Select(l => l.Id)
+            .ToListAsync();
+        // Stage 9.12 (S53 §4.8): who linked the risk to an inventoried AI model — the link derives flag 11. Resolved from the
+        // current links the reader sees (the risk and the model), as the requirement links are.
+        var aiModelLinkIds = await db.AiModelRisks.Where(l => l.RiskId == riskId).Select(l => l.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a =>
@@ -79,7 +104,17 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(MitigationDependency) && dependencyIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskLossComponent) && componentIds.Contains(a.EntityId)) ||
-                (a.EntityType == nameof(RiskCorrelation) && correlationIds.Contains(a.EntityId)))
+                (a.EntityType == nameof(RiskCorrelation) && correlationIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(KriRisk) && kriLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskReassessmentTrigger) && triggerIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchive) && archiveIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchiveCondition) && archiveConditionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchiveReview) && archiveReviewIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(IncidentBacktestRisk) && backtestLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCommitteeDecision) && committeeDecisionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCommitteeVote) && committeeVoteIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskLegalRequirement) && requirementLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(AiModelRisk) && aiModelLinkIds.Contains(a.EntityId)))
             .Include(a => a.User)
             .OrderByDescending(a => a.OccurredAt)
             .ThenByDescending(a => a.Id)
@@ -125,6 +160,40 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
             .ToListAsync();
         var correlationIds = await db.RiskCorrelations
             .Where(c => riskIds.Contains(c.RiskAId) || riskIds.Contains(c.RiskBId)).Select(c => c.Id).ToListAsync();
+        // Stage 9.8 (S49 §4.11): the indicators that gate the pack's risks — their tolerance, readings and voidings —,
+        // the links, and the reassessment events and triggers raised on them.
+        var kriLinks = await db.KriRisks.Where(l => riskIds.Contains(l.RiskId)).Select(l => new { l.Id, l.KriId })
+            .ToListAsync();
+        var kriLinkIds = kriLinks.Select(l => l.Id).ToList();
+        var kriIds = kriLinks.Select(l => l.KriId).Distinct().ToList();
+        var kriReadingIds = await db.KriReadings.Where(r => kriIds.Contains(r.KriId)).Select(r => r.Id).ToListAsync();
+        var triggers = await db.RiskReassessmentTriggers.Where(t => riskIds.Contains(t.RiskId))
+            .Select(t => new { t.Id, t.EventId }).ToListAsync();
+        var triggerIds = triggers.Select(t => t.Id).ToList();
+        var eventIds = triggers.Select(t => t.EventId).Distinct().ToList();
+        // Stage 9.9 (S50 §4.8): the archives of the pack's risks with their conditions and reviews, the backtests that
+        // matched incidents to them, the committee decisions on them with every vote; the committees themselves and
+        // their membership travel like the appetite — organization-wide governance.
+        var archiveIds = await db.RiskArchives.Where(a => riskIds.Contains(a.RiskId)).Select(a => a.Id).ToListAsync();
+        var archiveConditionIds = await db.RiskArchiveConditions.Where(c => archiveIds.Contains(c.ArchiveId))
+            .Select(c => c.Id).ToListAsync();
+        var archiveReviewIds = await db.RiskArchiveReviews.Where(r => archiveIds.Contains(r.ArchiveId))
+            .Select(r => r.Id).ToListAsync();
+        var backtestLinks = await db.IncidentBacktestRisks.Where(l => riskIds.Contains(l.RiskId))
+            .Select(l => new { l.Id, l.BacktestId }).ToListAsync();
+        var backtestLinkIds = backtestLinks.Select(l => l.Id).ToList();
+        var backtestIds = backtestLinks.Select(l => l.BacktestId).Distinct().ToList();
+        var committeeDecisionIds = await db.RiskCommitteeDecisions.Where(d => riskIds.Contains(d.RiskId))
+            .Select(d => d.Id).ToListAsync();
+        var committeeVoteIds = await db.RiskCommitteeVotes.Where(v => committeeDecisionIds.Contains(v.DecisionId))
+            .Select(v => v.Id).ToListAsync();
+        // Stage 9.11 (S52 §4.10): the legal requirements linked to the pack's risks. The catalogue itself is the
+        // organization's and is read through its own history routes.
+        var requirementLinkIds = await db.RiskLegalRequirements.Where(l => riskIds.Contains(l.RiskId)).Select(l => l.Id)
+            .ToListAsync();
+        // Stage 9.12 (S53 §4.8): the links of the pack's risks to inventoried AI models. The inventory itself is read through
+        // its own history route, after the model is found visible.
+        var aiModelLinkIds = await db.AiModelRisks.Where(l => riskIds.Contains(l.RiskId)).Select(l => l.Id).ToListAsync();
 
         return await db.AuditLogs
             .Where(a => a.OccurredAt >= fromUtc && a.OccurredAt <= toUtc)
@@ -143,6 +212,22 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 (a.EntityType == nameof(RiskTarget) && targetIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskLossComponent) && componentIds.Contains(a.EntityId)) ||
                 (a.EntityType == nameof(RiskCorrelation) && correlationIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(KriRisk) && kriLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(Kri) && kriIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(KriReading) && kriReadingIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskReassessmentTrigger) && triggerIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(ReassessmentEvent) && eventIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchive) && archiveIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchiveCondition) && archiveConditionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskArchiveReview) && archiveReviewIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(IncidentBacktest) && backtestIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(IncidentBacktestRisk) && backtestLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCommitteeDecision) && committeeDecisionIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskCommitteeVote) && committeeVoteIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(RiskLegalRequirement) && requirementLinkIds.Contains(a.EntityId)) ||
+                (a.EntityType == nameof(AiModelRisk) && aiModelLinkIds.Contains(a.EntityId)) ||
+                a.EntityType == nameof(RiskCommittee) ||
+                a.EntityType == nameof(RiskCommitteeMember) ||
                 a.EntityType == nameof(RiskAppetite) ||
                 a.EntityType == nameof(RiskAppetiteTailLimit))
             .Include(a => a.User)

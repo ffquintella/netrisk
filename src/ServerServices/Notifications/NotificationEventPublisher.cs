@@ -408,6 +408,116 @@ public class NotificationEventPublisher(
             OccurredAt = DateTime.UtcNow
         });
 
+    public Task KriToleranceBreachedAsync(Kri kri, decimal value, DateTime observedAt, int linkedRisks) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.KriToleranceBreached,
+            // Fixed at 3: the indicator says the Phase 0 tolerance is gone, which is high whatever the scores of the
+            // risks it governs — those are announced one by one through risk.reassessment_triggered.
+            Severity = 3,
+            Title = $"KRI beyond tolerance: {kri.Name}",
+            Body = Shorten(
+                $"{value.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)} {kri.Unit} observed " +
+                $"{observedAt:yyyy-MM-dd HH:mm} UTC is beyond the tolerance of " +
+                $"{kri.ToleranceThreshold.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)} {kri.Unit}.",
+                500),
+            Fields =
+            [
+                new NotificationField("KRI", $"#{kri.Id}"),
+                new NotificationField("Source", Shorten(kri.Source, 200)),
+                new NotificationField("Risks governed", linkedRisks.ToString())
+            ],
+            Link = Link($"/monitoring/kris/{kri.Id}"),
+            SubjectType = "kri",
+            SubjectId = kri.Id,
+            EntityId = kri.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskReassessmentTriggeredAsync(Risk risk, double? score, ReassessmentEvent reassessmentEvent) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskReassessmentTriggered,
+            Severity = SeverityFromScore(score),
+            Title = $"Reassessment required: {risk.Subject}",
+            Body = Shorten(reassessmentEvent.Title, 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Trigger", reassessmentEvent.TriggerType.ToString()),
+                new NotificationField("Occurred", reassessmentEvent.OccurredAt.ToString("yyyy-MM-dd"))
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskArchiveReopenedAsync(Risk risk, double? score, RiskArchive archive,
+        ReassessmentEvent reassessmentEvent) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskArchiveReopened,
+            Severity = SeverityFromScore(score),
+            Title = $"Archived risk reopened: {risk.Subject}",
+            Body = Shorten($"A reopening condition of the archive was met: {reassessmentEvent.Title}", 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Archived", archive.ArchivedAt.ToString("yyyy-MM-dd")),
+                new NotificationField("Condition", reassessmentEvent.TriggerType.ToString())
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskArchiveReviewDueAsync(Risk risk, RiskArchive archive) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskArchiveReviewDue,
+            // Fixed at 2: an archived risk was judged not worth treating; its review is due, not urgent.
+            Severity = 2,
+            Title = $"Archived risk due for its quarterly review: {risk.Subject}",
+            Body = Shorten(archive.Justification, 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Archived", archive.ArchivedAt.ToString("yyyy-MM-dd")),
+                new NotificationField("Review due", archive.NextReviewDueAt.ToString("yyyy-MM-dd"))
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
+    public Task RiskCommitteeDecisionOpenedAsync(Risk risk, double? score, RiskCommittee committee,
+        RiskCommitteeDecision decision) =>
+        SafeDispatch(new NotificationMessage
+        {
+            EventType = NotificationEventType.RiskCommitteeDecisionOpened,
+            Severity = SeverityFromScore(score),
+            Title = $"Submitted to {Shorten(committee.Name, 80)}: {risk.Subject}",
+            Body = Shorten(decision.BusinessJustification, 500),
+            Fields =
+            [
+                new NotificationField("Risk", $"#{risk.Id}"),
+                new NotificationField("Decision", $"#{decision.Id} ({decision.Kind})"),
+                new NotificationField("Approvals required", decision.RequiredApprovals.ToString()),
+                new NotificationField("Expires", decision.ExpiresAt.ToString("yyyy-MM-dd"))
+            ],
+            Link = Link($"/risks/{risk.Id}"),
+            SubjectType = "risk",
+            SubjectId = risk.Id,
+            EntityId = risk.EntityId,
+            OccurredAt = DateTime.UtcNow
+        });
+
     public Task JsmSlaBreachedAsync(string issueKey, string? summary, string metricName,
         string? requestUrl, string? reporter, long? remainingMs) =>
         SafeDispatch(new NotificationMessage

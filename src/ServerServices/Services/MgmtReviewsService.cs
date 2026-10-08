@@ -192,6 +192,10 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
 
         var workflow = RequireWorkflow();
 
+        // Stage 9.9 (S50 §4.7): the third line gives assurance on reviews; it does not perform them.
+        await using (var guard = DalService.GetContext())
+            await Governance.ThirdLineGuard.EnsureNotThirdLineAsync(guard, actingUserId, "review a risk");
+
         // Maker-checker first. Any user holding the matching severity band could previously approve
         // single-handedly, including the risk's own submitter, owner or manager — and administrators
         // bypassed every check. Nobody bypasses this one.
@@ -269,6 +273,8 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
                 "The second approver has to be someone other than the first. One person signing twice " +
                 "is a single approval with two dates on it.",
                 "dual_approval_distinct_approvers");
+
+        await Governance.ThirdLineGuard.EnsureNotThirdLineAsync(dbContext, actingUserId, "counter-sign a review");
 
         await workflow.EnsureSegregationOfDutiesAsync(review.RiskId, actingUserId, "counter-sign",
             segregationOverrideReason);

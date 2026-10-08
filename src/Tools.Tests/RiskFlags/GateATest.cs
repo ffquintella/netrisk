@@ -91,12 +91,35 @@ public class GateATest
         Assert.Null(RiskFlagCatalogue.Find(RiskFlagCode.LowProbabilityCatastrophic)!.DerivableIn);
         Assert.Equal(
             [RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData,
-             RiskFlagCode.LowProbabilityCatastrophic],
+             RiskFlagCode.LowProbabilityCatastrophic, RiskFlagCode.ArtificialIntelligence],
             RiskFlagCatalogue.All.Where(d => d.Derivation != RiskFlagDerivation.None).Select(d => d.Code));
 
-        // Flag 11 is declarable only here and names the stage that derives it.
-        Assert.Equal(RiskFlagDerivation.None, RiskFlagCatalogue.Find(RiskFlagCode.ArtificialIntelligence)!.Derivation);
-        Assert.Contains("9.12", RiskFlagCatalogue.Find(RiskFlagCode.ArtificialIntelligence)!.DerivableIn);
+        // Stage 9.10 (S51 D11): flag 7 stays declared — the concentration report is the declarer's evidence — and no longer
+        // names a later stage that would derive it.
+        Assert.Equal(RiskFlagDerivation.None, RiskFlagCatalogue.Find(RiskFlagCode.ThirdPartyConcentration)!.Derivation);
+        Assert.Null(RiskFlagCatalogue.Find(RiskFlagCode.ThirdPartyConcentration)!.DerivableIn);
+        Assert.Contains("/ThirdParties/Concentration", RiskFlagCatalogue.Find(RiskFlagCode.ThirdPartyConcentration)!.Description);
+
+        // Stage 9.11 (S52 D6, D7): flag 5 is derived from the classification and from the LGPD catalogue, and names no later
+        // stage; flag 2 — a Gate A condition — stays declared, with the risk's legal requirements as the evidence.
+        var flag5 = RiskFlagCatalogue.Find(RiskFlagCode.SensitiveData)!;
+        Assert.Null(flag5.DerivableIn);
+        Assert.Contains("LGPD data catalogue", flag5.Description);
+        var flag2 = RiskFlagCatalogue.Find(RiskFlagCode.LegalRegulatory)!;
+        Assert.Equal(RiskFlagDerivation.None, flag2.Derivation);
+        Assert.True(flag2.NonDiscretionary);
+        Assert.Null(flag2.DerivableIn);
+        Assert.Contains("/DataCatalogue/Risks/", flag2.Description);
+
+        // Stage 9.12 (S53 §4.6, amending S46 §4.1): flag 11 is derived from the AI model inventory — a link to a model that
+        // is not retired — names no later stage, stays declarable and is not a Gate A condition.
+        var flag11 = RiskFlagCatalogue.Find(RiskFlagCode.ArtificialIntelligence)!;
+        Assert.Equal(RiskFlagDerivation.AiModelInventory, flag11.Derivation);
+        Assert.Null(flag11.DerivableIn);
+        Assert.True(flag11.Declarable);
+        Assert.False(flag11.NonDiscretionary);
+        Assert.Contains("/AiModels/Risks/", flag11.Description);
+        Assert.All(RiskFlagCatalogue.All, d => Assert.Null(d.DerivableIn));
 
         Assert.False(RiskFlagCatalogue.IsDefined((RiskFlagCode)13));
         Assert.False(RiskFlagCatalogue.IsDefined((RiskFlagCode)0));

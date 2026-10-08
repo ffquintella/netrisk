@@ -369,6 +369,7 @@ public class AuthenticationController : ControllerBase
     [Route("SAMLApprove")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [API.Security.ThirdLineSelfService("Approves the caller's own SAML sign-in of the desktop client — signing in is not a register write.")]
     public ActionResult ApproveSamlSignIn([FromForm] string approvalToken)
     {
         var requestId = SanitizeRequestId(Request.Cookies["SAMLReqID"]);

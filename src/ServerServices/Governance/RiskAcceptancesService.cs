@@ -113,6 +113,10 @@ public class RiskAcceptancesService(
         // them to ask for the permission, which is the wrong fix.
         await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.Accept);
 
+        // Stage 9.9 (S50 §4.7): the third line gives assurance and never decides — not even when somebody else names an
+        // auditor as the authorizing manager.
+        await EnsureNeitherIsThirdLineAsync(db, authorizerId, actingUserId, "authorize a risk acceptance");
+
         await workflow.EnsureSegregationOfDutiesAsync(riskId, authorizerId, "accept",
             request.SegregationOverrideReason);
 
@@ -128,6 +132,10 @@ public class RiskAcceptancesService(
         // Stage 9.7 (S48 §4.7.2): Gate B on the tail, after the ordinal ceiling, which keeps its rule and its order.
         // Not assessable (no tail statistics) does not refuse — the ceiling above still governs (S48 D12).
         EnsureTailWithinTolerance(appetite);
+
+        // Stage 9.8 (S49 §4.8): Gate B by indicator, last. A stale or unread KRI is not assessable and does not refuse;
+        // a stale one whose last reading was beyond its tolerance does (S49 D4).
+        EnsureIndicatorsWithinTolerance(appetite);
 
         var acceptance = new RiskAcceptance
         {
@@ -190,6 +198,8 @@ public class RiskAcceptancesService(
         // Gate A before everything else, as on creation: a renewal is a new acceptance (S46 §4.7).
         await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.RenewAcceptance);
 
+        await EnsureNeitherIsThirdLineAsync(db, authorizerId, actingUserId, "authorize a risk acceptance");
+
         await workflow.EnsureSegregationOfDutiesAsync(riskId, authorizerId, "renew the acceptance of",
             request.SegregationOverrideReason);
 
@@ -203,6 +213,8 @@ public class RiskAcceptancesService(
             throw new RuleBrokenException(appetite.Explanation, "risk_appetite_ceiling");
 
         EnsureTailWithinTolerance(appetite);
+
+        EnsureIndicatorsWithinTolerance(appetite);
 
         previous.Status = RiskAcceptanceStatus.Renewed;
         previous.UpdatedAt = DateTime.UtcNow;
@@ -331,7 +343,131 @@ public class RiskAcceptancesService(
         return result;
     }
 
+    public async Task<RiskAcceptance> StageCommitteeAcceptanceAsync(DAL.Context.AuditableContext db,
+        CommitteeAcceptance approval)
+    {
+        ArgumentNullException.ThrowIfNull(db);
+        ArgumentNullException.ThrowIfNull(approval);
+
+        Validate(new RiskAcceptanceRequest
+            { BusinessJustification = approval.BusinessJustification, ExpiresAt = approval.ExpiresAt });
+
+        var riskId = approval.RiskId;
+        var now = DateTime.UtcNow;
+
+        var risk = await db.Risks.FirstOrDefaultAsync(r => r.Id == riskId)
+                   ?? throw new DataNotFoundException("local", "risks",
+                       new Exception($"Risk with id {riskId} not found"));
+
+        RiskAcceptance? previous = null;
+        if (approval.RenewsAcceptanceId is { } renewsId)
+        {
+            previous = await db.RiskAcceptances.FirstOrDefaultAsync(a => a.Id == renewsId && a.RiskId == riskId)
+                       ?? throw new DataNotFoundException("local", "risk_acceptances",
+                           new Exception($"Risk acceptance with id {renewsId} not found on risk {riskId}"));
+
+            // Stricter than the individual RenewAsync (S50 §4.6): a renewed acceptance was already replaced, and renewing
+            // it again — or renewing one while another is live — would leave two acceptances in force.
+            if (previous.Status is RiskAcceptanceStatus.Revoked or RiskAcceptanceStatus.Renewed)
+                throw new InvalidStateTransitionException(previous.Status.ToString(),
+                    RiskAcceptanceStatus.Renewed.ToString(),
+                    previous.Status == RiskAcceptanceStatus.Revoked
+                        ? "A revoked acceptance is not renewed, it is replaced. Submit a new acceptance with its own " +
+                          "justification."
+                        : "This acceptance was already renewed; renew the acceptance that replaced it.");
+
+            if (await db.RiskAcceptances.AnyAsync(a => a.RiskId == riskId && a.Id != previous.Id &&
+                                                     a.Status == RiskAcceptanceStatus.Active && a.ExpiresAt > now))
+                throw new DataAlreadyExistsException("local", "risk_acceptances", riskId.ToString(),
+                    "Another acceptance of this risk is live: renewing this one would leave two in force.");
+
+            await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.RenewAcceptance);
+        }
+        else
+        {
+            if (await db.RiskAcceptances.AnyAsync(a =>
+                    a.RiskId == riskId && a.Status == RiskAcceptanceStatus.Active && a.ExpiresAt > now))
+                throw new DataAlreadyExistsException("local", "risk_acceptances", riskId.ToString(),
+                    "This risk already has a live acceptance. Renew or revoke it rather than stacking a second one.");
+
+            await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.Accept);
+        }
+
+        // No individual band here (S50 D8): the committee's distinct approvals are the authority. Gate B is unchanged —
+        // a committee no more exceeds the appetite the board approved than a manager does.
+        var scoring = await db.RiskScorings.FirstOrDefaultAsync(s => s.Id == riskId);
+        var residual = scoring?.ResidualRisk ?? scoring?.CalculatedRisk;
+
+        var appetite = await workflow.EvaluateAppetiteAsync(riskId);
+        if (appetite.ExceedsCeiling)
+            throw new RuleBrokenException(appetite.Explanation, "risk_appetite_ceiling");
+
+        EnsureTailWithinTolerance(appetite);
+        EnsureIndicatorsWithinTolerance(appetite);
+
+        if (previous is not null)
+        {
+            previous.Status = RiskAcceptanceStatus.Renewed;
+            previous.UpdatedAt = now;
+        }
+
+        var acceptance = new RiskAcceptance
+        {
+            Name = string.IsNullOrWhiteSpace(approval.Name)
+                ? previous?.Name ?? $"Acceptance of risk {risk.ReferenceId ?? riskId.ToString()}"
+                : approval.Name.Trim(),
+            RiskId = riskId,
+            BusinessJustification = approval.BusinessJustification.Trim(),
+            AuthorizingManagerId = approval.DecidingMemberId,
+            RequestedById = approval.RequestedById,
+            StartDate = now,
+            ExpiresAt = approval.ExpiresAt,
+            CompensatingControls = approval.CompensatingControls ?? previous?.CompensatingControls,
+            ResidualScoreSnapshot = residual,
+            Status = RiskAcceptanceStatus.Active,
+            EntityId = previous?.EntityId ?? risk.EntityId,
+            CreatedAt = now,
+            CreatedById = approval.DecidingMemberId,
+            RenewedFromId = previous?.Id
+        };
+
+        db.RiskAcceptances.Add(acceptance);
+
+        // The same single timeline as every other acceptance, naming the committee. Above the dual-approval threshold
+        // the second signature is another approving member: the collegiate decision has at least two by construction.
+        var dual = appetite.RequiresDualApproval && approval.SecondApproverId is not null;
+        db.MgmtReviews.Add(new MgmtReview
+        {
+            RiskId = riskId,
+            SubmissionDate = now,
+            Review = ReviewAcceptTheRisk,
+            Reviewer = approval.DecidingMemberId,
+            NextStep = NextStepAcceptUntilNextReview,
+            Comments = $"Risk accepted by the risk committee '{approval.CommitteeName}' (decision #{approval.DecisionId}: " +
+                       $"{approval.Approvals} of {approval.RequiredApprovals} required approvals) until " +
+                       $"{acceptance.ExpiresAt:yyyy-MM-dd}. " + acceptance.BusinessJustification,
+            NextReview = DateOnly.FromDateTime(acceptance.ExpiresAt),
+            RequiresCountersignature = appetite.RequiresDualApproval,
+            SecondReviewerId = dual ? approval.SecondApproverId : null,
+            SecondReviewAt = dual ? now : null
+        });
+
+        Logger.Information(
+            "Risk {RiskId} accepted by committee '{Committee}' (decision {Decision}, {Approvals}/{Required}) until " +
+            "{Expiry:yyyy-MM-dd} (residual {Residual})", riskId, approval.CommitteeName, approval.DecisionId,
+            approval.Approvals, approval.RequiredApprovals, acceptance.ExpiresAt, residual);
+
+        return acceptance;
+    }
+
     // --- internals ------------------------------------------------------------------------------
+
+    private static async Task EnsureNeitherIsThirdLineAsync(DAL.Context.AuditableContext db, int authorizerId,
+        int actingUserId, string action)
+    {
+        await ThirdLineGuard.EnsureNotThirdLineAsync(db, authorizerId, action);
+        if (actingUserId != authorizerId) await ThirdLineGuard.EnsureNotThirdLineAsync(db, actingUserId, action);
+    }
 
     private static void Validate(RiskAcceptanceRequest request)
     {
@@ -463,5 +599,19 @@ public class RiskAcceptancesService(
             appetite.Tail.Explanation);
 
         throw new RuleBrokenException(appetite.Tail.Explanation, TailToleranceRule);
+    }
+
+    /// <summary>The rule name of a refusal by Gate B by indicator (Stage 9.8, S49 §4.8).</summary>
+    public const string IndicatorToleranceRule = "risk_appetite_indicator_tolerance";
+
+    /// <summary>Refuses an acceptance a linked KRI says is beyond tolerance (S49 §4.8).</summary>
+    private void EnsureIndicatorsWithinTolerance(AppetiteEvaluation appetite)
+    {
+        if (appetite.Indicators.State != Model.Monitoring.IndicatorAppetiteState.ExceedsTolerance) return;
+
+        Logger.Warning("Refused acceptance: a key risk indicator exceeds its tolerance ({Explanation})",
+            appetite.Indicators.Explanation);
+
+        throw new RuleBrokenException(appetite.Indicators.Explanation, IndicatorToleranceRule);
     }
 }

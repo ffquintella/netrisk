@@ -314,6 +314,248 @@ public class RiskFlagsServiceInMemoryTest : RiskChainTestBase
             Assert.Equal("data 'Student records' (#50) classified 'Restricted' (#70), sensitive", flag.DerivedBasis);
     }
 
+    private Task CatalogueAsync(PersonalDataCategory category, bool largeVolume = false, bool strategicResearch = false,
+        LgpdLegalBasis? basis = LgpdLegalBasis.Art11HealthProtection) =>
+        GetService<IDataCatalogueService>().SaveRecordAsync(Data, new Model.DataCatalogue.DataCatalogueEntryRequest
+        {
+            PersonalData = category, LargeVolume = largeVolume, StrategicResearch = strategicResearch,
+            Purposes = [new Model.DataCatalogue.DataCataloguePurposeRequest { Purpose = "Student care", LegalBasis = basis }],
+            Locations = []
+        }, Author);
+
+    /// <summary>
+    /// D7 (Stage 9.11, S52 §4.8, D6 — amends S46) — the LGPD catalogue derives flag 5: data catalogued as sensitive, as a
+    /// large volume of personal data or as strategic research; ordinary personal data does not, nor a large volume of data
+    /// that is not personal. Removing the mark reverts the flag with the system's trail — the edge case S27 names.
+    /// </summary>
+    [Theory]
+    [InlineData(PersonalDataCategory.SensitivePersonal, false, false, "catalogued as sensitive personal data")]
+    [InlineData(PersonalDataCategory.Personal, true, false, "catalogued as a large volume of personal data")]
+    [InlineData(PersonalDataCategory.NotPersonal, false, true, "catalogued as strategic research")]
+    [InlineData(PersonalDataCategory.Personal, false, false, null)]
+    [InlineData(PersonalDataCategory.NotPersonal, true, false, null)]
+    public async Task TestD7_TheCatalogueDerivesFlag5AndItsRemovalRevertsIt(PersonalDataCategory category, bool largeVolume,
+        bool strategicResearch, string? basis)
+    {
+        AddRisk(1, UnitA);
+        AddLink(1, Data);
+        await CatalogueAsync(category, largeVolume, strategicResearch);
+
+        var flag = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.SensitiveData);
+
+        Assert.Equal(basis is not null, flag.Derived);
+        if (basis is null) return;
+        Assert.Equal($"data 'Student records' (#50) {basis}", flag.DerivedBasis);
+
+        // The mark comes off: the flag reverts on the next reconciliation, never silently.
+        await CatalogueAsync(PersonalDataCategory.Personal);
+        var reverted = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.SensitiveData);
+
+        Assert.False(reverted.IsSet);
+        Assert.Equal($"Derived basis lost: data 'Student records' (#50) {basis}", reverted.DerivedNote);
+        var derived = Assert.Single(Audit(nameof(RiskFlag)),
+            a => a.Action == AuditLogAction.Update && a.Field == nameof(RiskFlag.Derived));
+        Assert.Equal(("true", "false", "system"), (derived.OldValue, derived.NewValue, derived.Actor));
+    }
+
+    /// <summary>D7b — the classification and the catalogue are both bases, and both are named.</summary>
+    [Fact]
+    public async Task TestD7b_ClassificationAndCatalogueAreBothBases()
+    {
+        AddRisk(1, UnitA);
+        Classify(Data, "Restricted", sensitive: true);
+        AddLink(1, Data);
+        await CatalogueAsync(PersonalDataCategory.SensitivePersonal);
+
+        var flag = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.SensitiveData);
+
+        Assert.Equal("data 'Student records' (#50) classified 'Restricted' (#70), sensitive; " +
+                     "data 'Student records' (#50) catalogued as sensitive personal data", flag.DerivedBasis);
+    }
+
+    /// <summary>
+    /// D8 (Stage 9.11, S52 D7) — flag 2 is not derived from the catalogue: sensitive data with no declared legal basis, linked
+    /// to the risk, and a legal requirement linked to the risk leave flag 2 unset and Gate A open. The catalogue is the
+    /// declarer's evidence, not a Gate A switch in the hands of whoever writes it.
+    /// </summary>
+    [Fact]
+    public async Task TestD8_Flag2IsNotDerivedFromTheCatalogue()
+    {
+        AddRisk(1, UnitA);
+        AddLink(1, Data);
+        await CatalogueAsync(PersonalDataCategory.SensitivePersonal, basis: null);
+        var catalogue = GetService<IDataCatalogueService>();
+        var requirement = await catalogue.CreateRequirementAsync(new Model.DataCatalogue.LegalRequirementRequest
+            { Code = "LGPD art. 11", Title = "Sensitive data", Kind = LegalRequirementKind.Law }, Author);
+        await catalogue.LinkRiskRequirementAsync(1, requirement.Id, new Model.DataCatalogue.RiskLegalRequirementRequest(), Author);
+
+        var state = await Svc.RefreshAsync(1);
+
+        Assert.False(state.Flags.SingleOrDefault(f => f.Code == RiskFlagCode.LegalRegulatory)?.IsSet ?? false);
+        Assert.False(state.GateA.Holds);
+        Assert.Contains(Model.DataCatalogue.DataCatalogueFindingCode.LegalBasisMissing,
+            (await catalogue.GetRiskComplianceAsync(1)).DataRecords.Single().FindingCodes);
+    }
+
+    /// <summary>
+    /// D9 (Stage 9.11, S52 D5, D17 — review of M49) — the nightly reconciliation, the one job that reaches the catalogue,
+    /// reads it and changes nothing in it: an expired, sensitive catalogue is still whole after <c>RefreshAllAsync</c>, and
+    /// the trail has no catalogue row it did not have.
+    /// </summary>
+    [Fact]
+    public async Task TestD9_TheNightlyReconciliationLeavesTheCatalogueUntouched()
+    {
+        AddRisk(1, UnitA);
+        AddLink(1, Data);
+        await GetService<IDataCatalogueService>().SaveRecordAsync(Data, new Model.DataCatalogue.DataCatalogueEntryRequest
+        {
+            PersonalData = PersonalDataCategory.SensitivePersonal, RetentionReviewDueAt = DateTime.UtcNow.AddYears(-1),
+            Purposes = [new Model.DataCatalogue.DataCataloguePurposeRequest { Purpose = "Student care" }],
+            Locations = [new Model.DataCatalogue.DataCatalogueLocationRequest
+                { Country = "BR", Purpose = DataLocationPurpose.Storage }]
+        }, Author);
+
+        var catalogueTypes = ServerServices.Governance.DataCatalogueService.TrailTypes;
+        var before = Read(ctx => (ctx.DataCatalogueEntries.Count(), ctx.DataCataloguePurposes.Count(),
+            ctx.DataCatalogueLocations.Count(), ctx.AuditLogs.Count(a => catalogueTypes.Contains(a.EntityType))));
+
+        await Svc.RefreshAllAsync();
+
+        Assert.True(Row(1, RiskFlagCode.SensitiveData)!.Derived);
+        Assert.Equal(before, Read(ctx => (ctx.DataCatalogueEntries.Count(), ctx.DataCataloguePurposes.Count(),
+            ctx.DataCatalogueLocations.Count(), ctx.AuditLogs.Count(a => catalogueTypes.Contains(a.EntityType)))));
+        Assert.Equal(DateTime.UtcNow.AddYears(-1).Date,
+            Read(ctx => ctx.DataCatalogueEntries.Single(e => e.EntityId == Data).RetentionReviewDueAt)!.Value.Date);
+    }
+
+    // --- Stage 9.12 (S53 §4.6): flag 11 from the AI model inventory -------------------------------------------------------
+
+    private IAiGovernanceService AiModels => GetService<IAiGovernanceService>();
+
+    private async Task<int> InventoriedModelAsync(string name = "Admissions triage", int? unit = null,
+        AiModelStatus status = AiModelStatus.Production) =>
+        (await AiModels.CreateAsync(new Model.AiGovernance.AiModelRequest
+        {
+            Name = name, Purpose = "Ranks applications.", Kind = AiModelKind.Classification, Source = AiModelSource.InHouse,
+            Version = "2.1", Status = status, RiskTier = AiModelRiskTier.High, HumanOversight = AiHumanOversight.EveryOutput,
+            OwnerId = Author, EntityId = unit, MaxEvaluationAgeDays = 90
+        }, Author)).Id;
+
+    /// <summary>
+    /// D10 (Stage 9.12, S53 §4.6 — amends S46 §4.1) — a risk linked to an inventoried model that is not retired derives flag
+    /// 11, whatever the model's evaluation; retiring the model reverts it on the next reconciliation with the system's trail,
+    /// never silently — the S46 rule for a derived flag that loses its basis.
+    /// </summary>
+    [Theory]
+    [InlineData(AiModelStatus.Proposed, "proposed")]
+    [InlineData(AiModelStatus.Pilot, "in pilot")]
+    [InlineData(AiModelStatus.Production, "in production")]
+    public async Task TestD10_TheInventoryDerivesFlag11AndRetiringTheModelRevertsIt(AiModelStatus status, string label)
+    {
+        AddRisk(1, UnitA);
+        var model = await InventoriedModelAsync(status: status);
+        await AiModels.LinkRiskAsync(model, 1, new Model.AiGovernance.AiModelRiskLinkRequest { Note = "Bias." }, Author);
+
+        var flag = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.ArtificialIntelligence);
+
+        Assert.True(flag is { Derived: true, Declared: false, IsSet: true });
+        Assert.Equal($"inventoried AI model #{model}, {label}", flag.DerivedBasis);
+
+        await AiModels.RetireAsync(model, new Model.AiGovernance.AiGovernanceReasonRequest { Reason = "Replaced by v3 of the model." },
+            Author);
+        var reverted = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.ArtificialIntelligence);
+
+        Assert.False(reverted.IsSet);
+        Assert.Equal($"Derived basis lost: inventoried AI model #{model}, {label}", reverted.DerivedNote);
+        var derived = Assert.Single(Audit(nameof(RiskFlag)),
+            a => a.Action == AuditLogAction.Update && a.Field == nameof(RiskFlag.Derived));
+        Assert.Equal(("true", "false", "system"), (derived.OldValue, derived.NewValue, derived.Actor));
+    }
+
+    /// <summary>
+    /// D10b — unlinking reverts flag 11 too; a model the reader cannot see still derives it (the derivation reads unscoped,
+    /// S46 D9), so the flag never depends on who asks — and its basis, its note and the risk's trail name that model by id
+    /// only, never by name or version (regression, review of M50: the reader of the risk may not see the model); a declared
+    /// flag 11 stays declared beside the derivation.
+    /// </summary>
+    [Fact]
+    public async Task TestD10b_UnlinkingRevertsAndAHiddenModelStillDerives()
+    {
+        AddRisk(1, UnitA);
+        var hidden = await InventoriedModelAsync("Unit B scoring", UnitB);
+        await AiModels.LinkRiskAsync(hidden, 1, new Model.AiGovernance.AiModelRiskLinkRequest(), Author);
+        await Svc.DeclareAsync(1, RiskFlagCode.ArtificialIntelligence, Because("A chatbot answers applicants."), Author);
+
+        ScopeTo(UnitA);
+        var flag = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.ArtificialIntelligence);
+        Assert.True(flag is { Derived: true, Declared: true });
+        Assert.Equal($"inventoried AI model #{hidden}, in production", flag.DerivedBasis);
+        await Assert.ThrowsAsync<DataNotFoundException>(() => AiModels.GetModelAsync(hidden));
+
+        ScopeToEverything();
+        await AiModels.UnlinkRiskAsync(hidden, 1, Author);
+        flag = (await Svc.RefreshAsync(1)).Flags.Single(f => f.Code == RiskFlagCode.ArtificialIntelligence);
+        Assert.True(flag is { Derived: false, Declared: true, IsSet: true });
+        Assert.DoesNotContain("Unit B scoring", flag.DerivedNote);
+
+        ScopeTo(UnitA);
+        var trail = await GetService<IAuditTrailService>().GetForRiskAsync(1, 1000);
+        Assert.NotEmpty(trail);
+        Assert.DoesNotContain(trail, a => (a.NewValue ?? "").Contains("Unit B scoring") || (a.OldValue ?? "").Contains("Unit B scoring") ||
+                                          (a.NewValue ?? "").Contains("version '2.1'"));
+    }
+
+    /// <summary>
+    /// D11 (T215) — deriving flag 11 decides nothing: flag 11 is not a Gate A condition, so no "act immediately" decision is
+    /// recorded, nobody is notified, no acceptance or review appears, and Gate A still allows acceptance. The flag is a
+    /// classification; the decisions stay with people.
+    /// </summary>
+    [Fact]
+    public async Task TestD11_DerivingFlag11DecidesNothing()
+    {
+        AddRisk(1, UnitA);
+        var model = await InventoriedModelAsync();
+        await AiModels.LinkRiskAsync(model, 1, new Model.AiGovernance.AiModelRiskLinkRequest(), Author);
+
+        var state = await Svc.RefreshAsync(1);
+
+        Assert.True(state.Flags.Single(f => f.Code == RiskFlagCode.ArtificialIntelligence).Derived);
+        Assert.False(state.GateA.Holds);
+        Assert.Empty(Read(ctx => ctx.RiskDecisions.ToList()));
+        Assert.Empty(Read(ctx => ctx.RiskAcceptances.ToList()));
+        Assert.Empty(Read(ctx => ctx.MgmtReviews.ToList()));
+        await Escalations(0);
+        Assert.False(Read(ctx => ctx.Risks.Single(r => r.Id == 1).ReviewRequested));
+        await Svc.EnsureGateAAllowsAsync(1, GateAAction.Accept);
+    }
+
+    /// <summary>
+    /// D12 (Stage 9.12, S53 D2) — the nightly reconciliation reads the inventory for flag 11 and writes nothing to it: the
+    /// models, readings, overrides and links are unchanged and the trail has no inventory row it did not have.
+    /// </summary>
+    [Fact]
+    public async Task TestD12_TheNightlyReconciliationLeavesTheInventoryUntouched()
+    {
+        AddRisk(1, UnitA);
+        var model = await InventoriedModelAsync();
+        await AiModels.LinkRiskAsync(model, 1, new Model.AiGovernance.AiModelRiskLinkRequest(), Author);
+        await AiModels.RecordOverrideAsync(model, new Model.AiGovernance.AiModelOverrideRequest
+        {
+            OccurredAt = DateTime.UtcNow.AddDays(-1), ModelOutput = "Reject", HumanDecision = "Admit",
+            Reason = "The transcript was misread."
+        }, Author);
+
+        var types = ServerServices.Governance.AiGovernanceService.TrailTypes;
+        var before = Read(ctx => (ctx.AiModels.Count(), ctx.AiModelRisks.Count(), ctx.AiModelOverrides.Count(),
+            ctx.AiModelMetricReadings.Count(), ctx.AuditLogs.Count(a => types.Contains(a.EntityType))));
+
+        await Svc.RefreshAllAsync();
+
+        Assert.True(Row(1, RiskFlagCode.ArtificialIntelligence)!.Derived);
+        Assert.Equal(before, Read(ctx => (ctx.AiModels.Count(), ctx.AiModelRisks.Count(), ctx.AiModelOverrides.Count(),
+            ctx.AiModelMetricReadings.Count(), ctx.AuditLogs.Count(a => types.Contains(a.EntityType)))));
+    }
+
     /// <summary>D5 — withdrawing a declaration never clears a derivation: Gate A stays for the KEV item (D2).</summary>
     [Fact]
     public async Task TestD5_ADeclarationDoesNotSuppressADerivation()

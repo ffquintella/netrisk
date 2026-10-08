@@ -57,7 +57,9 @@ default and is reported in `FallbackApplied`.
 ## 5. Known limitations
 
 - The flag 4, Gate A and "act now" are Stage 9.5; this stage exposes the weighted threat they consume.
-- No BIA on activities, applications, data or hosts; no third-party dependencies (Stage 9.10).
+- No BIA on activities, applications, data or hosts. Third parties are not BIA subjects either: Stage 9.10 links a
+  supplier to the services and processes it supplies and reads this cascade from there, comparing its contracted RTO/RPO
+  with what the cascade requires ([third-party register](third-party-register.md)).
 - Recovery times are not added along the chain (a DRP concern), and the immutability of backups is not
   modelled.
 - Writes need global scope; delegating them to unit managers is a later stage.

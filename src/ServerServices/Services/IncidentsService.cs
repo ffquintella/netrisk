@@ -218,6 +218,10 @@ public class IncidentsService(
         }
         
         incident.Id = existingIncident.Id;
+        // Stage 9.9 (S50 §4.4, R11): when the incident entered the register is not editable. It bounds the occurrence
+        // backtesting compares registrations with, so moving it later would let a risk written after the fact count as
+        // having foreseen the incident.
+        incident.CreationDate = existingIncident.CreationDate;
         incident.UpdatedById = user.Value;
         incident.LastUpdate = DateTime.Now;
 

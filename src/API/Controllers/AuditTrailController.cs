@@ -30,6 +30,9 @@ public class AuditTrailController(
     IReportsService reports)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
+    /// <summary>Administrators and the third line (S50 §6).</summary>
+    public const string EvidencePolicy = "RequireAssuranceEvidence";
+
     /// <summary>Audited types whose history only the hosts endpoint serves, scope-checked.</summary>
     private static readonly HashSet<string> HostTrailTypes = new(StringComparer.Ordinal)
     {
@@ -71,6 +74,44 @@ public class AuditTrailController(
                 route = $"/Hosts/{entityId}/History"
             });
 
+        // The same for the third-party register (Stage 9.10, S51 §4.10): a third party is entity-scoped, and its history is
+        // read through /ThirdParties/{id}/History, which finds it visible first.
+        if (ServerServices.Governance.ThirdPartiesService.TrailTypes.Contains(entityType))
+            return BadRequest(new
+            {
+                error = "use_third_party_history",
+                message = $"'{entityType}' history is served by /ThirdParties/{{thirdPartyId}}/History.",
+                route = "/ThirdParties/{thirdPartyId}/History"
+            });
+
+        // And for the LGPD data catalogue (Stage 9.11, S52 §4.10): a risk's requirement links carry the risk's scope, and the
+        // catalogue has its own read policy, which this reader's does not apply. The catalogue's history is read through its
+        // own routes; a risk's links through the risk's trail, which finds the risk visible first.
+        if (ServerServices.Governance.DataCatalogueService.TrailTypes.Contains(entityType))
+            return BadRequest(new
+            {
+                error = "use_data_catalogue_history",
+                message = $"'{entityType}' history is served by the /DataCatalogue history routes, or by " +
+                          "/Risks/{riskId}/AuditTrail for a risk's requirement links.",
+                route = entityType == nameof(DAL.Entities.RiskLegalRequirement)
+                    ? "/Risks/{riskId}/AuditTrail"
+                    : "/DataCatalogue/{Records|Dpias|Requirements}/{id}/History"
+            });
+
+        // And for the AI model inventory (Stage 9.12, S53 §4.8): a model is entity-scoped and has its own read policy, and a
+        // risk's model links carry the risk's scope; this reader applies neither. A model's history is read through
+        // /AiModels/{id}/History, which finds it visible first; a risk's links through the risk's trail.
+        if (ServerServices.Governance.AiGovernanceService.TrailTypes.Contains(entityType))
+            return BadRequest(new
+            {
+                error = "use_ai_model_history",
+                message = $"'{entityType}' history is served by /AiModels/{{modelId}}/History, or by " +
+                          "/Risks/{riskId}/AuditTrail for a risk's model links.",
+                route = entityType == nameof(DAL.Entities.AiModelRisk)
+                    ? "/Risks/{riskId}/AuditTrail"
+                    : "/AiModels/{modelId}/History"
+            });
+
         return Ok(await auditTrail.GetForRecordAsync(entityType, entityId, limit));
     }
 
@@ -88,12 +129,14 @@ public class AuditTrailController(
     /// The auditor evidence pack for one entity and period (8.4.2): the field-level trail over the
     /// whole governance aggregate, in the order it happened.
     ///
-    /// Admin-only. This is a cross-record export of who-did-what, which is a different and larger
-    /// disclosure than reading one risk's history.
+    /// Administrators and the third line (Stage 9.9, S50 §4.7). This is a cross-record export of
+    /// who-did-what, which is a different and larger disclosure than reading one risk's history — and
+    /// it is precisely the assurance internal audit gives, so the auditor reads it in the system rather
+    /// than receiving it by hand.
     /// </summary>
     [HttpGet]
     [Route("Evidence")]
-    [Authorize(Policy = "RequireAdminOnly")]
+    [Authorize(Policy = EvidencePolicy)]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AuditLog>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<AuditLog>>> GetEvidence([FromQuery] int? entityId,
@@ -128,7 +171,7 @@ public class AuditTrailController(
     /// </summary>
     [HttpGet]
     [Route("Evidence/Report")]
-    [Authorize(Policy = "RequireAdminOnly")]
+    [Authorize(Policy = EvidencePolicy)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> GetEvidenceReport([FromQuery] int? entityId,
@@ -152,6 +195,19 @@ public class AuditTrailController(
                 message = $"'{format}' is not a supported evidence format.",
                 supported = new[] { "csv", "pdf" }
             });
+
+        // format=pdf stores the pack as a report (below): a GET that writes. The third line takes the CSV, which is the
+        // same pack rendered here and stored nowhere (S50 §4.7).
+        if (normalized == "pdf" && API.Security.ThirdLineReadOnly.IsThirdLine(_httpContextAccessor.HttpContext?.User))
+        {
+            Logger.Warning("Refused the PDF evidence pack to user {User}: it stores a report, and the third line is read-only",
+                user.Value);
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                error = Model.DecisionCycle.ThirdLineAssurance.ReadOnlyRule,
+                message = "The PDF evidence pack is stored as a report, which is a write. Request format=csv."
+            });
+        }
 
         var requester = $"{user.Name} ({user.Login}, #{user.Value})";
 

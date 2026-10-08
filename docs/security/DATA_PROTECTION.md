@@ -10,7 +10,7 @@
 | Class | What | At rest | In transit |
 |---|---|---|---|
 | **C1 — Secret** | JWT signing key, TLS private key, integration credentials, API/SCIM token secrets | Key file with process-only permissions; credentials AES-256-GCM in the database | Never transmitted, except a token once at issue |
-| **C2 — Sensitive** | Vulnerability findings, hosts and services, risk register, management reviews, uploaded scan files, attachments, biometric templates | Database and BLOB storage; **not** column-encrypted — see §3 | TLS 1.2+ |
+| **C2 — Sensitive** | Vulnerability findings, hosts and services, risk register, management reviews, uploaded scan files, attachments, biometric templates, the LGPD data catalogue (kinds of data, legal bases, RIPDs — no data subject's values, S52), the AI model inventory and the human overrides of model outputs (kinds of case, never a person's data, S53) | Database and BLOB storage; **not** column-encrypted — see §3 | TLS 1.2+ |
 | **C3 — Personal** | User names, e-mail addresses, login timestamps, source addresses | Database; passwords are bcrypt hashes | TLS 1.2+ |
 | **C4 — Operational** | Audit log, job history, schema-upgrade log | Database | TLS 1.2+ |
 | **C5 — Public** | Release metadata, download counters, installer artifacts | WebSite SQLite | TLS 1.2+; artifacts signed and checksummed |

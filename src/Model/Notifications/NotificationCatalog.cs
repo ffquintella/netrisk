@@ -62,7 +62,25 @@ public static class NotificationCatalog
         // Stage 9.5 (S46 §4.8). Not digest-recommended: Gate A means "act immediately", and a digest
         // delivered tomorrow morning is the opposite of that.
         new(NotificationEventType.RiskGateAEscalated, "risk.gate_a",
-            "A risk reached a non-discretionary (Gate A) condition or was decided 'act immediately'.", false, false)
+            "A risk reached a non-discretionary (Gate A) condition or was decided 'act immediately'.", false, false),
+
+        // Stage 9.8 (S49 §4.10). A KRI breach is announced once per episode and is not digest material — it is the
+        // indicator saying the tolerance is gone. The reassessment triggers it raises are: one KRI can govern dozens of
+        // risks, and a subscriber wants one message listing them.
+        new(NotificationEventType.KriToleranceBreached, "kri.breached",
+            "A key risk indicator went beyond its tolerance.", false, false),
+        new(NotificationEventType.RiskReassessmentTriggered, "risk.reassessment_triggered",
+            "A mandatory reassessment trigger (Phase 7) was raised on a risk.", true, true),
+
+        // Stage 9.9 (S50 §4.9). A reopened archive is the register saying "the cut was wrong" — not digest material.
+        // The quarterly review notices come from a daily sweep and are; a decision put to a committee waits for its
+        // members' votes, so it is announced at once.
+        new(NotificationEventType.RiskArchiveReopened, "risk.archive_reopened",
+            "An archived risk was reopened because one of its reopening conditions was met.", true, false),
+        new(NotificationEventType.RiskArchiveReviewDue, "risk.archive_review_due",
+            "An archived risk is due for its quarterly review.", true, true),
+        new(NotificationEventType.RiskCommitteeDecisionOpened, "committee.decision_opened",
+            "A risk acceptance was submitted to a risk committee for its vote.", true, false)
     ];
 
     /// <summary>The wire name for an event type, or its enum name when the catalog does not list it.</summary>

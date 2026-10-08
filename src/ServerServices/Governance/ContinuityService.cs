@@ -176,6 +176,12 @@ public class ContinuityService(ILogger logger, IDalService dalService)
         return result;
     }
 
+    public async Task<ContinuityGraph> GetGraphAsync()
+    {
+        await using var db = DalService.GetContext();
+        return (await LoadWorldAsync(db)).Graph;
+    }
+
     public async Task<ContinuitySettingsDto> GetSettingsAsync()
     {
         await using var db = DalService.GetContext();

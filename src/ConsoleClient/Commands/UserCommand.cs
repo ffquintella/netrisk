@@ -133,15 +133,7 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
 
         if (cont)
         {
-            List<Permission> permissions;
-            if (admin)
-            {
-                permissions = PermissionsService.GetAllPermissions();
-            }
-            else
-            {
-                permissions = PermissionsService.GetDefaultPermissions();
-            }
+            var permissions = InitialPermissions(admin, PermissionsService);
             
             var role = roles.FirstOrDefault(r => r.Name == userRole);
             
@@ -269,4 +261,14 @@ public class UserCommand(IUsersService usersService, IPermissionsService permiss
             AnsiConsole.MarkupLine("[bold]User: {0}[/]", user.Name);
         }
     }
+
+    /// <summary>
+    /// The permissions a user created here starts with: every one for an administrator — except the third-line marker,
+    /// which restricts rather than grants and would make the first administrator read-only (Stage 9.9, S50 R10) — and the
+    /// defaults otherwise.
+    /// </summary>
+    public static List<Permission> InitialPermissions(bool admin, IPermissionsService permissionsService) =>
+        admin
+            ? Model.DecisionCycle.ThirdLineAssurance.BulkGrantable(permissionsService.GetAllPermissions())
+            : permissionsService.GetDefaultPermissions();
 }

@@ -136,4 +136,5 @@ audit trail with the person who declared them; the computed statistics are not.
   shown as the bound that holds under any dependence.
 - Tail statistics appear on the first recomputation after the upgrade (the 02:20 job, or a manual computation); until
   then Gate B on the tail reads `NotAssessable`.
-- Gate B by KRI, unavailability, data loss or number of data subjects is Stage 9.8 (M46).
+- Gate B by KRI — unavailability, data loss, number of data subjects or another indicator — arrived with Stage 9.8
+  ([KRIs, reassessment triggers and metrics](kri-reassessment-metrics.md)); it is checked after the tail.

@@ -126,6 +126,14 @@ public static class ConfigurationManager
         // AddTrack8Governance above, the same one the API's Gate A uses.
         services.AddScoped<BackgroundJobs.Jobs.Governance.RiskFlagsDerivationJob>();
 
+        // Track 9 Stage 9.8 (S49) — the daily KRI evaluation. Its service comes from AddTrack8Governance above, the same
+        // one the API evaluates a recorded reading with.
+        services.AddScoped<BackgroundJobs.Jobs.Governance.KriEvaluationJob>();
+
+        // Track 9 Stage 9.9 (S50) — the quarterly-review notice of the archive. Its service comes from AddTrack8Governance
+        // above, the same one the API archives through.
+        services.AddScoped<BackgroundJobs.Jobs.Governance.RiskArchiveReviewJob>();
+
         ConfigureHangFire(services);
 
     }

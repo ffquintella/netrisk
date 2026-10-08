@@ -149,6 +149,31 @@ public class GeneralServicesBootstrapper
         services.AddTransient<ITailRiskService>(sp => new TailRiskRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 9 Stage 9.8 (S49): KRIs, their readings and links, the mandatory reassessment triggers and the
+        // methodology's metrics panel. No view consumes it yet — the desktop surface is T306.
+        services.AddTransient<IMonitoringService>(sp => new MonitoringRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        // Track 9 Stage 9.9 (S50): the archive with its reopening conditions and quarterly review, incident backtesting
+        // and the risk committee. No view consumes it yet — the desktop surface is T307.
+        services.AddTransient<IDecisionCycleService>(sp => new DecisionCycleRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        // Track 9 Stage 9.10 (S51): the third-party register — suppliers, HECVAT, SBOM, sub-processors, data locations and
+        // the concentration by supplier, cloud and identity. No view consumes it yet — the desktop surface is T308.
+        services.AddTransient<IThirdPartiesService>(sp => new ThirdPartiesRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        // Track 9 Stage 9.11 (S52): the LGPD data catalogue — legal basis by purpose, retention, location, transfer, the RIPD
+        // and the legal requirements of a risk. No view consumes it yet — the desktop surface is T309.
+        services.AddTransient<IDataCatalogueService>(sp => new DataCatalogueRestService(
+            sp.GetRequiredService<IRestService>()));
+
+        // Track 9 Stage 9.12 (S53): AI governance — the model inventory, its data, metric readings and human overrides, and
+        // the models a risk involves. No view consumes it yet — the desktop surface is T310.
+        services.AddTransient<IAiGovernanceService>(sp => new AiGovernanceRestService(
+            sp.GetRequiredService<IRestService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

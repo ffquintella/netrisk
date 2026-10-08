@@ -223,6 +223,7 @@ public class MitigationsController: ApiBaseController
     [Route("{id}/Teams/Associate/{teamId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Team>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [API.Security.StateChangingGet("Associates a team with a mitigation: a GET that writes.")]
     public ActionResult AssociateTeamToMitigation(int id, int teamId)
     {
         var user = GetUser();

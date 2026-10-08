@@ -91,6 +91,34 @@ public interface INotificationEventPublisher
     /// </summary>
     Task RiskGateAEscalatedAsync(Risk risk, double? score, IReadOnlyList<string> conditions, string reason);
 
+    // --- Track 9 Stage 9.8 (KRIs and reassessment triggers) -------------------------------------
+
+    /// <summary>
+    /// A KRI went beyond its tolerance (<c>kri.breached</c>, S49 §4.10). Raised once per breach episode, when the
+    /// episode opens — never again while it stays breached.
+    /// </summary>
+    Task KriToleranceBreachedAsync(Kri kri, decimal value, DateTime observedAt, int linkedRisks);
+
+    /// <summary>
+    /// A Phase 7 reassessment trigger was raised on a risk (<c>risk.reassessment_triggered</c>, S49 §4.10). Raised once
+    /// per event and risk.
+    /// </summary>
+    Task RiskReassessmentTriggeredAsync(Risk risk, double? score, ReassessmentEvent reassessmentEvent);
+
+    // --- Track 9 Stage 9.9 (archival and the risk committee) ------------------------------------
+
+    /// <summary>
+    /// An archived risk was reopened by one of its conditions (<c>risk.archive_reopened</c>, S50 §4.3). Raised once per
+    /// archive: a reopened archive is never reopened again.
+    /// </summary>
+    Task RiskArchiveReopenedAsync(Risk risk, double? score, RiskArchive archive, ReassessmentEvent reassessmentEvent);
+
+    /// <summary>An archived risk is due for its quarterly review (<c>risk.archive_review_due</c>, S50 §4.2), once per due date.</summary>
+    Task RiskArchiveReviewDueAsync(Risk risk, RiskArchive archive);
+
+    /// <summary>A risk acceptance was submitted to a committee (<c>committee.decision_opened</c>, S50 §4.6).</summary>
+    Task RiskCommitteeDecisionOpenedAsync(Risk risk, double? score, RiskCommittee committee, RiskCommitteeDecision decision);
+
     // --- Track 4.6 (Jira Service Management) ----------------------------------------------------
 
     /// <summary>

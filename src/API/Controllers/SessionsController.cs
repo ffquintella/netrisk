@@ -40,6 +40,7 @@ public class SessionsController(
     [Route("Logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [API.Security.ThirdLineSelfService("Ends the caller's own session; signing out is not a register write.")]
     public async Task<ActionResult> Logout()
     {
         var user = GetUser();

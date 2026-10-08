@@ -24,8 +24,10 @@ public static class RiskFlagCatalogue
             "The scenario can harm a person's life, health or safety.",
             RiskFlagDerivation.None, true, null),
         new(RiskFlagCode.LegalRegulatory, 2, "Legal or regulatory obligation, or LGPD",
-            "The scenario breaches, or risks breaching, a legal, regulatory or data-protection obligation.",
-            RiskFlagDerivation.None, true, "Stage 9.11 (LGPD data catalogue)"),
+            "The scenario breaches, or risks breaching, a legal, regulatory or data-protection obligation. Declared: the " +
+            "risk's legal requirements and the LGPD findings of the data it reaches (GET /DataCatalogue/Risks/{id}) are " +
+            "evidence for the person declaring it.",
+            RiskFlagDerivation.None, true, null),
         new(RiskFlagCode.KnownExploitation, 3, "Known exploitation (CISA KEV) or active attack",
             "An open finding linked to the risk has a CVE listed in CISA KEV, or an active attack is declared.",
             RiskFlagDerivation.Kev, true, null),
@@ -33,26 +35,29 @@ public static class RiskFlagCatalogue
             "The risk reaches a critical business process whose recovery objectives are threatened.",
             RiskFlagDerivation.Bia, false, null),
         new(RiskFlagCode.SensitiveData, 5, "Sensitive personal data, large volume or strategic research",
-            "The risk is linked to data classified at a level marked sensitive, or this is declared.",
-            RiskFlagDerivation.DataClassification, false, "Stage 9.11 (LGPD data catalogue)"),
+            "The risk is linked to data classified at a level marked sensitive, or catalogued in the LGPD data catalogue " +
+            "as sensitive personal data, a large volume of personal data or strategic research; or this is declared.",
+            RiskFlagDerivation.DataClassification, false, null),
         new(RiskFlagCode.SystemicSinglePointOfFailure, 6, "Systemic risk or single point of failure",
             "The scenario is systemic or rests on a single point of failure.",
             RiskFlagDerivation.None, false, null),
         new(RiskFlagCode.ThirdPartyConcentration, 7, "Concentration in a third party, cloud or identity",
-            "The scenario concentrates on one supplier, cloud or identity provider.",
-            RiskFlagDerivation.None, false, "Stage 9.10 (third-party register)"),
+            "The scenario concentrates on one supplier, cloud or identity provider. Declared: the third-party register's " +
+            "concentration (GET /ThirdParties/Concentration) is evidence for the person declaring it.",
+            RiskFlagDerivation.None, false, null),
         new(RiskFlagCode.LowProbabilityCatastrophic, 8, "Low probability, catastrophic impact",
             "A rare event whose impact would be catastrophic: the inherent run loses in few years, and a loss year is catastrophic.",
             RiskFlagDerivation.TailStatistics, false, null),
         new(RiskFlagCode.EmergingRapidGrowth, 9, "Emerging risk or rapid growth",
-            "The risk is new or growing quickly.",
-            RiskFlagDerivation.None, false, "Stage 9.8 (KRIs)"),
+            "The risk is new or growing quickly. Declared: the series of a linked KRI is evidence for the person declaring it.",
+            RiskFlagDerivation.None, false, null),
         new(RiskFlagCode.HighUncertainty, 10, "High uncertainty or weak evidence",
             "The analysis rests on high uncertainty or weak evidence; evidence confidence sits beside it.",
             RiskFlagDerivation.None, false, null),
         new(RiskFlagCode.ArtificialIntelligence, 11, "AI risk: discrimination, hallucination, prompt injection, drift",
-            "The scenario involves an AI component. Declarable only until Stage 9.12 makes it derivable.",
-            RiskFlagDerivation.None, false, "Stage 9.12 (AI model inventory)")
+            "The scenario involves an AI component: the risk is linked to a model of the AI inventory that is not retired " +
+            "(GET /AiModels/Risks/{id}); or this is declared.",
+            RiskFlagDerivation.AiModelInventory, false, null)
     ];
 
     /// <summary>The Phase 4 Gate A condition that is not one of the eleven flags (S46 D6).</summary>

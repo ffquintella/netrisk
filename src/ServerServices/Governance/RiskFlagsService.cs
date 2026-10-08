@@ -50,7 +50,7 @@ public class RiskFlagsService(
     public static readonly IReadOnlyList<RiskFlagCode> DerivableCodes =
     [
         RiskFlagCode.KnownExploitation, RiskFlagCode.CriticalProcessContinuity, RiskFlagCode.SensitiveData,
-        RiskFlagCode.LowProbabilityCatastrophic
+        RiskFlagCode.LowProbabilityCatastrophic, RiskFlagCode.ArtificialIntelligence
     ];
 
     private const string StatusClosed = RiskWorkflowService.StatusClosed;
@@ -716,6 +716,18 @@ public class RiskFlagsService(
         public Dictionary<int, (string? Name, int? LevelId)> Data { get; } = new();
         public Dictionary<int, (string? Name, bool Sensitive)> Levels { get; } = new();
 
+        /// <summary>
+        /// Stage 9.11 (S52 §4.8, D6): what the LGPD catalogue says of each linked data record — sensitive personal data,
+        /// a large volume of personal data, strategic research — the three conditions of flag 5.
+        /// </summary>
+        public Dictionary<int, (bool Sensitive, bool LargeVolume, bool StrategicResearch)> Catalogue { get; } = new();
+
+        /// <summary>
+        /// Stage 9.12 (S53 §4.6): the inventoried models each risk is linked to that are not retired — the basis of flag 11.
+        /// Read unscoped, like every basis here (D9), so a model the reader cannot see still derives the flag.
+        /// </summary>
+        public Dictionary<int, List<(int Id, AiModelStatus Status)>> AiModelsByRisk { get; } = new();
+
         /// <summary>Stage 9.7: the inherent tail of each risk — probability of loss, loss-year mean, iterations, seed.</summary>
         public Dictionary<int, (double Probability, double? Conditional, int Iterations, int Seed)> InherentTail { get; } = new();
 
@@ -736,6 +748,15 @@ public class RiskFlagsService(
                 TailFlag.Basis(tail.Probability, tail.Conditional, tail.Iterations, tail.Seed, TailThresholds) is { } tailBasis)
                 bases[RiskFlagCode.LowProbabilityCatastrophic] = new DerivedBasis(tailBasis, null);
 
+            // Flag 11 (S53 §4.6): an AI component's risk — linked to an inventoried model that is not retired. The basis names
+            // the model by id and status only: every reader of the risk sees it, and the model may be one they cannot see —
+            // its name and version stay behind the inventory's own scope. Never its evaluation either: a reading arriving
+            // must not rewrite the flag.
+            if (AiModelsByRisk.TryGetValue(riskId, out var models) && models.Count > 0)
+                bases[RiskFlagCode.ArtificialIntelligence] = new DerivedBasis(string.Join("; ", models
+                    .OrderBy(m => m.Id)
+                    .Select(m => $"inventoried AI model #{m.Id}, {StatusLabel(m.Status)}")), null);
+
             var linked = LinkedEntitiesByRisk.GetValueOrDefault(riskId);
             if (linked is null || linked.Count == 0) return bases;
 
@@ -751,19 +772,39 @@ public class RiskFlagsService(
                                  $"({(t.Confirmed ? "confirmed" : "unverified")})")),
                     threatened.Max(t => t.ThreatWeight));
 
+            // Flag 5: the classification level marked sensitive (S46 §4.5) or the LGPD catalogue (S52 §4.8) — either is a basis.
             var sensitive = linked
                 .Where(Data.ContainsKey)
-                .Select(id => (Id: id, Data: Data[id]))
-                .Where(d => d.Data.LevelId is { } level && Levels.TryGetValue(level, out var l) && l.Sensitive)
-                .OrderBy(d => d.Id)
+                .OrderBy(id => id)
+                .SelectMany(Flag5Bases)
                 .ToList();
 
             if (sensitive.Count > 0)
-                bases[RiskFlagCode.SensitiveData] = new DerivedBasis(string.Join("; ", sensitive
-                    .Select(d => $"data '{d.Data.Name}' (#{d.Id}) classified '{Levels[d.Data.LevelId!.Value].Name}' " +
-                                 $"(#{d.Data.LevelId}), sensitive")), null);
+                bases[RiskFlagCode.SensitiveData] = new DerivedBasis(string.Join("; ", sensitive), null);
 
             return bases;
+        }
+
+        private static string StatusLabel(AiModelStatus status) => status switch
+        {
+            AiModelStatus.Proposed => "proposed",
+            AiModelStatus.Pilot => "in pilot",
+            AiModelStatus.Production => "in production",
+            _ => status.ToString()
+        };
+
+        private IEnumerable<string> Flag5Bases(int id)
+        {
+            var data = Data[id];
+
+            if (data.LevelId is { } level && Levels.TryGetValue(level, out var l) && l.Sensitive)
+                yield return $"data '{data.Name}' (#{id}) classified '{l.Name}' (#{level}), sensitive";
+
+            if (!Catalogue.TryGetValue(id, out var catalogue)) yield break;
+
+            if (catalogue.Sensitive) yield return $"data '{data.Name}' (#{id}) catalogued as sensitive personal data";
+            if (catalogue.LargeVolume) yield return $"data '{data.Name}' (#{id}) catalogued as a large volume of personal data";
+            if (catalogue.StrategicResearch) yield return $"data '{data.Name}' (#{id}) catalogued as strategic research";
         }
     }
 
@@ -820,6 +861,22 @@ public class RiskFlagsService(
 
         if (world.InherentTail.Count > 0) world.TailThresholds = await TailRiskService.ReadTailFlagThresholdsAsync(db);
 
+        // Flag 11 (S53 §4.6) — the inventoried models the risk(s) are linked to, retired ones excluded: a retired model is no
+        // longer an AI component of anything, and retiring it reverts the flag with the system's trail. Read before the
+        // early returns below, which concern the chain only.
+        var modelLinks = riskId is { } modelRisk
+            ? db.AiModelRisks.AsNoTracking().Where(l => l.RiskId == modelRisk)
+            : db.AiModelRisks.AsNoTracking().Where(l => risks.Any(r => r.Id == l.RiskId));
+
+        foreach (var link in await modelLinks
+                     .Where(l => l.Model.Status != AiModelStatus.Retired)
+                     .Select(l => new { l.RiskId, l.ModelId, l.Model.Status })
+                     .ToListAsync())
+        {
+            if (!world.AiModelsByRisk.TryGetValue(link.RiskId, out var list)) world.AiModelsByRisk[link.RiskId] = list = [];
+            list.Add((link.ModelId, link.Status));
+        }
+
         // Flags 4 and 5 — the entity targets of the risk's chain links.
         var links = riskId is { } one
             ? db.RiskChainLinks.AsNoTracking().Where(l => l.RiskId == one && l.EntityId != null)
@@ -859,6 +916,18 @@ public class RiskFlagsService(
             world.Data[node] = (name, int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var level)
                 ? level
                 : null);
+        }
+
+        // Stage 9.11 (S52 §4.8): the LGPD catalogue of the same records. Large volume counts for personal data only — the
+        // methodology's "large volume" is of personal data; strategic research counts whatever the category.
+        foreach (var entry in await db.DataCatalogueEntries.AsNoTracking()
+                     .Where(e => dataNodes.Contains(e.EntityId))
+                     .Select(e => new { e.EntityId, e.PersonalData, e.LargeVolume, e.StrategicResearch })
+                     .ToListAsync())
+        {
+            var personal = entry.PersonalData is PersonalDataCategory.Personal or PersonalDataCategory.SensitivePersonal;
+            world.Catalogue[entry.EntityId] = (entry.PersonalData == PersonalDataCategory.SensitivePersonal,
+                personal && entry.LargeVolume, entry.StrategicResearch);
         }
 
         var levelIds = world.Data.Values.Where(d => d.LevelId != null).Select(d => d.LevelId!.Value).Distinct().ToList();

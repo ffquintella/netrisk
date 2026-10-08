@@ -385,7 +385,12 @@ public class UsersViewModel: ViewModelBase
         
         BtSelectAllClicked = ReactiveCommand.Create(() =>
         {
-            PermissionSelection.SelectAll();
+            // Stage 9.9 (S50 R10): "select all" never ticks the third-line marker. It restricts rather than grants, and
+            // swept up with everything else it would make the user read-only; it is granted through the role.
+            var source = ((IEnumerable<Permission>?)PermissionSelection.Source)?.ToList() ?? [];
+            for (var i = 0; i < source.Count; i++)
+                if (Model.DecisionCycle.ThirdLineAssurance.IsBulkGrantable(source[i].Key))
+                    PermissionSelection.Select(i);
         });
         
         BtCleanAllClicked = ReactiveCommand.Create(() =>

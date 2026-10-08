@@ -81,5 +81,33 @@ public enum NotificationEventType
     /// it (S46 §4.8). Distinct from <see cref="RiskEscalated"/>, which is a business reviewer handing one
     /// risk to a named approver: this one goes to whoever manages risk, and is never digest material.
     /// </summary>
-    RiskGateAEscalated = 18
+    RiskGateAEscalated = 18,
+
+    // --- Track 9 Stage 9.8 (KRIs and reassessment triggers) -------------------------------------
+
+    /// <summary>
+    /// A key risk indicator went beyond its tolerance (S49 §4.10). Raised once per breach episode — a KRI that stays
+    /// breached for thirty days is announced once, not thirty times.
+    /// </summary>
+    KriToleranceBreached = 19,
+
+    /// <summary>
+    /// A mandatory reassessment trigger of Phase 7 was raised on a risk (S49 §4.10): a declared event, or a linked KRI
+    /// beyond its tolerance. Raised once per event and risk.
+    /// </summary>
+    RiskReassessmentTriggered = 20,
+
+    // --- Track 9 Stage 9.9 (archival and the risk committee) ------------------------------------
+
+    /// <summary>
+    /// An archived risk was reopened by one of its conditions (S50 §4.3). Raised once: the archive is reopened once, and
+    /// a further condition reaches an open risk, which the reassessment trigger already announces.
+    /// </summary>
+    RiskArchiveReopened = 21,
+
+    /// <summary>An archived risk is due for its quarterly review (S50 §4.2). Raised once per due date.</summary>
+    RiskArchiveReviewDue = 22,
+
+    /// <summary>A risk acceptance was submitted to a risk committee for its collegiate decision (S50 §4.6).</summary>
+    RiskCommitteeDecisionOpened = 23
 }

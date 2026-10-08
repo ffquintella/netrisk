@@ -61,6 +61,9 @@ public class EntityRiskReviewersService(ILogger logger, IDalService dalService)
                 "A disabled account cannot be appointed a risk reviewer — the campaigns would be " +
                 "assigned to somebody who cannot sign in to answer them.");
 
+        // Stage 9.9 (S50 §4.7): a business reviewer decides risks in the portal; the third line never decides.
+        await ThirdLineGuard.EnsureNotThirdLineAsync(db, userId, "be appointed a business risk reviewer");
+
         var existing = await db.EntityRiskReviewers
             .FirstOrDefaultAsync(r => r.EntityId == entityId && r.UserId == userId);
 

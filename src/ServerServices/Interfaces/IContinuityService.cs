@@ -57,4 +57,11 @@ public interface IContinuityService
 
     /// <summary>Stores both parameters in one save, or refuses both.</summary>
     Task<ContinuitySettingsDto> SaveSettingsAsync(ContinuitySettingsRequest request);
+
+    /// <summary>
+    /// The organisation's continuity graph — processes and services with their effective criticality and objectives, and
+    /// the declared dependencies between them — exactly as the profile and the metric read it. Stage 9.10 (S51 §4.8)
+    /// computes third-party concentration and the contracted RTO/RPO requirement over it, so the two cannot disagree.
+    /// </summary>
+    Task<Tools.Continuity.ContinuityGraph> GetGraphAsync();
 }

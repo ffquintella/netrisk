@@ -34,6 +34,13 @@ public class RiskReviewCadenceJob(
     private const int NotificationChatType = (int)Model.Messages.ChatTypes.Jobs;
 
     /// <summary>
+    /// 07:30 daily: after both expiry passes (06:00, 06:15) and the KRI evaluation (06:45), so an acceptance that lapsed
+    /// overnight and a KRI that breached overnight are both in this morning's message. A constant so the order of the
+    /// jobs that feed it can be pinned by test (S49 §4.10).
+    /// </summary>
+    public const string Cron = "30 7 * * *";
+
+    /// <summary>
     /// How far ahead a treatment task is announced. Seven days is enough notice to do something and
     /// short enough that the message is still about this week.
     /// </summary>

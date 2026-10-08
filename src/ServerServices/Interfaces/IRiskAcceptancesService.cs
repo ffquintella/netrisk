@@ -49,7 +49,37 @@ public interface IRiskAcceptancesService
     /// Idempotent — a second run on the same day repeats neither the expiry nor the warning.
     /// </summary>
     Task<RiskAcceptanceExpiryResult> ProcessExpiryAsync(DateTime asOfUtc);
+
+    /// <summary>
+    /// Stage 9.9 (S50 §4.6) — the acceptance a risk committee's decision creates, staged in <paramref name="db"/> and not
+    /// saved: the committee saves it with the vote that reached its required approvals, as one write.
+    ///
+    /// The gates of <see cref="CreateAsync"/>/<see cref="RenewAsync"/> apply — Gate A, a live acceptance (409), the
+    /// ceiling, the tail and the indicators — except the individual severity band: the committee's distinct approvals
+    /// are the authority (S50 D8). Segregation of duties and the third line were checked on each approving member when
+    /// they voted. Above the dual-approval threshold the review is counter-signed by a second approving member.
+    /// </summary>
+    Task<RiskAcceptance> StageCommitteeAcceptanceAsync(DAL.Context.AuditableContext db, CommitteeAcceptance approval);
 }
+
+/// <summary>What a committee decided, for <see cref="IRiskAcceptancesService.StageCommitteeAcceptanceAsync"/>.</summary>
+/// <param name="DecidingMemberId">The member whose approval reached the required number — the acceptance's authorizer.</param>
+/// <param name="SecondApproverId">Another approving member, the counter-signature above the dual-approval threshold.</param>
+/// <param name="RequestedById">Who submitted the decision.</param>
+public sealed record CommitteeAcceptance(
+    int DecisionId,
+    string CommitteeName,
+    int RiskId,
+    int? RenewsAcceptanceId,
+    string? Name,
+    string BusinessJustification,
+    string? CompensatingControls,
+    DateTime ExpiresAt,
+    int DecidingMemberId,
+    int? SecondApproverId,
+    int? RequestedById,
+    int Approvals,
+    int RequiredApprovals);
 
 /// <summary>What one expiry pass did, so the job can notify without re-deriving it.</summary>
 public class RiskAcceptanceExpiryResult

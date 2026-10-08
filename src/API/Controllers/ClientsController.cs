@@ -58,6 +58,7 @@ public class ClientsController : ControllerBase
     [Route("{id}/approve")]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(string))]
+    [API.Security.StateChangingGet("Approves a client registration: a GET that writes.")]
     public ActionResult<string> Approve(int id)
     {
         var result = _clientRegistrationService.Approve(id);
@@ -72,6 +73,7 @@ public class ClientsController : ControllerBase
     [Route("{id}/reject")]
     [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status403Forbidden, Type = typeof(string))]
+    [API.Security.StateChangingGet("Rejects a client registration: a GET that writes.")]
     public ActionResult<string> Reject(int id)
     {
         var result = _clientRegistrationService.Reject(id);

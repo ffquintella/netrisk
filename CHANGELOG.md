@@ -12,6 +12,111 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.37.0] - 2026-10-08
+
+### Added
+- Add the Stage 9.12 specification: the AI model inventory as the governance instrument that comes before any use of AI, flag 11 derived from a risk's link to a model, model metrics per version with an explicit "not evaluated", the human override rate computed from recorded overrides, and the Phase 6 prohibitions kept under test (T211, S53)
+- Register the organization's AI models through `/AiModels` with their purpose, kind, source, vendor (a registered third party), version, status, declared risk tier and human oversight, an owner who is a person and never the third line, and how long an evaluation stays current, guarded by the new `ai_governance_manage` permission within the model's own unit and read through the new `RequireAiGovernanceRead` policy (T212, S53)
+- Declare the data records a model uses for training, fine-tuning, evaluation, input or output through `PUT /AiModels/{id}/Data`, read against the LGPD catalogue through the data node with no new column on any link (T212, S53)
+- Link the register's risks to the models they involve through `/AiModels/{id}/Risks/{riskId}` and read a risk's models through `GET /AiModels/Risks/{riskId}` (T213, S53)
+- Record accuracy, precision, recall, calibration and drift readings of a model's current version, refusing a measurement from before that version was in use, voided with a reason and never edited, and read each metric and the model as not evaluated, incomplete, stale or evaluated over the metrics its risk tier requires (T214, S53)
+- Record a person's decision contrary to a model with its author and reason through `POST /AiModels/{id}/Overrides`, and compute the human override rate of a period from those overrides instead of accepting a typed rate (T214, S53)
+- List what each model's record is missing through `GET /AiModels?withFindings=true` — the owner, the tier, the oversight, a reviewed high-risk model, the vendor, the data and its catalogue, a risk in the register, and an evaluation of the version in use (T212, T215, S53)
+
+### Changed
+- Derive flag 11 from the AI model inventory — a risk linked to a model that is not retired, named in the basis by id and status only — and revert it with the system's trail when the model is retired or the link removed, keeping it declarable and outside Gate A (T213, S53)
+- Compute the methodology panel's M10 as the share of the AI models in use evaluated on every metric their tier requires, counting a model with no evaluation as not evaluated instead of reporting the metric as waiting for Stage 9.12 (T214, T215, S53)
+- Count an AI model naming a third party as its vendor as a use of that third party, so it answers `422 third_party_in_use` instead of being deleted (T212, S53)
+- Show a risk's model links on its audit trail and in the governance evidence pack (T213, S53)
+
+### Security
+- Test over every API action outside the anonymous allowlist and the SCIM provisioning controller that a principal that is not a user — an AI model's name or the background actor — is refused by the valid-user requirement, and that every approver a request names is a user, so the Phase 6 prohibition that AI never accepts residual risk or approves stays by construction (T215, S53)
+- Treat a model with no recorded evaluation of its current version as not evaluated everywhere — the model, each metric with no value, the findings, the list, the risk view and M10 — never as zero or as a pass (T215, S53)
+- Refuse the five AI governance types in the generic `GET /AuditTrail/{type}/{id}` reader, which cannot apply the caller's scope nor the inventory's read policy (T212, S53)
+- Refuse inventory, data, reading and override text that carries an e-mail address or a formatted CPF without echoing it, and keep that text out of the service's logs (T212, T214, S53)
+
+## [2.36.0] - 2026-10-08
+
+### Added
+- Add the Stage 9.11 specification: the LGPD catalogue of kinds of data — never of data — with the legal basis by purpose, retention that signals and never deletes, location and international transfer, the RIPD as an artifact, the legal requirements of the register as links, and why flag 2 stays declared while flag 5 derives from the catalogue (T206, S52)
+- Catalogue each data record through `PUT /DataCatalogue/Records/{id}` with its personal-data category (personal, sensitive, anonymised), minors, large volume and strategic research, each purpose with its LGPD art. 7 or art. 11 legal basis, retention, locations by country and international transfer with its art. 33 safeguard, guarded by the new `data_catalogue_manage` permission with global scope and read through the new `RequireDataCatalogueRead` policy (T207, S52)
+- List what each data record's catalogue is missing through `GET /DataCatalogue/Records` — uncatalogued, undeclared, sensitive data with no legal basis or with an art. 7 basis, an unnamed obligation, an unassessed legitimate interest, retention, location, an undeclared transfer through the record or its processors, and a missing, overdue or high-residual-risk RIPD (T207, T210, S52)
+- Record RIPDs (DPIAs) through `/DataCatalogue/Dpias`, linked to data records and business processes, approved by a person who is never the third line, frozen once approved, and retired with a reason instead of deleted (T208, S52)
+- Catalogue legal and contractual requirements through `/DataCatalogue/Requirements`, cite them from purposes and retention, and link them to risks through `/DataCatalogue/Risks/{id}`, which also shows the data records the risk reaches and their findings (T209, S52)
+
+### Changed
+- Derive flag 5 also from the LGPD catalogue — sensitive personal data, a large volume of personal data or strategic research — reverting it with the system's trail when the mark comes off (T207, S52)
+- Keep flag 2 "legal or regulatory obligation, or LGPD" declared instead of deriving it from the catalogue as Stage 9.5 had forecast, and say in the flag catalogue that the risk's requirements and data findings are the declarer's evidence (T206, S52)
+- Count a catalogued contract naming a third party as a use of that third party, so it answers `422 third_party_in_use` instead of being deleted (T209, S52)
+- Show a risk's requirement links on its audit trail and in the governance evidence pack (T209, S52)
+
+### Security
+- Signal an expired retention as a finding and never delete anything because of it: no route deletes a catalogue entry, reading writes nothing, and no job writes or deletes it — the nightly flag reconciliation only reads it (T210, S52)
+- Refuse catalogue text that carries an e-mail address or a formatted CPF without echoing it, keep the catalogue's text out of the service's logs, and mask a contract counterparty the reader cannot see in the requirement's trail (T207, T209, S52)
+- Refuse the seven catalogue types in the generic `GET /AuditTrail/{type}/{id}` reader, which cannot apply the caller's scope nor the catalogue's read policy (T207, T209, S52)
+- Refuse a requirement in use — cited by a purpose, a retention or a risk the caller cannot see — with `422 legal_requirement_in_use`, backed by restricting foreign keys (T209, S52)
+
+## [2.35.0] - 2026-10-08
+
+### Added
+- Add the Stage 9.10 specification: the third party as a first-class record with its contract terms, HECVAT, SBOM, sub-processors and data location, concentration counted once per dependent critical process, and why flag 7 and the new-supplier trigger stay declared (T200, S51)
+- Register suppliers, clouds and identity providers through `/ThirdParties` with their unit, owner, relationship status, contract, SLA, contracted RTO/RPO, vulnerability-fix deadline, right to audit, exit plan and data portability, guarded by the new `third_party_manage` permission and read through the new `RequireThirdPartyRead` policy (T201, S51)
+- Link a third party to the IT services it supplies, the business processes it operates and the data records it processes, and read from a service or a data record which suppliers it has through `GET /ThirdParties/ByEntity/{id}` (T204, S51)
+- Record HECVAT assessments with how many questions the vendor was asked and score them on read, so that a partially answered questionnaire reads as incomplete with no score and never as conforming, and an expired, unscorable or voided one never passes (T202, T205, S51)
+- Import a supplier's SBOM from CycloneDX or SPDX JSON text, storing its components and the document's SHA-256 (T202, S51)
+- Declare a third party's sub-processors — an empty list included — and the countries where it stores, processes, backs up and reaches the data (T202, S51)
+- List what the register does not know or what does not hold for each supplier — the HECVAT, personal data, sub-processors and location, the right to audit, the exit plan and portability, a contracted RTO/RPO absent or looser than the BIA requires, a vulnerability-fix deadline over the 30 days of FGV's NRM §5.2, an ended contract and the SLA (T202, S51)
+- Measure concentration by supplier, cloud and identity through `GET /ThirdParties/Concentration`, counting each supplier once per active critical process that depends on it through the BIA cascade or a registered sub-processor, whatever the reader's scope (T203, T205, S51)
+- Read a third party's audit trail through `GET /ThirdParties/{id}/History`, after the supplier is found visible (T201, S51)
+
+### Changed
+- Compute the methodology panel's M8 — the largest share of the critical processes that depend on one supplier — instead of reporting it as waiting for Stage 9.10 (T203, S51)
+- Keep flag 7 "concentration in a third party, cloud or identity" declared instead of deriving it as Stage 9.5 had forecast, and say in the flag catalogue that the concentration report is the declarer's evidence (T200, S51)
+
+### Security
+- Refuse a third party in use — linked, assessed, with an SBOM, or named as a sub-processor by any supplier, including one the caller cannot see — with `422 third_party_in_use`, backed by restricting foreign keys (T201, T205, S51)
+- Parse an SBOM as untrusted input: JSON only with XML refused unparsed, at most 5 MiB, 64 levels of nesting and 10 000 components refused rather than truncated, control characters stripped, nothing fetched from a URL or written to disk, and the request body capped before it is read (T202, S51)
+- Refuse every write on a third party — its record, what it declares, its HECVAT and SBOMs, and its deletion — to a caller whose entity scope does not include the third party's own entity, so a unit cannot answer, re-file or delete the organization's supplier (T201, S51)
+- Refuse the third-party types in the generic `GET /AuditTrail/{type}/{id}` reader, which cannot apply the caller's entity scope, so a scoped reader cannot read another unit's supplier terms from the trail (T201, S51)
+
+## [2.34.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.9 specification: the archive as a record closed by its own closure with reopening conditions and a quarterly review, incident backtesting decided by the dates, the risk committee as a collegiate approver beside the individual authorizing manager, and the read-only third line (T194, S50)
+- Archive an open risk through `/RiskArchive/Risks/{id}` with a justification, a closure reason and the Phase 7 triggers that reopen it, checked like a closure (Gate A, the state machine) and like a decision (segregation of duties), recording the Phase 4 "archive" decision (T195, S50)
+- Reopen an archived risk once when a reassessment event of a type its archive watches reaches it — declared naming it, or a breach of a KRI linked to it — restoring its status before archiving, raising the trigger in the same write and announcing it through the new `risk.archive_reopened` notification (T195, T199, S50)
+- Review each archive quarterly — keep it, a quarter more, or reopen it — announced once per due date by the daily `RiskArchiveReview` job at 07:15 through the new `risk.archive_review_due` notification, and reopen an archive by hand with a reason (T195, S50)
+- Backtest incidents and near misses against the register through `/Backtesting`, matching each to the risks that describe it or stating that none does, with an outcome computed from the dates — a risk registered at or after the occurrence never counts as foreseen — and a report of the unforeseen and false-negative rates (T196, T199, S50)
+- Constitute risk committees with members and two to fifty required approvals through `/RiskCommittees`, submit an acceptance or a renewal to one, and let the vote that reaches the required approvals create the acceptance after Gate A and Gate B are checked again, announced through the new `committee.decision_opened` notification (T197, S50)
+- Seed the `ThirdLineAuditor` role with the new `third_line_assurance` permission and the read permissions of the register, governance, compliance, assessments, reports, vulnerabilities, hosts and incidents (T198, S50)
+
+### Changed
+- Compute the methodology panel's M9 — unforeseen incidents, false negatives of the cut and reopened archives — instead of reporting it as waiting for Stage 9.9 (T196, S50)
+- Reopen, instead of skipping, a closed risk named in a declared reassessment event when its archive watches the event's type, and list it in `ReopenedArchivedRiskIds` (T195, S50)
+- Open the governance evidence pack (`GET /AuditTrail/Evidence` and its CSV export) to the third line under the new `RequireAssuranceEvidence` policy, keeping the stored PDF to administrators (T198, S50)
+- Keep a risk's submission date and an incident's creation date unchanged when the risk or the incident is updated, so a back-dated registration cannot turn into a foreseen incident (T196, T199, S50)
+- Leave the third-line permission out of the permissions a new console administrator receives and out of "select all" in the user editor (T198, S50)
+
+### Security
+- Refuse every write of the API to a caller holding `third_line_assurance`, administrators included, through a requirement on every authorization policy, except seven reviewed self-service writes on the caller's own session and credentials, and declare the seven GET endpoints that write (T198, T199, S50)
+- Refuse the second of two simultaneous deciding votes on a committee decision with 409 through an optimistic concurrency token, so the decision cannot create two acceptances (T197, S50)
+- Refuse to name the third line as the authorizing manager of an acceptance, a management reviewer or counter-signer, a business risk reviewer or a committee member (T198, S50)
+
+## [2.33.0] - 2026-10-07
+
+### Added
+- Add the Stage 9.8 specification: KRIs with a Phase 0 tolerance and an explicit stale state, the six Phase 7 reassessment triggers raised once per cause, Gate B by indicator after the ceiling and the tail, and which of the methodology's ten metrics this stage delivers (T188, S49)
+- Record key risk indicators through `/Monitoring/Kris` with their source, unit, direction, Phase 0 tolerance and its rationale, warning and maximum reading age, link them to the risks they govern, and keep an insert-only history of readings in which a wrong one is voided with a reason (T189, S49)
+- Read a KRI whose latest reading is older than its maximum age as stale — never within tolerance — in its state, in Gate B and in the metrics panel (T189, T193, S49)
+- Declare the Phase 7 reassessment triggers — architecture or technology change, supplier, acquisition or migration, significant incident or near miss (once per incident), new regulation, new AI model and new data — through `/Monitoring/Reassessment/Events`, flagging each open risk for review until its next management review answers it (T190, S49)
+- Detect a KRI beyond its tolerance when a reading is recorded or voided, when a risk is linked and in the daily `KriEvaluation` job at 06:45, raising one breach episode and one reassessment trigger per governed risk however long the breach lasts, announced through the new `kri.breached` and `risk.reassessment_triggered` notifications (T190, T193, S49)
+- Report Gate B by indicator in `GET /Risks/{id}/Appetite` as not configured, not assessable, within or exceeding tolerance, over the KRIs linked to the risk whatever the caller's entity scope (T191, S49)
+- Show the methodology's ten Phase 7 metrics through `GET /Monitoring/Metrics` — each available, partial or not available with the stage that delivers it — beside the health of the KRIs and of the reassessment triggers (T192, S49)
+
+### Changed
+- Refuse to accept or renew a risk whose linked KRI exceeds its tolerance, or is stale with its last reading beyond it, with `422 risk_appetite_indicator_tolerance`, checked after Gate A, the ordinal ceiling and the tail (T191, S49)
+- Keep flag 9 "emerging risk or rapid growth" declared instead of deriving it from KRIs as Stage 9.5 had forecast, and say so in the flag catalogue (T188, S49)
+
 ## [2.32.0] - 2026-10-07
 
 ### Added

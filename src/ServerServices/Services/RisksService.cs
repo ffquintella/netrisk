@@ -741,7 +741,10 @@ public class RisksService(
             dbRisk.RiskCatalogs.Add(catalog);
         }
         //context.SaveChanges();
-            
+
+        // Stage 9.9 (S50 §4.4, R11): the registration date is not editable here either.
+        risk.SubmissionDate = dbRisk.SubmissionDate;
+
         risk.Adapt(dbRisk);
         context.SaveChanges();
     }
@@ -910,6 +913,10 @@ public class RisksService(
             if (catalog == null) throw new DataNotFoundException("RiskCatalog", rc.Id.ToString());
             dbRisk.RiskCatalogs.Add(catalog);
         }
+
+        // Stage 9.9 (S50 §4.4, R11): when the risk was registered is not editable. Backtesting decides "foreseen" by it,
+        // and a back-dated submission would turn a scenario written after an incident into one that foresaw it.
+        risk.SubmissionDate = dbRisk.SubmissionDate;
 
         risk.Adapt(dbRisk);
         await context.SaveChangesAsync();
