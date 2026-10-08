@@ -22,6 +22,18 @@ follow [SemVer](http://semver.org/).
 - Cover the new desktop workflows with localized labels, permission and presentation tests, and guards against late responses replacing the selected record; document their entry points in `docs/features/track9-desktop.md`
 - Show Stage 9.4 on the desktop: EPSS and EPSS percentile columns with an EPSS minimum in the findings filter, an exploitation-signals panel on the finding (priority and reasons, both EPSS sources, KEV state, catalogue freshness), MITRE ATT&CK technique editors on findings and risk scenarios, and the exploitation prioritization and KEV remediation-time reports with the state of both synchronizations (T302, S45)
 
+### Fixed
+
+- Refuse to renew a risk acceptance that was already renewed, or while another acceptance of the same risk is in force, so a risk never has two acceptances in force (T314)
+- Read a role's permissions without a parallel loop, so a permission check can no longer lose entries or throw under load (T316)
+
+### Security
+
+- Serve the generic audit trail and the risk audit trail only for a record the caller's entity scope can see, so a scoped reader can no longer read another unit's field changes (T311, S53)
+- Identify an API token's caller by the issuer's login instead of the display name, so a token can no longer act as a different user whose login matches its issuer's display name (T312, S53)
+- Enforce segregation of duties and the third-line guard when a management review is recorded through `POST /MgmtReviews` (T313, S53)
+- Refuse a FaceID transaction commit for any account other than the caller's (T315)
+
 ## [2.37.0] - 2026-10-08
 
 ### Added
