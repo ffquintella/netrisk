@@ -138,6 +138,11 @@ public class Track9KriReassessmentSchemaTests(MariaDbContainerFixture fixture)
         await RefusedAsync(conn, $"INSERT INTO reassessment_events {EventColumns} VALUES (4, 1, 'x', NOW(), 9821, NULL, NULL, NULL, 980, NOW())");
         await RefusedAsync(conn, $"INSERT INTO reassessment_events {EventColumns} VALUES (7, 1, 'x', NOW(), NULL, NULL, NULL, NULL, 980, NOW())");
 
+        // The incident/type rule also holds on updates, rather than only at the insert path used by the service.
+        await ExecAsync(conn, $"INSERT INTO reassessment_events {EventColumns} VALUES (3, 1, 'update', NOW(), 9821, NULL, NULL, NULL, 980, NOW())");
+        await RefusedAsync(conn, "UPDATE reassessment_events SET trigger_type = 4 WHERE title = 'update'");
+        await ExecAsync(conn, "DELETE FROM reassessment_events WHERE title = 'update'");
+
         // One episode per opening reading, one event per incident (S49 D8).
         await ExecAsync(conn, $"INSERT INTO reassessment_events {EventColumns} VALUES (6, 2, 'x', NOW(), NULL, 9801, 98011, NULL, NULL, NOW())");
         var episode = await RefusedAsync(conn,
@@ -192,6 +197,17 @@ public class Track9KriReassessmentSchemaTests(MariaDbContainerFixture fixture)
         await ExecAsync(conn, "DELETE FROM incidents WHERE Id = 9821;");
         Assert.Equal(1L, await CountAsync(conn,
             "SELECT COUNT(*) FROM reassessment_events WHERE title = 'incident' AND incident_id IS NULL"));
+
+        // Incidents can also be removed by the CreatedBy user FK's ON DELETE CASCADE. MariaDB does not
+        // activate an incident DELETE trigger for that path, so the reassessment FK itself must stay SET NULL.
+        await ExecAsync(conn,
+            "INSERT INTO incidents (Id, Year, Sequence, Name, Description, Category, CreationDate, LastUpdate, CreatedById, Status) " +
+            "VALUES (9822, 2026, 9822, '2026-9822', 'Cascade.', 'malware', NOW(), NOW(), 981, 2);" +
+            $"INSERT INTO reassessment_events {EventColumns} VALUES (3, 1, 'cascade-incident', NOW(), 9822, NULL, NULL, NULL, 981, NOW());" +
+            "DELETE FROM `user` WHERE `value` = 981;");
+        Assert.Equal(0L, await CountAsync(conn, "SELECT COUNT(*) FROM incidents WHERE Id = 9822"));
+        Assert.Equal(1L, await CountAsync(conn,
+            "SELECT COUNT(*) FROM reassessment_events WHERE title = 'cascade-incident' AND incident_id IS NULL"));
 
         await ExecAsync(conn, "DELETE FROM risks WHERE id = 9812;");
         Assert.Equal(1L, await CountAsync(conn, "SELECT COUNT(*) FROM kri_risks"));

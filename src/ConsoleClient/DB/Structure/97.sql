@@ -94,7 +94,6 @@ CREATE TABLE IF NOT EXISTS `reassessment_events` (
     `declared_by_id` int(11) NULL,
     `created_at` datetime NOT NULL,
     CONSTRAINT `PRIMARY` PRIMARY KEY (`id`),
-    CONSTRAINT `ck_reassessment_events_incident_type` CHECK (`incident_id` IS NULL OR `trigger_type` = 3),
     CONSTRAINT `ck_reassessment_events_kri_origin` CHECK ((`origin` = 2 AND `kri_id` IS NOT NULL AND `kri_reading_id` IS NOT NULL AND `trigger_type` = 6) OR (`origin` = 1 AND `kri_id` IS NULL AND `kri_reading_id` IS NULL AND `kri_breach_ended_at` IS NULL)),
     CONSTRAINT `ck_reassessment_events_origin` CHECK (`origin` >= 1 AND `origin` <= 2),
     CONSTRAINT `ck_reassessment_events_trigger_type` CHECK (`trigger_type` >= 1 AND `trigger_type` <= 6),
@@ -114,6 +113,30 @@ CREATE TABLE IF NOT EXISTS `risk_reassessment_triggers` (
     CONSTRAINT `fk_risk_reassessment_triggers_event_id` FOREIGN KEY (`event_id`) REFERENCES `reassessment_events` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_risk_reassessment_triggers_risk_id` FOREIGN KEY (`risk_id`) REFERENCES `risks` (`id`) ON DELETE CASCADE
 ) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- MariaDB 10.5+ rejects a CHECK column whose foreign key uses ON DELETE SET NULL (MDEV-30606).
+-- Triggers preserve the same insert/update rule while the FK keeps SET NULL for both direct incident
+-- deletion and deletion cascaded from an incident's creator. MySqlConnector sends compound statements
+-- directly, so client-only DELIMITER directives must not be used here.
+CREATE TRIGGER IF NOT EXISTS `trg_reassessment_events_incident_type_insert`
+BEFORE INSERT ON `reassessment_events`
+FOR EACH ROW
+BEGIN
+    IF NEW.`incident_id` IS NOT NULL AND NEW.`trigger_type` <> 3 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'ck_reassessment_events_incident_type violated';
+    END IF;
+END;
+
+CREATE TRIGGER IF NOT EXISTS `trg_reassessment_events_incident_type_update`
+BEFORE UPDATE ON `reassessment_events`
+FOR EACH ROW
+BEGIN
+    IF NEW.`incident_id` IS NOT NULL AND NEW.`trigger_type` <> 3 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'ck_reassessment_events_incident_type violated';
+    END IF;
+END;
 
 CREATE INDEX IF NOT EXISTS `idx_kri_readings_kri_id_observed_at` ON `kri_readings` (`kri_id`, `observed_at`);
 
