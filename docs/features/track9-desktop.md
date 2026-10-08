@@ -65,3 +65,7 @@ Verified on 2026-10-08: `GUIClient` compiled with 0 errors and 8 pre-existing wa
 `GUIClient.Tests` compiled without warnings and passed all 674 tests (0 skipped); `LintUi`
 scanned 121 views with 0 violations. Its build bootstrap reported 3 existing .NET 10 tooling
 warnings. Authenticated visual acceptance remains pending.
+
+Release 2.38.0 verification used a copy of the staged application sources, excluding separate
+workspace changes: the GUI compiled and all 671 GUI tests passed. The four product-version
+compatibility tests also passed.

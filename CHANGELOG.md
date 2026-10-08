@@ -12,25 +12,13 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
-
-- Refuse to renew a risk acceptance that was already renewed, or while another acceptance of the same risk is in force, so a risk never has two acceptances in force (T314)
-- Read a role's permissions without a parallel loop, so a permission check can no longer lose entries or throw under load (T316)
-
-### Security
-
-- Serve the generic audit trail and the risk audit trail only for a record the caller's entity scope can see, so a scoped reader can no longer read another unit's field changes (T311, S53)
-- Identify an API token's caller by the issuer's login instead of the display name, so a token can no longer act as a different user whose login matches its issuer's display name (T312, S53)
-- Enforce segregation of duties and the third-line guard when a management review is recorded through `POST /MgmtReviews` (T313, S53)
-- Refuse a FaceID transaction commit for any account other than the caller's (T315)
-
 ## [2.38.0] - 2026-10-08
 
 ### Added
 
-- Add a permission-filtered desktop governance workspace and contextual risk editors for flags and decisions, Top Risks, treatment economics and prerequisites, risk targets, task acceptance criteria and evidence, loss components, tail tolerances, correlations and portfolio analysis (T303–T305)
-- Add desktop KRI readings and links, reassessment declarations and queues, methodology metrics, archival and quarterly reviews, incident backtesting, and committee membership, submissions and voting, with read-only access for third-line assurance (T306–T307)
-- Add desktop supplier contracts, HECVAT and SBOM records, concentration analysis, the LGPD catalogue and legal requirements, RIPD review, and AI model inventory, evaluation readings and human overrides, with contextual entity and risk blocks (T308–T310)
+- Add a permission-filtered desktop governance workspace and contextual risk editors for flags and decisions, Top Risks, treatment economics and prerequisites, risk targets, task acceptance criteria and evidence, loss components, tail tolerances, correlations and portfolio analysis (T303, T304, T305)
+- Add desktop KRI readings and links, reassessment declarations and queues, methodology metrics, archival and quarterly reviews, incident backtesting, and committee membership, submissions and voting, with read-only access for third-line assurance (T306, T307)
+- Add desktop supplier contracts, HECVAT and SBOM records, concentration analysis, the LGPD catalogue and legal requirements, RIPD review, and AI model inventory, evaluation readings and human overrides, with contextual entity and risk blocks (T308, T309, T310)
 - Cover the new desktop workflows with localized labels, permission and presentation tests, and guards against late responses replacing the selected record; document their entry points in `docs/features/track9-desktop.md`
 - Show Stage 9.4 on the desktop: EPSS and EPSS percentile columns with an EPSS minimum in the findings filter, an exploitation-signals panel on the finding (priority and reasons, both EPSS sources, KEV state, catalogue freshness), MITRE ATT&CK technique editors on findings and risk scenarios, and the exploitation prioritization and KEV remediation-time reports with the state of both synchronizations (T302, S45)
 
