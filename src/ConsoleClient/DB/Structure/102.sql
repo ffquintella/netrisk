@@ -18,6 +18,7 @@ PREPARE nr_ddl FROM @nr_ddl;
 EXECUTE nr_ddl;
 DEALLOCATE PREPARE nr_ddl;
 
-ALTER TABLE `risk_acceptances` DROP INDEX IF EXISTS `idx_ra_renewed_from_id`;
+-- The existing self-referencing FK requires an index, so create its unique replacement first.
 CREATE UNIQUE INDEX IF NOT EXISTS `uq_ra_renewed_from_id`
     ON `risk_acceptances` (`renewed_from_id`);
+ALTER TABLE `risk_acceptances` DROP INDEX IF EXISTS `idx_ra_renewed_from_id`;

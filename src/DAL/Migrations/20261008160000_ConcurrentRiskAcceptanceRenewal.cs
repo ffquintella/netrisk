@@ -26,26 +26,28 @@ public partial class ConcurrentRiskAcceptanceRenewal : Migration
             DEALLOCATE PREPARE nr_ddl;
             """);
 
-        migrationBuilder.DropIndex(
-            name: "idx_ra_renewed_from_id",
-            table: "risk_acceptances");
-
+        // The existing self-referencing FK requires an index, so create its unique replacement first.
         migrationBuilder.CreateIndex(
             name: "uq_ra_renewed_from_id",
             table: "risk_acceptances",
             column: "renewed_from_id",
             unique: true);
+
+        migrationBuilder.DropIndex(
+            name: "idx_ra_renewed_from_id",
+            table: "risk_acceptances");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropIndex(
-            name: "uq_ra_renewed_from_id",
-            table: "risk_acceptances");
-
+        // Keep the FK supported while replacing the unique index during rollback.
         migrationBuilder.CreateIndex(
             name: "idx_ra_renewed_from_id",
             table: "risk_acceptances",
             column: "renewed_from_id");
+
+        migrationBuilder.DropIndex(
+            name: "uq_ra_renewed_from_id",
+            table: "risk_acceptances");
     }
 }
