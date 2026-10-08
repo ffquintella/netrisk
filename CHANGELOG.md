@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.38.1] - 2026-10-08
+
+### Fixed
+
+- Fix MariaDB database upgrades failing in migration 97 on `ck_reassessment_events_incident_type`; enforce the incident-type rule with insert/update triggers while preserving incident deletion behavior and partial-upgrade retries.
+
 ## [2.38.0] - 2026-10-08
 
 ### Added
