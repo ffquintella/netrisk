@@ -7,6 +7,7 @@ using LiveChartsCore.Defaults;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Extensions;
+using GUIClient.Tools;
 using ReactiveUI;
 using Tools.Extensions;
 
@@ -61,21 +62,13 @@ public class VulnerabilitiesDistributionViewModel: GraphsViewModelBase
 
     private async Task LoadDataAsync()
     {
-        var gaugeItems = new List<GaugeItem>();
         var vulnerabilitiesDistribution = await StatisticsService.GetVulnerabilitiesDistributionAsync();
-        
-        /*foreach (var vulnerability in vulnerabilitiesDistribution)
+
+        var gaugeItems = ViewModelCollection.Materialize(vulnerabilitiesDistribution, vulnerability =>
         {
             if(vulnerability.Value > MaxValue) MaxValue = vulnerability.Value;
-            
-            gaugeItems.Add(new GaugeItem(vulnerability.Value, series => SetStyle(vulnerability.Name, series)));
-        }*/
-        
-        Parallel.ForEach(vulnerabilitiesDistribution, vulnerability =>
-        {
-            if(vulnerability.Value > MaxValue) MaxValue = vulnerability.Value;
-            
-            gaugeItems.Add(new GaugeItem(vulnerability.Value, series => SetStyle(vulnerability.Name, series)));
+
+            return new GaugeItem(vulnerability.Value, series => SetStyle(vulnerability.Name, series));
         });
         
         gaugeItems.Add(new GaugeItem(GaugeItem.Background, series =>

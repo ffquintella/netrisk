@@ -846,6 +846,14 @@
     <Content Include="DB\Data\101.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="DB\Structure\102.sql" />
+    <Content Include="DB\Structure\102.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\102.sql" />
+    <Content Include="DB\Data\102.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="DB\Data\24.sql" />

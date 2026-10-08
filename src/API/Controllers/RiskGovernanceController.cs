@@ -145,6 +145,7 @@ public class RiskGovernanceController(
     [Authorize(Policy = "RequireMgmtReviewAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskAcceptance))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<RiskAcceptance>> RenewAcceptance(int id, int acceptanceId,
         [FromBody] RiskAcceptanceRequest request)
@@ -173,6 +174,10 @@ public class RiskGovernanceController(
         {
             return StatusCode(StatusCodes.Status403Forbidden,
                 new { error = "insufficient_authority", ex.Permission, ex.Message });
+        }
+        catch (DataAlreadyExistsException ex)
+        {
+            return Conflict(new { error = "already_renewed", ex.Message });
         }
         catch (DataNotFoundException)
         {
@@ -330,15 +335,28 @@ public class RiskGovernanceController(
 
     // --- 8.4 audit trail ----------------------------------------------------------------------
 
-    /// <summary>Who changed what, when, across the whole risk aggregate (8.4.2).</summary>
+    /// <summary>
+    /// Who changed what, when, across the whole risk aggregate (8.4.2). A risk the caller cannot see — another entity's, or
+    /// deleted — is a 404 (<c>AuditTrailService.GetForRiskAsync</c>; pinned by <c>AuditTrailScopeTest</c>).
+    /// </summary>
     [HttpGet]
     [Route("{id}/AuditTrail")]
     [Authorize(Policy = "RequireRiskmanagement")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AuditLog>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<AuditLog>>> GetAuditTrail(int id, [FromQuery] int limit = 1000)
     {
-        GetUser();
-        return Ok(await auditTrail.GetForRiskAsync(id, limit));
+        var user = GetUser();
+
+        try
+        {
+            return Ok(await auditTrail.GetForRiskAsync(id, limit));
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("User:{User} asked for the trail of risk {Id}, which is not visible to them", user.Value, id);
+            return NotFound();
+        }
     }
 
     // --- 8.5 review requests and treatment tasks ----------------------------------------------

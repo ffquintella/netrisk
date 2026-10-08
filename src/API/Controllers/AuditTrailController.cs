@@ -6,6 +6,7 @@ using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Model.Exceptions;
 using Model.Reports;
 using ServerServices.Governance;
 using ServerServices.Interfaces;
@@ -40,16 +41,24 @@ public class AuditTrailController(
         nameof(DAL.Entities.HostsService)
     };
 
-    /// <summary>The recorded changes to one governance record.</summary>
+    /// <summary>
+    /// The recorded changes to one governance record.
+    ///
+    /// <c>audit_logs</c> has no entity id, so the caller's scope is applied to the record instead: the service looks it up
+    /// through the entity-scoped set of its type first, and a record the caller cannot see — another entity's, or deleted —
+    /// is a 404, as every other out-of-scope read is (<c>AuditTrailService.RecordScopes</c>; pinned by
+    /// <c>AuditTrailScopeInMemoryTest</c> and, through this action, by <c>AuditTrailScopeTest</c>).
+    /// </summary>
     [HttpGet]
     [Route("{entityType}/{entityId}")]
     [Authorize(Policy = "RequireRiskmanagement")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AuditLog>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<AuditLog>>> GetForRecord(string entityType, int entityId,
         [FromQuery] int limit = 500)
     {
-        GetUser();
+        var user = GetUser();
 
         // The allowlist is the answer, not a filter over an open query: accepting an arbitrary type
         // name would let a caller probe which types the interceptor covers, and would return an empty
@@ -63,9 +72,8 @@ public class AuditTrailController(
             });
 
         // Host history is read through /Hosts/{id}/History, which looks the host up through the
-        // entity-scoped hosts set first. audit_logs has no entity id, so this reader cannot apply the
-        // caller's scope, and serving hosts here would let a scoped caller read another entity's host
-        // values out of the trail (S38 §5.4).
+        // entity-scoped hosts set first and strips the user record from each row (S38 §5.4). The
+        // service below would refuse another entity's host too; the route is kept as the one reader.
         if (HostTrailTypes.Contains(entityType))
             return BadRequest(new
             {
@@ -112,7 +120,16 @@ public class AuditTrailController(
                     : "/AiModels/{modelId}/History"
             });
 
-        return Ok(await auditTrail.GetForRecordAsync(entityType, entityId, limit));
+        try
+        {
+            return Ok(await auditTrail.GetForRecordAsync(entityType, entityId, limit));
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("User:{User} asked for the trail of {Type} {Id}, which is not visible to them", user.Value,
+                entityType, entityId);
+            return NotFound();
+        }
     }
 
     /// <summary>The types the interceptor writes rows for, so a client can render only what exists.</summary>

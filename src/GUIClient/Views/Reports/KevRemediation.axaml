@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:reports="clr-namespace:GUIClient.ViewModels.Reports"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:DataType="reports:KevRemediationViewModel"
+             x:Class="GUIClient.Views.Reports.KevRemediation">
+    <Design.DataContext>
+        <reports:KevRemediationViewModel/>
+    </Design.DataContext>
+
+    <!-- Report 10 (Stage 9.4, T302, S45 §7.5): time to remediate KEV items (Phase 7) and the state of both
+         synchronizations. "Not computable" is its own state; a failed feed is shown with NetRisk's reason. -->
+    <Panel>
+        <StackPanel Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Margin="5 0 0 0" VerticalAlignment="Center"
+                        Command="{Binding BtReloadClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrReload}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <StackPanel IsVisible="{Binding HasMetric}" Margin="0 5 0 0">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOpenFindings}" Classes="label"/><TextBlock Text="{Binding OpenText}" Classes="formData"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOpenPastDue}" Classes="label"/><TextBlock Text="{Binding OpenPastDueText}" Classes="formData"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrMitigated}" Classes="label"/><TextBlock Text="{Binding MitigatedText}" Classes="formData"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrMitigatedWithoutDate}" Classes="label"/><TextBlock Text="{Binding MitigatedWithoutDateText}" Classes="formData"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrMedian}" Classes="label"/><TextBlock Text="{Binding MedianText}" Classes="formData" TextWrapping="Wrap"/></StackPanel>
+                <TextBlock Classes="header_detail" Text="{Binding ComputedAtText}"/>
+                <TextBlock Classes="header_detail" Text="{Binding CatalogueText}"/>
+            </StackPanel>
+
+            <TextBlock Classes="header2" Text="{Binding StrSyncStatus}" Margin="0 10 0 0"/>
+            <ItemsControl ItemsSource="{Binding Feeds}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="reports:SignalFeedStatusRow">
+                        <StackPanel Margin="0 5 0 0">
+                            <TextBlock Classes="fieldLabel" Text="{Binding Name}"/>
+                            <TextBlock Classes="formData" Text="{Binding LastRun}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="notice" Text="{Binding Error}" TextWrapping="Wrap" IsVisible="{Binding HasError}"/>
+                            <TextBlock Classes="formData" Text="{Binding LastApplied}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <progRing:ProgressRing Width="80" Height="80"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               ZIndex="1000"/>
+    </Panel>
+</UserControl>

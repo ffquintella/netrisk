@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.RiskTailPanel" x:DataType="vm:RiskTailPanelViewModel"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="620">
+    <Design.DataContext><vm:RiskTailPanelViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,*" Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*" Margin="0 6">
+                <TextBlock Classes="form_label" Text="{Binding StrGateB}"/>
+                <TextBlock Grid.Column="1" Text="{Binding GateBText}" TextWrapping="Wrap"/>
+            </Grid>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Runs}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrTitle, Mode=OneTime}" Binding="{Binding Run}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrExpectedLoss, Mode=OneTime}" Binding="{Binding ExpectedLoss}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrP95, Mode=OneTime}" Binding="{Binding P95}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrCvar95, Mode=OneTime}" Binding="{Binding Cvar95}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrProbabilityOfLoss, Mode=OneTime}" Binding="{Binding ProbabilityOfLoss}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrComputedAt, Mode=OneTime}" Binding="{Binding ComputedAt}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock Grid.Row="4" Classes="form_label" Text="{Binding StrContribution}" Margin="0 8 0 3"/>
+            <DataGrid Grid.Row="5" ItemsSource="{Binding Contributions}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrComponent, Mode=OneTime}" Binding="{Binding Component}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrExpectedLoss, Mode=OneTime}" Binding="{Binding ExpectedLoss}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrCvar95, Mode=OneTime}" Binding="{Binding Cvar95}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

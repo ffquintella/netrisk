@@ -746,26 +746,11 @@ public class EditIncidentViewModel
     
     private bool VerifyIncidentResponsePlans()
     {
-        var hasChanges = false;
-        
         var selectedIds = SelectedPlans.Select(sp => Convert.ToInt32(sp.Key)).ToList();
         
-        NewIncidentResponsePlanIds = selectedIds;        
-        
-        if(selectedIds.Count != IncidentResponsePlanIds.Count)
-        {
-            return true;
-        }
-        
-        Parallel.ForEach(IncidentResponsePlanIds, id =>
-        {
-            if(!selectedIds.Contains(id))
-            {
-                hasChanges = true;
-            }
-        });
+        NewIncidentResponsePlanIds = selectedIds;
 
-        return hasChanges;
+        return !ViewModelCollection.HaveSameMembers(selectedIds, IncidentResponsePlanIds);
 
     }
 
@@ -1032,20 +1017,14 @@ public class EditIncidentViewModel
 
     }
     
-    private async Task<ObservableCollection<string>> LoadListAsync(List<Entity> entities)
+    private Task<ObservableCollection<string>> LoadListAsync(List<Entity> entities)
     {
-        var entitiesString = new List<string>();
-        await Task.Run(() =>
-        {
-            Parallel.ForEach(entities, entity =>
-            {
-                entitiesString.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
-            });
-        });
+        var entitiesString = ViewModelCollection.Materialize(entities, entity =>
+            $"{entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value} ({entity.Id})");
         
         entitiesString.Sort();
         
-        return new ObservableCollection<string>(entitiesString);
+        return Task.FromResult(new ObservableCollection<string>(entitiesString));
     }
     
     

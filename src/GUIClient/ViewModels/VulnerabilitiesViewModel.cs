@@ -101,6 +101,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
     public string StrReopen {get; } = Localizer["Reopen"] ;
     public string StrLastScanDate {get; } = Localizer["LastScanDate"] + " :" ;
 
+    // Stage 9.4 (T302, S45 §7.1) — the EPSS columns and the EPSS minimum of the filter row.
+    public string StrEpss { get; } = Localizer["Epss"];
+    public string StrEpssPercentile { get; } = Localizer["EpssPercentile"];
+    public string StrEpssMinimum { get; } = Localizer["EpssMinimumPercent"];
+    public string StrEpssMinimumTip { get; } = Localizer["EpssMinimumTip"];
+    private string StrNotAvailable { get; } = Localizer["NotAvailableShort"];
+
     #endregion
     
     #region PROPERTIES
@@ -196,6 +203,11 @@ public class VulnerabilitiesViewModel: ViewModelBase
                 LoadVulnerabilityDetails(value.Id);
             }
             this.RaiseAndSetIfChanged(ref _selectedVulnerability, value);
+
+            // Stage 9.4 (T302): posted so the panel's collections always change on the UI thread, whichever
+            // thread cleared the selection.
+            var findingId = value?.Id;
+            Dispatcher.UIThread.Post(() => _ = SignalsPanel.LoadAsync(findingId));
             
             ProcessStatusButtons();
         }
@@ -209,11 +221,58 @@ public class VulnerabilitiesViewModel: ViewModelBase
     }
     
     private string _filterText = "";
+
+    /// <summary>
+    /// The free-text Gridify filter — the single source of truth for what is sent and saved. Changing it
+    /// re-reads the EPSS minimum field from its <c>epss&gt;=</c> term (Stage 9.4, S45 §7.1).
+    /// </summary>
     public string FilterText
     {
         get => _filterText;
-        set => this.RaiseAndSetIfChanged(ref _filterText, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _filterText, value);
+            if (_syncingEpssFilter) return;
+
+            _syncingEpssFilter = true;
+            try { EpssMinimum = EpssFilter.ReadMinimum(value); }
+            finally { _syncingEpssFilter = false; }
+        }
     }
+
+    private bool _syncingEpssFilter;
+    private decimal? _epssMinimum;
+
+    /// <summary>
+    /// The EPSS minimum, in percent (Stage 9.4, S45 §7.1): a structured editor of one term of
+    /// <see cref="FilterText"/>. Changing it rewrites that term, with a dot as the decimal separator in any
+    /// culture; nothing is sent until the filter is applied.
+    /// </summary>
+    public decimal? EpssMinimum
+    {
+        get => _epssMinimum;
+        set
+        {
+            if (!EpssFilter.IsValidPercent(value)) return;
+
+            this.RaiseAndSetIfChanged(ref _epssMinimum, value);
+            if (_syncingEpssFilter) return;
+
+            _syncingEpssFilter = true;
+            try { FilterText = EpssFilter.Apply(FilterText, value); }
+            finally { _syncingEpssFilter = false; }
+        }
+    }
+
+    /// <summary>The exploitation-signals block of the detail pane (Stage 9.4, T302, S45 §7.2).</summary>
+    public ExploitationSignalsPanelViewModel SignalsPanel { get; } = new();
+
+    /// <summary>The EPSS cell: a percentage in the user's culture, or "n/a" — never 0 for a missing reading.</summary>
+    public string EpssCell(double? score) => ExploitationSignalsSummary.Percent(score, StrNotAvailable);
+
+    /// <summary>The EPSS percentile cell, one decimal, or "n/a".</summary>
+    public string EpssPercentileCell(double? percentile) =>
+        ExploitationSignalsSummary.Percent(percentile, StrNotAvailable, 1);
     
     private Host? _selectedVulnerabilityHost;
 

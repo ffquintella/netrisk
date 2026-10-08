@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:GUIClient.ViewModels"
+        x:Class="GUIClient.Views.Track9WorkspaceWindow"
+        x:DataType="vm:Track9WorkspaceViewModel"
+        Width="1280" Height="820" MinWidth="900" MinHeight="600"
+        Title="{Binding StrTitle}">
+    <Grid ColumnDefinitions="250,*" Margin="12">
+        <ListBox Grid.Column="0" ItemsSource="{Binding Sections}"
+                 SelectedItem="{Binding SelectedSection}" Classes="content-list">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:Track9Section">
+                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ContentControl Grid.Column="1" Content="{Binding Content}" Margin="12 0 0 0"/>
+    </Grid>
+</Window>

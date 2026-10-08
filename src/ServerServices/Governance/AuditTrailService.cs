@@ -1,6 +1,9 @@
+using System.Globalization;
 using DAL.Auditing;
+using DAL.Context;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
 using Model.Governance;
@@ -19,9 +22,136 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
     /// <summary>Five years — a SOC 2 Type II look-back plus margin. Overridable in settings.</summary>
     public const int DefaultRetentionDays = 1825;
 
+    /// <summary>One row of <see cref="RecordScopes"/>: the set whose filter decides, and the lookup through it.</summary>
+    internal sealed record RecordScope(Type? Owner, Func<AuditableContext, int, Task<bool>> IsVisibleAsync);
+
+    // Declared before RecordScopes: static initializers run in textual order.
+    private static readonly RecordScope OrganizationWide = new(null, (_, _) => Task.FromResult(true));
+
+    /// <summary>
+    /// Whose scope decides that a caller may read one audited record's trail, per audited type.
+    ///
+    /// <c>audit_logs</c> carries no entity id, so a query over it is never filtered by the caller's scope. What is filtered is
+    /// the record the rows describe: every scoped type's DbSet carries a query filter (<c>NRDbContext.EntityScope</c> and its
+    /// partials) that already encodes "my parent is visible to me". So a scoped caller may read a record's history exactly
+    /// when the record is visible through that set — the same answer every other read of the record gets — and a record
+    /// they cannot see (another entity's, or gone) is not found, the codebase's answer to an out-of-scope read.
+    ///
+    /// <see cref="RecordScope.Owner"/> is the set the lookup goes through: the type itself, unless the type has no filter of
+    /// its own and belongs to a record that has one (<see cref="RiskScoring"/> shares its risk's id). <c>null</c> marks the
+    /// types that are the organization's and carry no scope by design (S43 D12, S52 D10). A type missing from this table is
+    /// refused to every scoped caller. <c>AuditTrailScopeInMemoryTest</c> pins that every audited type is here and that
+    /// every owner is filtered by entity scope.
+    /// </summary>
+    internal static readonly IReadOnlyDictionary<string, RecordScope> RecordScopes =
+        new Dictionary<string, RecordScope>(StringComparer.Ordinal)
+        {
+            // Track 8 — the governance core.
+            [nameof(Risk)] = Through<Risk>(),
+            [nameof(RiskScoring)] = Through<Risk>(),
+            [nameof(Mitigation)] = Through<Mitigation>(),
+            [nameof(MitigationTask)] = Through<MitigationTask>(),
+            [nameof(MgmtReview)] = Through<MgmtReview>(),
+            [nameof(RiskAcceptance)] = Through<RiskAcceptance>(),
+            [nameof(RiskAppetite)] = Through<RiskAppetite>(),
+            [nameof(RiskReviewCampaignItem)] = Through<RiskReviewCampaignItem>(),
+            [nameof(EntityRiskReviewer)] = Through<EntityRiskReviewer>(),
+            [nameof(Host)] = Through<Host>(),
+            [nameof(DAL.Entities.HostsService)] = Through<DAL.Entities.HostsService>(),
+
+            // Stage 9.1 and 9.4 — chain links and ATT&CK techniques.
+            [nameof(RiskChainLink)] = Through<RiskChainLink>(),
+            [nameof(RiskAttackTechnique)] = Through<RiskAttackTechnique>(),
+
+            // Stage 9.3 — processes and services carry no scope column (S43 §11, D12).
+            [nameof(BusinessImpactAnalysis)] = OrganizationWide,
+            [nameof(BiaDependency)] = OrganizationWide,
+            [nameof(RestorationTest)] = OrganizationWide,
+
+            // Stage 9.5 to 9.7 — flags and decisions, treatment economics, tail inputs.
+            [nameof(RiskFlag)] = Through<RiskFlag>(),
+            [nameof(RiskDecision)] = Through<RiskDecision>(),
+            [nameof(MitigationEconomics)] = Through<MitigationEconomics>(),
+            [nameof(MitigationDependency)] = Through<MitigationDependency>(),
+            [nameof(RiskTarget)] = Through<RiskTarget>(),
+            [nameof(RiskLossComponent)] = Through<RiskLossComponent>(),
+            [nameof(RiskCorrelation)] = Through<RiskCorrelation>(),
+            [nameof(RiskAppetiteTailLimit)] = Through<RiskAppetiteTailLimit>(),
+
+            // Stage 9.8 — indicators and reassessment.
+            [nameof(Kri)] = Through<Kri>(),
+            [nameof(KriReading)] = Through<KriReading>(),
+            [nameof(KriRisk)] = Through<KriRisk>(),
+            [nameof(ReassessmentEvent)] = Through<ReassessmentEvent>(),
+            [nameof(RiskReassessmentTrigger)] = Through<RiskReassessmentTrigger>(),
+
+            // Stage 9.9 — archival, backtesting and the committee.
+            [nameof(RiskArchive)] = Through<RiskArchive>(),
+            [nameof(RiskArchiveCondition)] = Through<RiskArchiveCondition>(),
+            [nameof(RiskArchiveReview)] = Through<RiskArchiveReview>(),
+            [nameof(IncidentBacktest)] = Through<IncidentBacktest>(),
+            [nameof(IncidentBacktestRisk)] = Through<IncidentBacktestRisk>(),
+            [nameof(RiskCommittee)] = Through<RiskCommittee>(),
+            [nameof(RiskCommitteeMember)] = Through<RiskCommitteeMember>(),
+            [nameof(RiskCommitteeDecision)] = Through<RiskCommitteeDecision>(),
+            [nameof(RiskCommitteeVote)] = Through<RiskCommitteeVote>(),
+
+            // Stage 9.10 — the third-party register.
+            [nameof(ThirdParty)] = Through<ThirdParty>(),
+            [nameof(ThirdPartyLink)] = Through<ThirdPartyLink>(),
+            [nameof(ThirdPartySubprocessor)] = Through<ThirdPartySubprocessor>(),
+            [nameof(ThirdPartyDataLocation)] = Through<ThirdPartyDataLocation>(),
+            [nameof(ThirdPartyAssessment)] = Through<ThirdPartyAssessment>(),
+            [nameof(ThirdPartySbom)] = Through<ThirdPartySbom>(),
+
+            // Stage 9.11 — the catalogue is the organization's (S52 D10); only a risk's requirement links carry a scope.
+            [nameof(LegalRequirement)] = OrganizationWide,
+            [nameof(DataCatalogueEntry)] = OrganizationWide,
+            [nameof(DataCataloguePurpose)] = OrganizationWide,
+            [nameof(DataCatalogueLocation)] = OrganizationWide,
+            [nameof(Dpia)] = OrganizationWide,
+            [nameof(DpiaLink)] = OrganizationWide,
+            [nameof(RiskLegalRequirement)] = Through<RiskLegalRequirement>(),
+
+            // Stage 9.12 — the AI model inventory.
+            [nameof(AiModel)] = Through<AiModel>(),
+            [nameof(AiModelDataLink)] = Through<AiModelDataLink>(),
+            [nameof(AiModelMetricReading)] = Through<AiModelMetricReading>(),
+            [nameof(AiModelOverride)] = Through<AiModelOverride>(),
+            [nameof(AiModelRisk)] = Through<AiModelRisk>()
+        };
+
+    /// <summary>
+    /// Visible when the record with that primary key — the key the interceptor writes as <c>entity_id</c> — is found through
+    /// the scoped set. An owner the model does not map is never visible, so a typo here fails closed.
+    /// </summary>
+    private static RecordScope Through<TOwner>() where TOwner : class =>
+        new(typeof(TOwner), async (db, id) =>
+        {
+            var key = db.Model.FindEntityType(typeof(TOwner))?.FindPrimaryKey()?.Properties;
+            if (key is not { Count: 1 }) return false;
+
+            var keyName = key[0].Name;
+            return await db.Set<TOwner>().AsNoTracking().AnyAsync(e => EF.Property<int>(e, keyName) == id);
+        });
+
+    /// <summary>
+    /// Refuses a scoped caller the trail of a record they cannot see. Unrestricted callers (global administrators, jobs) are
+    /// not checked, so they keep reading the history of records since deleted, as they always could.
+    /// </summary>
+    private static async Task RequireRecordVisibleAsync(AuditableContext db, string entityType, int entityId)
+    {
+        if (db.EntityScope.IsUnrestricted) return;
+
+        if (!RecordScopes.TryGetValue(entityType, out var scope) || !await scope.IsVisibleAsync(db, entityId))
+            throw new DataNotFoundException(entityType, entityId.ToString(CultureInfo.InvariantCulture));
+    }
+
     public async Task<List<AuditLog>> GetForRecordAsync(string entityType, int entityId, int limit = 500)
     {
         await using var db = DalService.GetContext();
+
+        await RequireRecordVisibleAsync(db, entityType, entityId);
 
         return await db.AuditLogs
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
@@ -35,6 +165,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
     public async Task<List<AuditLog>> GetForRiskAsync(int riskId, int limit = 1000)
     {
         await using var db = DalService.GetContext();
+
+        // The children below are resolved through filtered sets, but the risk's own rows and its scoring's are matched on
+        // the id alone — without this, a scoped caller read another entity's risk subject and scores out of its trail.
+        await RequireRecordVisibleAsync(db, nameof(Risk), riskId);
 
         // The aggregate's children, resolved to ids first. A join over entity_type/entity_id pairs
         // is not expressible in one query because the trail is polymorphic by design — the price of

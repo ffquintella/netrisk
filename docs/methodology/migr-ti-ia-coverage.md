@@ -285,3 +285,22 @@ Vale registrar, porque a análise acima é uma lista de lacunas e desequilibra a
   vez de desenhá-lo na posição inerente. Plotar um número derivado em eixos de
   probabilidade × impacto colocaria o risco numa célula onde ninguém o avaliou — é o mesmo cuidado
   que a metodologia pede ao separar visualização executiva de mecanismo de decisão.
+
+## Adendo de 2026-10-08 — acesso desktop às etapas 9.5–9.12
+
+A análise original acima é um registro da versão 2.21.11. Este adendo delimita a verificação da
+superfície desktop, sem reclassificar retrospectivamente as linhas históricas nem alegar uma nova
+execução dos testes de banco ou de todos os controles de backend.
+
+Os instrumentos das etapas 9.5–9.12 agora têm consumidores Avalonia no workspace
+`Track9WorkspaceViewModel`, com blocos nos detalhes de risco/entidade e nos editores de
+mitigação, apetite e perdas. A matriz de tarefas, classes e caminhos de acesso está em
+[track9-desktop.md](../features/track9-desktop.md). As permissões são confrontadas com as políticas
+existentes pelas classes de teste `Track9RiskPresentationTest`, `Track9MonitoringPermissionsTest`,
+`Track9RegistersAccessTest` e `Track9WorkspaceAccessTest`; a terceira linha não recebe novos caminhos
+de escrita. Os casos de valores ausentes, estado não avaliado e resposta atrasada são cobertos pelos
+helpers de apresentação e pelos testes `Track9*` em `GUIClient.Tests`.
+
+A implementação desktop não amplia o escopo da etapa 9.12 para uso de IA em decisões e não substitui
+as proibições exercidas no servidor. Homologação visual com sessão autenticada e revisão humana da
+metodologia continuam verificações separadas da compilação, do linter e dos testes headless.

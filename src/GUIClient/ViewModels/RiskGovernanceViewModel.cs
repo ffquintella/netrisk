@@ -9,9 +9,11 @@ using DAL.Entities;
 using DAL.Enums;
 using Model.DTO;
 using Model.Governance;
+using GUIClient.Tools.Track9;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
+using GUIClient.ViewModels.Track9;
 using ReactiveUI;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
@@ -46,7 +48,13 @@ public class RiskGovernanceViewModel
     public string StrResidual { get; } = Localizer["Residual"];
     public string StrResidualDelta { get; } = Localizer["ResidualDelta"];
     public string StrCounterSign { get; } = Localizer["CounterSign"];
+    public GUIClient.ViewModels.Track9.LossComponentsViewModel Track9LossComponents { get; } = new();
+    public string StrTrack9LossComponents => Localizer["Track9LossComponents"];
+    public string StrTrack9AcceptanceCriterion => Localizer["Track9AcceptanceCriterion"];
+    public string StrTrack9CompletionEvidence => Localizer["Track9CompletionEvidence"];
+
     public string StrMitigationTasks { get; } = Localizer["MitigationTasks"];
+    public string StrMitigation { get; } = Localizer["Mitigation"];
     public string StrAddTask { get; } = Localizer["AddTask"];
     public string StrTaskTitle { get; } = Localizer["TaskTitle"];
     public string StrOwner { get; } = Localizer["Owner"];
@@ -75,6 +83,10 @@ public class RiskGovernanceViewModel
     private IRiskGovernanceService GovernanceService { get; } = GetService<IRiskGovernanceService>();
 
     private IRisksService RisksService { get; } = GetService<IRisksService>();
+
+    private IMitigationService MitigationService { get; } = GetService<IMitigationService>();
+
+    private IUsersService UsersService { get; } = GetService<IUsersService>();
 
     #endregion
 
@@ -109,6 +121,8 @@ public class RiskGovernanceViewModel
             this.RaiseAndSetIfChanged(ref _activeAcceptance, value);
             this.RaisePropertyChanged(nameof(IsAccepted));
             this.RaisePropertyChanged(nameof(CanAccept));
+            this.RaisePropertyChanged(nameof(CanRenew));
+            this.RaisePropertyChanged(nameof(CanRevoke));
         }
     }
 
@@ -119,7 +133,13 @@ public class RiskGovernanceViewModel
     /// separate reasons, both surfaced in <see cref="AppetiteExplanation"/> rather than left as a
     /// greyed-out button with no explanation (IX-4).
     /// </summary>
-    public bool CanAccept => ActiveAcceptance is null && Appetite?.ExceedsCeiling != true;
+    public bool CanManageAcceptances => Track9RiskPresentation.CanReview(AuthenticationService.AuthenticatedUserInfo);
+
+    public bool CanAccept => CanManageAcceptances && ActiveAcceptance is null && Appetite?.ExceedsCeiling != true;
+
+    public bool CanRenew => CanManageAcceptances && ActiveAcceptance is not null;
+
+    public bool CanRevoke => CanManageAcceptances && ActiveAcceptance is not null;
 
     private AppetiteEvaluation? _appetite;
 
@@ -211,16 +231,58 @@ public class RiskGovernanceViewModel
     /// owner — and its refusal is what the user sees.
     /// </summary>
     public bool CanCounterSign =>
-        SelectedReview is { RequiresCountersignature: true, SecondReviewerId: null };
+        CanManageAcceptances && SelectedReview is { RequiresCountersignature: true, SecondReviewerId: null };
 
     public ObservableCollection<MitigationTask> Tasks { get; } = [];
+    public ObservableCollection<Track9LookupItem> MitigationChoices { get; } = [];
+    public ObservableCollection<Track9LookupItem> TaskOwnerChoices { get; } = [];
 
     private MitigationTask? _selectedTask;
 
     public MitigationTask? SelectedTask
     {
         get => _selectedTask;
-        set => this.RaiseAndSetIfChanged(ref _selectedTask, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedTask, value);
+            TaskAcceptanceCriterion = value?.AcceptanceCriterion;
+            TaskCompletionEvidence = value?.CompletionEvidence;
+            this.RaisePropertyChanged(nameof(CanSaveTaskEvidence));
+        }
+    }
+
+    private string? _taskAcceptanceCriterion;
+    public string? TaskAcceptanceCriterion
+    {
+        get => _taskAcceptanceCriterion;
+        set => this.RaiseAndSetIfChanged(ref _taskAcceptanceCriterion, value);
+    }
+    private string? _taskCompletionEvidence;
+    public string? TaskCompletionEvidence
+    {
+        get => _taskCompletionEvidence;
+        set => this.RaiseAndSetIfChanged(ref _taskCompletionEvidence, value);
+    }
+    public string? NewTaskAcceptanceCriterion { get; set; }
+    public string? NewTaskCompletionEvidence { get; set; }
+    public string StrTrack9NewTask => Localizer["Track9NewTask"];
+    public string StrTrack9SelectedTask => Localizer["Track9SelectedTask"];
+    public string StrSaveTaskEvidence => Localizer["Track9SaveTaskEvidence"];
+    public bool CanSaveTaskEvidence => SelectedTask != null &&
+        GUIClient.Tools.Track9.Track9RiskPresentation.CanPlanMitigations(AuthenticationService.AuthenticatedUserInfo);
+    public ReactiveCommand<RxVoid, RxVoid> SaveTaskEvidenceCommand { get; }
+    private async Task SaveTaskEvidenceAsync()
+    {
+        if (!CanSaveTaskEvidence || SelectedTask is not { } task) return;
+        if (TaskAcceptanceCriterion?.Length > 4000 || TaskCompletionEvidence?.Length > 4000) return;
+        var request = GUIClient.Tools.Track9.Track9TaskEvidence.Update(task,
+            TaskAcceptanceCriterion ?? string.Empty, TaskCompletionEvidence ?? string.Empty);
+        await RunAsync(Localizer["TaskSavedMSG"], async () =>
+        {
+            await GovernanceService.UpdateTaskAsync(request);
+            await LoadAsync();
+            SelectedTask = Tasks.FirstOrDefault(t => t.Id == task.Id);
+        });
     }
 
     private string? _newTaskTitle;
@@ -237,6 +299,18 @@ public class RiskGovernanceViewModel
     {
         get => _newTaskOwnerId;
         set => this.RaiseAndSetIfChanged(ref _newTaskOwnerId, value);
+    }
+
+    private Track9LookupItem? _selectedTaskOwner;
+
+    public Track9LookupItem? SelectedTaskOwner
+    {
+        get => _selectedTaskOwner;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedTaskOwner, value);
+            NewTaskOwnerId = value?.Id;
+        }
     }
 
     private DateTimeOffset? _newTaskDueDate = DateTimeOffset.UtcNow.AddDays(30);
@@ -263,7 +337,25 @@ public class RiskGovernanceViewModel
         }
     }
 
-    public bool CanAddTask => MitigationId is not null;
+    private Track9LookupItem? _selectedTaskMitigation;
+
+    public Track9LookupItem? SelectedTaskMitigation
+    {
+        get => _selectedTaskMitigation;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedTaskMitigation, value);
+            MitigationId = value?.Id;
+        }
+    }
+
+    public bool CanPlanTasks => Track9RiskPresentation.CanPlanMitigations(AuthenticationService.AuthenticatedUserInfo);
+
+    public bool CanAddTask => SelectedTaskMitigation?.Id is > 0 && CanPlanTasks;
+
+    public bool CanRunSimulation => Track9RiskPresentation.CanSubmitRisk(AuthenticationService.AuthenticatedUserInfo);
+
+    public bool CanRequestReview => Track9RiskPresentation.CanDeclareFlags(AuthenticationService.AuthenticatedUserInfo);
 
     // --- 8.7.2 quantitative -------------------------------------------------------------------
 
@@ -340,6 +432,7 @@ public class RiskGovernanceViewModel
         BtRevokeClicked = ReactiveCommand.CreateFromTask(RevokeAsync);
         BtCounterSignClicked = ReactiveCommand.CreateFromTask(CounterSignAsync);
         BtAddTaskClicked = ReactiveCommand.CreateFromTask(AddTaskAsync);
+        SaveTaskEvidenceCommand = ReactiveCommand.CreateFromTask(SaveTaskEvidenceAsync);
         BtRunSimulationClicked = ReactiveCommand.CreateFromTask(RunSimulationAsync);
         BtRequestReviewClicked = ReactiveCommand.CreateFromTask(RequestReviewAsync);
         BtReloadClicked = ReactiveCommand.CreateFromTask(LoadAsync);
@@ -350,6 +443,7 @@ public class RiskGovernanceViewModel
     {
         RiskId = parameter.RiskId;
         RiskSubject = parameter.RiskSubject;
+        await Track9LossComponents.LoadRiskAsync(RiskId);
 
         await LoadAsync();
     }
@@ -358,6 +452,9 @@ public class RiskGovernanceViewModel
     {
         await WithBusyAsync(async () =>
         {
+            var selectedTaskId = SelectedTask?.Id;
+            var selectedMitigationId = SelectedTaskMitigation?.Id ?? MitigationId;
+            var selectedOwnerId = SelectedTaskOwner?.Id ?? NewTaskOwnerId;
             var acceptances = await GovernanceService.GetAcceptancesAsync(RiskId);
 
             Acceptances.Clear();
@@ -378,7 +475,37 @@ public class RiskGovernanceViewModel
             var tasks = await GovernanceService.GetTasksByRiskAsync(RiskId);
             Tasks.Clear();
             foreach (var task in tasks) Tasks.Add(task);
-            MitigationId = tasks.FirstOrDefault()?.MitigationId ?? MitigationId;
+            SelectedTask = selectedTaskId is null ? null : Tasks.FirstOrDefault(task => task.Id == selectedTaskId);
+
+            if (Track9RiskPresentation.CanPlanMitigations(AuthenticationService.AuthenticatedUserInfo))
+            {
+                Mitigation? primaryMitigation = null;
+                IReadOnlyCollection<UserListing> owners = [];
+                try
+                {
+                    primaryMitigation = await MitigationService.GetByRiskIdAsync(RiskId);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Could not load the primary mitigation selector for risk {RiskId}", RiskId);
+                }
+                try
+                {
+                    owners = await UsersService.GetAllAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Could not load mitigation task owners for risk {RiskId}", RiskId);
+                }
+                PopulateTaskChoices(tasks, primaryMitigation, owners, selectedMitigationId, selectedOwnerId);
+            }
+            else
+            {
+                MitigationChoices.Clear();
+                TaskOwnerChoices.Clear();
+                SelectedTaskMitigation = null;
+                SelectedTaskOwner = null;
+            }
 
             Quantitative = await GovernanceService.GetQuantitativeAsync(RiskId);
 
@@ -386,6 +513,33 @@ public class RiskGovernanceViewModel
             AuditTrail.Clear();
             foreach (var entry in trail) AuditTrail.Add(entry);
         });
+    }
+
+    private void PopulateTaskChoices(IEnumerable<MitigationTask> tasks, Mitigation? primaryMitigation,
+        IEnumerable<UserListing> owners, int? selectedMitigationId, int? selectedOwnerId)
+    {
+        MitigationChoices.Clear();
+        if (primaryMitigation is not null)
+            MitigationChoices.Add(new Track9LookupItem(primaryMitigation.Id,
+                string.IsNullOrWhiteSpace(primaryMitigation.CurrentSolution)
+                    ? $"{StrMitigation} #{primaryMitigation.Id}"
+                    : primaryMitigation.CurrentSolution));
+
+        foreach (var mitigationId in tasks.Select(task => task.MitigationId).Distinct()
+                     .Where(id => MitigationChoices.All(choice => choice.Id != id)))
+            MitigationChoices.Add(new Track9LookupItem(mitigationId, $"{StrMitigation} #{mitigationId}"));
+
+        SelectedTaskMitigation = MitigationChoices.FirstOrDefault(choice => choice.Id == selectedMitigationId)
+                                 ?? MitigationChoices.FirstOrDefault();
+
+        TaskOwnerChoices.Clear();
+        TaskOwnerChoices.Add(new Track9LookupItem(null, Localizer["Select"]));
+        foreach (var owner in owners.OrderBy(owner => owner.Name, StringComparer.CurrentCultureIgnoreCase))
+            TaskOwnerChoices.Add(new Track9LookupItem(owner.Id, owner.Name));
+
+        var preferredOwnerId = selectedOwnerId ?? AuthenticationService.AuthenticatedUserInfo?.UserId;
+        SelectedTaskOwner = TaskOwnerChoices.FirstOrDefault(choice => choice.Id == preferredOwnerId)
+                            ?? TaskOwnerChoices[0];
     }
 
     // --- 8.1.4 acceptance ---------------------------------------------------------------------
@@ -411,6 +565,7 @@ public class RiskGovernanceViewModel
 
     private async Task AcceptAsync()
     {
+        if (!CanAccept) return;
         var request = BuildAcceptanceRequest();
         if (request is null) return;
 
@@ -425,7 +580,7 @@ public class RiskGovernanceViewModel
 
     private async Task RenewAsync()
     {
-        if (ActiveAcceptance is null) return;
+        if (!CanRenew || ActiveAcceptance is null) return;
 
         var request = BuildAcceptanceRequest();
         if (request is null) return;
@@ -441,7 +596,7 @@ public class RiskGovernanceViewModel
 
     private async Task RevokeAsync()
     {
-        if (ActiveAcceptance is null) return;
+        if (!CanRevoke || ActiveAcceptance is null) return;
 
         if (string.IsNullOrWhiteSpace(RevocationReason))
         {
@@ -464,7 +619,7 @@ public class RiskGovernanceViewModel
 
     private async Task CounterSignAsync()
     {
-        if (SelectedReview is null) return;
+        if (!CanCounterSign || SelectedReview is null) return;
 
         await RunAsync(Localizer["CounterSignedMSG"], async () =>
         {
@@ -477,16 +632,23 @@ public class RiskGovernanceViewModel
 
     private async Task AddTaskAsync()
     {
-        if (MitigationId is null || string.IsNullOrWhiteSpace(NewTaskTitle)) return;
+        if (!CanAddTask ||
+            !Track9GovernanceRouting.TryCreateTaskRoute(
+                SelectedTaskMitigation?.Id,
+                SelectedTaskOwner?.Id,
+                out var route) ||
+            string.IsNullOrWhiteSpace(NewTaskTitle)) return;
 
         await RunAsync(Localizer["TaskSavedMSG"], async () =>
         {
             await GovernanceService.CreateTaskAsync(new MitigationTaskRequest
             {
-                MitigationId = MitigationId.Value,
+                MitigationId = route.MitigationId,
                 Title = NewTaskTitle!.Trim(),
-                OwnerId = NewTaskOwnerId,
-                DueDate = NewTaskDueDate?.UtcDateTime.Date
+                OwnerId = route.OwnerId,
+                DueDate = NewTaskDueDate?.UtcDateTime.Date,
+                AcceptanceCriterion = NewTaskAcceptanceCriterion,
+                CompletionEvidence = NewTaskCompletionEvidence
             });
 
             NewTaskTitle = null;
@@ -498,6 +660,7 @@ public class RiskGovernanceViewModel
 
     private async Task RunSimulationAsync()
     {
+        if (!CanRunSimulation) return;
         await RunAsync(Localizer["SimulationCompletedMSG"], async () =>
         {
             Quantitative = await GovernanceService.ComputeQuantitativeAsync(RiskId,
@@ -523,6 +686,7 @@ public class RiskGovernanceViewModel
 
     private async Task RequestReviewAsync()
     {
+        if (!CanRequestReview) return;
         await RunAsync(Localizer["ReviewRequestedMSG"], async () =>
         {
             await GovernanceService.RequestReviewAsync(RiskId,

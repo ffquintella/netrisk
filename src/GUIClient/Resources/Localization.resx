@@ -3932,4 +3932,942 @@ Save anyway?</value>
     <data name="ErrorDownloadingFileMSG" xml:space="preserve">
         <value>Error downloading the file. Please try again.</value>
     </data>
+    <!-- Stage 9.4 desktop surface (T302, S45 §7): grid, signals panel, ATT&amp;CK editor, reports 9 and 10. -->
+    <data name="Epss" xml:space="preserve">
+        <value>EPSS</value>
+    </data>
+    <data name="EpssPercentile" xml:space="preserve">
+        <value>EPSS percentile</value>
+    </data>
+    <data name="EpssMinimumPercent" xml:space="preserve">
+        <value>EPSS ≥ (%)</value>
+    </data>
+    <data name="EpssMinimumTip" xml:space="preserve">
+        <value>Only findings whose effective EPSS is at least this percentage. Edits the epss&gt;= term of the filter, always with a dot as the decimal separator.</value>
+    </data>
+    <data name="NotAvailableShort" xml:space="preserve">
+        <value>n/a</value>
+    </data>
+    <data name="ExploitationSignals" xml:space="preserve">
+        <value>Exploitation signals</value>
+    </data>
+    <data name="RemediationPriority" xml:space="preserve">
+        <value>Remediation priority</value>
+    </data>
+    <data name="PriorityReasons" xml:space="preserve">
+        <value>Reasons</value>
+    </data>
+    <data name="CvssUsed" xml:space="preserve">
+        <value>CVSS used: {0}</value>
+    </data>
+    <data name="EffectiveEpss" xml:space="preserve">
+        <value>Effective EPSS</value>
+    </data>
+    <data name="EpssEffectiveFormat" xml:space="preserve">
+        <value>{0} (percentile {1}) — {2}, {3}, as of {4}</value>
+    </data>
+    <data name="EpssNone" xml:space="preserve">
+        <value>No EPSS reading</value>
+    </data>
+    <data name="EpssReadings" xml:space="preserve">
+        <value>EPSS readings (both sources)</value>
+    </data>
+    <data name="EpssReadingFormat" xml:space="preserve">
+        <value>{0} · {1}: {2} (percentile {3}), as of {4}</value>
+    </data>
+    <data name="EpssEffectiveMark" xml:space="preserve">
+        <value>effective</value>
+    </data>
+    <data name="EpssSourceFirstOrg" xml:space="preserve">
+        <value>FIRST.org</value>
+    </data>
+    <data name="EpssSourceVisionOne" xml:space="preserve">
+        <value>Trend Vision One</value>
+    </data>
+    <data name="KevCatalogue" xml:space="preserve">
+        <value>CISA KEV catalogue</value>
+    </data>
+    <data name="KevNone" xml:space="preserve">
+        <value>None of this finding's CVEs is in the KEV catalogue</value>
+    </data>
+    <data name="KevEntryFormat" xml:space="preserve">
+        <value>{0} — added {1}, CISA due date {2}</value>
+    </data>
+    <data name="KevDuePast" xml:space="preserve">
+        <value>past due</value>
+    </data>
+    <data name="KevRansomwareKnown" xml:space="preserve">
+        <value>known ransomware use</value>
+    </data>
+    <data name="KevRansomwareUnknown" xml:space="preserve">
+        <value>ransomware use unknown</value>
+    </data>
+    <data name="KevStateListed" xml:space="preserve">
+        <value>listed</value>
+    </data>
+    <data name="KevStateDelisted" xml:space="preserve">
+        <value>delisted on {0} — no longer KEV</value>
+    </data>
+    <data name="KevStateDelistingHeld" xml:space="preserve">
+        <value>absent from the catalogue since {0}, delisting held — still KEV</value>
+    </data>
+    <data name="KevRequiredAction" xml:space="preserve">
+        <value>Required action: {0}</value>
+    </data>
+    <data name="KevAppliedAt" xml:space="preserve">
+        <value>KEV catalogue last applied on {0}</value>
+    </data>
+    <data name="KevNeverApplied" xml:space="preserve">
+        <value>The KEV catalogue has never been applied</value>
+    </data>
+    <data name="EpssAppliedAt" xml:space="preserve">
+        <value>EPSS last applied on {0}</value>
+    </data>
+    <data name="EpssNeverApplied" xml:space="preserve">
+        <value>EPSS has never been synchronized from FIRST</value>
+    </data>
+    <data name="ExploitationSignalsLoadFailed" xml:space="preserve">
+        <value>The exploitation signals could not be loaded</value>
+    </data>
+    <data name="PriorityTierP1" xml:space="preserve">
+        <value>P1 — known or observed exploitation</value>
+    </data>
+    <data name="PriorityTierP2" xml:space="preserve">
+        <value>P2 — likely exploitation</value>
+    </data>
+    <data name="PriorityTierP3" xml:space="preserve">
+        <value>P3 — high impact without likely exploitation, or likely exploitation with lower impact</value>
+    </data>
+    <data name="PriorityTierP4" xml:space="preserve">
+        <value>P4 — lower impact, no known or likely exploitation</value>
+    </data>
+    <data name="PriorityTierUndetermined" xml:space="preserve">
+        <value>Undetermined — no signal at all (not low)</value>
+    </data>
+    <data name="PriorityTierShortP1" xml:space="preserve">
+        <value>P1</value>
+    </data>
+    <data name="PriorityTierShortP2" xml:space="preserve">
+        <value>P2</value>
+    </data>
+    <data name="PriorityTierShortP3" xml:space="preserve">
+        <value>P3</value>
+    </data>
+    <data name="PriorityTierShortP4" xml:space="preserve">
+        <value>P4</value>
+    </data>
+    <data name="PriorityTierShortUndetermined" xml:space="preserve">
+        <value>Undetermined</value>
+    </data>
+    <data name="PriorityReasonKevListed" xml:space="preserve">
+        <value>Listed in the CISA KEV catalogue</value>
+    </data>
+    <data name="PriorityReasonKevKnownRansomware" xml:space="preserve">
+        <value>KEV: known ransomware use</value>
+    </data>
+    <data name="PriorityReasonKevPastDueDate" xml:space="preserve">
+        <value>KEV: CISA due date passed</value>
+    </data>
+    <data name="PriorityReasonExploitedByScanner" xml:space="preserve">
+        <value>Exploitation observed by the scanner</value>
+    </data>
+    <data name="PriorityReasonEpssAtOrAboveThreshold" xml:space="preserve">
+        <value>EPSS at or above 10%</value>
+    </data>
+    <data name="PriorityReasonExploitAvailable" xml:space="preserve">
+        <value>Public exploit available</value>
+    </data>
+    <data name="PriorityReasonHighImpact" xml:space="preserve">
+        <value>High impact (CVSS ≥ 7.0, or severity High or above without CVSS)</value>
+    </data>
+    <data name="PriorityReasonLowerImpact" xml:space="preserve">
+        <value>Lower impact</value>
+    </data>
+    <data name="PriorityReasonImpactUnknown" xml:space="preserve">
+        <value>Impact unknown (no CVSS nor severity)</value>
+    </data>
+    <data name="PriorityReasonNoExploitationSignal" xml:space="preserve">
+        <value>No known or likely exploitation</value>
+    </data>
+    <data name="AttackTechniques" xml:space="preserve">
+        <value>MITRE ATT&amp;CK techniques</value>
+    </data>
+    <data name="ScenarioAttackTechniques" xml:space="preserve">
+        <value>Scenario MITRE ATT&amp;CK techniques</value>
+    </data>
+    <data name="AttackTechniqueId" xml:space="preserve">
+        <value>Technique: T1234 or T1234.567</value>
+    </data>
+    <data name="AttackTechniqueName" xml:space="preserve">
+        <value>Name (optional)</value>
+    </data>
+    <data name="AttackTechniqueLinkedOn" xml:space="preserve">
+        <value>linked on {0}</value>
+    </data>
+    <data name="AddAttackTechnique" xml:space="preserve">
+        <value>Link</value>
+    </data>
+    <data name="RemoveAttackTechnique" xml:space="preserve">
+        <value>Unlink the selected technique</value>
+    </data>
+    <data name="AttackTechniqueIdInvalid" xml:space="preserve">
+        <value>A MITRE ATT&amp;CK technique identifier looks like T1059 or T1059.001</value>
+    </data>
+    <data name="AttackTechniqueNameTooLong" xml:space="preserve">
+        <value>The name is at most 255 characters</value>
+    </data>
+    <data name="AttackTechniqueAlreadyLinked" xml:space="preserve">
+        <value>This technique is already linked</value>
+    </data>
+    <data name="AttackTechniqueLinked" xml:space="preserve">
+        <value>Technique linked</value>
+    </data>
+    <data name="AttackTechniqueUnlinked" xml:space="preserve">
+        <value>Technique unlinked</value>
+    </data>
+    <data name="AttackTechniquesNone" xml:space="preserve">
+        <value>No technique linked</value>
+    </data>
+    <data name="AttackTechniquesReadOnly" xml:space="preserve">
+        <value>You can read these techniques but not change them</value>
+    </data>
+    <data name="ExploitationPrioritizationReport" xml:space="preserve">
+        <value>Exploitation prioritization</value>
+    </data>
+    <data name="PrioritizationNote" xml:space="preserve">
+        <value>Open findings in your scope, computed on read. CVSS is an input: on its own it never reaches the top. P1 is not Gate A.</value>
+    </data>
+    <data name="PriorityTier" xml:space="preserve">
+        <value>Tier</value>
+    </data>
+    <data name="PriorityTierAll" xml:space="preserve">
+        <value>All tiers</value>
+    </data>
+    <data name="TierCountFormat" xml:space="preserve">
+        <value>{0}: {1}</value>
+    </data>
+    <data name="PrioritizationPageFormat" xml:space="preserve">
+        <value>Page {0} of {1} — {2} open findings</value>
+    </data>
+    <data name="KevCves" xml:space="preserve">
+        <value>CVEs in KEV</value>
+    </data>
+    <data name="KevNotListed" xml:space="preserve">
+        <value>not listed</value>
+    </data>
+    <data name="KevDueDate" xml:space="preserve">
+        <value>CISA due date</value>
+    </data>
+    <data name="Cvss" xml:space="preserve">
+        <value>CVSS</value>
+    </data>
+    <data name="KevRemediationReport" xml:space="preserve">
+        <value>Time to remediate KEV items</value>
+    </data>
+    <data name="KevOpenFindings" xml:space="preserve">
+        <value>Open KEV findings</value>
+    </data>
+    <data name="KevOpenPastDue" xml:space="preserve">
+        <value>Open past the CISA due date</value>
+    </data>
+    <data name="KevMitigatedFindings" xml:space="preserve">
+        <value>Mitigated KEV findings</value>
+    </data>
+    <data name="KevMitigatedWithoutDate" xml:space="preserve">
+        <value>Mitigated with no date (outside the median)</value>
+    </data>
+    <data name="KevMedianDaysToMitigate" xml:space="preserve">
+        <value>Median days to mitigate</value>
+    </data>
+    <data name="KevMedianDays" xml:space="preserve">
+        <value>{0} days</value>
+    </data>
+    <data name="KevMedianNotComputable" xml:space="preserve">
+        <value>Not computable — no mitigated KEV finding has a date</value>
+    </data>
+    <data name="MetricComputedAt" xml:space="preserve">
+        <value>Computed on {0}</value>
+    </data>
+    <data name="SignalSyncStatus" xml:space="preserve">
+        <value>Synchronization</value>
+    </data>
+    <data name="SignalFeedCisaKev" xml:space="preserve">
+        <value>CISA KEV catalogue</value>
+    </data>
+    <data name="SignalFeedFirstEpss" xml:space="preserve">
+        <value>FIRST EPSS</value>
+    </data>
+    <data name="SignalFeedLastRun" xml:space="preserve">
+        <value>Last run on {1} — {2}</value>
+    </data>
+    <data name="SignalFeedNeverRun" xml:space="preserve">
+        <value>Never run</value>
+    </data>
+    <data name="SignalFeedLastApplied" xml:space="preserve">
+        <value>Last applied on {0}: {1} received, {2} added, {3} updated, {4} delisted, {5} held, {6} findings updated</value>
+    </data>
+    <data name="SignalFeedNeverApplied" xml:space="preserve">
+        <value>Nothing applied yet</value>
+    </data>
+    <data name="SignalFeedError" xml:space="preserve">
+        <value>Reason: {0}</value>
+    </data>
+    <data name="SignalSyncOutcomeSucceeded" xml:space="preserve">
+        <value>Succeeded</value>
+    </data>
+    <data name="SignalSyncOutcomeUnavailable" xml:space="preserve">
+        <value>Unavailable — nothing changed</value>
+    </data>
+    <data name="SignalSyncOutcomeMalformed" xml:space="preserve">
+        <value>Malformed catalogue or response — nothing changed</value>
+    </data>
+    <data name="SignalSyncOutcomeDelistingHeld" xml:space="preserve">
+        <value>Applied, delistings held</value>
+    </data>
+    <data name="SignalSyncOutcomePartial" xml:space="preserve">
+        <value>Partial — part applied</value>
+    </data>
+  <data name="Track9Workspace" xml:space="preserve"><value>Risk governance</value></data>
+  <data name="Track9TopRisks" xml:space="preserve"><value>Top risks</value></data>
+  <data name="Track9FlaggedRegister" xml:space="preserve"><value>Flagged risks</value></data>
+  <data name="Track9TreatmentPortfolio" xml:space="preserve"><value>Treatment portfolio</value></data>
+  <data name="Track9TailPortfolio" xml:space="preserve"><value>Portfolio exposure</value></data>
+  <data name="Track9Correlations" xml:space="preserve"><value>Risk correlations</value></data>
+  <data name="Track9Kris" xml:space="preserve"><value>Key risk indicators</value></data>
+  <data name="Track9Reassessments" xml:space="preserve"><value>Reassessment events</value></data>
+  <data name="Track9Metrics" xml:space="preserve"><value>Methodology metrics</value></data>
+  <data name="Track9Archives" xml:space="preserve"><value>Archive and reviews</value></data>
+  <data name="Track9Backtesting" xml:space="preserve"><value>Incident backtesting</value></data>
+  <data name="Track9Committees" xml:space="preserve"><value>Risk committees</value></data>
+  <data name="Track9ThirdParties" xml:space="preserve"><value>Third-party register</value></data>
+  <data name="Track9Concentration" xml:space="preserve"><value>Supplier concentration</value></data>
+  <data name="Track9DataCatalogue" xml:space="preserve"><value>Data catalogue</value></data>
+  <data name="Track9LegalRequirements" xml:space="preserve"><value>Legal requirements</value></data>
+  <data name="Track9Dpia" xml:space="preserve"><value>Data protection impact assessments</value></data>
+  <data name="Track9AiModels" xml:space="preserve"><value>AI model inventory</value></data>
+  <data name="Track9Economics" xml:space="preserve"><value>Treatment economics</value></data>
+  <data name="Track9TailLimits" xml:space="preserve"><value>Tail tolerances</value></data>
+  <data name="Track9LossComponents" xml:space="preserve"><value>Loss components</value></data>
+  <data name="Track9AcceptanceCriterion" xml:space="preserve"><value>Acceptance criterion</value></data>
+  <data name="Track9CompletionEvidence" xml:space="preserve"><value>Completion evidence</value></data>
+  <data name="Track9SaveTaskEvidence" xml:space="preserve"><value>Save task evidence</value></data>
+  <data name="Track9FlagFilter" xml:space="preserve"><value>Filter by flag</value></data>
+  <data name="Track9FlagsUnavailable" xml:space="preserve"><value>Flags unavailable — reload to try again</value></data>
+  <data name="Track9NoFlags" xml:space="preserve"><value>No active flags</value></data>
+  <data name="Track9RiskFlags" xml:space="preserve"><value>Flags and decision</value></data>
+  <data name="Track9FlaggedRisks" xml:space="preserve"><value>Flagged risks</value></data>
+  <data name="Track9TreatmentEconomics" xml:space="preserve"><value>Treatment economics</value></data>
+  <data name="Track9RiskTarget" xml:space="preserve"><value>Target risk level</value></data>
+  <data name="Track9TailRisk" xml:space="preserve"><value>Tail risk</value></data>
+  <data name="Track9NotAvailable" xml:space="preserve"><value>Not available</value></data>
+  <data name="Track9NoRiskSelected" xml:space="preserve"><value>Select a risk to see this section.</value></data>
+  <data name="Track9NoData" xml:space="preserve"><value>No data is available.</value></data>
+  <data name="Track9ReadOnly" xml:space="preserve"><value>You can view this information, but your profile cannot change it.</value></data>
+  <data name="Track9ThirdLineReadOnly" xml:space="preserve"><value>The third-line profile is read-only.</value></data>
+  <data name="Track9LoadFailed" xml:space="preserve"><value>This information could not be loaded.</value></data>
+  <data name="Track9Saved" xml:space="preserve"><value>Changes saved.</value></data>
+  <data name="Track9Deleted" xml:space="preserve"><value>Declaration removed.</value></data>
+  <data name="Track9Calculate" xml:space="preserve"><value>Calculate</value></data>
+  <data name="Track9Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Track9Rationale" xml:space="preserve"><value>Rationale</value></data>
+  <data name="Track9Declare" xml:space="preserve"><value>Declare</value></data>
+  <data name="Track9Withdraw" xml:space="preserve"><value>Withdraw declaration</value></data>
+  <data name="Track9RefreshDerived" xml:space="preserve"><value>Refresh derived flags</value></data>
+  <data name="Track9RecordDecision" xml:space="preserve"><value>Record decision</value></data>
+  <data name="Track9CurrentDecision" xml:space="preserve"><value>Current decision</value></data>
+  <data name="Track9DecisionHistory" xml:space="preserve"><value>Decision history</value></data>
+  <data name="Track9GateA" xml:space="preserve"><value>Gate A</value></data>
+  <data name="Track9GateB" xml:space="preserve"><value>Gate B</value></data>
+  <data name="Track9GateC" xml:space="preserve"><value>Gate C</value></data>
+  <data name="Track9GateD" xml:space="preserve"><value>Gate D</value></data>
+  <data name="Track9Declared" xml:space="preserve"><value>Declared</value></data>
+  <data name="Track9Derived" xml:space="preserve"><value>Derived</value></data>
+  <data name="Track9Set" xml:space="preserve"><value>Set</value></data>
+  <data name="Track9Flag" xml:space="preserve"><value>Flag</value></data>
+  <data name="Track9AllFlags" xml:space="preserve"><value>All flags</value></data>
+  <data name="Track9AllGateAStates" xml:space="preserve"><value>All Gate A states</value></data>
+  <data name="Track9GateAOnly" xml:space="preserve"><value>Gate A only</value></data>
+  <data name="Track9WithoutGateA" xml:space="preserve"><value>Without Gate A</value></data>
+  <data name="Track9Rank" xml:space="preserve"><value>Rank</value></data>
+  <data name="Track9Risk" xml:space="preserve"><value>Risk</value></data>
+  <data name="Track9Flags" xml:space="preserve"><value>Flags</value></data>
+  <data name="Track9Decision" xml:space="preserve"><value>Decision</value></data>
+  <data name="Track9ExpectedAnnualLoss" xml:space="preserve"><value>Expected annual loss</value></data>
+  <data name="Track9NextDecision" xml:space="preserve"><value>Next decision</value></data>
+  <data name="Track9Trend" xml:space="preserve"><value>Trend</value></data>
+  <data name="Track9Option" xml:space="preserve"><value>Treatment option</value></data>
+  <data name="Track9TransferCounterparty" xml:space="preserve"><value>Transfer counterparty</value></data>
+  <data name="Track9OneTimeCost" xml:space="preserve"><value>One-time cost</value></data>
+  <data name="Track9AnnualCost" xml:space="preserve"><value>Annual cost</value></data>
+  <data name="Track9AnnualSideEffects" xml:space="preserve"><value>Annual side effects</value></data>
+  <data name="Track9HorizonYears" xml:space="preserve"><value>Horizon (years)</value></data>
+  <data name="Track9CostBasis" xml:space="preserve"><value>Cost estimate basis</value></data>
+  <data name="Track9EffortPersonDays" xml:space="preserve"><value>Effort (person-days)</value></data>
+  <data name="Track9DurationDays" xml:space="preserve"><value>Duration (days)</value></data>
+  <data name="Track9Prerequisites" xml:space="preserve"><value>Prerequisite treatments</value></data>
+  <data name="Track9GateCOutcome" xml:space="preserve"><value>Economic result</value></data>
+  <data name="Track9Benefit" xml:space="preserve"><value>Expected annual benefit</value></data>
+  <data name="Track9AnnualizedCost" xml:space="preserve"><value>Annualized cost</value></data>
+  <data name="Track9NetBenefit" xml:space="preserve"><value>Net benefit</value></data>
+  <data name="Track9BenefitCostRatio" xml:space="preserve"><value>Benefit-cost ratio</value></data>
+  <data name="Track9GordonLoeb" xml:space="preserve"><value>Gordon–Loeb reference</value></data>
+  <data name="Track9Stale" xml:space="preserve"><value>The quantitative analysis is older than this treatment declaration.</value></data>
+  <data name="Track9TargetScore" xml:space="preserve"><value>Target score</value></data>
+  <data name="Track9TargetExpectedLoss" xml:space="preserve"><value>Target expected annual loss</value></data>
+  <data name="Track9TargetDate" xml:space="preserve"><value>Target date</value></data>
+  <data name="Track9Current" xml:space="preserve"><value>Current</value></data>
+  <data name="Track9TargetStatus" xml:space="preserve"><value>Target status</value></data>
+  <data name="Track9RemoveTarget" xml:space="preserve"><value>Remove target</value></data>
+  <data name="Track9Budget" xml:space="preserve"><value>First-year budget</value></data>
+  <data name="Track9PeopleCapacity" xml:space="preserve"><value>People capacity (person-days)</value></data>
+  <data name="Track9StartDate" xml:space="preserve"><value>Start date</value></data>
+  <data name="Track9Deadline" xml:space="preserve"><value>Deadline</value></data>
+  <data name="Track9Candidates" xml:space="preserve"><value>Candidate treatments</value></data>
+  <data name="Track9PortfolioSummary" xml:space="preserve"><value>Portfolio result</value></data>
+  <data name="Track9BudgetUsed" xml:space="preserve"><value>Budget used</value></data>
+  <data name="Track9PeopleUsed" xml:space="preserve"><value>People capacity used</value></data>
+  <data name="Track9ExpectedReduction" xml:space="preserve"><value>Expected loss reduction</value></data>
+  <data name="Track9Escalations" xml:space="preserve"><value>Escalations required</value></data>
+  <data name="Track9Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Track9Component" xml:space="preserve"><value>Component</value></data>
+  <data name="Track9Include" xml:space="preserve"><value>Include</value></data>
+  <data name="Track9Minimum" xml:space="preserve"><value>Minimum</value></data>
+  <data name="Track9MostLikely" xml:space="preserve"><value>Most likely</value></data>
+  <data name="Track9Maximum" xml:space="preserve"><value>Maximum</value></data>
+  <data name="Track9Basis" xml:space="preserve"><value>Basis</value></data>
+  <data name="Track9RemoveComponents" xml:space="preserve"><value>Remove components</value></data>
+  <data name="Track9Inherent" xml:space="preserve"><value>Inherent</value></data>
+  <data name="Track9Residual" xml:space="preserve"><value>Residual</value></data>
+  <data name="Track9ExpectedLoss" xml:space="preserve"><value>Expected loss</value></data>
+  <data name="Track9P95" xml:space="preserve"><value>P95</value></data>
+  <data name="Track9Cvar95" xml:space="preserve"><value>CVaR95</value></data>
+  <data name="Track9ProbabilityOfLoss" xml:space="preserve"><value>Probability of a loss year</value></data>
+  <data name="Track9Contribution" xml:space="preserve"><value>CVaR95 contribution</value></data>
+  <data name="Track9RiskA" xml:space="preserve"><value>First risk</value></data>
+  <data name="Track9RiskB" xml:space="preserve"><value>Second risk</value></data>
+  <data name="Track9Coefficient" xml:space="preserve"><value>Coefficient</value></data>
+  <data name="Track9ScenarioExpectedLossLimit" xml:space="preserve"><value>Scenario E[L] limit</value></data>
+  <data name="Track9ScenarioP95Limit" xml:space="preserve"><value>Scenario P95 limit</value></data>
+  <data name="Track9ScenarioCvar95Limit" xml:space="preserve"><value>Scenario CVaR95 limit</value></data>
+  <data name="Track9PortfolioExpectedLossLimit" xml:space="preserve"><value>Portfolio E[L] limit</value></data>
+  <data name="Track9PortfolioP95Limit" xml:space="preserve"><value>Portfolio P95 limit</value></data>
+  <data name="Track9PortfolioCvar95Limit" xml:space="preserve"><value>Portfolio CVaR95 limit</value></data>
+  <data name="Track9RemoveLimits" xml:space="preserve"><value>Remove tail tolerances</value></data>
+  <data name="Track9PortfolioBasis" xml:space="preserve"><value>Portfolio basis</value></data>
+  <data name="Track9Seed" xml:space="preserve"><value>Simulation seed</value></data>
+  <data name="Track9Members" xml:space="preserve"><value>Included risks</value></data>
+  <data name="Track9Excluded" xml:space="preserve"><value>Not quantified</value></data>
+  <data name="Track9Diversification" xml:space="preserve"><value>Diversification</value></data>
+  <data name="Track9Dependence" xml:space="preserve"><value>Dependence</value></data>
+  <data name="Track9OptionRequired" xml:space="preserve"><value>Select a treatment option.</value></data>
+  <data name="Track9CounterpartyRequired" xml:space="preserve"><value>Name the counterparty for a transfer/share treatment.</value></data>
+  <data name="Track9CounterpartyTooLong" xml:space="preserve"><value>The counterparty name is too long.</value></data>
+  <data name="Track9CostBasisTooLong" xml:space="preserve"><value>The cost basis is too long.</value></data>
+  <data name="Track9EffortOutOfRange" xml:space="preserve"><value>The effort is outside the accepted range.</value></data>
+  <data name="Track9DurationOutOfRange" xml:space="preserve"><value>The duration is outside the accepted range.</value></data>
+  <data name="Track9TooManyPrerequisites" xml:space="preserve"><value>Select at most 50 prerequisites.</value></data>
+  <data name="Track9DuplicatePrerequisite" xml:space="preserve"><value>A prerequisite can be selected only once.</value></data>
+  <data name="Track9AmountOutOfRange" xml:space="preserve"><value>An amount is outside the accepted range.</value></data>
+  <data name="Track9HorizonRequired" xml:space="preserve"><value>A positive one-time cost requires a horizon.</value></data>
+  <data name="Track9HorizonOutOfRange" xml:space="preserve"><value>The horizon must be between 1 and 30 years.</value></data>
+  <data name="Track9TargetValueRequired" xml:space="preserve"><value>Enter a target score, a target expected loss, or both.</value></data>
+  <data name="Track9TargetScoreOutOfRange" xml:space="preserve"><value>The target score must be between 0 and 10.</value></data>
+  <data name="Track9TargetDateRequired" xml:space="preserve"><value>Select the target date.</value></data>
+  <data name="Track9RationaleRequired" xml:space="preserve"><value>Enter the rationale.</value></data>
+  <data name="Track9RationaleTooLong" xml:space="preserve"><value>The rationale is too long.</value></data>
+  <data name="Track9ReasonRequired" xml:space="preserve"><value>Enter the reason.</value></data>
+  <data name="Track9ReasonTooLong" xml:space="preserve"><value>The reason is too long.</value></data>
+  <data name="Track9DecisionReasonTooLong" xml:space="preserve"><value>The decision reason is too long.</value></data>
+  <data name="Track9LossComponentsCount" xml:space="preserve"><value>Include between one and seven loss components.</value></data>
+  <data name="Track9DuplicateLossComponent" xml:space="preserve"><value>Each loss component can appear only once.</value></data>
+  <data name="Track9LossRangeRequired" xml:space="preserve"><value>Enter the minimum, most likely and maximum loss.</value></data>
+  <data name="Track9LossRangeInvalid" xml:space="preserve"><value>The loss range must be non-negative and ordered minimum ≤ most likely ≤ maximum.</value></data>
+  <data name="Track9BasisTooLong" xml:space="preserve"><value>The basis is too long.</value></data>
+  <data name="Track9FineBasisRequired" xml:space="preserve"><value>A regulatory fine requires a written legal basis.</value></data>
+  <data name="Track9TwoRisksRequired" xml:space="preserve"><value>Select two risks.</value></data>
+  <data name="Track9DistinctRisksRequired" xml:space="preserve"><value>Select two different risks.</value></data>
+  <data name="Track9CorrelationOutOfRange" xml:space="preserve"><value>The coefficient must be between 0 and 1.</value></data>
+  <data name="Track9TailLimitRequired" xml:space="preserve"><value>Enter at least one tail tolerance.</value></data>
+  <data name="Track9ComputedAt" xml:space="preserve"><value>Computed at</value></data>
+  <data name="Track9RiskFlagCodeHumanSafety" xml:space="preserve"><value>Human safety</value></data>
+  <data name="Track9RiskFlagCodeLegalRegulatory" xml:space="preserve"><value>Legal, regulatory or privacy obligation</value></data>
+  <data name="Track9RiskFlagCodeKnownExploitation" xml:space="preserve"><value>Known exploitation or active attack</value></data>
+  <data name="Track9RiskFlagCodeCriticalProcessContinuity" xml:space="preserve"><value>Critical process continuity</value></data>
+  <data name="Track9RiskFlagCodeSensitiveData" xml:space="preserve"><value>Sensitive or strategic data</value></data>
+  <data name="Track9RiskFlagCodeSystemicSinglePointOfFailure" xml:space="preserve"><value>Systemic risk or single point of failure</value></data>
+  <data name="Track9RiskFlagCodeThirdPartyConcentration" xml:space="preserve"><value>Third-party concentration</value></data>
+  <data name="Track9RiskFlagCodeLowProbabilityCatastrophic" xml:space="preserve"><value>Low-probability catastrophic impact</value></data>
+  <data name="Track9RiskFlagCodeEmergingRapidGrowth" xml:space="preserve"><value>Emerging risk or rapid growth</value></data>
+  <data name="Track9RiskFlagCodeHighUncertainty" xml:space="preserve"><value>High uncertainty or weak evidence</value></data>
+  <data name="Track9RiskFlagCodeArtificialIntelligence" xml:space="preserve"><value>Artificial intelligence risk</value></data>
+  <data name="Track9RiskFlagCodeNoLegitimateAcceptance" xml:space="preserve"><value>No legitimate acceptance</value></data>
+  <data name="Track9RiskDecisionKindActImmediately" xml:space="preserve"><value>Act immediately</value></data>
+  <data name="Track9RiskDecisionKindTreatInCycle" xml:space="preserve"><value>Treat within the cycle</value></data>
+  <data name="Track9RiskDecisionKindMonitorAccept" xml:space="preserve"><value>Monitor or accept</value></data>
+  <data name="Track9RiskDecisionKindArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Track9TreatmentOptionAvoid" xml:space="preserve"><value>Avoid</value></data>
+  <data name="Track9TreatmentOptionReduce" xml:space="preserve"><value>Reduce</value></data>
+  <data name="Track9TreatmentOptionTransferShare" xml:space="preserve"><value>Transfer or share</value></data>
+  <data name="Track9TreatmentOptionAccept" xml:space="preserve"><value>Accept</value></data>
+  <data name="Track9GateCOutcomePasses" xml:space="preserve"><value>Passes</value></data>
+  <data name="Track9GateCOutcomeFails" xml:space="preserve"><value>Fails</value></data>
+  <data name="Track9GateCOutcomeNotAssessable" xml:space="preserve"><value>Not assessable</value></data>
+  <data name="Track9GateCOutcomeNotApplicable" xml:space="preserve"><value>Not applicable</value></data>
+  <data name="Track9PortfolioTierMandatory" xml:space="preserve"><value>Mandatory</value></data>
+  <data name="Track9PortfolioTierProtected" xml:space="preserve"><value>Protected</value></data>
+  <data name="Track9PortfolioTierEconomic" xml:space="preserve"><value>Economic</value></data>
+  <data name="Track9PortfolioItemStatusSelected" xml:space="preserve"><value>Selected</value></data>
+  <data name="Track9PortfolioItemStatusOverBudget" xml:space="preserve"><value>Over budget</value></data>
+  <data name="Track9PortfolioItemStatusOverPeopleCapacity" xml:space="preserve"><value>Over people capacity</value></data>
+  <data name="Track9PortfolioItemStatusMissesDeadline" xml:space="preserve"><value>Misses deadline</value></data>
+  <data name="Track9PortfolioItemStatusBlockedByDependency" xml:space="preserve"><value>Blocked by dependency</value></data>
+  <data name="Track9PortfolioItemStatusDependencyCycle" xml:space="preserve"><value>Dependency cycle</value></data>
+  <data name="Track9PortfolioItemStatusFailsGateC" xml:space="preserve"><value>Fails Gate C</value></data>
+  <data name="Track9PortfolioItemStatusNotAssessable" xml:space="preserve"><value>Not assessable</value></data>
+  <data name="Track9PortfolioItemStatusNotApplicable" xml:space="preserve"><value>Not applicable</value></data>
+  <data name="Track9LossComponentResponse" xml:space="preserve"><value>Incident response</value></data>
+  <data name="Track9LossComponentRecovery" xml:space="preserve"><value>Recovery</value></data>
+  <data name="Track9LossComponentProductivity" xml:space="preserve"><value>Lost productivity</value></data>
+  <data name="Track9LossComponentRevenue" xml:space="preserve"><value>Lost or deferred revenue</value></data>
+  <data name="Track9LossComponentLiability" xml:space="preserve"><value>Liability</value></data>
+  <data name="Track9LossComponentFine" xml:space="preserve"><value>Regulatory fine</value></data>
+  <data name="Track9LossComponentReputation" xml:space="preserve"><value>Reputation</value></data>
+  <data name="Track9TailAppetiteStateNotConfigured" xml:space="preserve"><value>Not configured</value></data>
+  <data name="Track9TailAppetiteStateNotAssessable" xml:space="preserve"><value>Not assessable</value></data>
+  <data name="Track9TailAppetiteStateWithinTolerance" xml:space="preserve"><value>Within tolerance</value></data>
+  <data name="Track9TailAppetiteStateExceedsTolerance" xml:space="preserve"><value>Exceeds tolerance</value></data>
+  <data name="Track9TailRunInherent" xml:space="preserve"><value>Inherent</value></data>
+  <data name="Track9TailRunResidual" xml:space="preserve"><value>Residual</value></data>
+  <data name="Track9PortfolioBasisResidual" xml:space="preserve"><value>Residual where available</value></data>
+  <data name="Track9PortfolioBasisInherent" xml:space="preserve"><value>Inherent</value></data>
+  <data name="Track9PortfolioDependenceAssumedIndependent" xml:space="preserve"><value>Assumed independent</value></data>
+  <data name="Track9PortfolioDependenceDeclared" xml:space="preserve"><value>Declared correlations</value></data>
+  <data name="Track9PortfolioExclusionReasonNotQuantified" xml:space="preserve"><value>Not quantified</value></data>
+  <data name="Track9KriRegisterTitle" xml:space="preserve"><value>Key risk indicators</value></data>
+  <data name="Track9ReassessmentQueueTitle" xml:space="preserve"><value>Reassessment events and queue</value></data>
+  <data name="Track9MethodologyMetricsTitle" xml:space="preserve"><value>Methodology metrics</value></data>
+  <data name="Track9ArchiveReviewTitle" xml:space="preserve"><value>Risk archive and quarterly review</value></data>
+  <data name="Track9BacktestingTitle" xml:space="preserve"><value>Incident backtesting</value></data>
+  <data name="Track9RiskCommitteesTitle" xml:space="preserve"><value>Risk committees</value></data>
+  <data name="Track9RiskMonitoringTitle" xml:space="preserve"><value>Monitoring and Gate B</value></data>
+  <data name="Track9GateBNotConfigured" xml:space="preserve"><value>No active KRI is linked.</value></data>
+  <data name="Track9GateBNotAssessable" xml:space="preserve"><value>Not assessable: a KRI is stale or has no reading.</value></data>
+  <data name="Track9GateBWithin" xml:space="preserve"><value>Within indicator tolerance.</value></data>
+  <data name="Track9GateBExceeded" xml:space="preserve"><value>Indicator tolerance exceeded.</value></data>
+  <data name="Track9NoItems" xml:space="preserve"><value>No records match the current filters.</value></data>
+  <data name="Track9ReadOnlyThirdLine" xml:space="preserve"><value>Internal audit has read-only access.</value></data>
+  <data name="Track9ShowRetired" xml:space="preserve"><value>Include retired records</value></data>
+  <data name="Track9KriDefinition" xml:space="preserve"><value>KRI definition</value></data>
+  <data name="Track9Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Track9Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Track9Retire" xml:space="preserve"><value>Retire</value></data>
+  <data name="Track9Direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="Track9Tolerance" xml:space="preserve"><value>Tolerance threshold</value></data>
+  <data name="Track9WarningThreshold" xml:space="preserve"><value>Warning threshold</value></data>
+  <data name="Track9ToleranceRationale" xml:space="preserve"><value>Tolerance rationale</value></data>
+  <data name="Track9MaximumReadingAge" xml:space="preserve"><value>Maximum reading age (days)</value></data>
+  <data name="Track9OwnerId" xml:space="preserve"><value>Owner</value></data>
+  <data name="Track9EntityId" xml:space="preserve"><value>Entity</value></data>
+  <data name="Track9OrganizationWide" xml:space="preserve"><value>Organization-wide</value></data>
+  <data name="Track9Unassigned" xml:space="preserve"><value>Unassigned</value></data>
+  <data name="Track9Readings" xml:space="preserve"><value>Readings</value></data>
+  <data name="Track9RecordReading" xml:space="preserve"><value>Record reading</value></data>
+  <data name="Track9ObservedAt" xml:space="preserve"><value>Observed at</value></data>
+  <data name="Track9VoidReading" xml:space="preserve"><value>Void reading</value></data>
+  <data name="Track9VoidReason" xml:space="preserve"><value>Reason for voiding</value></data>
+  <data name="Track9LinkedRisks" xml:space="preserve"><value>Linked risks</value></data>
+  <data name="Track9LinkRisk" xml:space="preserve"><value>Link risk</value></data>
+  <data name="Track9UnlinkRisk" xml:space="preserve"><value>Unlink risk</value></data>
+  <data name="Track9RiskId" xml:space="preserve"><value>Risk</value></data>
+  <data name="Track9KriSaved" xml:space="preserve"><value>KRI saved.</value></data>
+  <data name="Track9KriRetired" xml:space="preserve"><value>KRI retired.</value></data>
+  <data name="Track9ReadingRecorded" xml:space="preserve"><value>Reading recorded.</value></data>
+  <data name="Track9ReadingVoided" xml:space="preserve"><value>Reading voided.</value></data>
+  <data name="Track9RiskLinked" xml:space="preserve"><value>Risk linked.</value></data>
+  <data name="Track9RiskUnlinked" xml:space="preserve"><value>Risk unlinked.</value></data>
+  <data name="Track9KriCategoryUnavailability" xml:space="preserve"><value>Unavailability</value></data>
+  <data name="Track9KriCategoryDataLoss" xml:space="preserve"><value>Data loss</value></data>
+  <data name="Track9KriCategoryDataSubjects" xml:space="preserve"><value>Data subjects</value></data>
+  <data name="Track9KriCategoryOther" xml:space="preserve"><value>Other</value></data>
+  <data name="Track9KriDirectionHigher" xml:space="preserve"><value>Higher is worse</value></data>
+  <data name="Track9KriDirectionLower" xml:space="preserve"><value>Lower is worse</value></data>
+  <data name="Track9Events" xml:space="preserve"><value>Events</value></data>
+  <data name="Track9Triggers" xml:space="preserve"><value>Reassessment queue</value></data>
+  <data name="Track9PendingOnly" xml:space="preserve"><value>Pending only</value></data>
+  <data name="Track9EventType" xml:space="preserve"><value>Trigger type</value></data>
+  <data name="Track9EventTitle" xml:space="preserve"><value>Event title</value></data>
+  <data name="Track9OccurredAt" xml:space="preserve"><value>Occurred at</value></data>
+  <data name="Track9IncidentId" xml:space="preserve"><value>Incident</value></data>
+  <data name="Track9DeclareEvent" xml:space="preserve"><value>Declare event</value></data>
+  <data name="Track9ApplyRisk" xml:space="preserve"><value>Apply risk to selected event</value></data>
+  <data name="Track9EventDeclared" xml:space="preserve"><value>Reassessment event declared.</value></data>
+  <data name="Track9EventRiskAdded" xml:space="preserve"><value>Risk applied to the event.</value></data>
+  <data name="Track9TriggerArchitecture" xml:space="preserve"><value>Architecture or technology change</value></data>
+  <data name="Track9TriggerSupplier" xml:space="preserve"><value>Supplier, acquisition or migration</value></data>
+  <data name="Track9TriggerIncident" xml:space="preserve"><value>Significant incident or near miss</value></data>
+  <data name="Track9TriggerRegulation" xml:space="preserve"><value>New regulation</value></data>
+  <data name="Track9TriggerAiModel" xml:space="preserve"><value>New AI model</value></data>
+  <data name="Track9TriggerDataOrKri" xml:space="preserve"><value>New data or KRI breach</value></data>
+  <data name="Track9Availability" xml:space="preserve"><value>Availability</value></data>
+  <data name="Track9MetricValue" xml:space="preserve"><value>Value</value></data>
+  <data name="Track9MetricAvailable" xml:space="preserve"><value>Available</value></data>
+  <data name="Track9MetricPartial" xml:space="preserve"><value>Partial</value></data>
+  <data name="Track9MetricNotAvailable" xml:space="preserve"><value>Not available</value></data>
+  <data name="Track9MetricTerms" xml:space="preserve"><value>Numerator / denominator</value></data>
+  <data name="Track9Stage" xml:space="preserve"><value>Stage</value></data>
+  <data name="Track9KriHealth" xml:space="preserve"><value>KRI health</value></data>
+  <data name="Track9ReassessmentHealth" xml:space="preserve"><value>Reassessment health</value></data>
+  <data name="Track9Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Track9WithinTolerance" xml:space="preserve"><value>Within tolerance</value></data>
+  <data name="Track9Breached" xml:space="preserve"><value>Breached</value></data>
+  <data name="Track9NoReading" xml:space="preserve"><value>No reading</value></data>
+  <data name="Track9Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Track9Answered" xml:space="preserve"><value>Answered</value></data>
+  <data name="Track9RiskClosed" xml:space="preserve"><value>Risk closed</value></data>
+  <data name="Track9MeanDaysToAnswer" xml:space="preserve"><value>Mean days to answer</value></data>
+  <data name="Track9DueOnly" xml:space="preserve"><value>Due for review only</value></data>
+  <data name="Track9IncludeEnded" xml:space="preserve"><value>Include ended archives</value></data>
+  <data name="Track9ArchiveDecision" xml:space="preserve"><value>Archive decision</value></data>
+  <data name="Track9Justification" xml:space="preserve"><value>Justification</value></data>
+  <data name="Track9CloseReason" xml:space="preserve"><value>Close reason</value></data>
+  <data name="Track9ReopeningConditions" xml:space="preserve"><value>Reopening conditions</value></data>
+  <data name="Track9ArchiveRisk" xml:space="preserve"><value>Archive risk</value></data>
+  <data name="Track9QuarterlyReview" xml:space="preserve"><value>Quarterly review</value></data>
+  <data name="Track9KeepArchived" xml:space="preserve"><value>Keep archived</value></data>
+  <data name="Track9ReviewNote" xml:space="preserve"><value>Review note</value></data>
+  <data name="Track9ManualReopen" xml:space="preserve"><value>Manual reopen</value></data>
+  <data name="Track9ArchiveCreated" xml:space="preserve"><value>Risk archived.</value></data>
+  <data name="Track9ArchiveLive" xml:space="preserve"><value>Live</value></data>
+  <data name="Track9ArchiveReopenedState" xml:space="preserve"><value>Reopened</value></data>
+  <data name="Track9ArchiveSuperseded" xml:space="preserve"><value>Superseded</value></data>
+  <data name="Track9ArchiveReviewed" xml:space="preserve"><value>Archive reviewed.</value></data>
+  <data name="Track9ArchiveReopened" xml:space="preserve"><value>Archive reopened.</value></data>
+  <data name="Track9ReportFilters" xml:space="preserve"><value>Report filters</value></data>
+  <data name="Track9From" xml:space="preserve"><value>From</value></data>
+  <data name="Track9To" xml:space="preserve"><value>To</value></data>
+  <data name="Track9GenerateReport" xml:space="preserve"><value>Generate report</value></data>
+  <data name="Track9Assessed" xml:space="preserve"><value>Assessed</value></data>
+  <data name="Track9NotAssessed" xml:space="preserve"><value>Not assessed</value></data>
+  <data name="Track9UnforeseenRate" xml:space="preserve"><value>Unforeseen rate</value></data>
+  <data name="Track9FalseNegativeRate" xml:space="preserve"><value>False-negative rate</value></data>
+  <data name="Track9Assessment" xml:space="preserve"><value>Incident assessment</value></data>
+  <data name="Track9BacktestNotAssessed" xml:space="preserve"><value>Not assessed</value></data>
+  <data name="Track9BacktestNotForeseen" xml:space="preserve"><value>Not foreseen</value></data>
+  <data name="Track9BacktestRegisteredAfter" xml:space="preserve"><value>Registered after occurrence</value></data>
+  <data name="Track9BacktestForeseenTreated" xml:space="preserve"><value>Foreseen and treated</value></data>
+  <data name="Track9BacktestForeseenDismissed" xml:space="preserve"><value>Foreseen but dismissed</value></data>
+  <data name="Track9NoCorrespondingScenario" xml:space="preserve"><value>No corresponding scenario</value></data>
+  <data name="Track9MatchedRiskIds" xml:space="preserve"><value>Matched risk IDs</value></data>
+  <data name="Track9AddMatchedRisk" xml:space="preserve"><value>Add matched risk</value></data>
+  <data name="Track9RemoveMatchedRisk" xml:space="preserve"><value>Remove matched risk</value></data>
+  <data name="Track9AssessIncident" xml:space="preserve"><value>Save assessment</value></data>
+  <data name="Track9IncidentAssessed" xml:space="preserve"><value>Incident assessment saved.</value></data>
+  <data name="Track9Decisions" xml:space="preserve"><value>Decisions</value></data>
+  <data name="Track9CommitteeDefinition" xml:space="preserve"><value>Committee definition</value></data>
+  <data name="Track9Mandate" xml:space="preserve"><value>Mandate</value></data>
+  <data name="Track9RequiredApprovals" xml:space="preserve"><value>Required approvals</value></data>
+  <data name="Track9RetireCommittee" xml:space="preserve"><value>Retire committee</value></data>
+  <data name="Track9MemberUserId" xml:space="preserve"><value>Member</value></data>
+  <data name="Track9AddMember" xml:space="preserve"><value>Add member</value></data>
+  <data name="Track9RemoveMember" xml:space="preserve"><value>Remove member</value></data>
+  <data name="Track9SubmitDecision" xml:space="preserve"><value>Submit decision</value></data>
+  <data name="Track9DecisionKind" xml:space="preserve"><value>Decision kind</value></data>
+  <data name="Track9RenewedAcceptanceId" xml:space="preserve"><value>Acceptance ID to renew</value></data>
+  <data name="Track9BusinessJustification" xml:space="preserve"><value>Business justification</value></data>
+  <data name="Track9CompensatingControls" xml:space="preserve"><value>Compensating controls</value></data>
+  <data name="Track9ExpiresAt" xml:space="preserve"><value>Expires at</value></data>
+  <data name="Track9MinutesReference" xml:space="preserve"><value>Minutes reference</value></data>
+  <data name="Track9OpenOnly" xml:space="preserve"><value>Open decisions only</value></data>
+  <data name="Track9Vote" xml:space="preserve"><value>Cast vote</value></data>
+  <data name="Track9VoteChoice" xml:space="preserve"><value>Vote</value></data>
+  <data name="Track9Comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="Track9CommitteeSaved" xml:space="preserve"><value>Committee saved.</value></data>
+  <data name="Track9CommitteeRetired" xml:space="preserve"><value>Committee retired.</value></data>
+  <data name="Track9MemberAdded" xml:space="preserve"><value>Committee member added.</value></data>
+  <data name="Track9MemberRemoved" xml:space="preserve"><value>Committee member removed.</value></data>
+  <data name="Track9DecisionSubmitted" xml:space="preserve"><value>Committee decision submitted.</value></data>
+  <data name="Track9VoteRecorded" xml:space="preserve"><value>Vote recorded.</value></data>
+  <data name="Track9DecisionWithdrawn" xml:space="preserve"><value>Decision withdrawn.</value></data>
+  <data name="Track9DecisionAccept" xml:space="preserve"><value>Accept residual risk</value></data>
+  <data name="Track9DecisionRenew" xml:space="preserve"><value>Renew acceptance</value></data>
+  <data name="Track9VoteApprove" xml:space="preserve"><value>Approve</value></data>
+  <data name="Track9VoteReject" xml:space="preserve"><value>Reject</value></data>
+  <data name="Track9VoteAbstain" xml:space="preserve"><value>Abstain</value></data>
+  <data name="Track9ThirdPartyRegister" xml:space="preserve"><value>Third-party register</value></data>
+  <data name="Track9ContractTerms" xml:space="preserve"><value>Contract and continuity</value></data>
+  <data name="Track9Cloud" xml:space="preserve"><value>Cloud provider</value></data>
+  <data name="Track9Identity" xml:space="preserve"><value>Identity provider</value></data>
+  <data name="Track9PersonalData" xml:space="preserve"><value>Processes personal data</value></data>
+  <data name="Track9Links" xml:space="preserve"><value>Services, processes and data</value></data>
+  <data name="Track9Subprocessors" xml:space="preserve"><value>Sub-processors</value></data>
+  <data name="Track9DataLocations" xml:space="preserve"><value>Data locations</value></data>
+  <data name="Track9Hecvat" xml:space="preserve"><value>HECVAT</value></data>
+  <data name="Track9Sbom" xml:space="preserve"><value>SBOM</value></data>
+  <data name="Track9SaveDeclaration" xml:space="preserve"><value>Save declaration</value></data>
+  <data name="Track9SelectRecord" xml:space="preserve"><value>Select a record to edit</value></data>
+  <data name="Track9LoadError" xml:space="preserve"><value>The governance data could not be loaded</value></data>
+  <data name="Track9Linked" xml:space="preserve"><value>Linked</value></data>
+  <data name="Track9Unlinked" xml:space="preserve"><value>Unlinked</value></data>
+  <data name="Track9Imported" xml:space="preserve"><value>Import SBOM</value></data>
+  <data name="Track9Voided" xml:space="preserve"><value>Voided</value></data>
+  <data name="Track9Void" xml:space="preserve"><value>Void</value></data>
+  <data name="Track9ThirdPartiesBlock" xml:space="preserve"><value>Third parties</value></data>
+  <data name="Track9NoneLinked" xml:space="preserve"><value>No linked records</value></data>
+  <data name="Track9ThirdPartyConcentration" xml:space="preserve"><value>Third-party concentration</value></data>
+  <data name="Track9Supplier" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Track9CriticalProcesses" xml:space="preserve"><value>Critical processes</value></data>
+  <data name="Track9Share" xml:space="preserve"><value>Share</value></data>
+  <data name="Track9FourthParty" xml:space="preserve"><value>Fourth party</value></data>
+  <data name="Track9UnmappedDependencies" xml:space="preserve"><value>Unmapped dependencies</value></data>
+  <data name="Track9ScopeRestricted" xml:space="preserve"><value>The list is scope-restricted; shares use the organization-wide denominator.</value></data>
+  <data name="Track9FindingsOnly" xml:space="preserve"><value>Only records with findings</value></data>
+  <data name="Track9DataSubjects" xml:space="preserve"><value>Data subjects</value></data>
+  <data name="Track9DataCategories" xml:space="preserve"><value>Data categories</value></data>
+  <data name="Track9Retention" xml:space="preserve"><value>Retention</value></data>
+  <data name="Track9InternationalTransfer" xml:space="preserve"><value>International transfer</value></data>
+  <data name="Track9Purposes" xml:space="preserve"><value>Purposes and legal bases</value></data>
+  <data name="Track9Processors" xml:space="preserve"><value>Processors</value></data>
+  <data name="Track9Dpias" xml:space="preserve"><value>DPIAs / RIPDs</value></data>
+  <data name="Track9NotCatalogued" xml:space="preserve"><value>This data record has not been catalogued</value></data>
+  <data name="Track9InvolvesMinors" xml:space="preserve"><value>Involves children or adolescents</value></data>
+  <data name="Track9LargeVolume" xml:space="preserve"><value>Large volume</value></data>
+  <data name="Track9StrategicResearch" xml:space="preserve"><value>Strategic research</value></data>
+  <data name="Track9TransferDeclared" xml:space="preserve"><value>International transfer declared</value></data>
+  <data name="Track9DpiaRegister" xml:space="preserve"><value>DPIA / RIPD register</value></data>
+  <data name="Track9Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Track9Retired" xml:space="preserve"><value>Retired</value></data>
+  <data name="Track9RiskRequirements" xml:space="preserve"><value>Risk requirements</value></data>
+  <data name="Track9CatalogueEvidence" xml:space="preserve"><value>Data-catalogue evidence</value></data>
+  <data name="Track9AiModelInventory" xml:space="preserve"><value>AI model inventory</value></data>
+  <data name="Track9Inventory" xml:space="preserve"><value>Inventory record</value></data>
+  <data name="Track9Evaluation" xml:space="preserve"><value>Evaluation and version state</value></data>
+  <data name="Track9MetricReadings" xml:space="preserve"><value>Metric readings</value></data>
+  <data name="Track9HumanOverrides" xml:space="preserve"><value>Human overrides</value></data>
+  <data name="Track9IncludeRetired" xml:space="preserve"><value>Include retired</value></data>
+  <data name="Track9HiddenRecords" xml:space="preserve"><value>Hidden linked records</value></data>
+  <data name="Track9RiskAiModels" xml:space="preserve"><value>AI components</value></data>
+  <data name="Track9AiMetricNotEvaluated" xml:space="preserve"><value>Not evaluated</value></data>
+  <data name="Track9AiMetricEvaluated" xml:space="preserve"><value>Evaluated</value></data>
+  <data name="Track9AiMetricStale" xml:space="preserve"><value>Stale</value></data>
+  <data name="Track9PeopleCapacityOutOfRange" xml:space="preserve"><value>People capacity is outside the accepted range.</value></data>
+  <data name="Track9DeadlineBeforeStart" xml:space="preserve"><value>The deadline cannot be before the start date.</value></data>
+  <data name="Track9TooManyCandidates" xml:space="preserve"><value>Select at most 1,000 candidate treatments.</value></data>
+  <data name="Track9NotConfigured" xml:space="preserve"><value>No tail tolerances are configured. Enter at least one value to create them.</value></data>
+  <data name="Track9DecisionOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="Track9DecisionApproved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Track9DecisionRejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="Track9DecisionWithdrawnState" xml:space="preserve"><value>Withdrawn</value></data>
+  <data name="Track9Overdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="Track9NextDecisionKindNone" xml:space="preserve"><value>No decision scheduled</value></data>
+  <data name="Track9NextDecisionKindGateAEscalation" xml:space="preserve"><value>Gate A escalation</value></data>
+  <data name="Track9NextDecisionKindAcceptanceExpiry" xml:space="preserve"><value>Acceptance expiry</value></data>
+  <data name="Track9NextDecisionKindManagementReview" xml:space="preserve"><value>Management review</value></data>
+  <data name="Track9NextDecisionKindMitigationTaskDue" xml:space="preserve"><value>Treatment task due</value></data>
+  <data name="Track9NextDecisionKindDecisionPending" xml:space="preserve"><value>Decision pending</value></data>
+  <data name="Findings" xml:space="preserve"><value>Findings</value></data>
+  <data name="Track9ThirdPartyStatusProspective" xml:space="preserve"><value>Prospective</value></data>
+  <data name="Track9ThirdPartyStatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="Track9ThirdPartyStatusExiting" xml:space="preserve"><value>Exiting</value></data>
+  <data name="Track9ThirdPartyStatusTerminated" xml:space="preserve"><value>Terminated</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeStorage" xml:space="preserve"><value>Storage</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeProcessing" xml:space="preserve"><value>Processing</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeBackup" xml:space="preserve"><value>Backup</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeSupportAccess" xml:space="preserve"><value>Support access</value></data>
+  <data name="Track9HecvatVariantLite" xml:space="preserve"><value>Lite</value></data>
+  <data name="Track9HecvatVariantFull" xml:space="preserve"><value>Full</value></data>
+  <data name="Track9HecvatVariantOnPremise" xml:space="preserve"><value>On-premises</value></data>
+  <data name="Track9HecvatVariantUnified" xml:space="preserve"><value>Unified</value></data>
+  <data name="Track9HecvatAnswerYes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Track9HecvatAnswerNo" xml:space="preserve"><value>No</value></data>
+  <data name="Track9HecvatAnswerNotApplicable" xml:space="preserve"><value>Not applicable</value></data>
+  <data name="Track9HecvatAnswerUnanswered" xml:space="preserve"><value>Unanswered</value></data>
+  <data name="Track9PersonalDataCategoryNotPersonal" xml:space="preserve"><value>Not personal</value></data>
+  <data name="Track9PersonalDataCategoryPersonal" xml:space="preserve"><value>Personal</value></data>
+  <data name="Track9PersonalDataCategorySensitivePersonal" xml:space="preserve"><value>Sensitive personal</value></data>
+  <data name="Track9PersonalDataCategoryAnonymised" xml:space="preserve"><value>Anonymised</value></data>
+  <data name="Track9LgpdLegalBasisArt7Consent" xml:space="preserve"><value>Art. 7 — consent</value></data>
+  <data name="Track9LgpdLegalBasisArt7LegalObligation" xml:space="preserve"><value>Art. 7 — legal obligation</value></data>
+  <data name="Track9LgpdLegalBasisArt7PublicPolicy" xml:space="preserve"><value>Art. 7 — public policy</value></data>
+  <data name="Track9LgpdLegalBasisArt7Research" xml:space="preserve"><value>Art. 7 — research</value></data>
+  <data name="Track9LgpdLegalBasisArt7Contract" xml:space="preserve"><value>Art. 7 — contract</value></data>
+  <data name="Track9LgpdLegalBasisArt7ExerciseOfRights" xml:space="preserve"><value>Art. 7 — exercise of rights</value></data>
+  <data name="Track9LgpdLegalBasisArt7ProtectionOfLife" xml:space="preserve"><value>Art. 7 — protection of life</value></data>
+  <data name="Track9LgpdLegalBasisArt7HealthProtection" xml:space="preserve"><value>Art. 7 — health protection</value></data>
+  <data name="Track9LgpdLegalBasisArt7LegitimateInterest" xml:space="preserve"><value>Art. 7 — legitimate interest</value></data>
+  <data name="Track9LgpdLegalBasisArt7CreditProtection" xml:space="preserve"><value>Art. 7 — credit protection</value></data>
+  <data name="Track9LgpdLegalBasisArt11Consent" xml:space="preserve"><value>Art. 11 — consent</value></data>
+  <data name="Track9LgpdLegalBasisArt11LegalObligation" xml:space="preserve"><value>Art. 11 — legal obligation</value></data>
+  <data name="Track9LgpdLegalBasisArt11PublicPolicy" xml:space="preserve"><value>Art. 11 — public policy</value></data>
+  <data name="Track9LgpdLegalBasisArt11Research" xml:space="preserve"><value>Art. 11 — research</value></data>
+  <data name="Track9LgpdLegalBasisArt11ExerciseOfRights" xml:space="preserve"><value>Art. 11 — exercise of rights</value></data>
+  <data name="Track9LgpdLegalBasisArt11ProtectionOfLife" xml:space="preserve"><value>Art. 11 — protection of life</value></data>
+  <data name="Track9LgpdLegalBasisArt11HealthProtection" xml:space="preserve"><value>Art. 11 — health protection</value></data>
+  <data name="Track9LgpdLegalBasisArt11FraudPrevention" xml:space="preserve"><value>Art. 11 — fraud prevention</value></data>
+  <data name="Track9InternationalTransferMechanismAdequateCountry" xml:space="preserve"><value>Adequate country</value></data>
+  <data name="Track9InternationalTransferMechanismSpecificContractualClauses" xml:space="preserve"><value>Specific contractual clauses</value></data>
+  <data name="Track9InternationalTransferMechanismStandardContractualClauses" xml:space="preserve"><value>Standard contractual clauses</value></data>
+  <data name="Track9InternationalTransferMechanismGlobalCorporateRules" xml:space="preserve"><value>Global corporate rules</value></data>
+  <data name="Track9InternationalTransferMechanismSealsCertificatesCodes" xml:space="preserve"><value>Seals, certificates or codes</value></data>
+  <data name="Track9InternationalTransferMechanismLegalCooperation" xml:space="preserve"><value>Legal cooperation</value></data>
+  <data name="Track9InternationalTransferMechanismProtectionOfLife" xml:space="preserve"><value>Protection of life</value></data>
+  <data name="Track9InternationalTransferMechanismAnpdAuthorization" xml:space="preserve"><value>ANPD authorization</value></data>
+  <data name="Track9InternationalTransferMechanismInternationalCommitment" xml:space="preserve"><value>International commitment</value></data>
+  <data name="Track9InternationalTransferMechanismPublicPolicy" xml:space="preserve"><value>Public policy</value></data>
+  <data name="Track9InternationalTransferMechanismSpecificConsent" xml:space="preserve"><value>Specific consent</value></data>
+  <data name="Track9InternationalTransferMechanismArticle7Basis" xml:space="preserve"><value>Article 7 basis</value></data>
+  <data name="Track9DataLocationPurposeStorage" xml:space="preserve"><value>Storage</value></data>
+  <data name="Track9DataLocationPurposeProcessing" xml:space="preserve"><value>Processing</value></data>
+  <data name="Track9DataLocationPurposeBackup" xml:space="preserve"><value>Backup</value></data>
+  <data name="Track9DataLocationPurposeSupportAccess" xml:space="preserve"><value>Support access</value></data>
+  <data name="Track9LegalRequirementKindLaw" xml:space="preserve"><value>Law</value></data>
+  <data name="Track9LegalRequirementKindRegulation" xml:space="preserve"><value>Regulation</value></data>
+  <data name="Track9LegalRequirementKindContract" xml:space="preserve"><value>Contract</value></data>
+  <data name="Track9LegalRequirementKindInternalNorm" xml:space="preserve"><value>Internal norm</value></data>
+  <data name="Track9DpiaStatusDraft" xml:space="preserve"><value>Draft</value></data>
+  <data name="Track9DpiaStatusApproved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Track9DpiaStatusRetired" xml:space="preserve"><value>Retired</value></data>
+  <data name="Track9DpiaResidualRiskLow" xml:space="preserve"><value>Low</value></data>
+  <data name="Track9DpiaResidualRiskMedium" xml:space="preserve"><value>Medium</value></data>
+  <data name="Track9DpiaResidualRiskHigh" xml:space="preserve"><value>High</value></data>
+  <data name="Track9AiModelKindClassification" xml:space="preserve"><value>Classification</value></data>
+  <data name="Track9AiModelKindForecasting" xml:space="preserve"><value>Forecasting</value></data>
+  <data name="Track9AiModelKindGenerative" xml:space="preserve"><value>Generative</value></data>
+  <data name="Track9AiModelKindRecommendation" xml:space="preserve"><value>Recommendation</value></data>
+  <data name="Track9AiModelKindAnomalyDetection" xml:space="preserve"><value>Anomaly detection</value></data>
+  <data name="Track9AiModelKindBiometric" xml:space="preserve"><value>Biometric</value></data>
+  <data name="Track9AiModelKindOther" xml:space="preserve"><value>Other</value></data>
+  <data name="Track9AiModelSourceInHouse" xml:space="preserve"><value>In-house</value></data>
+  <data name="Track9AiModelSourceVendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Track9AiModelSourceOpenSource" xml:space="preserve"><value>Open source</value></data>
+  <data name="Track9AiModelStatusProposed" xml:space="preserve"><value>Proposed</value></data>
+  <data name="Track9AiModelStatusPilot" xml:space="preserve"><value>Pilot</value></data>
+  <data name="Track9AiModelStatusProduction" xml:space="preserve"><value>Production</value></data>
+  <data name="Track9AiModelStatusRetired" xml:space="preserve"><value>Retired</value></data>
+  <data name="Track9AiModelRiskTierMinimal" xml:space="preserve"><value>Minimal</value></data>
+  <data name="Track9AiModelRiskTierLimited" xml:space="preserve"><value>Limited</value></data>
+  <data name="Track9AiModelRiskTierHigh" xml:space="preserve"><value>High</value></data>
+  <data name="Track9AiHumanOversightEveryOutput" xml:space="preserve"><value>Review every output</value></data>
+  <data name="Track9AiHumanOversightSampled" xml:space="preserve"><value>Sampled review</value></data>
+  <data name="Track9AiHumanOversightNoReview" xml:space="preserve"><value>No review</value></data>
+  <data name="Track9AiModelDataUsageTraining" xml:space="preserve"><value>Training</value></data>
+  <data name="Track9AiModelDataUsageFineTuning" xml:space="preserve"><value>Fine-tuning</value></data>
+  <data name="Track9AiModelDataUsageEvaluation" xml:space="preserve"><value>Evaluation</value></data>
+  <data name="Track9AiModelDataUsageInput" xml:space="preserve"><value>Input</value></data>
+  <data name="Track9AiModelDataUsageOutput" xml:space="preserve"><value>Output</value></data>
+  <data name="Track9AiModelMetricAccuracy" xml:space="preserve"><value>Accuracy</value></data>
+  <data name="Track9AiModelMetricPrecision" xml:space="preserve"><value>Precision</value></data>
+  <data name="Track9AiModelMetricRecall" xml:space="preserve"><value>Recall</value></data>
+  <data name="Track9AiModelMetricCalibration" xml:space="preserve"><value>Calibration</value></data>
+  <data name="Track9AiModelMetricDrift" xml:space="preserve"><value>Drift</value></data>
+  <data name="Track9AiModelMetricHumanOverrideRate" xml:space="preserve"><value>Human override rate</value></data>
+  <data name="Track9Catalogued" xml:space="preserve"><value>Catalogued</value></data>
+  <data name="Track9Purpose" xml:space="preserve"><value>Purpose</value></data>
+  <data name="Track9LegalBasis" xml:space="preserve"><value>Legal basis</value></data>
+  <data name="Track9LegalRequirement" xml:space="preserve"><value>Legal requirement</value></data>
+  <data name="Track9BasisReference" xml:space="preserve"><value>Basis reference</value></data>
+  <data name="Track9Country" xml:space="preserve"><value>Country</value></data>
+  <data name="Track9Region" xml:space="preserve"><value>Region</value></data>
+  <data name="Track9Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Track9RetentionPeriod" xml:space="preserve"><value>Retention period (months)</value></data>
+  <data name="Track9RetentionTrigger" xml:space="preserve"><value>Retention trigger</value></data>
+  <data name="Track9RetentionBasis" xml:space="preserve"><value>Retention basis</value></data>
+  <data name="Track9ReviewDue" xml:space="preserve"><value>Review due</value></data>
+  <data name="Track9ReviewedAt" xml:space="preserve"><value>Reviewed at</value></data>
+  <data name="Track9TransferMechanism" xml:space="preserve"><value>Transfer mechanism</value></data>
+  <data name="Track9ThroughGroup" xml:space="preserve"><value>Through group</value></data>
+  <data name="Track9Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Track9ResidualRisk" xml:space="preserve"><value>Residual risk</value></data>
+  <data name="Track9Kind" xml:space="preserve"><value>Kind</value></data>
+  <data name="Track9Source" xml:space="preserve"><value>Source</value></data>
+  <data name="Track9RiskTier" xml:space="preserve"><value>Risk tier</value></data>
+  <data name="Track9HumanOversight" xml:space="preserve"><value>Human oversight</value></data>
+  <data name="Track9Owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="Track9Entity" xml:space="preserve"><value>Scope entity</value></data>
+  <data name="Track9Vendor" xml:space="preserve"><value>Vendor</value></data>
+  <data name="Track9Version" xml:space="preserve"><value>Version</value></data>
+  <data name="Track9VersionSince" xml:space="preserve"><value>Version in use since</value></data>
+  <data name="Track9MaxEvaluationAge" xml:space="preserve"><value>Maximum evaluation age (days)</value></data>
+  <data name="Track9DataRecord" xml:space="preserve"><value>Data record</value></data>
+  <data name="Track9DataUsage" xml:space="preserve"><value>Data usage</value></data>
+  <data name="Track9Metric" xml:space="preserve"><value>Metric</value></data>
+  <data name="Track9Value" xml:space="preserve"><value>Value</value></data>
+  <data name="Track9MeasuredAt" xml:space="preserve"><value>Measured at</value></data>
+  <data name="Track9PeriodStart" xml:space="preserve"><value>Period start</value></data>
+  <data name="Track9PeriodEnd" xml:space="preserve"><value>Period end</value></data>
+  <data name="Track9SampleSize" xml:space="preserve"><value>Sample size</value></data>
+  <data name="Track9Method" xml:space="preserve"><value>Method</value></data>
+  <data name="Track9Evidence" xml:space="preserve"><value>Evidence reference</value></data>
+  <data name="Track9ModelOutput" xml:space="preserve"><value>Model output</value></data>
+  <data name="Track9HumanDecision" xml:space="preserve"><value>Human decision</value></data>
+  <data name="Track9EvaluationState" xml:space="preserve"><value>Evaluation state</value></data>
+  <data name="Track9Required" xml:space="preserve"><value>Required</value></data>
+  <data name="Track9PreviousVersion" xml:space="preserve"><value>Previous evaluated version</value></data>
+  <data name="Track9RiskReference" xml:space="preserve"><value>Risk reference</value></data>
+  <data name="Track9Subject" xml:space="preserve"><value>Subject</value></data>
+  <data name="Track9AiModelEvaluationStateNotEvaluated" xml:space="preserve"><value>Not evaluated</value></data>
+  <data name="Track9AiModelEvaluationStateIncomplete" xml:space="preserve"><value>Incomplete</value></data>
+  <data name="Track9AiModelEvaluationStateStale" xml:space="preserve"><value>Stale</value></data>
+  <data name="Track9AiModelEvaluationStateEvaluated" xml:space="preserve"><value>Evaluated</value></data>
+  <data name="Track9Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Track9ThirdPartyLinkKindItService" xml:space="preserve"><value>IT service</value></data>
+  <data name="Track9ThirdPartyLinkKindBusinessProcess" xml:space="preserve"><value>Business process</value></data>
+  <data name="Track9ThirdPartyLinkKindData" xml:space="preserve"><value>Data record</value></data>
+  <data name="Track9SaveMitigationFirst" xml:space="preserve"><value>Save this mitigation first, then reopen it to record monetary costs and Gate C estimates.</value></data>
+  <data name="Track9NewTask" xml:space="preserve"><value>Evidence for the new task</value></data>
+  <data name="Track9SelectedTask" xml:space="preserve"><value>Edit evidence of the selected task</value></data>
+  <data name="Track9LegalName" xml:space="preserve"><value>Legal name</value></data>
+  <data name="Track9TaxId" xml:space="preserve"><value>Tax identifier</value></data>
+  <data name="Track9Website" xml:space="preserve"><value>Website</value></data>
+  <data name="Track9Service" xml:space="preserve"><value>Service</value></data>
+  <data name="Track9ContractReference" xml:space="preserve"><value>Contract reference</value></data>
+  <data name="Track9ContractStart" xml:space="preserve"><value>Contract start</value></data>
+  <data name="Track9ContractEnd" xml:space="preserve"><value>Contract end</value></data>
+  <data name="Track9SlaAvailability" xml:space="preserve"><value>SLA availability (%)</value></data>
+  <data name="Track9RtoMinutes" xml:space="preserve"><value>Contracted RTO (minutes)</value></data>
+  <data name="Track9RpoMinutes" xml:space="preserve"><value>Contracted RPO (minutes)</value></data>
+  <data name="Track9VulnerabilityFixDays" xml:space="preserve"><value>Vulnerability fix deadline (days)</value></data>
+  <data name="Track9RightToAudit" xml:space="preserve"><value>Right to audit</value></data>
+  <data name="Track9AuditClause" xml:space="preserve"><value>Audit clause reference</value></data>
+  <data name="Track9ExitPlan" xml:space="preserve"><value>Exit plan</value></data>
+  <data name="Track9TestedAt" xml:space="preserve"><value>Tested at</value></data>
+  <data name="Track9DataPortability" xml:space="preserve"><value>Data portability</value></data>
+  <data name="Track9FrameworkVersion" xml:space="preserve"><value>Framework version</value></data>
+  <data name="Track9ExpectedQuestions" xml:space="preserve"><value>Expected questions</value></data>
+  <data name="Track9RespondedAt" xml:space="preserve"><value>Responded at</value></data>
+  <data name="Track9ValidUntil" xml:space="preserve"><value>Valid until</value></data>
+  <data name="Track9Question" xml:space="preserve"><value>Question</value></data>
+  <data name="Track9Answer" xml:space="preserve"><value>Answer</value></data>
+  <data name="Track9PreferredAnswer" xml:space="preserve"><value>Preferred answer</value></data>
+  <data name="Track9Weight" xml:space="preserve"><value>Weight</value></data>
+  <data name="Track9Critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="Track9State" xml:space="preserve"><value>State</value></data>
+  <data name="Track9Unanswered" xml:space="preserve"><value>Unanswered</value></data>
+  <data name="Track9ComponentName" xml:space="preserve"><value>Component name</value></data>
+  <data name="Track9ComponentVersion" xml:space="preserve"><value>Component version</value></data>
+  <data name="Track9FileName" xml:space="preserve"><value>File name</value></data>
+  <data name="Track9Format" xml:space="preserve"><value>Format</value></data>
+  <data name="Track9ComponentCount" xml:space="preserve"><value>Component count</value></data>
+  <data name="Track9Sha256" xml:space="preserve"><value>SHA-256</value></data>
+  <data name="Track9HecvatStateIncomplete" xml:space="preserve"><value>Incomplete</value></data>
+  <data name="Track9HecvatStateConforming" xml:space="preserve"><value>Conforming</value></data>
+  <data name="Track9HecvatStateNonConforming" xml:space="preserve"><value>Non-conforming</value></data>
+  <data name="Track9HecvatStateExpired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Track9HecvatStateNotScorable" xml:space="preserve"><value>Not scorable</value></data>
+  <data name="Track9HecvatStateVoided" xml:space="preserve"><value>Voided</value></data>
+  <data name="Track9HecvatStateNotAssessed" xml:space="preserve"><value>Not assessed</value></data>
+  <data name="Track9SbomFormatCycloneDxJson" xml:space="preserve"><value>CycloneDX JSON</value></data>
+  <data name="Track9SbomFormatSpdxJson" xml:space="preserve"><value>SPDX JSON</value></data>
+  <data name="Track9ReviewOverdue" xml:space="preserve"><value>Review overdue</value></data>
+  <data name="Track9PerformedAt" xml:space="preserve"><value>Performed at</value></data>
+  <data name="Track9DocumentReference" xml:space="preserve"><value>Document reference</value></data>
+  <data name="Track9Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="Track9DpiaLinkKindDataRecord" xml:space="preserve"><value>Data record</value></data>
+  <data name="Track9DpiaLinkKindBusinessProcess" xml:space="preserve"><value>Business process</value></data>
+  <data name="Track9Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Track9Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Track9RiskLinks" xml:space="preserve"><value>Linked risks</value></data>
+  <data name="Track9HiddenSupplierReadOnly" xml:space="preserve"><value>This requirement references a supplier outside your visible scope and cannot be edited.</value></data>
+  <data name="Track9License" xml:space="preserve"><value>License</value></data>
+  <data name="Track9Purl" xml:space="preserve"><value>Package URL</value></data>
+  <data name="Track9SbomDocument" xml:space="preserve"><value>SBOM document</value></data>
 </root>

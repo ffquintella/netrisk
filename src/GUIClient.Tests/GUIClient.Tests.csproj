@@ -35,6 +35,7 @@
     <ProjectReference Include="..\DAL\DAL.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GUIClient\Tools\Track9\*.cs" LinkBase="Tools/Track9" />
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
          than pulling GUIClient (and all of Avalonia) into a headless test run. -->
     <Compile Include="..\GUIClient\Validation\*.cs" LinkBase="Validation" />
@@ -63,6 +64,11 @@
          from Tools so the form and the server share one definition. -->
     <Compile Include="..\GUIClient\Tools\ContinuitySummary.cs" LinkBase="Tools" />
     <Compile Include="..\Tools\Continuity\ContinuitySettings.cs" LinkBase="Tools/Continuity" />
+    <!-- The exploitation signals' pure half (Stage 9.4, T302, S45 §7): percentages and dates, the computed
+         keys, the EPSS term of the findings filter, the technique editor's input and who writes what. The
+         technique identifier rule is compiled in from Tools so the editor and the server share one. -->
+    <Compile Include="..\GUIClient\Tools\ExploitationSignalsSummary.cs" LinkBase="Tools" />
+    <Compile Include="..\Tools\ExploitationSignals\Identifiers.cs" LinkBase="Tools/ExploitationSignals" />
     <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
          rule that keeps a raw entity id out of the appetite grid. -->
     <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />
@@ -72,6 +78,9 @@
     <!-- Which option a ComboBox shows for a stored value: what keeps the issue-tracker Provider
          field from going blank after a save refills the provider list. -->
     <Compile Include="..\GUIClient\Tools\ComboSelection.cs" LinkBase="Tools" />
+    <!-- Safe, deterministic materialization for the five view-models that previously mutated shared
+         lists and observable collections from Parallel.ForEach workers. -->
+    <Compile Include="..\GUIClient\Tools\ViewModelCollection.cs" LinkBase="Tools" />
     <!-- Which Jira tabs a provider kind gets (Assets on Data Center, Service Management Cloud-only). -->
     <Compile Include="..\GUIClient\Tools\JiraFacets.cs" LinkBase="Tools" />
     <!-- What the queue selection Save sends: null until the grid is loaded, so it cannot wipe imports. -->

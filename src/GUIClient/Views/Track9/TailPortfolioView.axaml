@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.TailPortfolioView" x:DataType="vm:TailPortfolioViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="780">
+    <Design.DataContext><vm:TailPortfolioViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,170,Auto,*,Auto,150" Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,260,Auto,160,Auto" Margin="0 5">
+                <TextBlock Classes="form_label" Text="{Binding StrPortfolioBasis}"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding BasisOptions}" SelectedItem="{Binding SelectedBasis}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrSeed}"/>
+                <NumericUpDown Grid.Column="3" Value="{Binding Seed}" Minimum="-2147483648" Maximum="2147483647" Increment="1"/>
+                <Button Grid.Column="4" Classes="type1" Command="{Binding CalculateCommand}"><TextBlock Text="{Binding StrCalculate}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Risks}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="{Binding StrMembers, Mode=OneTime}" Binding="{Binding IsSelected}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,*,Auto,*" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrGateB}"/><TextBlock Grid.Column="1" Text="{Binding GateBText}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrDependence}"/><TextBlock Grid.Column="3" Text="{Binding DependenceText}"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrDiversification}"/><TextBlock Grid.Column="5" Text="{Binding DiversificationText}"/>
+            </Grid>
+            <DataGrid Grid.Row="5" ItemsSource="{Binding Members}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding Risk}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrPortfolioBasis, Mode=OneTime}" Binding="{Binding Run}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrExpectedLoss, Mode=OneTime}" Binding="{Binding ExpectedLoss}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrP95, Mode=OneTime}" Binding="{Binding P95}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrCvar95, Mode=OneTime}" Binding="{Binding Cvar95}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrContribution, Mode=OneTime}" Binding="{Binding Contribution}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrGateB, Mode=OneTime}" Binding="{Binding Appetite}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock Grid.Row="6" Classes="form_label" Text="{Binding StrExcluded}" Margin="0 8 0 3"/>
+            <DataGrid Grid.Row="7" ItemsSource="{Binding Excluded}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding Risk}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}" Binding="{Binding Reason}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

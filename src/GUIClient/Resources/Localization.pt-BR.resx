@@ -3939,4 +3939,942 @@ Salvar mesmo assim?</value>
     <data name="ErrorDownloadingFileMSG" xml:space="preserve">
         <value>Erro ao baixar o arquivo. Por favor, tente novamente.</value>
     </data>
+    <!-- Stage 9.4 desktop surface (T302, S45 §7): grid, signals panel, ATT&amp;CK editor, reports 9 and 10. -->
+    <data name="Epss" xml:space="preserve">
+        <value>EPSS</value>
+    </data>
+    <data name="EpssPercentile" xml:space="preserve">
+        <value>Percentil EPSS</value>
+    </data>
+    <data name="EpssMinimumPercent" xml:space="preserve">
+        <value>EPSS ≥ (%)</value>
+    </data>
+    <data name="EpssMinimumTip" xml:space="preserve">
+        <value>Só achados cujo EPSS efetivo é pelo menos esta porcentagem. Edita o termo epss&gt;= do filtro, sempre com ponto como separador decimal.</value>
+    </data>
+    <data name="NotAvailableShort" xml:space="preserve">
+        <value>n/d</value>
+    </data>
+    <data name="ExploitationSignals" xml:space="preserve">
+        <value>Sinais de exploração</value>
+    </data>
+    <data name="RemediationPriority" xml:space="preserve">
+        <value>Prioridade de correção</value>
+    </data>
+    <data name="PriorityReasons" xml:space="preserve">
+        <value>Razões</value>
+    </data>
+    <data name="CvssUsed" xml:space="preserve">
+        <value>CVSS usado: {0}</value>
+    </data>
+    <data name="EffectiveEpss" xml:space="preserve">
+        <value>EPSS efetivo</value>
+    </data>
+    <data name="EpssEffectiveFormat" xml:space="preserve">
+        <value>{0} (percentil {1}) — {2}, {3}, referência {4}</value>
+    </data>
+    <data name="EpssNone" xml:space="preserve">
+        <value>Sem leitura de EPSS</value>
+    </data>
+    <data name="EpssReadings" xml:space="preserve">
+        <value>Leituras de EPSS (as duas fontes)</value>
+    </data>
+    <data name="EpssReadingFormat" xml:space="preserve">
+        <value>{0} · {1}: {2} (percentil {3}), referência {4}</value>
+    </data>
+    <data name="EpssEffectiveMark" xml:space="preserve">
+        <value>efetiva</value>
+    </data>
+    <data name="EpssSourceFirstOrg" xml:space="preserve">
+        <value>FIRST.org</value>
+    </data>
+    <data name="EpssSourceVisionOne" xml:space="preserve">
+        <value>Trend Vision One</value>
+    </data>
+    <data name="KevCatalogue" xml:space="preserve">
+        <value>Catálogo CISA KEV</value>
+    </data>
+    <data name="KevNone" xml:space="preserve">
+        <value>Nenhum CVE deste achado está no catálogo KEV</value>
+    </data>
+    <data name="KevEntryFormat" xml:space="preserve">
+        <value>{0} — incluída em {1}, prazo da CISA {2}</value>
+    </data>
+    <data name="KevDuePast" xml:space="preserve">
+        <value>prazo vencido</value>
+    </data>
+    <data name="KevRansomwareKnown" xml:space="preserve">
+        <value>uso conhecido em ransomware</value>
+    </data>
+    <data name="KevRansomwareUnknown" xml:space="preserve">
+        <value>uso em ransomware desconhecido</value>
+    </data>
+    <data name="KevStateListed" xml:space="preserve">
+        <value>listada</value>
+    </data>
+    <data name="KevStateDelisted" xml:space="preserve">
+        <value>des-listada em {0} — deixou de ser KEV</value>
+    </data>
+    <data name="KevStateDelistingHeld" xml:space="preserve">
+        <value>ausente do catálogo desde {0}, des-listagem retida — continua KEV</value>
+    </data>
+    <data name="KevRequiredAction" xml:space="preserve">
+        <value>Ação requerida: {0}</value>
+    </data>
+    <data name="KevAppliedAt" xml:space="preserve">
+        <value>Catálogo KEV aplicado pela última vez em {0}</value>
+    </data>
+    <data name="KevNeverApplied" xml:space="preserve">
+        <value>O catálogo KEV nunca foi aplicado</value>
+    </data>
+    <data name="EpssAppliedAt" xml:space="preserve">
+        <value>EPSS aplicado pela última vez em {0}</value>
+    </data>
+    <data name="EpssNeverApplied" xml:space="preserve">
+        <value>O EPSS nunca foi sincronizado do FIRST</value>
+    </data>
+    <data name="ExploitationSignalsLoadFailed" xml:space="preserve">
+        <value>Não foi possível carregar os sinais de exploração</value>
+    </data>
+    <data name="PriorityTierP1" xml:space="preserve">
+        <value>P1 — exploração conhecida ou observada</value>
+    </data>
+    <data name="PriorityTierP2" xml:space="preserve">
+        <value>P2 — exploração provável</value>
+    </data>
+    <data name="PriorityTierP3" xml:space="preserve">
+        <value>P3 — impacto alto sem exploração provável, ou exploração provável com impacto menor</value>
+    </data>
+    <data name="PriorityTierP4" xml:space="preserve">
+        <value>P4 — impacto menor, sem exploração conhecida ou provável</value>
+    </data>
+    <data name="PriorityTierUndetermined" xml:space="preserve">
+        <value>Indeterminada — sem sinal algum (não é baixa)</value>
+    </data>
+    <data name="PriorityTierShortP1" xml:space="preserve">
+        <value>P1</value>
+    </data>
+    <data name="PriorityTierShortP2" xml:space="preserve">
+        <value>P2</value>
+    </data>
+    <data name="PriorityTierShortP3" xml:space="preserve">
+        <value>P3</value>
+    </data>
+    <data name="PriorityTierShortP4" xml:space="preserve">
+        <value>P4</value>
+    </data>
+    <data name="PriorityTierShortUndetermined" xml:space="preserve">
+        <value>Indeterminada</value>
+    </data>
+    <data name="PriorityReasonKevListed" xml:space="preserve">
+        <value>Listado no catálogo CISA KEV</value>
+    </data>
+    <data name="PriorityReasonKevKnownRansomware" xml:space="preserve">
+        <value>KEV: uso conhecido em ransomware</value>
+    </data>
+    <data name="PriorityReasonKevPastDueDate" xml:space="preserve">
+        <value>KEV: prazo da CISA vencido</value>
+    </data>
+    <data name="PriorityReasonExploitedByScanner" xml:space="preserve">
+        <value>Exploração observada pelo scanner</value>
+    </data>
+    <data name="PriorityReasonEpssAtOrAboveThreshold" xml:space="preserve">
+        <value>EPSS igual ou acima de 10%</value>
+    </data>
+    <data name="PriorityReasonExploitAvailable" xml:space="preserve">
+        <value>Exploit público disponível</value>
+    </data>
+    <data name="PriorityReasonHighImpact" xml:space="preserve">
+        <value>Impacto alto (CVSS ≥ 7,0, ou severidade Alta ou acima sem CVSS)</value>
+    </data>
+    <data name="PriorityReasonLowerImpact" xml:space="preserve">
+        <value>Impacto menor</value>
+    </data>
+    <data name="PriorityReasonImpactUnknown" xml:space="preserve">
+        <value>Impacto desconhecido (sem CVSS nem severidade)</value>
+    </data>
+    <data name="PriorityReasonNoExploitationSignal" xml:space="preserve">
+        <value>Nenhuma exploração conhecida ou provável</value>
+    </data>
+    <data name="AttackTechniques" xml:space="preserve">
+        <value>Técnicas MITRE ATT&amp;CK</value>
+    </data>
+    <data name="ScenarioAttackTechniques" xml:space="preserve">
+        <value>Técnicas MITRE ATT&amp;CK do cenário</value>
+    </data>
+    <data name="AttackTechniqueId" xml:space="preserve">
+        <value>Técnica: T1234 ou T1234.567</value>
+    </data>
+    <data name="AttackTechniqueName" xml:space="preserve">
+        <value>Nome (opcional)</value>
+    </data>
+    <data name="AttackTechniqueLinkedOn" xml:space="preserve">
+        <value>associada em {0}</value>
+    </data>
+    <data name="AddAttackTechnique" xml:space="preserve">
+        <value>Associar</value>
+    </data>
+    <data name="RemoveAttackTechnique" xml:space="preserve">
+        <value>Desassociar a técnica selecionada</value>
+    </data>
+    <data name="AttackTechniqueIdInvalid" xml:space="preserve">
+        <value>Um identificador de técnica MITRE ATT&amp;CK tem a forma T1059 ou T1059.001</value>
+    </data>
+    <data name="AttackTechniqueNameTooLong" xml:space="preserve">
+        <value>O nome tem no máximo 255 caracteres</value>
+    </data>
+    <data name="AttackTechniqueAlreadyLinked" xml:space="preserve">
+        <value>Esta técnica já está associada</value>
+    </data>
+    <data name="AttackTechniqueLinked" xml:space="preserve">
+        <value>Técnica associada</value>
+    </data>
+    <data name="AttackTechniqueUnlinked" xml:space="preserve">
+        <value>Técnica desassociada</value>
+    </data>
+    <data name="AttackTechniquesNone" xml:space="preserve">
+        <value>Nenhuma técnica associada</value>
+    </data>
+    <data name="AttackTechniquesReadOnly" xml:space="preserve">
+        <value>Você pode ler estas técnicas, mas não alterá-las</value>
+    </data>
+    <data name="ExploitationPrioritizationReport" xml:space="preserve">
+        <value>Priorização por sinais de exploração</value>
+    </data>
+    <data name="PrioritizationNote" xml:space="preserve">
+        <value>Achados abertos do seu escopo, calculados na leitura. O CVSS é entrada: sozinho nunca leva ao topo. P1 não é o Portão A.</value>
+    </data>
+    <data name="PriorityTier" xml:space="preserve">
+        <value>Faixa</value>
+    </data>
+    <data name="PriorityTierAll" xml:space="preserve">
+        <value>Todas as faixas</value>
+    </data>
+    <data name="TierCountFormat" xml:space="preserve">
+        <value>{0}: {1}</value>
+    </data>
+    <data name="PrioritizationPageFormat" xml:space="preserve">
+        <value>Página {0} de {1} — {2} achados abertos</value>
+    </data>
+    <data name="KevCves" xml:space="preserve">
+        <value>CVEs no KEV</value>
+    </data>
+    <data name="KevNotListed" xml:space="preserve">
+        <value>não listado</value>
+    </data>
+    <data name="KevDueDate" xml:space="preserve">
+        <value>Prazo da CISA</value>
+    </data>
+    <data name="Cvss" xml:space="preserve">
+        <value>CVSS</value>
+    </data>
+    <data name="KevRemediationReport" xml:space="preserve">
+        <value>Tempo de correção de itens KEV</value>
+    </data>
+    <data name="KevOpenFindings" xml:space="preserve">
+        <value>Achados KEV abertos</value>
+    </data>
+    <data name="KevOpenPastDue" xml:space="preserve">
+        <value>Abertos com prazo da CISA vencido</value>
+    </data>
+    <data name="KevMitigatedFindings" xml:space="preserve">
+        <value>Achados KEV mitigados</value>
+    </data>
+    <data name="KevMitigatedWithoutDate" xml:space="preserve">
+        <value>Mitigados sem data (fora da mediana)</value>
+    </data>
+    <data name="KevMedianDaysToMitigate" xml:space="preserve">
+        <value>Mediana de dias até mitigar</value>
+    </data>
+    <data name="KevMedianDays" xml:space="preserve">
+        <value>{0} dias</value>
+    </data>
+    <data name="KevMedianNotComputable" xml:space="preserve">
+        <value>Não calculável — nenhum achado KEV mitigado tem data</value>
+    </data>
+    <data name="MetricComputedAt" xml:space="preserve">
+        <value>Calculado em {0}</value>
+    </data>
+    <data name="SignalSyncStatus" xml:space="preserve">
+        <value>Sincronização</value>
+    </data>
+    <data name="SignalFeedCisaKev" xml:space="preserve">
+        <value>Catálogo CISA KEV</value>
+    </data>
+    <data name="SignalFeedFirstEpss" xml:space="preserve">
+        <value>EPSS do FIRST</value>
+    </data>
+    <data name="SignalFeedLastRun" xml:space="preserve">
+        <value>Última execução em {1} — {2}</value>
+    </data>
+    <data name="SignalFeedNeverRun" xml:space="preserve">
+        <value>Nunca executada</value>
+    </data>
+    <data name="SignalFeedLastApplied" xml:space="preserve">
+        <value>Última aplicada em {0}: {1} recebidos, {2} incluídos, {3} atualizados, {4} des-listados, {5} retidos, {6} achados atualizados</value>
+    </data>
+    <data name="SignalFeedNeverApplied" xml:space="preserve">
+        <value>Nada aplicado ainda</value>
+    </data>
+    <data name="SignalFeedError" xml:space="preserve">
+        <value>Motivo: {0}</value>
+    </data>
+    <data name="SignalSyncOutcomeSucceeded" xml:space="preserve">
+        <value>Concluída</value>
+    </data>
+    <data name="SignalSyncOutcomeUnavailable" xml:space="preserve">
+        <value>Indisponível — nada mudou</value>
+    </data>
+    <data name="SignalSyncOutcomeMalformed" xml:space="preserve">
+        <value>Catálogo ou resposta malformado — nada mudou</value>
+    </data>
+    <data name="SignalSyncOutcomeDelistingHeld" xml:space="preserve">
+        <value>Aplicada, des-listagens retidas</value>
+    </data>
+    <data name="SignalSyncOutcomePartial" xml:space="preserve">
+        <value>Parcial — parte aplicada</value>
+    </data>
+  <data name="Track9Workspace" xml:space="preserve"><value>Governança de riscos</value></data>
+  <data name="Track9TopRisks" xml:space="preserve"><value>Principais riscos</value></data>
+  <data name="Track9FlaggedRegister" xml:space="preserve"><value>Riscos sinalizados</value></data>
+  <data name="Track9TreatmentPortfolio" xml:space="preserve"><value>Carteira de tratamentos</value></data>
+  <data name="Track9TailPortfolio" xml:space="preserve"><value>Exposição da carteira</value></data>
+  <data name="Track9Correlations" xml:space="preserve"><value>Correlações de riscos</value></data>
+  <data name="Track9Kris" xml:space="preserve"><value>Indicadores de risco</value></data>
+  <data name="Track9Reassessments" xml:space="preserve"><value>Eventos de reavaliação</value></data>
+  <data name="Track9Metrics" xml:space="preserve"><value>Métricas da metodologia</value></data>
+  <data name="Track9Archives" xml:space="preserve"><value>Arquivo e revisões</value></data>
+  <data name="Track9Backtesting" xml:space="preserve"><value>Backtesting de incidentes</value></data>
+  <data name="Track9Committees" xml:space="preserve"><value>Comitês de risco</value></data>
+  <data name="Track9ThirdParties" xml:space="preserve"><value>Registro de terceiros</value></data>
+  <data name="Track9Concentration" xml:space="preserve"><value>Concentração em fornecedores</value></data>
+  <data name="Track9DataCatalogue" xml:space="preserve"><value>Catálogo de dados</value></data>
+  <data name="Track9LegalRequirements" xml:space="preserve"><value>Requisitos legais</value></data>
+  <data name="Track9Dpia" xml:space="preserve"><value>Relatórios de impacto à proteção de dados</value></data>
+  <data name="Track9AiModels" xml:space="preserve"><value>Inventário de modelos de IA</value></data>
+  <data name="Track9Economics" xml:space="preserve"><value>Custos e benefícios do tratamento</value></data>
+  <data name="Track9TailLimits" xml:space="preserve"><value>Tolerâncias de cauda</value></data>
+  <data name="Track9LossComponents" xml:space="preserve"><value>Componentes de perda</value></data>
+  <data name="Track9AcceptanceCriterion" xml:space="preserve"><value>Critério de aceite</value></data>
+  <data name="Track9CompletionEvidence" xml:space="preserve"><value>Evidência de conclusão</value></data>
+  <data name="Track9SaveTaskEvidence" xml:space="preserve"><value>Salvar evidências da tarefa</value></data>
+  <data name="Track9FlagFilter" xml:space="preserve"><value>Filtrar por flag</value></data>
+  <data name="Track9FlagsUnavailable" xml:space="preserve"><value>Flags indisponíveis — recarregue para tentar novamente</value></data>
+  <data name="Track9NoFlags" xml:space="preserve"><value>Nenhuma flag ativa</value></data>
+  <data name="Track9RiskFlags" xml:space="preserve"><value>Flags e decisão</value></data>
+  <data name="Track9FlaggedRisks" xml:space="preserve"><value>Riscos com flags</value></data>
+  <data name="Track9TreatmentEconomics" xml:space="preserve"><value>Economia do tratamento</value></data>
+  <data name="Track9RiskTarget" xml:space="preserve"><value>Nível-alvo de risco</value></data>
+  <data name="Track9TailRisk" xml:space="preserve"><value>Risco de cauda</value></data>
+  <data name="Track9NotAvailable" xml:space="preserve"><value>Não disponível</value></data>
+  <data name="Track9NoRiskSelected" xml:space="preserve"><value>Selecione um risco para ver esta seção.</value></data>
+  <data name="Track9NoData" xml:space="preserve"><value>Não há dados disponíveis.</value></data>
+  <data name="Track9ReadOnly" xml:space="preserve"><value>Você pode ver estas informações, mas seu perfil não pode alterá-las.</value></data>
+  <data name="Track9ThirdLineReadOnly" xml:space="preserve"><value>O perfil de terceira linha é somente leitura.</value></data>
+  <data name="Track9LoadFailed" xml:space="preserve"><value>Não foi possível carregar estas informações.</value></data>
+  <data name="Track9Saved" xml:space="preserve"><value>Alterações salvas.</value></data>
+  <data name="Track9Deleted" xml:space="preserve"><value>Declaração removida.</value></data>
+  <data name="Track9Calculate" xml:space="preserve"><value>Calcular</value></data>
+  <data name="Track9Reason" xml:space="preserve"><value>Motivo</value></data>
+  <data name="Track9Rationale" xml:space="preserve"><value>Fundamentação</value></data>
+  <data name="Track9Declare" xml:space="preserve"><value>Declarar</value></data>
+  <data name="Track9Withdraw" xml:space="preserve"><value>Retirar declaração</value></data>
+  <data name="Track9RefreshDerived" xml:space="preserve"><value>Atualizar flags derivadas</value></data>
+  <data name="Track9RecordDecision" xml:space="preserve"><value>Registrar decisão</value></data>
+  <data name="Track9CurrentDecision" xml:space="preserve"><value>Decisão atual</value></data>
+  <data name="Track9DecisionHistory" xml:space="preserve"><value>Histórico de decisões</value></data>
+  <data name="Track9GateA" xml:space="preserve"><value>Portão A</value></data>
+  <data name="Track9GateB" xml:space="preserve"><value>Portão B</value></data>
+  <data name="Track9GateC" xml:space="preserve"><value>Portão C</value></data>
+  <data name="Track9GateD" xml:space="preserve"><value>Portão D</value></data>
+  <data name="Track9Declared" xml:space="preserve"><value>Declarada</value></data>
+  <data name="Track9Derived" xml:space="preserve"><value>Derivada</value></data>
+  <data name="Track9Set" xml:space="preserve"><value>Ativa</value></data>
+  <data name="Track9Flag" xml:space="preserve"><value>Flag</value></data>
+  <data name="Track9AllFlags" xml:space="preserve"><value>Todas as flags</value></data>
+  <data name="Track9AllGateAStates" xml:space="preserve"><value>Todos os estados do Portão A</value></data>
+  <data name="Track9GateAOnly" xml:space="preserve"><value>Somente Portão A</value></data>
+  <data name="Track9WithoutGateA" xml:space="preserve"><value>Sem Portão A</value></data>
+  <data name="Track9Rank" xml:space="preserve"><value>Posição</value></data>
+  <data name="Track9Risk" xml:space="preserve"><value>Risco</value></data>
+  <data name="Track9Flags" xml:space="preserve"><value>Flags</value></data>
+  <data name="Track9Decision" xml:space="preserve"><value>Decisão</value></data>
+  <data name="Track9ExpectedAnnualLoss" xml:space="preserve"><value>Perda anual esperada</value></data>
+  <data name="Track9NextDecision" xml:space="preserve"><value>Próxima decisão</value></data>
+  <data name="Track9Trend" xml:space="preserve"><value>Tendência</value></data>
+  <data name="Track9Option" xml:space="preserve"><value>Opção de tratamento</value></data>
+  <data name="Track9TransferCounterparty" xml:space="preserve"><value>Contraparte da transferência</value></data>
+  <data name="Track9OneTimeCost" xml:space="preserve"><value>Custo único</value></data>
+  <data name="Track9AnnualCost" xml:space="preserve"><value>Custo anual</value></data>
+  <data name="Track9AnnualSideEffects" xml:space="preserve"><value>Efeitos colaterais anuais</value></data>
+  <data name="Track9HorizonYears" xml:space="preserve"><value>Horizonte (anos)</value></data>
+  <data name="Track9CostBasis" xml:space="preserve"><value>Base da estimativa de custo</value></data>
+  <data name="Track9EffortPersonDays" xml:space="preserve"><value>Esforço (pessoa-dias)</value></data>
+  <data name="Track9DurationDays" xml:space="preserve"><value>Duração (dias)</value></data>
+  <data name="Track9Prerequisites" xml:space="preserve"><value>Tratamentos pré-requisitos</value></data>
+  <data name="Track9GateCOutcome" xml:space="preserve"><value>Resultado econômico</value></data>
+  <data name="Track9Benefit" xml:space="preserve"><value>Benefício anual esperado</value></data>
+  <data name="Track9AnnualizedCost" xml:space="preserve"><value>Custo anualizado</value></data>
+  <data name="Track9NetBenefit" xml:space="preserve"><value>Benefício líquido</value></data>
+  <data name="Track9BenefitCostRatio" xml:space="preserve"><value>Relação benefício-custo</value></data>
+  <data name="Track9GordonLoeb" xml:space="preserve"><value>Referência de Gordon–Loeb</value></data>
+  <data name="Track9Stale" xml:space="preserve"><value>A análise quantitativa é anterior a esta declaração de tratamento.</value></data>
+  <data name="Track9TargetScore" xml:space="preserve"><value>Pontuação-alvo</value></data>
+  <data name="Track9TargetExpectedLoss" xml:space="preserve"><value>Perda anual esperada-alvo</value></data>
+  <data name="Track9TargetDate" xml:space="preserve"><value>Data-alvo</value></data>
+  <data name="Track9Current" xml:space="preserve"><value>Atual</value></data>
+  <data name="Track9TargetStatus" xml:space="preserve"><value>Estado do alvo</value></data>
+  <data name="Track9RemoveTarget" xml:space="preserve"><value>Remover alvo</value></data>
+  <data name="Track9Budget" xml:space="preserve"><value>Orçamento do primeiro ano</value></data>
+  <data name="Track9PeopleCapacity" xml:space="preserve"><value>Capacidade de pessoas (pessoa-dias)</value></data>
+  <data name="Track9StartDate" xml:space="preserve"><value>Data de início</value></data>
+  <data name="Track9Deadline" xml:space="preserve"><value>Prazo final</value></data>
+  <data name="Track9Candidates" xml:space="preserve"><value>Tratamentos candidatos</value></data>
+  <data name="Track9PortfolioSummary" xml:space="preserve"><value>Resultado da carteira</value></data>
+  <data name="Track9BudgetUsed" xml:space="preserve"><value>Orçamento utilizado</value></data>
+  <data name="Track9PeopleUsed" xml:space="preserve"><value>Capacidade de pessoas utilizada</value></data>
+  <data name="Track9ExpectedReduction" xml:space="preserve"><value>Redução de perda esperada</value></data>
+  <data name="Track9Escalations" xml:space="preserve"><value>Escalações necessárias</value></data>
+  <data name="Track9Status" xml:space="preserve"><value>Estado</value></data>
+  <data name="Track9Component" xml:space="preserve"><value>Componente</value></data>
+  <data name="Track9Include" xml:space="preserve"><value>Incluir</value></data>
+  <data name="Track9Minimum" xml:space="preserve"><value>Mínimo</value></data>
+  <data name="Track9MostLikely" xml:space="preserve"><value>Mais provável</value></data>
+  <data name="Track9Maximum" xml:space="preserve"><value>Máximo</value></data>
+  <data name="Track9Basis" xml:space="preserve"><value>Base</value></data>
+  <data name="Track9RemoveComponents" xml:space="preserve"><value>Remover componentes</value></data>
+  <data name="Track9Inherent" xml:space="preserve"><value>Inerente</value></data>
+  <data name="Track9Residual" xml:space="preserve"><value>Residual</value></data>
+  <data name="Track9ExpectedLoss" xml:space="preserve"><value>Perda esperada</value></data>
+  <data name="Track9P95" xml:space="preserve"><value>P95</value></data>
+  <data name="Track9Cvar95" xml:space="preserve"><value>CVaR95</value></data>
+  <data name="Track9ProbabilityOfLoss" xml:space="preserve"><value>Probabilidade de um ano com perda</value></data>
+  <data name="Track9Contribution" xml:space="preserve"><value>Contribuição ao CVaR95</value></data>
+  <data name="Track9RiskA" xml:space="preserve"><value>Primeiro risco</value></data>
+  <data name="Track9RiskB" xml:space="preserve"><value>Segundo risco</value></data>
+  <data name="Track9Coefficient" xml:space="preserve"><value>Coeficiente</value></data>
+  <data name="Track9ScenarioExpectedLossLimit" xml:space="preserve"><value>Limite de E[L] do cenário</value></data>
+  <data name="Track9ScenarioP95Limit" xml:space="preserve"><value>Limite de P95 do cenário</value></data>
+  <data name="Track9ScenarioCvar95Limit" xml:space="preserve"><value>Limite de CVaR95 do cenário</value></data>
+  <data name="Track9PortfolioExpectedLossLimit" xml:space="preserve"><value>Limite de E[L] da carteira</value></data>
+  <data name="Track9PortfolioP95Limit" xml:space="preserve"><value>Limite de P95 da carteira</value></data>
+  <data name="Track9PortfolioCvar95Limit" xml:space="preserve"><value>Limite de CVaR95 da carteira</value></data>
+  <data name="Track9RemoveLimits" xml:space="preserve"><value>Remover tolerâncias de cauda</value></data>
+  <data name="Track9PortfolioBasis" xml:space="preserve"><value>Base da carteira</value></data>
+  <data name="Track9Seed" xml:space="preserve"><value>Semente da simulação</value></data>
+  <data name="Track9Members" xml:space="preserve"><value>Riscos incluídos</value></data>
+  <data name="Track9Excluded" xml:space="preserve"><value>Não quantificados</value></data>
+  <data name="Track9Diversification" xml:space="preserve"><value>Diversificação</value></data>
+  <data name="Track9Dependence" xml:space="preserve"><value>Dependência</value></data>
+  <data name="Track9OptionRequired" xml:space="preserve"><value>Selecione uma opção de tratamento.</value></data>
+  <data name="Track9CounterpartyRequired" xml:space="preserve"><value>Informe a contraparte do tratamento de transferência/compartilhamento.</value></data>
+  <data name="Track9CounterpartyTooLong" xml:space="preserve"><value>O nome da contraparte é muito longo.</value></data>
+  <data name="Track9CostBasisTooLong" xml:space="preserve"><value>A base do custo é muito longa.</value></data>
+  <data name="Track9EffortOutOfRange" xml:space="preserve"><value>O esforço está fora do intervalo aceito.</value></data>
+  <data name="Track9DurationOutOfRange" xml:space="preserve"><value>A duração está fora do intervalo aceito.</value></data>
+  <data name="Track9TooManyPrerequisites" xml:space="preserve"><value>Selecione no máximo 50 pré-requisitos.</value></data>
+  <data name="Track9DuplicatePrerequisite" xml:space="preserve"><value>Um pré-requisito pode ser selecionado apenas uma vez.</value></data>
+  <data name="Track9AmountOutOfRange" xml:space="preserve"><value>Um valor está fora do intervalo aceito.</value></data>
+  <data name="Track9HorizonRequired" xml:space="preserve"><value>Um custo único positivo exige um horizonte.</value></data>
+  <data name="Track9HorizonOutOfRange" xml:space="preserve"><value>O horizonte deve estar entre 1 e 30 anos.</value></data>
+  <data name="Track9TargetValueRequired" xml:space="preserve"><value>Informe uma pontuação-alvo, uma perda esperada-alvo ou ambas.</value></data>
+  <data name="Track9TargetScoreOutOfRange" xml:space="preserve"><value>A pontuação-alvo deve estar entre 0 e 10.</value></data>
+  <data name="Track9TargetDateRequired" xml:space="preserve"><value>Selecione a data-alvo.</value></data>
+  <data name="Track9RationaleRequired" xml:space="preserve"><value>Informe a fundamentação.</value></data>
+  <data name="Track9RationaleTooLong" xml:space="preserve"><value>A fundamentação é muito longa.</value></data>
+  <data name="Track9ReasonRequired" xml:space="preserve"><value>Informe o motivo.</value></data>
+  <data name="Track9ReasonTooLong" xml:space="preserve"><value>O motivo é muito longo.</value></data>
+  <data name="Track9DecisionReasonTooLong" xml:space="preserve"><value>O motivo da decisão é muito longo.</value></data>
+  <data name="Track9LossComponentsCount" xml:space="preserve"><value>Inclua entre um e sete componentes de perda.</value></data>
+  <data name="Track9DuplicateLossComponent" xml:space="preserve"><value>Cada componente de perda pode aparecer apenas uma vez.</value></data>
+  <data name="Track9LossRangeRequired" xml:space="preserve"><value>Informe a perda mínima, mais provável e máxima.</value></data>
+  <data name="Track9LossRangeInvalid" xml:space="preserve"><value>A faixa de perda deve ser não negativa e ordenada como mínimo ≤ mais provável ≤ máximo.</value></data>
+  <data name="Track9BasisTooLong" xml:space="preserve"><value>A base é muito longa.</value></data>
+  <data name="Track9FineBasisRequired" xml:space="preserve"><value>Uma multa regulatória exige base legal escrita.</value></data>
+  <data name="Track9TwoRisksRequired" xml:space="preserve"><value>Selecione dois riscos.</value></data>
+  <data name="Track9DistinctRisksRequired" xml:space="preserve"><value>Selecione dois riscos diferentes.</value></data>
+  <data name="Track9CorrelationOutOfRange" xml:space="preserve"><value>O coeficiente deve estar entre 0 e 1.</value></data>
+  <data name="Track9TailLimitRequired" xml:space="preserve"><value>Informe pelo menos uma tolerância de cauda.</value></data>
+  <data name="Track9ComputedAt" xml:space="preserve"><value>Calculado em</value></data>
+  <data name="Track9RiskFlagCodeHumanSafety" xml:space="preserve"><value>Vida, saúde ou segurança humana</value></data>
+  <data name="Track9RiskFlagCodeLegalRegulatory" xml:space="preserve"><value>Obrigação legal, regulatória ou de privacidade</value></data>
+  <data name="Track9RiskFlagCodeKnownExploitation" xml:space="preserve"><value>Exploração conhecida ou ataque ativo</value></data>
+  <data name="Track9RiskFlagCodeCriticalProcessContinuity" xml:space="preserve"><value>Continuidade de processo crítico</value></data>
+  <data name="Track9RiskFlagCodeSensitiveData" xml:space="preserve"><value>Dados sensíveis ou estratégicos</value></data>
+  <data name="Track9RiskFlagCodeSystemicSinglePointOfFailure" xml:space="preserve"><value>Risco sistêmico ou ponto único de falha</value></data>
+  <data name="Track9RiskFlagCodeThirdPartyConcentration" xml:space="preserve"><value>Concentração em terceiro</value></data>
+  <data name="Track9RiskFlagCodeLowProbabilityCatastrophic" xml:space="preserve"><value>Baixa probabilidade e impacto catastrófico</value></data>
+  <data name="Track9RiskFlagCodeEmergingRapidGrowth" xml:space="preserve"><value>Risco emergente ou crescimento rápido</value></data>
+  <data name="Track9RiskFlagCodeHighUncertainty" xml:space="preserve"><value>Alta incerteza ou evidência fraca</value></data>
+  <data name="Track9RiskFlagCodeArtificialIntelligence" xml:space="preserve"><value>Risco de inteligência artificial</value></data>
+  <data name="Track9RiskFlagCodeNoLegitimateAcceptance" xml:space="preserve"><value>Sem aceitação legítima</value></data>
+  <data name="Track9RiskDecisionKindActImmediately" xml:space="preserve"><value>Agir imediatamente</value></data>
+  <data name="Track9RiskDecisionKindTreatInCycle" xml:space="preserve"><value>Tratar dentro do ciclo</value></data>
+  <data name="Track9RiskDecisionKindMonitorAccept" xml:space="preserve"><value>Monitorar ou aceitar</value></data>
+  <data name="Track9RiskDecisionKindArchive" xml:space="preserve"><value>Arquivar</value></data>
+  <data name="Track9TreatmentOptionAvoid" xml:space="preserve"><value>Evitar</value></data>
+  <data name="Track9TreatmentOptionReduce" xml:space="preserve"><value>Reduzir</value></data>
+  <data name="Track9TreatmentOptionTransferShare" xml:space="preserve"><value>Transferir ou compartilhar</value></data>
+  <data name="Track9TreatmentOptionAccept" xml:space="preserve"><value>Aceitar</value></data>
+  <data name="Track9GateCOutcomePasses" xml:space="preserve"><value>Aprovado</value></data>
+  <data name="Track9GateCOutcomeFails" xml:space="preserve"><value>Reprovado</value></data>
+  <data name="Track9GateCOutcomeNotAssessable" xml:space="preserve"><value>Não avaliável</value></data>
+  <data name="Track9GateCOutcomeNotApplicable" xml:space="preserve"><value>Não aplicável</value></data>
+  <data name="Track9PortfolioTierMandatory" xml:space="preserve"><value>Obrigatório</value></data>
+  <data name="Track9PortfolioTierProtected" xml:space="preserve"><value>Protegido</value></data>
+  <data name="Track9PortfolioTierEconomic" xml:space="preserve"><value>Econômico</value></data>
+  <data name="Track9PortfolioItemStatusSelected" xml:space="preserve"><value>Selecionado</value></data>
+  <data name="Track9PortfolioItemStatusOverBudget" xml:space="preserve"><value>Acima do orçamento</value></data>
+  <data name="Track9PortfolioItemStatusOverPeopleCapacity" xml:space="preserve"><value>Acima da capacidade de pessoas</value></data>
+  <data name="Track9PortfolioItemStatusMissesDeadline" xml:space="preserve"><value>Não atende ao prazo</value></data>
+  <data name="Track9PortfolioItemStatusBlockedByDependency" xml:space="preserve"><value>Bloqueado por dependência</value></data>
+  <data name="Track9PortfolioItemStatusDependencyCycle" xml:space="preserve"><value>Ciclo de dependência</value></data>
+  <data name="Track9PortfolioItemStatusFailsGateC" xml:space="preserve"><value>Reprovado no Portão C</value></data>
+  <data name="Track9PortfolioItemStatusNotAssessable" xml:space="preserve"><value>Não avaliável</value></data>
+  <data name="Track9PortfolioItemStatusNotApplicable" xml:space="preserve"><value>Não aplicável</value></data>
+  <data name="Track9LossComponentResponse" xml:space="preserve"><value>Resposta ao incidente</value></data>
+  <data name="Track9LossComponentRecovery" xml:space="preserve"><value>Recuperação</value></data>
+  <data name="Track9LossComponentProductivity" xml:space="preserve"><value>Perda de produtividade</value></data>
+  <data name="Track9LossComponentRevenue" xml:space="preserve"><value>Receita perdida ou adiada</value></data>
+  <data name="Track9LossComponentLiability" xml:space="preserve"><value>Responsabilidade civil</value></data>
+  <data name="Track9LossComponentFine" xml:space="preserve"><value>Multa regulatória</value></data>
+  <data name="Track9LossComponentReputation" xml:space="preserve"><value>Reputação</value></data>
+  <data name="Track9TailAppetiteStateNotConfigured" xml:space="preserve"><value>Não configurado</value></data>
+  <data name="Track9TailAppetiteStateNotAssessable" xml:space="preserve"><value>Não avaliável</value></data>
+  <data name="Track9TailAppetiteStateWithinTolerance" xml:space="preserve"><value>Dentro da tolerância</value></data>
+  <data name="Track9TailAppetiteStateExceedsTolerance" xml:space="preserve"><value>Acima da tolerância</value></data>
+  <data name="Track9TailRunInherent" xml:space="preserve"><value>Inerente</value></data>
+  <data name="Track9TailRunResidual" xml:space="preserve"><value>Residual</value></data>
+  <data name="Track9PortfolioBasisResidual" xml:space="preserve"><value>Residual quando disponível</value></data>
+  <data name="Track9PortfolioBasisInherent" xml:space="preserve"><value>Inerente</value></data>
+  <data name="Track9PortfolioDependenceAssumedIndependent" xml:space="preserve"><value>Independência presumida</value></data>
+  <data name="Track9PortfolioDependenceDeclared" xml:space="preserve"><value>Correlações declaradas</value></data>
+  <data name="Track9PortfolioExclusionReasonNotQuantified" xml:space="preserve"><value>Não quantificado</value></data>
+  <data name="Track9KriRegisterTitle" xml:space="preserve"><value>Indicadores-chave de risco</value></data>
+  <data name="Track9ReassessmentQueueTitle" xml:space="preserve"><value>Eventos e fila de reavaliação</value></data>
+  <data name="Track9MethodologyMetricsTitle" xml:space="preserve"><value>Métricas da metodologia</value></data>
+  <data name="Track9ArchiveReviewTitle" xml:space="preserve"><value>Arquivo de riscos e revisão trimestral</value></data>
+  <data name="Track9BacktestingTitle" xml:space="preserve"><value>Backtesting de incidentes</value></data>
+  <data name="Track9RiskCommitteesTitle" xml:space="preserve"><value>Comitês de risco</value></data>
+  <data name="Track9RiskMonitoringTitle" xml:space="preserve"><value>Monitoramento e Portão B</value></data>
+  <data name="Track9GateBNotConfigured" xml:space="preserve"><value>Nenhum KRI ativo está vinculado.</value></data>
+  <data name="Track9GateBNotAssessable" xml:space="preserve"><value>Não avaliável: um KRI está obsoleto ou sem leitura.</value></data>
+  <data name="Track9GateBWithin" xml:space="preserve"><value>Dentro da tolerância dos indicadores.</value></data>
+  <data name="Track9GateBExceeded" xml:space="preserve"><value>Tolerância de indicador excedida.</value></data>
+  <data name="Track9NoItems" xml:space="preserve"><value>Nenhum registro corresponde aos filtros atuais.</value></data>
+  <data name="Track9ReadOnlyThirdLine" xml:space="preserve"><value>A auditoria interna tem acesso somente para leitura.</value></data>
+  <data name="Track9ShowRetired" xml:space="preserve"><value>Incluir registros aposentados</value></data>
+  <data name="Track9KriDefinition" xml:space="preserve"><value>Definição do KRI</value></data>
+  <data name="Track9Category" xml:space="preserve"><value>Categoria</value></data>
+  <data name="Track9Unit" xml:space="preserve"><value>Unidade</value></data>
+  <data name="Track9Retire" xml:space="preserve"><value>Aposentar</value></data>
+  <data name="Track9Direction" xml:space="preserve"><value>Direção</value></data>
+  <data name="Track9Tolerance" xml:space="preserve"><value>Limite de tolerância</value></data>
+  <data name="Track9WarningThreshold" xml:space="preserve"><value>Limite de alerta</value></data>
+  <data name="Track9ToleranceRationale" xml:space="preserve"><value>Justificativa da tolerância</value></data>
+  <data name="Track9MaximumReadingAge" xml:space="preserve"><value>Idade máxima da leitura (dias)</value></data>
+  <data name="Track9OwnerId" xml:space="preserve"><value>Responsável</value></data>
+  <data name="Track9EntityId" xml:space="preserve"><value>Entidade</value></data>
+  <data name="Track9OrganizationWide" xml:space="preserve"><value>Toda a organização</value></data>
+  <data name="Track9Unassigned" xml:space="preserve"><value>Não atribuído</value></data>
+  <data name="Track9Readings" xml:space="preserve"><value>Leituras</value></data>
+  <data name="Track9RecordReading" xml:space="preserve"><value>Registrar leitura</value></data>
+  <data name="Track9ObservedAt" xml:space="preserve"><value>Observado em</value></data>
+  <data name="Track9VoidReading" xml:space="preserve"><value>Anular leitura</value></data>
+  <data name="Track9VoidReason" xml:space="preserve"><value>Motivo da anulação</value></data>
+  <data name="Track9LinkedRisks" xml:space="preserve"><value>Riscos vinculados</value></data>
+  <data name="Track9LinkRisk" xml:space="preserve"><value>Vincular risco</value></data>
+  <data name="Track9UnlinkRisk" xml:space="preserve"><value>Desvincular risco</value></data>
+  <data name="Track9RiskId" xml:space="preserve"><value>Risco</value></data>
+  <data name="Track9KriSaved" xml:space="preserve"><value>KRI salvo.</value></data>
+  <data name="Track9KriRetired" xml:space="preserve"><value>KRI aposentado.</value></data>
+  <data name="Track9ReadingRecorded" xml:space="preserve"><value>Leitura registrada.</value></data>
+  <data name="Track9ReadingVoided" xml:space="preserve"><value>Leitura anulada.</value></data>
+  <data name="Track9RiskLinked" xml:space="preserve"><value>Risco vinculado.</value></data>
+  <data name="Track9RiskUnlinked" xml:space="preserve"><value>Risco desvinculado.</value></data>
+  <data name="Track9KriCategoryUnavailability" xml:space="preserve"><value>Indisponibilidade</value></data>
+  <data name="Track9KriCategoryDataLoss" xml:space="preserve"><value>Perda de dados</value></data>
+  <data name="Track9KriCategoryDataSubjects" xml:space="preserve"><value>Titulares de dados</value></data>
+  <data name="Track9KriCategoryOther" xml:space="preserve"><value>Outro</value></data>
+  <data name="Track9KriDirectionHigher" xml:space="preserve"><value>Maior é pior</value></data>
+  <data name="Track9KriDirectionLower" xml:space="preserve"><value>Menor é pior</value></data>
+  <data name="Track9Events" xml:space="preserve"><value>Eventos</value></data>
+  <data name="Track9Triggers" xml:space="preserve"><value>Fila de reavaliação</value></data>
+  <data name="Track9PendingOnly" xml:space="preserve"><value>Somente pendentes</value></data>
+  <data name="Track9EventType" xml:space="preserve"><value>Tipo de gatilho</value></data>
+  <data name="Track9EventTitle" xml:space="preserve"><value>Título do evento</value></data>
+  <data name="Track9OccurredAt" xml:space="preserve"><value>Ocorrido em</value></data>
+  <data name="Track9IncidentId" xml:space="preserve"><value>Incidente</value></data>
+  <data name="Track9DeclareEvent" xml:space="preserve"><value>Declarar evento</value></data>
+  <data name="Track9ApplyRisk" xml:space="preserve"><value>Aplicar risco ao evento selecionado</value></data>
+  <data name="Track9EventDeclared" xml:space="preserve"><value>Evento de reavaliação declarado.</value></data>
+  <data name="Track9EventRiskAdded" xml:space="preserve"><value>Risco aplicado ao evento.</value></data>
+  <data name="Track9TriggerArchitecture" xml:space="preserve"><value>Mudança de arquitetura ou tecnologia</value></data>
+  <data name="Track9TriggerSupplier" xml:space="preserve"><value>Fornecedor, aquisição ou migração</value></data>
+  <data name="Track9TriggerIncident" xml:space="preserve"><value>Incidente significativo ou quase incidente</value></data>
+  <data name="Track9TriggerRegulation" xml:space="preserve"><value>Nova regulamentação</value></data>
+  <data name="Track9TriggerAiModel" xml:space="preserve"><value>Novo modelo de IA</value></data>
+  <data name="Track9TriggerDataOrKri" xml:space="preserve"><value>Novos dados ou violação de KRI</value></data>
+  <data name="Track9Availability" xml:space="preserve"><value>Disponibilidade</value></data>
+  <data name="Track9MetricValue" xml:space="preserve"><value>Valor</value></data>
+  <data name="Track9MetricAvailable" xml:space="preserve"><value>Disponível</value></data>
+  <data name="Track9MetricPartial" xml:space="preserve"><value>Parcial</value></data>
+  <data name="Track9MetricNotAvailable" xml:space="preserve"><value>Indisponível</value></data>
+  <data name="Track9MetricTerms" xml:space="preserve"><value>Numerador / denominador</value></data>
+  <data name="Track9Stage" xml:space="preserve"><value>Etapa</value></data>
+  <data name="Track9KriHealth" xml:space="preserve"><value>Saúde dos KRIs</value></data>
+  <data name="Track9ReassessmentHealth" xml:space="preserve"><value>Saúde das reavaliações</value></data>
+  <data name="Track9Active" xml:space="preserve"><value>Ativos</value></data>
+  <data name="Track9WithinTolerance" xml:space="preserve"><value>Dentro da tolerância</value></data>
+  <data name="Track9Breached" xml:space="preserve"><value>Excedidos</value></data>
+  <data name="Track9NoReading" xml:space="preserve"><value>Sem leitura</value></data>
+  <data name="Track9Pending" xml:space="preserve"><value>Pendentes</value></data>
+  <data name="Track9Answered" xml:space="preserve"><value>Respondidos</value></data>
+  <data name="Track9RiskClosed" xml:space="preserve"><value>Risco encerrado</value></data>
+  <data name="Track9MeanDaysToAnswer" xml:space="preserve"><value>Média de dias para resposta</value></data>
+  <data name="Track9DueOnly" xml:space="preserve"><value>Somente com revisão vencida</value></data>
+  <data name="Track9IncludeEnded" xml:space="preserve"><value>Incluir arquivos encerrados</value></data>
+  <data name="Track9ArchiveDecision" xml:space="preserve"><value>Decisão de arquivamento</value></data>
+  <data name="Track9Justification" xml:space="preserve"><value>Justificativa</value></data>
+  <data name="Track9CloseReason" xml:space="preserve"><value>Motivo de encerramento</value></data>
+  <data name="Track9ReopeningConditions" xml:space="preserve"><value>Condições de reabertura</value></data>
+  <data name="Track9ArchiveRisk" xml:space="preserve"><value>Arquivar risco</value></data>
+  <data name="Track9QuarterlyReview" xml:space="preserve"><value>Revisão trimestral</value></data>
+  <data name="Track9KeepArchived" xml:space="preserve"><value>Manter arquivado</value></data>
+  <data name="Track9ReviewNote" xml:space="preserve"><value>Nota da revisão</value></data>
+  <data name="Track9ManualReopen" xml:space="preserve"><value>Reabertura manual</value></data>
+  <data name="Track9ArchiveCreated" xml:space="preserve"><value>Risco arquivado.</value></data>
+  <data name="Track9ArchiveLive" xml:space="preserve"><value>Vigente</value></data>
+  <data name="Track9ArchiveReopenedState" xml:space="preserve"><value>Reaberto</value></data>
+  <data name="Track9ArchiveSuperseded" xml:space="preserve"><value>Substituído</value></data>
+  <data name="Track9ArchiveReviewed" xml:space="preserve"><value>Arquivo revisado.</value></data>
+  <data name="Track9ArchiveReopened" xml:space="preserve"><value>Arquivo reaberto.</value></data>
+  <data name="Track9ReportFilters" xml:space="preserve"><value>Filtros do relatório</value></data>
+  <data name="Track9From" xml:space="preserve"><value>De</value></data>
+  <data name="Track9To" xml:space="preserve"><value>Até</value></data>
+  <data name="Track9GenerateReport" xml:space="preserve"><value>Gerar relatório</value></data>
+  <data name="Track9Assessed" xml:space="preserve"><value>Avaliados</value></data>
+  <data name="Track9NotAssessed" xml:space="preserve"><value>Não avaliados</value></data>
+  <data name="Track9UnforeseenRate" xml:space="preserve"><value>Taxa de não previstos</value></data>
+  <data name="Track9FalseNegativeRate" xml:space="preserve"><value>Taxa de falsos negativos</value></data>
+  <data name="Track9Assessment" xml:space="preserve"><value>Avaliação do incidente</value></data>
+  <data name="Track9BacktestNotAssessed" xml:space="preserve"><value>Não avaliado</value></data>
+  <data name="Track9BacktestNotForeseen" xml:space="preserve"><value>Não previsto</value></data>
+  <data name="Track9BacktestRegisteredAfter" xml:space="preserve"><value>Registrado após a ocorrência</value></data>
+  <data name="Track9BacktestForeseenTreated" xml:space="preserve"><value>Previsto e tratado</value></data>
+  <data name="Track9BacktestForeseenDismissed" xml:space="preserve"><value>Previsto, mas descartado</value></data>
+  <data name="Track9NoCorrespondingScenario" xml:space="preserve"><value>Nenhum cenário correspondente</value></data>
+  <data name="Track9MatchedRiskIds" xml:space="preserve"><value>IDs dos riscos correspondentes</value></data>
+  <data name="Track9AddMatchedRisk" xml:space="preserve"><value>Adicionar risco correspondente</value></data>
+  <data name="Track9RemoveMatchedRisk" xml:space="preserve"><value>Remover risco correspondente</value></data>
+  <data name="Track9AssessIncident" xml:space="preserve"><value>Salvar avaliação</value></data>
+  <data name="Track9IncidentAssessed" xml:space="preserve"><value>Avaliação do incidente salva.</value></data>
+  <data name="Track9Decisions" xml:space="preserve"><value>Decisões</value></data>
+  <data name="Track9CommitteeDefinition" xml:space="preserve"><value>Definição do comitê</value></data>
+  <data name="Track9Mandate" xml:space="preserve"><value>Mandato</value></data>
+  <data name="Track9RequiredApprovals" xml:space="preserve"><value>Aprovações necessárias</value></data>
+  <data name="Track9RetireCommittee" xml:space="preserve"><value>Aposentar comitê</value></data>
+  <data name="Track9MemberUserId" xml:space="preserve"><value>Membro</value></data>
+  <data name="Track9AddMember" xml:space="preserve"><value>Adicionar membro</value></data>
+  <data name="Track9RemoveMember" xml:space="preserve"><value>Remover membro</value></data>
+  <data name="Track9SubmitDecision" xml:space="preserve"><value>Submeter decisão</value></data>
+  <data name="Track9DecisionKind" xml:space="preserve"><value>Tipo de decisão</value></data>
+  <data name="Track9RenewedAcceptanceId" xml:space="preserve"><value>ID da aceitação a renovar</value></data>
+  <data name="Track9BusinessJustification" xml:space="preserve"><value>Justificativa de negócio</value></data>
+  <data name="Track9CompensatingControls" xml:space="preserve"><value>Controles compensatórios</value></data>
+  <data name="Track9ExpiresAt" xml:space="preserve"><value>Expira em</value></data>
+  <data name="Track9MinutesReference" xml:space="preserve"><value>Referência da ata</value></data>
+  <data name="Track9OpenOnly" xml:space="preserve"><value>Somente decisões abertas</value></data>
+  <data name="Track9Vote" xml:space="preserve"><value>Registrar voto</value></data>
+  <data name="Track9VoteChoice" xml:space="preserve"><value>Voto</value></data>
+  <data name="Track9Comment" xml:space="preserve"><value>Comentário</value></data>
+  <data name="Track9CommitteeSaved" xml:space="preserve"><value>Comitê salvo.</value></data>
+  <data name="Track9CommitteeRetired" xml:space="preserve"><value>Comitê aposentado.</value></data>
+  <data name="Track9MemberAdded" xml:space="preserve"><value>Membro do comitê adicionado.</value></data>
+  <data name="Track9MemberRemoved" xml:space="preserve"><value>Membro do comitê removido.</value></data>
+  <data name="Track9DecisionSubmitted" xml:space="preserve"><value>Decisão submetida ao comitê.</value></data>
+  <data name="Track9VoteRecorded" xml:space="preserve"><value>Voto registrado.</value></data>
+  <data name="Track9DecisionWithdrawn" xml:space="preserve"><value>Decisão retirada.</value></data>
+  <data name="Track9DecisionAccept" xml:space="preserve"><value>Aceitar risco residual</value></data>
+  <data name="Track9DecisionRenew" xml:space="preserve"><value>Renovar aceitação</value></data>
+  <data name="Track9VoteApprove" xml:space="preserve"><value>Aprovar</value></data>
+  <data name="Track9VoteReject" xml:space="preserve"><value>Rejeitar</value></data>
+  <data name="Track9VoteAbstain" xml:space="preserve"><value>Abster-se</value></data>
+  <data name="Track9ThirdPartyRegister" xml:space="preserve"><value>Cadastro de terceiros</value></data>
+  <data name="Track9ContractTerms" xml:space="preserve"><value>Contrato e continuidade</value></data>
+  <data name="Track9Cloud" xml:space="preserve"><value>Provedor de nuvem</value></data>
+  <data name="Track9Identity" xml:space="preserve"><value>Provedor de identidade</value></data>
+  <data name="Track9PersonalData" xml:space="preserve"><value>Trata dados pessoais</value></data>
+  <data name="Track9Links" xml:space="preserve"><value>Serviços, processos e dados</value></data>
+  <data name="Track9Subprocessors" xml:space="preserve"><value>Suboperadores</value></data>
+  <data name="Track9DataLocations" xml:space="preserve"><value>Localizações dos dados</value></data>
+  <data name="Track9Hecvat" xml:space="preserve"><value>HECVAT</value></data>
+  <data name="Track9Sbom" xml:space="preserve"><value>SBOM</value></data>
+  <data name="Track9SaveDeclaration" xml:space="preserve"><value>Salvar declaração</value></data>
+  <data name="Track9SelectRecord" xml:space="preserve"><value>Selecione um registro para editar</value></data>
+  <data name="Track9LoadError" xml:space="preserve"><value>Não foi possível carregar os dados de governança</value></data>
+  <data name="Track9Linked" xml:space="preserve"><value>Vinculado</value></data>
+  <data name="Track9Unlinked" xml:space="preserve"><value>Desvinculado</value></data>
+  <data name="Track9Imported" xml:space="preserve"><value>Importar SBOM</value></data>
+  <data name="Track9Voided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="Track9Void" xml:space="preserve"><value>Anular</value></data>
+  <data name="Track9ThirdPartiesBlock" xml:space="preserve"><value>Terceiros</value></data>
+  <data name="Track9NoneLinked" xml:space="preserve"><value>Nenhum registro vinculado</value></data>
+  <data name="Track9ThirdPartyConcentration" xml:space="preserve"><value>Concentração em terceiros</value></data>
+  <data name="Track9Supplier" xml:space="preserve"><value>Fornecedores</value></data>
+  <data name="Track9CriticalProcesses" xml:space="preserve"><value>Processos críticos</value></data>
+  <data name="Track9Share" xml:space="preserve"><value>Participação</value></data>
+  <data name="Track9FourthParty" xml:space="preserve"><value>Quarta parte</value></data>
+  <data name="Track9UnmappedDependencies" xml:space="preserve"><value>Dependências não mapeadas</value></data>
+  <data name="Track9ScopeRestricted" xml:space="preserve"><value>A lista está restrita pelo escopo; as participações usam o denominador de toda a organização.</value></data>
+  <data name="Track9FindingsOnly" xml:space="preserve"><value>Somente registros com achados</value></data>
+  <data name="Track9DataSubjects" xml:space="preserve"><value>Titulares dos dados</value></data>
+  <data name="Track9DataCategories" xml:space="preserve"><value>Categorias de dados</value></data>
+  <data name="Track9Retention" xml:space="preserve"><value>Retenção</value></data>
+  <data name="Track9InternationalTransfer" xml:space="preserve"><value>Transferência internacional</value></data>
+  <data name="Track9Purposes" xml:space="preserve"><value>Finalidades e bases legais</value></data>
+  <data name="Track9Processors" xml:space="preserve"><value>Operadores</value></data>
+  <data name="Track9Dpias" xml:space="preserve"><value>RIPDs</value></data>
+  <data name="Track9NotCatalogued" xml:space="preserve"><value>Este registro de dados não foi catalogado</value></data>
+  <data name="Track9InvolvesMinors" xml:space="preserve"><value>Envolve crianças ou adolescentes</value></data>
+  <data name="Track9LargeVolume" xml:space="preserve"><value>Grande volume</value></data>
+  <data name="Track9StrategicResearch" xml:space="preserve"><value>Pesquisa estratégica</value></data>
+  <data name="Track9TransferDeclared" xml:space="preserve"><value>Transferência internacional declarada</value></data>
+  <data name="Track9DpiaRegister" xml:space="preserve"><value>Cadastro de RIPD</value></data>
+  <data name="Track9Approved" xml:space="preserve"><value>Aprovado</value></data>
+  <data name="Track9Retired" xml:space="preserve"><value>Aposentado</value></data>
+  <data name="Track9RiskRequirements" xml:space="preserve"><value>Requisitos do risco</value></data>
+  <data name="Track9CatalogueEvidence" xml:space="preserve"><value>Evidências do catálogo de dados</value></data>
+  <data name="Track9AiModelInventory" xml:space="preserve"><value>Inventário de modelos de IA</value></data>
+  <data name="Track9Inventory" xml:space="preserve"><value>Registro do inventário</value></data>
+  <data name="Track9Evaluation" xml:space="preserve"><value>Avaliação e estado da versão</value></data>
+  <data name="Track9MetricReadings" xml:space="preserve"><value>Leituras de métricas</value></data>
+  <data name="Track9HumanOverrides" xml:space="preserve"><value>Decisões humanas divergentes</value></data>
+  <data name="Track9IncludeRetired" xml:space="preserve"><value>Incluir aposentados</value></data>
+  <data name="Track9HiddenRecords" xml:space="preserve"><value>Registros vinculados ocultos</value></data>
+  <data name="Track9RiskAiModels" xml:space="preserve"><value>Componentes de IA</value></data>
+  <data name="Track9AiMetricNotEvaluated" xml:space="preserve"><value>Não avaliada</value></data>
+  <data name="Track9AiMetricEvaluated" xml:space="preserve"><value>Avaliada</value></data>
+  <data name="Track9AiMetricStale" xml:space="preserve"><value>Vencida</value></data>
+  <data name="Track9PeopleCapacityOutOfRange" xml:space="preserve"><value>A capacidade de pessoas está fora do intervalo aceito.</value></data>
+  <data name="Track9DeadlineBeforeStart" xml:space="preserve"><value>O prazo final não pode ser anterior à data de início.</value></data>
+  <data name="Track9TooManyCandidates" xml:space="preserve"><value>Selecione no máximo 1.000 tratamentos candidatos.</value></data>
+  <data name="Track9NotConfigured" xml:space="preserve"><value>Nenhuma tolerância de cauda está configurada. Informe pelo menos um valor para criá-la.</value></data>
+  <data name="Track9DecisionOpen" xml:space="preserve"><value>Aberta</value></data>
+  <data name="Track9DecisionApproved" xml:space="preserve"><value>Aprovada</value></data>
+  <data name="Track9DecisionRejected" xml:space="preserve"><value>Rejeitada</value></data>
+  <data name="Track9DecisionWithdrawnState" xml:space="preserve"><value>Retirada</value></data>
+  <data name="Track9Overdue" xml:space="preserve"><value>Em atraso</value></data>
+  <data name="Track9NextDecisionKindNone" xml:space="preserve"><value>Nenhuma decisão agendada</value></data>
+  <data name="Track9NextDecisionKindGateAEscalation" xml:space="preserve"><value>Escalação do Portão A</value></data>
+  <data name="Track9NextDecisionKindAcceptanceExpiry" xml:space="preserve"><value>Vencimento da aceitação</value></data>
+  <data name="Track9NextDecisionKindManagementReview" xml:space="preserve"><value>Revisão da gestão</value></data>
+  <data name="Track9NextDecisionKindMitigationTaskDue" xml:space="preserve"><value>Prazo de tarefa de tratamento</value></data>
+  <data name="Track9NextDecisionKindDecisionPending" xml:space="preserve"><value>Decisão pendente</value></data>
+  <data name="Findings" xml:space="preserve"><value>Achados</value></data>
+  <data name="Track9ThirdPartyStatusProspective" xml:space="preserve"><value>Em avaliação</value></data>
+  <data name="Track9ThirdPartyStatusActive" xml:space="preserve"><value>Ativo</value></data>
+  <data name="Track9ThirdPartyStatusExiting" xml:space="preserve"><value>Em saída</value></data>
+  <data name="Track9ThirdPartyStatusTerminated" xml:space="preserve"><value>Encerrado</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeStorage" xml:space="preserve"><value>Armazenamento</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeProcessing" xml:space="preserve"><value>Tratamento</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeBackup" xml:space="preserve"><value>Backup</value></data>
+  <data name="Track9ThirdPartyDataLocationPurposeSupportAccess" xml:space="preserve"><value>Acesso de suporte</value></data>
+  <data name="Track9HecvatVariantLite" xml:space="preserve"><value>Lite</value></data>
+  <data name="Track9HecvatVariantFull" xml:space="preserve"><value>Completo</value></data>
+  <data name="Track9HecvatVariantOnPremise" xml:space="preserve"><value>Local</value></data>
+  <data name="Track9HecvatVariantUnified" xml:space="preserve"><value>Unificado</value></data>
+  <data name="Track9HecvatAnswerYes" xml:space="preserve"><value>Sim</value></data>
+  <data name="Track9HecvatAnswerNo" xml:space="preserve"><value>Não</value></data>
+  <data name="Track9HecvatAnswerNotApplicable" xml:space="preserve"><value>Não aplicável</value></data>
+  <data name="Track9HecvatAnswerUnanswered" xml:space="preserve"><value>Sem resposta</value></data>
+  <data name="Track9PersonalDataCategoryNotPersonal" xml:space="preserve"><value>Não pessoal</value></data>
+  <data name="Track9PersonalDataCategoryPersonal" xml:space="preserve"><value>Pessoal</value></data>
+  <data name="Track9PersonalDataCategorySensitivePersonal" xml:space="preserve"><value>Pessoal sensível</value></data>
+  <data name="Track9PersonalDataCategoryAnonymised" xml:space="preserve"><value>Anonimizado</value></data>
+  <data name="Track9LgpdLegalBasisArt7Consent" xml:space="preserve"><value>Art. 7º — consentimento</value></data>
+  <data name="Track9LgpdLegalBasisArt7LegalObligation" xml:space="preserve"><value>Art. 7º — obrigação legal</value></data>
+  <data name="Track9LgpdLegalBasisArt7PublicPolicy" xml:space="preserve"><value>Art. 7º — política pública</value></data>
+  <data name="Track9LgpdLegalBasisArt7Research" xml:space="preserve"><value>Art. 7º — pesquisa</value></data>
+  <data name="Track9LgpdLegalBasisArt7Contract" xml:space="preserve"><value>Art. 7º — contrato</value></data>
+  <data name="Track9LgpdLegalBasisArt7ExerciseOfRights" xml:space="preserve"><value>Art. 7º — exercício de direitos</value></data>
+  <data name="Track9LgpdLegalBasisArt7ProtectionOfLife" xml:space="preserve"><value>Art. 7º — proteção da vida</value></data>
+  <data name="Track9LgpdLegalBasisArt7HealthProtection" xml:space="preserve"><value>Art. 7º — tutela da saúde</value></data>
+  <data name="Track9LgpdLegalBasisArt7LegitimateInterest" xml:space="preserve"><value>Art. 7º — legítimo interesse</value></data>
+  <data name="Track9LgpdLegalBasisArt7CreditProtection" xml:space="preserve"><value>Art. 7º — proteção do crédito</value></data>
+  <data name="Track9LgpdLegalBasisArt11Consent" xml:space="preserve"><value>Art. 11 — consentimento</value></data>
+  <data name="Track9LgpdLegalBasisArt11LegalObligation" xml:space="preserve"><value>Art. 11 — obrigação legal</value></data>
+  <data name="Track9LgpdLegalBasisArt11PublicPolicy" xml:space="preserve"><value>Art. 11 — política pública</value></data>
+  <data name="Track9LgpdLegalBasisArt11Research" xml:space="preserve"><value>Art. 11 — pesquisa</value></data>
+  <data name="Track9LgpdLegalBasisArt11ExerciseOfRights" xml:space="preserve"><value>Art. 11 — exercício de direitos</value></data>
+  <data name="Track9LgpdLegalBasisArt11ProtectionOfLife" xml:space="preserve"><value>Art. 11 — proteção da vida</value></data>
+  <data name="Track9LgpdLegalBasisArt11HealthProtection" xml:space="preserve"><value>Art. 11 — tutela da saúde</value></data>
+  <data name="Track9LgpdLegalBasisArt11FraudPrevention" xml:space="preserve"><value>Art. 11 — prevenção à fraude</value></data>
+  <data name="Track9InternationalTransferMechanismAdequateCountry" xml:space="preserve"><value>País adequado</value></data>
+  <data name="Track9InternationalTransferMechanismSpecificContractualClauses" xml:space="preserve"><value>Cláusulas contratuais específicas</value></data>
+  <data name="Track9InternationalTransferMechanismStandardContractualClauses" xml:space="preserve"><value>Cláusulas-padrão contratuais</value></data>
+  <data name="Track9InternationalTransferMechanismGlobalCorporateRules" xml:space="preserve"><value>Normas corporativas globais</value></data>
+  <data name="Track9InternationalTransferMechanismSealsCertificatesCodes" xml:space="preserve"><value>Selos, certificados ou códigos</value></data>
+  <data name="Track9InternationalTransferMechanismLegalCooperation" xml:space="preserve"><value>Cooperação jurídica</value></data>
+  <data name="Track9InternationalTransferMechanismProtectionOfLife" xml:space="preserve"><value>Proteção da vida</value></data>
+  <data name="Track9InternationalTransferMechanismAnpdAuthorization" xml:space="preserve"><value>Autorização da ANPD</value></data>
+  <data name="Track9InternationalTransferMechanismInternationalCommitment" xml:space="preserve"><value>Compromisso internacional</value></data>
+  <data name="Track9InternationalTransferMechanismPublicPolicy" xml:space="preserve"><value>Política pública</value></data>
+  <data name="Track9InternationalTransferMechanismSpecificConsent" xml:space="preserve"><value>Consentimento específico</value></data>
+  <data name="Track9InternationalTransferMechanismArticle7Basis" xml:space="preserve"><value>Hipótese do art. 7º</value></data>
+  <data name="Track9DataLocationPurposeStorage" xml:space="preserve"><value>Armazenamento</value></data>
+  <data name="Track9DataLocationPurposeProcessing" xml:space="preserve"><value>Tratamento</value></data>
+  <data name="Track9DataLocationPurposeBackup" xml:space="preserve"><value>Backup</value></data>
+  <data name="Track9DataLocationPurposeSupportAccess" xml:space="preserve"><value>Acesso de suporte</value></data>
+  <data name="Track9LegalRequirementKindLaw" xml:space="preserve"><value>Lei</value></data>
+  <data name="Track9LegalRequirementKindRegulation" xml:space="preserve"><value>Regulamento</value></data>
+  <data name="Track9LegalRequirementKindContract" xml:space="preserve"><value>Contrato</value></data>
+  <data name="Track9LegalRequirementKindInternalNorm" xml:space="preserve"><value>Norma interna</value></data>
+  <data name="Track9DpiaStatusDraft" xml:space="preserve"><value>Rascunho</value></data>
+  <data name="Track9DpiaStatusApproved" xml:space="preserve"><value>Aprovado</value></data>
+  <data name="Track9DpiaStatusRetired" xml:space="preserve"><value>Aposentado</value></data>
+  <data name="Track9DpiaResidualRiskLow" xml:space="preserve"><value>Baixo</value></data>
+  <data name="Track9DpiaResidualRiskMedium" xml:space="preserve"><value>Médio</value></data>
+  <data name="Track9DpiaResidualRiskHigh" xml:space="preserve"><value>Alto</value></data>
+  <data name="Track9AiModelKindClassification" xml:space="preserve"><value>Classificação</value></data>
+  <data name="Track9AiModelKindForecasting" xml:space="preserve"><value>Previsão</value></data>
+  <data name="Track9AiModelKindGenerative" xml:space="preserve"><value>Generativo</value></data>
+  <data name="Track9AiModelKindRecommendation" xml:space="preserve"><value>Recomendação</value></data>
+  <data name="Track9AiModelKindAnomalyDetection" xml:space="preserve"><value>Detecção de anomalias</value></data>
+  <data name="Track9AiModelKindBiometric" xml:space="preserve"><value>Biométrico</value></data>
+  <data name="Track9AiModelKindOther" xml:space="preserve"><value>Outro</value></data>
+  <data name="Track9AiModelSourceInHouse" xml:space="preserve"><value>Interno</value></data>
+  <data name="Track9AiModelSourceVendor" xml:space="preserve"><value>Fornecedor</value></data>
+  <data name="Track9AiModelSourceOpenSource" xml:space="preserve"><value>Código aberto</value></data>
+  <data name="Track9AiModelStatusProposed" xml:space="preserve"><value>Proposto</value></data>
+  <data name="Track9AiModelStatusPilot" xml:space="preserve"><value>Piloto</value></data>
+  <data name="Track9AiModelStatusProduction" xml:space="preserve"><value>Produção</value></data>
+  <data name="Track9AiModelStatusRetired" xml:space="preserve"><value>Aposentado</value></data>
+  <data name="Track9AiModelRiskTierMinimal" xml:space="preserve"><value>Mínimo</value></data>
+  <data name="Track9AiModelRiskTierLimited" xml:space="preserve"><value>Limitado</value></data>
+  <data name="Track9AiModelRiskTierHigh" xml:space="preserve"><value>Alto</value></data>
+  <data name="Track9AiHumanOversightEveryOutput" xml:space="preserve"><value>Revisar toda saída</value></data>
+  <data name="Track9AiHumanOversightSampled" xml:space="preserve"><value>Revisão por amostragem</value></data>
+  <data name="Track9AiHumanOversightNoReview" xml:space="preserve"><value>Sem revisão</value></data>
+  <data name="Track9AiModelDataUsageTraining" xml:space="preserve"><value>Treinamento</value></data>
+  <data name="Track9AiModelDataUsageFineTuning" xml:space="preserve"><value>Ajuste fino</value></data>
+  <data name="Track9AiModelDataUsageEvaluation" xml:space="preserve"><value>Avaliação</value></data>
+  <data name="Track9AiModelDataUsageInput" xml:space="preserve"><value>Entrada</value></data>
+  <data name="Track9AiModelDataUsageOutput" xml:space="preserve"><value>Saída</value></data>
+  <data name="Track9AiModelMetricAccuracy" xml:space="preserve"><value>Acurácia</value></data>
+  <data name="Track9AiModelMetricPrecision" xml:space="preserve"><value>Precisão</value></data>
+  <data name="Track9AiModelMetricRecall" xml:space="preserve"><value>Revocação</value></data>
+  <data name="Track9AiModelMetricCalibration" xml:space="preserve"><value>Calibração</value></data>
+  <data name="Track9AiModelMetricDrift" xml:space="preserve"><value>Desvio</value></data>
+  <data name="Track9AiModelMetricHumanOverrideRate" xml:space="preserve"><value>Taxa de decisão humana divergente</value></data>
+  <data name="Track9Catalogued" xml:space="preserve"><value>Catalogado</value></data>
+  <data name="Track9Purpose" xml:space="preserve"><value>Finalidade</value></data>
+  <data name="Track9LegalBasis" xml:space="preserve"><value>Base legal</value></data>
+  <data name="Track9LegalRequirement" xml:space="preserve"><value>Requisito legal</value></data>
+  <data name="Track9BasisReference" xml:space="preserve"><value>Referência da base</value></data>
+  <data name="Track9Country" xml:space="preserve"><value>País</value></data>
+  <data name="Track9Region" xml:space="preserve"><value>Região</value></data>
+  <data name="Track9Notes" xml:space="preserve"><value>Observações</value></data>
+  <data name="Track9RetentionPeriod" xml:space="preserve"><value>Prazo de retenção (meses)</value></data>
+  <data name="Track9RetentionTrigger" xml:space="preserve"><value>Marco inicial da retenção</value></data>
+  <data name="Track9RetentionBasis" xml:space="preserve"><value>Fundamento da retenção</value></data>
+  <data name="Track9ReviewDue" xml:space="preserve"><value>Revisão prevista</value></data>
+  <data name="Track9ReviewedAt" xml:space="preserve"><value>Revisado em</value></data>
+  <data name="Track9TransferMechanism" xml:space="preserve"><value>Mecanismo de transferência</value></data>
+  <data name="Track9ThroughGroup" xml:space="preserve"><value>Por meio do grupo</value></data>
+  <data name="Track9Title" xml:space="preserve"><value>Título</value></data>
+  <data name="Track9ResidualRisk" xml:space="preserve"><value>Risco residual</value></data>
+  <data name="Track9Kind" xml:space="preserve"><value>Tipo</value></data>
+  <data name="Track9Source" xml:space="preserve"><value>Origem</value></data>
+  <data name="Track9RiskTier" xml:space="preserve"><value>Nível de risco</value></data>
+  <data name="Track9HumanOversight" xml:space="preserve"><value>Supervisão humana</value></data>
+  <data name="Track9Owner" xml:space="preserve"><value>Responsável</value></data>
+  <data name="Track9Entity" xml:space="preserve"><value>Entidade de escopo</value></data>
+  <data name="Track9Vendor" xml:space="preserve"><value>Fornecedor</value></data>
+  <data name="Track9Version" xml:space="preserve"><value>Versão</value></data>
+  <data name="Track9VersionSince" xml:space="preserve"><value>Versão em uso desde</value></data>
+  <data name="Track9MaxEvaluationAge" xml:space="preserve"><value>Idade máxima da avaliação (dias)</value></data>
+  <data name="Track9DataRecord" xml:space="preserve"><value>Registro de dados</value></data>
+  <data name="Track9DataUsage" xml:space="preserve"><value>Uso dos dados</value></data>
+  <data name="Track9Metric" xml:space="preserve"><value>Métrica</value></data>
+  <data name="Track9Value" xml:space="preserve"><value>Valor</value></data>
+  <data name="Track9MeasuredAt" xml:space="preserve"><value>Medido em</value></data>
+  <data name="Track9PeriodStart" xml:space="preserve"><value>Início do período</value></data>
+  <data name="Track9PeriodEnd" xml:space="preserve"><value>Fim do período</value></data>
+  <data name="Track9SampleSize" xml:space="preserve"><value>Tamanho da amostra</value></data>
+  <data name="Track9Method" xml:space="preserve"><value>Método</value></data>
+  <data name="Track9Evidence" xml:space="preserve"><value>Referência da evidência</value></data>
+  <data name="Track9ModelOutput" xml:space="preserve"><value>Saída do modelo</value></data>
+  <data name="Track9HumanDecision" xml:space="preserve"><value>Decisão humana</value></data>
+  <data name="Track9EvaluationState" xml:space="preserve"><value>Estado da avaliação</value></data>
+  <data name="Track9Required" xml:space="preserve"><value>Obrigatória</value></data>
+  <data name="Track9PreviousVersion" xml:space="preserve"><value>Versão anterior avaliada</value></data>
+  <data name="Track9RiskReference" xml:space="preserve"><value>Referência do risco</value></data>
+  <data name="Track9Subject" xml:space="preserve"><value>Assunto</value></data>
+  <data name="Track9AiModelEvaluationStateNotEvaluated" xml:space="preserve"><value>Não avaliado</value></data>
+  <data name="Track9AiModelEvaluationStateIncomplete" xml:space="preserve"><value>Incompleto</value></data>
+  <data name="Track9AiModelEvaluationStateStale" xml:space="preserve"><value>Vencido</value></data>
+  <data name="Track9AiModelEvaluationStateEvaluated" xml:space="preserve"><value>Avaliado</value></data>
+  <data name="Track9Description" xml:space="preserve"><value>Descrição</value></data>
+  <data name="Track9ThirdPartyLinkKindItService" xml:space="preserve"><value>Serviço de TI</value></data>
+  <data name="Track9ThirdPartyLinkKindBusinessProcess" xml:space="preserve"><value>Processo de negócio</value></data>
+  <data name="Track9ThirdPartyLinkKindData" xml:space="preserve"><value>Registro de dados</value></data>
+  <data name="Track9SaveMitigationFirst" xml:space="preserve"><value>Salve esta mitigação e reabra o editor para registrar custos monetários e estimativas do Portão C.</value></data>
+  <data name="Track9NewTask" xml:space="preserve"><value>Evidências da nova tarefa</value></data>
+  <data name="Track9SelectedTask" xml:space="preserve"><value>Editar evidências da tarefa selecionada</value></data>
+  <data name="Track9LegalName" xml:space="preserve"><value>Razão social</value></data>
+  <data name="Track9TaxId" xml:space="preserve"><value>Identificador fiscal</value></data>
+  <data name="Track9Website" xml:space="preserve"><value>Site</value></data>
+  <data name="Track9Service" xml:space="preserve"><value>Serviço</value></data>
+  <data name="Track9ContractReference" xml:space="preserve"><value>Referência do contrato</value></data>
+  <data name="Track9ContractStart" xml:space="preserve"><value>Início do contrato</value></data>
+  <data name="Track9ContractEnd" xml:space="preserve"><value>Fim do contrato</value></data>
+  <data name="Track9SlaAvailability" xml:space="preserve"><value>Disponibilidade do SLA (%)</value></data>
+  <data name="Track9RtoMinutes" xml:space="preserve"><value>RTO contratado (minutos)</value></data>
+  <data name="Track9RpoMinutes" xml:space="preserve"><value>RPO contratado (minutos)</value></data>
+  <data name="Track9VulnerabilityFixDays" xml:space="preserve"><value>Prazo para correção de vulnerabilidade (dias)</value></data>
+  <data name="Track9RightToAudit" xml:space="preserve"><value>Direito de auditoria</value></data>
+  <data name="Track9AuditClause" xml:space="preserve"><value>Referência da cláusula de auditoria</value></data>
+  <data name="Track9ExitPlan" xml:space="preserve"><value>Plano de saída</value></data>
+  <data name="Track9TestedAt" xml:space="preserve"><value>Testado em</value></data>
+  <data name="Track9DataPortability" xml:space="preserve"><value>Portabilidade dos dados</value></data>
+  <data name="Track9FrameworkVersion" xml:space="preserve"><value>Versão do framework</value></data>
+  <data name="Track9ExpectedQuestions" xml:space="preserve"><value>Questões esperadas</value></data>
+  <data name="Track9RespondedAt" xml:space="preserve"><value>Respondido em</value></data>
+  <data name="Track9ValidUntil" xml:space="preserve"><value>Válido até</value></data>
+  <data name="Track9Question" xml:space="preserve"><value>Questão</value></data>
+  <data name="Track9Answer" xml:space="preserve"><value>Resposta</value></data>
+  <data name="Track9PreferredAnswer" xml:space="preserve"><value>Resposta preferencial</value></data>
+  <data name="Track9Weight" xml:space="preserve"><value>Peso</value></data>
+  <data name="Track9Critical" xml:space="preserve"><value>Crítica</value></data>
+  <data name="Track9State" xml:space="preserve"><value>Estado</value></data>
+  <data name="Track9Unanswered" xml:space="preserve"><value>Sem resposta</value></data>
+  <data name="Track9ComponentName" xml:space="preserve"><value>Nome do componente</value></data>
+  <data name="Track9ComponentVersion" xml:space="preserve"><value>Versão do componente</value></data>
+  <data name="Track9FileName" xml:space="preserve"><value>Nome do arquivo</value></data>
+  <data name="Track9Format" xml:space="preserve"><value>Formato</value></data>
+  <data name="Track9ComponentCount" xml:space="preserve"><value>Quantidade de componentes</value></data>
+  <data name="Track9Sha256" xml:space="preserve"><value>SHA-256</value></data>
+  <data name="Track9HecvatStateIncomplete" xml:space="preserve"><value>Incompleto</value></data>
+  <data name="Track9HecvatStateConforming" xml:space="preserve"><value>Conforme</value></data>
+  <data name="Track9HecvatStateNonConforming" xml:space="preserve"><value>Não conforme</value></data>
+  <data name="Track9HecvatStateExpired" xml:space="preserve"><value>Expirado</value></data>
+  <data name="Track9HecvatStateNotScorable" xml:space="preserve"><value>Não pontuável</value></data>
+  <data name="Track9HecvatStateVoided" xml:space="preserve"><value>Anulado</value></data>
+  <data name="Track9HecvatStateNotAssessed" xml:space="preserve"><value>Não avaliado</value></data>
+  <data name="Track9SbomFormatCycloneDxJson" xml:space="preserve"><value>CycloneDX JSON</value></data>
+  <data name="Track9SbomFormatSpdxJson" xml:space="preserve"><value>SPDX JSON</value></data>
+  <data name="Track9ReviewOverdue" xml:space="preserve"><value>Revisão atrasada</value></data>
+  <data name="Track9PerformedAt" xml:space="preserve"><value>Realizado em</value></data>
+  <data name="Track9DocumentReference" xml:space="preserve"><value>Referência do documento</value></data>
+  <data name="Track9Summary" xml:space="preserve"><value>Resumo</value></data>
+  <data name="Track9DpiaLinkKindDataRecord" xml:space="preserve"><value>Registro de dados</value></data>
+  <data name="Track9DpiaLinkKindBusinessProcess" xml:space="preserve"><value>Processo de negócio</value></data>
+  <data name="Track9Code" xml:space="preserve"><value>Código</value></data>
+  <data name="Track9Reference" xml:space="preserve"><value>Referência</value></data>
+  <data name="Track9RiskLinks" xml:space="preserve"><value>Riscos vinculados</value></data>
+  <data name="Track9HiddenSupplierReadOnly" xml:space="preserve"><value>Este requisito referencia um fornecedor fora do seu escopo visível e não pode ser editado.</value></data>
+  <data name="Track9License" xml:space="preserve"><value>Licença</value></data>
+  <data name="Track9Purl" xml:space="preserve"><value>URL do pacote</value></data>
+  <data name="Track9SbomDocument" xml:space="preserve"><value>Documento SBOM</value></data>
 </root>

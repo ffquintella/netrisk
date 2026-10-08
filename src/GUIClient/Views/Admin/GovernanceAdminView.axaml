@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:track9="clr-namespace:GUIClient.Views.Track9"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -43,6 +44,9 @@
                             </ComboBox.ItemTemplate>
                         </ComboBox>
 
+                        <Expander Header="{Binding StrTrack9TailLimits}">
+                            <track9:AppetiteTailLimitsView DataContext="{Binding Track9TailLimits}"/>
+                        </Expander>
                         <TextBlock Text="{Binding StrMaxAcceptableResidual}" Classes="fieldLabel"
                                    Margin="0 10 0 0"/>
                         <NumericUpDown Value="{Binding MaxAcceptableResidual}" Minimum="0" Maximum="10"

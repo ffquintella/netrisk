@@ -28,62 +28,100 @@ public class MgmtReviewsController: ApiBaseController
         _mgmtReviewsService = mgmtReviewsService;
     }
 
+    /// <summary>
+    /// Records a management review in the caller's name, through the enforced service path
+    /// (<see cref="IMgmtReviewsService.CreateReviewAsync"/>): the third-line guard, segregation of duties
+    /// (nobody reviews a risk they submitted, own or manage — administrators included) and the appetite's
+    /// dual-approval threshold. The acting user is always the caller; a reviewer named in the payload is ignored.
+    ///
+    /// A refusal is 422 naming the rule, as the other governance decisions answer it (<c>RiskGovernanceController</c>):
+    /// the caller may review risks in general, and it is their relation to <em>this</em> risk that makes the request
+    /// impossible — a 403 would send them to ask for a permission that would not help.
+    /// </summary>
     [HttpPost]
     [Route("")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(MgmtReview))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<MgmtReview> Create([FromBody] MgmtReviewDto review)
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<MgmtReview>> Create([FromBody] MgmtReviewDto review)
     {
         var user = GetUser();
 
         if(review.Id > 0 ) review.Id = 0;
-        
-        Logger.Information("User:{UserValue} created new mgmtReview", user.Value);
 
-        MgmtReview newReview;
-        
         try
         {
             review.Reviewer = user.Value;
 
             var reviewObj = review.Adapt<MgmtReview>();
-            
-            newReview = _mgmtReviewsService.Create(reviewObj);
+
+            var newReview = await _mgmtReviewsService.CreateReviewAsync(reviewObj, user.Value);
+
+            Logger.Information("User:{UserValue} created mgmtReview {Id} on risk {RiskId}", user.Value,
+                newReview.Id, newReview.RiskId);
+
+            return Created($"MgmtReviews/{newReview.Id}", newReview);
+        }
+        catch (RuleBrokenException ex)
+        {
+            return UnprocessableEntity(new { error = ex.RuleName, ex.Message });
+        }
+        catch (PermissionInvalidException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { error = "insufficient_authority", ex.Permission, ex.Message });
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception ex)
         {
             Logger.Error("Internal error creating mgmtReview: {Message}", ex.Message);
             return StatusCode(500);
         }
-
-        return Created($"MgmtReviews/{newReview.Id}", newReview);
     }
 
     [HttpPut]
     [Route("{reviewId}")]
+    [Authorize(Policy = "RequireMgmtReviewAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<MgmtReview> Create(int reviewId, [FromBody] MgmtReviewDto review)
+    public async Task<ActionResult<MgmtReview>> Create(int reviewId, [FromBody] MgmtReviewDto review)
     {
         var user = GetUser();
 
-        if (review.Id <= 0) return BadRequest("reviewId must be greater than 0");
-        
-        Logger.Information("User:{UserValue} updated mgmtReview {Id}", user.Value, reviewId);
+        if (reviewId <= 0) return BadRequest("reviewId must be greater than 0");
 
         MgmtReview upReview;
         
         try
         {
-            review.Reviewer = user.Value;
-            
-            upReview = _mgmtReviewsService.Update(review);
+            review.Id = reviewId;
+            upReview = await _mgmtReviewsService.UpdateAsync(review, user.Value);
+
+            Logger.Information("User:{UserValue} updated mgmtReview {Id}", user.Value, reviewId);
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (RuleBrokenException ex)
+        {
+            return UnprocessableEntity(new { error = ex.RuleName, ex.Message });
+        }
+        catch (PermissionInvalidException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { error = "insufficient_authority", ex.Permission, ex.Message });
         }
         catch (Exception ex)
         {
-            Logger.Error("Internal error creating mgmtReview: {Message}", ex.Message);
+            Logger.Error("Internal error updating mgmtReview {Id}: {Message}", reviewId, ex.Message);
             return StatusCode(500);
         }
 

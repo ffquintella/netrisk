@@ -31,16 +31,9 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
             .FirstOrDefault(r => r.Value == roleId);
         if(role == null) throw new Exception($"Role with id {roleId} not found");
 
-        var permissions = role.Permissions;
-        
-        var result = new List<string>();
-        
-        Parallel.ForEach(permissions , permission =>
-        {
-            result.Add(permission.Key);
-        });
-
-        return result;
+        // Sequential on purpose: List<T>.Add is not thread-safe, and Parallel.ForEach here lost entries or
+        // threw under load (NR-2026-036, the same race PermissionsService had).
+        return role.Permissions.Select(permission => permission.Key).ToList();
     }
 
     public Role? GetRole(int roleId)

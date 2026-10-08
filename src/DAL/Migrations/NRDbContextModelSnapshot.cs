@@ -7455,7 +7455,8 @@ namespace DAL.Migrations
 
                     b.HasIndex(new[] { "EntityId" }, "idx_ra_entity_id");
 
-                    b.HasIndex(new[] { "RenewedFromId" }, "idx_ra_renewed_from_id");
+                    b.HasIndex(new[] { "RenewedFromId" }, "uq_ra_renewed_from_id")
+                        .IsUnique();
 
                     b.HasIndex(new[] { "RiskId" }, "idx_ra_risk_id");
 

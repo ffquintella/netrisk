@@ -438,6 +438,18 @@ fixes" rather than quietly corrected. Detailed specifications:
   - note: the old rule deleted incident, response-plan, risk-acceptance and assessment-evidence attachments and report PDFs every night; delivered on 2026-10-07; covered over the EF in-memory provider, not against MariaDB
 - [x] T301 Merge a user's own permissions into the role's without `Parallel.ForEach` on a shared `List<T>`, so a permission check can no longer lose entries or throw (NR-2026-036)
   - note: the race is probabilistic, so its regression test repeats the merge 25 times over 1,950 items; delivered on 2026-10-07, covered over the EF in-memory provider
+- [x] T311 Serve the generic audit trail (`GET /AuditTrail/{type}/{id}` and `GET /Risks/{id}/AuditTrail`) only for a record the caller's entity scope can see, answering 404 otherwise (S53)
+  - note: S51/S53 §11 defect 3; delivered on 2026-10-08; every audited type maps to the filtered table that decides its visibility (RiskScoring through its risk), a type with no mapping is refused to a scoped reader, and BIA and the LGPD catalogue stay organisation-wide by design; visibility uses where the record sits now, so a record moved between units shows its whole history to the new unit; covered over the EF in-memory provider
+- [x] T312 Put the issuer's login, not the display name, in an API token's name claim, so a token always acts as its issuer (S53)
+  - note: S53 §11 defect 1(a)(b); delivered on 2026-10-08; this makes tokens work on every decision route for every issuer, so whether decision routes should refuse tokens (defect 1(c)) is now more pressing and still needs the ESI decision; the handler checks lockout but not `Enabled`, so a disabled or deprovisioned user's token keeps working — not fixed here
+- [x] T313 Enforce segregation of duties and the third-line guard on `POST /MgmtReviews` by routing it through `CreateReviewAsync` with the caller as actor, and remove the unenforced `Create` (S53)
+  - note: S53 §11 defect 2; delivered on 2026-10-08; a violation is a 422; no break-glass override reason on this route; `RiskReviewCampaignsService.DecideAsync` still writes a review row without a segregation check, and `PUT /MgmtReviews/{id}` returns 200 without saving — not fixed here
+- [x] T314 Refuse to renew a risk acceptance that was already renewed, or while another acceptance of the same risk is in force
+  - note: delivered on 2026-10-08; the guard is check-then-act — two truly concurrent renewals can still both pass until a unique index on `renewed_from_id` or a concurrency token lands
+- [x] T315 Refuse `FaceID` transaction commits for any account other than the caller's, administrators included
+  - note: delivered on 2026-10-08; answers 401 like `StartTransaction`; `GET /FaceID/faceSet/{userId}` still tells any user whether another account has a face enrolled — not fixed here
+- [x] T316 Read a role's permissions sequentially in `RolesService.GetRolePermissionsAsync`, closing the `Parallel.ForEach` race T301 left one call below the merge (NR-2026-036)
+  - note: found as a flaky T301 regression test on 2026-10-08; the new test asserts the role's order, so it fails deterministically on the pre-fix code; the same pattern remains in five GUIClient view-models — not fixed here
 
 ### [M30] Data Protection & Transport Security
 > outcome: Data is protected in transit and at rest.
@@ -555,30 +567,31 @@ Stage 9.1 is implemented (T144–T148: schema version 88, `/RiskChain`, the cove
 screens); Stage 9.2 is implemented (T150–T155: schema version 89, the structured scenario, evidence confidence,
 standalone hypotheses, near misses and the duplicate warning); Stage 9.3 is implemented (T156–T160: schema version
 90, business impact analysis, cascading dependencies, restoration tests and the weighted continuity threat); Stage 9.4
-is implemented on the server and the REST client (T161–T167: schema version 93, the CISA KEV and FIRST EPSS syncs,
-ATT&CK techniques and the exploitation prioritization; its desktop surface is T302); Stage 9.5 is implemented on the
+is implemented (T161–T167: schema version 93, the CISA KEV and FIRST EPSS syncs, ATT&CK techniques and the
+exploitation prioritization; T302: its desktop surface — the EPSS column and filter, the exploitation-signals panel,
+the technique editors and reports 9 and 10); Stage 9.5 is implemented on the
 server, the job host and the REST client (T168–T173: schema version 94, the eleven flags with their origins, Gate A
-ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is T303); Stage 9.6 is
+ahead of the appetite, the act-immediately decision and the Top Risks list; its desktop surface is implemented by T303); Stage 9.6 is
 implemented on the server and the REST client (T174–T181: schema version 95, the four treatment options, the monetary
-cost beside the ordinal scale, Gate C, Gate D, the target level and task completion evidence; its desktop surface is
+cost beside the ordinal scale, Gate C, Gate D, the target level and task completion evidence; its desktop surface is implemented by
 T304); Stage 9.7 is implemented on the server and the REST client (T182–T187: schema version 96, P95 and CVaR with
 confidence intervals, the loss magnitude by form of loss, the correlated portfolio aggregation, Gate B on the tail and
-flag 8 derived; its desktop surface is T305); Stage 9.8 is implemented on the server, the job host and the REST client
+flag 8 derived; its desktop surface is implemented by T305); Stage 9.8 is implemented on the server, the job host and the REST client
 (T188–T193: schema version 97, KRIs with tolerance, history and an explicit stale state, the six Phase 7 reassessment
-triggers raised once per cause, Gate B by indicator and the methodology metrics panel; its desktop surface is T306); Stage
+triggers raised once per cause, Gate B by indicator and the methodology metrics panel; its desktop surface is implemented by T306); Stage
 9.9 is implemented on the server, the job host and the REST client (T194–T199: schema version 98, the archive with
 reopening conditions and a quarterly review, incident backtesting, the risk committee as a collegiate approver and the
-read-only third-line role; its desktop surface is T307); Stage 9.10 is implemented on the server and the REST client
+read-only third-line role; its desktop surface is implemented by T307); Stage 9.10 is implemented on the server and the REST client
 (T200–T205: schema version 99, the third party as a first-class record with its contract terms, HECVAT, SBOM, sub-processors,
 data location, right to audit and exit plan, and the concentration by supplier, cloud and identity counted once per
-dependent critical process; its desktop surface is T308); Stage 9.11 is implemented on the server and the REST client
+dependent critical process; its desktop surface is implemented by T308); Stage 9.11 is implemented on the server and the REST client
 (T206–T210: schema version 100, the LGPD catalogue of kinds of data with the legal basis by purpose, retention that signals
 and never deletes, location and transfer through the processors, the RIPD, the legal requirements of the register as links,
-and flag 5 derived from the catalogue while flag 2 stays declared; its desktop surface is T309); Stage 9.12 is implemented
+and flag 5 derived from the catalogue while flag 2 stays declared; its desktop surface is implemented by T309); Stage 9.12 is implemented
 on the server and the REST client (T211–T215: schema version 101, the AI model inventory with purpose, data, vendor,
 version, risk tier, human oversight and owner, flag 11 derived from a risk's link to a model, and model metrics recorded
 per version with an explicit "not evaluated" and a human override rate computed from overrides recorded with author and
-reason — governance only, no AI in the risk workflow; its desktop surface is T310); the runtime observations and
+reason — governance only, no AI in the risk workflow; its desktop surface is implemented by T310); the runtime observations and
 human/security review of all twelve are pending.** Does not reopen Track 8. Detailed specifications:
 [docs/roadmap/TRACK_9_MIGR_TI_IA.md](docs/roadmap/TRACK_9_MIGR_TI_IA.md) (S27).
 
@@ -652,7 +665,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
 - [x] T163 Synchronize the CISA KEV catalogue with listing date and deadline
   - note: `kev_entries` and the `exploitation_signal_syncs` run log, daily at 05:00; rows are never deleted, and a valid catalogue that shrinks past max(5, 1 %) holds its delistings (S45 §4.8)
 - [x] T164 Associate MITRE ATT&CK techniques to the finding and the risk scenario
-  - note: by identifier, validated by shape, with no synchronized ATT&CK catalogue (the STIX bundle exceeds the outbound size cap); API and REST client only — the desktop editors are T302
+  - note: by identifier, validated by shape, with no synchronized ATT&CK catalogue (the STIX bundle exceeds the outbound size cap); API and REST client only — the desktop editors came with T302
 - [x] T165 Combine the Phase 3 signals into a prioritization with CVSS as an input
   - note: P1–P4 or Undetermined from exploitation (KEV, scanner-observed, EPSS ≥ 0.10, public exploit) × impact (CVSS ≥ 7.0 or severity), computed on read, plus the KEV remediation-time metric; P1 is not Gate A (Stage 9.5), and neither process criticality nor compensating controls are inputs yet (S45 §3)
 - [x] T166 Synchronize outbound through IOutboundHttpClient under the SSRF policy
@@ -660,7 +673,8 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: HTTPS-only feed URLs from deployment configuration (`ExploitationSignals:*`), job host only — no "sync now" endpoint; EPSS in batches of 50, stopping at the first failure
 - [x] T167 Test that an unavailable/malformed KEV catalogue never silently de-lists a KEV item, and two EPSS sources converge by a declared rule
   - note: KP2, KR4/KR5, S2 and E4, S8 (FIRST before Vision One, both orders); Track9ExploitationSignalsSchemaTests Q1–Q4 need Docker and were not run here; the S45 §8 runtime observations are still to be recorded on the PR
-- [ ] T302 Add the Stage 9.4 desktop surface: the EPSS column and filter in the vulnerability grid, the exploitation-signals panel, the ATT&CK technique editors on findings and risks, and the prioritization and KEV-remediation reports (S45)
+- [x] T302 Add the Stage 9.4 desktop surface: the EPSS column and filter in the vulnerability grid, the exploitation-signals panel, the ATT&CK technique editors on findings and risks, and the prioritization and KEV-remediation reports (S45)
+  - note: specified first as the S45 §7 amendment of 2026-10-08 (§7.1–§7.8) and delivered as written, GUI only — no server or `ClientServices` change; the EPSS filter is a structured editor of one `epss>=` term of the free-text filter, so `epssPercentile` stays free-text only; the grid's EPSS sort, like every other column there, orders the loaded page; the sync status sits in report 10 rather than a screen of its own; `Identifiers.cs` gained explicit usings so `GUIClient.Tests` compiles the server's technique validator; G1–G8 cover the pure half, and layout and interaction were not observed in a running client
 
 ### [M43] Stage 9.5 — The eleven mandatory flags and Gate A
 > outcome: Gate A, non-discretionary in the methodology, becomes implementable via queryable flags. Closes gap 3.
@@ -679,7 +693,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `GET /RiskFlags/TopRisks` (1–50): Gate A, act immediately, business rank, E[L]; the ordinal score only breaks ties; API and REST client only — the desktop screen is T303
 - [x] T173 Test that a derived flag reverts with an audit-trail entry, and that Gate A precedes Gate B
   - note: R1–R3 and G1–G10 of `RiskFlagsServiceInMemoryTest`/`GateAInMemoryTest` (moving Gate A after the appetite fails G1, G4 and G9); Track9RiskFlagsSchemaTests Q1–Q3 need Docker and were not run here; the S46 §8 runtime observations are still to be recorded on the PR
-- [ ] T303 Add the Stage 9.5 desktop surface: the flag and decision editor on the risk, the flag column and filter in the register, and the Top Risks screen (S46)
+- [x] T303 Add the Stage 9.5 desktop surface: the flag and decision editor on the risk, the flag column and filter in the register, and the Top Risks screen (S46)
 
 ### [M44] Stage 9.6 — Treatment economics: monetary cost, Gates C and D, the full option set
 > outcome: Gate C gets a calculation; Gate D gets portfolio selection under constraints. Closes gaps 7, 10, part of 13.
@@ -702,7 +716,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `risk_targets` (score and/or annual E[L], date, rationale), compared with the residual and the appetite on read; a target above the appetite is flagged, not refused (D9); API and REST client only — the desktop surface is T304
 - [x] T181 Test that a mitigation with no monetary cost enters Gate C as not-assessable, and Gate D preserves tail/systemic risks at moderate E[L]
   - note: GC3, E3, PD1, PD2 and PF1 (making a missing cost zero, or dropping the protected tier, fails them); Track9TreatmentEconomicsSchemaTests Q1–Q3 need Docker and were not run here; the S47 §8 runtime observations are still to be recorded on the PR
-- [ ] T304 Add the Stage 9.6 desktop surface: the treatment option, monetary cost, estimates and prerequisites with Gate C on the mitigation editor, the target level on the risk detail, the acceptance criterion and completion evidence on treatment tasks, and the portfolio selection screen (S47)
+- [x] T304 Add the Stage 9.6 desktop surface: the treatment option, monetary cost, estimates and prerequisites with Gate C on the mitigation editor, the target level on the risk detail, the acceptance criterion and completion evidence on treatment tasks, and the portfolio selection screen (S47)
 
 ### [M45] Stage 9.7 — Tail statistics and portfolio: P95, CVaR, aggregation and correlation
 > outcome: The tail statistic appetite compares against, and the portfolio sum Phase 7 needs, exist. Closes gap 9.
@@ -721,7 +735,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `risk_appetite_tail_limits` per appetite (scenario and portfolio E[L]/P95/CVaR95, admin only); `AppetiteEvaluation.Tail` with an explicit not-assessable state; acceptance and renewal refused with `422 risk_appetite_tail_tolerance` after Gate A and the unchanged ordinal ceiling; not assessable does not refuse (D12); Gate B by KRI stays with T191; flag 8 derived from the inherent tail (probability of a loss year ≤ 10 %, mean loss of a loss year ≥ the top band threshold) with the S46 reversion trail
 - [x] T187 Test that CVaR of a low-frequency scenario is not zero, and a zero-correlation portfolio sum is not the sum of individual P95s
   - note: TS2, Q2 (P95 = 0, CVaR95 > 0), PA1, PA2 (below and above Σ P95), PA6/P5 (seed reproduces the aggregate) and GB4 (moving the tail check before the ceiling fails it); Track9TailRiskSchemaTests Q1–Q3 need Docker and were not run here; the S48 §8 runtime observations are still to be recorded on the PR
-- [ ] T305 Add the Stage 9.7 desktop surface: loss components and their contributions in the quantitative editor, the tail and Gate B on the risk detail, the correlation editor, the tail tolerances in the appetite administration, and the portfolio screen (S48)
+- [x] T305 Add the Stage 9.7 desktop surface: loss components and their contributions in the quantitative editor, the tail and Gate B on the risk detail, the correlation editor, the tail tolerances in the appetite administration, and the portfolio screen (S48)
 
 ### [M46] Stage 9.8 — KRIs, mandatory reassessment triggers and the methodology's metrics
 > outcome: A first-class KRI record and the six mandatory reassessment triggers of Phase 7 exist. Closes gap 5.
@@ -740,7 +754,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `GET /Monitoring/Metrics`, computed on read and never stored: the Stage 9.1/9.3/9.4/9.7 metrics composed through their services, M2, M3 and M5 computed for the first time, plus KRI and trigger health; a failing source is logged and reads not available (D12); API and REST client only — the desktop panel is T306
 - [x] T193 Test that a KRI with no recent reading reads as stale, and a reassessment trigger is idempotent
   - note: KE2, KA4 and S1 (stale everywhere, never within), I1 (thirty days breached: one event, one trigger per risk, one notification), I2–I6 and J3 (the job between the flags reconciliation and the cadence); E5 caught a scope leak in the first implementation (S49 §11); the database half of the idempotence is Track9KriReassessmentSchemaTests Q2, which needs Docker and was not run here; the S49 §8 runtime observations are still to be recorded on the PR
-- [ ] T306 Add the Stage 9.8 desktop surface: the KRI register with its readings, tolerance and state, the KRI links and Gate B by indicator on the risk detail, the reassessment event declaration and pending queue, and the methodology metrics panel (S49)
+- [x] T306 Add the Stage 9.8 desktop surface: the KRI register with its readings, tolerance and state, the KRI links and Gate B by indicator on the risk detail, the reassessment event declaration and pending queue, and the methodology metrics panel (S49)
 
 ### [M47] Stage 9.9 — Archival with triggers, backtesting, the risk committee and the third line
 > outcome: The decision cycle closes: reopenable archive, backtesting, and the missing Phase 0 roles. Closes gaps 13 (part), 14, 15.
@@ -759,7 +773,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: the `third_line_assurance` permission and the `ThirdLineAuditor` role with the read permissions (`Data/98.sql`); a requirement on every API policy refuses every write of its holder, `Admin` included, except seven reviewed self-service writes (D10, D12); seven GETs that write are declared; bulk grants (the console's first administrator, "select all") leave the marker out (R10); nobody can name the third line an approver, reviewer, business reviewer or committee member; it reads the evidence pack (`RequireAssuranceEvidence`), not the PDF, which stores a report; role-only controllers (SCIM) are outside policies and reviewed (R7); role and permission changes are not in the governance trail and MFA on them is the ESI's call (R6)
 - [x] T199 Test that a condition trigger fires once, backtesting never counts a post-incident registration as foreseen, and the third-line role cannot write
   - note: R1/R2 (a declared event, and a KRI breached for thirty days, reopen the archive once), BC3/BC12/B1 (registered at or after the occurrence is never foreseen), and TL-API1/TL-API7 (every write action of the API, evaluated through its real policy and sent through the real routing and authorization pipeline, refuses the third line, `Admin` included); mutation-checked (S50 §8); Track9DecisionCycleSchemaTests Q1–Q3 need Docker and were not run here; the S50 §8 runtime observations are still to be recorded on the PR
-- [ ] T307 Add the Stage 9.9 desktop surface: archiving with conditions, the quarterly review queue and reopening on the risk detail, the incident backtest and the backtesting report, the committee administration, submission and voting, and read-only screens for the third-line role (S50)
+- [x] T307 Add the Stage 9.9 desktop surface: archiving with conditions, the quarterly review queue and reopening on the risk detail, the incident backtest and the backtesting report, the committee administration, submission and voting, and read-only screens for the third-line role (S50)
 
 ### [M48] Stage 9.10 — Third-party register: HECVAT, SBOM, concentration and exit plan
 > outcome: The only discovery front with no instrument gets one. Closes gap 8.
@@ -778,7 +792,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `third_party_links` to an IT service, a business process (outsourced) or a data record, the kind derived from the entity; the data link targets the `organizationData` node Stage 9.11 extends, so M49 reads who processes a record from `GET /ThirdParties/ByEntity/{id}` with no new column (D4); the supplier links to what it supplies instead of becoming a new `bia_dependencies` target as S43 had forecast, so there is still one dependency graph (D3)
 - [x] T205 Test that concentration counts a supplier once per dependent critical process, and a partial HECVAT scores as incomplete
   - note: C1/C2 of `ConcentrationCalculatorTest` and C1 of `ThirdPartiesServiceInMemoryTest` (three links to one process count one; never once per link or path), H2 of `HecvatScoringTest` and of the service test (99 of 100 perfect answers, a blank question: incomplete, no score, never conforming), and R8 (a supplier in use is never deleted, by a use the caller cannot see either); mutation-checked (S51 §8); the generic audit reader now refuses the third-party types (HI2, regression); Track9ThirdPartySchemaTests Q1–Q3 need Docker and were not run here; the S51 §8 runtime observations are still to be recorded on the PR
-- [ ] T308 Add the Stage 9.10 desktop surface: the third-party register with its contract terms, links to services, processes and data, sub-processors and data locations, the HECVAT with its state and blank questions, SBOM import, the findings, the concentration panel by supplier, cloud and identity, and a third-parties block on the service and data detail (S51)
+- [x] T308 Add the Stage 9.10 desktop surface: the third-party register with its contract terms, links to services, processes and data, sub-processors and data locations, the HECVAT with its state and blank questions, SBOM import, the findings, the concentration panel by supplier, cloud and identity, and a third-parties block on the service and data detail (S51)
 
 ### [M49] Stage 9.11 — LGPD data catalogue: legal basis, purpose, retention, location and DPIA
 > outcome: Compliance becomes demonstrable; flags 2 and 5 get something to derive from. Closes gap 11.
@@ -795,7 +809,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: `legal_requirements` (law, regulation, contract with an optional third party, internal norm) and `risk_legal_requirements`, under the chain's `RequireRiskmanagement`; there was no free text to migrate — `risks.regulation` was an id into a dead table dropped at version 73, and `control_number` is a framework-control number the statistics group by, kept as it is (S52 D8); the fine's basis on a loss component stays text; a requirement in use, by a risk the caller cannot see too, is refused `422 legal_requirement_in_use`, and a contract's third party is in use (`ThirdPartyReferences` extended); flag 2 stays declared (D7) and `GET /DataCatalogue/Risks/{id}` is the declarer's evidence
 - [x] T210 Test that sensitive data with no declared legal basis is a finding, and expired retention signals but does not auto-delete
   - note: F2 of `DataCatalogueFindingsEvaluatorTest` and T210a of `DataCatalogueServiceInMemoryTest` (no purpose, a purpose without basis, one of two: a finding, never compliant by omission); F6 and T210b (the finding with its date, and reading the record, the list and the risk view writes nothing and removes nothing), T210c (no service path deletes a catalogue) and J1 of `DataCatalogueRetentionTest` with D9 of `RiskFlagsServiceInMemoryTest` (no job is written against the catalogue, and the nightly flag reconciliation reads it and changes nothing); D7 (the mark derives flag 5 and its removal reverts it with the system's trail); mutation-checked (S52 §8); the generic audit reader refuses the catalogue types (HI2, regression); Track9DataCatalogueSchemaTests Q1–Q3 need Docker and were not run here; the S52 §8 runtime observations are still to be recorded on the PR
-- [ ] T309 Add the Stage 9.11 desktop surface: the catalogue on the data detail with purposes and legal bases, retention, locations, transfer, processors and findings, the compliance list filtered by findings, the legal requirements, the RIPD with its links, approval and retirement, and a requirements block on the risk detail (S52)
+- [x] T309 Add the Stage 9.11 desktop surface: the catalogue on the data detail with purposes and legal bases, retention, locations, transfer, processors and findings, the compliance list filtered by findings, the legal requirements, the RIPD with its links, approval and retirement, and a requirements block on the risk detail (S52)
 
 ### [M50] Stage 9.12 — AI governance: model inventory, flag 11 and model metrics
 > outcome: The inventory and assurance the by-construction authority controls are missing. Closes gap 12.
@@ -812,7 +826,7 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
   - note: deliberately out of scope — adding AI to the risk workflow; the governance instrument must exist before the use. `ai_model_metric_readings` (insert-only, voided with a reason) records accuracy, precision, recall, calibration, drift and the human override rate per model version — "precisão" is both accuracy and precision (S53 D7); each metric reads not evaluated (no value), evaluated or stale for the current version since it is in use (`version_since`; a reading or override from before it is refused), and the model reads not evaluated, incomplete, stale or evaluated over the metrics its declared tier requires (D6); the override rate is computed from `ai_model_overrides` — a person's decision contrary to the model, recorded with its author and reason — and a typed rate is refused (D8); the methodology panel's M10 is now computed; bias, robustness, explainability and red team are referenced evidence, not metrics; no tolerance per metric (D12)
 - [x] T215 Test that the existing non-user-approval prohibitions still hold after this stage, and a model with no recorded evaluation is not treated as evaluated
   - note: NU1–NU5 of `NonUserApprovalInventoryTest` (every API action outside the anonymous allowlist and the SCIM controller, through its real policy, refuses a principal that is not a user — an inventoried model's name, the `system` actor — for the valid-user reason; no Stage 9.12 route decides), PR1–PR6 of `AiAuthorityProhibitionsInMemoryTest` (a named authorizer, committee member or business reviewer must be a user, the reviewer is the caller, on an AI component's risk with flag 11 derived), D11 (deriving flag 11 decides nothing), J1 (no job acts on the inventory), Q4 (the FKs refuse a non-user approver; Docker, not run here); EV1, FI2, T215b, T215c and P1 (no recorded evaluation is not evaluated — no value, never zero, never a pass, in the model, the list, the risk view and M10), and EV9 and T215d (found in review: a new version is not evaluated on data from before it — `version_since`); mutation-checked (S53 §8); two older gaps found and reported, not fixed: an API token decides in its owner's name on every decision route — or another user's, since its name claim is the display name matched against logins —, and `POST /MgmtReviews` skips segregation of duties (S53 §11); Track9AiGovernanceSchemaTests Q1–Q4 need Docker and were not run here; the S53 §8 runtime observations are still to be recorded on the PR
-- [ ] T310 Add the Stage 9.12 desktop surface: the AI model inventory with tier, oversight, owner, vendor and data, the evaluation by metric and version with an explicit "not evaluated", recording and voiding readings and overrides, the findings, an AI-component block on the risk detail, and M10 on the metrics panel (S53)
+- [x] T310 Add the Stage 9.12 desktop surface: the AI model inventory with tier, oversight, owner, vendor and data, the evaluation by metric and version with an explicit "not evaluated", recording and voiding readings and overrides, the findings, an AI-component block on the risk detail, and M10 on the metrics panel (S53)
 
 **Track completion.** The track is done when the coverage analysis (S28) is re-run and the lines each
 specification declared read ✅ — lines that stay 🟡 or ❌ are named with the reason.

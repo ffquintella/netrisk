@@ -564,18 +564,13 @@ public class IncidentResponsePlanTaskViewModel
         await LoadAttachments();
     }
     
-    private async Task LoadListAsync(List<Entity> entities)
+    private Task LoadListAsync(List<Entity> entities)
     {
-        var entResult = new List<string>();
-        await Task.Run(() =>
-        {
-            Parallel.ForEach(entities, entity =>
-            {
-                entResult.Add($"{entity.EntitiesProperties.Where(ep => ep.Type == "name").FirstOrDefault()?.Value} ({entity.Id})");
-            });
-        });
+        var entResult = ViewModelCollection.Materialize(entities, entity =>
+            $"{entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value} ({entity.Id})");
         
         PeopleAndTeamsEntities = new ObservableCollection<string>(entResult);
+        return Task.CompletedTask;
     }
     
     private async Task ExecuteCreateAsync()

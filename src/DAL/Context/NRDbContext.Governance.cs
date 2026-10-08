@@ -89,7 +89,7 @@ public partial class NRDbContext
             entity.Property(e => e.RenewedFromId).HasColumnName("renewed_from_id").HasColumnType("int(11)");
 
             entity.HasIndex(e => e.RiskId, "idx_ra_risk_id");
-            entity.HasIndex(e => e.RenewedFromId, "idx_ra_renewed_from_id");
+            entity.HasIndex(e => e.RenewedFromId, "uq_ra_renewed_from_id").IsUnique();
 
             // Cascade: an acceptance has no meaning without the risk it accepts. Deleting a risk is
             // already an administrator-only act, and leaving orphaned "accepted" rows behind would

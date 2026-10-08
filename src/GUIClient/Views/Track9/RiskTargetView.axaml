@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.RiskTargetView" x:DataType="vm:RiskTargetViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500">
+    <Design.DataContext><vm:RiskTargetViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="hint" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanWrite}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="3" ColumnDefinitions="210,*" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrTargetScore}"/>
+                <NumericUpDown Grid.Column="1" Value="{Binding TargetScore}" Minimum="0" Maximum="10" Increment="0.1" IsEnabled="{Binding CanWrite}"/>
+                <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrTargetExpectedLoss}"/>
+                <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding TargetExpectedLoss}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding CanWrite}"/>
+                <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrTargetDate}"/>
+                <DatePicker Grid.Row="2" Grid.Column="1" SelectedDate="{Binding TargetDate}" IsEnabled="{Binding CanWrite}"/>
+                <TextBlock Grid.Row="3" Classes="form_label" Text="{Binding StrRationale}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Rationale}" MaxLength="2000" MinHeight="100" AcceptsReturn="True" TextWrapping="Wrap" IsEnabled="{Binding CanWrite}"/>
+                <TextBlock Grid.Row="4" Classes="form_label" Text="{Binding StrCurrent}"/>
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentText}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Row="5" Classes="form_label" Text="{Binding StrTargetStatus}"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StatusText}" TextWrapping="Wrap"/>
+            </Grid>
+            <TextBlock Grid.Row="4" Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Classes="type3" Command="{Binding DeleteCommand}" IsEnabled="{Binding DeleteEnabled}" Margin="0 0 5 0"><TextBlock Text="{Binding StrRemoveTarget}"/></Button>
+                <Button Classes="type1" Command="{Binding SaveCommand}" IsEnabled="{Binding SaveEnabled}"><TextBlock Text="{Binding StrSaveChanges}"/></Button>
+            </StackPanel>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

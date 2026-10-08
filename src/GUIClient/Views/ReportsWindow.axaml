@@ -9,25 +9,25 @@
         xmlns:avaloniaProgressRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:ReportsViewModel" x:Class="GUIClient.Views.ReportsWindow"
         Title="{Binding StrTitle}">
-    
+
     <Design.DataContext>
         <viewModels:ReportsViewModel/>
     </Design.DataContext>
-    
+
     <Window.Resources>
         <converters:IntEqualConverter x:Key="IntEqualConverter"/>
     </Window.Resources>
-    
+
     <SplitView IsPaneOpen="True"
                DisplayMode="Inline"
                OpenPaneLength="300">
             <SplitView.Pane>
                 <StackPanel Orientation="Vertical">
-                    
+
                     <TextBlock Classes="header" Text="{Binding StrReports}" />
-                    
+
                     <!-- User List -->
-                    <ListBox  Name="LstUsers"  
+                    <ListBox  Name="LstUsers"
                               ItemsSource="{Binding ReportTypes}"
                               SelectedItem="{Binding SelectedReport, Mode=TwoWay}"
                               Classes="content-list">
@@ -37,7 +37,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    
+
                     <Button Classes="type2" Content="{Binding StrManageTemplates}"
                             Command="{Binding ManageTemplatesCommand}"
                             HorizontalAlignment="Stretch"
@@ -50,7 +50,7 @@
             </SplitView.Pane>
             <ScrollViewer >
                 <Grid ColumnDefinitions="*,5">
-                    <avaloniaProgressRing:ProgressRing Grid.Column="0" Width="100" 
+                    <avaloniaProgressRing:ProgressRing Grid.Column="0" Width="100"
                                            Height="100"
                                            IsActive="{Binding LoadingSpinner}"
                                            HorizontalAlignment="Center"
@@ -58,45 +58,55 @@
                                            Foreground="CornflowerBlue"
                                            ZIndex="1000"
                                            Margin="10,10,0,0"/>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=1}">
                         <reports:RiskReview DataContext="{Binding RiskReviewViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=2}">
                         <reports:RisksVsCosts DataContext="{Binding RisksVsCostsViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=3}">
                         <reports:RisksImpactVsProbability DataContext="{Binding RisksImpactVsProbabilityViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=4}">
                         <reports:EntitiesRisks DataContext="{Binding EntitiesRisksViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=5}">
                         <reports:FileReports DataContext="{Binding FileReportsViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=6}">
                         <reports:VulnerabilitiesByTime DataContext="{Binding VulnerabilitiesByTimeViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=7}">
                         <reports:CriticalProcessCoverage DataContext="{Binding CriticalProcessCoverageViewModel}"/>
                     </Panel>
-                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id, 
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
                                     Converter={StaticResource IntEqualConverter},
                                     ConverterParameter=8}">
                         <reports:RestorationVerification DataContext="{Binding RestorationVerificationViewModel}"/>
+                    </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=9}">
+                        <reports:ExploitationPrioritization DataContext="{Binding ExploitationPrioritizationViewModel}"/>
+                    </Panel>
+                    <Panel Grid.Column="0" IsVisible="{Binding SelectedReport.Id,
+                                    Converter={StaticResource IntEqualConverter},
+                                    ConverterParameter=10}">
+                        <reports:KevRemediation DataContext="{Binding KevRemediationViewModel}"/>
                     </Panel>
                 </Grid>
             </ScrollViewer>

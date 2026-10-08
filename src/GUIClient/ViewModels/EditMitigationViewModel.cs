@@ -41,6 +41,10 @@ public class EditMitigationViewModel
 {
     #region LANGUAGE
 
+    public GUIClient.ViewModels.Track9.MitigationEconomicsViewModel Track9Economics { get; } = new();
+    public string StrTrack9Economics => Localizer["Track9Economics"];
+    public string StrTrack9SaveMitigationFirst => Localizer["Track9SaveMitigationFirst"];
+    public bool HasSavedMitigation => _mitigation?.Id > 0;
     public string StrMitigation { get; }
     public string StrSubmissionDate { get; }
     public string StrSolution { get; }
@@ -166,6 +170,8 @@ public class EditMitigationViewModel
         // Awaited, not fire-and-forget: the edit-mode fields below are looked up *in* these
         // collections, so they have to be populated first.
         await LoadDataAsync();
+        await Track9Economics.LoadMitigationAsync(_mitigation?.Id > 0 ? _mitigation.Id : null);
+        this.RaisePropertyChanged(nameof(HasSavedMitigation));
 
         if (_operationType == OperationType.Create)
         {

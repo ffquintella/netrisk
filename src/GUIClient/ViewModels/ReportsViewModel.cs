@@ -51,6 +51,10 @@ public class ReportsViewModel: ViewModelBase
                 _ = CriticalProcessCoverageViewModel.EnsureLoadedAsync();
             if (value?.Id == RestorationVerificationReportId)
                 _ = RestorationVerificationViewModel.EnsureLoadedAsync();
+            if (value?.Id == ExploitationPrioritizationReportId)
+                _ = ExploitationPrioritizationViewModel.EnsureLoadedAsync();
+            if (value?.Id == KevRemediationReportId)
+                _ = KevRemediationViewModel.EnsureLoadedAsync();
         }
     }
 
@@ -59,6 +63,16 @@ public class ReportsViewModel: ViewModelBase
 
     /// <summary>Stage 9.3 (S43 §7): report 8, restoration tested vs declared RTO/RPO.</summary>
     public const int RestorationVerificationReportId = 8;
+
+    /// <summary>Stage 9.4 (T302, S45 §7.4): report 9, open findings by exploitation priority.</summary>
+    public const int ExploitationPrioritizationReportId = 9;
+
+    /// <summary>Stage 9.4 (T302, S45 §7.5): report 10, time to remediate KEV items, with the sync state.</summary>
+    public const int KevRemediationReportId = 10;
+
+    public ExploitationPrioritizationViewModel ExploitationPrioritizationViewModel { get; } = new();
+
+    public KevRemediationViewModel KevRemediationViewModel { get; } = new();
 
     private RestorationVerificationViewModel _restorationVerificationViewModel = new();
     public RestorationVerificationViewModel RestorationVerificationViewModel {
@@ -133,6 +147,10 @@ public class ReportsViewModel: ViewModelBase
             MaterialIconKind.ShieldCheckOutline));
         ReportTypes.Add(new ReportType(RestorationVerificationReportId, Localizer["Restoration tested vs declared RTO/RPO"], 8,
             MaterialIconKind.DatabaseRefresh));
+        ReportTypes.Add(new ReportType(ExploitationPrioritizationReportId, Localizer["ExploitationPrioritizationReport"], 9,
+            MaterialIconKind.ShieldAlert));
+        ReportTypes.Add(new ReportType(KevRemediationReportId, Localizer["KevRemediationReport"], 10,
+            MaterialIconKind.TimerSand));
 
         ReportTypes = ReportTypes.OrderBy(rt => rt.Order).ToList();
         

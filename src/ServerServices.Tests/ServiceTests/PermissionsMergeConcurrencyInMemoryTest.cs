@@ -96,6 +96,26 @@ public class PermissionsMergeConcurrencyInMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
+    public async Task TestRolePermissionsAreCompleteAndInRoleOrderUnderRepeatedCalls()
+    {
+        // RolesService.GetRolePermissionsAsync had the same Parallel.ForEach-into-a-List race, one call
+        // below the merge fixed above; it surfaced as a flaky "Source array was not long enough" here.
+        // Asserting the order makes the pre-fix failure deterministic rather than probabilistic.
+        Seed(ctx =>
+        {
+            var role = new Role { Value = 2, Name = "large" };
+            for (var i = 0; i < UserPermissionCount; i++)
+                role.Permissions.Add(NewPermission(i + 1, $"perm_{i}"));
+            ctx.Roles.Add(role);
+        });
+        var service = GetService<IRolesService>();
+        var expected = Enumerable.Range(0, UserPermissionCount).Select(i => $"perm_{i}").ToList();
+
+        for (var run = 0; run < 25; run++)
+            Assert.Equal(expected, await service.GetRolePermissionsAsync(2));
+    }
+
+    [Fact]
     public void TestUserHasPermissionFindsAnExtraAtTheEndOfALargeSet()
     {
         var user = SeedUser(roleId: 1);

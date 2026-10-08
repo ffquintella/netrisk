@@ -1,0 +1,153 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             x:Class="GUIClient.Views.Track9.AiModelInventoryView"
+             x:DataType="vm:AiModelInventoryViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto">
+      <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+      <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedValue="{Binding StatusFilter}"
+                SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}" Width="170"/>
+      <CheckBox Grid.Column="2" Margin="8 0 0 0" IsChecked="{Binding IncludeRetired}"><TextBlock Text="{Binding StrIncludeRetired}"/></CheckBox>
+      <CheckBox Grid.Column="3" Margin="8 0 0 0" IsChecked="{Binding WithFindingsOnly}"><TextBlock Text="{Binding StrFindingsOnly}"/></CheckBox>
+      <Button Grid.Column="4" Classes="operation" Margin="8 0 0 0" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button>
+      <Button Grid.Column="5" Classes="dialog1" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding NewCommand}"><TextBlock Text="{Binding StrNew}"/></Button>
+    </Grid>
+    <StackPanel Grid.Row="1">
+      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+      <TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/>
+      <TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/>
+    </StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="360,*" Margin="0 8 0 0">
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsReadOnly="True">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/>
+          <DataGridTextColumn Header="{Binding StrVersion}" Binding="{Binding Version}"/>
+          <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/>
+          <DataGridTextColumn Header="{Binding StrEvaluationState}" Binding="{Binding EvaluationStateText}"/>
+          <DataGridTextColumn Header="{Binding StrFindings}" Binding="{Binding FindingCount}"/>
+        </DataGrid.Columns>
+      </DataGrid>
+      <TabControl Grid.Column="1" Margin="10 0 0 0">
+        <TabItem Header="{Binding StrInventory}">
+          <ScrollViewer>
+            <StackPanel Margin="8" Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button Classes="dialog1" Command="{Binding OpenCommand}"><TextBlock Text="{Binding StrOpen}"/></Button>
+                <Button Classes="dialog1" IsEnabled="{Binding CanManage}" Command="{Binding SaveCommand}"><TextBlock Text="{Binding StrSave}"/></Button>
+                <TextBlock Classes="fieldLabel" VerticalAlignment="Center" Text="{Binding StrReason}"/>
+                <TextBox IsEnabled="{Binding CanManage}" Text="{Binding RetireReason}" MaxLength="1000" Width="280"/>
+                <Button Classes="dialog2" IsEnabled="{Binding CanManage}" Command="{Binding RetireCommand}"><TextBlock Text="{Binding StrRetire}"/></Button>
+              </StackPanel>
+              <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
+                <TextBlock Classes="fieldLabel" Text="{Binding StrName}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrPurpose}"/>
+                <TextBox Grid.Row="1" Text="{Binding Editor.Name}" MaxLength="200"/><TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Editor.Purpose}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap"/>
+                <TextBlock Grid.Row="2" Classes="fieldLabel" Text="{Binding StrKind}"/><TextBlock Grid.Row="2" Grid.Column="1" Classes="fieldLabel" Text="{Binding StrSource}"/>
+                <ComboBox Grid.Row="3" ItemsSource="{Binding KindOptions}" SelectedValue="{Binding SelectedEditorKind}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding SourceOptions}" SelectedValue="{Binding SelectedEditorSource}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <TextBlock Grid.Row="4" Classes="fieldLabel" Text="{Binding StrStatus}"/><TextBlock Grid.Row="4" Grid.Column="1" Classes="fieldLabel" Text="{Binding StrRiskTier}"/>
+                <ComboBox Grid.Row="5" ItemsSource="{Binding StatusOptions}" SelectedValue="{Binding SelectedEditorStatus}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <ComboBox Grid.Row="5" Grid.Column="1" ItemsSource="{Binding RiskTierOptions}" SelectedValue="{Binding SelectedEditorRiskTier}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <TextBlock Grid.Row="6" Classes="fieldLabel" Text="{Binding StrOversight}"/><TextBlock Grid.Row="6" Grid.Column="1" Classes="fieldLabel" Text="{Binding StrOwner}"/>
+                <ComboBox Grid.Row="7" ItemsSource="{Binding OversightOptions}" SelectedValue="{Binding SelectedEditorOversight}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <ComboBox Grid.Row="7" Grid.Column="1" ItemsSource="{Binding UserOptions}" SelectedValue="{Binding SelectedEditorOwnerId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              </Grid>
+              <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="3">
+                <TextBlock Classes="fieldLabel" Text="{Binding StrEntity}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrVendor}"/>
+                <ComboBox Grid.Row="1" ItemsSource="{Binding EntityOptions}" SelectedValue="{Binding SelectedEditorEntityId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ThirdPartyOptions}" SelectedValue="{Binding SelectedEditorThirdPartyId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+                <TextBlock Grid.Row="2" Classes="fieldLabel" Text="{Binding StrVersion}"/><TextBlock Grid.Row="2" Grid.Column="1" Classes="fieldLabel" Text="{Binding StrVersionSince}"/>
+                <TextBox Grid.Row="3" Text="{Binding Editor.Version}" MaxLength="100"/><DatePicker Grid.Row="3" Grid.Column="1" SelectedDate="{Binding Editor.VersionSince}"/>
+                <TextBlock Grid.Row="4" Classes="fieldLabel" Text="{Binding StrMaxEvaluationAge}"/><TextBlock Grid.Row="4" Grid.Column="1" Classes="fieldLabel" Text="{Binding StrNotes}"/>
+                <NumericUpDown Grid.Row="5" Value="{Binding Editor.MaxEvaluationAgeDays}" Minimum="1" Maximum="1096"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Editor.Notes}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap"/>
+              </Grid>
+              <ItemsControl ItemsSource="{Binding SelectedModel.Findings}"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Classes="warning" Text="{Binding Message}" TextWrapping="Wrap"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+        <TabItem Header="{Binding StrData}">
+          <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+            <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="2*,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6">
+              <TextBlock Classes="fieldLabel" Text="{Binding StrDataRecord}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrDataUsage}"/>
+              <ComboBox Grid.Row="1" ItemsSource="{Binding DataOptions}" SelectedValue="{Binding SelectedDataEntityId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding DataUsageOptions}" SelectedValue="{Binding SelectedDataUsage}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <Button Grid.Row="1" Grid.Column="2" Classes="dialog1" Command="{Binding AddDataCommand}"><TextBlock Text="{Binding StrAdd}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding DataDrafts}" SelectedItem="{Binding SelectedDataLink}" IsReadOnly="True">
+              <DataGrid.Columns><DataGridTextColumn Header="{Binding StrDataRecord}" Binding="{Binding EntityName}" Width="*"/><DataGridTextColumn Header="{Binding StrDataUsage}" Binding="{Binding UsageText}" Width="*"/></DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" IsEnabled="{Binding CanManage}" Orientation="Horizontal" Spacing="6" Margin="0 8 0 0"><Button Classes="dialog2" Command="{Binding RemoveDataCommand}"><TextBlock Text="{Binding StrRemove}"/></Button><Button Classes="dialog1" Command="{Binding SaveDataCommand}"><TextBlock Text="{Binding StrSave}"/></Button></StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrEvaluation}">
+          <Grid Margin="8" RowDefinitions="Auto,*">
+            <StackPanel><TextBlock Classes="header2" Text="{Binding SelectedEvaluationStateText}"/><TextBlock Classes="header_detail" Text="{Binding SelectedModel.Evaluation.Version}"/></StackPanel>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding MetricRows}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrMetric}" Binding="{Binding MetricText}"/>
+                <DataGridCheckBoxColumn Header="{Binding StrRequired}" Binding="{Binding State.Required}"/>
+                <DataGridTextColumn Header="{Binding StrEvaluationState}" Binding="{Binding StateText}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrValue}" Binding="{Binding ValueText}"/>
+                <DataGridTextColumn Header="{Binding StrMeasuredAt}" Binding="{Binding State.MeasuredAt}"/>
+                <DataGridTextColumn Header="{Binding StrPreviousVersion}" Binding="{Binding PreviousVersionText}"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrReadings}">
+          <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+            <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="*,*,*,Auto,*,*,*,*,2*,2*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="4">
+              <TextBlock Classes="fieldLabel" Text="{Binding StrMetric}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrValue}"/><TextBlock Grid.Column="2" Grid.ColumnSpan="2" Classes="fieldLabel" Text="{Binding StrMeasuredAt}"/><TextBlock Grid.Column="4" Classes="fieldLabel" Text="{Binding StrPeriodStart}"/><TextBlock Grid.Column="5" Classes="fieldLabel" Text="{Binding StrPeriodEnd}"/><TextBlock Grid.Column="6" Classes="fieldLabel" Text="{Binding StrSampleSize}"/><TextBlock Grid.Column="7" Grid.ColumnSpan="2" Classes="fieldLabel" Text="{Binding StrMethod}"/><TextBlock Grid.Column="9" Classes="fieldLabel" Text="{Binding StrEvidence}"/>
+              <ComboBox Grid.Row="1" ItemsSource="{Binding MetricOptions}" SelectedValue="{Binding ReadingMetric}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding ReadingValue}"/>
+              <DatePicker Grid.Row="1" Grid.Column="2" SelectedDate="{Binding ReadingMeasuredAt}"/><TimePicker Grid.Row="1" Grid.Column="3" SelectedTime="{Binding ReadingMeasuredTime}"/>
+              <DatePicker Grid.Row="1" Grid.Column="4" SelectedDate="{Binding ReadingPeriodStart}"/><DatePicker Grid.Row="1" Grid.Column="5" SelectedDate="{Binding ReadingPeriodEnd}"/>
+              <NumericUpDown Grid.Row="1" Grid.Column="6" Value="{Binding ReadingSampleSize}" Minimum="1" Maximum="100000000"/>
+              <TextBox Grid.Row="1" Grid.Column="7" Grid.ColumnSpan="2" Text="{Binding ReadingMethod}" MaxLength="500"/>
+              <TextBox Grid.Row="1" Grid.Column="9" Text="{Binding ReadingEvidence}" MaxLength="500"/>
+              <Button Grid.Row="1" Grid.Column="10" Classes="dialog1" Command="{Binding RecordReadingCommand}"><TextBlock Text="{Binding StrAdd}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Readings}" SelectedItem="{Binding SelectedReading}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrMetric}" Binding="{Binding MetricText}"/>
+                <DataGridTextColumn Header="{Binding StrValue}" Binding="{Binding Reading.Value}"/>
+                <DataGridTextColumn Header="{Binding StrVersion}" Binding="{Binding Reading.ModelVersion}"/>
+                <DataGridTextColumn Header="{Binding StrMeasuredAt}" Binding="{Binding Reading.MeasuredAt}"/>
+                <DataGridTextColumn Header="{Binding StrSampleSize}" Binding="{Binding Reading.SampleSize}"/>
+                <DataGridTextColumn Header="{Binding StrReason}" Binding="{Binding Reading.VoidReason}" Width="*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" IsEnabled="{Binding CanManage}" Orientation="Horizontal" Spacing="6" Margin="0 8 0 0"><TextBlock Classes="fieldLabel" VerticalAlignment="Center" Text="{Binding StrReason}"/><TextBox Text="{Binding VoidReason}" MaxLength="1000" Width="300"/><Button Classes="dialog2" Command="{Binding VoidReadingCommand}"><TextBlock Text="{Binding StrVoid}"/></Button></StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrOverrides}">
+          <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+            <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="*,Auto,2*,2*,2*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6">
+              <TextBlock Grid.ColumnSpan="2" Classes="fieldLabel" Text="{Binding StrOccurredAt}"/><TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrModelOutput}"/><TextBlock Grid.Column="3" Classes="fieldLabel" Text="{Binding StrHumanDecision}"/><TextBlock Grid.Column="4" Classes="fieldLabel" Text="{Binding StrReason}"/>
+              <DatePicker Grid.Row="1" SelectedDate="{Binding OverrideOccurredDate}"/><TimePicker Grid.Row="1" Grid.Column="1" SelectedTime="{Binding OverrideOccurredTime}"/>
+              <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding OverrideDraft.ModelOutput}" MaxLength="1000"/>
+              <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding OverrideDraft.HumanDecision}" MaxLength="1000"/>
+              <TextBox Grid.Row="1" Grid.Column="4" Text="{Binding OverrideDraft.Reason}" MaxLength="2000"/>
+              <Button Grid.Row="1" Grid.Column="5" Classes="dialog1" Command="{Binding RecordOverrideCommand}"><TextBlock Text="{Binding StrAdd}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Overrides}" SelectedItem="{Binding SelectedOverride}" IsReadOnly="True">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrOccurredAt}" Binding="{Binding OccurredAt}"/>
+                <DataGridTextColumn Header="{Binding StrModelOutput}" Binding="{Binding ModelOutput}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrHumanDecision}" Binding="{Binding HumanDecision}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrReason}" Binding="{Binding Reason}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrVoid}" Binding="{Binding VoidReason}"/>
+              </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" IsEnabled="{Binding CanManage}" Orientation="Horizontal" Spacing="6" Margin="0 8 0 0"><TextBlock Classes="fieldLabel" VerticalAlignment="Center" Text="{Binding StrReason}"/><TextBox Text="{Binding VoidReason}" MaxLength="1000" Width="300"/><Button Classes="dialog2" Command="{Binding VoidOverrideCommand}"><TextBlock Text="{Binding StrVoid}"/></Button></StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrRisks}">
+          <DataGrid Margin="8" ItemsSource="{Binding SelectedModel.Risks}" IsReadOnly="True">
+            <DataGrid.Columns><DataGridTextColumn Header="{Binding StrRiskReference}" Binding="{Binding ReferenceId}"/><DataGridTextColumn Header="{Binding StrSubject}" Binding="{Binding Subject}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding Status}"/><DataGridTextColumn Header="{Binding StrNotes}" Binding="{Binding Note}" Width="*"/></DataGrid.Columns>
+          </DataGrid>
+        </TabItem>
+      </TabControl>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9" x:Class="GUIClient.Views.Track9.ThirdPartyConcentrationView"
+             x:DataType="vm:ThirdPartyConcentrationViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+    <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="header" Text="{Binding StrTitle}"/><Button Grid.Column="1" Classes="operation" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button></Grid>
+    <TextBlock Grid.Row="1" Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <StackPanel Grid.Row="2" Margin="0 8 0 0">
+      <TextBlock Classes="notice" Text="{Binding StrRestricted}" IsVisible="{Binding Report.IsScopeRestricted}"/>
+      <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+        <Border Classes="card"><Grid RowDefinitions="Auto,*"><TextBlock Classes="header2" Text="{Binding StrSupplier}"/><DataGrid Grid.Row="1" ItemsSource="{Binding Report.Suppliers.Entries}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="{Binding StrCriticalProcesses}" Binding="{Binding DependentCriticalProcessCount}"/><DataGridTextColumn Header="{Binding StrShare}" Binding="{Binding Share, StringFormat='{}{0:P1}'}"/><DataGridCheckBoxColumn Header="{Binding StrFourthParty}" Binding="{Binding ReachedThroughSubprocessing}"/><DataGridTextColumn Header="{Binding StrUnmapped}" Binding="{Binding LinksWithoutDeclaredDependents}"/></DataGrid.Columns></DataGrid></Grid></Border>
+        <Border Grid.Column="1" Classes="card"><Grid RowDefinitions="Auto,*"><TextBlock Classes="header2" Text="{Binding StrCloud}"/><DataGrid Grid.Row="1" ItemsSource="{Binding Report.Cloud.Entries}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="{Binding StrCriticalProcesses}" Binding="{Binding DependentCriticalProcessCount}"/><DataGridTextColumn Header="{Binding StrShare}" Binding="{Binding Share, StringFormat='{}{0:P1}'}"/></DataGrid.Columns></DataGrid></Grid></Border>
+        <Border Grid.Column="2" Classes="card"><Grid RowDefinitions="Auto,*"><TextBlock Classes="header2" Text="{Binding StrIdentity}"/><DataGrid Grid.Row="1" ItemsSource="{Binding Report.Identity.Entries}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="{Binding StrCriticalProcesses}" Binding="{Binding DependentCriticalProcessCount}"/><DataGridTextColumn Header="{Binding StrShare}" Binding="{Binding Share, StringFormat='{}{0:P1}'}"/></DataGrid.Columns></DataGrid></Grid></Border>
+      </Grid>
+    </StackPanel>
+  </Grid>
+</UserControl>

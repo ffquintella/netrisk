@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.LossComponentsView" x:DataType="vm:LossComponentsViewModel"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="620">
+    <Design.DataContext><vm:LossComponentsViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="hint" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanWrite}" TextWrapping="Wrap"/>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Components}" AutoGenerateColumns="False" IsEnabled="{Binding CanWrite}" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="{Binding StrInclude, Mode=OneTime}" Binding="{Binding Included}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrComponent, Mode=OneTime}" Binding="{Binding Name}" IsReadOnly="True" Width="2*"/>
+                    <DataGridTemplateColumn Header="{Binding StrMinimum, Mode=OneTime}" Width="*">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate x:DataType="vm:LossComponentEditRow"><NumericUpDown Value="{Binding Minimum}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding Included}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{Binding StrMostLikely, Mode=OneTime}" Width="*">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate x:DataType="vm:LossComponentEditRow"><NumericUpDown Value="{Binding MostLikely}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding Included}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{Binding StrMaximum, Mode=OneTime}" Width="*">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate x:DataType="vm:LossComponentEditRow"><NumericUpDown Value="{Binding Maximum}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding Included}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{Binding StrBasis, Mode=OneTime}" Width="3*">
+                        <DataGridTemplateColumn.CellTemplate><DataTemplate x:DataType="vm:LossComponentEditRow"><TextBox Text="{Binding Basis}" MaxLength="1000" IsEnabled="{Binding Included}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <TextBlock Grid.Row="4" Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Classes="type3" Command="{Binding DeleteCommand}" IsEnabled="{Binding DeleteEnabled}" Margin="0 0 5 0"><TextBlock Text="{Binding StrRemoveComponents}"/></Button>
+                <Button Classes="type1" Command="{Binding SaveCommand}" IsEnabled="{Binding SaveEnabled}"><TextBlock Text="{Binding StrSaveChanges}"/></Button>
+            </StackPanel>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

@@ -346,6 +346,37 @@ public class RiskReviewPortalInMemoryTest : InMemoryServiceTestBase
         Assert.Equal("segregation_of_duties", ex.RuleName);
     }
 
+    [Theory]
+    [InlineData(RiskReviewDecision.MitigationRequested)]
+    [InlineData(RiskReviewDecision.Escalated)]
+    public async Task TestOwnerCannotWriteANonAcceptanceCampaignReview(RiskReviewDecision decision)
+    {
+        var campaign = await OpenCampaignAsync();
+        var item = (await _campaigns.GetAsync(campaign.Id)).Items.First(i => i.RiskId == 1);
+        var request = new CampaignDecisionRequest
+        {
+            Decision = decision,
+            EscalateToUserId = decision == RiskReviewDecision.Escalated ? 3 : null,
+            Tasks = decision == RiskReviewDecision.MitigationRequested
+                ? [new MitigationTaskRequest
+                {
+                    Title = "Owner-authored task", OwnerId = 3,
+                    DueDate = new DateTime(2026, 11, 30, 0, 0, 0, DateTimeKind.Utc)
+                }]
+                : null
+        };
+
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(() =>
+            _campaigns.DecideAsync(campaign.Id, item.Id, request, actingUserId: 2));
+
+        Assert.Equal("segregation_of_duties", ex.RuleName);
+        await using var db = OpenContext();
+        Assert.Empty(db.MgmtReviews.Where(r => r.RiskId == 1));
+        Assert.Empty(db.MitigationTasks);
+        Assert.Equal(RiskReviewDecision.Pending,
+            db.RiskReviewCampaignItems.Single(i => i.Id == item.Id).Decision);
+    }
+
     [Fact]
     public async Task TestRequestingMitigationCreatesTasksAndAMitigationToHangThemOff()
     {

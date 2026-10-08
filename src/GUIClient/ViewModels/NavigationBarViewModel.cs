@@ -43,6 +43,10 @@ public class NavigationBarViewModel: ViewModelBase
     public string StrVulnerabilities { get; set; }
     
     public string StrIncidents => Localizer["Incidents"];
+    public string StrTrack9Workspace => Localizer["Track9Workspace"];
+    public bool CanOpenTrack9 => IsEnabled && GUIClient.Tools.Track9.Track9WorkspaceAccess.CanOpen(AuthenticationService.AuthenticatedUserInfo);
+    public ReactiveCommand<RxVoid, RxVoid> BtTrack9Clicked { get; }
+
     public string StrNotifications => Localizer["Notifications"];
 
 
@@ -240,6 +244,10 @@ public class NavigationBarViewModel: ViewModelBase
         BtAccountClicked = ReactiveCommand.Create(ExecuteOpenAccount);
         BtEntitiesClicked = ReactiveCommand.Create(ExecuteOpenEntities);
         BtReportsClicked = ReactiveCommand.Create(ExecuteOpenReports);
+        BtTrack9Clicked = ReactiveCommand.Create(() =>
+        {
+            if (CanOpenTrack9) Navigation.ShowAuxiliaryWindow<Track9WorkspaceWindow>(() => new Track9WorkspaceViewModel());
+        });
         BtVulnerabilityClicked = ReactiveCommand.Create(ExecuteOpenVulnerability);
         BtNotificationsClicked = ReactiveCommand.Create(ExecuteOpenNotification);
         BtIncidentsClicked = ReactiveCommand.CreateFromTask(ExecuteOpenIncidentsAsync);
@@ -268,6 +276,7 @@ public class NavigationBarViewModel: ViewModelBase
             AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
             IsEnabled = true;
             if (AuthenticationService!.AuthenticatedUserInfo == null) await AuthenticationService.GetAuthenticatedUserInfoAsync();
+            this.RaisePropertyChanged(nameof(CanOpenTrack9));
             LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
             //if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
             if (AuthenticationService.AuthenticatedUserInfo.IsAdmin) IsAdmin = true;

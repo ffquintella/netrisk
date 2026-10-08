@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="500"
+             x:DataType="vm:RiskMonitoringPanelViewModel"
+             x:Class="GUIClient.Views.Track9.RiskMonitoringPanelView">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,*" Margin="5">
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="header2" Text="{Binding StrTitle}"/>
+            <Button Grid.Column="1" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrReload}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="notice" Text="{Binding StrThirdLine}" IsVisible="{Binding IsThirdLine}"/>
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0 5">
+            <TextBlock Classes="label" Text="{Binding StrGateB}"/>
+            <TextBlock Classes="formData" Text="{Binding GateBText}"/>
+        </StackPanel>
+        <GroupBox Grid.Row="3" Classes="type1" Header="{Binding StrKris}">
+            <DataGrid ItemsSource="{Binding LinkedKris}" SelectedItem="{Binding SelectedLinkedKri}"
+                      AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="3*"/>
+                    <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StateLabel}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrValue}" Binding="{Binding ValueText}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" Margin="0 5"
+              IsEnabled="{Binding !IsBusy}">
+            <ComboBox ItemsSource="{Binding AvailableKris}" SelectedItem="{Binding SelectedKriToLink}"/>
+            <Button Grid.Column="1" Classes="dialog1" Margin="5 0" Command="{Binding BtLinkClicked}"
+                    IsEnabled="{Binding CanWrite}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Link" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrLink}"/>
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Classes="dialog2" Command="{Binding BtUnlinkClicked}" IsEnabled="{Binding CanWrite}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="LinkOff" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrUnlink}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <GroupBox Grid.Row="5" Classes="type1" Header="{Binding StrTriggers}">
+            <DataGrid ItemsSource="{Binding Triggers}" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrOccurredAt}" Binding="{Binding RaisedAt}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Title}" Width="3*"/>
+                    <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StateLabel}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+        <progRing:ProgressRing Grid.RowSpan="6" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

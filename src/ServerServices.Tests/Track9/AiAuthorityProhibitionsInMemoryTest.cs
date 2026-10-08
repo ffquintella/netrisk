@@ -173,9 +173,10 @@ public class AiAuthorityProhibitionsInMemoryTest : DecisionCycleTestBase
     /// <summary>
     /// PR5 — the reviewer of a management review is always the caller, whatever the payload says: a review naming the
     /// background actor (0) as its reviewer is recorded with the person who acted. This pins
-    /// <c>MgmtReviewsService.CreateReviewAsync</c>, the enforced path; the route the desktop client uses today,
-    /// <c>POST /MgmtReviews</c>, sets the reviewer to the caller in the controller (<c>MgmtReviewsControllerTest</c>) but
-    /// reaches the legacy <c>Create</c>, without segregation of duties (S53 §11, defect 2).
+    /// <c>MgmtReviewsService.CreateReviewAsync</c>, the enforced path, which is also the one the desktop client's route,
+    /// <c>POST /MgmtReviews</c>, now reaches acting as the caller (<c>MgmtReviewsControllerTest</c>); the legacy
+    /// <c>Create</c> it used to reach without segregation of duties (S53 §11, defect 2) is gone
+    /// (<c>MgmtReviewSegregationInMemoryTest</c>).
     /// </summary>
     [Fact]
     public async Task TestPR5_TheReviewerIsTheCallerNeverThePayload()

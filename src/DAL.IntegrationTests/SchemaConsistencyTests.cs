@@ -15,6 +15,22 @@ namespace DAL.IntegrationTests;
 /// </summary>
 public class SchemaConsistencyTests
 {
+    [Fact]
+    public void RiskAcceptanceRenewalHasAUniquePredecessorIndex()
+    {
+        var options = new DbContextOptionsBuilder<NRDbContext>()
+            .UseMySql("server=unused;database=netrisk;user=x;password=y", ServerVersion.Parse("10.11.0-mariadb"))
+            .Options;
+        using var ctx = new NRDbContext(options);
+
+        var entity = ctx.Model.FindEntityType(typeof(Entities.RiskAcceptance))!;
+        var index = entity.GetIndexes().Single(i => i.Properties.Select(p => p.Name)
+            .SequenceEqual([nameof(Entities.RiskAcceptance.RenewedFromId)]));
+
+        Assert.True(index.IsUnique);
+        Assert.Equal("uq_ra_renewed_from_id", index.GetDatabaseName());
+    }
+
     /// <summary>
     /// The model must match the snapshot of the latest migration. Before the <c>AddUserEntityRoles</c>
     /// fix this returned <c>true</c> (entities like <c>UserEntityRole</c> were in the model but not the

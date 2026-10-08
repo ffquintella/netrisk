@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.RiskFlagsPanel"
+             x:DataType="vm:RiskFlagsPanelViewModel"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="720">
+    <Design.DataContext><vm:RiskFlagsPanelViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,240,Auto,Auto,Auto,*" Margin="5">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding RefreshCommand}" Margin="5 0"
+                        IsEnabled="{Binding CanRefresh}" ToolTip.Tip="{Binding StrRefreshDerived}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Refresh" Width="18" Height="18" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRefreshDerived}"/>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" Classes="type2" Command="{Binding ReloadCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="18" Height="18" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrReload}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="hint" Text="{Binding WriteDisabledReason}" IsVisible="{Binding IsThirdLine}" TextWrapping="Wrap"/>
+
+            <StackPanel Grid.Row="3" Margin="0 5" IsVisible="{Binding HasRisk}">
+                <TextBlock Classes="header_detail" Text="{Binding StrGateA}"/>
+                <TextBlock Text="{Binding GateAText}"/>
+                <TextBlock Classes="hint" Text="{Binding GateAExplanation}" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <DataGrid Grid.Row="4" ItemsSource="{Binding Flags}" SelectedItem="{Binding SelectedFlag}"
+                      AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrFlag, Mode=OneTime}" Binding="{Binding Number}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrFlag, Mode=OneTime}" Binding="{Binding Name}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrSet, Mode=OneTime}" Binding="{Binding IsSet}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrDeclared, Mode=OneTime}" Binding="{Binding Declared}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrDerived, Mode=OneTime}" Binding="{Binding Derived}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}" Binding="{Binding DeclaredReason}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" Margin="0 5">
+                <TextBox Grid.Column="0" Text="{Binding FlagReason, Mode=TwoWay}" AcceptsReturn="True"
+                         TextWrapping="Wrap" MaxLength="1000" PlaceholderText="{Binding StrReason}" IsEnabled="{Binding CanEditFlag}"/>
+                <Button Grid.Column="1" Classes="type1" Command="{Binding DeclareCommand}" Margin="5 0 0 0"
+                        IsEnabled="{Binding CanDeclare}" ToolTip.Tip="{Binding FlagError}">
+                    <TextBlock Text="{Binding StrDeclare}"/>
+                </Button>
+                <Button Grid.Column="2" Classes="type3" Command="{Binding WithdrawCommand}" Margin="5 0 0 0"
+                        IsEnabled="{Binding CanWithdraw}" ToolTip.Tip="{Binding FlagError}">
+                    <TextBlock Text="{Binding StrWithdraw}"/>
+                </Button>
+            </Grid>
+
+            <Grid Grid.Row="6" ColumnDefinitions="Auto,*,Auto" Margin="0 5">
+                <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrCurrentDecision}"/>
+                <TextBlock Grid.Column="1" Text="{Binding CurrentDecisionText}" TextWrapping="Wrap" Margin="5 0"/>
+            </Grid>
+
+            <Grid Grid.Row="7" ColumnDefinitions="240,*,Auto" Margin="0 5">
+                <ComboBox Grid.Column="0" ItemsSource="{Binding DecisionOptions}" SelectedItem="{Binding SelectedDecision}" IsEnabled="{Binding CanEditDecision}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBox Grid.Column="1" Text="{Binding DecisionReason, Mode=TwoWay}" AcceptsReturn="True"
+                         TextWrapping="Wrap" MaxLength="2000" Margin="5 0" PlaceholderText="{Binding StrReason}" IsEnabled="{Binding CanEditDecision}"/>
+                <Button Grid.Column="2" Classes="type1" Command="{Binding RecordDecisionCommand}"
+                        IsEnabled="{Binding CanRecordDecision}" ToolTip.Tip="{Binding DecisionError}">
+                    <TextBlock Text="{Binding StrRecordDecision}"/>
+                </Button>
+            </Grid>
+
+            <DataGrid Grid.Row="8" ItemsSource="{Binding Decisions}" AutoGenerateColumns="False" IsReadOnly="True"
+                      GridLinesVisibility="Horizontal" MinHeight="120">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrCurrentDecision, Mode=OneTime}" Binding="{Binding Decision}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}" Binding="{Binding Reason}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrDecisionHistory, Mode=OneTime}" Binding="{Binding DecidedAt}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

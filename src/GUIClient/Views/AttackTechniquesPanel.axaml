@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="260"
+             x:DataType="viewModels:AttackTechniquesPanelViewModel"
+             x:Class="GUIClient.Views.AttackTechniquesPanel">
+    <Design.DataContext>
+        <viewModels:AttackTechniquesPanelViewModel/>
+    </Design.DataContext>
+
+    <!-- Stage 9.4 (T302, S45 §7.3): the MITRE ATT&CK technique editor of a finding or a risk scenario.
+         Enabling follows ExploitationSignalsAccess; the server decides every write, and its refusal is
+         shown as the sentence it wrote. -->
+    <StackPanel IsVisible="{Binding IsVisible}" Margin="0 5 0 0">
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" Classes="header2" Text="{Binding StrTitle}" HorizontalAlignment="Stretch"/>
+            <Button Grid.Column="1" Classes="operation" Margin="5 0 0 0"
+                    Command="{Binding BtRemoveTechniqueClicked}" IsEnabled="{Binding IsRemoveEnabled}"
+                    ToolTip.Tip="{Binding StrRemove}">
+                <material:MaterialIcon Kind="LinkVariantOff"/>
+            </Button>
+        </Grid>
+
+        <TextBlock Classes="header_detail" Text="{Binding StrNone}" IsVisible="{Binding IsEmpty}"/>
+        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                 IsVisible="{Binding !IsEmpty}" MaxHeight="160">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="viewModels:AttackTechniqueRow">
+                    <StackPanel>
+                        <TextBlock Classes="formData" Text="{Binding Text}" TextWrapping="Wrap"/>
+                        <TextBlock Classes="hint" Text="{Binding LinkedOnText}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock Classes="hint" Text="{Binding StrReadOnly}" TextWrapping="Wrap" IsVisible="{Binding IsReadOnly}"/>
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0 5 0 0" IsEnabled="{Binding CanWrite}">
+            <TextBox Grid.Row="0" Grid.Column="0" MaxLength="16" Margin="0 0 0 3"
+                     Text="{Binding NewTechniqueId}" PlaceholderText="{Binding StrTechniqueId}"/>
+            <TextBox Grid.Row="1" Grid.Column="0" MaxLength="255"
+                     Text="{Binding NewTechniqueName}" PlaceholderText="{Binding StrTechniqueName}"/>
+            <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Classes="type2" Margin="5 0 0 0"
+                    VerticalAlignment="Center"
+                    Command="{Binding BtAddTechniqueClicked}" IsEnabled="{Binding IsAddEnabled}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Plus" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrAdd}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Classes="warning" Text="{Binding InputErrorText}" TextWrapping="Wrap" IsVisible="{Binding HasInputError}"/>
+    </StackPanel>
+</UserControl>

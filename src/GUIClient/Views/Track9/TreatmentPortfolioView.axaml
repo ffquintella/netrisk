@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.TreatmentPortfolioView" x:DataType="vm:TreatmentPortfolioViewModel"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760">
+    <Design.DataContext><vm:TreatmentPortfolioViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,180,Auto,*" Margin="5">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="3" ColumnDefinitions="Auto,150,Auto,150,Auto,160,Auto,160,Auto" Margin="0 5">
+                <TextBlock Classes="form_label" Text="{Binding StrBudget}"/>
+                <NumericUpDown Grid.Column="1" Value="{Binding Budget}" Minimum="0" Maximum="1000000000000"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrPeopleCapacity}"/>
+                <NumericUpDown Grid.Column="3" Value="{Binding PeopleCapacity}" Minimum="0" Maximum="99999999"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrStartDate}"/>
+                <DatePicker Grid.Column="5" SelectedDate="{Binding StartDate}"/>
+                <TextBlock Grid.Column="6" Classes="form_label" Text="{Binding StrDeadline}"/>
+                <DatePicker Grid.Column="7" SelectedDate="{Binding Deadline}"/>
+                <Button Grid.Column="8" Classes="type1" Command="{Binding CalculateCommand}" IsEnabled="{Binding CalculateEnabled}"><TextBlock Text="{Binding StrCalculate}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="4" ItemsSource="{Binding Candidates}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="{Binding StrCandidates, Mode=OneTime}" Binding="{Binding IsSelected}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto,*" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrBudgetUsed}"/><TextBlock Grid.Column="1" Text="{Binding BudgetUsedText}"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrPeopleUsed}"/><TextBlock Grid.Column="3" Text="{Binding PeopleUsedText}"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrExpectedReduction}"/><TextBlock Grid.Column="5" Text="{Binding ExpectedReductionText}"/>
+                <TextBlock Grid.Column="6" Classes="form_label" Text="{Binding StrEscalations}"/><TextBlock Grid.Column="7" Text="{Binding EscalationsText}"/>
+            </Grid>
+            <DataGrid Grid.Row="6" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding Risk}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrOption, Mode=OneTime}" Binding="{Binding Option}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrGateD, Mode=OneTime}" Binding="{Binding Tier}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}" Binding="{Binding Status}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrBudget, Mode=OneTime}" Binding="{Binding FirstYearCost}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrPeopleCapacity, Mode=OneTime}" Binding="{Binding EffortPersonDays}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrReason, Mode=OneTime}" Binding="{Binding Reasons}" Width="2*"/>
+                    <DataGridCheckBoxColumn Header="{Binding StrEscalations, Mode=OneTime}" Binding="{Binding RequiresEscalation}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

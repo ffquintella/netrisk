@@ -1,0 +1,105 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9" x:Class="GUIClient.Views.Track9.DataCatalogueView"
+             x:DataType="vm:DataCatalogueViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+      <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+      <CheckBox Grid.Column="1" IsChecked="{Binding WithFindingsOnly}"><TextBlock Text="{Binding StrFindingsOnly}"/></CheckBox>
+      <Button Grid.Column="2" Classes="operation" Margin="6 0 0 0" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button>
+      <Button Grid.Column="3" Classes="dialog1" Margin="6 0 0 0" Command="{Binding OpenCommand}"><TextBlock Text="{Binding StrOpen}"/></Button>
+    </Grid>
+    <StackPanel Grid.Row="1">
+      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+      <TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/>
+      <TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/>
+    </StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="330,*" Margin="0 8 0 0">
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsReadOnly="True">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/>
+          <DataGridCheckBoxColumn Header="{Binding StrCatalogued}" Binding="{Binding Catalogued}"/>
+          <DataGridTextColumn Header="{Binding StrPersonalData}" Binding="{Binding PersonalDataText}"/>
+          <DataGridTextColumn Header="{Binding StrFindings}" Binding="{Binding FindingCount}"/>
+        </DataGrid.Columns>
+      </DataGrid>
+      <TabControl Grid.Column="1" Margin="10 0 0 0">
+        <TabItem Header="{Binding StrTitle}">
+          <ScrollViewer><StackPanel Margin="8" Spacing="6">
+            <TextBlock Classes="header2" Text="{Binding SelectedRecord.Name}"/>
+            <StackPanel IsEnabled="{Binding CanManage}" Spacing="4">
+              <TextBlock Classes="fieldLabel" Text="{Binding StrPersonalData}"/>
+              <ComboBox ItemsSource="{Binding PersonalDataOptions}" SelectedValue="{Binding SelectedPersonalData}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <WrapPanel>
+                <CheckBox IsThreeState="True" IsChecked="{Binding Editor.InvolvesMinors}" Margin="0 0 12 0"><TextBlock Text="{Binding StrInvolvesMinors}"/></CheckBox>
+                <CheckBox IsChecked="{Binding Editor.LargeVolume}" Margin="0 0 12 0"><TextBlock Text="{Binding StrLargeVolume}"/></CheckBox>
+                <CheckBox IsChecked="{Binding Editor.StrategicResearch}"><TextBlock Text="{Binding StrStrategicResearch}"/></CheckBox>
+              </WrapPanel>
+              <TextBlock Classes="fieldLabel" Text="{Binding StrDataSubjects}"/>
+              <TextBox Text="{Binding Editor.DataSubjects}" MaxLength="500"/>
+              <TextBlock Classes="fieldLabel" Text="{Binding StrDataCategories}"/>
+              <TextBox Text="{Binding Editor.DataCategories}" MaxLength="1000"/>
+              <TextBlock Classes="fieldLabel" Text="{Binding StrNotes}"/>
+              <TextBox Text="{Binding Editor.Notes}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap"/>
+              <Button Classes="dialog1" Command="{Binding SaveCommand}" HorizontalAlignment="Left"><TextBlock Text="{Binding StrSave}"/></Button>
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding SelectedRecord.Findings}"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Classes="warning" Text="{Binding Message}" TextWrapping="Wrap"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+          </StackPanel></ScrollViewer>
+        </TabItem>
+        <TabItem Header="{Binding StrPurposes}">
+          <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+            <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="2*,*,*,2*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6">
+              <TextBlock Classes="fieldLabel" Text="{Binding StrPurpose}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrLegalBasis}"/><TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrLegalRequirement}"/><TextBlock Grid.Column="3" Classes="fieldLabel" Text="{Binding StrBasisReference}"/>
+              <TextBox Grid.Row="1" Text="{Binding NewPurpose.Purpose}" MaxLength="300"/>
+              <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding LegalBasisOptions}" SelectedValue="{Binding SelectedPurposeLegalBasis}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding RequirementOptions}" SelectedValue="{Binding SelectedPurposeRequirementId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+              <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding NewPurpose.BasisReference}" MaxLength="500"/>
+              <Button Grid.Row="1" Grid.Column="4" Classes="dialog1" Command="{Binding AddPurposeCommand}"><TextBlock Text="{Binding StrAdd}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding PurposeDrafts}" SelectedItem="{Binding SelectedPurpose}" IsReadOnly="{Binding !CanManage}">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrPurpose}" Binding="{Binding Purpose}" Width="2*"/>
+                <DataGridTextColumn Header="{Binding StrLegalBasis}" Binding="{Binding LegalBasisText}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrLegalRequirement}" Binding="{Binding RequirementName}"/>
+                <DataGridTextColumn Header="{Binding StrBasisReference}" Binding="{Binding BasisReference}" Width="2*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="2" IsEnabled="{Binding CanManage}" Orientation="Horizontal" Spacing="6" Margin="0 8 0 0"><Button Classes="dialog2" Command="{Binding RemovePurposeCommand}"><TextBlock Text="{Binding StrRemove}"/></Button><Button Classes="dialog1" Command="{Binding SaveCommand}"><TextBlock Text="{Binding StrSave}"/></Button></StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrRetention}">
+          <ScrollViewer><StackPanel IsEnabled="{Binding CanManage}" Margin="8" Spacing="4">
+            <TextBlock Classes="fieldLabel" Text="{Binding StrRetentionPeriod}"/><NumericUpDown Value="{Binding Editor.RetentionPeriodMonths}" Minimum="0"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrRetentionTrigger}"/><TextBox Text="{Binding Editor.RetentionTrigger}" MaxLength="500"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrRetentionBasis}"/><TextBox Text="{Binding Editor.RetentionBasis}" MaxLength="1000"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrLegalRequirement}"/><ComboBox ItemsSource="{Binding RequirementOptions}" SelectedValue="{Binding RetentionRequirementId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrReviewDue}"/><DatePicker SelectedDate="{Binding Editor.RetentionReviewDueAt}"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrReviewedAt}"/><DatePicker SelectedDate="{Binding Editor.RetentionReviewedAt}"/>
+            <Button Classes="dialog1" Command="{Binding SaveCommand}" HorizontalAlignment="Left"><TextBlock Text="{Binding StrSave}"/></Button>
+          </StackPanel></ScrollViewer>
+        </TabItem>
+        <TabItem Header="{Binding StrLocations}">
+          <Grid Margin="8" RowDefinitions="Auto,*,Auto">
+            <Grid IsEnabled="{Binding CanManage}" ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6">
+              <TextBlock Classes="fieldLabel" Text="{Binding StrCountry}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrRegion}"/><TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrPurpose}"/>
+              <TextBox Grid.Row="1" Text="{Binding NewLocation.Country}" MaxLength="2"/><TextBox Grid.Row="1" Grid.Column="1" Text="{Binding NewLocation.Region}" MaxLength="200"/><ComboBox Grid.Row="1" Grid.Column="2" ItemsSource="{Binding LocationPurposeOptions}" SelectedValue="{Binding SelectedNewLocationPurpose}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/><Button Grid.Row="1" Grid.Column="3" Classes="dialog1" Command="{Binding AddLocationCommand}"><TextBlock Text="{Binding StrAdd}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding LocationDrafts}" SelectedItem="{Binding SelectedLocation}" IsReadOnly="{Binding !CanManage}"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrCountry}" Binding="{Binding Country}"/><DataGridTextColumn Header="{Binding StrRegion}" Binding="{Binding Region}" Width="*"/><DataGridTextColumn Header="{Binding StrPurpose}" Binding="{Binding PurposeText}"/></DataGrid.Columns></DataGrid>
+            <StackPanel Grid.Row="2" IsEnabled="{Binding CanManage}" Orientation="Horizontal" Spacing="6" Margin="0 8 0 0"><Button Classes="dialog2" Command="{Binding RemoveLocationCommand}"><TextBlock Text="{Binding StrRemove}"/></Button><Button Classes="dialog1" Command="{Binding SaveCommand}"><TextBlock Text="{Binding StrSave}"/></Button></StackPanel>
+          </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrTransfer}">
+          <StackPanel IsEnabled="{Binding CanManage}" Margin="8" Spacing="6">
+            <CheckBox IsThreeState="True" IsChecked="{Binding Editor.InternationalTransfer}"><TextBlock Text="{Binding StrTransferDeclared}"/></CheckBox>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrTransferMechanism}"/>
+            <ComboBox ItemsSource="{Binding TransferMechanismOptions}" SelectedValue="{Binding SelectedTransferMechanism}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrCountry}"/>
+            <ItemsControl ItemsSource="{Binding SelectedRecord.TransferCountries}"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+            <Button Classes="dialog1" Command="{Binding SaveCommand}" HorizontalAlignment="Left"><TextBlock Text="{Binding StrSave}"/></Button>
+          </StackPanel>
+        </TabItem>
+        <TabItem Header="{Binding StrProcessors}"><DataGrid Margin="8" ItemsSource="{Binding ProcessorRows}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/><DataGridCheckBoxColumn Header="{Binding StrThroughGroup}" Binding="{Binding ThroughGroup}"/></DataGrid.Columns></DataGrid></TabItem>
+        <TabItem Header="{Binding StrDpias}"><DataGrid Margin="8" ItemsSource="{Binding DpiaRows}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrTitleColumn}" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/><DataGridTextColumn Header="{Binding StrResidualRisk}" Binding="{Binding ResidualRiskText}"/><DataGridTextColumn Header="{Binding StrReviewDue}" Binding="{Binding NextReviewDueAt}"/></DataGrid.Columns></DataGrid></TabItem>
+      </TabControl>
+    </Grid>
+  </Grid>
+</UserControl>

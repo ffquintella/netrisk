@@ -1,5 +1,6 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:track9="clr-namespace:GUIClient.Views.Track9"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
@@ -83,10 +84,23 @@
         <GridSplitter Grid.Column="1" Classes="horizontalSplitter"/>
         
         <!-- RIGHT SIDE AREA -->
-        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*">
             <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrEntity}" HorizontalAlignment="Stretch"/>
             <!-- Entity Data -->
             <Panel Grid.Row="1" Name="EntityPanel" Margin="5"/>
+
+            <Expander Grid.Row="3" Header="{Binding StrTrack9Workspace}" IsVisible="{Binding CanReadTrack9}">
+                <ScrollViewer MaxHeight="420">
+                    <StackPanel Spacing="8">
+                        <Panel IsVisible="{Binding CanReadTrack9ThirdParties}">
+                            <track9:EntityThirdPartiesBlock DataContext="{Binding Track9ThirdParties}"/>
+                        </Panel>
+                        <Panel IsVisible="{Binding ShowTrack9DataCatalogue}">
+                            <track9:DataCatalogueRecordBlock DataContext="{Binding Track9DataCatalogue}"/>
+                        </Panel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Expander>
 
             <!-- Stage 9.3 (S43 §7): the continuity block, for processes and IT services only. -->
             <Panel Grid.Row="2" IsVisible="{Binding ContinuityPanelViewModel.IsVisible}">

@@ -262,21 +262,11 @@ public class IncidentsViewModel: ViewModelBase
         
         var planIds = await IncidentsService.GetIncidentResponsPlanIdsByIdAsync(SelectedIncident.Id);
         
-        ParallelOptions parallelOptions = new()
-        {
-            MaxDegreeOfParallelism = 3
-        };
-        
-        IncidentResponsePlansActivated.Clear();
-        
-        await Parallel.ForEachAsync( planIds, parallelOptions, async (planId, token) =>
-        {
-            var plan = await IncidentResponsePlansService.GetByIdAsync(planId);
-            IncidentResponsePlansActivated.Add(plan);
-        });
+        var plans = await ViewModelCollection.MaterializeAsync(planIds,
+            planId => IncidentResponsePlansService.GetByIdAsync(planId), maxDegreeOfParallelism: 3);
 
         IncidentResponsePlansActivated =
-            new ObservableCollection<IncidentResponsePlan>(IncidentResponsePlansActivated.OrderBy(irp => irp.Name)
+            new ObservableCollection<IncidentResponsePlan>(plans.OrderBy(irp => irp.Name)
                 .ToList());
     }
 

@@ -66,7 +66,7 @@ public class MgmtReviewsServiceInMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
-    public void TestCreateAndGetOne()
+    public async Task TestCreateAndGetOne()
     {
         Seed(ctx =>
         {
@@ -74,7 +74,8 @@ public class MgmtReviewsServiceInMemoryTest : InMemoryServiceTestBase
             SeedReviewLookups(ctx);
         });
 
-        var created = _svc.Create(MidTierFixtures.NewReview(0, 1));
+        // The only create path is the enforced one; user 1 has no relation to risk 1, so it passes segregation.
+        var created = await _svc.CreateReviewAsync(MidTierFixtures.NewReview(0, 1), actingUserId: 1);
         Assert.NotNull(created);
 
         Assert.Equal(created.Id, _svc.GetOne(created.Id).Id);
@@ -100,7 +101,7 @@ public class MgmtReviewsServiceInMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
-    public void TestUpdate()
+    public async Task TestUpdate()
     {
         Seed(ctx =>
         {
@@ -108,11 +109,24 @@ public class MgmtReviewsServiceInMemoryTest : InMemoryServiceTestBase
             ctx.MgmtReviews.Add(MidTierFixtures.NewReview(1, 1));
         });
 
-        var updated = _svc.Update(new MgmtReviewDto { Id = 1, RiskId = 1, Review = 2, Reviewer = 1, NextStep = 1, Comments = "x" });
+        var updated = await _svc.UpdateAsync(new MgmtReviewDto
+        {
+            Id = 1, RiskId = 999, SubmissionDate = new DateTime(2030, 1, 1), Review = 2,
+            Reviewer = 999, NextStep = 1, Comments = "x", NextReview = new DateOnly(2027, 1, 1)
+        }, actingUserId: 1);
 
-        Assert.NotNull(updated);
-        Assert.Throws<DataNotFoundException>(() =>
-            _svc.Update(new MgmtReviewDto { Id = 99, RiskId = 1, Comments = "x" }));
+        Assert.Equal("x", updated.Comments);
+        using (var db = OpenContext())
+        {
+            var persisted = db.MgmtReviews.Single(r => r.Id == 1);
+            Assert.Equal("x", persisted.Comments);
+            Assert.Equal(2, persisted.Review);
+            Assert.Equal(1, persisted.RiskId);
+            Assert.Equal(1, persisted.Reviewer);
+            Assert.Equal(new DateTime(2026, 1, 1), persisted.SubmissionDate);
+        }
+        await Assert.ThrowsAsync<DataNotFoundException>(() =>
+            _svc.UpdateAsync(new MgmtReviewDto { Id = 99, RiskId = 1, Comments = "x" }, 1));
     }
 
     [Fact]

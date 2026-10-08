@@ -40,18 +40,13 @@ public interface IMgmtReviewsService
     public List<NextStep> GetNextSteps();
     
     /// <summary>
-    ///  Creates a new review
+    /// Updates the decision fields of an existing review after applying third-line and segregation
+    /// controls to <paramref name="actingUserId"/>. Risk, reviewer and submission time are immutable.
     /// </summary>
     /// <param name="review"></param>
-    /// <returns></returns>
-    public MgmtReview Create(MgmtReview review);
-
-    /// <summary>
-    ///  Updates a review
-    /// </summary>
-    /// <param name="review"></param>
-    /// <returns></returns>
-    public MgmtReview Update(MgmtReviewDto review);
+    /// <param name="actingUserId">The authenticated caller; never taken from the payload.</param>
+    /// <returns>The persisted review.</returns>
+    public Task<MgmtReview> UpdateAsync(MgmtReviewDto review, int actingUserId);
     
     /// <summary>
     ///  Gets a review
@@ -62,11 +57,18 @@ public interface IMgmtReviewsService
 
     /// <summary>
     /// Records a review as an identified user, with the Track 8 milestone 8.3 rules applied: the
-    /// state machine, segregation of duties, and the appetite's dual-approval threshold — which sets
-    /// <see cref="MgmtReview.RequiresCountersignature"/> rather than refusing the review.
+    /// third-line guard, segregation of duties (the caller must not have submitted, own or manage
+    /// the risk — administrators included), and the appetite's dual-approval threshold — which sets
+    /// <see cref="MgmtReview.RequiresCountersignature"/> rather than refusing the review. The
+    /// reviewer recorded is always <paramref name="actingUserId"/>, whatever the review names.
     ///
-    /// The parameterless <see cref="Create(MgmtReview)"/> remains for callers that have already
-    /// applied those rules themselves (the acceptance service writes its own review row).
+    /// This is the only way to create a review through this service. The legacy
+    /// <c>Create(MgmtReview)</c> carried no acting user, so it could check nothing, and
+    /// <c>POST /MgmtReviews</c> reached it without segregation of duties (S53 §11, defect 2); it was
+    /// removed rather than kept beside this method, and
+    /// <c>MgmtReviewSegregationInMemoryTest.TestMR5_EveryReviewWritingMethodNamesTheActingUser</c>
+    /// fails if a review-writing method without the acting user comes back. The acceptance service
+    /// writes its own review row and does not go through here.
     /// </summary>
     Task<MgmtReview> CreateReviewAsync(MgmtReview review, int actingUserId,
         string? segregationOverrideReason = null);

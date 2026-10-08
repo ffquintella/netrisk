@@ -175,6 +175,15 @@ public class Track8ControllersTest : BaseControllerTest
         Assert.IsType<UnprocessableEntityObjectResult>(result.Result);
     }
 
+    [Fact]
+    public async Task TestConcurrentRenewalLoserIsAConflict()
+    {
+        var result = await _governance.RenewAcceptance(1, 997, ValidAcceptance());
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+        Assert.Contains("renewed by another request", conflict.Value!.ToString());
+    }
+
     // --- 8.3 appetite and counter-signature ------------------------------------------------------
 
     [Fact]

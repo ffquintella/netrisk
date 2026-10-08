@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.RiskFlagFilterView" x:DataType="vm:RiskFlagFilterViewModel"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600">
+    <Design.DataContext><vm:RiskFlagFilterViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="5">
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrTitle}"/>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,300,Auto,240,Auto" Margin="0 5">
+                <TextBlock Grid.Column="0" Classes="label" Text="{Binding StrFlag}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding FlagOptions}" SelectedItem="{Binding SelectedFlag}" Margin="5 0">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="2" Classes="label" Text="{Binding StrGateA}" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="3" ItemsSource="{Binding GateAOptions}" SelectedItem="{Binding SelectedGateA}" Margin="5 0">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="4" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding ReferenceId}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding Subject}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrFlags, Mode=OneTime}" Binding="{Binding Flags}" Width="2*"/>
+                    <DataGridCheckBoxColumn Header="{Binding StrGateA, Mode=OneTime}" Binding="{Binding GateA}" Width="Auto"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

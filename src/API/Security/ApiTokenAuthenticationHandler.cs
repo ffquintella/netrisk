@@ -92,10 +92,11 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
             return AuthenticateResult.Fail("Invalid API token");
         }
 
-        if (user.Lockout == 1)
+        if (user.Enabled != true || user.Lockout == 1)
         {
-            // A locked-out human must not keep acting through a token they issued.
-            _log.Warning("API token {KeyId} refused: the user it acts as is locked out", token.KeyId);
+            // Deprovisioning and lockout terminate every authentication path, including previously
+            // issued non-interactive credentials.
+            _log.Warning("API token {KeyId} refused: the user it acts as is disabled or locked out", token.KeyId);
             return AuthenticateResult.Fail("Invalid API token");
         }
 
@@ -111,9 +112,14 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
 
     private async Task<List<Claim>> BuildClaimsAsync(DAL.Entities.ApiToken token, DAL.Entities.User user)
     {
+        // The name claim is the login, as on the Basic and JWT paths, because that is what every
+        // downstream reader resolves it as (ApiBaseController.GetUser via UserHelper.GetUserName,
+        // ValidUserRequirementHandler on every policy). It used to be the display name, so a token
+        // only worked when the two matched, and a token whose owner's display name was someone
+        // else's login acted as that someone else. Pinned by ApiTokenAuthenticationHandlerTest.
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, user.Name),
+            new(ClaimTypes.Name, user.Login),
             new(ClaimTypes.Sid, user.Value.ToString()),
             new(TokenIdClaimType, token.Id.ToString())
         };

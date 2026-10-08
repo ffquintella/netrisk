@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9" x:Class="GUIClient.Views.Track9.EntityThirdPartiesBlock"
+             x:DataType="vm:EntityThirdPartiesBlockViewModel">
+  <StackPanel Margin="5" Spacing="5">
+    <TextBlock Classes="header2" Text="{Binding StrTitle}"/><TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <DataGrid ItemsSource="{Binding Items}" IsReadOnly="True" MinHeight="100"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/><DataGridTextColumn Header="{Binding StrKind}" Binding="{Binding KindText}"/><DataGridTextColumn Header="{Binding StrDescription}" Binding="{Binding Description}" Width="2*"/></DataGrid.Columns></DataGrid>
+    <TextBlock Classes="header_detail" Text="{Binding StrNone}" IsVisible="{Binding IsEmpty}"/>
+  </StackPanel>
+</UserControl>

@@ -1,6 +1,7 @@
 <dialogs:DialogWindowBase x:TypeArguments="results:RiskGovernanceDialogResult"
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:track9="clr-namespace:GUIClient.Views.Track9"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
@@ -65,10 +66,10 @@
                                    Classes="header2" Margin="8 0 0 0"/>
 
                         <TextBox Grid.Column="2" Text="{Binding RevocationReason}" MinWidth="220"
-                                 PlaceholderText="{Binding StrReason}"/>
+                                 PlaceholderText="{Binding StrReason}" IsEnabled="{Binding CanRevoke}"/>
 
                         <Button Grid.Column="3" Classes="dialog2" Margin="10 0 0 0"
-                                Command="{Binding BtRevokeClicked}">
+                                Command="{Binding BtRevokeClicked}" IsEnabled="{Binding CanRevoke}">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="CloseOctagon"/>
                                 <TextBlock Text="{Binding StrRevoke}" Margin="5 0 0 0"/>
@@ -76,7 +77,7 @@
                         </Button>
                     </Grid>
 
-                    <StackPanel Grid.Row="2" Margin="0 10 0 0">
+                    <StackPanel Grid.Row="2" Margin="0 10 0 0" IsEnabled="{Binding CanManageAcceptances}">
                         <TextBlock Text="{Binding StrBusinessJustification}" Classes="label"/>
                         <TextBox Text="{Binding Justification}" AcceptsReturn="True" MinHeight="70"
                                  TextWrapping="Wrap"/>
@@ -96,7 +97,7 @@
 
                             <Button Classes="dialog1" Margin="10 0 0 0"
                                     Command="{Binding BtRenewClicked}"
-                                    IsEnabled="{Binding IsAccepted}">
+                                    IsEnabled="{Binding CanRenew}">
                                 <StackPanel Orientation="Horizontal">
                                     <material:MaterialIcon Kind="Autorenew"/>
                                     <TextBlock Text="{Binding StrRenew}" Margin="5 0 0 0"/>
@@ -156,7 +157,7 @@
             <!-- 8.5.3 — POA&M line items. A mitigation carried one date and one percentage, which
                  cannot say who is doing what by when. -->
             <TabItem Header="{Binding StrMitigationTasks}">
-                <Grid RowDefinitions="*,Auto" Margin="5">
+                <Grid RowDefinitions="*,Auto,Auto,Auto" Margin="5">
                     <DataGrid Grid.Row="0" ItemsSource="{Binding Tasks}"
                               SelectedItem="{Binding SelectedTask}"
                               IsReadOnly="True" CanUserSortColumns="True">
@@ -164,19 +165,40 @@
                             <DataGridTextColumn Header="{Binding StrTaskTitle, Mode=OneTime}"
                                                 Binding="{Binding Title}" Width="3*"/>
                             <DataGridTextColumn Header="{Binding StrOwner, Mode=OneTime}"
-                                                Binding="{Binding OwnerId}"/>
+                                                Binding="{Binding Owner.Name}"/>
                             <DataGridTextColumn Header="{Binding StrDueDate, Mode=OneTime}"
                                                 Binding="{Binding DueDate, StringFormat={}{0:d}}"/>
                             <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}"
                                                 Binding="{Binding Status}"/>
                         </DataGrid.Columns>
                     </DataGrid>
+                    <StackPanel Grid.Row="2" Spacing="4" IsEnabled="{Binding CanPlanTasks}">
+                        <TextBlock Text="{Binding StrTrack9NewTask}" Classes="header3"/>
+                        <TextBlock Text="{Binding StrTrack9AcceptanceCriterion}" Classes="fieldLabel"/>
+                        <TextBox Text="{Binding NewTaskAcceptanceCriterion}" MaxLength="4000"/>
+                        <TextBlock Text="{Binding StrTrack9CompletionEvidence}" Classes="fieldLabel"/>
+                        <TextBox Text="{Binding NewTaskCompletionEvidence}" MaxLength="4000"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Margin="0 10 0 0" Spacing="4" IsVisible="{Binding !!SelectedTask}">
+                        <TextBlock Text="{Binding StrTrack9SelectedTask}" Classes="header3"/>
+                        <TextBlock Text="{Binding StrTrack9AcceptanceCriterion}" Classes="fieldLabel"/>
+                        <TextBox Text="{Binding TaskAcceptanceCriterion}" MaxLength="4000" IsReadOnly="{Binding !CanSaveTaskEvidence}"/>
+                        <TextBlock Text="{Binding StrTrack9CompletionEvidence}" Classes="fieldLabel"/>
+                        <TextBox Text="{Binding TaskCompletionEvidence}" MaxLength="4000" IsReadOnly="{Binding !CanSaveTaskEvidence}"/>
+                        <Button Classes="dialog1" Content="{Binding StrSaveTaskEvidence}"
+                                Command="{Binding SaveTaskEvidenceCommand}" IsEnabled="{Binding CanSaveTaskEvidence}"/>
+                    </StackPanel>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0 10 0 0">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0 10 0 0"
+                                IsEnabled="{Binding CanPlanTasks}">
                         <TextBox Text="{Binding NewTaskTitle}" MinWidth="260"
                                  PlaceholderText="{Binding StrTaskTitle}"/>
-                        <NumericUpDown Value="{Binding NewTaskOwnerId}" Minimum="1" Margin="10 0 0 0"
-                                       MinWidth="120" FormatString="0"/>
+                        <ComboBox ItemsSource="{Binding MitigationChoices}"
+                                  SelectedItem="{Binding SelectedTaskMitigation}"
+                                  PlaceholderText="{Binding StrMitigation}" Margin="10 0 0 0" MinWidth="200"/>
+                        <ComboBox ItemsSource="{Binding TaskOwnerChoices}"
+                                  SelectedItem="{Binding SelectedTaskOwner}"
+                                  PlaceholderText="{Binding StrOwner}" Margin="10 0 0 0" MinWidth="180"/>
                         <DatePicker SelectedDate="{Binding NewTaskDueDate, Mode=TwoWay}"
                                     Margin="10 0 0 0"/>
 
@@ -190,6 +212,10 @@
                         </Button>
                     </StackPanel>
                 </Grid>
+            </TabItem>
+
+            <TabItem Header="{Binding StrTrack9LossComponents}">
+                <ScrollViewer><track9:LossComponentsView DataContext="{Binding Track9LossComponents}"/></ScrollViewer>
             </TabItem>
 
             <!-- 8.7.2 — FAIR-lite. Ranges rather than a matrix cell, because the magnitude and the
@@ -208,24 +234,31 @@
                         <TextBlock Grid.Row="1" Grid.Column="0"
                                    Text="{Binding StrLossEventFrequency}" Classes="label"
                                    Margin="0 8 10 0"/>
-                        <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding LefMin}"
+                            <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding LefMin}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="0.1" FormatString="0.00"/>
-                        <NumericUpDown Grid.Row="1" Grid.Column="2" Value="{Binding LefMostLikely}"
+                            <NumericUpDown Grid.Row="1" Grid.Column="2" Value="{Binding LefMostLikely}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="0.1" FormatString="0.00"/>
-                        <NumericUpDown Grid.Row="1" Grid.Column="3" Value="{Binding LefMax}"
+                            <NumericUpDown Grid.Row="1" Grid.Column="3" Value="{Binding LefMax}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="0.1" FormatString="0.00"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrLossMagnitude}"
                                    Classes="label" Margin="0 8 10 0"/>
-                        <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding LossMin}"
+                            <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding LossMin}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="1000" FormatString="0"/>
-                        <NumericUpDown Grid.Row="2" Grid.Column="2" Value="{Binding LossMostLikely}"
+                            <NumericUpDown Grid.Row="2" Grid.Column="2" Value="{Binding LossMostLikely}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="1000" FormatString="0"/>
-                        <NumericUpDown Grid.Row="2" Grid.Column="3" Value="{Binding LossMax}"
+                            <NumericUpDown Grid.Row="2" Grid.Column="3" Value="{Binding LossMax}"
+                                       IsEnabled="{Binding CanRunSimulation}"
                                        Minimum="0" Increment="1000" FormatString="0"/>
 
                         <Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Classes="dialog1"
-                                Margin="0 12 0 0" Command="{Binding BtRunSimulationClicked}">
+                                Margin="0 12 0 0" Command="{Binding BtRunSimulationClicked}"
+                                IsEnabled="{Binding CanRunSimulation}">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="Calculator"/>
                                 <TextBlock Text="{Binding StrRunSimulation}" Margin="5 0 0 0"/>
@@ -291,7 +324,8 @@
         <!-- FOOTER -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
                     Margin="10 0 10 10">
-            <Button Classes="dialog2" Command="{Binding BtRequestReviewClicked}">
+            <Button Classes="dialog2" Command="{Binding BtRequestReviewClicked}"
+                    IsEnabled="{Binding CanRequestReview}">
                 <StackPanel Orientation="Horizontal">
                     <material:MaterialIcon Kind="CalendarAlert"/>
                     <TextBlock Text="{Binding StrRequestReview}" Margin="5 0 0 0"/>

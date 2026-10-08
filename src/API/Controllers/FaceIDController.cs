@@ -71,6 +71,14 @@ public class FaceIDController: ApiBaseController
     {
         try
         {
+            var caller = await GetUserAsync();
+            if (caller.Value != userId)
+            {
+                Logger.Warning("User {CallerId} refused reading FaceID enrollment for user {UserId}",
+                    caller.Value, userId);
+                return Unauthorized("You are not allowed to read FaceID enrollment for this user");
+            }
+
             var result = await FaceIDService.UserHasFaceSetAsync(userId);
         
             return result;
@@ -255,6 +263,16 @@ public class FaceIDController: ApiBaseController
     {
         try
         {
+            // The route user must be the caller, as in StartTransaction: a ceremony is only ever committed for one's own
+            // account, with no administrator override. Compared by id, the value the third-line guard also checks.
+            var caller = await GetUserAsync();
+            if (caller.Value != userId)
+            {
+                Logger.Warning("User {CallerId} refused committing a FaceID transaction for user {UserId}",
+                    caller.Value, userId);
+                return Unauthorized("You are not allowed to commit a transaction for this user");
+            }
+
             var result = await FaceIDService.CommitTransactionAsync(userId, faceTData, transactionObjectType);
             return result;
         }

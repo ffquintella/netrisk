@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:DataType="vm:MethodologyMetricsViewModel"
+             x:Class="GUIClient.Views.Track9.MethodologyMetricsView">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="5">
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel>
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Classes="label" Text="{Binding StrComputedAt}"/>
+                    <TextBlock Classes="formData" Text="{Binding ComputedAtText}"/>
+                </StackPanel>
+            </StackPanel>
+            <Button Grid.Column="1" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrReload}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <DataGrid Grid.Row="2" Margin="0 5" ItemsSource="{Binding Metrics}"
+                  AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrStage}" Binding="{Binding Stage}" Width="Auto"/>
+                <DataGridTextColumn Header="{Binding StrTitle}" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="{Binding StrAvailability}" Binding="{Binding AvailabilityLabel}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrValue}" Binding="{Binding ValueText}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrTerms}" Binding="{Binding TermsText}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrDetails}" Binding="{Binding Detail}" Width="3*"/>
+                <DataGridTextColumn Header="{Binding StrSource}" Binding="{Binding Source}" Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="3" ColumnDefinitions="*,*" IsVisible="{Binding HasPanel}">
+            <GroupBox Grid.Column="0" Classes="type1" Header="{Binding StrKriHealth}">
+                <WrapPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrActive}"/><TextBlock Text="{Binding Panel.Kris.Active}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrWithin}"/><TextBlock Text="{Binding Panel.Kris.WithinTolerance}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrWarning}"/><TextBlock Text="{Binding Panel.Kris.Warning}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrBreached}"/><TextBlock Text="{Binding Panel.Kris.Breached}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrStale}"/><TextBlock Text="{Binding Panel.Kris.Stale}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrNoReading}"/><TextBlock Text="{Binding Panel.Kris.NoReading}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrRetired}"/><TextBlock Text="{Binding Panel.Kris.Retired}"/></StackPanel>
+                </WrapPanel>
+            </GroupBox>
+            <GroupBox Grid.Column="1" Classes="type1" Header="{Binding StrReassessmentHealth}">
+                <WrapPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrPending}"/><TextBlock Text="{Binding Panel.Reassessment.Pending}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrAnswered}"/><TextBlock Text="{Binding Panel.Reassessment.Answered}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrRiskClosed}"/><TextBlock Text="{Binding Panel.Reassessment.RiskClosed}"/></StackPanel>
+                    <StackPanel Margin="8"><TextBlock Classes="label" Text="{Binding StrMeanDays}"/><TextBlock Text="{Binding Panel.Reassessment.MeanDaysToAnswer}"/></StackPanel>
+                </WrapPanel>
+            </GroupBox>
+        </Grid>
+        <progRing:ProgressRing Grid.RowSpan="4" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.TopRisksView" x:DataType="vm:TopRisksViewModel"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650">
+    <Design.DataContext><vm:TopRisksViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,*" Margin="5">
+            <Grid Grid.Row="0" ColumnDefinitions="*,80,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <NumericUpDown Grid.Column="1" Value="{Binding Limit, Mode=TwoWay}" Minimum="1" Maximum="50"/>
+                <Button Grid.Column="2" Classes="type2" Command="{Binding ReloadCommand}" Margin="5 0 0 0">
+                    <TextBlock Text="{Binding StrReload}"/>
+                </Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <DataGrid Grid.Row="2" Margin="0 5 0 0" ItemsSource="{Binding Rows}" AutoGenerateColumns="False"
+                      IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRank, Mode=OneTime}" Binding="{Binding Rank}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding ReferenceId}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding Subject}" Width="2*"/>
+                    <DataGridCheckBoxColumn Header="{Binding StrGateA, Mode=OneTime}" Binding="{Binding GateA}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrFlags, Mode=OneTime}" Binding="{Binding Flags}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrDecision, Mode=OneTime}" Binding="{Binding Decision}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrExpectedAnnualLoss, Mode=OneTime}" Binding="{Binding ExpectedAnnualLoss}" Width="Auto"/>
+                    <DataGridTextColumn Header="{Binding StrNextDecision, Mode=OneTime}" Binding="{Binding NextDecision}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

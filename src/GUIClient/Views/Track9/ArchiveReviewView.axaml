@@ -1,0 +1,108 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:DataType="vm:ArchiveReviewViewModel"
+             x:Class="GUIClient.Views.Track9.ArchiveReviewView">
+    <Grid RowDefinitions="Auto,Auto,2*,3*" Margin="5">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <CheckBox Grid.Column="1" Margin="8 0" Content="{Binding StrDueOnly}" IsChecked="{Binding DueOnly}"/>
+            <CheckBox Grid.Column="2" Margin="8 0" Content="{Binding StrIncludeEnded}" IsChecked="{Binding IncludeEnded}"/>
+            <Button Grid.Column="3" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrReload}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="notice" Text="{Binding StrThirdLine}" IsVisible="{Binding IsThirdLine}"/>
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <DataGrid Grid.Row="2" Margin="0 5" ItemsSource="{Binding Archives}" SelectedItem="{Binding SelectedArchive}"
+                  AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrRiskId}" Binding="{Binding RiskId}" Width="*"/>
+                <DataGridTextColumn Header="{Binding StrDecision}" Binding="{Binding RiskSubject}" Width="3*"/>
+                <DataGridTextColumn Header="{Binding StrReview}" Binding="{Binding NextReviewDueAt}" Width="2*"/>
+                <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StateLabel}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="3" ColumnDefinitions="2*,*" Margin="0 5 0 0">
+            <GroupBox Grid.Column="0" Classes="type1" Header="{Binding StrDecision}"
+                      IsEnabled="{Binding !IsBusy}">
+                <ScrollViewer>
+                    <StackPanel Margin="5">
+                        <Grid ColumnDefinitions="Auto,*,Auto,*">
+                            <TextBlock Classes="form_label" Text="{Binding StrRiskId}"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding RiskChoices}"
+                                      SelectedItem="{Binding SelectedRisk}" IsEnabled="{Binding IsGlobalMode}"/>
+                            <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrCloseReason}"/>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding CloseReasonChoices}"
+                                      SelectedItem="{Binding SelectedCloseReason}"/>
+                        </Grid>
+                        <TextBlock Classes="form_label" Text="{Binding StrJustification}"/>
+                        <TextBox Text="{Binding Justification}" AcceptsReturn="True"/>
+                        <TextBlock Classes="header2" Text="{Binding StrConditions}" Margin="0 8 0 0"/>
+                        <ItemsControl ItemsSource="{Binding Conditions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:Track9ArchiveConditionDraft">
+                                    <Grid ColumnDefinitions="2*,3*" Margin="0 2">
+                                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsSelected}"/>
+                                        <TextBox Grid.Column="1" Text="{Binding Description}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Classes="dialog1" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Command="{Binding BtArchiveClicked}" IsEnabled="{Binding CanArchive}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Archive" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrArchive}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+            <StackPanel Grid.Column="1">
+                <GroupBox Classes="type1" Header="{Binding StrReview}" IsEnabled="{Binding !IsBusy}">
+                    <StackPanel Margin="5">
+                        <ComboBox ItemsSource="{Binding ReviewOutcomes}" SelectedItem="{Binding ReviewOutcome}"/>
+                        <TextBlock Classes="form_label" Text="{Binding StrReviewNote}"/>
+                        <TextBox Text="{Binding ReviewNote}" AcceptsReturn="True"/>
+                        <Button Classes="dialog1" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Command="{Binding BtReviewClicked}" IsEnabled="{Binding CanReview}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="RateReview" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrReview}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Classes="type1" Header="{Binding StrManualReopen}" Margin="0 5 0 0"
+                          IsEnabled="{Binding !IsBusy}">
+                    <StackPanel Margin="5">
+                        <TextBlock Classes="form_label" Text="{Binding StrReason}"/>
+                        <TextBox Text="{Binding ReopenReason}" AcceptsReturn="True"/>
+                        <Button Classes="dialog2" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Command="{Binding BtReopenClicked}" IsEnabled="{Binding CanReopen}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Restore" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrReopen}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </Grid>
+        <progRing:ProgressRing Grid.RowSpan="4" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

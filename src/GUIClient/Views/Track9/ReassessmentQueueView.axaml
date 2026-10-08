@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:DataType="vm:ReassessmentQueueViewModel"
+             x:Class="GUIClient.Views.Track9.ReassessmentQueueView">
+    <Grid RowDefinitions="Auto,Auto,2*,2*" Margin="5">
+        <Grid ColumnDefinitions="*,220,220,Auto,Auto">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <ComboBox Grid.Column="1" Margin="8 0" ItemsSource="{Binding TriggerTypes}"
+                      SelectedItem="{Binding FilterType}"/>
+            <ComboBox Grid.Column="2" Margin="8 0" ItemsSource="{Binding RiskChoices}"
+                      SelectedItem="{Binding FilterRisk}" IsEnabled="{Binding IsGlobalMode}"/>
+            <CheckBox Grid.Column="3" Margin="8 0" Content="{Binding StrPendingOnly}"
+                      IsChecked="{Binding PendingOnly}"/>
+            <Button Grid.Column="4" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrReload}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="notice" Text="{Binding StrThirdLine}" IsVisible="{Binding IsThirdLine}"/>
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0 5">
+            <GroupBox Grid.Column="0" Classes="type1" Header="{Binding StrEvents}">
+                <DataGrid ItemsSource="{Binding Events}" SelectedItem="{Binding SelectedEvent}"
+                          AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrOccurredAt}" Binding="{Binding OccurredAt}" Width="2*"/>
+                        <DataGridTextColumn Header="{Binding StrEventType}" Binding="{Binding TypeLabel}" Width="2*"/>
+                        <DataGridTextColumn Header="{Binding StrTitleField}" Binding="{Binding Title}" Width="3*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+            <GroupBox Grid.Column="1" Classes="type1" Header="{Binding StrTriggers}">
+                <DataGrid ItemsSource="{Binding Triggers}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrRiskId}" Binding="{Binding RiskId}" Width="*"/>
+                        <DataGridTextColumn Header="{Binding StrTitleField}" Binding="{Binding RiskSubject}" Width="3*"/>
+                        <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StateLabel}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+        <Grid Grid.Row="3" ColumnDefinitions="3*,2*" Margin="0 5 0 0">
+            <GroupBox Grid.Column="0" Classes="type1" Header="{Binding StrDeclare}"
+                      IsEnabled="{Binding !IsBusy}">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                    <TextBlock Grid.Row="0" Classes="form_label" Text="{Binding StrEventType}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding TriggerTypes}" SelectedItem="{Binding EventType}"/>
+                    <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrTitleField}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding EventTitle}"/>
+                    <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrDescription}"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding EventDescription}" AcceptsReturn="True"/>
+                    <TextBlock Grid.Row="3" Classes="form_label" Text="{Binding StrOccurredAt}"/>
+                    <DatePicker Grid.Row="3" Grid.Column="1" SelectedDate="{Binding OccurredAt}"/>
+                    <TextBlock Grid.Row="4" Classes="form_label" Text="{Binding StrIncidentId}"/>
+                    <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding IncidentChoices}"
+                              SelectedItem="{Binding SelectedIncident}"/>
+                    <Grid Grid.Row="5" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <TextBlock Classes="form_label" Text="{Binding StrRiskId}"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding RiskChoices}" SelectedItem="{Binding DraftRisk}"
+                                  IsEnabled="{Binding IsGlobalMode}"/>
+                        <Button Grid.Column="2" Classes="subButton" Margin="5 0"
+                                Command="{Binding BtAddDraftRiskClicked}" ToolTip.Tip="{Binding StrAdd}"
+                                IsEnabled="{Binding IsGlobalMode}">
+                            <material:MaterialIcon Classes="subButton" Kind="Add"/>
+                        </Button>
+                        <Button Grid.Column="3" Classes="dialog1" Command="{Binding BtDeclareClicked}"
+                                IsEnabled="{Binding CanWrite}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="NewReleases" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrDeclare}"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </GroupBox>
+            <GroupBox Grid.Column="1" Classes="type1" Header="{Binding StrApplyRisk}"
+                      IsEnabled="{Binding !IsBusy}">
+                <Grid RowDefinitions="*,Auto" Margin="5">
+                    <ListBox ItemsSource="{Binding DraftRiskIds}" SelectedItem="{Binding SelectedDraftRiskId}"
+                             IsVisible="{Binding IsGlobalMode}"/>
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto">
+                        <ComboBox ItemsSource="{Binding RiskChoices}" SelectedItem="{Binding AdditionalRisk}"
+                                  IsVisible="{Binding IsGlobalMode}"/>
+                        <Button Grid.Column="1" Classes="dialog1" Margin="5 0"
+                                Command="{Binding BtApplyRiskClicked}" IsEnabled="{Binding CanWrite}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Link" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrApplyRisk}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="2" Classes="subButton" Command="{Binding BtRemoveDraftRiskClicked}"
+                                IsVisible="{Binding IsGlobalMode}"
+                                ToolTip.Tip="{Binding StrRemove}">
+                            <material:MaterialIcon Classes="subButton" Kind="Delete"/>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </GroupBox>
+        </Grid>
+        <progRing:ProgressRing Grid.RowSpan="4" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

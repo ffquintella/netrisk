@@ -2,6 +2,7 @@ using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.Tools;
+using GUIClient.ViewModels.Track9;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +10,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -326,68 +328,25 @@ public class RiskViewModel: ViewModelBase
     
     
     private Risk? _selectedRisk;
+    private int _riskSelectionGeneration;
     public Risk? SelectedRisk
     {
         get => _selectedRisk;
         set
         {
+            var generation = Interlocked.Increment(ref _riskSelectionGeneration);
             LoadingSpinner = true;
-            Task.Run(async () =>
-            {
-                if (value != null)
-                {
-                    HdRisk = new Hydrated.Risk(value);
-
-                    if (HdRisk.Mitigation == null) IsMitigationVisible = false;
-                    if (HdRisk.LastReview == null) HasReviews = false;
-                    
-                    SelectedRiskIncidentResponsePlan = await RisksService.GetIncidentResponsePlanAsync(value.Id);
-                    IrpDate = SelectedRiskIncidentResponsePlan?.LastUpdate;
-                    IrpIsApproved = SelectedRiskIncidentResponsePlan?.HasBeenApproved ?? false;
-                    
-                    SelectedRiskHasIncidentResponsePlan = SelectedRiskIncidentResponsePlan != null;
-                    
-                    //SelectedVulnerabilities = new ObservableCollection<Vulnerability>(await RisksService.GetOpenVulnerabilitiesAsync(value.Id));
-
-                    var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(value.Id, 1, 10);
-                    
-                    SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
-                    TotalSelectedVulnerabilities = pageTuple.Item1;
-                    
-                    SelectedRiskId = value.Id;
-                    SelectedRiskCtrlNumber = value.ControlNumber;
-                    SelectedRiskStatus = value.Status;
-                    SelectedRiskSubmissionDate = value.SubmissionDate;
-                    SelectedVulnerabilityPage = 1;
-
-                    await LoadSelectedRiskChainAsync(value.Id);
-
-                }
-                else
-                {
-                    HdRisk = null;
-                    IsMitigationVisible = false;
-                    HasReviews = false;
-                    SelectedReviewer = null;
-                    LastReview = null;
-                    SelectedRiskId = null;
-                    SelectedRiskCtrlNumber = null;
-                    SelectedRiskStatus = null;
-                    SelectedRiskSubmissionDate = null;
-                    IrpDate = null;
-                    IrpIsApproved = false;
-                    SelectedRiskChain = null;
-                }
-
-                ProcessLifecycleButtons();
-                
-            }).ContinueWith( _ =>
-            {
-                LoadingSpinner = false;
-            });
-            
             this.RaiseAndSetIfChanged(ref _selectedRisk, value);
             this.RaisePropertyChanged(nameof(IsEditChainEnabled));
+
+            var riskId = value?.Id;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (!IsCurrentRiskSelection(generation, riskId)) return;
+                _ = LoadSelectedRiskAsync(value, generation);
+                _ = RiskTechniques.LoadAsync(riskId);
+                _ = LoadTrack9RiskAsync(riskId);
+            });
             this.RaisePropertyChanged(nameof(ScenarioCauseSummary));
             this.RaisePropertyChanged(nameof(ScenarioVulnerabilitySummary));
             this.RaisePropertyChanged(nameof(ScenarioCentralEventSummary));
@@ -396,9 +355,172 @@ public class RiskViewModel: ViewModelBase
         }
     }
 
+    private bool IsCurrentRiskSelection(int generation, int? riskId) =>
+        GUIClient.Tools.Track9.Track9RiskPresentation.IsLatestLoad(generation, _riskSelectionGeneration) &&
+        (riskId is null
+            ? SelectedRisk is null
+            : GUIClient.Tools.Track9.Track9RiskPresentation.IsCurrentSelection(riskId.Value, SelectedRisk?.Id));
+
+    private async Task LoadSelectedRiskAsync(Risk? risk, int generation)
+    {
+        var riskId = risk?.Id;
+        try
+        {
+            if (!IsCurrentRiskSelection(generation, riskId)) return;
+            ClearSelectedRiskDetail();
+            if (risk is null) return;
+
+            HdRisk = new Hydrated.Risk(risk);
+            IsMitigationVisible = HdRisk.Mitigation is not null;
+            HasReviews = HdRisk.LastReview is not null;
+            LastReview = HdRisk.LastReview;
+            SelectedRiskFiles = new ObservableCollection<FileListing>(HdRisk.Files);
+            SelectedRiskId = risk.Id;
+            SelectedRiskCtrlNumber = risk.ControlNumber;
+            SelectedRiskStatus = risk.Status;
+            SelectedRiskSubmissionDate = risk.SubmissionDate;
+            SelectedVulnerabilityPage = 1;
+            ProcessLifecycleButtons();
+
+            var plan = await RisksService.GetIncidentResponsePlanAsync(risk.Id);
+            if (!IsCurrentRiskSelection(generation, risk.Id)) return;
+            SelectedRiskIncidentResponsePlan = plan;
+            IrpDate = plan?.LastUpdate;
+            IrpIsApproved = plan?.HasBeenApproved ?? false;
+            SelectedRiskHasIncidentResponsePlan = plan is not null;
+
+            var page = await RisksService.GetOpenVulnerabilitiesPageAsync(risk.Id, 1, 10);
+            if (!IsCurrentRiskSelection(generation, risk.Id)) return;
+            SelectedVulnerabilities = new ObservableCollection<Vulnerability>(page.Item2);
+            TotalSelectedVulnerabilities = page.Item1;
+
+            await LoadSelectedRiskChainAsync(risk.Id, generation);
+            if (IsCurrentRiskSelection(generation, risk.Id)) ProcessLifecycleButtons();
+        }
+        catch (Exception ex)
+        {
+            if (IsCurrentRiskSelection(generation, riskId))
+                Logger.Error(ex, "Could not load the detail of risk {RiskId}", riskId);
+        }
+        finally
+        {
+            if (IsCurrentRiskSelection(generation, riskId)) LoadingSpinner = false;
+        }
+    }
+
+    private void ClearSelectedRiskDetail()
+    {
+        HdRisk = null;
+        IsMitigationVisible = false;
+        HasReviews = false;
+        SelectedReviewer = null;
+        LastReview = null;
+        SelectedRiskId = null;
+        SelectedRiskCtrlNumber = null;
+        SelectedRiskStatus = null;
+        SelectedRiskSubmissionDate = null;
+        SelectedRiskIncidentResponsePlan = null;
+        SelectedRiskHasIncidentResponsePlan = false;
+        SelectedRiskFiles = null;
+        SelectedVulnerabilities = null;
+        TotalSelectedVulnerabilities = 0;
+        IrpDate = null;
+        IrpIsApproved = false;
+        SelectedRiskChain = null;
+        ProcessLifecycleButtons();
+    }
+
     // Stage 9.2 (S42 §7): an empty field reads "not informed" — the same words as an empty chain
     // level — rather than disappearing, so a legacy risk shows plainly that its scenario was never
     // structured. NULL confidence reads "not declared".
+    public RiskMonitoringPanelViewModel Track9Monitoring { get; } = new();
+    public string StrTrack9FlagFilter => Localizer["Track9FlagFilter"];
+    public string StrTrack9FlagsUnavailable => Localizer["Track9FlagsUnavailable"];
+    public string StrTrack9NoFlags => Localizer["Track9NoFlags"];
+    private bool _track9FlagsLoaded;
+    public bool Track9FlagsLoaded { get => _track9FlagsLoaded; private set => this.RaiseAndSetIfChanged(ref _track9FlagsLoaded, value); }
+    private IReadOnlyDictionary<int, Model.RiskFlags.FlaggedRiskDto>? _track9FlagRows;
+    private IReadOnlyDictionary<int, string> _track9FlagSummaries = new Dictionary<int, string>();
+    public IReadOnlyDictionary<int, string> Track9FlagSummaries
+    {
+        get => _track9FlagSummaries;
+        private set => this.RaiseAndSetIfChanged(ref _track9FlagSummaries, value);
+    }
+    public ObservableCollection<Track9FlagFilterOption> Track9FlagOptions { get; } = [];
+    private Track9FlagFilterOption? _track9FlagFilter;
+    public Track9FlagFilterOption? Track9FlagFilter
+    {
+        get => _track9FlagFilter;
+        set { this.RaiseAndSetIfChanged(ref _track9FlagFilter, value); if (_allRisks != null) ApplyFilter(); }
+    }
+    private int _track9FlagGeneration;
+    private async Task LoadTrack9FlagSummariesAsync()
+    {
+        var generation = System.Threading.Interlocked.Increment(ref _track9FlagGeneration);
+        try
+        {
+            var rows = await GetService<IRiskFlagsService>().GetFlaggedAsync();
+            if (generation != _track9FlagGeneration) return;
+            _track9FlagRows = rows.ToDictionary(r => r.RiskId);
+            Track9FlagSummaries = rows.ToDictionary(r => r.RiskId, r =>
+                string.Join(", ", r.Flags.Select(f => (string)Localizer[GUIClient.Tools.Track9.Track9RiskPresentation.EnumKey(f)]))
+                + (r.GateA ? " · " + Localizer["Track9GateA"] : string.Empty));
+            Track9FlagsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            if (generation != _track9FlagGeneration) return;
+            Logger.Warning(ex, "Could not load the register flags");
+            _track9FlagRows = null;
+            Track9FlagSummaries = new Dictionary<int, string>();
+            Track9FlagsLoaded = false;
+            _track9FlagFilter = Track9FlagOptions.FirstOrDefault();
+            this.RaisePropertyChanged(nameof(Track9FlagFilter));
+        }
+        if (_allRisks != null) ApplyFilter();
+    }
+
+    public RiskFlagsPanelViewModel Track9Flags { get; } = new();
+    public RiskTargetViewModel Track9Target { get; } = new();
+    public RiskTailPanelViewModel Track9Tail { get; } = new();
+    public ReassessmentQueueViewModel Track9Reassessments { get; } = new();
+    public ArchiveReviewViewModel Track9Archive { get; } = new();
+    public RiskRequirementsBlockViewModel Track9Requirements { get; } = new();
+    public RiskAiModelsBlockViewModel Track9AiModels { get; } = new();
+    public string StrTrack9Workspace => Localizer["Track9Workspace"];
+
+    private bool _isTrack9Expanded;
+    public bool IsTrack9Expanded
+    {
+        get => _isTrack9Expanded;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isTrack9Expanded, value);
+            _ = LoadTrack9RiskAsync(SelectedRisk?.Id);
+        }
+    }
+
+    private async Task LoadTrack9RiskAsync(int? riskId)
+    {
+        if (!IsTrack9Expanded) riskId = null;
+        if (riskId is null)
+        {
+            Track9Reassessments.Clear();
+            Track9Archive.Clear();
+        }
+        try
+        {
+            await Task.WhenAll(Track9Flags.LoadRiskAsync(riskId), Track9Target.LoadRiskAsync(riskId),
+                Track9Tail.LoadRiskAsync(riskId), Track9Monitoring.LoadRiskAsync(riskId), (riskId is null ? Task.CompletedTask : Track9Reassessments.LoadRiskAsync(riskId)),
+                (riskId is null ? Task.CompletedTask : Track9Archive.LoadRiskAsync(riskId)), Track9Requirements.LoadRiskAsync(riskId),
+                Track9AiModels.LoadRiskAsync(riskId));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Could not load the governance detail of risk {RiskId}", riskId);
+        }
+    }
+
     public string ScenarioCauseSummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioCause, StrChainNotInformed);
     public string ScenarioVulnerabilitySummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioVulnerability, StrChainNotInformed);
     public string ScenarioCentralEventSummary => RiskScenarioSummary.Field(SelectedRisk?.ScenarioCentralEvent, StrChainNotInformed);
@@ -478,6 +600,12 @@ public class RiskViewModel: ViewModelBase
     /// </summary>
     public bool IsEditChainEnabled =>
         SelectedRisk is not null && RiskChainAccess.CanEditChain(AutenticationService.AuthenticatedUserInfo);
+
+    /// <summary>
+    /// The scenario's MITRE ATT&amp;CK techniques (Stage 9.4, T302, S45 §7.3): a self-contained block with its
+    /// own view-model, loaded on selection and hidden for anyone outside <c>RequireRiskmanagement</c>.
+    /// </summary>
+    public AttackTechniquesPanelViewModel RiskTechniques { get; } = new(AttackTechniqueTarget.Risk);
     
     private IReadOnlyDictionary<int, RiskScorePair> _scoreSummaries =
         new Dictionary<int, RiskScorePair>();
@@ -913,6 +1041,11 @@ public class RiskViewModel: ViewModelBase
         StrClosed = Localizer["Closed"].ToString().ToUpper();
         StrReopen = Localizer["Reopen"];
         StrGovernance = Localizer["Governance"];
+        Track9FlagOptions.Add(new Track9FlagFilterOption(null, Localizer["Track9AllFlags"]));
+        foreach (var flag in Model.RiskFlags.RiskFlagCatalogue.Flags)
+            Track9FlagOptions.Add(new Track9FlagFilterOption(flag.Code,
+                Localizer[GUIClient.Tools.Track9.Track9RiskPresentation.EnumKey(flag.Code)]));
+        _track9FlagFilter = Track9FlagOptions[0];
         StrResidual = Localizer["Residual"] + ":";
         StrResidualDelta = Localizer["ResidualDelta"] + ":";
         StrBusinessRank = Localizer["BusinessRank"] + ":";
@@ -998,9 +1131,12 @@ public class RiskViewModel: ViewModelBase
 
         if (SelectedVulnerabilityPage > 1)
         {
+            var generation = _riskSelectionGeneration;
+            var riskId = SelectedRisk.Id;
             SelectedVulnerabilityPage--;
-            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(SelectedRisk.Id, SelectedVulnerabilityPage, 10);
-                    
+            var page = SelectedVulnerabilityPage;
+            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(riskId, page, 10);
+            if (!IsCurrentRiskSelection(generation, riskId) || SelectedVulnerabilityPage != page) return;
             SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
             TotalSelectedVulnerabilities = pageTuple.Item1;
         }
@@ -1012,10 +1148,12 @@ public class RiskViewModel: ViewModelBase
 
         if (SelectedVulnerabilityPage * 10 <= TotalSelectedVulnerabilities)
         {
+            var generation = _riskSelectionGeneration;
+            var riskId = SelectedRisk.Id;
             SelectedVulnerabilityPage++;
-        
-            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(SelectedRisk.Id, SelectedVulnerabilityPage, 10);
-                    
+            var page = SelectedVulnerabilityPage;
+            var pageTuple = await RisksService.GetOpenVulnerabilitiesPageAsync(riskId, page, 10);
+            if (!IsCurrentRiskSelection(generation, riskId) || SelectedVulnerabilityPage != page) return;
             SelectedVulnerabilities = new ObservableCollection<Vulnerability>(pageTuple.Item2);
             TotalSelectedVulnerabilities = pageTuple.Item1;
         }
@@ -1115,6 +1253,9 @@ public class RiskViewModel: ViewModelBase
             Risks = new ObservableCollection<Risk>(_allRisks!.Where(r => r.Subject.ToLower().Contains(_riskFilter.ToLower()) 
                                                                          && _filterStatuses.Any(s => r.Status == RiskHelper.GetRiskStatusName(s))));
         }
+        if (Track9FlagFilter?.Code is { } selectedFlag)
+            Risks = new ObservableCollection<Risk>(Risks!.Where(r =>
+                GUIClient.Tools.Track9.Track9RegisterFlags.Matches(r.Id, selectedFlag, _track9FlagRows)));
     }
 
     private void CleanFilters()
@@ -1241,20 +1382,21 @@ public class RiskViewModel: ViewModelBase
     /// Reads the selected risk's chain (Stage 9.1). A failure — a user outside the
     /// <c>riskmanagement</c> audience gets 403 — hides the block instead of failing the whole detail.
     /// </summary>
-    private async Task LoadSelectedRiskChainAsync(int riskId)
+    private async Task LoadSelectedRiskChainAsync(int riskId, int? expectedGeneration = null)
     {
+        var generation = expectedGeneration ?? _riskSelectionGeneration;
         try
         {
             var chain = await RiskChainService.GetRiskChainAsync(riskId);
 
-            // The user may have moved on while the chain was loading; a late answer must not paint
-            // another risk's chain under this one.
-            SelectedRiskChain = SelectedRisk?.Id == riskId ? chain : SelectedRiskChain;
+            // The user may have moved A -> B -> A while the chain was loading. The id alone cannot
+            // distinguish that stale A response, so both the selection and its generation are checked.
+            if (IsCurrentRiskSelection(generation, riskId)) SelectedRiskChain = chain;
         }
         catch (Exception ex)
         {
             Logger.Warning("Could not load the linkage chain of risk {Id}: {Message}", riskId, ex.Message);
-            if (SelectedRisk?.Id == riskId) SelectedRiskChain = null;
+            if (IsCurrentRiskSelection(generation, riskId)) SelectedRiskChain = null;
         }
     }
 
@@ -1637,6 +1779,7 @@ public class RiskViewModel: ViewModelBase
     /// </summary>
     private async Task LoadScoreSummariesAsync()
     {
+        await LoadTrack9FlagSummariesAsync();
         try
         {
             var pairs = await RiskGovernanceService.GetScorePairsAsync();
@@ -1680,3 +1823,4 @@ public class RiskViewModel: ViewModelBase
     }
     #endregion
 }
+public sealed record Track9FlagFilterOption(DAL.Enums.RiskFlagCode? Code, string Label);

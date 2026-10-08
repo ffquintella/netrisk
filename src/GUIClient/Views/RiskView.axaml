@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:track9="clr-namespace:GUIClient.Views.Track9"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
@@ -8,6 +9,7 @@
              xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
              xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
+             xmlns:views="clr-namespace:GUIClient.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:RiskViewModel" x:Class="GUIClient.Views.RiskView"
              Name="RisksUc"
@@ -37,6 +39,7 @@
         
         <convertes:DateToFormatedStringConverter x:Key="DateToFormatedStringConverter"/>
         <convertes:ActionTooltipConverter x:Key="ActionTooltipConverter"/>
+        <convertes:Track9FlagSummaryConverter x:Key="Track9FlagSummaryConverter"/>
         <convertes:RiskScoreSummaryConverter x:Key="RiskScoreSummaryConverter"/>
         
     </UserControl.Resources>
@@ -88,6 +91,17 @@
                     <DataTemplate>
                         <StackPanel Orientation="Vertical">
                             <TextBlock Text="{Binding Subject}" TextWrapping="Wrap" MaxWidth="400" />
+                            <TextBlock Classes="header_detail" FontSize="11" MaxWidth="400" TextWrapping="Wrap">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource Track9FlagSummaryConverter}">
+                                        <Binding Path="Id"/>
+                                        <Binding Path="$parent[ListBox].((dvm:RiskViewModel)DataContext).Track9FlagSummaries"/>
+                                        <Binding Path="$parent[ListBox].((dvm:RiskViewModel)DataContext).Track9FlagsLoaded"/>
+                                        <Binding Path="$parent[ListBox].((dvm:RiskViewModel)DataContext).StrTrack9NoFlags"/>
+                                        <Binding Path="$parent[ListBox].((dvm:RiskViewModel)DataContext).StrTrack9FlagsUnavailable"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                             <!-- Track 8 milestones 8.2.3 and 8.6.5 — inherent → residual with the
                                  delta, and the rank the business reviewers gave it. Hidden when the
                                  row has neither, so an untreated register does not grow a column of
@@ -105,9 +119,17 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <TextBox Grid.Row="3" Text="{Binding RiskFilter, Mode=TwoWay}" Margin="0 0 5 0 "
-                     IsVisible="{Binding FilterVisible}"
-                     behaviors:FocusOnVisible.Enabled="True" />
+            <StackPanel Grid.Row="3" IsVisible="{Binding FilterVisible}" Spacing="4">
+                <TextBox Text="{Binding RiskFilter, Mode=TwoWay}" Margin="0 0 5 0"
+                         behaviors:FocusOnVisible.Enabled="True"/>
+                <TextBlock Text="{Binding StrTrack9FlagFilter}" Classes="fieldLabel"/>
+                <ComboBox IsEnabled="{Binding Track9FlagsLoaded}" ItemsSource="{Binding Track9FlagOptions}" SelectedItem="{Binding Track9FlagFilter}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="dvm:Track9FlagFilterOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Text="{Binding StrTrack9FlagsUnavailable}" IsVisible="{Binding !Track9FlagsLoaded}" Classes="warning"/>
+            </StackPanel>
             <!-- Risk Control Bar -->
             <Grid Grid.Row="4" ColumnDefinitions="Auto, Auto,Auto, *, Auto,Auto, Auto">
                 <Button Grid.Column="0" Name="BtAddRisk"  Classes="subButton"
@@ -299,6 +321,11 @@
                                 </StackPanel>
                             </Button>
                         </StackPanel>
+
+                        <!-- Stage 9.4 (T302, S45 §7.3): the scenario's ATT&CK techniques — its own control and
+                             view-model; hidden for anyone outside RequireRiskmanagement and on a failed read. -->
+                        <views:AttackTechniquesPanel DataContext="{Binding RiskTechniques}" Width="450"
+                                                     HorizontalAlignment="Left"/>
                     </StackPanel>
                     <!-- Incident Response PLAN -->
                     <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*">
@@ -464,6 +491,18 @@
 
                         </Grid>
                     </Panel>
+                    <Expander Header="{Binding StrTrack9Workspace}" IsExpanded="{Binding IsTrack9Expanded, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                        <StackPanel Spacing="12">
+                            <track9:RiskFlagsPanel DataContext="{Binding Track9Flags}"/>
+                            <track9:RiskTargetView DataContext="{Binding Track9Target}"/>
+                            <track9:RiskTailPanel DataContext="{Binding Track9Tail}"/>
+                            <track9:RiskMonitoringPanelView DataContext="{Binding Track9Monitoring}"/>
+                            <track9:ReassessmentQueueView DataContext="{Binding Track9Reassessments}" Height="560"/>
+                            <track9:ArchiveReviewView DataContext="{Binding Track9Archive}" Height="560"/>
+                            <track9:RiskRequirementsBlock DataContext="{Binding Track9Requirements}"/>
+                            <track9:RiskAiModelsBlock DataContext="{Binding Track9AiModels}"/>
+                        </StackPanel>
+                    </Expander>
                     <!-- NOTES -->
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="{Binding StrNotes}" Classes="label"/>

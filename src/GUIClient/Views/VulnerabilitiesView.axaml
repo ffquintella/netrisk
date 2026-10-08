@@ -9,6 +9,7 @@
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:vulnerability="clr-namespace:Model.Vulnerability;assembly=Model"
              xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
+             xmlns:views="clr-namespace:GUIClient.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              Name="VulnerabilitiesUc"
              xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:VulnerabilitiesViewModel" x:Class="GUIClient.Views.VulnerabilitiesView">
@@ -195,6 +196,14 @@
                         <KeyBinding Gesture="Enter" Command="{Binding BtApplyFilterClicked}"/>
                     </TextBox.KeyBindings>
                 </TextBox>
+                <!-- Stage 9.4 (T302, S45 §7.1): the EPSS minimum edits the epss>= term of the text above,
+                     which stays what is sent; written with a dot whatever the culture. -->
+                <Border ToolTip.Tip="{Binding StrEpssMinimumTip}" Classes="tooltip">
+                    <NumericUpDown MinWidth="130" Margin="5 0 0 0"
+                                   Minimum="0" Maximum="100" Increment="1" FormatString="0.##"
+                                   Value="{Binding EpssMinimum}"
+                                   PlaceholderText="{Binding StrEpssMinimum}"/>
+                </Border>
                 <Border ToolTip.Tip="{Binding StrApply}" Classes="tooltip">
                     <Button Classes="toolbar" Command="{Binding BtApplyFilterClicked}"
                             HorizontalAlignment="Right">
@@ -266,7 +275,7 @@
                         pane closed.
                     -->
                     <ScrollViewer Grid.Column="1" IsVisible="{Binding IsDetailsPanelOpen}">
-                        <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto,Auto">
+                        <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto,Auto,Auto">
                             <Border Grid.Column="1" Grid.Row="1" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
@@ -340,8 +349,13 @@
                                     FallbackValue=''}" TextWrapping="Wrap"  Classes="formData" />
                                 </StackPanel>
                             </Border>
-                            <!-- RISKS -->
+                            <!-- EXPLOITATION SIGNALS (Stage 9.4, T302, S45 §7.2) — priority, EPSS from both
+                                 sources, KEV and the ATT&CK techniques of the selected finding. -->
                             <Border Grid.Column="1" Grid.Row="2" BorderThickness="2">
+                                <views:ExploitationSignalsPanel DataContext="{Binding SignalsPanel}"/>
+                            </Border>
+                            <!-- RISKS -->
+                            <Border Grid.Column="1" Grid.Row="3" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrRisks}" Classes="header"/>
                                     <ItemsRepeater  ItemsSource="{Binding SelectedRisksTuples}" >
@@ -375,7 +389,7 @@
                                 </StackPanel>
                             </Border>
                             <!-- ACTIONS -->
-                            <Border Grid.Column="1" Grid.Row="3" BorderThickness="2">
+                            <Border Grid.Column="1" Grid.Row="4" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock Text="{Binding StrActions}" Classes="header"/>
                                     <ItemsRepeater  ItemsSource="{Binding SelectedActions}" >
@@ -405,7 +419,7 @@
                                  changed this finding's triage state, when, and why. Rendered beside
                                  the actions rather than in place of them: actions are free-text
                                  notes, this is the audit trail an auditor samples. -->
-                            <Border Grid.Column="1" Grid.Row="4" BorderThickness="2">
+                            <Border Grid.Column="1" Grid.Row="5" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding StrTimeline}" Classes="header"/>

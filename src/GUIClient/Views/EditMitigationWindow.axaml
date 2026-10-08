@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:track9="clr-namespace:GUIClient.Views.Track9"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
@@ -37,7 +38,7 @@
 
             <!-- BODY -->
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <Grid ColumnDefinitions="Auto,*">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
 
                     <!-- LEFT: single line fields, kept compact at the top -->
                     <Grid Grid.Column="0" VerticalAlignment="Top"
@@ -113,7 +114,8 @@
                         <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding StrMitigationPercent, Mode=OneTime}" Classes="label" Margin="3 10 0 0"/>
                         <NumericUpDown Grid.Row="7" Grid.Column="1" Value="{Binding MitigationPercent, Mode=TwoWay}"
                                        Increment="1" Minimum="0" Maximum="100" MinWidth="297" Margin="5 5"/>
-                    </Grid>
+
+                </Grid>
 
                     <!-- RIGHT: multi line fields, they take all the remaining height -->
                     <Grid Grid.Column="1"
@@ -192,6 +194,12 @@
                             </Button>
                         </Grid>
                     </Grid>
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding StrTrack9SaveMitigationFirst}"
+                               IsVisible="{Binding !HasSavedMitigation}" Classes="header_detail" TextWrapping="Wrap"/>
+                    <Expander Grid.Row="1" Grid.ColumnSpan="2" Header="{Binding StrTrack9Economics}"
+                              IsVisible="{Binding HasSavedMitigation}">
+                        <track9:MitigationEconomicsView DataContext="{Binding Track9Economics}"/>
+                    </Expander>
                 </Grid>
             </ScrollViewer>
 

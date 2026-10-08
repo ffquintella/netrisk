@@ -61,11 +61,29 @@ public class EntitiesViewModel: ViewModelBase
         set
         {
             if (value != null) CreateEntityForm(value.EntityId);
+            else
+            {
+                IsTrack9DataEntity = false;
+                this.RaisePropertyChanged(nameof(ShowTrack9DataCatalogue));
+                _ = Track9ThirdParties.LoadEntityAsync(null);
+                _ = Track9DataCatalogue.LoadEntityAsync(null);
+            }
             this.RaiseAndSetIfChanged(ref _selectedNode, value);
         }
     }
     
-    /// <summary>Stage 9.3 (S43 §7): the continuity block under the form, for processes and IT services.</summary>
+    /// <summary>Contextual supplier and data governance under the selected entity form.</summary>
+    public GUIClient.ViewModels.Track9.EntityThirdPartiesBlockViewModel Track9ThirdParties { get; } = new();
+    public GUIClient.ViewModels.Track9.DataCatalogueRecordBlockViewModel Track9DataCatalogue { get; } = new();
+    public bool CanReadTrack9ThirdParties => GUIClient.Tools.Track9.Track9WorkspaceAccess.CanReadRegister(AuthenticationService.AuthenticatedUserInfo, "third_party_manage");
+    private bool _isTrack9DataEntity;
+    public bool IsTrack9DataEntity { get => _isTrack9DataEntity; private set => this.RaiseAndSetIfChanged(ref _isTrack9DataEntity, value); }
+    public bool CanReadTrack9Catalogue => GUIClient.Tools.Track9.Track9WorkspaceAccess.CanReadRegister(AuthenticationService.AuthenticatedUserInfo, "data_catalogue_manage");
+    public bool ShowTrack9DataCatalogue => IsTrack9DataEntity && CanReadTrack9Catalogue;
+    public bool CanReadTrack9 => CanReadTrack9ThirdParties || CanReadTrack9Catalogue;
+    public string StrTrack9Workspace => Localizer["Track9Workspace"];
+
+    /// <summary>Stage 9.3 (S43 §7): continuity for processes and IT services.</summary>
     public ContinuityPanelViewModel ContinuityPanelViewModel { get; } = new();
 
     private bool _isSearchVisible;
@@ -661,6 +679,13 @@ public class EntitiesViewModel: ViewModelBase
         _entityPanel.Children.Clear();
         _entityPanel.Children.Add(entityForm);
 
+        IsTrack9DataEntity = entity.DefinitionName == "organizationData";
+        this.RaisePropertyChanged(nameof(CanReadTrack9ThirdParties));
+        this.RaisePropertyChanged(nameof(CanReadTrack9Catalogue));
+        this.RaisePropertyChanged(nameof(CanReadTrack9));
+        this.RaisePropertyChanged(nameof(ShowTrack9DataCatalogue));
+        _ = Track9ThirdParties.LoadEntityAsync(CanReadTrack9ThirdParties ? entity.Id : null);
+        _ = Track9DataCatalogue.LoadEntityAsync(CanReadTrack9Catalogue && entity.DefinitionName == "organizationData" ? entity.Id : null);
         _ = ContinuityPanelViewModel.LoadAsync(entity.Id, entity.DefinitionName,
             entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")?.Value ?? "#" + entity.Id);
     }

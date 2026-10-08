@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.MitigationEconomicsView"
+             x:DataType="vm:MitigationEconomicsViewModel" mc:Ignorable="d"
+             d:DesignWidth="1050" d:DesignHeight="720">
+    <Design.DataContext><vm:MitigationEconomicsViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="5">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}">
+                    <TextBlock Text="{Binding StrReload}"/>
+                </Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="hint" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanWrite}" TextWrapping="Wrap"/>
+
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                <Grid ColumnDefinitions="180,*,180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="0 8">
+                    <TextBlock Grid.Row="0" Classes="form_label" Text="{Binding StrOption}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding OptionChoices}" SelectedItem="{Binding SelectedOption}" IsEnabled="{Binding CanWrite}">
+                        <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Classes="form_label" Text="{Binding StrTransferCounterparty}"/>
+                    <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding TransferCounterparty}" MaxLength="255" IsEnabled="{Binding CanWrite}"/>
+
+                    <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrOneTimeCost}"/>
+                    <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding OneTime}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding CanWrite}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Classes="form_label" Text="{Binding StrAnnualCost}"/>
+                    <NumericUpDown Grid.Row="1" Grid.Column="3" Value="{Binding Annual}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding CanWrite}"/>
+
+                    <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrAnnualSideEffects}"/>
+                    <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding SideEffectsAnnual}" Minimum="0" Maximum="1000000000000" IsEnabled="{Binding CanWrite}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" Classes="form_label" Text="{Binding StrHorizonYears}"/>
+                    <NumericUpDown Grid.Row="2" Grid.Column="3" Value="{Binding HorizonYears}" Minimum="1" Maximum="30" Increment="1" IsEnabled="{Binding CanWrite}"/>
+
+                    <TextBlock Grid.Row="3" Classes="form_label" Text="{Binding StrCostBasis}"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding CostBasis}" MaxLength="1000" AcceptsReturn="True" TextWrapping="Wrap" IsEnabled="{Binding CanWrite}"/>
+
+                    <TextBlock Grid.Row="4" Classes="form_label" Text="{Binding StrEffortPersonDays}"/>
+                    <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding EffortPersonDays}" Minimum="0" Maximum="99999999" IsEnabled="{Binding CanWrite}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Classes="form_label" Text="{Binding StrDurationDays}"/>
+                    <NumericUpDown Grid.Row="4" Grid.Column="3" Value="{Binding DurationDays}" Minimum="0" Maximum="3650" Increment="1" IsEnabled="{Binding CanWrite}"/>
+
+                    <TextBlock Grid.Row="5" Classes="form_label" Text="{Binding StrPrerequisites}"/>
+                    <DataGrid Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" ItemsSource="{Binding PrerequisiteChoices}"
+                              AutoGenerateColumns="False" MinHeight="130" IsEnabled="{Binding CanWrite}" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Header="{Binding StrPrerequisites, Mode=OneTime}" Binding="{Binding IsSelected}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrPrerequisites, Mode=OneTime}" Binding="{Binding DisplayName}" Width="*" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Grid Grid.Row="6" Grid.ColumnSpan="4" ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto" Margin="0 8 0 0">
+                        <TextBlock Classes="form_label" Text="{Binding StrGateC}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding GateCText}" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrBenefit}"/>
+                        <TextBlock Grid.Column="3" Text="{Binding BenefitText}"/>
+                        <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrAnnualizedCost}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AnnualizedCostText}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="form_label" Text="{Binding StrNetBenefit}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding NetBenefitText}"/>
+                        <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrBenefitCostRatio}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding BenefitCostRatioText}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Classes="form_label" Text="{Binding StrGordonLoeb}"/>
+                        <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding GordonLoebText}"/>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+            <TextBlock Grid.Row="4" Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding StrStale}" IsVisible="{Binding IsStale}" Classes="hint" TextWrapping="Wrap"/>
+                <Button Grid.Column="1" Classes="type1" Command="{Binding SaveCommand}" IsEnabled="{Binding SaveEnabled}">
+                    <TextBlock Text="{Binding StrSaveChanges}"/>
+                </Button>
+            </Grid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

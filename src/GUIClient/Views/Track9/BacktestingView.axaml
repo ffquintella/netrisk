@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:DataType="vm:BacktestingViewModel"
+             x:Class="GUIClient.Views.Track9.BacktestingView">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,2*" Margin="5">
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <Button Grid.Column="1" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrGenerate}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="notice" Text="{Binding StrThirdLine}" IsVisible="{Binding IsThirdLine}"/>
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <GroupBox Grid.Row="2" Classes="type1" Header="{Binding StrFilters}" Margin="0 5">
+            <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto">
+                <TextBlock Classes="form_label" Text="{Binding StrFrom}"/>
+                <DatePicker Grid.Column="1" SelectedDate="{Binding From}"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrTo}"/>
+                <DatePicker Grid.Column="3" SelectedDate="{Binding To}"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrEntityId}"/>
+                <ComboBox Grid.Column="5" ItemsSource="{Binding EntityChoices}" SelectedItem="{Binding SelectedEntity}"/>
+                <Button Grid.Column="6" Classes="type2" Margin="8 0 0 0" Command="{Binding BtReloadClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Magnify" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrGenerate}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </GroupBox>
+        <Grid Grid.Row="3" ColumnDefinitions="3*,2*">
+            <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedReportItem}"
+                      AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrIncidents}" Binding="{Binding IncidentName}" Width="3*"/>
+                    <DataGridTextColumn Header="{Binding StrFrom}" Binding="{Binding OccurredAt}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrAssessment}" Binding="{Binding OutcomeLabel}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <GroupBox Grid.Column="1" Classes="type1" Header="{Binding StrAssessment}">
+                <StackPanel Margin="5">
+                    <StackPanel Orientation="Horizontal"><TextBlock Classes="label" Text="{Binding StrIncidents}"/><TextBlock Text="{Binding IncidentCountText}"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Classes="label" Text="{Binding StrAssessed}"/><TextBlock Text="{Binding AssessedText}"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Classes="label" Text="{Binding StrNotAssessed}"/><TextBlock Text="{Binding NotAssessedText}"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Classes="label" Text="{Binding StrUnforeseenRate}"/><TextBlock Text="{Binding UnforeseenRateText}"/></StackPanel>
+                    <StackPanel Orientation="Horizontal"><TextBlock Classes="label" Text="{Binding StrFalseNegativeRate}"/><TextBlock Text="{Binding FalseNegativeRateText}"/></StackPanel>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+        <GroupBox Grid.Row="4" Classes="type1" Header="{Binding StrAssessment}" Margin="0 5 0 0"
+                  IsEnabled="{Binding !IsBusy}">
+            <Grid ColumnDefinitions="2*,3*" IsVisible="{Binding HasSelectedIncident}">
+                <StackPanel Margin="5">
+                    <CheckBox Content="{Binding StrNoScenario}" IsChecked="{Binding NoCorrespondingScenario}"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <ComboBox ItemsSource="{Binding RiskChoices}" SelectedItem="{Binding DraftRisk}"/>
+                        <Button Grid.Column="1" Classes="subButton" Margin="5 0 0 0"
+                                Command="{Binding BtAddRiskClicked}" ToolTip.Tip="{Binding StrAddRisk}">
+                            <material:MaterialIcon Classes="subButton" Kind="Add"/>
+                        </Button>
+                    </Grid>
+                    <TextBlock Classes="form_label" Text="{Binding StrMatchedRisks}"/>
+                    <ListBox ItemsSource="{Binding DraftRiskIds}" SelectedItem="{Binding SelectedDraftRiskId}" MinHeight="70"/>
+                    <Button Classes="subButton" HorizontalAlignment="Right" Command="{Binding BtRemoveRiskClicked}"
+                            ToolTip.Tip="{Binding StrRemoveRisk}">
+                        <material:MaterialIcon Classes="subButton" Kind="Delete"/>
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="5">
+                    <TextBlock Classes="form_label" Text="{Binding StrNotes}"/>
+                    <TextBox Text="{Binding AssessmentNote}" AcceptsReturn="True" MinHeight="80"/>
+                    <Button Classes="dialog1" HorizontalAlignment="Right" Margin="0 8 0 0"
+                            Command="{Binding BtAssessClicked}" IsEnabled="{Binding CanWrite}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin="0 0 5 0"/>
+                            <TextBlock Text="{Binding StrAssess}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+        <progRing:ProgressRing Grid.RowSpan="5" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

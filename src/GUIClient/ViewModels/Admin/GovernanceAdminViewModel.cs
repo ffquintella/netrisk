@@ -7,6 +7,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using DAL.Enums;
 using GUIClient.Tools;
+using GUIClient.Tools.Track9;
 using Model.DTO;
 using Model.Governance;
 using ReactiveUI;
@@ -85,6 +86,9 @@ public class GovernanceAdminViewModel : ViewModelBase
 
     #region PROPERTIES
 
+    public GUIClient.ViewModels.Track9.AppetiteTailLimitsViewModel Track9TailLimits { get; } = new();
+    public string StrTrack9TailLimits => Localizer["Track9TailLimits"];
+
     public ObservableCollection<AppetiteRow> Appetites { get; } = [];
 
     private AppetiteRow? _selectedAppetite;
@@ -136,7 +140,20 @@ public class GovernanceAdminViewModel : ViewModelBase
     public int? SelectedAppetiteEntityId
     {
         get => _selectedAppetiteEntityId;
-        set => this.RaiseAndSetIfChanged(ref _selectedAppetiteEntityId, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedAppetiteEntityId, value);
+            SyncTrack9TailScope();
+        }
+    }
+
+    private void SyncTrack9TailScope()
+    {
+        var appetiteId = Track9GovernanceRouting.AppetiteIdForEditor(
+            SelectedAppetite?.Id,
+            SelectedAppetite?.EntityId,
+            SelectedAppetiteEntityId);
+        _ = Track9TailLimits.LoadAppetiteAsync(appetiteId);
     }
 
     private bool _appetiteConfigured;
@@ -394,8 +411,9 @@ public class GovernanceAdminViewModel : ViewModelBase
 
     // --- 8.3.3 appetite -----------------------------------------------------------------------
 
-    private async Task LoadAppetitesAsync()
+    private async Task LoadAppetitesAsync(int? preferredAppetiteId = null)
     {
+        preferredAppetiteId ??= SelectedAppetite?.Id;
         var appetites = await GovernanceService.GetAppetitesAsync();
 
         // Wrapped as they arrive, so the scope cell is a string the grid can render rather than an
@@ -404,7 +422,8 @@ public class GovernanceAdminViewModel : ViewModelBase
         foreach (var appetite in appetites) Appetites.Add(new AppetiteRow(appetite, StrGlobal));
 
         AppetiteConfigured = Appetites.Count > 0;
-        SelectedAppetite = Appetites.FirstOrDefault();
+        SelectedAppetite = Appetites.FirstOrDefault(appetite => appetite.Id == preferredAppetiteId)
+                            ?? Appetites.FirstOrDefault();
 
         var counts = await GovernanceService.GetRisksAboveAppetiteAsync();
 
@@ -416,7 +435,7 @@ public class GovernanceAdminViewModel : ViewModelBase
     {
         await RunAsync(Localizer["AppetiteSavedMSG"], async () =>
         {
-            await GovernanceService.SaveAppetiteAsync(new RiskAppetite
+            var saved = await GovernanceService.SaveAppetiteAsync(new RiskAppetite
             {
                 Id = SelectedAppetite?.EntityId == SelectedAppetiteEntityId ? SelectedAppetite?.Id ?? 0 : 0,
                 EntityId = SelectedAppetiteEntityId,
@@ -425,7 +444,7 @@ public class GovernanceAdminViewModel : ViewModelBase
                 Notes = AppetiteNotes
             });
 
-            await LoadAppetitesAsync();
+            await LoadAppetitesAsync(saved.Id);
         });
     }
 

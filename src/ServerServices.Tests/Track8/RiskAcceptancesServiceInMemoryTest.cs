@@ -318,6 +318,49 @@ public class RiskAcceptancesServiceInMemoryTest : InMemoryServiceTestBase
             _service.RenewAsync(first.Id, ValidRequest(), 1));
     }
 
+    [Fact]
+    public async Task TestAnAlreadyRenewedAcceptanceCannotBeRenewedAgain()
+    {
+        SeedBaseline();
+
+        var first = await _service.CreateAsync(1, ValidRequest(DateTime.UtcNow.AddDays(30)), 1);
+        var renewal = await _service.RenewAsync(first.Id, ValidRequest(DateTime.UtcNow.AddDays(120)), 1);
+
+        var ex = await Assert.ThrowsAsync<InvalidStateTransitionException>(() =>
+            _service.RenewAsync(first.Id, ValidRequest(DateTime.UtcNow.AddDays(150)), 1));
+        Assert.Equal(RiskAcceptanceStatus.Renewed.ToString(), ex.FromState);
+
+        await using (var db = OpenContext())
+        {
+            var rows = db.RiskAcceptances.Where(a => a.RiskId == 1).ToList();
+
+            // Exactly one acceptance in force, and it is the first renewal; the refusal wrote nothing.
+            Assert.Equal(2, rows.Count);
+            var live = Assert.Single(rows, a => a.Status == RiskAcceptanceStatus.Active);
+            Assert.Equal(renewal.Id, live.Id);
+        }
+
+        // The successor is still renewable.
+        var second = await _service.RenewAsync(renewal.Id, ValidRequest(DateTime.UtcNow.AddDays(200)), 1);
+        Assert.Equal(renewal.Id, second.RenewedFromId);
+    }
+
+    [Fact]
+    public async Task TestAnExpiredAcceptanceCannotBeRenewedWhileAnotherIsLive()
+    {
+        SeedBaseline();
+
+        var expired = await _service.CreateAsync(1, ValidRequest(DateTime.UtcNow.AddDays(30)), 1);
+        await _service.ProcessExpiryAsync(DateTime.UtcNow.AddDays(31));
+        var live = await _service.CreateAsync(1, ValidRequest(DateTime.UtcNow.AddDays(60)), 1);
+
+        await Assert.ThrowsAsync<DataAlreadyExistsException>(() =>
+            _service.RenewAsync(expired.Id, ValidRequest(DateTime.UtcNow.AddDays(90)), 1));
+
+        await using var db = OpenContext();
+        Assert.Equal(live.Id, Assert.Single(db.RiskAcceptances, a => a.Status == RiskAcceptanceStatus.Active).Id);
+    }
+
     // --- revocation -------------------------------------------------------------------------------
 
     [Fact]

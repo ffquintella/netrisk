@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:ring="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             x:Class="GUIClient.Views.Track9.CorrelationEditorView" x:DataType="vm:CorrelationEditorViewModel"
+             mc:Ignorable="d" d:DesignWidth="1050" d:DesignHeight="650">
+    <Design.DataContext><vm:CorrelationEditorViewModel/></Design.DataContext>
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto" Margin="5">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+                <Button Grid.Column="1" Classes="type2" Command="{Binding NewCommand}" Margin="0 0 5 0"><TextBlock Text="{Binding StrNew}"/></Button>
+                <Button Grid.Column="2" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="2" Classes="hint" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanWrite}" TextWrapping="Wrap"/>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedCorrelation}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrRiskA, Mode=OneTime}" Binding="{Binding RiskA}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrRiskB, Mode=OneTime}" Binding="{Binding RiskB}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrCoefficient, Mode=OneTime}" Binding="{Binding Coefficient}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrRationale, Mode=OneTime}" Binding="{Binding Rationale}" Width="3*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,*,Auto,120" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrRiskA}"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRiskA}" IsEnabled="{Binding CanWrite}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9RiskChoice"><TextBlock Text="{Binding DisplayName}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrRiskB}"/>
+                <ComboBox Grid.Column="3" ItemsSource="{Binding Risks}" SelectedItem="{Binding SelectedRiskB}" IsEnabled="{Binding CanWrite}">
+                    <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9RiskChoice"><TextBlock Text="{Binding DisplayName}"/></DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrCoefficient}"/>
+                <NumericUpDown Grid.Column="5" Value="{Binding Coefficient}" Minimum="0" Maximum="1" Increment="0.001" IsEnabled="{Binding CanWrite}"/>
+            </Grid>
+            <Grid Grid.Row="5" ColumnDefinitions="Auto,*">
+                <TextBlock Classes="form_label" Text="{Binding StrRationale}"/>
+                <TextBox Grid.Column="1" Text="{Binding Rationale}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" IsEnabled="{Binding CanWrite}"/>
+            </Grid>
+            <Grid Grid.Row="6" ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
+                <Button Grid.Column="1" Classes="type3" Command="{Binding DeleteCommand}" IsEnabled="{Binding DeleteEnabled}" Margin="0 0 5 0"><TextBlock Text="{Binding StrDelete}"/></Button>
+                <Button Grid.Column="2" Classes="type1" Command="{Binding SaveCommand}" IsEnabled="{Binding SaveEnabled}"><TextBlock Text="{Binding StrSaveChanges}"/></Button>
+            </Grid>
+        </Grid>
+        <ring:ProgressRing Width="72" Height="72" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" ZIndex="1000"/>
+    </Panel>
+</UserControl>

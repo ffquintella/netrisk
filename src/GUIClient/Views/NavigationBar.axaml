@@ -36,6 +36,12 @@
         </StackPanel>
         <Rectangle Grid.Column="1" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Border ToolTip.Tip="{Binding StrTrack9Workspace}" Classes="tooltip">
+                <Button Classes="nav-base nav-icon" IsEnabled="{Binding CanOpenTrack9}"
+                        Command="{Binding BtTrack9Clicked}">
+                    <material:MaterialIcon Kind="ShieldCheck" Width="20" Height="20"/>
+                </Button>
+            </Border>
             <Border ToolTip.Tip="{Binding StrDashboard}" Classes="tooltip">
                 <Button Name="BtnDashboard" Classes="nav-base nav-icon"
                         Command="{Binding BtDashboardClicked}">

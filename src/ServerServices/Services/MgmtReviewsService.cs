@@ -1,5 +1,4 @@
-﻿using Mapster;
-using DAL;
+﻿using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.DTO;
@@ -138,36 +137,29 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
         return reviews;
     }
 
-    public MgmtReview Create(MgmtReview review)
+    public async Task<MgmtReview> UpdateAsync(MgmtReviewDto review, int actingUserId)
     {
-        using var dbContext = DalService.GetContext();
+        await using var dbContext = DalService.GetContext();
 
-        var dbReview = dbContext.MgmtReviews.Add(review);
-        dbContext.SaveChanges();
-
-        var dbObj = dbContext.MgmtReviews
-            .Include(rev => rev.ReviewNavigation)
-            .Include(rev => rev.NextStepNavigation)
-            .FirstOrDefault(mr => mr.Id == dbReview.Entity.Id);
-        
-        return dbObj!;
-    }
-    
-    public MgmtReview Update(MgmtReviewDto review)
-    {
-        using var dbContext = DalService.GetContext();
-
-        var dbObj = dbContext.MgmtReviews.FirstOrDefault(mr => mr.Id == review.Id);
+        var dbObj = await dbContext.MgmtReviews.FirstOrDefaultAsync(mr => mr.Id == review.Id);
         
         if(dbObj == null)
             throw new DataNotFoundException("local", "mgmtReviews", new Exception($"MgmtReview with id {review.Id} not found"));
 
         
-        dbObj = review.Adapt<MgmtReview>();
-        
-        //var dbReview = dbContext.MgmtReviews.Update(dbObj);
-        dbContext.SaveChanges();
-        
+        await Governance.ThirdLineGuard.EnsureNotThirdLineAsync(dbContext, actingUserId,
+            "update a management review");
+        await RequireWorkflow().EnsureSegregationOfDutiesAsync(dbObj.RiskId, actingUserId, "review");
+
+        // A review's risk, author and timestamp are evidence, not editable form fields. PUT updates
+        // only the review decision content; moving it or rewriting who made it would forge history.
+        dbObj.Review = review.Review;
+        dbObj.NextStep = review.NextStep;
+        dbObj.Comments = review.Comments;
+        dbObj.NextReview = review.NextReview;
+
+        await dbContext.SaveChangesAsync();
+
         return dbObj;
     }
 

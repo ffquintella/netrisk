@@ -9,6 +9,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Markup.Xaml;
 using DAL.Entities;
 using DAL.Enums;
+using GUIClient.Tools;
 using GUIClient.ViewModels;
 
 namespace GUIClient.Views;
@@ -96,6 +97,12 @@ public partial class VulnerabilitiesView : UserControl
     /// <summary>The Application cell text, out of the view model's prefetched label map. See <see cref="FixTeamLabel"/>.</summary>
     private string? ApplicationLabel(int? entityId) => _viewModel?.ApplicationLabel(entityId);
 
+    /// <summary>The EPSS cell text (Stage 9.4): a method rather than an inline expression, as the columns above.</summary>
+    private string? EpssLabel(double? score) => _viewModel?.EpssCell(score);
+
+    /// <summary>The EPSS percentile cell text (Stage 9.4).</summary>
+    private string? EpssPercentileLabel(double? percentile) => _viewModel?.EpssPercentileCell(percentile);
+
     /// <summary>Applies one of the view's registered <see cref="IValueConverter"/> resources, mirroring the old DataGrid column bindings.</summary>
     private string? ConvertWith(string converterKey, object? value, object? parameter = null)
     {
@@ -123,6 +130,22 @@ public partial class VulnerabilitiesView : UserControl
 
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrTitle, x => x.Title));
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrScore, x => x.Score == null ? null : x.Score.Value.ToString("F2")));
+        // Stage 9.4 (T302, S45 §7.1): the effective EPSS and its percentile. The text is a percentage or
+        // "n/a"; the order is numeric with a missing reading last in both directions, so a finding without
+        // EPSS never sorts as the least exploitable one.
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrEpss, x => EpssLabel(x.EpssScore),
+            options: new TextColumnOptions<Vulnerability>
+            {
+                CompareAscending = (a, b) => ExploitationSignalsSummary.CompareNullsLast(a?.EpssScore, b?.EpssScore, false),
+                CompareDescending = (a, b) => ExploitationSignalsSummary.CompareNullsLast(a?.EpssScore, b?.EpssScore, true)
+            }));
+        source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrEpssPercentile,
+            x => EpssPercentileLabel(x.EpssPercentile),
+            options: new TextColumnOptions<Vulnerability>
+            {
+                CompareAscending = (a, b) => ExploitationSignalsSummary.CompareNullsLast(a?.EpssPercentile, b?.EpssPercentile, false),
+                CompareDescending = (a, b) => ExploitationSignalsSummary.CompareNullsLast(a?.EpssPercentile, b?.EpssPercentile, true)
+            }));
         source.Columns.Add(new TextColumn<Vulnerability, string?>(_viewModel.StrImpact, x => ConvertWith("StringIdToImpactConverter", x.Severity, "keepId")));
         source.Columns.Add(new TextColumn<Vulnerability, DateTime>(_viewModel.StrFirstDetection, x => x.FirstDetection));
         source.Columns.Add(new TextColumn<Vulnerability, DateTime>(_viewModel.StrLastDetection, x => x.LastDetection));

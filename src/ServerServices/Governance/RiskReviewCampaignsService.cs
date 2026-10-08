@@ -288,6 +288,10 @@ public class RiskReviewCampaignsService(
             riskId = item.RiskId;
         }
 
+        // Every campaign decision is a management review, including mitigation and escalation.
+        // Apply the same maker-checker rule before any branch can write a task, acceptance or review.
+        await workflow.EnsureSegregationOfDutiesAsync(riskId, actingUserId, "review");
+
         // The decision's side effects run through their own services, each with its own rules —
         // acceptance is appetite-gated and segregation-checked, tasks validate their owner. Doing it
         // here rather than inline is what makes the portal and the desktop app apply one rulebook.

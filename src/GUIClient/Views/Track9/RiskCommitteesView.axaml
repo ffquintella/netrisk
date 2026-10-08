@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1180" d:DesignHeight="760"
+             x:DataType="vm:RiskCommitteesViewModel"
+             x:Class="GUIClient.Views.Track9.RiskCommitteesView">
+    <Grid RowDefinitions="Auto,Auto,2*,3*" Margin="5">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <CheckBox Grid.Column="1" Margin="8 0" Content="{Binding StrShowRetired}" IsChecked="{Binding IncludeRetired}"/>
+            <CheckBox Grid.Column="2" Margin="8 0" Content="{Binding StrOpenOnly}" IsChecked="{Binding OpenOnly}"/>
+            <Button Grid.Column="3" Classes="type2" Command="{Binding BtReloadClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrReload}"/>
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="4" Classes="operation" Margin="5 0 0 0" Command="{Binding BtNewClicked}"
+                    ToolTip.Tip="{Binding StrCreate}" IsEnabled="{Binding CanDefine}">
+                <material:MaterialIcon Kind="Add" Width="20" Height="20"/>
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1">
+            <TextBlock Classes="notice" Text="{Binding StrThirdLine}" IsVisible="{Binding IsThirdLine}"/>
+            <TextBlock Classes="warning2" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}"/>
+            <TextBlock Classes="header_detail" Text="{Binding StrNoItems}" IsVisible="{Binding IsEmpty}"/>
+        </StackPanel>
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0 5">
+            <GroupBox Classes="type1" Header="{Binding StrCommittees}">
+                <DataGrid ItemsSource="{Binding Committees}" SelectedItem="{Binding SelectedCommittee}"
+                          AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="3*"/>
+                        <DataGridTextColumn Header="{Binding StrEntityId}" Binding="{Binding EntityId}" Width="*"/>
+                        <DataGridTextColumn Header="{Binding StrRequiredApprovals}" Binding="{Binding RequiredApprovals}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+            <GroupBox Grid.Column="1" Classes="type1" Header="{Binding StrDecisions}">
+                <DataGrid ItemsSource="{Binding CommitteeDecisions}" SelectedItem="{Binding SelectedDecision}"
+                          AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrRiskId}" Binding="{Binding RiskId}" Width="*"/>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding RiskSubject}" Width="3*"/>
+                        <DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusLabel}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </Grid>
+        <TabControl Grid.Row="3" IsEnabled="{Binding !IsBusy}">
+            <TabItem Header="{Binding StrDefinition}">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="8">
+                    <TextBlock Classes="form_label" Text="{Binding StrName}"/>
+                    <TextBox Grid.Column="1" Text="{Binding CommitteeName}"/>
+                    <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrMandate}"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Mandate}" AcceptsReturn="True"/>
+                    <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrEntityId}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding EntityChoices}"
+                              SelectedItem="{Binding SelectedEntity}"/>
+                    <TextBlock Grid.Row="3" Classes="form_label" Text="{Binding StrRequiredApprovals}"/>
+                    <NumericUpDown Grid.Row="3" Grid.Column="1" Minimum="2" Maximum="50" Increment="1"
+                                   Value="{Binding RequiredApprovals}"/>
+                    <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Classes="dialog1" Command="{Binding BtSaveClicked}" IsEnabled="{Binding CanDefine}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="ContentSave" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrSave}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="dialog2" Margin="5 0 0 0" Command="{Binding BtRetireClicked}"
+                                IsEnabled="{Binding CanRetire}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Archive" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrRetire}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{Binding StrMembers}">
+                <Grid RowDefinitions="*,Auto" Margin="8">
+                    <DataGrid ItemsSource="{Binding SelectedCommittee.Members}" SelectedItem="{Binding SelectedMember}"
+                              AutoGenerateColumns="False" IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrMemberId}" Binding="{Binding UserId}" Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="3*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto">
+                        <TextBlock Classes="form_label" Text="{Binding StrMemberId}"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding UserChoices}"
+                                  SelectedItem="{Binding SelectedUserToAdd}"/>
+                        <Button Grid.Column="2" Classes="dialog1" Margin="8 0" Command="{Binding BtAddMemberClicked}"
+                                IsEnabled="{Binding CanManageMembers}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="AccountPlus" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrAddMember}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="3" Classes="dialog2" Command="{Binding BtRemoveMemberClicked}"
+                                IsEnabled="{Binding CanManageMembers}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="AccountMinus" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrRemoveMember}"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{Binding StrSubmit}">
+                <ScrollViewer>
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="8">
+                        <TextBlock Classes="form_label" Text="{Binding StrKind}"/>
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding DecisionKinds}" SelectedItem="{Binding DecisionKind}"/>
+                        <TextBlock Grid.Row="1" Classes="form_label" Text="{Binding StrRiskId}"/>
+                        <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding RiskChoices}"
+                                  SelectedItem="{Binding SelectedDecisionRisk}"/>
+                        <TextBlock Grid.Row="2" Classes="form_label" Text="{Binding StrRenewsId}"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding AcceptanceChoices}"
+                                  SelectedItem="{Binding SelectedAcceptanceToRenew}"/>
+                        <TextBlock Grid.Row="3" Classes="form_label" Text="{Binding StrName}"/>
+                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DecisionName}"/>
+                        <TextBlock Grid.Row="4" Classes="form_label" Text="{Binding StrBusinessJustification}"/>
+                        <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding BusinessJustification}" AcceptsReturn="True"/>
+                        <TextBlock Grid.Row="5" Classes="form_label" Text="{Binding StrControls}"/>
+                        <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding CompensatingControls}" AcceptsReturn="True"/>
+                        <TextBlock Grid.Row="6" Classes="form_label" Text="{Binding StrExpires}"/>
+                        <DatePicker Grid.Row="6" Grid.Column="1" SelectedDate="{Binding ExpiresAt}"/>
+                        <TextBlock Grid.Row="7" Classes="form_label" Text="{Binding StrMinutes}"/>
+                        <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal">
+                            <TextBox Text="{Binding MinutesReference}" MinWidth="260"/>
+                            <Button Classes="dialog1" Margin="8 0" Command="{Binding BtSubmitClicked}"
+                                    IsEnabled="{Binding CanSubmit}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Kind="Send" Width="20" Height="20" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding StrSubmit}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{Binding StrVote}">
+                <Grid ColumnDefinitions="*,*" Margin="8">
+                    <StackPanel>
+                        <ComboBox ItemsSource="{Binding VoteChoices}" SelectedItem="{Binding VoteChoice}"/>
+                        <TextBlock Classes="form_label" Text="{Binding StrComment}"/>
+                        <TextBox Text="{Binding VoteComment}" AcceptsReturn="True"/>
+                        <Button Classes="dialog1" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Command="{Binding BtVoteClicked}" IsEnabled="{Binding CanVote}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="HowToVote" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrVote}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="8 0 0 0">
+                        <TextBlock Classes="form_label" Text="{Binding StrReason}"/>
+                        <TextBox Text="{Binding WithdrawalReason}" AcceptsReturn="True"/>
+                        <Button Classes="dialog2" HorizontalAlignment="Right" Margin="0 8 0 0"
+                                Command="{Binding BtWithdrawClicked}" IsEnabled="{Binding CanWithdraw}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrWithdraw}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <progRing:ProgressRing Grid.RowSpan="4" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" ZIndex="1000"/>
+    </Grid>
+</UserControl>

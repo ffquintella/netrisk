@@ -115,6 +115,10 @@ public static class MockedRiskAcceptancesService
                     throw new InvalidStateTransitionException("Revoked", "Renewed",
                         "A revoked acceptance is not renewed, it is replaced.");
 
+                if (id == 997)
+                    throw new DataAlreadyExistsException("local", "risk_acceptances", id.ToString(),
+                        "This acceptance was renewed by another request.");
+
                 if (id == 999)
                     throw new DataNotFoundException("risk_acceptances", id.ToString(),
                         new Exception("Acceptance not found."));

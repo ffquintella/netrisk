@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9" x:Class="GUIClient.Views.Track9.DpiaView"
+             x:DataType="vm:DpiaViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+      <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+      <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedValue="{Binding StatusFilter}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}" Width="180"/>
+      <Button Grid.Column="2" Classes="operation" Margin="6 0 0 0" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button>
+      <Button Grid.Column="3" Classes="dialog1" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding NewCommand}"><TextBlock Text="{Binding StrNew}"/></Button>
+    </Grid>
+    <StackPanel Grid.Row="1"><TextBlock Classes="warning" Text="{Binding ErrorMessage}"/><TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/><TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/></StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="350,*" Margin="0 8 0 0">
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsReadOnly="True">
+        <DataGrid.Columns><DataGridTextColumn Header="{Binding StrTitleColumn}" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/><DataGridTextColumn Header="{Binding StrResidualRisk}" Binding="{Binding ResidualRiskText}"/><DataGridCheckBoxColumn Header="{Binding StrReviewOverdue}" Binding="{Binding ReviewOverdue}"/></DataGrid.Columns>
+      </DataGrid>
+      <ScrollViewer Grid.Column="1"><StackPanel Margin="10 0 0 0" Spacing="6">
+        <StackPanel Orientation="Horizontal" Spacing="6"><Button Classes="dialog1" Command="{Binding OpenCommand}"><TextBlock Text="{Binding StrOpen}"/></Button><Button Classes="dialog1" IsEnabled="{Binding CanManageEdit}" Command="{Binding SaveCommand}"><TextBlock Text="{Binding StrSave}"/></Button><Button Classes="dialog1" IsEnabled="{Binding CanManageApprove}" Command="{Binding ApproveCommand}"><TextBlock Text="{Binding StrApprove}"/></Button><TextBlock Classes="fieldLabel" VerticalAlignment="Center" Text="{Binding StrReason}"/><TextBox IsEnabled="{Binding CanManageRetire}" Text="{Binding RetireReason}" MaxLength="1000" Width="280"/><Button Classes="dialog2" IsEnabled="{Binding CanManageRetire}" Command="{Binding RetireCommand}"><TextBlock Text="{Binding StrRetire}"/></Button></StackPanel>
+        <Grid IsEnabled="{Binding CanManageEdit}" ColumnDefinitions="2*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="6"><TextBlock Classes="fieldLabel" Text="{Binding StrTitleColumn}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrResidualRisk}"/><TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrPerformedAt}"/><TextBlock Grid.Column="3" Classes="fieldLabel" Text="{Binding StrReviewDue}"/><TextBox Grid.Row="1" Text="{Binding Editor.Title}" MaxLength="200"/><ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ResidualRiskOptions}" SelectedValue="{Binding SelectedResidualRisk}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/><DatePicker Grid.Row="1" Grid.Column="2" SelectedDate="{Binding Editor.PerformedAt}"/><DatePicker Grid.Row="1" Grid.Column="3" SelectedDate="{Binding Editor.NextReviewDueAt}"/></Grid>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrDocumentReference}"/><TextBox IsEnabled="{Binding CanManageEdit}" Text="{Binding Editor.DocumentReference}" MaxLength="500"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrSummary}"/><TextBox IsEnabled="{Binding CanManageEdit}" Text="{Binding Editor.Summary}" MaxLength="20000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="120"/>
+        <Grid IsEnabled="{Binding CanManageEdit}" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6"><TextBlock Classes="fieldLabel" Text="{Binding StrEntity}"/><ComboBox Grid.Row="1" ItemsSource="{Binding EntityOptions}" SelectedValue="{Binding LinkEntityId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/><Button Grid.Row="1" Grid.Column="1" Classes="dialog1" Command="{Binding LinkCommand}"><TextBlock Text="{Binding StrAdd}"/></Button><Button Grid.Row="1" Grid.Column="2" Classes="dialog2" Command="{Binding UnlinkCommand}"><TextBlock Text="{Binding StrRemove}"/></Button></Grid>
+        <DataGrid ItemsSource="{Binding LinkRows}" SelectedItem="{Binding SelectedLink}" IsReadOnly="True"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrKind}" Binding="{Binding KindText}"/><DataGridTextColumn Header="{Binding StrEntity}" Binding="{Binding EntityName}" Width="*"/></DataGrid.Columns></DataGrid>
+      </StackPanel></ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

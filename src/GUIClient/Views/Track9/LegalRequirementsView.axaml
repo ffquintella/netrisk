@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Track9" x:Class="GUIClient.Views.Track9.LegalRequirementsView"
+             x:DataType="vm:LegalRequirementsViewModel">
+  <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+      <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+      <Button Grid.Column="1" Classes="operation" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button>
+      <Button Grid.Column="2" Classes="dialog1" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding NewCommand}"><TextBlock Text="{Binding StrNew}"/></Button>
+      <Button Grid.Column="3" Classes="dialog1" Margin="6 0 0 0" IsEnabled="{Binding CanEditSelected}" Command="{Binding SaveCommand}"><TextBlock Text="{Binding StrSave}"/></Button>
+      <Button Grid.Column="4" Classes="dialog2" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding DeleteCommand}"><TextBlock Text="{Binding StrDelete}"/></Button>
+    </Grid>
+    <StackPanel Grid.Row="1"><TextBlock Classes="warning" Text="{Binding ErrorMessage}"/><TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/><TextBlock Classes="warning" Text="{Binding StrHiddenSupplierReadOnly}" IsVisible="{Binding SelectedSupplierHidden}"/><TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/></StackPanel>
+    <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0 8 0 0">
+      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsReadOnly="True">
+        <DataGrid.Columns><DataGridTextColumn Header="{Binding StrCode}" Binding="{Binding Code}"/><DataGridTextColumn Header="{Binding StrTitleColumn}" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="{Binding StrKind}" Binding="{Binding KindText}"/><DataGridTextColumn Header="{Binding StrRiskLinks}" Binding="{Binding RiskLinkCount}"/><DataGridTextColumn Header="{Binding StrPurposes}" Binding="{Binding PurposeCount}"/></DataGrid.Columns>
+      </DataGrid>
+      <ScrollViewer Grid.Column="1"><StackPanel Grid.Column="1" IsEnabled="{Binding CanEditSelected}" Margin="10 0 0 0" Spacing="4">
+        <TextBlock Classes="fieldLabel" Text="{Binding StrCode}"/><TextBox Text="{Binding Editor.Code}" MaxLength="100"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrTitleColumn}"/><TextBox Text="{Binding Editor.Title}" MaxLength="300"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrKind}"/><ComboBox ItemsSource="{Binding KindOptions}" SelectedValue="{Binding SelectedKind}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrDescription}"/><TextBox Text="{Binding Editor.Description}" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="100"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrReference}"/><TextBox Text="{Binding Editor.Reference}" MaxLength="500"/>
+        <TextBlock Classes="fieldLabel" Text="{Binding StrVendor}"/><ComboBox ItemsSource="{Binding ThirdPartyOptions}" SelectedValue="{Binding SelectedThirdPartyId}" SelectedValueBinding="{Binding Value}" DisplayMemberBinding="{Binding Name}"/>
+      </StackPanel></ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

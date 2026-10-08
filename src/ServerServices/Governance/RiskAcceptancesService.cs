@@ -192,8 +192,24 @@ public class RiskAcceptancesService(
                 "A revoked acceptance is not renewed, it is replaced. Create a new acceptance with its " +
                 "own justification — the revocation was a decision, and renewing past it would hide it.");
 
+        // A renewed acceptance was already replaced by its successor. Renewing it again would leave the successor
+        // and the new row both Active for the same risk — nobody could say which decision is in force.
+        if (previous.Status == RiskAcceptanceStatus.Renewed)
+            throw new InvalidStateTransitionException(previous.Status.ToString(),
+                RiskAcceptanceStatus.Renewed.ToString(),
+                "This acceptance was already renewed; renew the acceptance that replaced it.");
+
         var riskId = previous.RiskId.Value;
         var authorizerId = request.AuthorizingManagerId ?? actingUserId;
+
+        // Same rule as the committee path (S50 §4.6): renewing an acceptance (say an expired one) while another is
+        // live would also leave two in force. The unique predecessor index below closes the race after this useful
+        // early check; the losing writer is translated to the same domain conflict.
+        if (await db.RiskAcceptances.AnyAsync(a => a.RiskId == riskId && a.Id != previous.Id &&
+                                                 a.Status == RiskAcceptanceStatus.Active &&
+                                                 a.ExpiresAt > DateTime.UtcNow))
+            throw new DataAlreadyExistsException("local", "risk_acceptances", riskId.ToString(),
+                "Another acceptance of this risk is live: renewing this one would leave two in force.");
 
         // Gate A before everything else, as on creation: a renewal is a new acceptance (S46 §4.7).
         await workflow.EnsureGateAAllowsAsync(riskId, GateAAction.RenewAcceptance);
@@ -241,7 +257,15 @@ public class RiskAcceptancesService(
 
         WriteReview(db, riskId, authorizerId, renewal, appetite, request.SegregationOverrideReason);
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ContinuityService.Mentions(ex, "uq_ra_renewed_from_id"))
+        {
+            throw new DataAlreadyExistsException("local", "risk_acceptances", previous.Id.ToString(),
+                "This acceptance was renewed by another request. Renew its successor instead.");
+        }
 
         Logger.Information("Risk acceptance {Previous} renewed as {Renewal} until {Expiry:yyyy-MM-dd}",
             previous.Id, renewal.Id, renewal.ExpiresAt);
