@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.38.2] - 2026-10-09
+
+### Fixed
+
+- Fix database upgrades from version 101 to 102 failing when replacing the risk acceptance renewal index; create the replacement unique index before dropping the index required by the foreign key, preserving the constraint and allowing migration retries.
+
 ## [2.38.1] - 2026-10-08
 
 ### Fixed
