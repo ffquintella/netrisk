@@ -34,6 +34,8 @@ public class StatusToColourConverterTest
     [UiTheory]
     [InlineData("New", "#FF90EE90")]
     [InlineData("Management Review", "#FFFFA500")]
+    // T329: the status the register actually stores for a reviewed risk; it used to fall through to the Closed colour.
+    [InlineData("Mgmt Reviewed", "#FFFFA500")]
     [InlineData("Mitigation Planned", "#FFFFA07A")]
     [InlineData("Closed", "#FF40E0D0")]
     public void TestAStatusKeepsItsColour(string status, string expected)

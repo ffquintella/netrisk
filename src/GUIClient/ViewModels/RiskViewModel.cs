@@ -660,8 +660,30 @@ public class RiskViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedRiskFiles, value);
     }
 
+    // The bar under the list writes the risk record, so each button follows the policy of the API action it
+    // ends in, failing closed (T328, Tools/RiskRecordAccess.cs).
+
+    private bool _canSubmitRisk;
+
+    /// <summary>Add and Edit: <c>submit_risks</c>.</summary>
+    public bool CanSubmitRisk
+    {
+        get => _canSubmitRisk;
+        set => this.RaiseAndSetIfChanged(ref _canSubmitRisk, value);
+    }
+
+    private bool _canCloseRisk;
+
+    /// <summary>Close and Reopen: the Admin role claim or <c>close_risks</c>.</summary>
+    public bool CanCloseRisk
+    {
+        get => _canCloseRisk;
+        set => this.RaiseAndSetIfChanged(ref _canCloseRisk, value);
+    }
+
     private bool _hasDeleteRiskPermission;
 
+    /// <summary>Delete: the Admin role claim or <c>delete_risk</c>.</summary>
     public bool CanDeleteRisk
     {
         get => _hasDeleteRiskPermission;
@@ -771,8 +793,8 @@ public class RiskViewModel: ViewModelBase
         var status = risk == null ? null : RiskHelper.GetRiskStatusFromName(risk.Status);
         var isClosed = status == RiskStatus.Closed;
 
-        // A closed risk has exactly one exit: reopen it.
-        BtReopenEnabled = risk != null && isClosed;
+        // A closed risk has exactly one exit: reopen it — which deletes the closure, so it is the close permission.
+        BtReopenEnabled = risk != null && isClosed && CanCloseRisk;
 
         if (risk == null || isClosed)
         {
@@ -790,7 +812,7 @@ public class RiskViewModel: ViewModelBase
         BtEditReviewEnabled = HasReviews;
 
         // Closing is a permissioned action, and only meaningful for an open risk.
-        BtCloseRiskEnabled = CanDeleteRisk;
+        BtCloseRiskEnabled = CanCloseRisk;
     }
 
     #endregion
@@ -1110,7 +1132,9 @@ public class RiskViewModel: ViewModelBase
             if(AutenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement"))
                 _= InitializeAsync();
             
-            CanDeleteRisk = PermissionTool.VerifyPermission("delete_risk", AutenticationService.AuthenticatedUserInfo);
+            CanSubmitRisk = RiskRecordAccess.CanSubmit(AutenticationService.AuthenticatedUserInfo);
+            CanCloseRisk = RiskRecordAccess.CanClose(AutenticationService.AuthenticatedUserInfo);
+            CanDeleteRisk = RiskRecordAccess.CanDelete(AutenticationService.AuthenticatedUserInfo);
             ProcessLifecycleButtons();
 
             UserHasPermissionToAccessIncidentResponsePlans = PermissionTool.VerifyPermission("incident-response-plans",

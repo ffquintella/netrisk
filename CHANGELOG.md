@@ -12,6 +12,22 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add headless UI flow tests for the desktop risk screen and the risk editor, close, chain and governance dialogs, run on demand or at release like the rest of the UI suite (T327, S54)
+
+### Fixed
+
+- Enable the desktop risk screen's Add, Edit, Close, Reopen and Delete buttons only for users the API would let perform them, instead of Add and Edit for everyone and Close for whoever may delete (T328, S54)
+- Show a management-reviewed risk's status in orange on the desktop risk screen instead of the colour of a closed risk (T329, S54)
+- Put the caret in the search box when Ctrl+F or the magnifier reveals the search row on the desktop risk, findings, incidents and entities screens (T330, S54)
+- Show the fix team and analyst of a risk's open findings on the desktop risk screen, including findings nobody is assigned to yet (T331, S54)
+- Select a risk just created on the desktop and offer to plan its mitigation, which the screen never did (T332, S54)
+- Draw the file-type icons in the desktop file lists of risks, mitigations, incidents and response plans (T333, S54)
+- Stop the desktop risk screen and risk governance window logging a binding error each time a risk or task is selected (T334, S54)
+- Show whether the desktop risk editor is creating or editing a risk in its header (T335, S54)
+- Explain a duplicate risk subject in the desktop risk editor in the session language (T336, S54)
+
 ## [2.39.0] - 2026-10-13
 
 ### Added

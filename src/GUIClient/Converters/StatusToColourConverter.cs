@@ -30,6 +30,10 @@ public class StatusToColourConverter: IValueConverter
             {
                 case "New":
                     return new SolidColorBrush(Colors.LightGreen);
+                // "Mgmt Reviewed" is the status the register actually stores (RiskHelper.GetRiskStatusName,
+                // RiskWorkflowService); matching only "Management Review" painted every reviewed risk in the
+                // Closed turquoise (T329). The long form is kept for any caller still passing it.
+                case "Mgmt Reviewed":
                 case "Management Review":
                     return new SolidColorBrush(Colors.Orange);
                 case "Mitigation Planned":

@@ -413,6 +413,9 @@
     <data name="RiskMustHaveASubjectMSG" xml:space="preserve">
         <value>Risk must have a subject.</value>
     </data>
+    <data name="RiskSubjectExistsMSG" xml:space="preserve">
+        <value>A risk with this subject already exists.</value>
+    </data>
     <data name="RisksOverTime" xml:space="preserve">
         <value>Risks over time</value>
     </data>

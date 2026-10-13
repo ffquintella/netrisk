@@ -43,6 +43,7 @@ public sealed class TestApp : GUIClient.App
         UiDiagnostics.Reset();
         UiHost.Reset();
         UiServices.Install();
+        UiDesktop.Reset();
 
         base.Initialize();
     }
@@ -71,7 +72,10 @@ public static class TestAppBuilder
         // SkiaSharp, and with the stub every frame threw "SkiaSharp is not supported", the render loop
         // produced no scene, and hit-testing — so every simulated click — found nothing. Skia renders
         // off-screen; no display, Xvfb or GPU is involved on any of the three systems.
-        return AppBuilder.Configure<TestApp>()
+        //
+        // The classic-desktop lifetime the client always runs under: MsBox.Avalonia refuses to show a
+        // message box without one (UiDesktop).
+        return UiDesktop.AttachTo(AppBuilder.Configure<TestApp>())
             .UseSkia()
             .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
             .UseReactiveUI(reactiveUi => reactiveUi.WithExceptionHandler(UiDiagnostics.CommandExceptionObserver));

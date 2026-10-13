@@ -509,7 +509,7 @@ public class EditRiskViewModel
         this.ValidationRule(
             vm => vm.RiskSubject,
             subjectUnique,
-            "Subject already exists.");
+            Localizer["RiskSubjectExistsMSG"]);
         
         
         this.IsValid()
@@ -725,6 +725,11 @@ public class EditRiskViewModel
             {
                 var newRisk = _risksService.CreateRisk(Risk);
                 Debug.Assert(newRisk != null, nameof(newRisk) + " != null");
+
+                // The REST client posts this Risk and returns the server's row; the id is only on the latter. The
+                // result below carries this Risk, and the risk screen selects the new row by its id to offer planning
+                // the mitigation (IX-6) — with 0 it never found it (T332).
+                Risk.Id = newRisk.Id;
                 riskScoring.Id = newRisk.Id;
                 _risksService.CreateRiskScoring(riskScoring);
 

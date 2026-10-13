@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
@@ -26,6 +28,17 @@ public static class UiInput
         topLevel.MouseDown(centre, MouseButton.Left);
         topLevel.MouseUp(centre, MouseButton.Left);
         UiHost.Settle(topLevel);
+    }
+
+    /// <summary>
+    /// Scrolls <paramref name="control"/> into view, as a person scrolls to a button below the fold, and then
+    /// left-clicks it. <see cref="Click"/> alone misses a control a scroll viewer has moved out of the window.
+    /// </summary>
+    public static void ScrollToAndClick(Control control)
+    {
+        control.BringIntoView();
+        UiHost.Settle(TopLevelOf(control));
+        Click(control);
     }
 
     /// <summary>Presses and releases one key on the window that has focus.</summary>
@@ -62,6 +75,37 @@ public static class UiInput
         Press(topLevel, Key.End, PhysicalKey.End);
         Press(topLevel, Key.Back, PhysicalKey.Backspace, times: textBox.Text?.Length ?? 0);
     }
+
+    /// <summary>
+    /// Picks <paramref name="itemText"/> in <paramref name="combo"/> the way a person does: a click opens the
+    /// drop-down, the list scrolls to the item, a click on the item chooses it. The item is matched by the text its
+    /// template shows.
+    /// </summary>
+    public static async Task ChooseAsync(ComboBox combo, string itemText)
+    {
+        Click(combo);
+        await UiHost.WaitUntilAsync(() => combo.IsDropDownOpen, "the drop-down to open");
+
+        ComboBoxItem? item = null;
+        for (var index = 0; index < combo.ItemCount && item is null; index++)
+        {
+            combo.ScrollIntoView(index);
+            UiHost.Settle();
+            item = combo.GetRealizedContainers().OfType<ComboBoxItem>()
+                .FirstOrDefault(i => TextOf(i) == itemText && i.IsEffectivelyVisible);
+        }
+
+        if (item is null)
+            throw new InvalidOperationException($"The drop-down has no \"{itemText}\" item; it has: " +
+                                                string.Join(" | ", combo.GetRealizedContainers().Select(TextOf)));
+
+        Click(item);
+        await UiHost.WaitUntilAsync(() => !combo.IsDropDownOpen, "the drop-down to close on the choice");
+    }
+
+    /// <summary>The text a templated item shows: its text blocks, joined.</summary>
+    public static string TextOf(Visual item) =>
+        string.Concat(item.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text));
 
     private static TopLevel TopLevelOf(Visual visual) =>
         TopLevel.GetTopLevel(visual)

@@ -252,6 +252,9 @@
     <data name="RiskMustHaveASubjectMSG" xml:space="preserve">
         <value>Risco precisa ter um assunto.</value>
     </data>
+    <data name="RiskSubjectExistsMSG" xml:space="preserve">
+        <value>Já existe um risco com este assunto.</value>
+    </data>
     <data name="ErrorCreatingRiskMSG" xml:space="preserve">
         <value>Erro criando ou atualizando um risco.</value>
     </data>

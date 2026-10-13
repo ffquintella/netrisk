@@ -179,7 +179,7 @@
                         <TextBlock Text="{Binding StrTrack9CompletionEvidence}" Classes="fieldLabel"/>
                         <TextBox Text="{Binding NewTaskCompletionEvidence}" MaxLength="4000"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="3" Margin="0 10 0 0" Spacing="4" IsVisible="{Binding !!SelectedTask}">
+                    <StackPanel Grid.Row="3" Margin="0 10 0 0" Spacing="4" IsVisible="{Binding SelectedTask, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <TextBlock Text="{Binding StrTrack9SelectedTask}" Classes="header3"/>
                         <TextBlock Text="{Binding StrTrack9AcceptanceCriterion}" Classes="fieldLabel"/>
                         <TextBox Text="{Binding TaskAcceptanceCriterion}" MaxLength="4000" IsReadOnly="{Binding !CanSaveTaskEvidence}"/>

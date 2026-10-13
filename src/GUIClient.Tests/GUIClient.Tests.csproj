@@ -43,6 +43,9 @@
          [PermissionAuthorize] admits, failing closed on anything it does not recognise. Pure: AuthenticatedUserInfo
          or a permission list in, bool out. -->
     <Compile Include="..\GUIClient\Tools\PermissionGate.cs" LinkBase="Tools" />
+    <!-- Who may write the risk record from the risk screen (T328): the mirror of RisksController's RequireSubmitRisk,
+         RequireCloseRisk and RequireDeleteRisk, on top of PermissionGate. Pure: AuthenticatedUserInfo in, bool out. -->
+    <Compile Include="..\GUIClient\Tools\RiskRecordAccess.cs" LinkBase="Tools" />
     <!-- The status → icon table behind IntStatusToMaterialIconkindConverter, and which target types it answers
          (T325). Pure: MaterialIconKind is the Avalonia-free Material.Icons enum referenced above. -->
     <Compile Include="..\GUIClient\Tools\StatusIconMap.cs" LinkBase="Tools" />

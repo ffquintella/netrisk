@@ -141,6 +141,12 @@ Conventions when you write or update one:
   synthetic (`@example.invalid` addresses, made-up hosts).
 - **Drive the UI with `UiInput`** (clicks, keys, typed text through the headless platform), not by
   setting view-model properties, when the test is about interaction.
+- **Message boxes are answered, not avoided.** Every test runs under a classic-desktop lifetime
+  (`Infrastructure/UiDesktop.cs`), so the client's MsBox confirmations and error boxes open as windows:
+  `await UiMessageBoxes.WaitForAsync(...)`, assert on `UiMessageBoxes.Text(box)`, then
+  `await UiMessageBoxes.AnswerAsync(box, "Yes")`. A double whose first answer the view-model must not see
+  synchronously (a constructor that starts a load and is subscribed to afterwards) can complete after a
+  dispatcher hop, as the REST client does — see `Flows/Risks/RiskScreen.cs` (`RiskServer.Later`).
 - **End every test with `UiHost.AssertClean()`.** A standing binding error, an Avalonia error-level log
   (for example a render-loop exception) or an exception escaping a ReactiveCommand fails the test. A
   product defect the suite has found but that is not being fixed is tolerated only by name, through an

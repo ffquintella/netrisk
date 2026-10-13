@@ -47,7 +47,7 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
                                            Classes="header_detail" Text="{Binding StrOperation, Mode=OneTime}" TextAlignment="Right" Margin="0 5 50 0"/>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                                           Classes="header_detail" Text="{Binding StrOperationType, Mode=OneTime}" TextAlignment="Right"/>
+                                           Classes="header_detail" Text="{Binding StrOperationType}" TextAlignment="Right"/>
 
                                 <!-- RISK DATA -->
                                 <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"

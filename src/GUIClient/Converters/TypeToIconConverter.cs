@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using GUIClient.Exceptions;
+using GUIClient.Tools;
 using Material.Icons;
 
 namespace GUIClient.Converters;
@@ -18,7 +19,9 @@ public class TypeToIconConverter: IValueConverter
     {
         if (value is null) return "";
         
-        if (value is string sourceData && targetType.IsAssignableTo(typeof(MaterialIconKind)))
+        // MaterialIcon.Kind is a MaterialIconKind? — testing IsAssignableTo(typeof(MaterialIconKind)) refused it, so no
+        // file-type icon was drawn on any screen that lists files (T333; the same rule T325 fixed for status icons).
+        if (value is string sourceData && StatusIconMap.CanHoldIcon(targetType))
         {
             if (sourceData.Length == 0) throw new InvalidStatusException("Invalid empty Type to convert", sourceData);
 

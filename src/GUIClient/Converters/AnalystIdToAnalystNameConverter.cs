@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using ClientServices.Interfaces;
 using GUIClient.Exceptions;
-using Model.Exceptions;
 
 namespace GUIClient.Converters;
 
@@ -13,7 +13,10 @@ public class AnalystIdToAnalystNameConverter: BaseConverter, IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is null) throw new InvalidParameterException("analystId","Invalid null analyst id to convert");
+        // A finding nobody has been assigned yet has no analyst: an empty cell, as TeamIdToTeamNameConverter does for a
+        // finding with no fix team. This used to throw, so every unassigned finding on the risk screen logged a failed
+        // binding (T331).
+        if (value is null) return AvaloniaProperty.UnsetValue;
         
         if (value is int sourceId && targetType.IsAssignableTo(typeof(string)))
         {
