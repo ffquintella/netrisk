@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.38.3] - 2026-10-13
+
 ### Fixed
 
 - Let a desktop administrator whose role is not named "Admin" manage the third-party, data catalogue and AI registers, define KRIs and committees, archive risks and edit appetite tail tolerances, as the API already allowed, while the third line stays read-only, and hide the Track 9 error bar when there is no error (T317)
