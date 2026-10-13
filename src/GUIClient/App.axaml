@@ -25,7 +25,10 @@
              style that does nothing. This is the reverse of the pre-Semi order, where FluentTheme
              was loaded last and the local sheets won only because Fluent set those properties
              through control themes rather than through styles. -->
-        <semi:SemiTheme />
+        <!-- Locale pins Semi's built-in strings to English: unset, it loads zh-CN and every
+             DatePicker reads 月 日 年. The text itself comes from our resx (Tools/ThemeStrings);
+             this is only the floor for a key a future Semi adds. -->
+        <semi:SemiTheme Locale="en-US" />
         <semi:DataGridSemiTheme />
         <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
 

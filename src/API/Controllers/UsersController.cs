@@ -2,6 +2,7 @@ using System.Text;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DecisionCycle;
 using Model.DTO;
 using Model.Exceptions;
 using Model.Users;
@@ -30,6 +31,7 @@ public class UsersController: ApiBaseController
     private readonly ILinksService _linksService;
     private readonly IConfiguration _configuration;
     private readonly IPermissionsService _permissionsService;
+    private readonly IRolesService _rolesService;
 
     #endregion
 
@@ -41,6 +43,7 @@ public class UsersController: ApiBaseController
         ILanguageManager languageManager,
         IPermissionsService permissionsService,
         ITeamsService teamsService,
+        IRolesService rolesService,
         IConfiguration configuration) : base(logger, httpContextAccessor, usersService)
     {
         _emailService = emailService;
@@ -48,6 +51,24 @@ public class UsersController: ApiBaseController
         _linksService = linksService;
         _configuration = configuration;
         _permissionsService = permissionsService;
+        _rolesService = rolesService;
+    }
+
+    /// <summary>
+    /// The 422 for an administrator putting their own account in the third line (S50 R10,
+    /// <see cref="ThirdLineAssurance.SelfAppointmentRule"/>). <c>ThirdLineReadOnlyRequirement</c> refuses every write the
+    /// marker's holder makes, the one that would take the marker off again included, so the account could not undo it.
+    /// </summary>
+    private UnprocessableEntityObjectResult RefuseSelfAppointment(int userId, string how)
+    {
+        Logger.Warning("Refused {How} for user {UserId}: an administrator may not put their own account in the third line",
+            how, userId);
+        return UnprocessableEntity(new
+        {
+            error = ThirdLineAssurance.SelfAppointmentRule,
+            message = "You cannot put your own account in the third line (internal audit): it is read-only, so the " +
+                      "account could not undo it. Another administrator has to grant it."
+        });
     }
     
     
@@ -165,6 +186,15 @@ public class UsersController: ApiBaseController
         
         try
         {
+            // S50 R10: the marker restricts rather than grants. On the caller's own account it is a one-way door.
+            if (id == (await GetUserAsync()).Value)
+            {
+                var marker = _permissionsService.GetAllPermissions()
+                    .FirstOrDefault(p => p.Key == ThirdLineAssurance.PermissionKey);
+                if (marker is not null && permissionIds.Contains(marker.Id))
+                    return RefuseSelfAppointment(id, "a grant of the third-line marker");
+            }
+
             await _permissionsService.SaveUserPermissionsByIdAsync(id, permissionIds);
 
             return Ok();
@@ -233,6 +263,11 @@ public class UsersController: ApiBaseController
             //Let´s find the user 
             var userEntity = UsersService.GetUserById(id);
             if (userEntity == null) return StatusCode(StatusCodes.Status500InternalServerError, "Error looking for the user");
+
+            // S50 R10: a role that holds the third-line marker puts whoever holds the role in the third line.
+            if (user.RoleId > 0 && id == GetUser().Value &&
+                _rolesService.GetRolePermissions(user.RoleId)?.Contains(ThirdLineAssurance.PermissionKey) == true)
+                return RefuseSelfAppointment(id, $"a move into role {user.RoleId}, which holds the third-line marker");
 
 
             // make sure the username is lowercase

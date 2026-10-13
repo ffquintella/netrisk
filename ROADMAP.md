@@ -60,6 +60,8 @@ the previously logged 162 (a doubled log count). 102 were fixed and 4 waived wit
 - [x] T5 Add automated lint checks rejecting inline colors or unclassed buttons
 - [x] T6 Close the full docs/ui-standard.md compliance sweep (UI-STD-001) (S3, S4, S5)
   - note: 4 dangling style-class references found (`Panel.EditTitle`, `TextBlock.subHeader`) and fixed by adopting documented classes; guarded by GUIClient.Tests/Views/StyleClassReferenceTest
+- [x] T320 Localize the Semi.Avalonia built-in control strings (DatePicker and TimePicker placeholders, text box and scroll bar menus, file chooser) from the client resx instead of the theme's zh-CN default
+  - note: delivered on 2026-10-13; a `SemiTheme` with no `Locale` loads its zh-CN dictionary, so every DatePicker read 月 日 年; App.axaml now pins `Locale="en-US"` as the floor and `App.Initialize` writes the 32 `STRING_*` keys from `Tools/ThemeStrings` into `Application.Resources` (Semi ships no pt-BR); guarded by `GUIClient.Tests/Resources/ThemeStringsTest`; not observed in a running desktop session
 
 ### [M2] Shell Backdrop & Material Stabilization
 > outcome: Glassmorphic window compositions with clean solid-color fallbacks across host window managers.
@@ -794,6 +796,8 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
 - [x] T307 Add the Stage 9.9 desktop surface: archiving with conditions, the quarterly review queue and reopening on the risk detail, the incident backtest and the backtesting report, the committee administration, submission and voting, and read-only screens for the third-line role (S50)
 - [x] T318 Keep the third-line marker out of every bulk selection in the desktop user and role permission editors (S50)
   - note: delivered on 2026-10-13; the user editor's "select all" already skipped `third_line_assurance` (R10), but its multiple-selection list could still be range-selected and the role editor's transfer list moved several entries at once, each sweeping the marker along; the marker is now left out of both lists and granted only through its own labelled check box (`Track9ThirdLineMarker`, `Track9ThirdLineMarkerTest`, three of whose six tests fail with the full list restored); the view-model wiring has no headless test (`GUIClient.Tests` does not compile `UsersViewModel`), and it was not observed in a running desktop session against the API
+- [x] T321 Refuse an administrator giving the third-line marker to their own account or role, explain a refused user or profile save in the desktop editor, and caption its Clear all button (S50)
+  - note: delivered on 2026-10-13; the reported "Error saving users" was a 403 from `ThirdLineReadOnlyRequirement` on an administrator who had ticked the marker on themselves, after which no write, including removing the marker, can succeed; `UsersController`/`RolesController` now answer 422 `third_line_self_appointment` (API.Tests `UsersControllerTest`/`RolesControllerTest`), the REST clients keep the status and rule (`RestServiceBase.ThrowIfRefused`), and `Track9UserAdministrationRefusal` maps it to a localized message; an account that already holds the marker still needs another administrator or a DBA to remove it; deleting users, profiles or teams as third line still shows the generic error; not observed in a running desktop session
 
 ### [M48] Stage 9.10 — Third-party register: HECVAT, SBOM, concentration and exit plan
 > outcome: The only discovery front with no instrument gets one. Closes gap 8.

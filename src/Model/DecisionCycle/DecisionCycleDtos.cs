@@ -65,6 +65,14 @@ public static class ThirdLineAssurance
     public const string CannotApproveRule = "third_line_cannot_approve";
 
     /// <summary>
+    /// The 422 when an administrator would put their own account in the third line — the marker granted to themselves,
+    /// to the role they hold, or a move into a role that holds it. The third line's read-only rule refuses every write
+    /// it makes afterwards, the one that would take the marker off again included, so the account could not undo it;
+    /// and independent assurance is not something one appoints oneself to. Another administrator grants it.
+    /// </summary>
+    public const string SelfAppointmentRule = "third_line_self_appointment";
+
+    /// <summary>
     /// The read permissions the seeded role carries beside <see cref="PermissionKey"/>: the register, governance,
     /// compliance, assessments, reports, vulnerabilities, hosts and incidents. Several of them also gate writes; the
     /// read-only guard is what keeps those writes closed (S50 D10).

@@ -42,18 +42,23 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                         
-                        <!-- Buttons -->
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
-                            <Button Grid.Column="0" Name="BtAddUser" Classes="subButton" 
-                                    Command="{Binding BtAddUserClicked}">
+                        <!-- The list's toolbar (ui-standard §4.5): icon-only operation buttons, so each names
+                             itself through its tooltip and its accessible name. -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5" Spacing="5">
+                            <Button Name="BtAddUser" Classes="operation"
+                                    Command="{Binding BtAddUserClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}"
+                                    AutomationProperties.Name="{Binding StrAdd}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
-                            <Button Grid.Column="2" Name="BtDeleteUser" Classes="subButton type3"
+                            <Button Name="BtDeleteUser" Classes="operation"
                                     IsEnabled="{Binding !!SelectedUser}"
-                                    Command="{Binding BtDeleteClicked}">
+                                    Command="{Binding BtDeleteClicked}"
+                                    ToolTip.Tip="{Binding StrDelete}"
+                                    AutomationProperties.Name="{Binding StrDelete}">
                                 <material:MaterialIcon Kind="Delete" />
                             </Button>
-                        </Grid>
+                        </StackPanel>
 
                     </Grid>
                     <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
@@ -147,11 +152,11 @@
                                     <material:MaterialIcon Kind="CloseCircle" Classes="danger" Margin="10 0 10 0" IsVisible="{Binding !FaceIdSetForSelectedUser}"/> 
                                 </StackPanel>
                                 
-                                <Button Classes="operation" IsVisible="{Binding SelectedUserHasFaceId}"
+                                <Button Classes="type2" IsVisible="{Binding SelectedUserHasFaceId}"
                                         Command="{Binding BtAddFaceClicked}">
                                     <StackPanel Orientation="Horizontal">
-                                        <material:MaterialIcon Kind="CameraAccount" Margin="0 0 5 0"/>                             
-                                        <TextBlock Text="{Binding StrAddUpdateFaceId, Mode=OneTime}" Margin=" 0 3 0 0"/>  
+                                        <material:MaterialIcon Kind="CameraAccount" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding StrAddUpdateFaceId, Mode=OneTime}"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel> 
@@ -170,26 +175,29 @@
                                        Text="{Binding StrLastPasswordChange, Mode=OneTime}"/>
                             <TextBlock Grid.Row="12" Grid.Column="1" Margin="5 10 0 0" 
                                        Text="{Binding User.LastPasswordChangeDate}"/> 
-                            <!-- BUTTONS -->
-                            <Button Grid.Row="13" Grid.Column="0" Classes="operation" Margin="15 25 10 0"
-                                    Command="{Binding BtSaveClicked}"
-                                    IsEnabled="{Binding SaveEnabled}"
-                        ToolTip.Tip="{Binding ValidationContext.Text}"
-                                    Name="BtSave">
-                                <StackPanel Orientation="Horizontal">
-                                    <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
-                                    <TextBlock Text="{Binding StrSave, Mode=OneTime}" Margin=" 0 3 0 0"/>  
-                                </StackPanel>
-                            </Button>
-                            <Button Grid.Row="13" Grid.Column="1" Classes="operation" Margin="15 25 10 0"
-                                    IsEnabled="{Binding ChangePasswordEnabled}"
-                                    Command="{Binding BtChangePasswordClicked}"
-                                    Name="BtChangePassword">
-                                <StackPanel Orientation="Horizontal">
-                                    <material:MaterialIcon Kind="Password" Margin="0 0 5 0"/>                             
-                                    <TextBlock Text="{Binding StrChangePassword, Mode=OneTime}" Margin=" 0 3 0 0"/>  
-                                </StackPanel>
-                            </Button>
+                            <!-- BUTTONS: the form's action row (ui-standard §4.4) — Save is the primary commit
+                                 (dialog1), Change password a non-committing action (type2), 10 px to its right.
+                                 Both are auto-sized by their class; neither sets a size of its own (§4.8). -->
+                            <StackPanel Grid.Row="13" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal"
+                                        Margin="5 25 0 0">
+                                <Button Name="BtSave" Classes="dialog1"
+                                        Command="{Binding BtSaveClicked}"
+                                        IsEnabled="{Binding SaveEnabled}"
+                                        ToolTip.Tip="{Binding ValidationContext.Text}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Name="BtChangePassword" Classes="type2" Margin="10 0 0 0"
+                                        IsEnabled="{Binding ChangePasswordEnabled}"
+                                        Command="{Binding BtChangePasswordClicked}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <material:MaterialIcon Kind="Password" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding StrChangePassword, Mode=OneTime}"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
 
 
 
@@ -221,19 +229,22 @@
                                 <TextBlock Classes="hint" Width="250" HorizontalAlignment="Left"
                                            Text="{Binding StrThirdLineMarkerHint}"
                                            IsVisible="{Binding ThirdLineMarkerAvailable}"/>
-                                <StackPanel Orientation="Vertical">
-                                    <Button Name="BtSelectAll" Classes="dialog2" Margin="10 3 10 3"
+                                <!-- Non-committing list actions (ui-standard §4.2: type2), each with its caption.
+                                     Stacked as wide as the list, so the two read as one pair at one size. -->
+                                <StackPanel Orientation="Vertical" Width="250" HorizontalAlignment="Left"
+                                            Margin="0 6 0 0" Spacing="5">
+                                    <Button Name="BtSelectAll" Classes="type2" HorizontalAlignment="Stretch"
                                             Command="{Binding BtSelectAllClicked}">
                                         <StackPanel Orientation="Horizontal">
-                                            <material:MaterialIcon Kind="SelectAll" Margin="0 0 10 0"/>
+                                            <material:MaterialIcon Kind="SelectAll" Margin="0 0 5 0"/>
                                             <TextBlock Text="{Binding StrSelectAll}"/>
                                         </StackPanel>
                                     </Button>
-                                    <Button Name="BtDeselectAll" Classes="dialog2" Margin="10 3 10 3"
+                                    <Button Name="BtDeselectAll" Classes="type2" HorizontalAlignment="Stretch"
                                             Command="{Binding BtCleanAllClicked}">
                                         <StackPanel Orientation="Horizontal">
-                                            <material:MaterialIcon Kind="Cleaning" Margin="0 0 10 0"/>
-                                            <TextBlock Text="{ Binding StrCleanAll}"/>
+                                            <material:MaterialIcon Kind="Cleaning" Margin="0 0 5 0"/>
+                                            <TextBlock Text="{Binding StrCleanAll}"/>
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -265,17 +276,21 @@
                         </ListBox>
                         
                         <!-- Buttons -->
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
-                            <Button Grid.Column="0" Name="BtAddProfile" Classes="subButton" 
-                                    Command="{Binding BtAddProfileClicked}">
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5" Spacing="5">
+                            <Button Name="BtAddProfile" Classes="operation"
+                                    Command="{Binding BtAddProfileClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}"
+                                    AutomationProperties.Name="{Binding StrAdd}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
-                            <Button Grid.Column="2" Name="BtDeleteProfile" Classes="subButton type3"
+                            <Button Name="BtDeleteProfile" Classes="operation"
                                     Command="{Binding BtDeleteProfileClicked}"
-                                    IsEnabled="{Binding !!SelectedProfile}" >
+                                    IsEnabled="{Binding !!SelectedProfile}"
+                                    ToolTip.Tip="{Binding StrDelete}"
+                                    AutomationProperties.Name="{Binding StrDelete}">
                                 <material:MaterialIcon Kind="Delete" />
                             </Button>
-                        </Grid>
+                        </StackPanel>
 
                     </Grid>
                     <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
@@ -296,11 +311,11 @@
                             <CheckBox Content="{Binding StrThirdLineMarker}" IsChecked="{Binding ProfileGrantsThirdLine}"/>
                             <TextBlock Classes="hint" Text="{Binding StrThirdLineMarkerHint}"/>
                         </StackPanel>
-                        <Button Name="BtSaveProfile" Classes="operation" Grid.Row="2"  Margin="15 25 10 0"
+                        <Button Name="BtSaveProfile" Classes="dialog1" Grid.Row="2" Margin="15 25 10 0"
                                 Command="{Binding BtSaveProfileClicked}">
                             <StackPanel Orientation="Horizontal">
-                                <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
-                                <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
+                                <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -328,17 +343,21 @@
                         </ListBox>
                         
                         <!-- Buttons -->
-                        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto">
-                            <Button Grid.Column="0" Name="BtAddTeam" Classes="subButton" 
-                                    Command="{Binding BtAddTeamClicked}">
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="5" Spacing="5">
+                            <Button Name="BtAddTeam" Classes="operation"
+                                    Command="{Binding BtAddTeamClicked}"
+                                    ToolTip.Tip="{Binding StrAdd}"
+                                    AutomationProperties.Name="{Binding StrAdd}">
                                 <material:MaterialIcon Kind="Add" />
                             </Button>
-                            <Button Grid.Column="2" Name="BtDeleteTeam" Classes="subButton type3"
+                            <Button Name="BtDeleteTeam" Classes="operation"
                                     Command="{Binding BtDeleteTeamClicked}"
-                                    IsEnabled="{Binding !!SelectedTeam}" >
+                                    IsEnabled="{Binding !!SelectedTeam}"
+                                    ToolTip.Tip="{Binding StrDelete}"
+                                    AutomationProperties.Name="{Binding StrDelete}">
                                 <material:MaterialIcon Kind="Delete" />
                             </Button>
-                        </Grid>
+                        </StackPanel>
 
                     </Grid>
                     <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
@@ -353,11 +372,11 @@
                                                  AvailableItems="{Binding AvailableTeamUsers, Mode=TwoWay}"
                                                  SelectedItems="{Binding SelectedTeamUsers, Mode=TwoWay}"
                                                  />
-                        <Button Name="BtSaveTeam" Classes="operation" Grid.Row="1"  Margin="15 25 10 0"
+                        <Button Name="BtSaveTeam" Classes="dialog1" Grid.Row="1" Margin="15 25 10 0"
                                 Command="{Binding BtSaveTeamClicked}">
                             <StackPanel Orientation="Horizontal">
-                                <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             
-                                <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>  
+                                <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrSave, Mode=OneTime}"/>
                             </StackPanel>
                         </Button>
                     </Grid>

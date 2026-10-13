@@ -1,6 +1,7 @@
 ﻿using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.DecisionCycle;
 using Model.Exceptions;
 using ServerServices.Interfaces;
 using ILogger = Serilog.ILogger;
@@ -167,9 +168,24 @@ public class RolesController: ApiBaseController
 
         try
         {
+            var user = await GetUserAsync();
+
+            // S50 R10: the third-line marker on the role the caller holds puts the caller in the third line, whose
+            // read-only rule then refuses every write — the one that would take the marker off the role again included.
+            if (user.RoleId == roleId && permissions.Contains(ThirdLineAssurance.PermissionKey))
+            {
+                Logger.Warning("Refused the third-line marker on role {RoleId} to user {UserValue}, who holds that role",
+                    roleId, user.Value);
+                return UnprocessableEntity(new
+                {
+                    error = ThirdLineAssurance.SelfAppointmentRule,
+                    message = "You cannot give the third-line marker to the role you hold: your own account would " +
+                              "become read-only and could not undo it. Another administrator has to grant it."
+                });
+            }
+
             await RolesService.UpdatePermissionsAsync(roleId, permissions);
             
-            var user = await GetUserAsync();
             Logger.Information("User:{UserValue} updated role:{RoleId} permissions", user.Value, roleId);
 
             

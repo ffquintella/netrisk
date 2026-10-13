@@ -295,6 +295,54 @@ public class UsersRestServiceTest : BaseServiceTest
         Assert.Throws<RestComunicationException>(() => _service.SaveUser(new UserDto { Id = 7, Name = "Ana" }));
     }
 
+    // The production client throws on any error status (ThrowOnAnyError), which is how a 403 on PUT /Users/{id} — an
+    // administrator in the third line, refused by ThirdLineReadOnlyRequirement — reached the desktop as a bare
+    // "Error saving users" with nothing to tell it from a failure (nr-gui20261013.log).
+    private IUsersService ProductionLikeService(out StubRestBackend backend)
+    {
+        backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+        return ResolveWith<IUsersService>(backend);
+    }
+
+    private static object SelfAppointmentRefusal() => new
+    {
+        error = Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule,
+        message = "You cannot put your own account in the third line."
+    };
+
+    [Fact]
+    public void TestSaveUserKeepsTheStatusOfAForbiddenSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Users/7", HttpStatusCode.Forbidden);
+
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => service.SaveUser(new UserDto { Id = 7, Name = "Ana" }));
+
+        Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
+        Assert.Equal("/Users/7", ex.Url);
+        Assert.Equal("PUT", ex.Method);
+    }
+
+    [Fact]
+    public void TestSaveUserRaisesTheRuleOfARefusedSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnPut("/Users/7", SelfAppointmentRefusal(), HttpStatusCode.UnprocessableEntity);
+
+        var ex = Assert.Throws<RuleBrokenException>(() => service.SaveUser(new UserDto { Id = 7, Name = "Ana" }));
+
+        Assert.Equal(Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, ex.RuleName);
+    }
+
+    [Fact]
+    public void TestSaveUserStillWrapsAServerErrorOnTheProductionClient()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Users/7", HttpStatusCode.InternalServerError);
+
+        Assert.Throws<RestComunicationException>(() => service.SaveUser(new UserDto { Id = 7, Name = "Ana" }));
+    }
+
     // ---------------------------------------------------------------- GetUser
 
     [Fact]
@@ -473,6 +521,28 @@ public class UsersRestServiceTest : BaseServiceTest
         _backend.OnStatus(Method.Put, "/Users/7/Permissions", HttpStatusCode.InternalServerError);
 
         Assert.Throws<RestComunicationException>(() => _service.SaveUserPermissions(7, [TwoPermissions()[0]]));
+    }
+
+    [Fact]
+    public void TestSaveUserPermissionsKeepsTheStatusOfAForbiddenSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Users/7/Permissions", HttpStatusCode.Forbidden);
+
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => service.SaveUserPermissions(7, [TwoPermissions()[0]]));
+
+        Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
+    }
+
+    [Fact]
+    public void TestSaveUserPermissionsRaisesTheRuleOfARefusedSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnPut("/Users/7/Permissions", SelfAppointmentRefusal(), HttpStatusCode.UnprocessableEntity);
+
+        var ex = Assert.Throws<RuleBrokenException>(() => service.SaveUserPermissions(7, [TwoPermissions()[0]]));
+
+        Assert.Equal(Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, ex.RuleName);
     }
 
     // ---------------------------------------------------------------- ChangePassword

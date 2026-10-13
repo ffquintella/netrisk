@@ -192,21 +192,19 @@ public class UsersRestService: RestServiceBase, IUsersService
         if(string.IsNullOrEmpty(user.Lang)) user.Lang = "en";
             
         
-        using var client = RestService.GetClient();
+        // Read with reportErrorResponses so a refusal keeps its status and rule (ThrowIfRefused): a 403 here is the
+        // third line, which is read-only whatever else the caller holds, and a 422 the self-appointment rule.
+        using var client = RestService.GetClient(reportErrorResponses: true);
         
-        var request = new RestRequest($"/Users/{user.Id}");
+        var route = $"/Users/{user.Id}";
+        var request = new RestRequest(route);
         try
         {
             request.AddJsonBody(user);
             
-            var response = client.Put(request);
+            var response = client.Execute(request, Method.Put);
             
-            if (response == null || response.StatusCode != HttpStatusCode.OK)
-            {
-                Logger.Error("Error saving user");
-                throw new InvalidHttpRequestException("Error saving user", "/Users/{id}", "GET");
-            }
-            
+            ThrowIfRefused(response, route, "PUT", "Error saving user");
         }
         catch (HttpRequestException ex)
         {
@@ -386,9 +384,10 @@ public class UsersRestService: RestServiceBase, IUsersService
 
     public void SaveUserPermissions(int userId, List<Permission?> permissions)
     {
-        using var client = RestService.GetClient();
+        using var client = RestService.GetClient(reportErrorResponses: true);
         
-        var request = new RestRequest($"/Users/{userId}/Permissions");
+        var route = $"/Users/{userId}/Permissions";
+        var request = new RestRequest(route);
 
         var pintList = permissions.Where(p=> p != null ).Select(p => p!.Id).ToList();
 
@@ -396,14 +395,9 @@ public class UsersRestService: RestServiceBase, IUsersService
         
         try
         {
-            var response = client.Put(request);
+            var response = client.Execute(request, Method.Put);
 
-            if (response == null || response.StatusCode != HttpStatusCode.OK)
-            {
-                Logger.Error("Error saving user permissions");
-                throw new InvalidHttpRequestException("Error saving permissions", $"/Users/{userId}/permissions", "PUT");
-            }
-
+            ThrowIfRefused(response, route, "PUT", "Error saving permissions");
         }
         catch (HttpRequestException ex)
         {

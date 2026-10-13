@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Show the desktop date and time picker placeholders, the text box Cut/Copy/Paste menu and the scroll bar menu in the session language instead of Chinese (T320)
+- Refuse an administrator giving the read-only third-line marker to their own account or role, which locked them out of every later write including undoing it, and explain a refused user or profile save in the desktop editor instead of showing "Error saving users" (T321, S50)
+- Caption the desktop user editor's Clear all button and give the administration buttons consistent standard styles and tooltips (T321)
+
 ## [2.38.3] - 2026-10-13
 
 ### Fixed

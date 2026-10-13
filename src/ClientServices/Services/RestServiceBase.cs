@@ -62,4 +62,63 @@ public class RestServiceBase(IRestService restService) : ServiceBase
             return null;
         }
     }
+
+    /// <summary>The <c>{ error, message }</c> body the API answers a broken rule with (422).</summary>
+    private sealed class RuleRefusal
+    {
+        public string? Error { get; set; }
+        public string? Message { get; set; }
+    }
+
+    /// <summary>
+    /// Raises a write the server did not accept as something the screen can act on, from a response read with
+    /// <c>reportErrorResponses: true</c>:
+    /// <list type="bullet">
+    /// <item>no status at all — the server was never reached — is a <see cref="RestComunicationException"/>;</item>
+    /// <item>a 422 naming a rule is a <see cref="RuleBrokenException"/> carrying it;</item>
+    /// <item>a 5xx is a <see cref="RestComunicationException"/> over an <see cref="System.Net.Http.HttpRequestException"/>
+    /// with the status, as these writes have always reported a server error;</item>
+    /// <item>any other refusal is an <see cref="InvalidHttpRequestException"/> that keeps its status, so a 403 — the
+    /// third line is read-only, administrators included — is told apart from a failure.</item>
+    /// </list>
+    /// The server's English text is kept as the exception message for the log; a screen shows its own localized
+    /// sentence, chosen by rule or status, never the body.
+    /// </summary>
+    protected void ThrowIfRefused(RestResponse response, string route, string method, string failure)
+    {
+        if (response.StatusCode == 0)
+        {
+            Logger.Error("{Method} {Route} did not reach the server: {Message}", method, route, response.ErrorMessage);
+            throw new RestComunicationException(failure,
+                response.ErrorException ?? new System.Net.Http.HttpRequestException(response.ErrorMessage));
+        }
+
+        if (response.IsSuccessStatusCode) return;
+
+        Logger.Warning("{Method} {Route} refused with {Status}", method, route, response.StatusCode);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity &&
+            TryReadRuleRefusal(response) is { Error: { Length: > 0 } rule } refusal)
+            throw new RuleBrokenException(string.IsNullOrWhiteSpace(refusal.Message) ? failure : refusal.Message, rule);
+
+        if ((int)response.StatusCode >= 500)
+            throw new RestComunicationException(failure,
+                new System.Net.Http.HttpRequestException(failure, null, response.StatusCode));
+
+        throw new InvalidHttpRequestException(failure, route, method) { StatusCode = response.StatusCode };
+    }
+
+    private static RuleRefusal? TryReadRuleRefusal(RestResponse response)
+    {
+        if (string.IsNullOrWhiteSpace(response.Content)) return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<RuleRefusal>(response.Content, ErrorOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 }

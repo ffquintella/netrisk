@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using GUIClient.Helpers;
+using GUIClient.Tools;
 using GUIClient.Views;
 using ClientServices.Interfaces;
 using LiveChartsCore;
@@ -33,6 +34,7 @@ namespace GUIClient
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
+            ApplyThemeStrings();
             
             LiveCharts.Configure(config => 
                     config 
@@ -60,6 +62,18 @@ namespace GUIClient
             );
             
             
+        }
+
+        /// <summary>
+        /// Overrides Semi.Avalonia's built-in control strings (DatePicker placeholders, TextBox menu,
+        /// …) with the client's own localization. Application.Resources is looked up before the
+        /// theme's dictionaries, so these win over the theme's Locale. See <see cref="ThemeStrings"/>.
+        /// </summary>
+        private void ApplyThemeStrings()
+        {
+            var localizer = GetService<ILocalizationService>().GetLocalizer(typeof(App).Assembly);
+            foreach (var (key, text) in ThemeStrings.Resolve(resxKey => localizer[resxKey].Value))
+                Resources[key] = text;
         }
 
         public  override void OnFrameworkInitializationCompleted()

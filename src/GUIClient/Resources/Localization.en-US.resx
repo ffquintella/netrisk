@@ -409,7 +409,7 @@
         <value>Select all</value>
     </data>
     <data name="CleanAll" xml:space="preserve">
-        <value>Clean all</value>
+        <value>Clear all</value>
     </data>
     <data name="EnterAValidEmailMSG" xml:space="preserve">
         <value>Entrer a valid email.</value>
@@ -4816,4 +4816,39 @@ Save anyway?</value>
   <data name="Track9SbomDocument" xml:space="preserve"><value>SBOM document</value></data>
   <data name="ThirdLineMarkerGrant" xml:space="preserve"><value>Third line (internal audit): read-only</value></data>
   <data name="ThirdLineMarkerGrantHint" xml:space="preserve"><value>A restriction, not a permission: whoever holds it can only read, administrators included. Select all never ticks it.</value></data>
+  <data name="UsersThirdLineReadOnlyMSG" xml:space="preserve"><value>Your account is in the third line (internal audit), which is read-only, administrators included: it cannot change users or profiles. Another administrator has to remove the third-line marker from your account.</value></data>
+  <data name="UsersThirdLineSelfAppointmentMSG" xml:space="preserve"><value>You cannot put your own account in the third line (internal audit): it would make your account read-only, and it could not undo that. Another administrator has to grant it.</value></data>
+  <data name="UsersSaveForbiddenMSG" xml:space="preserve"><value>The server refused this change: your account is not allowed to make it.</value></data>
+  <data name="ThemeDatePickerDay" xml:space="preserve"><value>day</value></data>
+  <data name="ThemeDatePickerMonth" xml:space="preserve"><value>month</value></data>
+  <data name="ThemeDatePickerYear" xml:space="preserve"><value>year</value></data>
+  <data name="ThemeTimePickerHour" xml:space="preserve"><value>hour</value></data>
+  <data name="ThemeTimePickerMinute" xml:space="preserve"><value>minute</value></data>
+  <data name="ThemeTimePickerSecond" xml:space="preserve"><value>second</value></data>
+  <data name="ThemeMenuCut" xml:space="preserve"><value>Cut</value></data>
+  <data name="ThemeMenuCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ThemeMenuPaste" xml:space="preserve"><value>Paste</value></data>
+  <data name="ThemeDrawerToggleNavigation" xml:space="preserve"><value>Toggle navigation drawer</value></data>
+  <data name="ThemeChooserFileName" xml:space="preserve"><value>File name</value></data>
+  <data name="ThemeChooserShowHiddenFiles" xml:space="preserve"><value>Show hidden files</value></data>
+  <data name="ThemeChooserOk" xml:space="preserve"><value>OK</value></data>
+  <data name="ThemeChooserCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ThemeChooserNameColumn" xml:space="preserve"><value>Name</value></data>
+  <data name="ThemeChooserDateModifiedColumn" xml:space="preserve"><value>Date modified</value></data>
+  <data name="ThemeChooserTypeColumn" xml:space="preserve"><value>Type</value></data>
+  <data name="ThemeChooserSizeColumn" xml:space="preserve"><value>Size</value></data>
+  <data name="ThemeChooserFileAlreadyExists" xml:space="preserve"><value>{0} already exists. Do you want to replace it?</value></data>
+  <data name="ThemeScrollBarScrollHere" xml:space="preserve"><value>Scroll here</value></data>
+  <data name="ThemeScrollBarTop" xml:space="preserve"><value>Top</value></data>
+  <data name="ThemeScrollBarBottom" xml:space="preserve"><value>Bottom</value></data>
+  <data name="ThemeScrollBarPageUp" xml:space="preserve"><value>Page up</value></data>
+  <data name="ThemeScrollBarPageDown" xml:space="preserve"><value>Page down</value></data>
+  <data name="ThemeScrollBarScrollUp" xml:space="preserve"><value>Scroll up</value></data>
+  <data name="ThemeScrollBarScrollDown" xml:space="preserve"><value>Scroll down</value></data>
+  <data name="ThemeScrollBarLeftEdge" xml:space="preserve"><value>Left edge</value></data>
+  <data name="ThemeScrollBarRightEdge" xml:space="preserve"><value>Right edge</value></data>
+  <data name="ThemeScrollBarPageLeft" xml:space="preserve"><value>Page left</value></data>
+  <data name="ThemeScrollBarPageRight" xml:space="preserve"><value>Page right</value></data>
+  <data name="ThemeScrollBarScrollLeft" xml:space="preserve"><value>Scroll left</value></data>
+  <data name="ThemeScrollBarScrollRight" xml:space="preserve"><value>Scroll right</value></data>
 </root>

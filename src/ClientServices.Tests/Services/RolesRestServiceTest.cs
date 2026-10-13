@@ -237,4 +237,37 @@ public class RolesRestServiceTest : BaseServiceTest
 
         Assert.Throws<RestComunicationException>(() => _service.UpdateRolePermissions(2, ["risks"]));
     }
+
+    // The production client throws on any error status, so before a refusal kept its status and rule the role editor
+    // could only say "Error updating role permissions" — for the third line's 403 and the self-appointment 422 alike.
+    private IRolesService ProductionLikeService(out StubRestBackend backend)
+    {
+        backend = new StubRestBackend { ThrowsOnErrorResponses = true };
+        return ResolveWith<IRolesService>(backend);
+    }
+
+    [Fact]
+    public void TestUpdateRolePermissionsKeepsTheStatusOfAForbiddenSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Roles/2/Permissions", HttpStatusCode.Forbidden);
+
+        var ex = Assert.Throws<InvalidHttpRequestException>(() => service.UpdateRolePermissions(2, ["risks"]));
+
+        Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
+    }
+
+    [Fact]
+    public void TestUpdateRolePermissionsRaisesTheRuleOfARefusedSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.On(Method.Put, "/Roles/2/Permissions",
+            new { error = Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, message = "Not your own role." },
+            HttpStatusCode.UnprocessableEntity);
+
+        var ex = Assert.Throws<RuleBrokenException>(
+            () => service.UpdateRolePermissions(2, [Model.DecisionCycle.ThirdLineAssurance.PermissionKey]));
+
+        Assert.Equal(Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, ex.RuleName);
+    }
 }

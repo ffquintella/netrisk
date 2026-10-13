@@ -147,23 +147,20 @@ public class RolesRestService : RestServiceBase, IRolesService
 
     public void UpdateRolePermissions(int roleId, List<string> permissions)
     {
-        using var client = RestService.GetClient();
+        // Read with reportErrorResponses so a refusal keeps its status and rule (ThrowIfRefused): the third line's 403
+        // and the 422 for the marker on the caller's own role.
+        using var client = RestService.GetClient(reportErrorResponses: true);
         
-        var request = new RestRequest($"/Roles/{roleId}/Permissions");
+        var route = $"/Roles/{roleId}/Permissions";
+        var request = new RestRequest(route);
         
         request.AddJsonBody(permissions);
 
         try
         {
-            var response = client.Put(request);
+            var response = client.Execute(request, Method.Put);
 
-            if (response.StatusCode != HttpStatusCode.OK )
-            {
-                Logger.Error("Error updating role permissions");
-                throw new InvalidHttpRequestException("Error updating role permissions", $"/Roles/{roleId}/Permissions", "PUT");
-            }
-            
-            
+            ThrowIfRefused(response, route, "PUT", "Error updating role permissions");
         }
         catch (HttpRequestException ex)
         {

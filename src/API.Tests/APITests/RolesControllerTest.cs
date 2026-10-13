@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using API.Controllers;
 using DAL.Entities;
@@ -7,6 +8,7 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Model.DecisionCycle;
 using Model.Exceptions;
 using NSubstitute;
 using ServerServices.Interfaces;
@@ -233,6 +235,64 @@ public class RolesControllerTest : BaseControllerTest
 
         var obj = Assert.IsType<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status500InternalServerError, obj.StatusCode);
+    }
+
+    // S50 R10: the marker on the role the caller holds puts the caller in the third line, whose read-only rule then
+    // refuses every write — the one that would take the marker off the role again included.
+
+    private RolesController ControllerForACallerInRole(int roleId)
+    {
+        var users = Substitute.For<IUsersService>();
+        var caller = new User
+        {
+            Value = 1, Admin = true, Lang = "en", Name = "testUser", Email = "testUser@teste.com",
+            Password = "testUser"u8.ToArray(), RoleId = roleId
+        };
+        users.GetUser("testUser").Returns(caller);
+        users.GetUserAsync("testUser").Returns(caller);
+
+        return ResolveController<RolesController>(s =>
+        {
+            s.AddSingleton(_rolesService);
+            s.AddSingleton(users);
+        });
+    }
+
+    [Fact]
+    public async Task TestUpdateRolePermissionsRefusesToGiveTheCallersOwnRoleTheThirdLineMarker()
+    {
+        var controller = ControllerForACallerInRole(4);
+
+        var result = await controller.UpdateRolePermissions(4,
+            new List<string> { "riskmanagement", ThirdLineAssurance.PermissionKey });
+
+        var refused = Assert.IsType<UnprocessableEntityObjectResult>(result);
+        Assert.Equal(ThirdLineAssurance.SelfAppointmentRule,
+            JsonDocument.Parse(JsonSerializer.Serialize(refused.Value)).RootElement.GetProperty("error").GetString());
+        await _rolesService.DidNotReceive().UpdatePermissionsAsync(Arg.Any<int>(), Arg.Any<List<string>>());
+    }
+
+    [Fact]
+    public async Task TestUpdateRolePermissionsSavesTheCallersOwnRoleWithoutTheMarker()
+    {
+        var controller = ControllerForACallerInRole(4);
+
+        var result = await controller.UpdateRolePermissions(4, new List<string> { "riskmanagement" });
+
+        Assert.IsType<OkResult>(result);
+        await _rolesService.Received(1).UpdatePermissionsAsync(4, Arg.Any<List<string>>());
+    }
+
+    [Fact]
+    public async Task TestUpdateRolePermissionsStillGivesAnotherRoleTheThirdLineMarker()
+    {
+        var controller = ControllerForACallerInRole(4);
+
+        var result = await controller.UpdateRolePermissions(9, new List<string> { ThirdLineAssurance.PermissionKey });
+
+        Assert.IsType<OkResult>(result);
+        await _rolesService.Received(1).UpdatePermissionsAsync(9,
+            Arg.Is<List<string>>(keys => keys.Contains(ThirdLineAssurance.PermissionKey)));
     }
 
     #endregion

@@ -52,7 +52,11 @@ public class UsersViewModel: ViewModelBase
     public string StrPermissions { get; }
     public new string StrSave { get; }
     public string StrSelectAll { get; }
-    private string StrCleanAll { get; }
+    // Public: the "Clear all" button binds it. Private, the binding could not read it and the button rendered as a
+    // bare icon (ViewStringBindingVisibilityTest).
+    public string StrCleanAll { get; }
+    public string StrAdd { get; } = Localizer["Add"];
+    public string StrDelete { get; } = Localizer["Delete"];
     public string StrTeams { get; } 
     public string StrRolePermissions { get; }
     public string StrChangePassword { get; } = Localizer["ChangePassword"];
@@ -757,6 +761,12 @@ public class UsersViewModel: ViewModelBase
         }catch(Exception e)
         {
             Console.WriteLine(e);
+            // Stage 9.9 (S50 R10): the third line's 403, and the 422 for the marker on the role the caller holds.
+            if (Track9UserAdministrationRefusal.MessageKey(e, _authenticationService.AuthenticatedUserInfo) is { } refusal)
+            {
+                await ShowSaveRefusalAsync(refusal);
+                return;
+            }
             var msgError = MessageBoxManager
                 .GetMessageBoxStandard(new MessageBoxStandardParams
                 {
@@ -957,7 +967,24 @@ public class UsersViewModel: ViewModelBase
         User.Type = SelectedAuthenticationMethod!.Name!.ToLower();
         
         _authenticationService.GetAuthenticatedUserInfo();
-        var loggedUserId = _authenticationService.AuthenticatedUserInfo!.UserId;
+        var caller = _authenticationService.AuthenticatedUserInfo;
+        var loggedUserId = caller!.UserId;
+
+        // Stage 9.9 (S50 R10): the third line reads and never writes, administrators included, so the server refuses
+        // every save of theirs (ThirdLineReadOnlyRequirement). Say so rather than send it and report a bare failure.
+        if (Track9UserAdministrationRefusal.CallerIsReadOnly(caller))
+        {
+            await ShowSaveRefusalAsync(Track9UserAdministrationRefusal.ThirdLineReadOnlyKey);
+            return;
+        }
+
+        // Nor may an administrator tick the marker on their own account: the account could not take it off again. The
+        // server refuses it too (422); checked here first because the user is saved before its permissions.
+        if (Track9UserAdministrationRefusal.AppointsSelf(User.Id, caller, UserGrantsThirdLine))
+        {
+            await ShowSaveRefusalAsync(Track9UserAdministrationRefusal.SelfAppointmentKey);
+            return;
+        }
         
         if(User.Id == loggedUserId  && !User.Enabled)
         {
@@ -991,19 +1018,21 @@ public class UsersViewModel: ViewModelBase
             if (result == ButtonResult.No) return;
         }
         
-        if (User.Id == 0)
-        {
-            User = _usersService.CreateUser(User);
-        }
-        else
-        {
-            _usersService.SaveUser(User);
-        }
-
-        await FaceIDService.SetUserEnabledStatusAsync(User.Id, SelectedUserHasFaceId);
-
         try
         {
+            // Inside the try: a refusal of the user itself (the 403 of the third line, the 422 of a move into a
+            // third-line role) used to escape to the app-wide handler, which showed only "Error saving users".
+            if (User.Id == 0)
+            {
+                User = _usersService.CreateUser(User);
+            }
+            else
+            {
+                _usersService.SaveUser(User);
+            }
+
+            await FaceIDService.SetUserEnabledStatusAsync(User.Id, SelectedUserHasFaceId);
+
             if(_permissionSelection.Source != null )
                 _usersService.SaveUserPermissions(User.Id,
                     Track9ThirdLineMarker.Compose(_permissionSelection.SelectedItems, _thirdLineMarker, UserGrantsThirdLine));
@@ -1017,19 +1046,24 @@ public class UsersViewModel: ViewModelBase
             Toasts.Success(Localizer["UserCreatedSuccessfully"]);
         }catch (Exception ex)
         {
-            var msgError = MessageBoxManager
-                .GetMessageBoxStandard(new MessageBoxStandardParams
-                {
-                    ContentTitle = Localizer["Error"],
-                    ContentMessage = Localizer["ErrorSavingUserMSG"] + " " + ex.Message,
-                    Icon = Icon.Error,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                });
-
-            await msgError.ShowAsync();
+            Logger.Error(ex, "Error saving user {UserId}", User.Id);
+            // A refusal is explained in the session language; anything else keeps the generic message. The server's own
+            // text is English and is already in the log, so it is not shown.
+            await ShowSaveRefusalAsync(Track9UserAdministrationRefusal.MessageKey(ex, caller) ?? "ErrorSavingUserMSG");
         }
 
     }
+
+    private Task ShowSaveRefusalAsync(string messageKey) =>
+        MessageBoxManager
+            .GetMessageBoxStandard(new MessageBoxStandardParams
+            {
+                ContentTitle = Localizer["Error"],
+                ContentMessage = Localizer[messageKey],
+                Icon = Icon.Error,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            })
+            .ShowAsync();
     
     private void ExecuteAddUser()
     {

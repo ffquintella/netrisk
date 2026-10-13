@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using API.Controllers;
 using DAL.Entities;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Model.DecisionCycle;
 using Model.DTO;
 using Model.Exceptions;
 using Model.Globalization;
@@ -28,6 +30,7 @@ public class UsersControllerTest : BaseControllerTest
     private readonly ILanguageManager _languageManager = Substitute.For<ILanguageManager>();
     private readonly IPermissionsService _permissionsService = Substitute.For<IPermissionsService>();
     private readonly ITeamsService _teamsService = Substitute.For<ITeamsService>();
+    private readonly IRolesService _rolesService = Substitute.For<IRolesService>();
 
     private readonly IUsersService _nonAdminUsersService = Substitute.For<IUsersService>();
 
@@ -67,6 +70,7 @@ public class UsersControllerTest : BaseControllerTest
             s.AddSingleton(_languageManager);
             s.AddSingleton(_permissionsService);
             s.AddSingleton(_teamsService);
+            s.AddSingleton(_rolesService);
             s.AddSingleton<IConfiguration>(Configuration());
         });
 
@@ -78,6 +82,7 @@ public class UsersControllerTest : BaseControllerTest
             s.AddSingleton(_languageManager);
             s.AddSingleton(_permissionsService);
             s.AddSingleton(_teamsService);
+            s.AddSingleton(_rolesService);
             s.AddSingleton<IConfiguration>(Configuration());
         });
     }
@@ -335,6 +340,119 @@ public class UsersControllerTest : BaseControllerTest
         var result = _controller.SaveUser(4, dto);
 
         Assert.IsType<NotFoundObjectResult>(result);
+    }
+
+    #endregion
+
+    #region Third-line self-appointment (S50 R10)
+
+    // The caller of _controller is user 1 (an administrator). ThirdLineReadOnlyRequirement refuses every write a holder
+    // of the marker makes — the one that would take it off again included — so an administrator who grants it to their
+    // own account is locked out of every write for good. That is how "Error saving users" reached the desktop: a 403 on
+    // PUT /Users/{id} for an administrator holding the marker on their own account.
+
+    private const int MarkerId = 90;
+
+    private void SeedPermissionsWithTheMarker() =>
+        _permissionsService.GetAllPermissions().Returns(new List<Permission>
+        {
+            new() { Id = 1, Key = "riskmanagement", Name = "Risks", Description = "Risks", Order = 1 },
+            new() { Id = MarkerId, Key = ThirdLineAssurance.PermissionKey, Name = "Third line", Description = "Third line", Order = 90 }
+        });
+
+    private static string RuleOf(IActionResult? result)
+    {
+        var refused = Assert.IsType<UnprocessableEntityObjectResult>(result);
+        return JsonDocument.Parse(JsonSerializer.Serialize(refused.Value)).RootElement.GetProperty("error").GetString()!;
+    }
+
+    [Fact]
+    public async Task TestSaveUserPermissionsRefusesToPutTheCallersOwnAccountInTheThirdLine()
+    {
+        SeedPermissionsWithTheMarker();
+
+        var result = await _controller.SaveUserPermissions(1, new List<int> { 1, MarkerId });
+
+        Assert.Equal(ThirdLineAssurance.SelfAppointmentRule, RuleOf(result.Result));
+        await _permissionsService.DidNotReceive().SaveUserPermissionsByIdAsync(Arg.Any<int>(), Arg.Any<List<int>>());
+    }
+
+    [Fact]
+    public async Task TestSaveUserPermissionsSavesTheCallersOwnPermissionsWithoutTheMarker()
+    {
+        SeedPermissionsWithTheMarker();
+
+        var result = await _controller.SaveUserPermissions(1, new List<int> { 1 });
+
+        Assert.IsType<OkResult>(result.Result);
+        await _permissionsService.Received(1).SaveUserPermissionsByIdAsync(1, Arg.Any<List<int>>());
+    }
+
+    [Fact]
+    public async Task TestSaveUserPermissionsStillGrantsTheMarkerToAnotherUser()
+    {
+        SeedPermissionsWithTheMarker();
+
+        var result = await _controller.SaveUserPermissions(2, new List<int> { 1, MarkerId });
+
+        Assert.IsType<OkResult>(result.Result);
+        await _permissionsService.Received(1).SaveUserPermissionsByIdAsync(2,
+            Arg.Is<List<int>>(ids => ids.Contains(MarkerId)));
+    }
+
+    [Fact]
+    public async Task TestSaveUserPermissionsForTheCallerWorksOnAnInstallationWithoutTheMarker()
+    {
+        _permissionsService.GetAllPermissions().Returns(new List<Permission>
+        {
+            new() { Id = 1, Key = "riskmanagement", Name = "Risks", Description = "Risks", Order = 1 }
+        });
+
+        var result = await _controller.SaveUserPermissions(1, new List<int> { 1, MarkerId });
+
+        Assert.IsType<OkResult>(result.Result);
+    }
+
+    [Fact]
+    public void TestSaveUserRefusesToMoveTheCallerIntoARoleThatHoldsTheMarker()
+    {
+        _usersService.GetUserById(1).Returns(MakeUser(1, "testUser", true));
+        _rolesService.GetRolePermissions(7).Returns(new List<string> { "riskmanagement", ThirdLineAssurance.PermissionKey });
+
+        var dto = new UserDto { Id = 1, UserName = "testUser", Name = "Test User", Email = "t@teste.com", RoleId = 7, Admin = true };
+
+        var result = _controller.SaveUser(1, dto);
+
+        Assert.Equal(ThirdLineAssurance.SelfAppointmentRule, RuleOf(result));
+        _usersService.DidNotReceive().SaveUser(Arg.Any<User>());
+    }
+
+    [Fact]
+    public void TestSaveUserSavesTheCallerInARoleWithoutTheMarker()
+    {
+        _usersService.GetUserById(1).Returns(MakeUser(1, "testUser", true));
+        _rolesService.GetRolePermissions(3).Returns(new List<string> { "riskmanagement" });
+
+        var dto = new UserDto { Id = 1, UserName = "testUser", Name = "Test User", Email = "t@teste.com", RoleId = 3, Admin = true };
+
+        var result = _controller.SaveUser(1, dto);
+
+        Assert.IsType<OkResult>(result);
+        _usersService.Received(1).SaveUser(Arg.Is<User>(u => u.RoleId == 3));
+    }
+
+    [Fact]
+    public void TestSaveUserStillMovesAnotherUserIntoARoleThatHoldsTheMarker()
+    {
+        _usersService.GetUserById(2).Returns(MakeUser(2, "auditor", false));
+        _rolesService.GetRolePermissions(7).Returns(new List<string> { ThirdLineAssurance.PermissionKey });
+
+        var dto = new UserDto { Id = 2, UserName = "auditor", Name = "Auditor", Email = "a@teste.com", RoleId = 7 };
+
+        var result = _controller.SaveUser(2, dto);
+
+        Assert.IsType<OkResult>(result);
+        _usersService.Received(1).SaveUser(Arg.Is<User>(u => u.RoleId == 7));
     }
 
     #endregion
