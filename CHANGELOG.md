@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.38.4] - 2026-10-13
+
 ### Fixed
 
 - Show the desktop date and time picker placeholders, the text box Cut/Copy/Paste menu and the scroll bar menu in the session language instead of Chinese (T320)
