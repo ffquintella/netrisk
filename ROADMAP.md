@@ -12,7 +12,8 @@ developed and released independently or in mixed-milestone batches. For shipped 
 
 Tracks 1–8 are delivered as of 2.17.0 (37 milestones, 137 line items) and are kept below as the record
 of what was built and why — where delivered behaviour differs from the original specification, the
-task's `note:` says so rather than simply claiming the box. Track 9 is planned and does not reopen any
+task's `note:` says so rather than simply claiming the box. Track 1 has since gained one planned
+milestone (M60, headless UI tests), which adds coverage and changes no delivered behaviour. Track 9 is planned and does not reopen any
 of them. Track 10 is planned too; its foundation milestone (M52) corrects defects found in Track 3, 4
 and 8 code while specifying the index, and each correction is its own task rather than an edit to a
 ticked box.
@@ -127,6 +128,18 @@ the previously logged 162 (a doubled log count). 102 were fixed and 4 waived wit
   - note: a host inserted with a database-generated id has its create row recorded against the provisional key the interceptor sees before the insert (existing interceptor behaviour), so on MariaDB a host's History starts at its first edit
 - [x] T235 Add a per-host open-vulnerability severity summary endpoint feeding the header card (S38)
   - note: "open" is the Master Dashboard's closed set, moved to `Model.Status.ClosedStatuses` so both read one definition; `Total` counts every finding on the host, `Open.Total` the open ones; the batch route has no client method yet because the list does not call it in this milestone
+- [x] T228 Let users read and add comments on a host from the Hosts view
+  - note: reuses the existing `comments.host_id` column; the comment is attributed server-side to the authenticated user
+
+### [M60] Headless Desktop UI Tests
+> outcome: The desktop client's views are exercised headlessly on macOS, Linux and Windows — styles,
+> bindings and simulated input — as a release gate that runs only on demand or at release, never in
+> the development loop.
+> spec: S54
+
+- [ ] T319 Add a `GUIClient.UiTests` project on Avalonia.Headless.XUnit with a view smoke catalogue and one interactive dialog flow, run only on explicit request or at release via `./build.sh TestUi` and a tag/dispatch-only `ui-tests.yml` (S54)
+  - note: execution rule (S54 §3) — the UI tests are too expensive for the development cycle: they compile with the solution but are excluded from `dotnet test src/netrisk.sln`, skip unless `NETRISK_UI_TESTS=1`, and run only when the user asks or before a release tag; agents never run them as routine verification
+  - note: deliverables include the agent rule in CLAUDE.md and `src/AI_TESTING_INSTRUCTIONS.md` and the release-checklist step in S10 (S54 §6.2, §7); visual regression and Appium end-to-end tests stay out of scope (S54 §5)
 
 ## Track 2 — GRC Core & Reporting Engine
 
@@ -152,6 +165,8 @@ GRC core features, incident workflows, and data output templates. Detailed speci
 - [x] T32 Implement progress trackers and draft auto-saving
 - [x] T33 Support importing assessment templates from industry standards (NIST, ISO 27001)
 - [x] T34 Build the assessment-run viewer, progress tracker and template-import GUI
+- [x] T297 Let an assessor attach a comment and evidence files to each answer of an assessment run (GitHub #80) (S44)
+  - note: `assessment_run_answers.comment` and `nr_files.assessment_run_answer_id` (db_version 92); up to 10 files of 20 MiB per answer, read-only once the run is submitted; the declared file type is checked against `file_types` but the content is not sniffed, and the legacy answers grid under the runs list shows neither the comment nor the evidence
 
 ### [M8] Multi-Entity & Multi-Tenant Support
 > outcome: Managed risk monitoring across distinct organizational subdivisions, enforced server-side.
@@ -205,6 +220,8 @@ scanner outputs. Detailed specifications:
 - [x] T50 Add a RiskAcceptance entity with expiry, authorizer and justification
   - note: generalized further by Track 8.1 into one entity shared by risks and findings
 - [x] T51 Add a Hangfire job to auto-reopen expired risk acceptances
+- [x] T296 Classify a vulnerability as Server or Application from the vulnerability form (GitHub #79)
+  - note: `vulnerabilities.source_type` (db_version 91), NOT NULL DEFAULT 0 = Unknown, so existing rows read "Not classified" rather than a guessed class; importers do not set it yet and the vulnerabilities grid and filter do not show it
 
 ### [M12] Intelligent Deduplication Engine
 > outcome: No database bloat from repeated automated scans, via pluggable matching strategies.
@@ -315,6 +332,7 @@ Detailed specifications: [docs/roadmap/TRACK_4_INTEGRATIONS.md](docs/roadmap/TRA
 - [x] T226 Report why a Jira Assets call failed in transit (timeout, dropped connection, oversized response) instead of "(no response body)"
 - [x] T227 Give a Jira Assets object search 120 s per page instead of 30 s, so a slow instance no longer cuts an import short
   - note: found with T226 — the preview stopped at 700 and 900 objects with "timed out after 30s" while the same page answered in about 1 s from a workstation; 120 s is a ceiling chosen from that, not a measured p99
+- [x] T229 Make the Jira Assets admin tab scrollable so its imported-objects grid is reachable
 
 ## Track 5 — Native Packaging & Release Engineering
 
@@ -1002,19 +1020,12 @@ planned, nothing started.**
   - note: precondition — Stage 9.12 (AI governance) must land first; the methodology requires the governance instrument before the use
 - [ ] T219 Move the BastionVault plugin onto BastionVault.IntegrationSdk, replacing the hand-written wire protocol (S35)
   - note: current plugin does not support KV v2 and misreads a v2 secret's nested `data.data`; four-stage migration with the 33 existing plugin tests as non-regression evidence
-- [x] T228 Let users read and add comments on a host from the Hosts view
-  - note: reuses the existing `comments.host_id` column; the comment is attributed server-side to the authenticated user
-- [x] T229 Make the Jira Assets admin tab scrollable so its imported-objects grid is reachable
 - [ ] T269 Add Tenable Security Center as a second client behind the same normaliser (S40)
   - note: moved from M56 on 2026-10-05 — the organisation uses Tenable Vulnerability Management cloud with Tenable One; kept for installations that run Security Center
 - [ ] T289 Add a read-only executive Cyber Risk Overview page to the RiskPortal (S40)
   - note: the portal is Razor Pages over the API with no chart library; a page needs the S40 read API and inline SVG or a library vetted under S21
 - [ ] T295 Let unit managers edit the risk context (criticality, internet exposure, data classification) of entities in their own subtree, requiring global scope only for a process shared by more than one unit (S40)
   - note: product-owner decision 2026-10-05 — not now, unit managers do not use the product yet; the write rule already lives in one policy (`RiskContextWritePolicy`) so this lands without an API or screen change
-- [x] T296 Classify a vulnerability as Server or Application from the vulnerability form (GitHub #79)
-  - note: `vulnerabilities.source_type` (db_version 91), NOT NULL DEFAULT 0 = Unknown, so existing rows read "Not classified" rather than a guessed class; importers do not set it yet and the vulnerabilities grid and filter do not show it
-- [x] T297 Let an assessor attach a comment and evidence files to each answer of an assessment run (GitHub #80) (S44)
-  - note: `assessment_run_answers.comment` and `nr_files.assessment_run_answer_id` (db_version 92); up to 10 files of 20 MiB per answer, read-only once the run is submitted; the declared file type is checked against `file_types` but the content is not sniffed, and the legacy answers grid under the runs list shows neither the comment nor the evidence
 
 ## Specs
 
@@ -1073,3 +1084,4 @@ planned, nothing started.**
 | S51 | Stage 9.10 — third-party register: HECVAT, SBOM, concentration and exit plan specification | docs/roadmap/track9/9.10-third-party-register.md |
 | S52 | Stage 9.11 — LGPD data catalogue: legal basis, purpose, retention, location and DPIA specification | docs/roadmap/track9/9.11-lgpd-data-catalogue.md |
 | S53 | Stage 9.12 — AI governance: model inventory, flag 11 and model metrics specification | docs/roadmap/track9/9.12-ai-governance.md |
+| S54 | Headless desktop UI tests: tool choice and on-demand/release execution rule | docs/testing/desktop-ui-tests.md |

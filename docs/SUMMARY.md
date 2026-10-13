@@ -27,6 +27,7 @@
 * [📐 Track 9 — MIGR-TI/IA Methodology Alignment](roadmap/TRACK_9_MIGR_TI_IA.md)
   * [Especificações das etapas](roadmap/track9/README.md)
     * [Modelo de especificação](roadmap/track9/_TEMPLATE.md)
+* [🧪 Testes de UI do cliente desktop (headless)](testing/desktop-ui-tests.md)
 
 ## Methodology
 
