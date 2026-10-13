@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Headless Avalonia UI tests for the desktop client (M60, S54 — docs/testing/desktop-ui-tests.md).
+
+    RUN ONLY ON DEMAND OR AT RELEASE (S54 §3). These tests are too expensive for the development
+    loop: they compile with the solution (so an API break in a view or view-model is caught by every
+    build) but are never executed by `dotnet test src/netrisk.sln`, `./build.sh`/`Compile`, push or
+    pull-request CI, or an agent's routine verification. The single entry point is
+    `./build.sh TestUi`, which sets NETRISK_UI_TESTS=1; without it every [UiFact]/[UiTheory] skips.
+
+    Shape: the same self-executing xUnit v3 / Microsoft.Testing.Platform project as every other test
+    project here (OutputType=Exe, no Microsoft.NET.Test.Sdk / xunit.runner.visualstudio / coverlet).
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- xunit v3 test projects are self-executing and must be built as executables. -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>13</LangVersion>
+    <Nullable>enable</Nullable>
+    <!-- Lock 1 of S54 §3.2: keeps `dotnet test src/netrisk.sln` from discovering this project.
+         IsTestProject=false alone is NOT enough: the .NET 10 SDK's Microsoft.Testing.Platform mode
+         selects projects by IsTestingPlatformApplication, which xunit.v3 sets to true, and ran this
+         project with IsTestProject=false (verified 2026-10-13, S54 amendment). Turning that off
+         leaves the executable intact — xunit.v3 generates its own entry point either way
+         (UseMicrosoftTestingPlatformRunner) — and only removes it from `dotnet test`. -->
+    <IsTestProject>false</IsTestProject>
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- VersionOverride, deliberately (S54 amendment 2026-10-13): every Avalonia.Headless.XUnit
+         release up to 12.1.4 is compiled against xunit.v3 3.2.2, and xunit.v3 4.x changed the
+         TestIntrospectionHelper.GetTestCaseDetails signature its discoverer calls, so on the
+         solution's 4.0.1 every test fails at discovery with MissingMethodException. Move this back
+         to the central version once an Avalonia.Headless.XUnit built on xunit.v3 4 ships. Safe to
+         differ: this project is never run by `dotnet test` alongside the others (S54 §3.2). -->
+    <PackageReference Include="xunit.v3" VersionOverride="3.2.2" />
+    <!-- Version is pinned centrally to Avalonia's own (src/Directory.Packages.props). -->
+    <PackageReference Include="Avalonia.Headless.XUnit" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GUIClient\GUIClient.csproj" />
+  </ItemGroup>
+</Project>

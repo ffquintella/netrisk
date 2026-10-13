@@ -2,9 +2,7 @@
 using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
-using GUIClient.Exceptions;
-using Material.Icons;
-using Model;
+using GUIClient.Tools;
 
 namespace GUIClient.Converters;
 
@@ -14,61 +12,12 @@ public class IntStatusToMaterialIconkindConverter: IValueConverter
     public static readonly IntStatusToMaterialIconkindConverter Instance = new();
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is null) return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);;
+        if (value is null) return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
 
-        // Vulnerability.Status is a ushort; Host.Status is a short. Both carry the same IntStatus
-        // numbers, so the host header (S38 §6) reuses this table rather than growing a second one.
-        ushort? numeric = value switch
-        {
-            ushort u => u,
-            short s and >= 0 => (ushort)s,
-            int i and >= 0 and <= ushort.MaxValue => (ushort)i,
-            _ => null
-        };
-
-        if (numeric is { } status && targetType.IsAssignableTo(typeof(MaterialIconKind)))
-        {
-
-           
-            switch (status)
-            {
-                case (ushort) IntStatus.New:
-                    return MaterialIconKind.NewReleases;
-                case (ushort) IntStatus.Verified:
-                    return MaterialIconKind.Verified;
-                case (ushort) IntStatus.Rejected:
-                    return MaterialIconKind.Denied;
-                case (ushort) IntStatus.AwaitingFix:
-                    return MaterialIconKind.WrenchClock;
-                case (ushort) IntStatus.Closed:
-                    return MaterialIconKind.CloseOctagon;
-                case (ushort) IntStatus.Fixed:
-                    return MaterialIconKind.BugCheck;
-                case (ushort) IntStatus.Mitigated:
-                    return MaterialIconKind.VacuumCleaner;
-                case (ushort) IntStatus.NotRelevant:
-                    return MaterialIconKind.FileDiscard;
-                case (ushort) IntStatus.Retired:
-                    return MaterialIconKind.HourglassEmpty;
-                case (ushort) IntStatus.Active:
-                    return MaterialIconKind.CheckCircleOutline;
-                case (ushort) IntStatus.Duplicated:
-                    return MaterialIconKind.ContentDuplicate;
-                case (ushort) IntStatus.Outdated:
-                    return MaterialIconKind.History;
-                case (ushort) IntStatus.Deleted:
-                    return MaterialIconKind.TrashCan;
-                case (ushort) IntStatus.Prioritized:
-                    return MaterialIconKind.PriorityHigh;
-                case (ushort) IntStatus.Processing:
-                    return MaterialIconKind.CogPlay;
-                case (ushort) IntStatus.Error:
-                    return MaterialIconKind.AlertCircle;
-                default:
-                    return MaterialIconKind.FlaskEmpty;
-            }
-        }
-        return new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
+        // The table and the target-type rule live in Tools/StatusIconMap, which GUIClient.Tests covers.
+        return StatusIconMap.TryResolve(value, targetType, out var kind)
+            ? kind
+            : new BindingNotification(new InvalidCastException(), BindingErrorType.Error);
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

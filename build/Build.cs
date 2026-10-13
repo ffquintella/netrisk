@@ -311,6 +311,9 @@ partial class Build : NukeBuild
             Console.WriteLine("    CreateAllDockerImages  Create all Docker images");
             Console.WriteLine("    PushAllDockerImages    Push all Docker images to registry");
             Console.WriteLine();
+            Console.WriteLine("  Desktop UI tests (S54 -- on explicit request or at release only):");
+            Console.WriteLine("    TestUi                 Run the headless Avalonia UI tests (sets NETRISK_UI_TESTS=1)");
+            Console.WriteLine();
             Console.WriteLine("  Utilities:");
             Console.WriteLine("    Clean                  Clean build artifacts");
             Console.WriteLine("    Restore                Restore NuGet packages");
@@ -607,11 +610,14 @@ partial class Build : NukeBuild
             }
         });
 
+    // CompileUiTests builds the headless UI tests without running them (S54 §3, E3). Running them is
+    // TestUi's job alone, and Compile must never depend on TestUi (E1) — see build/Build.UiTests.cs.
     Target Compile => _ => _
         .DependsOn(Restore)
         .DependsOn(Print)
         .DependsOn(LintUi)
         .DependsOn(CompileApi, CompileWebsite, CompileRiskPortal, CompileBackgroundJobs, CompileConsoleClient, CompileLinuxGUI, CompileWindowsGUI, CompileMacGUI)
+        .DependsOn(CompileUiTests)
         .Executes(() =>
         {
         });

@@ -103,8 +103,51 @@ When a test cannot reasonably be written (needs real hardware, a live third-part
 
 ## Running Tests
 
-- From the solution directory, run: `dotnet test netrisk.sln`.
+- From the solution directory, run: `dotnet test netrisk.sln`. This does **not** run
+  `GUIClient.UiTests` — see the next section.
 - Keep tests deterministic and fast to support frequent local runs and CI.
+
+## Desktop UI tests (`GUIClient.UiTests`) — on demand or at release only (S54)
+
+`src/GUIClient.UiTests` holds headless Avalonia UI tests: real views, the client's own styles,
+bindings and simulated mouse and keyboard input. They are too expensive for the development loop,
+so the rule of [docs/testing/desktop-ui-tests.md](../docs/testing/desktop-ui-tests.md) §3 applies to
+every agent and every brief:
+
+- **Never run them as routine verification** — not in `dotnet test`, not in a `test-runner` brief,
+  not to "double-check" a GUI change. Run them only when the user explicitly asks, or as the release
+  gate: `./build.sh TestUi` before `git tag vX.Y.Z`, and `.github/workflows/ui-tests.yml` on the tag.
+  "Verify the change" or "run the tests" is not an explicit request (E6).
+- **When you change a view or view-model a UI test covers**, update the test in the same change so it
+  still compiles (`Compile` builds the project), do not run it, and say *"UI tests not run (S54 §3)"*
+  in your summary.
+- Two locks keep this true; do not remove either. The `.csproj` sets `IsTestingPlatformApplication`
+  (and `IsTestProject`) to `false`, so `dotnet test src/netrisk.sln` never selects the project. And
+  every test skips unless `NETRISK_UI_TESTS=1`, which only `TestUi` and the workflow set.
+
+Conventions when you write or update one:
+
+- **Declare tests with `[UiFact]` / `[UiTheory]` only** (`Infrastructure/UiFactAttribute.cs`), never a
+  bare `[Fact]`, `[Theory]`, `[AvaloniaFact]` or `[AvaloniaTheory]`: those run without the opt-in.
+  `Guards/UiTestAttributeGuardTest` fails on one.
+- **Doubles come from the project helper, `UiServices`.** Each test gets a fresh container (the
+  Application is rebuilt per test). Localization, toasts, navigation and the dialog service are the
+  client's real ones; every other interface a view-model resolves is an NSubstitute double that
+  answers like an empty server (empty lists, not nulls). Configure what the test needs through
+  `UiServices.Current.Double<IHostsService>()` **before** creating the view — view-models read their
+  services in their constructors. Open dialogs through `IDialogService`, as the client does, with
+  `IMainWindowProvider.GetActiveWindow()` pointed at an owner window.
+- **No network, database, user-secret or real server** — and no production data: fixtures are
+  synthetic (`@example.invalid` addresses, made-up hosts).
+- **Drive the UI with `UiInput`** (clicks, keys, typed text through the headless platform), not by
+  setting view-model properties, when the test is about interaction.
+- **End every test with `UiHost.AssertClean()`.** A standing binding error, an Avalonia error-level log
+  (for example a render-loop exception) or an exception escaping a ReactiveCommand fails the test. A
+  product defect the suite has found but that is not being fixed is tolerated only by name, through an
+  entry in `Infrastructure/KnownDefects.cs` passed to `AssertClean(...)` — and that entry fails the
+  test as soon as the defect stops occurring, so it has to be removed with the fix.
+- `xunit.v3` is pinned to 3.2.2 in this project (`VersionOverride`): Avalonia.Headless.XUnit is not
+  compatible with xunit.v3 4.x yet. Keep the project's other packages on the central versions.
 
 ## Minimal Templates
 

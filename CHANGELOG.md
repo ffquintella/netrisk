@@ -12,6 +12,22 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.39.0] - 2026-10-13
+
+### Added
+
+- Add headless desktop UI tests (`src/GUIClient.UiTests`, on Avalonia.Headless.XUnit) — a view smoke catalogue and an interactive dialog flow that fail on binding errors and run only on explicit request or as the release gate, through `./build.sh TestUi` and the tag-triggered `ui-tests.yml` on Linux, Windows and macOS (T319, S54)
+
+### Fixed
+
+- Stop the desktop risk screen logging a failed colour conversion for the status whenever no risk is selected, leaving that text in the theme colour (T324, S54)
+- Draw the status icons on the desktop hosts, findings and risk screens, which never appeared since the icon control's kind became nullable (T325, S54)
+- Enable the desktop findings toolbar's Add, Edit, Import and Delete buttons only for users the API would let perform them, instead of for everyone (T326, S54)
+- List the flags in the Risk governance "Flagged risks" Flag filter, whose drop-down was empty so no flag could be selected (T322, S46)
+- Stop the Risk governance "Treatment portfolio" date pickers overlapping the Deadline label and the Calculate button, and align the summary labels with their values there and on "Portfolio exposure" (T323, S47)
+- Stop submitting a risk-committee decision from the desktop failing with "Error calling /RiskCommittees/{id}/Decisions" on MariaDB, where the Gate A check it runs on submission and on the deciding vote used a query MariaDB cannot execute
+- Stop archiving a risk from the desktop "Archive and reviews" screen failing with "Error calling /RiskArchive/Risks/{id}" on MariaDB, where the Gate A check it shares with closing and accepting a risk and with the daily flag sweep could not translate the linked-findings query (T195, S50)
+
 ## [2.38.4] - 2026-10-13
 
 ### Fixed

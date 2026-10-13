@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text;
+using Avalonia;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
@@ -17,11 +18,13 @@ public class StatusToColourConverter: IValueConverter
         object? parameter, 
         CultureInfo culture)
     {
-        if (value is null) return "";
-        
+        // No status — nothing selected yet, or a selection just cleared — has no colour: leave the foreground to
+        // the theme. This used to return "" (not a brush, so every start-up logged a failed conversion) and to
+        // throw for an empty string (T324).
+        if (value is null or string { Length: 0 }) return AvaloniaProperty.UnsetValue;
+
         if (value is string sourceData && targetType.IsAssignableTo(typeof(Avalonia.Media.IBrush)))
         {
-            if (sourceData.Length == 0) throw new InvalidStatusException("Invalid empty status to convert", sourceData);
 
             switch (sourceData)
             {

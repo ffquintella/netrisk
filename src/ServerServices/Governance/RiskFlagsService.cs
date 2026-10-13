@@ -808,6 +808,29 @@ public class RiskFlagsService(
         }
     }
 
+    /// <summary>An active or verified finding linked to a risk, with its raw CVE list — the read behind flag 3.</summary>
+    internal sealed class LinkedOpenFinding
+    {
+        public int RiskId { get; init; }
+        public int FindingId { get; init; }
+        public string? Cves { get; init; }
+    }
+
+    /// <summary>
+    /// The active or verified findings linked to <paramref name="risks"/>.
+    ///
+    /// The risk id is projected by <c>SelectMany</c>'s result selector, never inside the collection selector. Read there,
+    /// the outer risk turns the collection into a correlated subquery that EF can only translate as CROSS APPLY — a
+    /// LATERAL join — and MariaDB has none: the query failed to translate on the production database, so every Gate A
+    /// check (archiving, closing, accepting, a committee decision, the daily sweep) answered 500, while the in-memory
+    /// provider evaluated it happily. This shape is a plain INNER JOIN. Pinned without a database by
+    /// <c>RiskFlagsMariaDbTranslationTest</c> and on MariaDB by <c>Track9RiskArchiveWriteTests</c>.
+    /// </summary>
+    internal static IQueryable<LinkedOpenFinding> LinkedOpenFindings(IQueryable<Risk> risks) =>
+        risks.SelectMany(r => r.Vulnerabilities
+                .Where(v => v.LifecycleStatus == FindingStatus.Active || v.LifecycleStatus == FindingStatus.Verified),
+            (r, v) => new LinkedOpenFinding { RiskId = r.Id, FindingId = v.Id, Cves = v.Cves });
+
     /// <summary>
     /// Everything the three derivations read, for one risk or for every open risk, through
     /// <paramref name="db"/> — an unscoped context (D9).
@@ -821,11 +844,7 @@ public class RiskFlagsService(
             ? db.Risks.AsNoTracking().Where(r => r.Id == id)
             : db.Risks.AsNoTracking().Where(r => r.Status != StatusClosed);
 
-        var findings = await risks
-            .SelectMany(r => r.Vulnerabilities
-                .Where(v => v.LifecycleStatus == FindingStatus.Active || v.LifecycleStatus == FindingStatus.Verified)
-                .Select(v => new { RiskId = r.Id, FindingId = v.Id, v.Cves }))
-            .ToListAsync();
+        var findings = await LinkedOpenFindings(risks).ToListAsync();
 
         var cvesByFinding = findings
             .Select(f => (f.RiskId, f.FindingId, Cves: CveIds.Parse(f.Cves)))

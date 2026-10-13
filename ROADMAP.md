@@ -12,8 +12,8 @@ developed and released independently or in mixed-milestone batches. For shipped 
 
 Tracks 1–8 are delivered as of 2.17.0 (37 milestones, 137 line items) and are kept below as the record
 of what was built and why — where delivered behaviour differs from the original specification, the
-task's `note:` says so rather than simply claiming the box. Track 1 has since gained one planned
-milestone (M60, headless UI tests), which adds coverage and changes no delivered behaviour. Track 9 is planned and does not reopen any
+task's `note:` says so rather than simply claiming the box. Track 1 has since gained one more
+milestone (M60, headless UI tests, delivered by T319), which adds coverage and changes no delivered behaviour. Track 9 is planned and does not reopen any
 of them. Track 10 is planned too; its foundation milestone (M52) corrects defects found in Track 3, 4
 and 8 code while specifying the index, and each correction is its own task rather than an edit to a
 ticked box.
@@ -138,10 +138,22 @@ the previously logged 162 (a doubled log count). 102 were fixed and 4 waived wit
 > bindings and simulated input — as a release gate that runs only on demand or at release, never in
 > the development loop.
 > spec: S54
+> version: 2.39.0
 
-- [ ] T319 Add a `GUIClient.UiTests` project on Avalonia.Headless.XUnit with a view smoke catalogue and one interactive dialog flow, run only on explicit request or at release via `./build.sh TestUi` and a tag/dispatch-only `ui-tests.yml` (S54)
+- [x] T319 Add a `GUIClient.UiTests` project on Avalonia.Headless.XUnit with a view smoke catalogue and one interactive dialog flow, run only on explicit request or at release via `./build.sh TestUi` and a tag/dispatch-only `ui-tests.yml` (S54)
   - note: execution rule (S54 §3) — the UI tests are too expensive for the development cycle: they compile with the solution but are excluded from `dotnet test src/netrisk.sln`, skip unless `NETRISK_UI_TESTS=1`, and run only when the user asks or before a release tag; agents never run them as routine verification
   - note: deliverables include the agent rule in CLAUDE.md and `src/AI_TESTING_INSTRUCTIONS.md` and the release-checklist step in S10 (S54 §6.2, §7); visual regression and Appium end-to-end tests stay out of scope (S54 §5)
+  - note: delivered on 2026-10-13 — catalogue: the client's own styles and tokens, the shell (`MainWindow` with every hosted content view, signed in, then a simulated click on the Risks navigation button), `CloseRiskWindow` opened through `IDialogService`, `HostsView` (host list, click, findings DataGrid) and `VulnerabilitiesView` (TreeDataGrid); flow: `EditVulnerabilitiesDialog` — clear the title by keyboard, the inline summary appears and Save disables, retype, Save enables, Esc; 6 UI tests + 2 guard tests, about 2 s on macOS
+  - note: deviations are S54 amendments of 2026-10-13: `xunit.v3` pinned to 3.2.2 by `VersionOverride` (no Avalonia.Headless.XUnit runs on xunit.v3 4.x), `IsTestingPlatformApplication=false` because `IsTestProject=false` alone did not keep the .NET 10 MTP `dotnet test` away, `[UiFact]` names `AvaloniaFactDiscoverer` because `AvaloniaFactAttribute` is sealed, Skia rendering because LiveCharts broke the stub renderer and with it hit-testing, the binding-error definition, and `Compile` depending on the build-only `CompileUiTests`
+  - note: acceptance — A2 shown on `src/netrisk.sln` (`dotnet test --list-tests` discovers the other 12 test modules and not this one), A8 by `scan-dependencies.sh` (no vulnerable package), A3/A4 by running the executable without the variable and by a temporary bare `[Fact]` (guard failed), A6 by a temporary `{ReflectionBinding StrNotesTypo}` in `CloseRiskWindow.axaml` (smoke failed on "Could not find a matching property accessor"; file restored); A5 checked on macOS only — Linux and Windows wait for a `ui-tests.yml` dispatch; the CLAUDE.md half of A9 was not applied by the implementing agent and awaits the user (text in S54 §7)
+  - note: the first run found three product defects, tolerated by name in `GUIClient.UiTests/Infrastructure/KnownDefects.cs` until T324–T326 and not fixed here (T319 changes no production code) — `StatusToColourConverter` returns `""` for no status (RiskView logs a failed brush conversion), `IntStatusToMaterialIconkindConverter` rejects `MaterialIcon.Kind`'s nullable target so status icons never render on the hosts, findings and risk screens, and `HasPermissionConverter` rejects `List<string>` so the findings toolbar's create/delete buttons ignore the user's permissions (the API still authorizes each call); fixed by T324–T326 below
+- [x] T324 Leave the risk status colour to the theme when no risk is selected, instead of feeding `TextBlock.Foreground` an empty string (S54)
+  - note: delivered on 2026-10-13; `StatusToColourConverter` returned `""` for a null status and threw for an empty one, so `RiskView` logged a failed brush conversion at every start-up and cleared selection; both now return `AvaloniaProperty.UnsetValue`; regression test `GUIClient.UiTests/Converters/StatusToColourConverterTest` (Avalonia brushes, so in the on-demand UI project), and the shell smoke test no longer tolerates it
+- [x] T325 Draw the status icons on the hosts, findings and risk screens by accepting the nullable icon target `MaterialIcon.Kind` has (S54)
+  - note: delivered on 2026-10-13; the status table and the target-type rule moved out of `IntStatusToMaterialIconkindConverter` into the Avalonia-free `GUIClient/Tools/StatusIconMap.cs`, which now accepts `MaterialIconKind?` as well as `MaterialIconKind`; regression test `GUIClient.Tests/Tools/StatusIconMapTest`, plus the hosts smoke test asserting the findings grid draws the icon
+- [x] T326 Make the findings toolbar's Add, Edit, Import and Delete buttons follow the user's permissions, failing closed (S54)
+  - note: delivered on 2026-10-13; `HasPermissionConverter` accepted only an `ObservableCollection<string>` and threw on null, the client's list is a `List<string>`, and the failed binding fell back to `IsEnabled = true` for everyone; the decision is now `GUIClient/Tools/PermissionGate.cs`, which mirrors `[PermissionAuthorize]` — the Admin role claim (`AdminRoleClaim.IsHeldBy`) or the permission, never the third line — and answers "no" to anything it does not recognise; `VulnerabilitiesView` binds the four buttons to the user rather than the bare list so an administrator stays admitted; regression test `GUIClient.Tests/Tools/PermissionGateTest`, plus the findings smoke test (analyst without the write permissions: all four disabled) and the shell smoke test (administrator: admitted)
+  - note: the gate is for enabling only; the API decides each call through `[PermissionAuthorize("vulnerabilities_create")]`/`("vulnerabilities_delete")` on `VulnerabilitiesController` (`Create`, `DeleteOne`, …) — no API test pins those two attributes yet, which is a gap, not something this task changed
 
 ## Track 2 — GRC Core & Reporting Engine
 
@@ -714,6 +726,8 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
 - [x] T173 Test that a derived flag reverts with an audit-trail entry, and that Gate A precedes Gate B
   - note: R1–R3 and G1–G10 of `RiskFlagsServiceInMemoryTest`/`GateAInMemoryTest` (moving Gate A after the appetite fails G1, G4 and G9); Track9RiskFlagsSchemaTests Q1–Q3 need Docker and were not run here; the S46 §8 runtime observations are still to be recorded on the PR
 - [x] T303 Add the Stage 9.5 desktop surface: the flag and decision editor on the risk, the flag column and filter in the register, and the Top Risks screen (S46)
+- [x] T322 List the flag catalogue in the Risk governance "Flagged risks" Flag filter, whose drop-down was empty (S46)
+  - note: delivered on 2026-10-13; `RiskFlagFilterViewModel.FlagOptions` was a plain `List` created empty and filled by `LoadAsync` after the view bound it, so the ComboBox never saw the items (its box still read "All flags" because `SelectedFlag` notifies separately); now an `ObservableCollection`; guarded for every view by `GUIClient.Tests/Views/ItemsSourceChangeNotificationTests`; not observed in a running desktop session
 
 ### [M44] Stage 9.6 — Treatment economics: monetary cost, Gates C and D, the full option set
 > outcome: Gate C gets a calculation; Gate D gets portfolio selection under constraints. Closes gaps 7, 10, part of 13.
@@ -737,6 +751,8 @@ human/security review of all twelve are pending.** Does not reopen Track 8. Deta
 - [x] T181 Test that a mitigation with no monetary cost enters Gate C as not-assessable, and Gate D preserves tail/systemic risks at moderate E[L]
   - note: GC3, E3, PD1, PD2 and PF1 (making a missing cost zero, or dropping the protected tier, fails them); Track9TreatmentEconomicsSchemaTests Q1–Q3 need Docker and were not run here; the S47 §8 runtime observations are still to be recorded on the PR
 - [x] T304 Add the Stage 9.6 desktop surface: the treatment option, monetary cost, estimates and prerequisites with Gate C on the mitigation editor, the target level on the risk detail, the acceptance criterion and completion evidence on treatment tasks, and the portfolio selection screen (S47)
+- [x] T323 Stop the Treatment portfolio filter row overlapping itself and level the summary labels with their values there and on Portfolio exposure (S47)
+  - note: delivered on 2026-10-13; the two DatePickers sat in fixed 160px columns while the Semi DatePicker is ~300px wide, so each painted over the next label and the Calculate button — the row is now label+control pairs in a WrapPanel; the summary values take `form_text` so their top margin matches `form_label`; the same summary fix and label/control spacing applied to `TailPortfolioView` (Portfolio exposure); checked with LintUi and a GUIClient build, not yet observed in a running desktop session
 
 ### [M45] Stage 9.7 — Tail statistics and portfolio: P95, CVaR, aggregation and correlation
 > outcome: The tail statistic appetite compares against, and the portfolio sum Phase 7 needs, exist. Closes gap 9.

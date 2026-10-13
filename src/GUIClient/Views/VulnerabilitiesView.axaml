@@ -66,7 +66,7 @@
                         </MultiBinding>
                     </ToolTip.Tip>
                     <Button Name="BtnAdd" Classes="toolbar" 
-                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtAddClicked}"
                             HorizontalAlignment="Right">
@@ -81,7 +81,7 @@
                         </MultiBinding>
                     </ToolTip.Tip>
                     <Button Name="BtnEdit" Classes="toolbar" 
-                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtEditClicked}"
                             HorizontalAlignment="Right">
@@ -96,7 +96,7 @@
                         </MultiBinding>
                     </ToolTip.Tip>
                     <Button Name="BtnDelete" Classes="toolbar" 
-                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_delete}"
                             Command="{Binding BtDeleteClicked}"
                             HorizontalAlignment="Right">
@@ -234,7 +234,7 @@
                 </Border>
                 <Border ToolTip.Tip="{Binding StrImport}" Classes="tooltip">
                     <Button Name="BtnImport" Classes="toolbar" 
-                            IsEnabled="{Binding AuthenticatedUserInfo.UserPermissions, 
+                            IsEnabled="{Binding AuthenticatedUserInfo, 
                             Converter={StaticResource HasPermissionConverter}, ConverterParameter=vulnerabilities_create}"
                             Command="{Binding BtImportClicked}"
                             HorizontalAlignment="Right">

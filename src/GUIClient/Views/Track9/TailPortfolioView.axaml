@@ -14,14 +14,14 @@
                 <Button Grid.Column="1" Classes="type2" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrReload}"/></Button>
             </Grid>
             <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
-            <Grid Grid.Row="2" ColumnDefinitions="Auto,260,Auto,160,Auto" Margin="0 5">
-                <TextBlock Classes="form_label" Text="{Binding StrPortfolioBasis}"/>
-                <ComboBox Grid.Column="1" ItemsSource="{Binding BasisOptions}" SelectedItem="{Binding SelectedBasis}">
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,260,Auto,160,Auto" ColumnSpacing="6" Margin="0 5">
+                <TextBlock Classes="form_label" Margin="3 0 0 0" VerticalAlignment="Center" Text="{Binding StrPortfolioBasis}"/>
+                <ComboBox Grid.Column="1" VerticalAlignment="Center" ItemsSource="{Binding BasisOptions}" SelectedItem="{Binding SelectedBasis}">
                     <ComboBox.ItemTemplate><DataTemplate x:DataType="vm:Track9Choice"><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrSeed}"/>
-                <NumericUpDown Grid.Column="3" Value="{Binding Seed}" Minimum="-2147483648" Maximum="2147483647" Increment="1"/>
-                <Button Grid.Column="4" Classes="type1" Command="{Binding CalculateCommand}"><TextBlock Text="{Binding StrCalculate}"/></Button>
+                <TextBlock Grid.Column="2" Classes="form_label" Margin="9 0 0 0" VerticalAlignment="Center" Text="{Binding StrSeed}"/>
+                <NumericUpDown Grid.Column="3" VerticalAlignment="Center" Value="{Binding Seed}" Minimum="-2147483648" Maximum="2147483647" Increment="1"/>
+                <Button Grid.Column="4" Classes="type1" VerticalAlignment="Center" Command="{Binding CalculateCommand}"><TextBlock Text="{Binding StrCalculate}"/></Button>
             </Grid>
             <DataGrid Grid.Row="3" ItemsSource="{Binding Risks}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>
@@ -29,10 +29,10 @@
                     <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,*,Auto,*" Margin="0 8">
-                <TextBlock Classes="form_label" Text="{Binding StrGateB}"/><TextBlock Grid.Column="1" Text="{Binding GateBText}" TextWrapping="Wrap"/>
-                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrDependence}"/><TextBlock Grid.Column="3" Text="{Binding DependenceText}"/>
-                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrDiversification}"/><TextBlock Grid.Column="5" Text="{Binding DiversificationText}"/>
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*,Auto,*,Auto,*" ColumnSpacing="6" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrGateB}"/><TextBlock Grid.Column="1" Classes="form_text" Text="{Binding GateBText}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrDependence}"/><TextBlock Grid.Column="3" Classes="form_text" Text="{Binding DependenceText}"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrDiversification}"/><TextBlock Grid.Column="5" Classes="form_text" Text="{Binding DiversificationText}"/>
             </Grid>
             <DataGrid Grid.Row="5" ItemsSource="{Binding Members}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>

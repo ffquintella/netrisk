@@ -303,7 +303,7 @@ public sealed class RiskFlagFilterViewModel : Track9RiskViewModelBase
     public string StrGateA { get; } = Localizer["Track9GateA"];
     public string StrRisk { get; } = Localizer["Track9Risk"];
     public string StrFlags { get; } = Localizer["Track9Flags"];
-    public List<Track9Choice> FlagOptions { get; } = [];
+    public ObservableCollection<Track9Choice> FlagOptions { get; } = [];
     public List<Track9Choice> GateAOptions { get; }
     public ObservableCollection<FlaggedRiskRow> Rows { get; } = [];
 

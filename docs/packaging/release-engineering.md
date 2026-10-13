@@ -420,7 +420,8 @@ Plan one job per platform. See [`docs/ci/`](../ci/README.md) for the existing pi
 definitions.
 
 Recommended release job order: build and test → Windows job → macOS job → Linux job →
-`VerifySignatures` on each platform's own artifacts → publish.
+`VerifySignatures` on each platform's own artifacts → publish. The desktop UI tests are a gate
+before the tag, not a job in this chain — see §9.
 
 ---
 
@@ -437,3 +438,30 @@ Recommended release job order: build and test → Windows job → macOS job → 
 | `WiX was not found, so no MSI was produced` | Run the `dotnet tool install --global wix` line from §5.1 on the runner. In a `Release` build this is a hard failure rather than a skip. |
 | `Snap packaging skipped: snapcraft is not installed` | Expected off Linux; the recipe and payload are still staged. |
 | Camera does nothing in the Flatpak/Snap build | By design — see §6. |
+
+---
+
+## 9. Release gate: headless desktop UI tests (S54)
+
+The headless Avalonia UI tests in `src/GUIClient.UiTests` (M60, T319,
+[docs/testing/desktop-ui-tests.md](../testing/desktop-ui-tests.md)) are too expensive for the
+development loop, so they run at release instead (S54 §3, rule E2). Two steps belong to every
+release:
+
+1. **After the `Bump*` target and before `git tag vX.Y.Z`**, on the release host and on the commit
+   that will be tagged:
+
+   ```bash
+   ./build.sh TestUi
+   ```
+
+   The target builds the project, runs it with `NETRISK_UI_TESTS=1` and `-failSkips`, and writes
+   `output/ui-tests/GUIClient.UiTests.{xml,html}`. **If it fails, do not create the tag** (E5): fix
+   the view or the test first. Never loosen an assertion to get the release out.
+2. **After pushing the tag**, follow `.github/workflows/ui-tests.yml`, which the `v*` tag triggers on
+   Linux, Windows and macOS. A failure there after the tag is a release defect: fix it and ship a
+   patch release (E5). The failing runner uploads its reports as the `ui-tests-<os>` artifact.
+
+The same workflow can be started by hand (`workflow_dispatch`) — that, or an explicit request to
+run `./build.sh TestUi`, is the only other way these tests run. They are never part of
+`./build.sh`/`Compile`, `dotnet test src/netrisk.sln` or push/pull-request CI (E1).

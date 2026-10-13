@@ -38,6 +38,7 @@
         "CompileLinuxGUI",
         "CompileMacGUI",
         "CompileRiskPortal",
+        "CompileUiTests",
         "CompileWebsite",
         "CompileWindowsGUI",
         "CreateAllDockerImages",
@@ -73,6 +74,7 @@
         "PushDockerImageConsoleClient",
         "PushDockerImageWebSite",
         "Restore",
+        "TestUi",
         "Usage",
         "VerifySignatures"
       ]

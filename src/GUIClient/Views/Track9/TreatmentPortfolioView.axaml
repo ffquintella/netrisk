@@ -15,28 +15,39 @@
             </Grid>
             <TextBlock Grid.Row="1" Classes="error" Text="{Binding LoadError}" IsVisible="{Binding HasLoadError}" TextWrapping="Wrap"/>
             <TextBlock Grid.Row="2" Classes="error" Text="{Binding ValidationMessage}" IsVisible="{Binding HasValidationMessage}" TextWrapping="Wrap"/>
-            <Grid Grid.Row="3" ColumnDefinitions="Auto,150,Auto,150,Auto,160,Auto,160,Auto" Margin="0 5">
-                <TextBlock Classes="form_label" Text="{Binding StrBudget}"/>
-                <NumericUpDown Grid.Column="1" Value="{Binding Budget}" Minimum="0" Maximum="1000000000000"/>
-                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrPeopleCapacity}"/>
-                <NumericUpDown Grid.Column="3" Value="{Binding PeopleCapacity}" Minimum="0" Maximum="99999999"/>
-                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrStartDate}"/>
-                <DatePicker Grid.Column="5" SelectedDate="{Binding StartDate}"/>
-                <TextBlock Grid.Column="6" Classes="form_label" Text="{Binding StrDeadline}"/>
-                <DatePicker Grid.Column="7" SelectedDate="{Binding Deadline}"/>
-                <Button Grid.Column="8" Classes="type1" Command="{Binding CalculateCommand}" IsEnabled="{Binding CalculateEnabled}"><TextBlock Text="{Binding StrCalculate}"/></Button>
-            </Grid>
+            <!-- Label+control pairs in a WrapPanel rather than fixed grid columns: the Semi DatePicker
+                 is ~300px wide, so a fixed 160px column let it paint over the next label, and a
+                 narrow window must wrap a pair instead of clipping it. -->
+            <WrapPanel Grid.Row="3" Orientation="Horizontal" Margin="0 5">
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 0 12 4">
+                    <TextBlock Classes="form_label" Margin="3 0 0 0" VerticalAlignment="Center" Text="{Binding StrBudget}"/>
+                    <NumericUpDown Width="150" VerticalAlignment="Center" Value="{Binding Budget}" Minimum="0" Maximum="1000000000000"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 0 12 4">
+                    <TextBlock Classes="form_label" Margin="3 0 0 0" VerticalAlignment="Center" Text="{Binding StrPeopleCapacity}"/>
+                    <NumericUpDown Width="150" VerticalAlignment="Center" Value="{Binding PeopleCapacity}" Minimum="0" Maximum="99999999"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 0 12 4">
+                    <TextBlock Classes="form_label" Margin="3 0 0 0" VerticalAlignment="Center" Text="{Binding StrStartDate}"/>
+                    <DatePicker VerticalAlignment="Center" SelectedDate="{Binding StartDate}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 0 12 4">
+                    <TextBlock Classes="form_label" Margin="3 0 0 0" VerticalAlignment="Center" Text="{Binding StrDeadline}"/>
+                    <DatePicker VerticalAlignment="Center" SelectedDate="{Binding Deadline}"/>
+                </StackPanel>
+                <Button Classes="type1" VerticalAlignment="Center" Margin="0 0 0 4" Command="{Binding CalculateCommand}" IsEnabled="{Binding CalculateEnabled}"><TextBlock Text="{Binding StrCalculate}"/></Button>
+            </WrapPanel>
             <DataGrid Grid.Row="4" ItemsSource="{Binding Candidates}" AutoGenerateColumns="False" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Header="{Binding StrCandidates, Mode=OneTime}" Binding="{Binding IsSelected}" Width="Auto"/>
                     <DataGridTextColumn Header="{Binding StrRisk, Mode=OneTime}" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto,*" Margin="0 8">
-                <TextBlock Classes="form_label" Text="{Binding StrBudgetUsed}"/><TextBlock Grid.Column="1" Text="{Binding BudgetUsedText}"/>
-                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrPeopleUsed}"/><TextBlock Grid.Column="3" Text="{Binding PeopleUsedText}"/>
-                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrExpectedReduction}"/><TextBlock Grid.Column="5" Text="{Binding ExpectedReductionText}"/>
-                <TextBlock Grid.Column="6" Classes="form_label" Text="{Binding StrEscalations}"/><TextBlock Grid.Column="7" Text="{Binding EscalationsText}"/>
+            <Grid Grid.Row="5" ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto,*" ColumnSpacing="6" Margin="0 8">
+                <TextBlock Classes="form_label" Text="{Binding StrBudgetUsed}"/><TextBlock Grid.Column="1" Classes="form_text" Text="{Binding BudgetUsedText}"/>
+                <TextBlock Grid.Column="2" Classes="form_label" Text="{Binding StrPeopleUsed}"/><TextBlock Grid.Column="3" Classes="form_text" Text="{Binding PeopleUsedText}"/>
+                <TextBlock Grid.Column="4" Classes="form_label" Text="{Binding StrExpectedReduction}"/><TextBlock Grid.Column="5" Classes="form_text" Text="{Binding ExpectedReductionText}"/>
+                <TextBlock Grid.Column="6" Classes="form_label" Text="{Binding StrEscalations}"/><TextBlock Grid.Column="7" Classes="form_text" Text="{Binding EscalationsText}"/>
             </Grid>
             <DataGrid Grid.Row="6" ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>

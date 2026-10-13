@@ -1,6 +1,6 @@
 # Testes de UI do cliente desktop (Avalonia headless)
 
-> Status: **Especificação — implementação pendente (T319)** · Track: Track 1 — Modern Desktop
+> Status: **Implementada (T319, 2026-10-13)** — ver as emendas abaixo · Track: Track 1 — Modern Desktop
 > Experience · Roadmap: [ROADMAP.md → M60](../../ROADMAP.md#track-1--modern-desktop-experience-uiux-compliance) · S54
 >
 > Revisores: pendentes · Mesclada em: pendente
@@ -12,7 +12,15 @@
 
 | Data | O que mudou | Motivo |
 |---|---|---|
-| — | — | — |
+| 2026-10-13 | §3.2 trava 1: o `.csproj` declara também `<IsTestingPlatformApplication>false</IsTestingPlatformApplication>`, além de `IsTestProject=false`. | Verificado na T319: o modo MTP do `dotnet test` do SDK .NET 10 seleciona projetos por `IsTestingPlatformApplication` (que o xunit.v3 liga) e executou o projeto com `IsTestProject=false`. Desligada, o projeto some do `dotnet test` (A2) e o executável continua autoexecutável: o xunit.v3 gera o próprio ponto de entrada. |
+| 2026-10-13 | §3.2 trava 2: `[UiFact]`/`[UiTheory]` derivam de `FactAttribute`/`TheoryAttribute` do xUnit e declaram o descobridor público do Avalonia (`[XunitTestCaseDiscoverer(typeof(AvaloniaFactDiscoverer))]`, idem para teoria), em vez de derivar de `AvaloniaFactAttribute`. | `AvaloniaFactAttribute` e `AvaloniaTheoryAttribute` são `sealed` no 12.x. O que torna um teste "Avalonia" é o descobridor que o atributo nomeia, então o comportamento é o mesmo. |
+| 2026-10-13 | §2.3/§4: o projeto fixa `xunit.v3` **3.2.2** por `VersionOverride` (o restante da solução segue no 4.0.1 central). | Todo Avalonia.Headless.XUnit lançado até 12.1.4 é compilado contra xunit.v3 3.2.2 e é binariamente incompatível com o 4.x: na descoberta, `MissingMethodException` em `TestIntrospectionHelper.GetTestCaseDetails`. `CentralPackageManagementTest` admite `VersionOverride` justificado. Seguro porque o projeto nunca roda junto dos outros (trava 1). Voltar à versão central quando sair um headless para o xunit.v3 4. |
+| 2026-10-13 | §4 App de teste: `TestApp` **deriva do próprio `GUIClient.App`** e suprime só `OnFrameworkInitializationCompleted`; renderiza com **Skia** (`UseSkia()` + `UseHeadlessDrawing = false`). | Derivar carrega o `App.axaml` real (Semi, temas de DataGrid/TreeDataGrid, ícones, `Tokens`, `DarkStyles`/`WindowStyles`/`ComponentStyles`, `ViewLocator`) e as strings do tema, sem cópia que possa divergir; o método suprimido abre janelas, a bandeja e, em Debug, o listener MCP do DevTools numa porta TCP. Skia porque os gráficos LiveCharts do dashboard exigem SkiaSharp: com o desenho stub o loop de renderização lançava exceção a cada quadro e nenhum clique simulado atingia controle algum. Continua sem display, Xvfb ou GPU. |
+| 2026-10-13 | §4 Isolamento: `PerTest`, com a preparação por teste (cultura, contêiner de dublês, coletor de erros) em `TestApp.Initialize`. | O Avalonia chama `BuildAvaloniaApp` uma vez por assembly e recria só a `Application` a cada teste; preparar no builder deixava erros e dublês de um teste vazarem para o seguinte. |
+| 2026-10-13 | §4 Erros de binding: toda advertência da área `Binding` reprova, **exceto** (a) "Unable to cast X to Y" quando, depois de a view assentar, o elemento já não tem um `X` como data context (a troca pai→filho de `DataContext="{Binding Filho}"` em curso) e (b) "Value is null" (elo nulo no meio do caminho, dado que o servidor vazio não fornece). Erros de nível *Error* de outras áreas (ex.: "Exception in render loop") e exceções que escapam de `ReactiveCommand` também reprovam. | Sem a distinção, a janela principal registrava mais de 600 avisos transitórios e nenhum teste passaria; caminho ou propriedade errados ("Could not find a matching property accessor") e conversão falha ("Could not convert") continuam reprovando — A6 verificado. |
+| 2026-10-13 | §4: defeitos de produto achados pela suíte e não corrigidos na T319 (que não altera código de produção) são tolerados **por nome** em `Infrastructure/KnownDefects.cs`; a tolerância reprova assim que o defeito deixa de ocorrer. | O primeiro uso achou três (ver a nota da T319 no ROADMAP), corrigidos no mesmo dia por T324–T326; a lista está vazia. A alternativa — apagar as asserções — é proibida por `AI_TESTING_INSTRUCTIONS.md`. |
+| 2026-10-13 | §8 A1: `Compile` passa a depender de `CompileUiTests` (só compila; não executa). | `Compile` só compilava os projetos de produção; sem isso, A1 e E3 não valiam para `./build.sh Compile`. |
+| 2026-10-13 | §8 A3: os dois testes de varredura de A4 são `[Fact]` puros ("sem a trava") e rodam mesmo sem a variável; **todos os testes de UI** pulam com a mensagem da §3.2. `TestUi` roda com `-failSkips`. | A4 exige a varredura sem a trava; `-failSkips` impede que um gate que deixou de abrir passe vazio. |
 
 *Uma especificação mesclada muda por emenda datada aqui, com o motivo. Um desvio descoberto na
 implementação volta para cá — não fica anotado apenas na mensagem de commit.*

@@ -39,6 +39,13 @@
     <!-- The desktop mirror of the server's Admin role claim (the admin flag), which the Track 9 access rules and the
          device approval screen gate on. Pure: AuthenticatedUserInfo in, bool out. -->
     <Compile Include="..\GUIClient\Tools\AdminRoleClaim.cs" LinkBase="Tools" />
+    <!-- The decision behind HasPermissionConverter, the findings toolbar's write gate (T326): the mirror of what
+         [PermissionAuthorize] admits, failing closed on anything it does not recognise. Pure: AuthenticatedUserInfo
+         or a permission list in, bool out. -->
+    <Compile Include="..\GUIClient\Tools\PermissionGate.cs" LinkBase="Tools" />
+    <!-- The status → icon table behind IntStatusToMaterialIconkindConverter, and which target types it answers
+         (T325). Pure: MaterialIconKind is the Avalonia-free Material.Icons enum referenced above. -->
+    <Compile Include="..\GUIClient\Tools\StatusIconMap.cs" LinkBase="Tools" />
     <!-- Semi.Avalonia STRING_* key → resx key map (DatePicker placeholders, TextBox menu, …). Pure. -->
     <Compile Include="..\GUIClient\Tools\ThemeStrings.cs" LinkBase="Tools" />
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather

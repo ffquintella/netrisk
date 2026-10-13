@@ -1,0 +1,66 @@
+# Headless desktop UI tests — Track 1 milestone M60, task T319, specification S54
+# (docs/testing/desktop-ui-tests.md).
+#
+# RULE E1 (S54 §3): these tests are too expensive for the development loop. They run ONLY
+#   (a) when someone asks for them explicitly — `workflow_dispatch` here, or `./build.sh TestUi` locally;
+#   (b) at release — the push of a `v*` tag, after `./build.sh TestUi` already passed on the release host.
+#
+# Do NOT "fix" a missed regression by adding `pull_request`, a branch `push` or a `schedule` trigger:
+# that breaks E1 and multiplies the cost (the macOS runner bills at a high minute multiplier). A
+# failure after a tag is a release defect (E5): fix it and ship a patch, never loosen the assertion.
+#
+# The tests need no display, Xvfb, GPU or accessibility permission on any of the three systems:
+# Avalonia's headless platform renders off-screen through Skia. No secret is used and the token is
+# read-only.
+name: ui-tests
+
+on:
+  workflow_dispatch:      # explicit request (E2a)
+  push:
+    tags: ['v*']          # release (E2b)
+  # NEVER: push on a branch, pull_request, schedule (E1).
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ui-tests:
+    name: UI tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # The Nuke target sets NETRISK_UI_TESTS=1 for the test process only, builds the project and runs
+      # it with -failSkips, so a gate that silently stopped opening fails instead of passing empty.
+      - name: Run the UI tests
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ./build.sh TestUi --configuration Release
+
+      - name: Run the UI tests (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: build.cmd TestUi --configuration Release
+
+      - name: Upload the test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-tests-${{ matrix.os }}
+          path: output/ui-tests/
+          if-no-files-found: ignore

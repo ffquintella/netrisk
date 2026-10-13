@@ -99,7 +99,13 @@ After running a bump command, you should:
    git add -A
    git commit -m "Bump version to 2.2.0"
    ```
-3. **Tag the release** (optional but recommended):
+3. **Run the desktop UI release gate** (S54 §3 — on the commit you are about to tag; a failure
+   blocks the tag, see [release-engineering.md §9](../docs/packaging/release-engineering.md)):
+   ```bash
+   ./build.sh TestUi
+   ```
+4. **Tag the release** (optional but recommended). The `v*` tag also triggers
+   `.github/workflows/ui-tests.yml` on Linux, Windows and macOS:
    ```bash
    git tag -a v2.2.0 -m "Release version 2.2.0"
    git push origin v2.2.0
@@ -184,6 +190,17 @@ certificate-rotation procedure and sandbox-permission rationale are in
 ./build.sh PushDockerImageBackgroundJobs
 ./build.sh PushDockerImageConsoleClient
 ```
+
+### Desktop UI Test Target (on demand or at release only)
+
+```bash
+# Run the headless Avalonia UI tests (src/GUIClient.UiTests, S54). Sets NETRISK_UI_TESTS=1 for the
+# test process only. Never a dependency of another target: run it when asked, or before tagging.
+./build.sh TestUi
+```
+
+`Compile` builds the UI test project (`CompileUiTests`) without running it, so a view-model rename
+breaks the build; only `TestUi` executes the tests. Reports: `output/ui-tests/`.
 
 ### Utility Targets
 

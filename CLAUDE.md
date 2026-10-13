@@ -125,6 +125,13 @@ dotnet user-secrets set "Server:Url" "https://127.0.0.1:5443"   # GUIClient
 
 Frameworks: **xUnit v3** (`[Fact]`/`[Theory]`) + **NSubstitute** for mocks. Unit test projects: `API.Tests`, `ServerServices.Tests`, `ClientServices.Tests`, `Tools.Tests`, `GUIClient.Tests`, `SharedServices.Tests`, `BackgroundJobs.Tests`, `ConsoleClient.Tests`, `WebSite.Tests`, `Packaging.Tests`, `RiskPortal.Tests`. Integration: `DAL.IntegrationTests` (Testcontainers MariaDB — see below).
 
+**`GUIClient.UiTests` runs only on demand or at release (S54).** Headless Avalonia UI tests are
+too expensive for the development loop. Never run them as routine verification: not in
+`dotnet test`, not in a `test-runner` brief, not to "double-check" a GUI change. Run them only
+when the user explicitly asks, or as the release gate (`./build.sh TestUi` before tagging). When
+you change a view or view-model a UI test covers, update the test so it compiles, do not run it,
+and say "UI tests not run (S54 §3)" in your summary.
+
 `API.Tests` registration is convention-based: `API.Tests/DI/ServiceRegistration.cs` auto-registers every static `Create()` factory in namespace `API.Tests.Mock` against the interface it returns, and every concrete controller in the API assembly. Covering a new controller therefore needs no edit to any shared file — write `APITests/<Name>ControllerTest.cs`, inherit `BaseControllerTest`, and pass per-test doubles through `ResolveController<T>(configure)`, whose registrations are applied last and so win. Controllers that read the database directly get `API.Tests/Mock/InMemoryDalService`; give each test class its own database name. Note that EF `Include` on a **required** navigation inner-joins, so seed the principal rows (`User`, `Entity`, `Role`, …) or your seeded rows read back as an empty list.
 
 `Packaging.Tests` covers `build/NetRisk.Packaging` — the pure packaging logic the Nuke build uses (installer identifiers, per-format version normalisation, signing-material resolution, template rendering, secret redaction). It also **renders the real installer manifests from `build/installers/` and asserts on them**, because MSI/MSIX need Windows tooling and Flatpak/Snap need Linux tooling, so those artifacts cannot be built on a Mac. A template edit that breaks a manifest fails here rather than on a packaging runner.
