@@ -212,6 +212,15 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
+                                <!-- Stage 9.9 (S50 R10): the third-line marker restricts rather than grants, so it is
+                                     not in the list above, where "select all" or a range would sweep it up. It is
+                                     ticked here, on purpose, or not at all (Track9ThirdLineMarker). -->
+                                <CheckBox Margin="0 6 0 0" Content="{Binding StrThirdLineMarker}"
+                                          IsChecked="{Binding UserGrantsThirdLine}"
+                                          IsVisible="{Binding ThirdLineMarkerAvailable}"/>
+                                <TextBlock Classes="hint" Width="250" HorizontalAlignment="Left"
+                                           Text="{Binding StrThirdLineMarkerHint}"
+                                           IsVisible="{Binding ThirdLineMarkerAvailable}"/>
                                 <StackPanel Orientation="Vertical">
                                     <Button Name="BtSelectAll" Classes="dialog2" Margin="10 3 10 3"
                                             Command="{Binding BtSelectAllClicked}">
@@ -271,17 +280,23 @@
                     </Grid>
                     <GridSplitter Grid.Column="1" ResizeDirection="Columns"/>
                     <!-- RIGHT SIDE AREA -->
-                    <Grid Grid.Column="2" RowDefinitions="*,Auto" 
-                          IsVisible="{Binding !!SelectedProfile}" 
+                    <Grid Grid.Column="2" RowDefinitions="*,Auto,Auto"
+                          IsVisible="{Binding !!SelectedProfile}"
                           Margin="3 0 0 0 ">
 
-                        <multiSelect:MultiSelect Name="MSRoles" Grid.Row="0" Title="{Binding StrRolePermissions}" 
+                        <multiSelect:MultiSelect Name="MSRoles" Grid.Row="0" Title="{Binding StrRolePermissions}"
                                                  StrAvailable="{Binding StrAvailable}"
                                                  StrSelected="{Binding StrSelected}"
                                                  AvailableItems="{Binding AvailableProfilePermissions, Mode=TwoWay}"
                                                  SelectedItems="{Binding SelectedProfilePermissions, Mode=TwoWay}"
                                                  />
-                        <Button Name="BtSaveProfile" Classes="operation" Grid.Row="1"  Margin="15 25 10 0"
+                        <!-- Stage 9.9 (S50 R10): not a transfer-list entry, where moving several at once would
+                             carry it along with the rest; granted to the role here, on purpose (Track9ThirdLineMarker). -->
+                        <StackPanel Grid.Row="1" Margin="15 10 10 0" IsVisible="{Binding ThirdLineMarkerAvailable}">
+                            <CheckBox Content="{Binding StrThirdLineMarker}" IsChecked="{Binding ProfileGrantsThirdLine}"/>
+                            <TextBlock Classes="hint" Text="{Binding StrThirdLineMarkerHint}"/>
+                        </StackPanel>
+                        <Button Name="BtSaveProfile" Classes="operation" Grid.Row="2"  Margin="15 25 10 0"
                                 Command="{Binding BtSaveProfileClicked}">
                             <StackPanel Orientation="Horizontal">
                                 <material:MaterialIcon Kind="ContentSaveAll" Margin="0 0 5 0"/>                             

@@ -130,8 +130,13 @@ public class DpiaViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        private set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            this.RaisePropertyChanged(nameof(HasError));
+        }
     }
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public ReactiveCommand<RxVoid, RxVoid> ReloadCommand { get; }
     public ReactiveCommand<RxVoid, RxVoid> NewCommand { get; }

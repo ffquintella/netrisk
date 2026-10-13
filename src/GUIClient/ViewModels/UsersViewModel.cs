@@ -1,4 +1,5 @@
 ﻿using GUIClient.Tools;
+using GUIClient.Tools.Track9;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -56,7 +57,9 @@ public class UsersViewModel: ViewModelBase
     public string StrRolePermissions { get; }
     public string StrChangePassword { get; } = Localizer["ChangePassword"];
     public string StrAddUpdateFaceId { get; } = Localizer["AddUpdateFaceId"];
-    
+    public string StrThirdLineMarker { get; } = Localizer["ThirdLineMarkerGrant"];
+    public string StrThirdLineMarkerHint { get; } = Localizer["ThirdLineMarkerGrantHint"];
+
     
     #endregion
 
@@ -100,6 +103,9 @@ public class UsersViewModel: ViewModelBase
             if (value != null)
             {
                 var selectedPermissionsKeys = _rolesService.GetRolePermissions(value.Value);
+
+                // Permissions holds no third-line marker (Initialize), so neither transfer list does; its own box shows it.
+                ProfileGrantsThirdLine = Track9ThirdLineMarker.IsGranted(selectedPermissionsKeys);
 
                 if (Permissions != null)
                 {
@@ -242,10 +248,30 @@ public class UsersViewModel: ViewModelBase
     }
 
     private ObservableCollection<Permission>? _permissions;
+    /// <summary>Every permission but the third-line marker: what both editors list, and so what a bulk selection reaches.</summary>
     public ObservableCollection<Permission>? Permissions
     {
         get => _permissions;
         set => this.RaiseAndSetIfChanged(ref _permissions, value);
+    }
+
+    // Stage 9.9 (S50 R10): the marker restricts rather than grants, so it is kept out of the lists, where "select all",
+    // a range or a multi-item move would sweep it up, and is granted only through its own check box (Track9ThirdLineMarker).
+    private Permission? _thirdLineMarker;
+    public bool ThirdLineMarkerAvailable => _thirdLineMarker is not null;
+
+    private bool _userGrantsThirdLine;
+    public bool UserGrantsThirdLine
+    {
+        get => _userGrantsThirdLine;
+        set => this.RaiseAndSetIfChanged(ref _userGrantsThirdLine, value);
+    }
+
+    private bool _profileGrantsThirdLine;
+    public bool ProfileGrantsThirdLine
+    {
+        get => _profileGrantsThirdLine;
+        set => this.RaiseAndSetIfChanged(ref _profileGrantsThirdLine, value);
     }
 
     private string? _name;
@@ -386,7 +412,8 @@ public class UsersViewModel: ViewModelBase
         BtSelectAllClicked = ReactiveCommand.Create(() =>
         {
             // Stage 9.9 (S50 R10): "select all" never ticks the third-line marker. It restricts rather than grants, and
-            // swept up with everything else it would make the user read-only; it is granted through the role.
+            // swept up with everything else it would make the user read-only. The list no longer holds it (Initialize);
+            // the filter stays as a second guard should it ever be listed again.
             var source = ((IEnumerable<Permission>?)PermissionSelection.Source)?.ToList() ?? [];
             for (var i = 0; i < source.Count; i++)
                 if (Model.DecisionCycle.ThirdLineAssurance.IsBulkGrantable(source[i].Key))
@@ -503,15 +530,19 @@ public class UsersViewModel: ViewModelBase
                         ChangePasswordEnabled = true;
                     else
                         ChangePasswordEnabled = false;
+                    var userPermissions = _usersService.GetUserPermissions(userId);
                     if (PermissionSelection.Source != null)
                     {
-                        PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
-                        foreach (var permission in _usersService.GetUserPermissions(userId))
+                        var listed = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList();
+                        PermissionSelection.DeselectRange(0, listed.Count);
+                        foreach (var permission in userPermissions)
                         {
-                            var index = ((IEnumerable<Permission>)PermissionSelection.Source!).ToList().TakeWhile(t => t.Id != permission.Id).Count();
-                            PermissionSelection.Select(index);
+                            // The third-line marker is not listed (Initialize): its box below carries it.
+                            var index = listed.FindIndex(t => t.Id == permission.Id);
+                            if (index >= 0) PermissionSelection.Select(index);
                         }
                     }
+                    UserGrantsThirdLine = Track9ThirdLineMarker.IsGranted(userPermissions.Select(p => p.Key));
 
                 }
                 else
@@ -538,6 +569,7 @@ public class UsersViewModel: ViewModelBase
                     SelectedRole = null;
                     SelectedAuthenticationMethod = null;
                     PermissionSelection.DeselectRange(0, ((IEnumerable<Permission>)PermissionSelection.Source!).Count());
+                    UserGrantsThirdLine = false;
 
                 }
 
@@ -717,7 +749,8 @@ public class UsersViewModel: ViewModelBase
             var selectedPermissionKeys = Permissions?.Where(p => selectedPermissionIds.Contains(p.Id)).Select(p => p.Key).ToList();
             if(selectedPermissionKeys == null) return;
             
-            _rolesService.UpdateRolePermissions(SelectedProfile.Value, selectedPermissionKeys); 
+            _rolesService.UpdateRolePermissions(SelectedProfile.Value,
+                Track9ThirdLineMarker.Compose(selectedPermissionKeys, _thirdLineMarker, ProfileGrantsThirdLine));
             
             Toasts.Success(Localizer["ProfileSavedMSG"]);
             
@@ -972,9 +1005,11 @@ public class UsersViewModel: ViewModelBase
         try
         {
             if(_permissionSelection.Source != null )
-                _usersService.SaveUserPermissions(User.Id, _permissionSelection.SelectedItems.ToList());
-            else 
-                _usersService.SaveUserPermissions(User.Id, new List<Permission?>());
+                _usersService.SaveUserPermissions(User.Id,
+                    Track9ThirdLineMarker.Compose(_permissionSelection.SelectedItems, _thirdLineMarker, UserGrantsThirdLine));
+            else
+                _usersService.SaveUserPermissions(User.Id,
+                    Track9ThirdLineMarker.Compose(new List<Permission?>(), _thirdLineMarker, UserGrantsThirdLine));
 
         
             SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
@@ -1013,7 +1048,10 @@ public class UsersViewModel: ViewModelBase
         Users = new ObservableCollection<UserListing>(await _usersService.GetAllAsync());
         AuthenticationMethods = AuthenticationService.GetAuthenticationMethods();
         Roles = await _rolesService.GetAllRolesAsync();
-        Permissions = new ObservableCollection<Permission>(await _usersService.GetAllPermissionsAsync());
+        var allPermissions = await _usersService.GetAllPermissionsAsync();
+        _thirdLineMarker = Track9ThirdLineMarker.Find(allPermissions);
+        this.RaisePropertyChanged(nameof(ThirdLineMarkerAvailable));
+        Permissions = new ObservableCollection<Permission>(Track9ThirdLineMarker.Selectable(allPermissions));
         Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
         Profiles = new ObservableCollection<Role>(await _rolesService.GetAllRolesAsync());
 

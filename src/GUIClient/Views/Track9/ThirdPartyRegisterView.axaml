@@ -11,7 +11,7 @@
       <Button Grid.Column="4" Classes="dialog2" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding DeleteCommand}"><TextBlock Text="{Binding StrDelete}"/></Button>
     </Grid>
     <StackPanel Grid.Row="1">
-      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
       <TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/>
       <TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/>
     </StackPanel>

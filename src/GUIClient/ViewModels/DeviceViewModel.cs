@@ -125,7 +125,8 @@ public class DeviceViewModel: ViewModelBase
             if(AuthenticationService.AuthenticatedUserInfo == null)
                 return;
             
-            if(AuthenticationService.AuthenticatedUserInfo!.UserRole != "Administrator")
+            // ClientsController is RequireAdminOnly, which also accepts the Admin role claim the admin flag carries.
+            if(!AdminRoleClaim.InAdminOnlyAudience(AuthenticationService.AuthenticatedUserInfo))
                 return;
             
             Initialize();

@@ -36,6 +36,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\GUIClient\Tools\Track9\*.cs" LinkBase="Tools/Track9" />
+    <!-- The desktop mirror of the server's Admin role claim (the admin flag), which the Track 9 access rules and the
+         device approval screen gate on. Pure: AuthenticatedUserInfo in, bool out. -->
+    <Compile Include="..\GUIClient\Tools\AdminRoleClaim.cs" LinkBase="Tools" />
     <!-- The validation layer only depends on ReactiveUI, so it is compiled in directly rather
          than pulling GUIClient (and all of Avalonia) into a headless test run. -->
     <Compile Include="..\GUIClient\Validation\*.cs" LinkBase="Validation" />

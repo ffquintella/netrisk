@@ -4814,4 +4814,6 @@ Save anyway?</value>
   <data name="Track9License" xml:space="preserve"><value>License</value></data>
   <data name="Track9Purl" xml:space="preserve"><value>Package URL</value></data>
   <data name="Track9SbomDocument" xml:space="preserve"><value>SBOM document</value></data>
+  <data name="ThirdLineMarkerGrant" xml:space="preserve"><value>Third line (internal audit): read-only</value></data>
+  <data name="ThirdLineMarkerGrantHint" xml:space="preserve"><value>A restriction, not a permission: whoever holds it can only read, administrators included. Select all never ticks it.</value></data>
 </root>

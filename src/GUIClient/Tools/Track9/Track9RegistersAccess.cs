@@ -24,7 +24,9 @@ public static class Track9RegistersAccess
         !IsThirdLine(user) &&
         (user.UserRole == "Administrator" || user.UserPermissions?.Contains("riskmanagement") == true);
 
+    // [PermissionAuthorize(permission)]: the Admin role claim (the admin flag, whatever the role is named) or the
+    // permission — and never the third line, whose read-only requirement outranks both.
     private static bool CanManage(AuthenticatedUserInfo? user, string permission) => user is not null &&
         !IsThirdLine(user) &&
-        (user.UserRole == "Admin" || user.UserPermissions?.Contains(permission) == true);
+        (AdminRoleClaim.IsHeldBy(user) || user.UserPermissions?.Contains(permission) == true);
 }

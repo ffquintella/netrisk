@@ -4,7 +4,7 @@
              x:DataType="vm:DataCatalogueRecordBlockViewModel">
   <StackPanel Margin="5" Spacing="6">
     <TextBlock Classes="header2" Text="{Binding StrTitle}"/>
-    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
     <TextBlock Classes="header_detail" Text="{Binding StrNotCatalogued}" IsVisible="{Binding IsNotCatalogued}"/>
     <StackPanel IsVisible="{Binding HasRecord}" Spacing="6">
       <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">

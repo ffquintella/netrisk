@@ -35,12 +35,27 @@ public class Track9RiskPresentationTest
 
         Assert.False(Track9RiskPresentation.CanReview(isAdminFlagOnly));
         Assert.True(Track9RiskPresentation.CanReview(reviewer));
-        Assert.False(Track9RiskPresentation.CanAdministerAppetite(isAdminFlagOnly));
+        // RiskAppetitesController is RequireAdminOnly, which accepts the Admin role claim — and the server
+        // issues that claim for the admin flag whatever the role is named. This assertion read False before
+        // the fix, encoding the same desktop defect as the Track 9 registers.
+        Assert.True(Track9RiskPresentation.CanAdministerAppetite(isAdminFlagOnly));
+        Assert.True(Track9RiskPresentation.CanReadAppetite(isAdminFlagOnly));
         Assert.True(Track9RiskPresentation.CanAdministerAppetite(adminRole));
         Assert.False(Track9RiskPresentation.CanReadRisks(isAdminFlagOnly));
         Assert.True(Track9RiskPresentation.CanReadAppetite(adminRole));
+        Assert.False(Track9RiskPresentation.CanReadAppetite(reviewer));
         Assert.True(Track9RiskPresentation.CanReadMitigations(new AuthenticatedUserInfo
             { UserRole = "Analyst", UserPermissions = ["plan_mitigations"] }));
+    }
+
+    [Fact]
+    public void AdminFlagNeverAdministersTheAppetiteForTheThirdLine()
+    {
+        var auditor = new AuthenticatedUserInfo
+            { IsAdmin = true, UserRole = "Administrator", UserPermissions = [ThirdLineAssurance.PermissionKey] };
+
+        Assert.False(Track9RiskPresentation.CanAdministerAppetite(auditor));
+        Assert.True(Track9RiskPresentation.CanReadAppetite(auditor));
     }
 
     [Fact]

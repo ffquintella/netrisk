@@ -24,6 +24,30 @@ public class Track9WorkspaceAccessTest
         Assert.Equal(expected, Track9WorkspaceAccess.CanReadRisk(user));
         Assert.True(Track9WorkspaceAccess.CanReadRegister(user, "data_catalogue_manage"));
     }
+    /// <summary>
+    /// Regression: RequireThirdPartyRead, RequireDataCatalogueRead and RequireAiGovernanceRead accept the
+    /// <c>Admin</c> role claim, which the server issues for the admin flag whatever the role is named. The
+    /// risk register itself (RequireRiskmanagement) does not, and the admin flag must not open it.
+    /// </summary>
+    [Theory]
+    [InlineData("Analyst")]
+    [InlineData(null)]
+    public void AdminFlagReadsEveryRegisterButNotTheRiskRegister(string? role)
+    {
+        var user = new AuthenticatedUserInfo { UserRole = role, IsAdmin = true, UserPermissions = [] };
+        Assert.True(Track9WorkspaceAccess.CanOpen(user));
+        Assert.True(Track9WorkspaceAccess.CanReadRegister(user, "third_party_manage"));
+        Assert.True(Track9WorkspaceAccess.CanReadRegister(user, "data_catalogue_manage"));
+        Assert.True(Track9WorkspaceAccess.CanReadRegister(user, "ai_governance_manage"));
+        Assert.False(Track9WorkspaceAccess.CanReadRisk(user));
+    }
+    [Fact]
+    public void WithoutAnyAudienceTheWorkspaceStaysClosed()
+    {
+        var user = new AuthenticatedUserInfo { UserRole = "Analyst", IsAdmin = false, UserPermissions = ["hosts"] };
+        Assert.False(Track9WorkspaceAccess.CanOpen(user));
+        Assert.False(Track9WorkspaceAccess.CanReadRegister(user, "third_party_manage"));
+    }
     [Fact]
     public void RiskReadersIncludingThirdLineCanReadEveryGovernanceRegister()
     {

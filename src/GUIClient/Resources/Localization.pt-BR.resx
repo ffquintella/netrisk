@@ -4877,4 +4877,6 @@ Salvar mesmo assim?</value>
   <data name="Track9License" xml:space="preserve"><value>Licença</value></data>
   <data name="Track9Purl" xml:space="preserve"><value>URL do pacote</value></data>
   <data name="Track9SbomDocument" xml:space="preserve"><value>Documento SBOM</value></data>
+  <data name="ThirdLineMarkerGrant" xml:space="preserve"><value>Terceira linha (auditoria interna): somente leitura</value></data>
+  <data name="ThirdLineMarkerGrantHint" xml:space="preserve"><value>Uma restrição, não uma permissão: quem a recebe só pode ler, inclusive administradores. Selecionar todos nunca a marca.</value></data>
 </root>

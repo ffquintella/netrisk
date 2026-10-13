@@ -3,7 +3,7 @@
              x:DataType="vm:RiskAiModelsBlockViewModel">
   <StackPanel Margin="5" Spacing="5">
     <TextBlock Classes="header2" Text="{Binding StrTitle}"/>
-    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
     <Grid IsEnabled="{Binding CanEdit}" ColumnDefinitions="280,240,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6">
       <TextBlock Classes="fieldLabel" Text="{Binding StrTitle}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrNotes}"/>
       <ComboBox Grid.Row="1" ItemsSource="{Binding AvailableModels}" SelectedItem="{Binding SelectedAvailableModel}" DisplayMemberBinding="{Binding Name}"/>

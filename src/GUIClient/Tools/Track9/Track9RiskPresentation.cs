@@ -35,10 +35,9 @@ public static class Track9RiskPresentation
          (user.UserPermissions?.Contains("accept_mitigation") ?? false) ||
          (user.UserPermissions?.Contains("plan_mitigations") ?? false));
 
-    public static bool CanReadAppetite(AuthenticatedUserInfo? user) =>
-        user is not null &&
-        (string.Equals(user.UserRole, "Admin", StringComparison.Ordinal) ||
-         string.Equals(user.UserRole, "Administrator", StringComparison.Ordinal));
+    /// <summary><c>RiskAppetitesController</c> is <c>RequireAdminOnly</c>: the <c>Admin</c> role claim (the admin
+    /// flag) or the <c>Administrator</c> role.</summary>
+    public static bool CanReadAppetite(AuthenticatedUserInfo? user) => AdminRoleClaim.InAdminOnlyAudience(user);
 
     public static bool CanReview(AuthenticatedUserInfo? user) =>
         user is not null && !IsThirdLine(user) &&
@@ -53,9 +52,7 @@ public static class Track9RiskPresentation
         user is not null && !IsThirdLine(user) && (user.UserPermissions?.Contains("submit_risks") ?? false);
 
     public static bool CanAdministerAppetite(AuthenticatedUserInfo? user) =>
-        user is not null && !IsThirdLine(user) &&
-        (string.Equals(user.UserRole, "Admin", StringComparison.Ordinal) ||
-         string.Equals(user.UserRole, "Administrator", StringComparison.Ordinal));
+        user is not null && !IsThirdLine(user) && AdminRoleClaim.InAdminOnlyAudience(user);
 
     public static string? ReasonError(string? reason, int maxLength, string requiredKey, string tooLongKey)
     {

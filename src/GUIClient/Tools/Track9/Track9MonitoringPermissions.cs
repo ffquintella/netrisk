@@ -17,14 +17,16 @@ public static class Track9MonitoringPermissions
         user is not null
         && (Role(user, "Administrator") || Has(user, "riskmanagement"));
 
+    /// <summary><c>RequireAdminOnly</c>: the <c>Admin</c> role claim (the admin flag) or the <c>Administrator</c> role.</summary>
     public static bool CanDefineKriOrCommittee(AuthenticatedUserInfo? user) =>
-        Writable(user) && (Role(user!, "Admin") || Role(user!, "Administrator"));
+        Writable(user) && AdminRoleClaim.InAdminOnlyAudience(user);
 
     public static bool CanSubmitRiskData(AuthenticatedUserInfo? user) =>
         Writable(user) && Has(user!, "submit_risks");
 
+    /// <summary><c>RequireCloseRisk</c>: the <c>Admin</c> role claim (the admin flag) or <c>close_risks</c>.</summary>
     public static bool CanCloseRisk(AuthenticatedUserInfo? user) =>
-        Writable(user) && (Role(user!, "Admin") || Has(user!, "close_risks"));
+        Writable(user) && (AdminRoleClaim.IsHeldBy(user) || Has(user!, "close_risks"));
 
     public static bool CanReviewRisk(AuthenticatedUserInfo? user) =>
         Writable(user) && Array.Exists(ReviewPermissions, permission => Has(user!, permission));

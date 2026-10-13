@@ -89,8 +89,13 @@ public class LegalRequirementsViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        private set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            this.RaisePropertyChanged(nameof(HasError));
+        }
     }
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
     public bool IsEmpty => _loaded && Items.Count == 0;
 
     public ReactiveCommand<RxVoid, RxVoid> ReloadCommand { get; }
@@ -278,8 +283,13 @@ public class RiskRequirementsBlockViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        private set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            this.RaisePropertyChanged(nameof(HasError));
+        }
     }
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     private RiskComplianceDto? _compliance;
     public RiskComplianceDto? Compliance

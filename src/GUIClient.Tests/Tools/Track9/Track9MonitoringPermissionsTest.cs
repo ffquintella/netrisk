@@ -32,6 +32,40 @@ public class Track9MonitoringPermissionsTest
         Assert.True(Track9MonitoringPermissions.CanReviewRisk(User("Reviewer", false, "review_medium")));
     }
 
+    /// <summary>
+    /// Regression: defining a KRI or a committee (RequireAdminOnly) and archiving (RequireCloseRisk) accept the
+    /// <c>Admin</c> role claim, which the server issues for the admin flag whatever the role is named. Reading
+    /// (RequireRiskmanagement) does not, and the admin flag must not satisfy it.
+    /// </summary>
+    [Fact]
+    public void AdminFlagSatisfiesTheAdminClaimPoliciesWhateverTheRoleIsNamed()
+    {
+        var admin = User("Analyst", true);
+
+        Assert.True(Track9MonitoringPermissions.CanDefineKriOrCommittee(admin));
+        Assert.True(Track9MonitoringPermissions.CanCloseRisk(admin));
+        Assert.False(Track9MonitoringPermissions.CanRead(admin));
+        Assert.False(Track9MonitoringPermissions.CanSubmitRiskData(admin));
+        Assert.False(Track9MonitoringPermissions.CanReviewRisk(admin));
+    }
+
+    [Fact]
+    public void AdminFlagNeverOutranksTheThirdLine()
+    {
+        var auditor = User("Analyst", true, ThirdLineAssurance.PermissionKey);
+
+        Assert.False(Track9MonitoringPermissions.CanDefineKriOrCommittee(auditor));
+        Assert.False(Track9MonitoringPermissions.CanCloseRisk(auditor));
+    }
+
+    [Fact]
+    public void CloseRiskIsNotAnAdministratorRolePolicy()
+    {
+        // RequireCloseRisk accepts the Admin claim or close_risks — not the Administrator role.
+        Assert.False(Track9MonitoringPermissions.CanCloseRisk(User("Administrator", false)));
+        Assert.True(Track9MonitoringPermissions.CanCloseRisk(User("Analyst", false, "close_risks")));
+    }
+
     [Fact]
     public void VoteRequiresCurrentCommitteeMembership()
     {

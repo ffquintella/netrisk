@@ -172,8 +172,13 @@ public class DataCatalogueViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        private set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            this.RaisePropertyChanged(nameof(HasError));
+        }
     }
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public ReactiveCommand<RxVoid, RxVoid> ReloadCommand { get; }
     public ReactiveCommand<RxVoid, RxVoid> OpenCommand { get; }
@@ -474,8 +479,13 @@ public class DataCatalogueRecordBlockViewModel : ViewModelBase
     public string? ErrorMessage
     {
         get => _errorMessage;
-        private set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            this.RaisePropertyChanged(nameof(HasError));
+        }
     }
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     private DataRecordDto? _record;
     public DataRecordDto? Record

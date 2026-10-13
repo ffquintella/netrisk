@@ -9,7 +9,7 @@
       <Button Grid.Column="3" Classes="dialog1" Margin="6 0 0 0" Command="{Binding OpenCommand}"><TextBlock Text="{Binding StrOpen}"/></Button>
     </Grid>
     <StackPanel Grid.Row="1">
-      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+      <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
       <TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/>
       <TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/>
     </StackPanel>

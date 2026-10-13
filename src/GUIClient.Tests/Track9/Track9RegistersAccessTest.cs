@@ -32,6 +32,45 @@ public class Track9RegistersAccessTest
         Assert.True(Track9RegistersAccess.CanEditRiskLinks(User("User", "riskmanagement")));
     }
 
+    /// <summary>
+    /// Regression: the admin flag is what makes the server issue the <c>Admin</c> role claim, which
+    /// <c>PermissionAuthorizationHandler</c> admits for every <c>[PermissionAuthorize]</c> — the three register
+    /// writes included. The desktop compared only the role's name with "Admin", so an administrator whose
+    /// role is named anything else saw the registers locked while the API would accept the write.
+    /// </summary>
+    [Theory]
+    [InlineData("Administrator")]
+    [InlineData("Analyst")]
+    [InlineData(null)]
+    public void TestAdminFlagManagesEveryRegisterWhateverTheRoleIsNamed(string? role)
+    {
+        var admin = Admin(role);
+
+        Assert.True(Track9RegistersAccess.CanManageThirdParties(admin));
+        Assert.True(Track9RegistersAccess.CanManageDataCatalogue(admin));
+        Assert.True(Track9RegistersAccess.CanManageAiGovernance(admin));
+        Assert.True(Track9RegistersAccess.CanEditLegalRequirement(admin, thirdPartyHidden: false));
+    }
+
+    [Fact]
+    public void TestAdminFlagNeverOutranksTheThirdLine()
+    {
+        var auditor = Admin("Administrator", ThirdLineAssurance.PermissionKey);
+
+        Assert.False(Track9RegistersAccess.CanManageThirdParties(auditor));
+        Assert.False(Track9RegistersAccess.CanManageDataCatalogue(auditor));
+        Assert.False(Track9RegistersAccess.CanManageAiGovernance(auditor));
+        Assert.False(Track9RegistersAccess.CanEditRiskLinks(auditor));
+    }
+
+    /// <summary>Risk links sit under <c>RequireRiskmanagement</c>, which does not accept the <c>Admin</c> claim.</summary>
+    [Fact]
+    public void TestAdminFlagAloneDoesNotEditRiskLinks()
+    {
+        Assert.False(Track9RegistersAccess.CanEditRiskLinks(Admin("Analyst")));
+        Assert.False(Track9RegistersAccess.CanEditRiskLinks(User("Admin")));
+    }
+
     [Fact]
     public void TestHiddenSupplierRequirementCannotBeEditedWithoutItsVisibleAssociation()
     {
@@ -44,6 +83,13 @@ public class Track9RegistersAccessTest
     private static AuthenticatedUserInfo User(string role, params string[] permissions) => new()
     {
         UserRole = role,
+        UserPermissions = new List<string>(permissions)
+    };
+
+    private static AuthenticatedUserInfo Admin(string? role, params string[] permissions) => new()
+    {
+        UserRole = role,
+        IsAdmin = true,
         UserPermissions = new List<string>(permissions)
     };
 }

@@ -3,7 +3,7 @@
              x:DataType="vm:RiskRequirementsBlockViewModel">
   <StackPanel Margin="5" Spacing="5">
     <TextBlock Classes="header2" Text="{Binding StrTitle}"/>
-    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
     <Grid IsEnabled="{Binding CanEdit}" ColumnDefinitions="280,240,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="6"><TextBlock Classes="fieldLabel" Text="{Binding StrRequirements}"/><TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrNotes}"/><ComboBox Grid.Row="1" ItemsSource="{Binding AvailableRequirements}" SelectedItem="{Binding SelectedAvailableRequirement}" DisplayMemberBinding="{Binding Title}"/><TextBox Grid.Row="1" Grid.Column="1" Text="{Binding LinkNote}" MaxLength="500"/><Button Grid.Row="1" Grid.Column="2" Classes="dialog1" Command="{Binding LinkCommand}"><TextBlock Text="{Binding StrAdd}"/></Button><Button Grid.Row="1" Grid.Column="3" Classes="dialog2" Command="{Binding UnlinkCommand}"><TextBlock Text="{Binding StrRemove}"/></Button></Grid>
     <DataGrid ItemsSource="{Binding RequirementRows}" SelectedItem="{Binding SelectedLinkedRequirement}" IsReadOnly="True" MinHeight="100"><DataGrid.Columns><DataGridTextColumn Header="{Binding StrCode}" Binding="{Binding Code}"/><DataGridTextColumn Header="{Binding StrTitleColumn}" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="{Binding StrKind}" Binding="{Binding KindText}"/><DataGridTextColumn Header="{Binding StrNotes}" Binding="{Binding Note}" Width="*"/></DataGrid.Columns></DataGrid>
     <TextBlock Classes="header3" Text="{Binding StrCatalogueEvidence}"/>

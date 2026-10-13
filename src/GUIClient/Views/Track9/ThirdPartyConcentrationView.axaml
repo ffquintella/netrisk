@@ -3,7 +3,7 @@
              x:DataType="vm:ThirdPartyConcentrationViewModel">
   <Grid RowDefinitions="Auto,Auto,*" Margin="10">
     <Grid ColumnDefinitions="*,Auto"><TextBlock Classes="header" Text="{Binding StrTitle}"/><Button Grid.Column="1" Classes="operation" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button></Grid>
-    <TextBlock Grid.Row="1" Classes="warning" Text="{Binding ErrorMessage}" TextWrapping="Wrap"/>
+    <TextBlock Grid.Row="1" Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
     <StackPanel Grid.Row="2" Margin="0 8 0 0">
       <TextBlock Classes="notice" Text="{Binding StrRestricted}" IsVisible="{Binding Report.IsScopeRestricted}"/>
       <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">

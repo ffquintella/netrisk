@@ -29,6 +29,10 @@ flags, appetite checks, scope, segregation of duties, committee voting and state
 server operations. The desktop does not implement another decision engine.
 
 The third-line assurance permission takes precedence over write permissions in the new screens.
+An administrator — the account's admin flag, which the server issues as the `Admin` role claim
+whatever the role is named — passes every gate whose API policy accepts that claim
+(`GUIClient/Tools/AdminRoleClaim.cs`); the `RequireRiskmanagement` screens (the risk register and
+risk links) accept only the `Administrator` role or `riskmanagement`, not the flag (T317).
 A read-only user can inspect the records but cannot submit changes. A server refusal is reported;
 a failed read must not turn into an apparently successful empty evaluation. Unavailable estimates,
 stale KRIs and unevaluated AI metrics remain explicit. Changing a selection invalidates outstanding

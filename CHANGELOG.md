@@ -12,6 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Let a desktop administrator whose role is not named "Admin" manage the third-party, data catalogue and AI registers, define KRIs and committees, archive risks and edit appetite tail tolerances, as the API already allowed, while the third line stays read-only, and hide the Track 9 error bar when there is no error (T317)
+- Stop a bulk selection in the desktop user or role permission editor from granting the read-only third-line marker, which is now ticked only through its own check box (T318, S50)
+
 ## [2.38.2] - 2026-10-09
 
 ### Fixed

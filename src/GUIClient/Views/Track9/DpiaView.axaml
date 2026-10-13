@@ -8,7 +8,7 @@
       <Button Grid.Column="2" Classes="operation" Margin="6 0 0 0" Command="{Binding ReloadCommand}"><TextBlock Text="{Binding StrRefresh}"/></Button>
       <Button Grid.Column="3" Classes="dialog1" Margin="6 0 0 0" IsEnabled="{Binding CanManage}" Command="{Binding NewCommand}"><TextBlock Text="{Binding StrNew}"/></Button>
     </Grid>
-    <StackPanel Grid.Row="1"><TextBlock Classes="warning" Text="{Binding ErrorMessage}"/><TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/><TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/></StackPanel>
+    <StackPanel Grid.Row="1"><TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/><TextBlock Classes="header_detail" Text="{Binding WriteDisabledReason}" IsVisible="{Binding !CanManage}"/><TextBlock Classes="header_detail" Text="{Binding StrNoData}" IsVisible="{Binding IsEmpty}"/></StackPanel>
     <Grid Grid.Row="2" ColumnDefinitions="350,*" Margin="0 8 0 0">
       <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" IsReadOnly="True">
         <DataGrid.Columns><DataGridTextColumn Header="{Binding StrTitleColumn}" Binding="{Binding Title}" Width="*"/><DataGridTextColumn Header="{Binding StrStatus}" Binding="{Binding StatusText}"/><DataGridTextColumn Header="{Binding StrResidualRisk}" Binding="{Binding ResidualRiskText}"/><DataGridCheckBoxColumn Header="{Binding StrReviewOverdue}" Binding="{Binding ReviewOverdue}"/></DataGrid.Columns>
