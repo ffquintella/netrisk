@@ -16,6 +16,10 @@ follow [SemVer](http://semver.org/).
 
 - Pin the Nuke build project's MSBuild packages to 18.9.6, the newest release built for .NET 10, and compile the build projects as C# 14, removing the NU1701 and "doesn't support net10.0" warnings that the .NET 11-only 18.11 packages raised
 
+### Removed
+
+- Stop building and offering the macOS Intel (osx-x64) desktop client, leaving Apple Silicon as the only macOS build; the server now answers an Intel Mac's upgrade requests with a 400 saying the platform is no longer supported, and the client says no upgrade is available instead of starting one (T341)
+
 ## [2.41.0] - 2026-10-14
 
 ### Changed

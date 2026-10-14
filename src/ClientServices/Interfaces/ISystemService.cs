@@ -31,6 +31,12 @@ public interface ISystemService
     /// </summary>
     /// <returns></returns>
     public string GetCurrentOsName();
+
+    /// <summary>
+    /// False on a platform NetRisk no longer ships for — macOS on Intel since T341. The client still
+    /// runs there, but there is no upgrade it can install, so it must not start one.
+    /// </summary>
+    public bool IsCurrentPlatformSupported();
     
     /// <summary>
     /// Downloads the upgrade script to the tempo folder

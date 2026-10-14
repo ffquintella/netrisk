@@ -399,6 +399,8 @@ Windows/Linux runners. Operational guide: [docs/packaging/release-engineering.md
   - note: executed on Apple Silicon; produced a mountable DMG with the expected unsigned-build warnings
 - [x] T90 Author the Linux Flatpak and Snap packaging targets with least-privilege sandboxing
   - note: flatpak-builder/snapcraft are Linux-only; no .flatpak/.snap produced here, rendered recipes asserted in src/Packaging.Tests
+- [x] T341 Drop the macOS Intel (osx-x64) build, leaving Apple Silicon as the only macOS target, and refuse deployed Intel clients' upgrade requests as an unsupported platform
+  - note: a client older than 2.4.5 reports bare `mac` on either architecture, so an Intel Mac that old cannot be told apart and is sent the Apple Silicon DMG; the client-side "no upgrade available" message is not covered by a test (UI tests not run, S54 §3)
 
 ## Track 6 — Database Uniformization & Schema Health
 

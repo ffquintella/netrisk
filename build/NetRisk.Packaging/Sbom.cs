@@ -57,7 +57,7 @@ public static class Sbom
         new("console-client", "ConsoleClient", "consoleClient"),
         new("gui-linux", "GUIClient", "GUIClient-Linux"),
         new("gui-windows", "GUIClient", "GUIClient-Windows-x64-Releases"),
-        new("gui-mac", "GUIClient", "GUIClient-Mac"),
+        // "gui-mac" (the Intel macOS build) was removed with that build in T341.
         new("gui-mac-arm64", "GUIClient", "GUIClient-MacA64")
     ];
 

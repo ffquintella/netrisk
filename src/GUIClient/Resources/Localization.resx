@@ -191,6 +191,9 @@
     <data name="UpgradeNeededMSG" xml:space="preserve">
         <value>A new upgrade is avaliable and the aplication needs to restart before proceeding.</value>
     </data>
+    <data name="UpgradeUnsupportedPlatformMSG" xml:space="preserve">
+        <value>NetRisk is no longer released for Macs with an Intel processor, so this client cannot be upgraded. It will keep running, but some features may not work with the current server. Install the current version on a Mac with Apple Silicon.</value>
+    </data>
     <data name="Risk review by time" xml:space="preserve">
         <value>Risk review by time</value>
     </data>

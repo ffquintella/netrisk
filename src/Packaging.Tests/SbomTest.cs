@@ -88,7 +88,7 @@ public class SbomTest
 
     /// <summary>
     /// The set has to cover every shippable component; an artifact without an SBOM is what this
-    /// milestone removes. Pinned as a count plus explicit membership so that adding a ninth artifact
+    /// milestone removes. Pinned as a count plus explicit membership so that adding an eighth artifact
     /// without an SBOM entry fails here.
     /// </summary>
     [Fact]
@@ -99,7 +99,7 @@ public class SbomTest
         Assert.Equal(
             new[]
             {
-                "api", "background-jobs", "console-client", "gui-linux", "gui-mac", "gui-mac-arm64",
+                "api", "background-jobs", "console-client", "gui-linux", "gui-mac-arm64",
                 "gui-windows", "website"
             },
             names.OrderBy(n => n, StringComparer.Ordinal).ToArray());

@@ -2,6 +2,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Model.ClientData;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
@@ -59,18 +60,26 @@ public class SystemController : ApiBaseController
     [AllowAnonymous]
     [Route("ClientDownloadLocation/{osFamily}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-    public async Task<string> ClientDownloadLocation(string osFamily)
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
+    public async Task<ActionResult<string>> ClientDownloadLocation(string osFamily)
     {
         Logger.Debug("Client Download Location Requested");
-        
+
+        // Checked before the lookup, and answered as a 400 rather than thrown: nothing maps an
+        // exception thrown here to a status code, so a throw reached the client as a 500.
+        if (ClientPlatforms.IsRetired(osFamily))
+        {
+            Logger.Warning("Client download location refused for a retired client platform ({Platform})",
+                ClientPlatforms.MacIntel);
+            return BadRequest(ClientPlatforms.MacIntelUnsupportedMessage);
+        }
+
+        if (!ClientPlatforms.IsSupported(osFamily))
+            return BadRequest(ClientPlatforms.UnknownPlatformMessage);
+
         var clientInformation = await _systemService.GetClientInformation(osFamily);
 
-        if (osFamily.ToLower() != "windows" && osFamily.ToLower() != "linux" && osFamily.ToLower() != "mac")
-            throw new InvalidParameterException("osFamily","OS Family not supported");
-            
-
-        return clientInformation.DownloadLocation[osFamily.ToLower()];
-
+        return clientInformation.DownloadLocation[ClientPlatforms.Normalize(osFamily)];
     }
     
     [HttpGet]

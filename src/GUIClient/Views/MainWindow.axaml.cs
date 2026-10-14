@@ -124,6 +124,26 @@ namespace GUIClient.Views
             var systemsService = GetService<ISystemService>();
             if (await systemsService.NeedsUpgradeAsync())
             {
+                // macOS on Intel is no longer released (T341), so there is nothing to upgrade to.
+                // Starting the upgrade anyway ends in an exception out of this async void handler;
+                // say so once instead and carry on with the client that is installed.
+                if (!systemsService.IsCurrentPlatformSupported())
+                {
+                    Log.Warning("An upgrade is available but this client platform is no longer supported; skipping it");
+
+                    var msgUnsupported = MessageBoxManager
+                        .GetMessageBoxStandard(new MessageBoxStandardParams
+                        {
+                            ContentTitle = Localizer["Upgrade"],
+                            ContentMessage = Localizer["UpgradeUnsupportedPlatformMSG"],
+                            Icon = MsBox.Avalonia.Enums.Icon.Warning,
+                            WindowStartupLocation = WindowStartupLocation.CenterOwner
+                        });
+
+                    await msgUnsupported.ShowAsync();
+                    return false;
+                }
+
                 var msgUpgrade = MessageBoxManager
                     .GetMessageBoxStandard(   new MessageBoxStandardParams
                     {

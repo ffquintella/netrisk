@@ -58,7 +58,6 @@
         "PackageLinuxInstallers",
         "PackageLinuxSnap",
         "PackageMacA64GUI",
-        "PackageMacGUI",
         "PackageRiskPortal",
         "PackageWebSite",
         "PackageWindowsGUI",

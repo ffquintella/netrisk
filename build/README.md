@@ -124,7 +124,7 @@ After running a bump command, you should:
 ./build.sh CompileConsoleClient
 ./build.sh CompileLinuxGUI
 ./build.sh CompileWindowsGUI
-./build.sh CompileMacGUI
+./build.sh CompileMacGUI        # osx-arm64 (Apple Silicon)
 ```
 
 ### Packaging Targets
@@ -140,8 +140,7 @@ After running a bump command, you should:
 ./build.sh PackageConsoleClient
 ./build.sh PackageWindowsGUI
 ./build.sh PackageLinuxGUI
-./build.sh PackageMacGUI
-./build.sh PackageMacA64GUI
+./build.sh PackageMacA64GUI     # macOS, Apple Silicon only (Intel was dropped in T341)
 ```
 
 #### Desktop installers (Track 5)

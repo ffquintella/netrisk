@@ -591,6 +591,9 @@
     <data name="UpgradeNeededMSG" xml:space="preserve">
         <value>Uma nova ataulização está disponível e a aplicação precisa reiniciar antes de prosseguir.</value>
     </data>
+    <data name="UpgradeUnsupportedPlatformMSG" xml:space="preserve">
+        <value>O NetRisk não é mais publicado para Macs com processador Intel, por isso este cliente não pode ser atualizado. Ele continuará funcionando, mas alguns recursos podem não funcionar com o servidor atual. Instale a versão atual em um Mac com Apple Silicon.</value>
+    </data>
     <data name="Risk review by time" xml:space="preserve">
         <value>Revisão do risco por tempo</value>
     </data>

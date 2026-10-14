@@ -23,7 +23,7 @@ This track automates artifact production for secure, native software distributio
 - A `VerifySignatures` step (`signtool verify /pa /all`) gates artifact publication.
 - Document certificate/account setup and rotation in `docs/`.
 
-### 5.1.2 macOS Developer ID & notarization in `PackageMacGUI`
+### 5.1.2 macOS Developer ID & notarization in `PackageMacA64GUI`
 
 Pipeline, in order:
 1. `codesign` all binaries/frameworks **with hardened runtime** (`--options runtime`) and an entitlements file.
@@ -33,7 +33,7 @@ Pipeline, in order:
 5. Verify with `spctl --assess`.
 
 - The Nuke target fails hard on notarization rejection and surfaces Apple's log URL.
-- Both arm64 and x64 (or a universal binary) go through the same path.
+- Apple Silicon (arm64) is the only macOS build. The x64 build this originally covered was dropped in T341 rather than turned into a universal binary.
 - **Acceptance:** Gatekeeper-clean install verified on a macOS runner.
 
 **Sources (5.1):** [Big Iron — Code-signing certs in 2026](https://www.bigiron.cc/guides/code-signing-certs-for-your-own-binaries-when-it-matters) · [Microsoft Learn — Code signing options](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options) · [Electron — Code signing & notarization flow](https://www.electronjs.org/docs/latest/tutorial/code-signing)
@@ -61,7 +61,7 @@ Pipeline, in order:
 
 ### 5.2.2 macOS: drag-and-drop `.dmg`
 
-- Scripted DMG assembly (e.g., `create-dmg`) inside `PackageMacGUI`: branded background, app icon + `/Applications` symlink drag target, volume name/icon.
+- Scripted DMG assembly (e.g., `create-dmg`) inside `PackageMacA64GUI`: branded background, app icon + `/Applications` symlink drag target, volume name/icon.
 - The DMG itself is signed; the app inside is notarized + stapled (5.1.2).
 - CI-reproducible with no Finder-scripting dependency.
 

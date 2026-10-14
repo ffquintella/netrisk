@@ -26,13 +26,21 @@ rendering, secret redaction) lives in `build/NetRisk.Packaging` and is covered b
 | Windows | `PackageWindowsGUI` | `NetRisk-Setup-<version>.exe` (Inno Setup, interactive) | Authenticode |
 | Windows | `PackageWindowsMSI` | `NetRisk-<version>-x64.msi` (per-machine, silent) | Authenticode |
 | Windows | `PackageWindowsMSIX` | `NetRisk-<version>-x64.msix` + `NetRisk.appinstaller` | Authenticode (**mandatory**) |
-| macOS | `PackageMacGUI` / `PackageMacA64GUI` | `NetRisk.app`, `.pkg`, drag-and-drop `.dmg` | Developer ID + notarization |
+| macOS | `PackageMacA64GUI` | `NetRisk.app`, `GUIClient-Mac-a64-<version>.pkg`, drag-and-drop `GUIClient-Mac-a64-<version>.dmg` (Apple Silicon) | Developer ID + notarization |
 | Linux | `PackageLinuxGUI` | `GUIClient-Linux-x64-<version>.zip` | — |
 | Linux | `PackageLinuxFlatpak` | `app.netrisk.NetRisk-<version>.flatpak` | Flatpak repo GPG (see §6) |
 | Linux | `PackageLinuxSnap` | `netrisk_<version>_amd64.snap` | Snap Store (signed on upload) |
 
 Convenience aggregates: `PackageWindowsInstallers`, `PackageLinuxInstallers`,
 `PackageAllInstallers`. `VerifySignatures` re-checks whatever is already in `output/publish`.
+
+**macOS is Apple Silicon only.** The Intel build (`osx-x64`, the former `PackageMacGUI` target and
+its `GUIClient-Mac-x64.dmg`) was dropped in T341. Intel clients already deployed still report
+themselves as `mac-x64`; the API answers their update requests with a 400 saying the platform is no
+longer supported (`Model.ClientData.ClientPlatforms`, pinned by `SystemControllerClientPlatformTest`
+and `SystemServiceClientPlatformTest`), never with the Apple Silicon script or DMG, and the client
+shows that no upgrade is available instead of starting one. The generic `mac` key of
+`ClientInformation.yaml` points at the Apple Silicon DMG.
 
 Every artifact gets a `.sha256` companion file. The Windows `.exe`, the Linux `.zip` and the
 macOS `.dmg` keep their historical checksum file names (extension replaced); the artifacts

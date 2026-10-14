@@ -576,7 +576,7 @@ partial class Build
 
     Target PackageAllInstallers => _ => _
         .Description("Build every desktop installer for every platform this host supports")
-        .DependsOn(PackageWindowsInstallers, PackageLinuxInstallers, PackageMacGUI, PackageMacA64GUI)
+        .DependsOn(PackageWindowsInstallers, PackageLinuxInstallers, PackageMacA64GUI)
         .Executes(() =>
         {
             Log.Information("Artifacts are in {Publish}.", PublishDirectory);

@@ -299,8 +299,7 @@ partial class Build : NukeBuild
             Console.WriteLine("    PackageLinuxFlatpak    Package Linux GUI as a Flatpak bundle");
             Console.WriteLine("    PackageLinuxSnap       Package Linux GUI as a Snap");
             Console.WriteLine("    PackageLinuxInstallers     All Linux packages");
-            Console.WriteLine("    PackageMacGUI          Package Mac GUI (Intel) as .app/.pkg/.dmg");
-            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (ARM64) as .app/.pkg/.dmg");
+            Console.WriteLine("    PackageMacA64GUI       Package Mac GUI (Apple Silicon) as .app/.pkg/.dmg");
             Console.WriteLine("    PackageAllInstallers   Every desktop installer this host can build");
             Console.WriteLine();
             Console.WriteLine("  Signing (Milestone 5.1 -- see docs/packaging/release-engineering.md):");
@@ -570,7 +569,8 @@ partial class Build : NukeBuild
             DotNetBuild(s => 
                 s.SetProjectFile(project)
                     .SetConfiguration(Configuration)
-                    .SetRuntime("osx-x64")
+                    // Apple Silicon only: macOS on Intel is no longer built (T341).
+                    .SetRuntime("osx-arm64")
                     .SetVerbosity(DotNetVerbosity.minimal)
                     .DisableProcessOutputLogging()
                     .EnablePublishTrimmed()
@@ -864,56 +864,7 @@ partial class Build : NukeBuild
             
         });
 
-    Target PackageMacGUI => _ => _
-        .DependsOn(Clean)
-        .DependsOn(Restore)
-        .DependsOn(CheckMacBuildHost)
-        .OnlyWhenDynamic(() =>
-        {
-            if (Configuration == Configuration.Release) return true;
-            if (Directory.Exists(PublishDirectory / "GUIClient")) return false;
-            return true;
-        })
-        .Executes(() =>
-        {
-            if (!IsOsx)
-            {
-                Log.Warning("PackageMacGUI is only supported on macOS.");
-                return;
-            }
-
-            Directory.CreateDirectory(BuildWorkDirectory);
-            
-            var project = Solution.GetProject("GUIClient");
-
-            Directory.CreateDirectory(PublishDirectory);
-            
-            // GUIClient publishes plain IL (no ReadyToRun/AOT/single-file/trimming), so an
-            // osx-x64 publish only has to resolve and copy the osx-x64 runtime pack -- nothing
-            // x64 is ever executed. It runs natively on an Apple Silicon host; neither Rosetta
-            // nor a linux/amd64 container is needed. Do not reintroduce a Docker cross-publish
-            // here: the x86_64 SDK under QEMU crashes MSBuild with an AccessViolationException
-            // in XmlNameTableThreadSafe and leaves the parent process wedged forever.
-            DotNetPublish(s => s
-                .SetProject(project)
-                .SetVersion(VersionClean)
-                .SetFileVersion(VersionClean)
-                .SetAssemblyVersion(VersionClean)
-                .SetConfiguration(Configuration)
-                .EnableSelfContained()
-                .SetRuntime("osx-x64")
-                .SetOutput(PublishDirectory / "GUIClient-Mac")
-                .SetVerbosity(DotNetVerbosity.minimal)
-                .DisableProcessOutputLogging()
-            );
-
-            CreateMacPkgAndDmg(
-                PublishDirectory / "GUIClient-Mac",
-                "x64",
-                VersionClean
-            );
-        });
-    
+    // The only macOS package: the Intel build and its target were dropped in T341.
     Target PackageMacA64GUI => _ => _
         .DependsOn(Clean)
         .DependsOn(Restore)
@@ -937,10 +888,8 @@ partial class Build : NukeBuild
             var project = Solution.GetProject("GUIClient");
 
             Directory.CreateDirectory(PublishDirectory);
-            
-            if (IsOsx && RuntimeInformation.OSArchitecture == Architecture.X64)
-                Log.Warning("Building macOS arm64 on Intel host. Validate output on Apple Silicon.");
 
+            // An Intel build host is reported once, by CheckMacBuildHost.
             DotNetPublish(s => s
                 .SetProject(project)
                 .SetVersion(VersionClean)
@@ -976,9 +925,6 @@ partial class Build : NukeBuild
 
             if (RuntimeInformation.OSArchitecture == Architecture.X64)
                 Log.Warning("Intel macOS host detected. macOS arm64 build is cross-compiled and should be validated on Apple Silicon.");
-
-            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
-                Log.Warning("Apple Silicon host detected. macOS x64 build is cross-compiled and should be validated on Intel.");
         });
 
     Target CleanWorkDir => _ => _
@@ -1081,7 +1027,6 @@ partial class Build : NukeBuild
         .DependsOn(CleanWorkDir)
         .DependsOn(PackageWindowsGUI)
         .DependsOn(PackageLinuxGUI)
-        .DependsOn(PackageMacGUI)
         .DependsOn(PackageMacA64GUI)
         .DependsOn(PackageWebSite)
         .Executes(() =>
@@ -1120,10 +1065,6 @@ partial class Build : NukeBuild
             CopyInstallerIfPresent(
                 PublishDirectory / $"GUIClient-Linux-x64-{VersionClean}.zip",
                 installersDir / "GUIClient-Linux.zip");
-
-            CopyInstallerIfPresent(
-                PublishDirectory / $"GUIClient-Mac-x64-{VersionClean}.dmg",
-                installersDir / "GUIClient-Mac-x64.dmg");
 
             CopyInstallerIfPresent(
                 PublishDirectory / $"GUIClient-Mac-a64-{VersionClean}.dmg",

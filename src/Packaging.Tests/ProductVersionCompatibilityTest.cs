@@ -54,7 +54,7 @@ public class ProductVersionCompatibilityTest
         Assert.EndsWith(".msi", ArtifactNames.WindowsMsi(version));
         Assert.EndsWith(".msix", ArtifactNames.WindowsMsix(version));
         Assert.EndsWith(".dmg", ArtifactNames.MacDmg("a64", version));
-        Assert.EndsWith(".pkg", ArtifactNames.MacPkg("x64", version));
+        Assert.EndsWith(".pkg", ArtifactNames.MacPkg("a64", version));
         Assert.EndsWith(".flatpak", ArtifactNames.LinuxFlatpak(version));
         Assert.EndsWith(".snap", ArtifactNames.LinuxSnap(version));
     }

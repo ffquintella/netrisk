@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using ClientServices.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Model.ClientData;
 using Model.Exceptions;
 using RestSharp;
 
@@ -102,29 +103,58 @@ public class SystemRestService: RestServiceBase, ISystemService
         return tempDir;
     }
 
-    public string GetCurrentOsName()
+    // Virtual so a test can stand in for a platform it is not running on (an Intel Mac, T341).
+    public virtual string GetCurrentOsName()
     {
-       
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            return "windows";
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            return "linux";
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-            return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "mac-a64" : "mac-x64";
-        }
+        OSPlatform? platform =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
+            null;
+
+        return OsNameFor(platform, RuntimeInformation.OSArchitecture);
+    }
+
+    /// <summary>
+    /// The name the API knows a platform by. An Intel Mac still reports
+    /// <see cref="ClientPlatforms.MacIntel"/> although NetRisk no longer ships for it (T341): that is
+    /// the truth, and reporting it is what lets the server refuse it instead of answering it with the
+    /// Apple Silicon build.
+    /// </summary>
+    internal static string OsNameFor(OSPlatform? platform, Architecture architecture)
+    {
+        if (platform == OSPlatform.Windows) return ClientPlatforms.Windows;
+        if (platform == OSPlatform.Linux) return ClientPlatforms.Linux;
+        if (platform == OSPlatform.OSX)
+            return architecture == Architecture.Arm64 ? ClientPlatforms.MacArm64 : ClientPlatforms.MacIntel;
 
         return "unknown";
+    }
+
+    public bool IsCurrentPlatformSupported() => !ClientPlatforms.IsRetired(GetCurrentOsName());
+
+    /// <summary>
+    /// The platform name an upgrade request is made for. Refuses before anything is asked of the
+    /// server on a platform NetRisk no longer ships for, so a client there can never fetch, write or
+    /// run an update script or installer built for another architecture, whatever the server answers.
+    /// </summary>
+    private string UpgradeOsName()
+    {
+        var os = GetCurrentOsName();
+        if(os == "unknown")
+            throw new Exception("Unknown OS");
+
+        if (ClientPlatforms.IsRetired(os))
+            throw new PlatformNotSupportedException(ClientPlatforms.MacIntelUnsupportedMessage);
+
+        return os;
     }
     
     public void  DownloadUpgradeScript()
     {
+        var os = UpgradeOsName();
+
         var client = RestService.GetClient();
-        
-        var os = GetCurrentOsName();
-        if(os == "unknown")
-            throw new Exception("Unknown OS");
         
         var request = new RestRequest($"/System/UpdateScript/{os}");
         
@@ -157,11 +187,9 @@ public class SystemRestService: RestServiceBase, ISystemService
 
     public void DownloadApplication()
     {
+        var os = UpgradeOsName();
+
         using var client = RestService.GetClient();
-        
-        var os = GetCurrentOsName();
-        if(os == "unknown")
-            throw new Exception("Unknown OS");
         
         var request = new RestRequest($"/System/ClientDownloadLocation/{os}");
         
@@ -197,11 +225,9 @@ public class SystemRestService: RestServiceBase, ISystemService
 
     public void ExecuteUpgrade()
     {
+        var os = UpgradeOsName();
+
         var tempDir = GetTempPath();
-        
-        var os = GetCurrentOsName();
-        if(os == "unknown")
-            throw new Exception("Unknown OS");
         
         string scriptPath;
         if(os == "windows") scriptPath = Path.Combine(tempDir, "update.bat");

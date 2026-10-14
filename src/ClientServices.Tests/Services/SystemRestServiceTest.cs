@@ -9,6 +9,7 @@ using ClientServices.Interfaces;
 using ClientServices.Services;
 using ClientServices.Tests.Mock;
 using JetBrains.Annotations;
+using Model.ClientData;
 using Model.Exceptions;
 using RestSharp;
 using Xunit;
@@ -77,6 +78,85 @@ public class SystemRestServiceTest : BaseServiceTest
         else
             Assert.Equal("unknown", os);
     }
+
+    // The runtime test above can only ever see the host it runs on; these pin every platform,
+    // including the Intel Mac no CI runner is any more.
+    [Theory]
+    [InlineData("WINDOWS", Architecture.X64, "windows")]
+    [InlineData("WINDOWS", Architecture.Arm64, "windows")]
+    [InlineData("LINUX", Architecture.X64, "linux")]
+    [InlineData("LINUX", Architecture.Arm64, "linux")]
+    [InlineData("OSX", Architecture.Arm64, "mac-a64")]
+    // Still reported after T341: it is the truth, and it is what lets the server refuse the client
+    // rather than answer it with the Apple Silicon build.
+    [InlineData("OSX", Architecture.X64, "mac-x64")]
+    [InlineData(null, Architecture.X64, "unknown")]
+    [InlineData("FREEBSD", Architecture.X64, "unknown")]
+    public void TestOsNameForEveryPlatform(string? platform, Architecture architecture, string expected)
+    {
+        var osPlatform = platform is null ? (OSPlatform?)null : OSPlatform.Create(platform);
+
+        Assert.Equal(expected, SystemRestService.OsNameFor(osPlatform, architecture));
+    }
+
+    // ---------- Retired platform: macOS on Intel (T341) ----------
+
+    /// <summary>A client that believes it is running on an Intel Mac, whatever the host is.</summary>
+    private sealed class IntelMacSystemRestService(IRestService restService) : SystemRestService(restService)
+    {
+        public override string GetCurrentOsName() => ClientPlatforms.MacIntel;
+    }
+
+    private IntelMacSystemRestService IntelMac()
+    {
+        // The stub answers as a server that predates T341 would, so a refusal can only come from
+        // the client itself.
+        _backend.OnGet("/System/UpdateScript/mac-x64", JsonString("update-script-payload"));
+        _backend.OnGet("/System/ClientDownloadLocation/mac-x64",
+            JsonString("https://localhost:5443/installers/GUIClient-Mac-a64.dmg"));
+        return new IntelMacSystemRestService(_backend);
+    }
+
+    [Fact]
+    public void TestAnIntelMacIsNotASupportedPlatform()
+    {
+        Assert.False(IntelMac().IsCurrentPlatformSupported());
+    }
+
+    [Fact]
+    public void TestTheHostPlatformIsSupportedUnlessItIsAnIntelMac()
+    {
+        var intelMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                       && RuntimeInformation.OSArchitecture != Architecture.Arm64;
+
+        Assert.Equal(!intelMac, _service.IsCurrentPlatformSupported());
+    }
+
+    [Fact]
+    public void TestAnIntelMacRefusesToDownloadAnUpgradeScriptWithoutAskingTheServer()
+    {
+        var service = IntelMac();
+
+        var ex = Assert.Throws<PlatformNotSupportedException>(() => service.DownloadUpgradeScript());
+
+        Assert.Equal(ClientPlatforms.MacIntelUnsupportedMessage, ex.Message);
+        Assert.Empty(_backend.Requests);
+    }
+
+    [Fact]
+    public void TestAnIntelMacRefusesToDownloadAnInstallerWithoutAskingTheServer()
+    {
+        var service = IntelMac();
+
+        var ex = Assert.Throws<PlatformNotSupportedException>(() => service.DownloadApplication());
+
+        Assert.Equal(ClientPlatforms.MacIntelUnsupportedMessage, ex.Message);
+        Assert.Empty(_backend.Requests);
+    }
+
+    // ExecuteUpgrade goes through the same guard but is deliberately not exercised here: if the guard
+    // ever regressed, the method would start a process and call Environment.Exit(0), ending the test
+    // run with a success code.
 
     // ---------- NeedsUpgrade ----------
 

@@ -98,7 +98,7 @@ test:
 coverage:
 	$(DOTNET) test $(SLN) --coverage --coverage-output-format cobertura $(ARGS)
 
-## nuke: run a Nuke target, e.g. make nuke TARGET=PackageMacGUI
+## nuke: run a Nuke target, e.g. make nuke TARGET=PackageMacA64GUI
 nuke:
 	@test -n "$(TARGET)" || { echo "usage: make nuke TARGET=<NukeTarget>"; exit 2; }
 	$(NUKE) $(TARGET) $(ARGS)

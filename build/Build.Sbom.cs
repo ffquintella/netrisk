@@ -48,13 +48,13 @@ partial class Build
     /// each published component's directory.
     ///
     /// Only components whose publish directory exists are processed, so a run of
-    /// <c>PackageApi</c> alone produces exactly one SBOM rather than failing on the seven
+    /// <c>PackageApi</c> alone produces exactly one SBOM rather than failing on the six
     /// directories it did not create.
     /// </summary>
     Target GenerateSbom => _ => _
         .Description("Generate a CycloneDX SBOM for each published component (Track 7 milestone 7.2.2)")
         .TriggeredBy(PackageApi, PackageWebSite, PackageBackgroundJobs, PackageConsoleClient,
-            PackageWindowsGUI, PackageLinuxGUI, PackageMacGUI, PackageMacA64GUI)
+            PackageWindowsGUI, PackageLinuxGUI, PackageMacA64GUI)
         .Executes(() =>
         {
             var requested = ResolveSbomComponents();

@@ -48,16 +48,21 @@ public class SystemService(ILogger logger, IDalService dalService) : ServiceBase
     
     public async Task<string> GetUpdateScriptAsync(string osFamily)
     {
-        switch (osFamily.ToLower())
+        switch (ClientPlatforms.Normalize(osFamily))
         {
-            case "windows":
+            case ClientPlatforms.Windows:
                 return await ReadDiskFileAsync("Scripts/Update-Windows.bat");
-            case "linux":
+            case ClientPlatforms.Linux:
                 return await ReadDiskFileAsync("Scripts/Update-Linux.sh");
-            case "mac":
-            case "mac-x64":
-            case "mac-a64":
+            case ClientPlatforms.Mac:
+            case ClientPlatforms.MacArm64:
                 return await ReadDiskFileAsync("Scripts/Update-Mac.sh");
+            // An Intel Mac is refused by name rather than by the default, so the client is told why:
+            // NetRisk used to ship for it (T341) and its deployed clients still ask. It must never
+            // fall into the Mac case above, which is the Apple Silicon script.
+            case ClientPlatforms.MacIntel:
+                Logger.Warning("Update script refused for a retired client platform ({Platform})", ClientPlatforms.MacIntel);
+                throw new InvalidParameterException("osFamily", ClientPlatforms.MacIntelUnsupportedMessage);
             default:
                 throw new InvalidParameterException("osFamily", "Unknown OS Family");
             

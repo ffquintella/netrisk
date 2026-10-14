@@ -251,7 +251,7 @@ To close these gaps systematically without disrupting ongoing feature work, we p
 *   **Tasks:**
     *   Extend Nuke build tasks (`build/Build.cs`) to automate code-signing:
         *   **Windows:** Sign executable artifacts with an Authenticode certificate during the `PackageWindowsGUI` target execution.
-        *   **macOS:** Integrate Apple Developer ID signing and automated notarization into the `PackageMacGUI` target.
+        *   **macOS:** Integrate Apple Developer ID signing and automated notarization into the `PackageMacA64GUI` target (Apple Silicon; the Intel `PackageMacGUI` target was removed in T341).
     *   Build native packages:
         *   **Windows:** Generate modern, sandboxed `.msix` containers and native `.msi` installers.
         *   **macOS:** Automate the creation of a drag-and-drop `.dmg` installer.
