@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GUIClient;
 
@@ -24,6 +25,10 @@ public sealed record ClientConfigurationSource(string FileName, ClientConfigurat
 /// its <c>SERVERURL</c> property, and it is equally usable by the Flatpak, Snap, .deb-style and
 /// macOS deployments. The INI configuration provider maps <c>[Server] Url=…</c> to the
 /// <c>Server:Url</c> key, so the file needs no NetRisk-specific parsing.
+///
+/// <see cref="ForEnvironment"/> adds one more optional layer on top, <c>netrisk.&lt;environment&gt;.ini</c>,
+/// so a single installation started with <c>--environment=homolog</c> can be pointed at a different
+/// server than the one started without it.
 /// </summary>
 public static class ClientConfigurationSources
 {
@@ -46,4 +51,30 @@ public static class ClientConfigurationSources
         new ClientConfigurationSource("appsettings.development.json", ClientConfigurationFormat.Json, Optional: false),
         Overlay
     };
+
+    /// <summary>File name of the overlay read only when the client runs as <paramref name="environment"/>.</summary>
+    public static string EnvironmentOverlayIniFileName(string environment) => $"netrisk.{environment}.ini";
+
+    /// <summary>
+    /// Whether <paramref name="environment"/> may name an overlay file. It comes straight from the
+    /// command line, so anything other than letters, digits, '-' and '_' — a path separator above
+    /// all — gets no overlay rather than a file name outside the install directory.
+    /// </summary>
+    public static bool IsOverlayEnvironmentName(string? environment) =>
+        !string.IsNullOrEmpty(environment) &&
+        environment.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_');
+
+    /// <summary>
+    /// <paramref name="sources"/> plus the optional per-environment overlay as the last layer.
+    /// </summary>
+    public static IReadOnlyList<ClientConfigurationSource> ForEnvironment(
+        IReadOnlyList<ClientConfigurationSource> sources, string environment)
+    {
+        if (!IsOverlayEnvironmentName(environment)) return sources;
+
+        return sources
+            .Append(new ClientConfigurationSource(
+                EnvironmentOverlayIniFileName(environment), ClientConfigurationFormat.Ini, Optional: true))
+            .ToArray();
+    }
 }
