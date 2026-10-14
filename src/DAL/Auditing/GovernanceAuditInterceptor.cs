@@ -30,6 +30,10 @@ namespace DAL.Auditing;
 /// else changed: <see cref="Host.LastVerificationDate"/> and <see cref="Host.RiskScoreUpdatedAt"/>.
 /// Recording them would bury the edits a person cares about under one row per host per scan; the
 /// risk score itself is still recorded when it moves.
+///
+/// The entity map is in for the risk-context inputs and the hierarchy (T241), not for its contents: only the property
+/// rows in <see cref="AuditedEntityPropertyKeys"/> are recorded, and no row of a <see cref="PersonDefinition"/> at all —
+/// a person's email or phone in an append-only table would be personal data kept with no purpose (LGPD art. 6, III).
 /// </summary>
 public class GovernanceAuditInterceptor : SaveChangesInterceptor
 {
@@ -148,8 +152,38 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(AiModelDataLink),
         nameof(AiModelMetricReading),
         nameof(AiModelOverride),
-        nameof(AiModelRisk)
+        nameof(AiModelRisk),
+
+        // T241 (S39 D-17, S40 §7.5): the entity map. A change of parent moves access (T292) and the inputs of the risk
+        // index, and criticality, internet exposure and classification move its weights — a Goodhart vector the spec
+        // requires to be attributable. The properties are EAV rows, so each one is its own record here: a value change
+        // is an Update row naming the old and new value, a value set or cleared a Create or Delete row. Only the rows
+        // named in AuditedEntityPropertyKeys, and never a person's (T241/T242 review, LGPD): see IsAuditedEntityProperty.
+        nameof(Entity),
+        nameof(EntitiesProperty)
     };
+
+    /// <summary>
+    /// The <c>entities_properties</c> rows the trail records, by property key: the three risk-context inputs S39 D-17 and
+    /// S40 §7.5 require attributed (<c>Model.Entities.RiskContextProperties</c>, which DAL cannot reference —
+    /// <c>EntityAuditTrailTest</c> fails if the two lists drift) and the entity's name. Every other property is out.
+    /// The map holds people (<see cref="PersonDefinition"/>) whose email and phone number are personal data, and
+    /// copying them into <c>audit_logs</c> — which nobody may delete — is a retention the spec never asked for.
+    /// </summary>
+    public static readonly IReadOnlySet<string> AuditedEntityPropertyKeys = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "criticality",
+        "internetFacing",
+        "securityClassification",
+        "name"
+    };
+
+    /// <summary>
+    /// The entity definition whose property rows are never recorded, whatever their key: a person's name, email and
+    /// phone are personal data (LGPD art. 5, I), and the trail needs none of them. Its <see cref="Entity"/> row — id,
+    /// definition, status, parent — carries no personal value and is still recorded.
+    /// </summary>
+    public const string PersonDefinition = "person";
 
     /// <summary>
     /// The <c>settings</c> rows audited, by key (S43 §4.4, D18). <see cref="Setting"/> is deliberately
@@ -181,7 +215,10 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(RiskScoring.QuantComputedAt),
         nameof(Host.LastVerificationDate),
         nameof(Host.RiskScoreUpdatedAt),
-        "UpdatedAt"
+        "UpdatedAt",
+
+        // The entity map's own churn stamp, written on every save of the form (T241); who saved is the row's actor.
+        nameof(Entity.Updated)
     };
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData,
@@ -214,7 +251,10 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
             var rows = new List<AuditLog>();
 
-            foreach (var entry in context.ChangeTracker.Entries().ToList())
+            var entries = context.ChangeTracker.Entries().ToList();
+            var definitions = new Dictionary<int, string?>();
+
+            foreach (var entry in entries)
             {
                 if (entry.Entity is AuditLog) continue;
                 if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
@@ -229,6 +269,10 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
                 if (!AuditedTypes.Contains(entry.Entity.GetType().Name)) continue;
 
+                if (entry.Entity is EntitiesProperty property &&
+                    !IsAuditedEntityProperty(context, entries, definitions, entry, property))
+                    continue;
+
                 rows.AddRange(RowsFor(entry, userId, actor, correlationId, occurredAt));
             }
 
@@ -240,6 +284,51 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         {
             Serilog.Log.Error(ex, "Error writing the governance audit trail");
         }
+    }
+
+    /// <summary>
+    /// Whether an <c>entities_properties</c> row is recorded: its key — before or after the save — is one of
+    /// <see cref="AuditedEntityPropertyKeys"/>, and its entity is known and not a <see cref="PersonDefinition"/>. An entity
+    /// whose definition cannot be resolved counts as a person: for personal data the trail fails closed.
+    /// </summary>
+    private static bool IsAuditedEntityProperty(DbContext context, IReadOnlyList<EntityEntry> entries,
+        Dictionary<int, string?> definitions, EntityEntry entry, EntitiesProperty property)
+    {
+        var originalKey = entry.State == EntityState.Added
+            ? null
+            : entry.Property(nameof(EntitiesProperty.Type)).OriginalValue as string;
+
+        if (!AuditedEntityPropertyKeys.Contains(property.Type) &&
+            (originalKey is null || !AuditedEntityPropertyKeys.Contains(originalKey)))
+            return false;
+
+        var definition = DefinitionOf(context, entries, definitions, property);
+        return definition is not null && !string.Equals(definition, PersonDefinition, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The definition of the entity a property row belongs to: from its loaded navigation, else from an entity this save
+    /// tracks, else one narrow query — memoised per save, and only ever reached for a risk-context or name row.
+    /// </summary>
+    private static string? DefinitionOf(DbContext context, IReadOnlyList<EntityEntry> entries,
+        Dictionary<int, string?> definitions, EntitiesProperty property)
+    {
+        // Declared non-null, but null whenever the row was loaded without its entity.
+        if (property.EntityNavigation is { } loaded) return loaded.DefinitionName;
+
+        if (definitions.TryGetValue(property.Entity, out var known)) return known;
+
+        var tracked = entries.Select(e => e.Entity).OfType<Entity>().FirstOrDefault(e => e.Id == property.Entity);
+
+        var definition = tracked?.DefinitionName ?? context.Set<Entity>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(e => e.Id == property.Entity)
+            .Select(e => e.DefinitionName)
+            .FirstOrDefault();
+
+        definitions[property.Entity] = definition;
+        return definition;
     }
 
     private static IEnumerable<AuditLog> RowsFor(EntityEntry entry, int? userId, string actor,

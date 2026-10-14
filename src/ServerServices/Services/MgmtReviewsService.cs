@@ -5,6 +5,7 @@ using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using Tools.Risks;
 
 namespace ServerServices.Services;
 
@@ -316,12 +317,7 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
 
         var riskLevels = await dbContext.RiskLevels.OrderBy(rl => rl.Value).ToListAsync();
 
-        RiskLevel? foundRiskLevel = null;
-        foreach (var riskLevel in riskLevels)
-        {
-            if (score > Convert.ToSingle(riskLevel.Value)) foundRiskLevel = riskLevel;
-            else break;
-        }
+        var foundRiskLevel = FindRiskLevel(riskLevels, score);
 
         if (foundRiskLevel == null)
             throw new DataNotFoundException("local", "risks",
@@ -404,6 +400,18 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
     }
 
     /// <summary>
+    /// The configured risk level a score falls in, through the one band function (T238, S39 §4.5):
+    /// lower bounds are inclusive, so a score exactly on a level's value belongs to that level, and a
+    /// score of exactly 0 resolves to the lowest level instead of to none. Null when no level applies.
+    /// </summary>
+    private static RiskLevel? FindRiskLevel(IReadOnlyList<RiskLevel> riskLevels, double score)
+    {
+        var ordered = riskLevels.OrderBy(l => l.Value).ToList();
+        var index = RiskBand.Faixa(score, ordered.Select(l => (double)l.Value).ToList());
+        return index < 0 ? null : ordered[index];
+    }
+
+    /// <summary>
     /// The review interval for one scoring row, or null when the bands are not configured well
     /// enough to resolve one.
     ///
@@ -411,20 +419,14 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
     /// do not line up has a configuration gap, and inventing a cadence for it would produce daily
     /// notifications nobody can act on.
     /// </summary>
-    private static int? ResolveCadenceDays(RiskScoring scoring, string? cadenceBasisSetting,
+    public static int? ResolveCadenceDays(RiskScoring scoring, string? cadenceBasisSetting,
         List<RiskLevel> riskLevels, List<ReviewLevel> reviewLevels)
     {
         if (riskLevels.Count == 0 || reviewLevels.Count == 0) return null;
 
         var score = SelectCadenceScore(scoring, cadenceBasisSetting);
 
-        RiskLevel? band = null;
-        foreach (var level in riskLevels)
-        {
-            if (score > Convert.ToSingle(level.Value)) band = level;
-            else break;
-        }
-
+        var band = FindRiskLevel(riskLevels, score);
         if (band == null) return null;
 
         var reviewLevel = reviewLevels.FirstOrDefault(rl => rl.Name == band.DisplayName);

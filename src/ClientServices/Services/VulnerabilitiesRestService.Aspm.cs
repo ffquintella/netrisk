@@ -6,8 +6,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using DAL.Entities;
 using DAL.Enums;
+using Model;
 using Model.Exceptions;
 using Model.Findings;
+using Model.Status;
 using RestSharp;
 
 namespace ClientServices.Services;
@@ -177,6 +179,88 @@ public partial class VulnerabilitiesRestService
         {
             Logger.Error("Error changing the status of finding {Finding} message:{Message}", findingId, ex.Message);
             throw new RestComunicationException("Error changing the finding status", ex);
+        }
+    }
+
+    /// <summary>
+    /// Desktop close/reject routed through the lifecycle (T239). Lifecycle first, workflow column
+    /// second: if the server refuses the transition the exception leaves both columns as they were,
+    /// whereas the opposite order would recreate the very state D-04 describes — closed on the
+    /// desktop, open everywhere else.
+    /// </summary>
+    public async Task<LifecycleChangeOutcome> CloseThroughLifecycleAsync(int findingId, IntStatus finalStatus,
+        FindingStatus currentLifecycle, string? justification)
+    {
+        var transition = LegacyFindingStatus.TransitionForClose((int)finalStatus, currentLifecycle);
+
+        return await ApplyWorkflowThroughLifecycleAsync(findingId, finalStatus, currentLifecycle, transition,
+            justification);
+    }
+
+    /// <summary>Desktop reopen routed through the lifecycle (T239), in the same order as a close.</summary>
+    public async Task<LifecycleChangeOutcome> ReopenThroughLifecycleAsync(int findingId, IntStatus workflowStatus,
+        FindingStatus currentLifecycle, string? justification)
+    {
+        if (ClosedStatuses.IsClosed((int)workflowStatus))
+            throw new ArgumentOutOfRangeException(nameof(workflowStatus), workflowStatus,
+                "A reopen must leave the workflow status open.");
+
+        var transition = LegacyFindingStatus.TransitionForReopen(currentLifecycle);
+
+        return await ApplyWorkflowThroughLifecycleAsync(findingId, workflowStatus, currentLifecycle, transition,
+            justification);
+    }
+
+    /// <summary>
+    /// The lifecycle transition, then the workflow status. A refused transition throws and nothing was written. A
+    /// workflow write that fails <em>after</em> a transition committed is not that: the finding has moved for the API,
+    /// the SLA and the risk index, so the failure is returned as a partial outcome carrying the lifecycle state re-read
+    /// from the server, never thrown as if the transition itself had been refused (T239 review). With no transition to
+    /// make, a failed workflow write changed nothing and throws as before.
+    /// </summary>
+    private async Task<LifecycleChangeOutcome> ApplyWorkflowThroughLifecycleAsync(int findingId,
+        IntStatus workflowStatus, FindingStatus currentLifecycle, FindingStatus? transition, string? justification)
+    {
+        if (transition is not { } target)
+        {
+            await UpdateStatusAsync(findingId, (ushort)workflowStatus);
+            return new LifecycleChangeOutcome(currentLifecycle, WorkflowStatusApplied: true);
+        }
+
+        var updated = await UpdateLifecycleStatusAsync(findingId, target,
+            string.IsNullOrWhiteSpace(justification) ? null : justification);
+
+        try
+        {
+            await UpdateStatusAsync(findingId, (ushort)workflowStatus);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Finding {Finding} moved to {Lifecycle} but its workflow status was not written",
+                findingId, updated.LifecycleStatus);
+
+            return new LifecycleChangeOutcome(await ReadLifecycleStatusAsync(findingId, updated.LifecycleStatus),
+                WorkflowStatusApplied: false, WorkflowError: ex.Message);
+        }
+
+        return new LifecycleChangeOutcome(updated.LifecycleStatus, WorkflowStatusApplied: true);
+    }
+
+    /// <summary>
+    /// The finding's lifecycle state as the server holds it now; <paramref name="committed"/> — what the transition
+    /// answered with — when it cannot be read, which is still the server's word and never the state the client began with.
+    /// </summary>
+    private async Task<FindingStatus> ReadLifecycleStatusAsync(int findingId, FindingStatus committed)
+    {
+        try
+        {
+            return (await GetOneAsync(findingId)).LifecycleStatus;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not re-read finding {Finding} after a partial status change: {Message}",
+                findingId, ex.Message);
+            return committed;
         }
     }
 

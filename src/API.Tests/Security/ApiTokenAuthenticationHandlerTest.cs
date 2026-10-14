@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using Model.Findings;
 using NSubstitute;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using Xunit;
 
@@ -198,6 +199,30 @@ public class ApiTokenAuthenticationHandlerTest
         Assert.Equal("5", principal.FindFirst(ApiTokenAuthenticationHandler.TokenIdClaimType)!.Value);
         Assert.False(principal.IsInRole("Admin"));
         Assert.Contains(principal.FindAll("Permission"), c => c.Value == "riskmanagement");
+    }
+
+    /// <summary>
+    /// T237 (S39): <c>scope=global</c> is now also what the job host's principal carries, so the request path must not
+    /// hand it to a user who is not an administrator. A non-administrator's token carries its user's entity
+    /// assignments and no global scope.
+    /// </summary>
+    [Fact]
+    public async Task TestTokenOfANonAdministratorCarriesNoGlobalScope()
+    {
+        Seed(NewUser(OwnerId, "analyst", "An Analyst"));
+
+        await using (var db = _dal.GetContext())
+        {
+            db.UserEntityRoles.Add(new UserEntityRole
+                { Id = 1, UserId = OwnerId, EntityId = 7, RoleId = 1, CreatedAt = DateTime.UtcNow });
+            await db.SaveChangesAsync();
+        }
+
+        var principal = await AuthenticateAsync();
+
+        Assert.False(principal.HasClaim(BackgroundServiceHttpContextAccessor.ScopeClaimType,
+            BackgroundServiceHttpContextAccessor.GlobalScope));
+        Assert.Contains(principal.FindAll("entity_id"), c => c.Value == "7");
     }
 
     /// <summary>Exposes the protected resolution every API controller uses, without picking any one controller.</summary>

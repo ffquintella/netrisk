@@ -16,7 +16,10 @@ public class RiskScoreCalculation: BaseJob, IJob
 
     public void Run()
     {
-        _riskCalculationService.CalculateRiskScoreAsync();
+        // Blocking, as every other job here does. The call used to be discarded un-awaited, so Hangfire
+        // marked the job succeeded before the pass had read a row and any exception it threw was lost
+        // with the task — a failing matrix pass looked like a green one (T236, S39).
+        _riskCalculationService.CalculateRiskScoreAsync().GetAwaiter().GetResult();
         
         /*
         using var context = DalService.GetContext();

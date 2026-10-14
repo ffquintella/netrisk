@@ -111,6 +111,18 @@ public class MariaDbContainerFixture : IAsyncLifetime
     }
 
     /// <summary>
+    /// An <c>INSERT INTO risks</c> for minimal seed rows that is valid under the container's strict
+    /// <c>sql_mode</c>: it supplies every NOT NULL column without a default (<c>subject</c>,
+    /// <c>reference_id</c>, …), so a test only states the id and status it cares about.
+    /// </summary>
+    public static string InsertRisksSql(params (int Id, string Status)[] risks) =>
+        "INSERT INTO `risks` (`id`,`status`,`subject`,`reference_id`,`assessment`,`notes`,`submission_date`," +
+        "`last_update`,`risk_catalog_mapping`,`threat_catalog_mapping`,`template_group_id`,`submitted_by`,`owner`,`manager`,`source`,`category`) VALUES " +
+        string.Join(",", risks.Select(r =>
+            $"({r.Id},'{r.Status}','Risk {r.Id}','R-{r.Id}','','','2026-01-01 00:00:00','2026-01-01 00:00:00','','',1,NULL,NULL,NULL,NULL,NULL)")) +
+        ";";
+
+    /// <summary>
     /// Builds the real production schema in the container by applying the numbered SQL files
     /// (<c>Structure/{n}.sql</c> then <c>Data/{n}.sql</c>) for n = 1..<paramref name="toVersion"/>,
     /// exactly as <c>DatabaseService.Update</c> does in production. This is the faithful test bed for

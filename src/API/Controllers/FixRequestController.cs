@@ -134,6 +134,14 @@ public class FixRequestController: ApiBaseController
 
             return Ok(requests);
         }
+        catch (DataNotFoundException)
+        {
+            // The finding does not exist or is outside the caller's entity scope (T237 review): the website sync would
+            // otherwise publish another entity's finding. 404 either way, so the answer confirms nothing.
+            Logger.Warning("User:{User} asked for a fix request on finding {Finding}, which they cannot see",
+                user.Value, fixRequest.VulnerabilityId);
+            return NotFound();
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while creating fix requests: {Message}", ex.Message);

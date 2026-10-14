@@ -66,7 +66,7 @@ public class Track9DataCatalogueSchemaTests(MariaDbContainerFixture fixture)
         "(9903,'organizationData','2.6',NOW(),NOW(),990,990,'active',NULL),(9904,'organizationData','2.6',NOW(),NOW(),990,990,'active',NULL);" +
         "INSERT INTO third_parties (id, name, status, is_cloud_provider, is_identity_provider, created_at) " +
         "VALUES (9911, 'Acme SaaS', 2, 0, 0, NOW());" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9921,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9921, "New")) +
         "INSERT INTO legal_requirements (id, code, title, kind, created_at) VALUES (9931, 'LGPD-7', 'LGPD art. 7', 1, NOW());" +
         "INSERT INTO data_catalogue_entries (id, entity_id, large_volume, strategic_research, created_at) VALUES (9941, 9901, 0, 0, NOW());");
 

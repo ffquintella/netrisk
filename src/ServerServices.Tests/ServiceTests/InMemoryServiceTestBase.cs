@@ -47,7 +47,17 @@ public abstract class InMemoryServiceTestBase
         }
     }
 
-    protected InMemoryServiceTestBase()
+    protected InMemoryServiceTestBase() : this(null)
+    {
+    }
+
+    /// <param name="dalOverride">
+    /// The <see cref="IDalService"/> the services under test get instead of the scope-as-given
+    /// <see cref="InMemoryDalService"/>, built from this test's database name — for a test that must go
+    /// through the production scope derivation (<c>PrincipalDalService</c>, T292). Such a test seeds and
+    /// asserts through its own service: <see cref="Seed"/> and <see cref="OpenContext"/> stay on the default one.
+    /// </param>
+    protected InMemoryServiceTestBase(Func<string, IDalService>? dalOverride)
     {
         EnsureMapsterConfigured();
 
@@ -55,13 +65,14 @@ public abstract class InMemoryServiceTestBase
         var factory = new SerilogLoggerFactory(logger);
         Log.Logger = logger;
 
-        _dalService = new InMemoryDalService(Guid.NewGuid().ToString());
+        var databaseName = Guid.NewGuid().ToString();
+        _dalService = new InMemoryDalService(databaseName);
 
         var services = new ServiceCollection();
 
         services.AddSingleton<ILoggerFactory>(factory);
         services.AddSingleton<ILogger>(logger);
-        services.AddSingleton<IDalService>(_dalService);
+        services.AddSingleton<IDalService>(dalOverride?.Invoke(databaseName) ?? _dalService);
         services.AddSingleton(MockConfiguration.Create());
         services.AddScoped<IEntityFilterMapperProvider, ApplicationEntityFilterMapperProvider>();
         services.AddSingleton<ILocalizationService>(

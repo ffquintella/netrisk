@@ -680,6 +680,181 @@ public class VulnerabilitiesRestServiceTest : BaseServiceTest
         Assert.Throws<RestComunicationException>(() => _service.UpdateStatus(65, 1));
     }
 
+    // ------------------------------------- desktop close / reject / reopen (T239)
+
+    private static Vulnerability WithLifecycle(int id, FindingStatus status)
+    {
+        var v = Vuln(id);
+        v.LifecycleStatus = status;
+        return v;
+    }
+
+    private IReadOnlyList<string> Sent() => _backend.Requests.Select(r => $"{r.Method} {r.Path}").ToList();
+
+    /// <summary>
+    /// The regression (S39 D-04): a desktop close used to PUT only <c>/WorkflowStatus</c>, so
+    /// <c>status_id</c> stayed Active and the finding counted as open for the API, the SLA and the risk
+    /// index. It now goes through the lifecycle endpoint first, with the comments as justification.
+    /// </summary>
+    [Fact]
+    public async Task TestCloseMovesTheLifecycleBeforeTheWorkflowStatus()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/81/status", WithLifecycle(81, FindingStatus.Mitigated));
+        _backend.On(Method.Put, "/Vulnerabilities/81/WorkflowStatus", "", HttpStatusCode.OK);
+
+        var result = await _service.CloseThroughLifecycleAsync(81, Model.IntStatus.Fixed, FindingStatus.Active,
+            "patched in the June window");
+
+        Assert.Equal((FindingStatus.Mitigated, true), (result.LifecycleStatus, result.WorkflowStatusApplied));
+        Assert.Equal(new[] { "PUT /Vulnerabilities/81/status", "PUT /Vulnerabilities/81/WorkflowStatus" }, Sent());
+
+        using var lifecycleBody = JsonDocument.Parse(_backend.Requests[0].Body);
+        Assert.Equal((int)FindingStatus.Mitigated, lifecycleBody.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("patched in the June window", lifecycleBody.RootElement.GetProperty("justification").GetString());
+        Assert.Equal(((int)Model.IntStatus.Fixed).ToString(), _backend.Requests[1].Body);
+    }
+
+    [Fact]
+    public async Task TestRejectSuppressesTheFindingAsAFalsePositiveWithTheReason()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/82/status", WithLifecycle(82, FindingStatus.FalsePositive));
+        _backend.On(Method.Put, "/Vulnerabilities/82/WorkflowStatus", "", HttpStatusCode.OK);
+
+        var result = await _service.CloseThroughLifecycleAsync(82, Model.IntStatus.Rejected, FindingStatus.Verified,
+            "banner grab, not the real version");
+
+        Assert.Equal((FindingStatus.FalsePositive, true), (result.LifecycleStatus, result.WorkflowStatusApplied));
+        using var body = JsonDocument.Parse(_backend.Requests[0].Body);
+        Assert.Equal((int)FindingStatus.FalsePositive, body.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("banner grab, not the real version", body.RootElement.GetProperty("justification").GetString());
+    }
+
+    /// <summary>
+    /// A refused transition (an accepted finding cannot be closed over its acceptance) must leave the
+    /// workflow column untouched — writing it anyway would recreate the D-04 split.
+    /// </summary>
+    [Fact]
+    public async Task TestARefusedTransitionLeavesTheWorkflowStatusUnwritten()
+    {
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/83/status", HttpStatusCode.UnprocessableEntity);
+        _backend.On(Method.Put, "/Vulnerabilities/83/WorkflowStatus", "", HttpStatusCode.OK);
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.CloseThroughLifecycleAsync(83, Model.IntStatus.Fixed, FindingStatus.RiskAccepted, "fixed"));
+
+        Assert.False(_backend.Sent(Method.Put, "/Vulnerabilities/83/WorkflowStatus"));
+    }
+
+    [Fact]
+    public async Task TestClosingAFindingTheLifecycleAlreadyHoldsClosedOnlyWritesTheWorkflowStatus()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/84/WorkflowStatus", "", HttpStatusCode.OK);
+
+        var result = await _service.CloseThroughLifecycleAsync(84, Model.IntStatus.Closed, FindingStatus.OutOfScope,
+            null);
+
+        Assert.Equal((FindingStatus.OutOfScope, true), (result.LifecycleStatus, result.WorkflowStatusApplied));
+        Assert.Equal(new[] { "PUT /Vulnerabilities/84/WorkflowStatus" }, Sent());
+    }
+
+    [Fact]
+    public async Task TestReopenReactivatesAClosedLifecycle()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/85/status", WithLifecycle(85, FindingStatus.Active));
+        _backend.On(Method.Put, "/Vulnerabilities/85/WorkflowStatus", "", HttpStatusCode.OK);
+
+        var result = await _service.ReopenThroughLifecycleAsync(85, Model.IntStatus.Verified, FindingStatus.Mitigated,
+            "came back after the rollback");
+
+        Assert.Equal((FindingStatus.Active, true), (result.LifecycleStatus, result.WorkflowStatusApplied));
+        Assert.Equal(new[] { "PUT /Vulnerabilities/85/status", "PUT /Vulnerabilities/85/WorkflowStatus" }, Sent());
+        using var body = JsonDocument.Parse(_backend.Requests[0].Body);
+        Assert.Equal((int)FindingStatus.Active, body.RootElement.GetProperty("status").GetInt32());
+    }
+
+    [Fact]
+    public async Task TestReopenOfAnOpenLifecycleOnlyWritesTheWorkflowStatus()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/86/WorkflowStatus", "", HttpStatusCode.OK);
+
+        var result = await _service.ReopenThroughLifecycleAsync(86, Model.IntStatus.Verified, FindingStatus.Active, null);
+
+        Assert.Equal((FindingStatus.Active, true), (result.LifecycleStatus, result.WorkflowStatusApplied));
+        Assert.Equal(new[] { "PUT /Vulnerabilities/86/WorkflowStatus" }, Sent());
+    }
+
+    /// <summary>
+    /// The review's finding (T239): the lifecycle transition commits on its own, so when the workflow write that follows
+    /// fails the finding <b>is</b> closed for the API. That used to throw as if the transition had been refused, and the
+    /// client kept the lifecycle state it started from. It is now a partial outcome carrying the state re-read from the
+    /// server, with the reason.
+    /// </summary>
+    [Fact]
+    public async Task TestAWorkflowFailureAfterTheTransitionIsAPartialSuccessWithTheServersLifecycle()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/88/status", WithLifecycle(88, FindingStatus.Mitigated));
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/88/WorkflowStatus", HttpStatusCode.InternalServerError);
+        _backend.On(Method.Get, "/Vulnerabilities/88", WithLifecycle(88, FindingStatus.Mitigated));
+
+        var result = await _service.CloseThroughLifecycleAsync(88, Model.IntStatus.Fixed, FindingStatus.Active,
+            "patched");
+
+        Assert.True(result.IsPartial);
+        Assert.Equal(FindingStatus.Mitigated, result.LifecycleStatus);
+        Assert.False(string.IsNullOrWhiteSpace(result.WorkflowError));
+        Assert.Equal(new[]
+        {
+            "PUT /Vulnerabilities/88/status", "PUT /Vulnerabilities/88/WorkflowStatus", "GET /Vulnerabilities/88"
+        }, Sent());
+    }
+
+    /// <summary>A reopen whose workflow write fails is partial the same way, and the re-read is what is reported.</summary>
+    [Fact]
+    public async Task TestAPartialReopenReportsTheLifecycleTheServerHoldsNow()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/89/status", WithLifecycle(89, FindingStatus.Active));
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/89/WorkflowStatus", HttpStatusCode.Forbidden);
+        _backend.On(Method.Get, "/Vulnerabilities/89", WithLifecycle(89, FindingStatus.Verified));
+
+        var result = await _service.ReopenThroughLifecycleAsync(89, Model.IntStatus.Verified, FindingStatus.Mitigated,
+            null);
+
+        Assert.Equal((FindingStatus.Verified, false), (result.LifecycleStatus, result.WorkflowStatusApplied));
+    }
+
+    /// <summary>When the re-read fails too, the state the transition answered with stands — never the starting one.</summary>
+    [Fact]
+    public async Task TestAPartialChangeFallsBackToTheTransitionsAnswerWhenTheReReadFails()
+    {
+        _backend.On(Method.Put, "/Vulnerabilities/90/status", WithLifecycle(90, FindingStatus.FalsePositive));
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/90/WorkflowStatus", HttpStatusCode.InternalServerError);
+        _backend.OnStatus(Method.Get, "/Vulnerabilities/90", HttpStatusCode.InternalServerError);
+
+        var result = await _service.CloseThroughLifecycleAsync(90, Model.IntStatus.Rejected, FindingStatus.Active,
+            "duplicate scanner entry");
+
+        Assert.Equal((FindingStatus.FalsePositive, false), (result.LifecycleStatus, result.WorkflowStatusApplied));
+    }
+
+    /// <summary>With no transition to make, a failed workflow write changed nothing, and still throws.</summary>
+    [Fact]
+    public async Task TestAWorkflowFailureWithNoTransitionStillThrows()
+    {
+        _backend.OnStatus(Method.Put, "/Vulnerabilities/91/WorkflowStatus", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            _service.CloseThroughLifecycleAsync(91, Model.IntStatus.Closed, FindingStatus.OutOfScope, null));
+    }
+
+    [Fact]
+    public async Task TestReopenToAClosedWorkflowStatusIsRefusedBeforeAnyCall()
+    {
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            _service.ReopenThroughLifecycleAsync(87, Model.IntStatus.Closed, FindingStatus.Mitigated, null));
+
+        Assert.Empty(_backend.Requests);
+    }
+
     // ---------------------------------------------------- UpdateCommentsAsync
 
     [Fact]

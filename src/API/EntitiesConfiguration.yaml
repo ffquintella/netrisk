@@ -1,5 +1,8 @@
 ---
-version: 2.6
+# 2.7 (T242, S39 §5.2/§5.3/§10.2): `criticality` (1-5) on businessProcess, application, organizationUnit and
+# subOrganizationUnit, `internetFacing` on application, and the `activity` type under businessProcess. The
+# risk-context properties are nullable, so every entity saved under 2.6 stays valid and reads "not declared".
+version: 2.7
 definitions:
   organization:
     isRoot: True
@@ -137,6 +140,13 @@ definitions:
         maxSize: 250
         nullable: True
         defaultValue: ""
+      criticality:
+        type: Integer
+        label: Criticality
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
   subOrganizationUnit:
     isRoot: False
     iconKind: OfficeBuildingCog
@@ -167,6 +177,13 @@ definitions:
         label: Responsible
         multiple: true
         maxSize: 250
+        nullable: True
+        defaultValue: ""
+      criticality:
+        type: Integer
+        label: Criticality
+        multiple: False
+        maxSize: -1
         nullable: True
         defaultValue: ""
   securityClassificationLevel:
@@ -326,6 +343,20 @@ definitions:
         maxSize: -1
         nullable: True
         defaultValue: "True"
+      criticality:
+        type: Integer
+        label: Criticality
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: ""
+      internetFacing:
+        type: Boolean
+        label: Internet Facing
+        multiple: False
+        maxSize: -1
+        nullable: True
+        defaultValue: "False"
   applicationModule:
     isRoot: False
     iconKind: ApplicationBraces
@@ -356,6 +387,7 @@ definitions:
     isRoot: True
     iconKind: HumanMaleBoardPoll
     allowedChildren:
+      - activity
     properties:
       name:
         type: String
@@ -413,6 +445,32 @@ definitions:
         maxSize: -1
         nullable: True
         defaultValue: ""
+  activity:
+    isRoot: False
+    iconKind: FormatListChecks
+    allowedChildren:
+    properties:
+      name:
+        type: String
+        label: Name
+        multiple: False
+        maxSize: 250
+        nullable: False
+        defaultValue: ""
+      description:
+        type: String
+        label: Description
+        multiple: False
+        maxSize: 250
+        nullable: True
+        defaultValue: ""
+      isActive:
+        type: Boolean
+        label: Is Active
+        multiple: False
+        maxSize: -1
+        nullable: False
+        defaultValue: "True"
   strategicObjective:
     isRoot: True
     iconKind: BullseyeArrow

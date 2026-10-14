@@ -1,43 +1,40 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using DAL.Context;
 using DAL.Interfaces;
+using ServerServices.Security;
 
 namespace ServerServices.Services;
 
 public static class EntityScopeExtensions
 {
     /// <summary>
-    /// Filters a queryable data source to only contain records within the user's assigned entity scopes.
-    /// Global administrators bypass this check completely.
+    /// The scope of an explicitly given principal — the same rule as <c>DalService.GetCurrentEntityScope</c>
+    /// (<see cref="EntityScopeClaims"/>), expanded through the same tree (T292). <paramref name="tree"/> is only
+    /// called when there is a claim to expand.
     /// </summary>
-    public static IQueryable<T> ApplyEntityScope<T>(this IQueryable<T> query, ClaimsPrincipal? user, bool bypassScope = false) where T : class, IEntityScoped
+    public static EntityScope ScopeOf(ClaimsPrincipal user, Func<EntityTree> tree)
     {
-        if (bypassScope || user == null)
-        {
-            return query;
-        }
+        if (EntityScopeClaims.IsUnrestricted(user)) return EntityScope.Unrestricted;
 
-        // Bypassed if user is a global administrator
-        if (user.IsInRole("Admin") || user.HasClaim("scope", "global"))
-        {
-            return query;
-        }
+        var claimed = EntityScopeClaims.ClaimedEntityIds(user);
+        return claimed.Count == 0 ? EntityScope.DenyAll : tree().ScopeFor(claimed);
+    }
 
-        var entityIds = user.Claims
-            .Where(c => c.Type == "entity_id")
-            .Select(c => int.TryParse(c.Value, out var id) ? (int?)id : null)
-            .Where(id => id.HasValue)
-            .Select(id => id!.Value)
-            .ToList();
+    /// <summary>
+    /// Filters a queryable data source to the records <paramref name="scope"/> allows. The context's own query
+    /// filter already applies the caller's scope; this narrows further when a query must answer for another
+    /// principal. Unrestricted passes everything; an empty scope passes nothing.
+    /// </summary>
+    public static IQueryable<T> ApplyEntityScope<T>(this IQueryable<T> query, EntityScope scope) where T : class, IEntityScoped
+    {
+        if (scope.IsUnrestricted) return query;
 
-        if (!entityIds.Any())
-        {
-            // Deny by default: no assignments means no visibility
-            return query.Where(x => false);
-        }
+        // Deny by default: no assignments means no visibility
+        if (scope.EntityIds.Count == 0) return query.Where(x => false);
 
+        var entityIds = scope.EntityIds.ToArray();
         return query.Where(x => x.EntityId.HasValue && entityIds.Contains(x.EntityId.Value));
     }
 }

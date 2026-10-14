@@ -1,4 +1,5 @@
-﻿using Mapster;
+﻿using System.Text.Json;
+using Mapster;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -8,6 +9,7 @@ using Model.Messages;
 using Serilog;
 using ServerServices.EmailTemplates;
 using ServerServices.Interfaces;
+using SyncContracts;
 using Tools.Security;
 
 namespace ServerServices.Services;
@@ -21,7 +23,8 @@ public class IncidentResponsePlansService(
     IEmailService emailService,
     IEntitiesService entitiesService,
     IConfiguration configuration,
-    INotificationEventPublisher notifications
+    INotificationEventPublisher notifications,
+    ILinksService linksService
     ):LocalizableService(logger, dalService, localizationService), IIncidentResponsePlansService
 {
 
@@ -29,6 +32,7 @@ public class IncidentResponsePlansService(
     private IEmailService EmailService { get; } = emailService;
     private IEntitiesService EntitiesService { get; } = entitiesService;
     private IConfiguration Configuration { get; } = configuration;
+    private ILinksService LinksService { get; } = linksService;
     
     public async Task<List<IncidentResponsePlan>> GetAllAsync()
     {
@@ -413,6 +417,10 @@ public class IncidentResponsePlansService(
         
         if(destination == null) throw new DataNotFoundException("destination",$"{incidentResponsePlanTaskExecution.ExecutedById}");
 
+        // NR-2026-037: the website key is an unguessable, single-use token bound to this execution —
+        // never the execution's (or, as it was, the task's) sequential id. Only its SHA-256 is stored.
+        var reportKey = CreateTaskReportKey(incidentResponsePlanTaskExecution.Id);
+
         var mailParameters = new TaskExecution()
         {
             IncidentName = incident.Name,
@@ -424,13 +432,25 @@ public class IncidentResponsePlansService(
             TaskVerificationCriteria = irpt.VerificationCriteria ?? "",
             TaskConditionToProceed = irpt.ConditionToProceed ?? "",
             TaskConditionToSkip = irpt.ConditionToSkip ?? "",
-            ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEReport?key=" + irpt.Id,
+            ReportLink = Configuration["website:protocol"] + "://" + Configuration["website:host"] + ":" + Configuration["website:port"] + "/IRTEReport?key=" + reportKey,
             
         };
         
         await EmailService.SendEmailAsync(destination, "Incident Taks", "TaskExecution", user.Lang!.ToLower(), mailParameters);
         
         return incidentResponsePlanTaskExecution;
+    }
+
+    /// <summary>
+    /// Issues the website report key for one task execution (NR-2026-037): a <c>links</c> row of type
+    /// <see cref="IrpTaskReportLink.Type"/> whose data binds exactly <paramref name="taskExecutionId"/>,
+    /// pushed to the website on the fast sync lane. The website resolves the execution only through
+    /// this key, and the API deletes the row once the report is applied (<c>SyncIngestService</c>).
+    /// </summary>
+    private string CreateTaskReportKey(int taskExecutionId)
+    {
+        var data = JsonSerializer.SerializeToUtf8Bytes(new IrpTaskReportLinkData { TaskExecutionId = taskExecutionId });
+        return LinksService.CreateLinkKey(IrpTaskReportLink.Type, DateTime.Now.Add(IrpTaskReportLink.Lifetime), data);
     }
 
     public async Task<Incident> GetIncidentByTaskIdAsync(int taskId)

@@ -30,6 +30,15 @@ public class RiskCalculationService(
         RiskContributingImpactCalculated.Invoke(this, e);
     }
     
+    /// <summary>
+    /// The two-hourly matrix pass: every classically scored risk's inherent score, looked up from its
+    /// impact and likelihood in the custom risk model.
+    ///
+    /// A quantitatively scored risk (<see cref="IsQuantitative"/>) is skipped. Its inherent score is
+    /// the mapped annualized loss the simulation wrote, and its classic impact and likelihood are
+    /// whatever the row last held — overwriting the first from the second replaces a monetary
+    /// estimate with a matrix cell nobody chose, and writes no history saying so (T236, S39 D-03).
+    /// </summary>
     public async Task CalculateRiskScoreAsync()
     {
         await using var context = DalService.GetContext();
@@ -53,6 +62,8 @@ public class RiskCalculationService(
                     ClassicImpact = 2,
                     ClassicLikelihood = 2,
                 };
+
+            if (IsQuantitative(scoring)) continue;
             
 
             scoring.CalculatedRisk =  Convert.ToSingle(riskModelValues.FirstOrDefault(rmv => rmv.Impact == scoring.ClassicImpact && rmv.Likelihood == scoring.ClassicLikelihood)?.Value ?? 0.0);
@@ -147,6 +158,10 @@ public class RiskCalculationService(
     /// A history row is written only when the value actually moves. The job runs on a schedule, and
     /// writing an identical row every run would bury the changes that matter under thousands that
     /// do not.
+    ///
+    /// A quantitatively scored risk is skipped (T236, S39 D-03): its residual is the mapped residual
+    /// loss the simulation derived — <c>QuantitativeRiskService.RecomputeAllAsync</c>, which the job
+    /// runs first — and this formula would replace it with a percentage of the mapped inherent score.
     /// </summary>
     public async Task<int> CalculateResidualRiskAsync()
     {
@@ -164,6 +179,7 @@ public class RiskCalculationService(
         {
             var scoring = await context.RiskScorings.FirstOrDefaultAsync(rs => rs.Id == risk.Id);
             if (scoring == null) continue;
+            if (IsQuantitative(scoring)) continue;
 
             var mitigation = mitigations
                 .Where(m => m.RiskId == risk.Id)
@@ -227,6 +243,13 @@ public class RiskCalculationService(
 
         return strategies[0];
     }
+
+    /// <summary>
+    /// A risk the FAIR-lite method scores (<see cref="QuantitativeRiskService.QuantitativeScoringMethod"/>).
+    /// Its inherent and residual scores belong to the simulation, so neither matrix pass may write them.
+    /// </summary>
+    private static bool IsQuantitative(RiskScoring scoring) =>
+        scoring.ScoringMethod == QuantitativeRiskService.QuantitativeScoringMethod;
 
     /// <summary>Float comparison with a tolerance, so a rounding wobble is not a change.</summary>
     private static bool Nearly(float? a, float? b)

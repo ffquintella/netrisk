@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SyncContracts;
 using Tools.Security;
@@ -138,10 +141,79 @@ public class LocalIrpService : ILocalIrpService
         _outbox = outbox;
     }
 
-    public async Task<LocalIrpTaskExecution?> GetTaskExecutionAsync(int id)
+    public async Task<LocalIrpTaskExecution?> GetTaskExecutionByReportKeyAsync(string reportKey)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        return await db.IrpTaskExecutions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var link = await FindLiveReportLinkAsync(db, reportKey);
+        if (link == null) return null;
+
+        var taskExecutionId = ReadTaskExecutionId(link);
+        if (taskExecutionId == null) return null;
+
+        return await db.IrpTaskExecutions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == taskExecutionId.Value);
+    }
+
+    public async Task<bool> QueueTaskReportAsync(string reportKey, int newStatus)
+    {
+        var execution = await GetTaskExecutionByReportKeyAsync(reportKey);
+        if (execution == null) return false;
+
+        // Consume first, atomically: of two concurrent reports with the same key only the one that flips
+        // Consumed queues anything. The row is kept (not deleted) so a fast push that still lists the
+        // link cannot resurrect it — the same rule as password-reset links.
+        var keyHash = LinkKeyHash.Primary(reportKey);
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            var consumed = await db.Links
+                .Where(l => l.Type == IrpTaskReportLink.Type && l.KeyHash == keyHash && !l.Consumed)
+                .ExecuteUpdateAsync(s => s.SetProperty(l => l.Consumed, true));
+            if (consumed != 1) return false;
+        }
+
+        await _outbox.EnqueueAsync(SyncActionTypes.IrpTaskStatusChange,
+            new IrpTaskStatusChangeDto
+            {
+                TaskExecutionId = execution.Id,
+                NewStatus = newStatus,
+                ActionTimeUtc = DateTime.UtcNow,
+                ReportKey = reportKey
+            });
+        return true;
+    }
+
+    /// <summary>
+    /// The live report link for <paramref name="reportKey"/>. Only the key's SHA-256 is ever stored, so
+    /// the lookup is on the digest; the matched digest is then re-compared in constant time, so the
+    /// answer never depends on a short-circuiting string comparison of secret-derived values.
+    /// </summary>
+    private static async Task<LocalLink?> FindLiveReportLinkAsync(WebSiteDbContext db, string reportKey)
+    {
+        if (!IrpTaskReportLink.IsWellFormedKey(reportKey)) return null;
+
+        var keyHash = LinkKeyHash.Primary(reportKey);
+        var link = await db.Links.AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Type == IrpTaskReportLink.Type && l.KeyHash == keyHash);
+        if (link == null || link.Consumed) return null;
+
+        if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.ASCII.GetBytes(link.KeyHash), Encoding.ASCII.GetBytes(keyHash)))
+            return null;
+
+        if (link.ExpirationDate != null && link.ExpirationDate < DateTime.UtcNow) return null;
+        return link;
+    }
+
+    private static int? ReadTaskExecutionId(LocalLink link)
+    {
+        if (string.IsNullOrEmpty(link.DataJson)) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<IrpTaskReportLinkData>(link.DataJson)?.TaskExecutionId;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<LocalIrpTask?> GetTaskAsync(int taskId)
@@ -158,12 +230,4 @@ public class LocalIrpService : ILocalIrpService
         return await db.Incidents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == task.IncidentId);
     }
 
-    public Task QueueTaskStatusChangeAsync(int taskExecutionId, int newStatus)
-        => _outbox.EnqueueAsync(SyncActionTypes.IrpTaskStatusChange,
-            new IrpTaskStatusChangeDto
-            {
-                TaskExecutionId = taskExecutionId,
-                NewStatus = newStatus,
-                ActionTimeUtc = DateTime.UtcNow
-            });
 }

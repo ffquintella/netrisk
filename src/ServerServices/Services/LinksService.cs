@@ -50,6 +50,34 @@ public class LinksService: ServiceBase, ILinksService
         
     }
 
+    public string CreateLinkKey(string type, DateTime expirationDate, byte[]? data)
+    {
+        CleanLinks();
+
+        var key = RandomGenerator.RandomToken(32);
+
+        using var context = DalService.GetContext();
+        context.Links.Add(new Link
+        {
+            Type = type,
+            ExpirationDate = expirationDate,
+            CreationDate = DateTime.Now,
+            Data = data,
+            KeyHash = LinkKeyHash.Primary(key)
+        });
+        try
+        {
+            context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error creating link of type {Type}", type);
+            throw new Exception("Error creating link");
+        }
+
+        return key;
+    }
+
     public bool LinkExists(string type, string key)
     {
         CleanLinks();

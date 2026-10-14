@@ -48,6 +48,15 @@ public class SyncIngestService : ServiceBase, ISyncIngestService
                 await RecordProcessedAsync(action);
                 applied.Add(action.ClientActionId);
             }
+            catch (SyncActionRejectedException ex)
+            {
+                // Refused for good — retrying cannot make a missing or mismatched key valid. Recorded and
+                // acked so the website stops resending it; nothing was applied.
+                Logger.Warning("Rejected sync action {Id} of type {Type}: {Reason}",
+                    action.ClientActionId, action.ActionType, ex.Message);
+                await RecordProcessedAsync(action);
+                applied.Add(action.ClientActionId);
+            }
             catch (Exception ex)
             {
                 // Leave it un-acked; it will be retried on the next sync cycle.
@@ -78,12 +87,67 @@ public class SyncIngestService : ServiceBase, ISyncIngestService
                 ApplyLinkDelete(Deserialize<LinkDeleteDto>(action));
                 break;
             case SyncActionTypes.IrpTaskStatusChange:
-                var i = Deserialize<IrpTaskStatusChangeDto>(action);
-                await _irp.ChangeExecutionTaskSatusByIdAsync(i.TaskExecutionId, i.NewStatus, i.ActionTimeUtc);
+                await ApplyIrpTaskStatusChangeAsync(Deserialize<IrpTaskStatusChangeDto>(action));
                 break;
             default:
                 Logger.Warning("Unknown sync action type {Type}", action.ActionType);
                 break;
+        }
+    }
+
+    /// <summary>The outcomes the public task report page can record (succeed, skip, fail).</summary>
+    private static readonly HashSet<int> WebsiteReportableIrpStatuses = new()
+    {
+        (int)Model.IntStatus.Completed, (int)Model.IntStatus.Skipped, (int)Model.IntStatus.Failed
+    };
+
+    /// <summary>
+    /// NR-2026-037, server half. The website already refuses a report without a valid key, but it is the
+    /// public, less-trusted host, so the API does not take the execution id it sends on trust: the action
+    /// must carry a key that still resolves to a live <see cref="IrpTaskReportLink"/> bound to that very
+    /// execution, and the status must be one the page can report. The link is deleted once applied, so
+    /// each key changes one execution once.
+    /// </summary>
+    private async Task ApplyIrpTaskStatusChangeAsync(IrpTaskStatusChangeDto dto)
+    {
+        if (!WebsiteReportableIrpStatuses.Contains(dto.NewStatus))
+            throw new SyncActionRejectedException($"status {dto.NewStatus} cannot be reported from the website");
+
+        if (!IrpTaskReportLink.IsWellFormedKey(dto.ReportKey))
+            throw new SyncActionRejectedException("the report key is missing or malformed");
+
+        byte[] data;
+        try
+        {
+            data = _links.GetLinkData(IrpTaskReportLink.Type, dto.ReportKey);
+        }
+        catch (DataNotFoundException)
+        {
+            throw new SyncActionRejectedException("the report key names no live link");
+        }
+
+        IrpTaskReportLinkData? linkData;
+        try
+        {
+            linkData = JsonSerializer.Deserialize<IrpTaskReportLinkData>(data);
+        }
+        catch (JsonException)
+        {
+            linkData = null;
+        }
+
+        if (linkData == null || linkData.TaskExecutionId != dto.TaskExecutionId)
+            throw new SyncActionRejectedException("the report key is not bound to this task execution");
+
+        await _irp.ChangeExecutionTaskSatusByIdAsync(dto.TaskExecutionId, dto.NewStatus, dto.ActionTimeUtc);
+
+        try
+        {
+            _links.DeleteLink(IrpTaskReportLink.Type, dto.ReportKey);
+        }
+        catch (DataNotFoundException)
+        {
+            // Expired and cleaned between the read and the delete — the key is dead either way.
         }
     }
 
@@ -160,4 +224,7 @@ public class SyncIngestService : ServiceBase, ISyncIngestService
     private static T Deserialize<T>(OutboxActionDto action) where T : class
         => JsonSerializer.Deserialize<T>(action.PayloadJson)
            ?? throw new Exception($"Invalid payload for action {action.ClientActionId}");
+
+    /// <summary>An action that fails validation permanently: acked and recorded, never applied.</summary>
+    private sealed class SyncActionRejectedException(string reason) : Exception(reason);
 }

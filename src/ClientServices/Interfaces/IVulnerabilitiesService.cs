@@ -151,6 +151,30 @@ public interface IVulnerabilitiesService
     Task<Vulnerability> UpdateLifecycleStatusAsync(int findingId, DAL.Enums.FindingStatus status,
         string? justification = null, int? duplicateOfId = null);
 
+    /// <summary>
+    /// Closes or rejects a finding from the desktop register (S39 D-04, T239). When
+    /// <see cref="Model.Status.LegacyFindingStatus.TransitionForClose"/> says the lifecycle must move,
+    /// the finding goes through <c>PUT /Vulnerabilities/{id}/status</c> first — which sets
+    /// <c>status_id</c>, writes the history row and requires <c>vulnerabilities_update</c> — and only
+    /// then is the register's workflow status written. A refused transition therefore throws before
+    /// the workflow column changes, so the two columns never end up saying different things. A workflow
+    /// write that fails <em>after</em> the lifecycle committed does not throw: it returns a partial
+    /// <see cref="Model.Findings.LifecycleChangeOutcome"/> carrying the lifecycle state re-read from the server.
+    /// </summary>
+    /// <returns>The finding's lifecycle state afterwards, and whether the workflow status was written.</returns>
+    Task<Model.Findings.LifecycleChangeOutcome> CloseThroughLifecycleAsync(int findingId, Model.IntStatus finalStatus,
+        DAL.Enums.FindingStatus currentLifecycle, string? justification);
+
+    /// <summary>
+    /// Reopens a finding from the desktop register (T239): back to Active in the lifecycle when it
+    /// holds the finding closed (<see cref="Model.Status.LegacyFindingStatus.TransitionForReopen"/>),
+    /// then the workflow status. Without it a reopened finding would stay closed for the API, the SLA
+    /// and the risk index. A workflow write that fails after the lifecycle moved is reported as for a close.
+    /// </summary>
+    /// <returns>The finding's lifecycle state afterwards, and whether the workflow status was written.</returns>
+    Task<Model.Findings.LifecycleChangeOutcome> ReopenThroughLifecycleAsync(int findingId, Model.IntStatus workflowStatus,
+        DAL.Enums.FindingStatus currentLifecycle, string? justification);
+
     /// <summary>The finding's audit timeline (3.2.2), newest first.</summary>
     Task<List<FindingStatusHistory>> GetStatusHistoryAsync(int findingId);
 

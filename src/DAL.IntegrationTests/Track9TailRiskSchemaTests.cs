@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using MySqlConnector;
@@ -51,7 +52,7 @@ public class Track9TailRiskSchemaTests(MariaDbContainerFixture fixture)
     private static Task SeedAsync(MySqlConnection conn) => ExecAsync(conn,
         "INSERT INTO `user` (`value`,`enabled`,`lockout`,`type`,`name`,`email`,`salt`,`password`,`role_id`,`admin`,`login`) " +
         "VALUES (970,1,0,'local','U970','u970@x.test','s',REPEAT('x',60),1,0,'user970');" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9701,'New'),(9702,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9701, "New"), (9702, "New")) +
         "INSERT INTO `risk_appetites` (`id`,`entity_id`,`max_acceptable_residual`,`dual_approval_threshold`,`created_at`) " +
         "VALUES (9790,NULL,6,5,NOW());");
 
@@ -63,9 +64,10 @@ public class Track9TailRiskSchemaTests(MariaDbContainerFixture fixture)
 
     private static string TailRow(int riskId, int run, int iterations = 10000, double probability = 0.03,
         int source = 1, double effectiveness = 0) =>
+        // Doubles are formatted invariantly: under a comma-decimal culture (pt-BR) 0.03 renders as 0,03 — one extra value.
         $"INSERT INTO risk_tail_statistics {TailColumns} VALUES ({riskId}, {run}, {iterations}, 7, 0.950, 0.01, 0.03, 0.06, " +
-        $"1000000, 4000000, 10000000, {source}, {effectiveness}, 137000, 120000, 154000, 0, 0, 0, 2740000, 2400000, " +
-        $"3080000, {probability}, 4700000, NOW(), NOW())";
+        $"1000000, 4000000, 10000000, {source}, {effectiveness.ToString(CultureInfo.InvariantCulture)}, 137000, 120000, 154000, 0, 0, 0, 2740000, 2400000, " +
+        $"3080000, {probability.ToString(CultureInfo.InvariantCulture)}, 4700000, NOW(), NOW())";
 
     private static async Task<MySqlException> RefusedAsync(MySqlConnection conn, string sql) =>
         await Assert.ThrowsAsync<MySqlException>(() => ExecAsync(conn, sql));

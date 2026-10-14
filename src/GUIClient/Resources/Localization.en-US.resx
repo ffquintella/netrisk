@@ -507,6 +507,9 @@
     <data name="businessProcess" xml:space="preserve">
         <value>business process</value>
     </data>
+    <data name="activity" xml:space="preserve">
+        <value>activity</value>
+    </data>
     <data name="Is Main Organization" xml:space="preserve">
         <value>Is Main Organization</value>
     </data>
@@ -1902,6 +1905,12 @@
     <data name="TemplateDeletedMSG" xml:space="preserve">
         <value>Template deleted.</value>
     </data>
+    <data name="EntitiesManageRequiredMSG" xml:space="preserve">
+        <value>Read-only: editing entities requires the entities_manage permission.</value>
+    </data>
+    <data name="EntityRiskContextRequiredMSG" xml:space="preserve">
+        <value>Risk context: editable only with the entity_risk_context permission and global scope.</value>
+    </data>
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Fill in the required fields before saving.</value>
     </data>
@@ -2174,6 +2183,9 @@
     </data>
     <data name="TransitionRefusedMSG" xml:space="preserve">
         <value>The status change was refused: </value>
+    </data>
+    <data name="CloseReasonRequiredMSG" xml:space="preserve">
+        <value>This final status needs a reason in the comments.</value>
     </data>
     <data name="RiskAcceptances" xml:space="preserve">
         <value>Risk acceptances</value>
@@ -3230,6 +3242,9 @@
     </data>
     <data name="Criticality" xml:space="preserve">
         <value>Criticality</value>
+    </data>
+    <data name="Internet Facing" xml:space="preserve">
+        <value>Internet Facing</value>
     </data>
     <data name="FilterAll" xml:space="preserve">
         <value>All</value>
@@ -4854,4 +4869,13 @@ Save anyway?</value>
   <data name="ThemeScrollBarPageRight" xml:space="preserve"><value>Page right</value></data>
   <data name="ThemeScrollBarScrollLeft" xml:space="preserve"><value>Scroll left</value></data>
   <data name="ThemeScrollBarScrollRight" xml:space="preserve"><value>Scroll right</value></data>
+    <data name="LifecyclePartiallyAppliedMSG" xml:space="preserve">
+        <value>The finding's lifecycle changed to {0}, but its workflow status could not be saved: {1}. The register now shows the lifecycle as the server holds it; try the workflow change again.</value>
+    </data>
+    <data name="EntityFieldNotSet" xml:space="preserve">
+        <value>Not set</value>
+    </data>
+    <data name="EntityBooleanNotSetMSG" xml:space="preserve">
+        <value>Not set: nothing is saved for this field until you choose a value.</value>
+    </data>
 </root>

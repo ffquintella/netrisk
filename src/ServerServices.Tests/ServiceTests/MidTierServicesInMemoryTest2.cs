@@ -185,6 +185,33 @@ public class FixRequestsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(2, saved.Status);
     }
 
+    /// <summary>
+    /// The sweep's finding (T237 review): a fix request is pushed to the website — title, description, solution, host — by
+    /// the job host under its unrestricted principal, and the request named any finding id. A scoped caller can now only
+    /// ask for a fix of a finding they can see; anything else is not found and stores nothing.
+    /// </summary>
+    [Fact]
+    public async Task TestAFixRequestOnAFindingOutsideTheCallersScopeIsRefused()
+    {
+        Seed(ctx =>
+        {
+            var mine = NewVuln(10);
+            mine.EntityId = 1;
+            var theirs = NewVuln(20);
+            theirs.EntityId = 2;
+            ctx.Vulnerabilities.AddRange(mine, theirs);
+        });
+
+        ScopeTo(1);
+
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _svc.CreateFixRequestAsync(NewFr(0, "LEAK", vulnId: 20)));
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _svc.CreateFixRequestAsync(NewFr(0, "NONE", vulnId: 999)));
+        Assert.Equal("MINE", (await _svc.CreateFixRequestAsync(NewFr(0, "MINE", vulnId: 10))).Identifier);
+
+        ScopeToEverything();
+        Assert.Equal(new[] { "MINE" }, (await _svc.GetAllFixRequestAsync()).Select(f => f.Identifier));
+    }
+
     [Fact]
     public async Task TestGetVulnerabilitiesFixRequest()
     {

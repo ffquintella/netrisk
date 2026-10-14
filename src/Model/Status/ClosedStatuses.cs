@@ -11,6 +11,13 @@ namespace Model.Status;
 /// severity summary (S38 §5.3) both read this set, so the dashboard and the Hosts header cannot
 /// disagree about the same finding. It was a private field of <c>MasterDashboardService</c> until
 /// the host summary needed the same answer.
+///
+/// For findings the set is exactly the keys of <see cref="LegacyFindingStatus.ClosingTargets"/>
+/// (S39 D-04, T239): every workflow value the desktop close dialog offers takes the finding out of
+/// the lifecycle's open population too, so a value closed there and open here would make the two
+/// columns disagree again. Mitigated, FixNotRequired, Outdated and FixVerified were missing until
+/// then — offered as final statuses by the close dialog, mapped to closed lifecycle states since
+/// <c>Structure/77.sql</c>, and still counted as open here. No incident status uses them.
 /// </summary>
 public static class ClosedStatuses
 {
@@ -26,7 +33,11 @@ public static class ClosedStatuses
         (int)IntStatus.Retired,
         (int)IntStatus.Deleted,
         (int)IntStatus.Completed,
-        (int)IntStatus.Cancelled
+        (int)IntStatus.Cancelled,
+        (int)IntStatus.Mitigated,
+        (int)IntStatus.FixNotRequired,
+        (int)IntStatus.Outdated,
+        (int)IntStatus.FixVerified
     };
 
     /// <summary>True when <paramref name="status"/> is in the closed set.</summary>

@@ -502,6 +502,89 @@ public class EntitiesService: ServiceBase, IEntitiesService
         return entity; 
     }
 
+    public void AuthorizeEntityWrite(EntityWriteKind kind, int? entityId, EntityDto? incoming,
+        bool holdsRiskContextPermission)
+    {
+        var scope = DalService.GetCurrentEntityScope();
+
+        // The entity map carries no scope filter: the checks below are the scope rule for it.
+        using var db = DalService.GetContext(withIdentity: false, bypassEntityScope: true);
+
+        Entity? stored = null;
+        if (kind != EntityWriteKind.Create)
+        {
+            stored = db.Entities.AsNoTracking().Include(e => e.EntitiesProperties).FirstOrDefault(e => e.Id == entityId)
+                     ?? throw new DataNotFoundException("entities", entityId?.ToString() ?? "",
+                         new Exception("Entity not found"));
+
+            if (!scope.Allows(stored.Id))
+                throw new EntityWriteRefusedException(EntityWriteErrors.EntityOutsideScope,
+                    $"Entity {stored.Id} is outside your entity scope.");
+        }
+
+        if (kind == EntityWriteKind.Delete) return;
+
+        var body = incoming ?? throw new ArgumentNullException(nameof(incoming));
+        var parentChanges = kind == EntityWriteKind.Create || stored!.Parent != body.Parent;
+
+        if (parentChanges)
+        {
+            if (body.Parent is not { } parent)
+            {
+                if (!scope.IsUnrestricted)
+                    throw new EntityWriteRefusedException(EntityWriteErrors.RootRequiresGlobalScope,
+                        "Only a caller with global scope can create a root entity or move one to the root.");
+            }
+            else
+            {
+                if (!db.Entities.Any(e => e.Id == parent))
+                    throw new EntityWriteRefusedException(EntityWriteErrors.ParentNotFound,
+                        $"Parent entity {parent} does not exist.", 400);
+
+                if (!scope.Allows(parent))
+                    throw new EntityWriteRefusedException(EntityWriteErrors.EntityOutsideScope,
+                        $"Parent entity {parent} is outside your entity scope.");
+
+                if (stored is not null && IsSelfOrAncestorOf(db, stored.Id, parent))
+                    throw new EntityWriteRefusedException(EntityWriteErrors.ParentCycle,
+                        $"Entity {parent} is entity {stored.Id} itself or one of its descendants; it cannot be its parent.", 400);
+            }
+        }
+
+        var changed = RiskContextProperties.Changed(
+            stored?.EntitiesProperties.Select(p => (p.Type, (string?)p.Value)) ?? [],
+            (body.EntitiesProperties ?? []).Select(p => (p.Type, (string?)p.Value)));
+
+        if (changed.Count == 0) return;
+
+        if (!holdsRiskContextPermission)
+            throw new EntityWriteRefusedException(EntityWriteErrors.RiskContextRequiresPermission,
+                $"Changing {string.Join(", ", changed)} requires the {EntityPermissions.RiskContext} permission.");
+
+        if (!scope.IsUnrestricted)
+            throw new EntityWriteRefusedException(EntityWriteErrors.RiskContextRequiresGlobalScope,
+                $"Changing {string.Join(", ", changed)} requires global scope: a process's criticality moves every unit it serves.");
+    }
+
+    /// <summary>
+    /// Whether <paramref name="entityId"/> is <paramref name="candidateParent"/> or one of its ancestors — that is,
+    /// whether making <paramref name="candidateParent"/> its parent would close a cycle. Walks up from the candidate
+    /// with a visited set, so an existing cycle above it also answers yes (refused) instead of looping.
+    /// </summary>
+    private static bool IsSelfOrAncestorOf(AuditableContext db, int entityId, int candidateParent)
+    {
+        var seen = new HashSet<int>();
+        int? current = candidateParent;
+
+        while (current is { } id)
+        {
+            if (id == entityId || !seen.Add(id)) return true;
+            current = db.Entities.AsNoTracking().Where(e => e.Id == id).Select(e => e.Parent).FirstOrDefault();
+        }
+
+        return false;
+    }
+
     public Entity DeleteEntity(int id)
     {
         using var dbContext = DalService.GetContext();

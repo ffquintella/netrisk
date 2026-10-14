@@ -6855,6 +6855,10 @@ namespace DAL.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
                     b.Property<string>("FrequencyCron")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -6893,6 +6897,8 @@ namespace DAL.Migrations
 
                     b.HasKey("Id")
                         .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_report_schedules_created_by_id");
 
                     b.HasIndex(new[] { "ReportTemplateVersionId" }, "fk_report_schedules_template_version");
 
@@ -13746,6 +13752,12 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.ReportSchedule", b =>
                 {
+                    b.HasOne("DAL.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_report_schedules_created_by_id");
+
                     b.HasOne("DAL.Entities.ReportTemplateVersion", "ReportTemplateVersion")
                         .WithMany()
                         .HasForeignKey("ReportTemplateVersionId")

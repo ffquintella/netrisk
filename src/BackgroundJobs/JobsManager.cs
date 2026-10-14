@@ -15,15 +15,24 @@ namespace BackgroundJobs;
 
 public static class JobsManager
 {
-    public static void ConfigureScheduledJobs(IServiceProvider sp)
+    public static void ConfigureScheduledJobs(IServiceProvider sp) =>
+        ConfigureScheduledJobs(sp, new RecurringJobManager());
+
+    /// <summary>
+    /// Schedules every recurring job on <paramref name="jobs"/>. Production passes a manager over
+    /// <c>JobStorage.Current</c>; <c>RecurringJobsContainerTest</c> passes a recording one, so the list of
+    /// scheduled job types it resolves from the container is this method's list rather than a copy of it
+    /// (T237, S39).
+    /// </summary>
+    public static void ConfigureScheduledJobs(IServiceProvider sp, IRecurringJobManager jobs)
     {
-        ConfigureBackupJobs();
-        ConfigureCleanupJobs();
-        ConfigureCalculationJobs();
-        ConfigureSyncJobs(sp);
-        ConfigureFindingJobs();
-        ConfigureIntegrationJobs();
-        ConfigureGovernanceJobs();
+        ConfigureBackupJobs(jobs);
+        ConfigureCleanupJobs(jobs);
+        ConfigureCalculationJobs(jobs);
+        ConfigureSyncJobs(sp, jobs);
+        ConfigureFindingJobs(jobs);
+        ConfigureIntegrationJobs(jobs);
+        ConfigureGovernanceJobs(jobs);
     }
 
     /// <summary>
@@ -40,43 +49,43 @@ public static class JobsManager
     ///
     /// Retention runs at 02:30, in the quiet hour, because it is the only job here that deletes.
     /// </summary>
-    private static void ConfigureGovernanceJobs()
+    private static void ConfigureGovernanceJobs(IRecurringJobManager jobs)
     {
-        RecurringJob
+        jobs
             .AddOrUpdate<ResidualRiskCalculation>("ResidualRiskCalculation",
                 x => x.Run(), "20 2 * * *");
 
-        RecurringJob
+        jobs
             .AddOrUpdate<GovernanceRetentionJob>("GovernanceRetention",
                 x => x.Run(), "30 2 * * *");
 
         // Stage 9.5 (S46 §4.6): the derived flags after the KEV/EPSS syncs (05:00, 05:20) and before the
         // expiry passes, so a Gate A onset is escalated before anything reads the register that morning.
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskFlagsDerivationJob>(RiskFlagsDerivationJob.JobId,
                 x => x.Run(), RiskFlagsDerivationJob.Cron);
 
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskAcceptanceExpiryPass>("RiskLevelAcceptanceExpiry",
                 x => x.Run(), "15 6 * * *");
 
         // Stage 9.8 (S49 §4.10): every KRI, after the expiry passes and before the cadence sweep, so a breach seen
         // overnight has flagged its risks for review by the time the 07:30 message goes out.
-        RecurringJob
+        jobs
             .AddOrUpdate<KriEvaluationJob>(KriEvaluationJob.JobId,
                 x => x.Run(), KriEvaluationJob.Cron);
 
         // Stage 9.9 (S50 §4.2): the archives due for their quarterly review, after the KRI evaluation (which may reopen
         // one) and before the cadence sweep.
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskArchiveReviewJob>(RiskArchiveReviewJob.JobId,
                 x => x.Run(), RiskArchiveReviewJob.Cron);
 
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskReviewCadenceJob>("RiskReviewCadence",
                 x => x.Run(), RiskReviewCadenceJob.Cron);
 
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskReviewCampaignJob>("RiskReviewCampaigns",
                 x => x.Run(), Cron.Daily(8));
     }
@@ -92,23 +101,23 @@ public static class JobsManager
     /// the SLA digest at 07:00, so a finding Vision One reported overnight appears in the right person's
     /// digest the same morning instead of tomorrow's.
     /// </summary>
-    private static void ConfigureIntegrationJobs()
+    private static void ConfigureIntegrationJobs(IRecurringJobManager jobs)
     {
-        RecurringJob
+        jobs
             .AddOrUpdate<NotificationDispatchJob>("NotificationDispatch",
                 x => x.Run(), Cron.Minutely());
 
         // Five minutes rather than minutely: the webhook is the primary path, and every poll is a
         // request per link against somebody's Jira.
-        RecurringJob
+        jobs
             .AddOrUpdate<IssueSyncPollingJob>("IssueSyncPolling",
                 x => x.Run(), @"*/5 * * * *");
 
-        RecurringJob
+        jobs
             .AddOrUpdate<TrendMicroSyncJob>("TrendMicroSync",
                 x => x.Run(), Cron.Daily(3));
 
-        RecurringJob
+        jobs
             .AddOrUpdate<SecurityScorecardSyncJob>("SecurityScorecardSync",
                 x => x.Run(), Cron.Daily(4));
 
@@ -116,18 +125,18 @@ public static class JobsManager
         // Running by a killed process both misreports as live work and refuses the next sync of that
         // connection, so the horizon that matters is "how long until an operator can retry", not
         // "how long until the display is tidy".
-        RecurringJob
+        jobs
             .AddOrUpdate<IntegrationSyncReaperJob>("IntegrationSyncReaper",
                 x => x.Run(), "10 * * * *");
 
         // Track 9 Stage 9.4 (S45 §6) — the public exploitation-signal feeds. At 05:00 and 05:20: after the
         // posture syncs above, so a finding imported overnight gets its KEV status and EPSS the same night,
         // and before the 06:00 expiry pass and the 07:00 SLA digest. The two never start in the same minute.
-        RecurringJob
+        jobs
             .AddOrUpdate<KevCatalogueSyncJob>(KevCatalogueSyncJob.JobId,
                 x => x.Run(), KevCatalogueSyncJob.Cron);
 
-        RecurringJob
+        jobs
             .AddOrUpdate<EpssSyncJob>(EpssSyncJob.JobId,
                 x => x.Run(), EpssSyncJob.Cron);
     }
@@ -137,18 +146,18 @@ public static class JobsManager
     /// acceptance lapsed overnight, and the SLA digest has to run after it so a finding that came
     /// back today appears in the right person's digest the same morning rather than tomorrow's.
     /// </summary>
-    private static void ConfigureFindingJobs()
+    private static void ConfigureFindingJobs(IRecurringJobManager jobs)
     {
-        RecurringJob
+        jobs
             .AddOrUpdate<RiskAcceptanceExpiryJob>("RiskAcceptanceExpiry",
                 x => x.Run(), Cron.Daily(6));
 
-        RecurringJob
+        jobs
             .AddOrUpdate<SlaBreachNotificationJob>("SlaBreachNotification",
                 x => x.Run(), Cron.Daily(7));
     }
 
-    private static void ConfigureSyncJobs(IServiceProvider sp)
+    private static void ConfigureSyncJobs(IServiceProvider sp, IRecurringJobManager jobs)
     {
         var settings = sp.GetService<ISettingsService>();
 
@@ -161,9 +170,9 @@ public static class JobsManager
             fastMinutes = ReadMinutes(settings, WebsiteSyncSettings.FastIntervalKey, fastMinutes);
         }
 
-        RecurringJob.AddOrUpdate<SyncBulkJob>("WebsiteSyncBulk",
+        jobs.AddOrUpdate<SyncBulkJob>("WebsiteSyncBulk",
             x => x.Run(), WebsiteSyncSettings.MinutesToCron(bulkMinutes));
-        RecurringJob.AddOrUpdate<SyncFastJob>("WebsiteSyncFast",
+        jobs.AddOrUpdate<SyncFastJob>("WebsiteSyncFast",
             x => x.Run(), WebsiteSyncSettings.MinutesToCron(fastMinutes));
     }
 
@@ -173,9 +182,9 @@ public static class JobsManager
         return int.TryParse(raw, out var minutes) && minutes >= 1 ? minutes : fallback;
     }
 
-    private static void ConfigureBackupJobs()
+    private static void ConfigureBackupJobs(IRecurringJobManager jobs)
     {
-        RecurringJob
+        jobs
             .AddOrUpdate<BackupWork>("BackupWork",
                 x => x.Run(), Cron.Daily(19)); 
         
@@ -183,46 +192,46 @@ public static class JobsManager
         //    .AddOrUpdate<BackupWork>(x => x.Run(), Cron.Minutely); 
     }
 
-    private static void ConfigureCleanupJobs()
+    private static void ConfigureCleanupJobs(IRecurringJobManager jobs)
     {
         
-        RecurringJob
+        jobs
             .AddOrUpdate<TransactionsCleanup>("TransactionsCleanup",
                 x => x.Run(), Cron.Minutely()); 
-        RecurringJob
+        jobs
             .AddOrUpdate<AuditCleanup>("AuditCleanup",
                 x => x.Run(), Cron.Daily(23)); 
-        RecurringJob
+        jobs
             .AddOrUpdate<FileCleanup>("FileCleanup",
                 x => x.Run(), Cron.Daily(1));
-        RecurringJob
+        jobs
             .AddOrUpdate<MessageCleanup>("MessageCleanup",
                 x => x.Run(), Cron.Daily(2));
-        RecurringJob
+        jobs
             .AddOrUpdate<TmpCleanup>("TmpCleanup",
                 x => x.Run(), Cron.Daily(3));
-        RecurringJob
+        jobs
             .AddOrUpdate<BackupCleanup>("BackupCleanup",
                 x => x.Run(), Cron.Daily(4));
-        RecurringJob
+        jobs
             .AddOrUpdate<BiometricTransactionCleanup>("BiometricTransactionCleanup",
                 x => x.Run(), Cron.Daily(5)); 
 
     }
 
-    private static void ConfigureCalculationJobs()
+    private static void ConfigureCalculationJobs(IRecurringJobManager jobs)
     {
         
-         RecurringJob
+         jobs
             .AddOrUpdate<ContributingImpactCalculation>("ContributingImpactCalculation",
                 x => x.Run(), @"*/10 * * * *"); 
          
-         RecurringJob
+         jobs
              .AddOrUpdate<RiskScoreCalculation>("RiskScoreCalculation",
                  x => x.Run(), @"0 */2 * * *"); 
          
          //DEBUG
-         //RecurringJob.AddOrUpdate<BackupWork>("DebugService", x => x.Run(), @"*/1 * * * *"); 
+         //jobs.AddOrUpdate<BackupWork>("DebugService", x => x.Run(), @"*/1 * * * *"); 
             
     }
 }

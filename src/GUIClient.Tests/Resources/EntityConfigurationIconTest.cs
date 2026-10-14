@@ -33,6 +33,7 @@ public class EntityConfigurationIconTest
     [Theory]
     [InlineData("strategicObjective", MaterialIconKind.BullseyeArrow)]
     [InlineData("itService", MaterialIconKind.ServerNetwork)]
+    [InlineData("activity", MaterialIconKind.FormatListChecks)]
     public void TestTheStage91TypesCarryTheirSpecifiedIcons(string definition, MaterialIconKind expected)
     {
         var configuration = EntityConfigurationSchema.Load();

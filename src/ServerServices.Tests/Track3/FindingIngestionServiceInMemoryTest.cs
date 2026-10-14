@@ -300,6 +300,49 @@ public class FindingIngestionServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Contains(regression, h => h.Justification != null && h.Justification.Contains("regression"));
     }
 
+    /// <summary>
+    /// T239: a desktop close now moves the lifecycle to Mitigated as well as the workflow column, so a
+    /// scanner regression must reopen both — otherwise the desktop, and every count that reads
+    /// ClosedStatuses, keeps calling "Fixed" a finding the lifecycle has reopened.
+    /// </summary>
+    [Fact]
+    public async Task TestARegressionAlsoReopensAClosedWorkflowStatus()
+    {
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus), Request());
+
+        var lifecycle = GetService<IFindingLifecycleService>();
+        var id = await FindingIdAsync("OpenSSL Heartbleed");
+
+        await lifecycle.TransitionAsync(id, FindingStatus.Mitigated, 1, FindingStatusChangeSource.Manual);
+        Seed(ctx => ctx.Vulnerabilities.Single(v => v.Id == id).Status = (ushort)Model.IntStatus.Fixed);
+
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus, SecondImport),
+            Request(at: SecondImport));
+
+        await using var db = OpenContext();
+        var finding = db.Vulnerabilities.Single(v => v.Id == id);
+
+        Assert.Equal(FindingStatus.Active, finding.LifecycleStatus);
+        Assert.Equal((ushort)Model.IntStatus.Reopened, finding.Status);
+        Assert.True(Model.Status.ClosedStatuses.IsOpen(finding.Status));
+    }
+
+    /// <summary>A plain re-sighting of an open finding leaves its workflow status where triage put it.</summary>
+    [Fact]
+    public async Task TestASightingOfAnOpenFindingLeavesItsWorkflowStatusAlone()
+    {
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus), Request());
+
+        var id = await FindingIdAsync("OpenSSL Heartbleed");
+        Seed(ctx => ctx.Vulnerabilities.Single(v => v.Id == id).Status = (ushort)Model.IntStatus.AwaitingFix);
+
+        await _ingestion.IngestAsync(await ParseAsync("nessus", ImporterFixtures.Nessus, SecondImport),
+            Request(at: SecondImport));
+
+        await using var db = OpenContext();
+        Assert.Equal((ushort)Model.IntStatus.AwaitingFix, db.Vulnerabilities.Single(v => v.Id == id).Status);
+    }
+
     [Fact]
     public async Task TestSeverityChangeMovesTheDueDateAndSaysSoOnTheTimeline()
     {

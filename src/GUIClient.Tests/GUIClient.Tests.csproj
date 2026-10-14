@@ -46,6 +46,12 @@
     <!-- Who may write the risk record from the risk screen (T328): the mirror of RisksController's RequireSubmitRisk,
          RequireCloseRisk and RequireDeleteRisk, on top of PermissionGate. Pure: AuthenticatedUserInfo in, bool out. -->
     <Compile Include="..\GUIClient\Tools\RiskRecordAccess.cs" LinkBase="Tools" />
+    <!-- Who may edit the entity map and its risk-context fields (T241): the mirror of EntitiesController on top of
+         PermissionGate. Pure: AuthenticatedUserInfo and a property key in, bool out. -->
+    <Compile Include="..\GUIClient\Tools\EntityAccess.cs" LinkBase="Tools" />
+    <!-- What an entity form's Integer and Boolean fields load and save (T241/T242 review): a nullable field with
+         nothing stored stays not set and saves nothing, so a rename never declares criticality 0. Pure. -->
+    <Compile Include="..\GUIClient\Tools\EntityFieldValues.cs" LinkBase="Tools" />
     <!-- The status → icon table behind IntStatusToMaterialIconkindConverter, and which target types it answers
          (T325). Pure: MaterialIconKind is the Avalonia-free Material.Icons enum referenced above. -->
     <Compile Include="..\GUIClient\Tools\StatusIconMap.cs" LinkBase="Tools" />

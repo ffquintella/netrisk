@@ -194,6 +194,26 @@ public class Track4ControllersTest : BaseControllerTest
                 .Create(new NotificationSubscription())).Result);
     }
 
+    /// <summary>
+    /// T237 review: notification routing needs an unrestricted caller, which the service decides
+    /// (<c>NotificationSubscriptionsServiceInMemoryTest</c>). Its refusal is a 403 with the reason — it used to fall through
+    /// the integrations controllers' mapping to a 500.
+    /// </summary>
+    [Fact]
+    public async Task AServiceRefusalForScopeIsA403()
+    {
+        var refusing = NSubstitute.Substitute.For<ServerServices.Interfaces.INotificationSubscriptionsService>();
+        refusing.CreateSubscriptionAsync(NSubstitute.Arg.Any<NotificationSubscription>())
+            .Returns<Task<NotificationSubscription>>(_ =>
+                throw new Model.Exceptions.PermissionInvalidException("global_scope", 0, "NotificationSubscriptions.Create"));
+        var controller = ResolveController<NotificationSubscriptionsController>(s => s.AddSingleton(refusing));
+
+        var result = await controller.Create(new NotificationSubscription { ChannelId = 1 });
+
+        var forbidden = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(403, forbidden.StatusCode);
+    }
+
     [Fact]
     public async Task TheDeliveryLogIsReadableAndCarriesTheLastError()
     {

@@ -1,4 +1,6 @@
-﻿using DAL.Entities;
+﻿using System.Security.Claims;
+using API.Security;
+using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model.Entities;
@@ -79,21 +81,48 @@ public class EntitiesController: ApiBaseController
         
     }
 
+    /// <summary>
+    /// Whether the caller may set risk-context properties: the permission, or the Admin role that
+    /// <c>PermissionAuthorizationHandler</c> admits for every permission.
+    /// </summary>
+    private bool HoldsRiskContextPermission()
+    {
+        var principal = _httpContextAccessor.HttpContext?.User;
+        return principal is not null &&
+               (principal.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin") ||
+                principal.HasClaim(c => c.Type == "Permission" && c.Value == EntityPermissions.RiskContext));
+    }
+
+    /// <summary>The refusal as the API answers it: the status the guard chose and <c>{ error, message }</c>.</summary>
+    private ObjectResult Refused(EntityWriteRefusedException ex, int userId, string operation)
+    {
+        Logger.Warning("User:{User} was refused {Operation}: {Error} {Message}", userId, operation, ex.Error, ex.Message);
+        return StatusCode(ex.StatusCode, new { error = ex.Error, message = ex.Message });
+    }
+
     [HttpDelete]
-    [Authorize(Policy = "RequireValidUser")]
+    [PermissionAuthorize(EntityPermissions.Manage)]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult DeleteOne(int id)
     {
         var user = GetUser();
 
         try
         {
+            // T292: a scoped caller deletes only inside their subtree.
+            _entitiesService.AuthorizeEntityWrite(EntityWriteKind.Delete, id, null, HoldsRiskContextPermission());
+
             Logger.Information("User:{User} delete entity: {Id}", user.Value, id);
             _entitiesService.DeleteEntity(id);
 
             return Ok();
+        }
+        catch (EntityWriteRefusedException ex)
+        {
+            return Refused(ex, user.Value, $"deleting entity {id}");
         }
         catch(DataNotFoundException ex)
         {
@@ -135,9 +164,11 @@ public class EntitiesController: ApiBaseController
 
    
     [HttpPut]
+    [PermissionAuthorize(EntityPermissions.Manage)]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult<Entity> Update(int id, [FromBody] EntityDto entityDto)
     {
 
@@ -171,6 +202,21 @@ public class EntitiesController: ApiBaseController
             return BadRequest(ex.Message);
         }
 
+        // T241/T292, before anything is written: the entity and any new parent inside the caller's subtree, no
+        // cycle, and a change to a risk-context property only with entity_risk_context and global scope.
+        try
+        {
+            _entitiesService.AuthorizeEntityWrite(EntityWriteKind.Update, id, entityDto, HoldsRiskContextPermission());
+        }
+        catch (EntityWriteRefusedException ex)
+        {
+            return Refused(ex, user.Value, $"updating entity {id}");
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
+        }
+
         try
         {
             Logger.Information("User:{User} updated entity id:{Id}", user.Value, id);
@@ -201,9 +247,11 @@ public class EntitiesController: ApiBaseController
     }
     
     [HttpPost]
+    [PermissionAuthorize(EntityPermissions.Manage)]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntitiesConfiguration))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public ActionResult<Entity> Create([FromBody] EntityDto entity)
     {
 
@@ -213,6 +261,10 @@ public class EntitiesController: ApiBaseController
         {
             
             _entitiesService.ValidatePropertyList(entity.DefinitionName, entity.EntitiesProperties);
+
+            // T241/T292, before the instance is created: the parent inside the caller's subtree, and a
+            // risk-context value only with entity_risk_context and global scope.
+            _entitiesService.AuthorizeEntityWrite(EntityWriteKind.Create, null, entity, HoldsRiskContextPermission());
             
             Logger.Information("User:{User} created entity of definition {Type}", user.Value, entity.DefinitionName);
             Entity newObj;
@@ -230,7 +282,10 @@ public class EntitiesController: ApiBaseController
 
             return Ok(newObj);
         }
-
+        catch (EntityWriteRefusedException ex)
+        {
+            return Refused(ex, user.Value, "creating an entity");
+        }
         catch (Exception ex)
         {
             Logger.Warning(ex, "Unknown error while creating entites: {Message}", ex.Message);

@@ -139,6 +139,31 @@ public class StatisticsServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(1, result.General.Low);
     }
 
+    /// <summary>
+    /// T238 (S39 §4.5): the bounds are inclusive. Scores exactly on 4 and 7 used to land one band
+    /// too low (<c>&gt; 4</c>, <c>&gt; 7</c>), and Very High (9 and above) counts under High.
+    /// </summary>
+    [Fact]
+    public async Task TestRisksNumbersPlaceBoundaryScoresInTheBandTheyOpen()
+    {
+        float[] scores = [0f, 3.99f, 4f, 6.99f, 7f, 9f, 10f];
+        Seed(ctx =>
+        {
+            for (var i = 0; i < scores.Length; i++)
+            {
+                ctx.Risks.Add(NewRisk(i + 1));
+                ctx.RiskScorings.Add(new RiskScoring { Id = i + 1, CalculatedRisk = scores[i] });
+            }
+        });
+
+        var result = await _svc.GetRisksNumbersAsync();
+
+        Assert.Equal(scores.Length, result.General.Total);
+        Assert.Equal(2, result.General.Low);     // 0, 3.99
+        Assert.Equal(2, result.General.Medium);  // 4, 6.99
+        Assert.Equal(3, result.General.High);    // 7, 9, 10
+    }
+
     [Fact]
     public async Task TestRisksTopAndGroups()
     {

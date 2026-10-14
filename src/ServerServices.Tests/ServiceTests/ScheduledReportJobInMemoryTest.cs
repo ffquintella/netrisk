@@ -9,6 +9,7 @@ using FluentEmail.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using Xunit;
 using ILogger = Serilog.ILogger;
@@ -24,7 +25,10 @@ public class ScheduledReportJobInMemoryTest : InMemoryServiceTestBase
     {
         _renderingService = GetService<IQuestPdfRenderingService>();
         _dalService = GetService<IDalService>();
+        _scopeResolver = new UserEntityScopeResolver(_dalService, GetService<IPermissionsService>());
     }
+
+    private readonly IUserEntityScopeResolver _scopeResolver;
 
     [Fact]
     public async Task TestScheduledReportJob_SuccessFlow()
@@ -47,6 +51,8 @@ public class ScheduledReportJobInMemoryTest : InMemoryServiceTestBase
                 Email = "admin@netrisk.io", 
                 Type = "Internal",
                 Enabled = true,
+                // The creator the job resolves its scope from (T237 review): an administrator reads every entity.
+                Admin = true,
                 Password = new byte[16]
             };
             ctx.Users.Add(user);
@@ -72,14 +78,15 @@ public class ScheduledReportJobInMemoryTest : InMemoryServiceTestBase
                 FrequencyCron = "0 9 1 * *",
                 RecipientsJson = "[\"recipient@netrisk.io\"]",
                 IsEnabled = true,
-                LastStatus = "Pending"
+                LastStatus = "Pending",
+                CreatedById = 1
             };
             ctx.ReportSchedules.Add(schedule);
         });
 
         // Construct Job
         var mockLogger = Substitute.For<ILogger>();
-        var job = new ScheduledReportJob(_dalService, _renderingService, mockFluentEmail);
+        var job = new ScheduledReportJob(_dalService, _renderingService, mockFluentEmail, _scopeResolver);
 
         // Run Job
         await job.Run(1);
@@ -136,12 +143,13 @@ public class ScheduledReportJobInMemoryTest : InMemoryServiceTestBase
                 FrequencyCron = "0 9 * * 1",
                 RecipientsJson = "[\"recipient2@netrisk.io\"]",
                 IsEnabled = false, // DISABLED!
-                LastStatus = "Pending"
+                LastStatus = "Pending",
+                CreatedById = 2
             };
             ctx.ReportSchedules.Add(schedule);
         });
 
-        var job = new ScheduledReportJob(_dalService, _renderingService, mockFluentEmail);
+        var job = new ScheduledReportJob(_dalService, _renderingService, mockFluentEmail, _scopeResolver);
 
         await job.Run(2);
 

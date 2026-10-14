@@ -7,6 +7,7 @@ using AvaloniaExtraControls.Models;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models.Events;
+using GUIClient.Tools;
 using Model.DTO;
 using Model.Entities;
 using ReactiveUI;
@@ -28,6 +29,9 @@ public class EntityFormViewModel : ViewModelBase
     public new string StrSave => Localizer["Save"];
     public new string StrCancel => Localizer["Cancel"];
     public string StrHasErrors => Localizer["EntityFormHasErrorsMSG"];
+
+    /// <summary>The notice shown instead of an editable form to a user without <c>entities_manage</c> (T241).</summary>
+    public string StrEntitiesManageRequired => Localizer["EntitiesManageRequiredMSG"];
 
     #endregion
 
@@ -61,6 +65,11 @@ public class EntityFormViewModel : ViewModelBase
         Fields.Where(f => f.HasError).Select(f => $"{f.Label}: {f.Error}").Distinct());
 
     public bool HasErrors => Fields.Any(f => f.HasError);
+
+    /// <summary>Whether the user may save this form at all: <c>entities_manage</c> or the Admin role (T241).</summary>
+    public bool CanManage { get; private set; }
+
+    public bool IsReadOnlyForm => !CanManage;
 
     #endregion
 
@@ -107,6 +116,14 @@ public class EntityFormViewModel : ViewModelBase
         var strAvailable = Localizer["Available"];
         var strSelected = Localizer["Selected"];
         var required = Localizer["PleaseEnterAValueMSG"];
+        var riskContextLocked = Localizer["EntityRiskContextRequiredMSG"];
+        var notSet = Localizer["EntityFieldNotSet"];
+        var booleanNotSet = Localizer["EntityBooleanNotSetMSG"];
+
+        var user = AuthenticationService.AuthenticatedUserInfo;
+        CanManage = EntityAccess.CanManage(user);
+        this.RaisePropertyChanged(nameof(CanManage));
+        this.RaisePropertyChanged(nameof(IsReadOnlyForm));
 
         var fields = new ObservableCollection<EntityFieldViewModel>();
 
@@ -114,9 +131,16 @@ public class EntityFormViewModel : ViewModelBase
         {
             var values = entity.EntitiesProperties.Where(ep => ep.Type == key).ToList();
 
-            var field = BuildField(key, type, values);
+            var access = new FieldAccess(
+                EntityAccess.IsFieldReadOnly(key, user),
+                EntityAccess.IsRiskContextLocked(key, user) ? riskContextLocked.Value : "",
+                values.Select(v => v.Value).ToList());
+
+            var field = BuildField(key, type, values, access);
             field.StrAvailable = strAvailable;
             field.StrSelected = strSelected;
+            field.StrNotSet = notSet;
+            field.StrBooleanNotSet = booleanNotSet;
             field.RequiredMessage = required;
             field.ValidityChanged = OnFieldChanged;
             field.Revalidate();
@@ -129,10 +153,20 @@ public class EntityFormViewModel : ViewModelBase
         Recompute();
     }
 
-    private EntityFieldViewModel BuildField(string key, EntityType type, List<EntitiesProperty> values)
+    /// <summary>What T241 decides about one field: read-only or not, why, and the values to save back if read-only.</summary>
+    private sealed record FieldAccess(bool IsReadOnly, string Reason, IReadOnlyList<string> OriginalValues);
+
+    private EntityFieldViewModel BuildField(string key, EntityType type, List<EntitiesProperty> values, FieldAccess access)
     {
         var label = LocalizedLabel(type.Label);
         var propertyId = values.Count > 0 ? values[0].Id : 0;
+
+        EntityFieldViewModel New(EntityFieldViewModel.FieldKind kind) => new(key, label, type, kind, propertyId)
+        {
+            IsReadOnly = access.IsReadOnly,
+            ReadOnlyReason = access.Reason,
+            OriginalValues = access.OriginalValues
+        };
 
         if (type.Type.StartsWith("Definition"))
         {
@@ -140,7 +174,7 @@ public class EntityFormViewModel : ViewModelBase
                 ? EntityFieldViewModel.FieldKind.MultiSelect
                 : EntityFieldViewModel.FieldKind.SingleSelect;
 
-            var field = new EntityFieldViewModel(key, label, type, kind, propertyId);
+            var field = New(kind);
 
             var definitionName = LabelIdParser.ExtractParenthesizedValue(type.Type);
             if (definitionName == null) return field;
@@ -172,31 +206,31 @@ public class EntityFormViewModel : ViewModelBase
 
         switch (type.Type)
         {
+            // A nullable field with nothing stored stays not set, and saves nothing until the user sets it (T241/T242
+            // review): loading it as the default made every save declare criticality 0 or internetFacing false.
             case "Integer":
             {
-                var field = new EntityFieldViewModel(key, label, type,
-                    EntityFieldViewModel.FieldKind.Integer, propertyId);
-                var raw = values.Count > 0 ? values[0].Value : type.DefaultValue ?? "0";
-                field.IntegerValue = decimal.TryParse(raw, out var parsed) ? parsed : 0;
+                var field = New(EntityFieldViewModel.FieldKind.Integer);
+                field.IntegerValue = EntityFieldValues.LoadInteger(StoredValues(values), type.Nullable, type.DefaultValue);
                 return field;
             }
             case "Boolean":
             {
-                var field = new EntityFieldViewModel(key, label, type,
-                    EntityFieldViewModel.FieldKind.Boolean, propertyId);
-                var raw = values.Count > 0 ? values[0].Value : type.DefaultValue ?? "false";
-                field.BooleanValue = bool.TryParse(raw, out var parsed) && parsed;
+                var field = New(EntityFieldViewModel.FieldKind.Boolean);
+                field.BooleanValue = EntityFieldValues.LoadBoolean(StoredValues(values), type.Nullable, type.DefaultValue);
                 return field;
             }
             default:
             {
-                var field = new EntityFieldViewModel(key, label, type,
-                    EntityFieldViewModel.FieldKind.Text, propertyId);
+                var field = New(EntityFieldViewModel.FieldKind.Text);
                 field.TextValue = values.Count > 0 ? values[0].Value : type.DefaultValue ?? "";
                 return field;
             }
         }
     }
+
+    private static IReadOnlyList<string> StoredValues(List<EntitiesProperty> values) =>
+        values.Select(v => v.Value).ToList();
 
     /// <summary>Falls back to the raw definition label when the resource is missing.</summary>
     private static string LocalizedLabel(string label)
@@ -213,7 +247,7 @@ public class EntityFormViewModel : ViewModelBase
 
     private void Recompute()
     {
-        SaveEnabled = Fields.All(f => f.IsValid) && IsDirty;
+        SaveEnabled = CanManage && Fields.All(f => f.IsValid) && IsDirty;
 
         this.RaisePropertyChanged(nameof(ErrorSummary));
         this.RaisePropertyChanged(nameof(HasErrors));
@@ -240,18 +274,36 @@ public class EntityFormViewModel : ViewModelBase
 
         foreach (var field in Fields)
         {
+            // A read-only field goes back exactly as it was stored (T241). Its control may show a default the user
+            // never chose — an absent criticality loads as 0 — and sending that would be a change the API refuses.
+            if (field.IsReadOnly)
+            {
+                foreach (var value in field.OriginalValues)
+                    dto.EntitiesProperties.Add(field.Kind == EntityFieldViewModel.FieldKind.MultiSelect
+                        ? new EntitiesPropertyDto
+                        {
+                            Id = field.PropertyId, Name = $"{field.PropertyKey}-{_entity.Id}-{value}",
+                            Type = field.PropertyKey, Value = value
+                        }
+                        : Property(field, value));
+                continue;
+            }
+
             switch (field.Kind)
             {
                 case EntityFieldViewModel.FieldKind.Text:
                     dto.EntitiesProperties.Add(Property(field, field.TextValue));
                     break;
 
+                // Not set saves nothing: the property stays absent rather than declared 0 or false.
                 case EntityFieldViewModel.FieldKind.Integer:
-                    dto.EntitiesProperties.Add(Property(field, Convert.ToUInt32(field.IntegerValue).ToString()));
+                    if (EntityFieldValues.SaveInteger(field.IntegerValue) is { } integer)
+                        dto.EntitiesProperties.Add(Property(field, integer));
                     break;
 
                 case EntityFieldViewModel.FieldKind.Boolean:
-                    dto.EntitiesProperties.Add(Property(field, field.BooleanValue.ToString().ToLower()));
+                    if (EntityFieldValues.SaveBoolean(field.BooleanValue) is { } boolean)
+                        dto.EntitiesProperties.Add(Property(field, boolean));
                     break;
 
                 case EntityFieldViewModel.FieldKind.SingleSelect:
@@ -275,7 +327,19 @@ public class EntityFormViewModel : ViewModelBase
             }
         }
 
-        var result = await _entitiesService.SaveEntityAsync(dto);
+        Entity? result;
+        try
+        {
+            result = await _entitiesService.SaveEntityAsync(dto);
+        }
+        catch (Exception ex)
+        {
+            // The API's refusal (403 for a permission or the scope, T241/T292) or any other failure: said, not thrown
+            // into the command, which would take the window down.
+            Logger.Warning(ex, "Saving entity {Id} failed", _entity.Id);
+            Toasts.Error(ExplainError(ex));
+            return;
+        }
 
         if (result == null) return;
 

@@ -16,7 +16,14 @@ public interface ILinksService
     /// <param name="data">The data to be encoded with the link</param>
     /// <returns>The link url</returns>
     public string CreateLink(string type, DateTime expirationDate, byte[]? data);
-    
+
+    /// <summary>
+    /// Creates a new link and returns its raw key, for a caller that builds its own URL. The key is
+    /// <c>RandomGenerator.RandomToken(32)</c> — 256 bits of CSPRNG output, URL-safe — and only its
+    /// <c>LinkKeyHash.Primary</c> digest is stored, so the key exists nowhere but in the value returned.
+    /// </summary>
+    public string CreateLinkKey(string type, DateTime expirationDate, byte[]? data);
+
     /// <summary>
     /// Check if the specified link exists
     /// </summary>

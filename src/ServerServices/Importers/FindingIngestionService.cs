@@ -7,6 +7,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Exceptions;
+using Model.Status;
 using Serilog;
 using ServerServices.Findings;
 using ServerServices.Importers.Dedup;
@@ -790,6 +791,13 @@ public class FindingIngestionService(
         {
             var from = existing.LifecycleStatus;
             existing.LifecycleStatus = FindingStatus.Active;
+
+            // The register's workflow column follows (S39 D-04, T239): a desktop close now moves the
+            // lifecycle to Mitigated, so this regression path is the common one, and leaving the
+            // workflow column at Fixed would show the reopened finding as closed on the desktop and
+            // in every count that reads ClosedStatuses.
+            if (ClosedStatuses.IsClosed(existing.Status))
+                existing.Status = (ushort)IntStatus.Reopened;
 
             db.FindingStatusHistories.Add(new FindingStatusHistory
             {

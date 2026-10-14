@@ -327,6 +327,68 @@ public class NotificationSubscriptionsServiceInMemoryTest : InMemoryServiceTestB
         Assert.Empty(await _svc.GetSubscriptionsAsync());
     }
 
+    // --- scope (T237 review) ----------------------------------------------------------------
+
+    /// <summary>
+    /// The sweep's finding: the dispatcher — in a request and in the job host, whose principal is unrestricted — matches
+    /// every entity's events against every subscription, so a subscription written by a caller scoped to one entity
+    /// mailed them the others' risks, findings and incidents. Routing is organisation-wide now: only an unrestricted
+    /// caller writes it.
+    /// </summary>
+    [Fact]
+    public async Task AScopedCallerCannotRouteEventsToAChannel()
+    {
+        var channel = await _svc.CreateChannelAsync(EmailChannel(), 1);
+
+        ScopeTo(10);
+        await Assert.ThrowsAsync<PermissionInvalidException>(() => _svc.CreateSubscriptionAsync(
+            new NotificationSubscription { EventType = NotificationEventType.RiskCreated, ChannelId = channel.Id }));
+
+        ScopeToEverything();
+        Assert.Empty(await _svc.GetSubscriptionsAsync());
+    }
+
+    [Fact]
+    public async Task AScopedCallerCannotChangeOrDeleteASubscription()
+    {
+        var channel = await _svc.CreateChannelAsync(EmailChannel(), 1);
+        var subscription = await _svc.CreateSubscriptionAsync(new NotificationSubscription
+        {
+            EventType = NotificationEventType.RiskCreated, ChannelId = channel.Id, EntityId = 10
+        });
+
+        ScopeTo(10);
+        // Widening an entity-bound subscription to every entity is the same leak as creating one.
+        await Assert.ThrowsAsync<PermissionInvalidException>(() => _svc.UpdateSubscriptionAsync(
+            new NotificationSubscription
+            {
+                Id = subscription.Id, EventType = NotificationEventType.RiskCreated, ChannelId = channel.Id,
+                EntityId = null
+            }));
+        await Assert.ThrowsAsync<PermissionInvalidException>(() => _svc.DeleteSubscriptionAsync(subscription.Id));
+
+        ScopeToEverything();
+        Assert.Equal(10, Assert.Single(await _svc.GetSubscriptionsAsync()).EntityId);
+    }
+
+    /// <summary>The delivery log holds every payload sent, whatever its entity: a scoped caller reads none of it.</summary>
+    [Fact]
+    public async Task AScopedCallerCannotReadOrRequeueTheDeliveryLog()
+    {
+        Seed(ctx => ctx.NotificationDeliveries.Add(new NotificationDelivery
+        {
+            Id = 1, EventType = NotificationEventType.SlaBreached, Status = NotificationDeliveryStatus.Failed,
+            CreatedAt = DateTime.UtcNow
+        }));
+
+        ScopeTo(10);
+        await Assert.ThrowsAsync<PermissionInvalidException>(() => _svc.GetDeliveriesAsync());
+        await Assert.ThrowsAsync<PermissionInvalidException>(() => _svc.RequeueDeliveryAsync(1));
+
+        ScopeToEverything();
+        Assert.Single(await _svc.GetDeliveriesAsync());
+    }
+
     // --- delivery log -----------------------------------------------------------------------
 
     [Fact]

@@ -114,4 +114,12 @@ public class IrpTaskStatusChangeDto
     public int TaskExecutionId { get; set; }
     public int NewStatus { get; set; }
     public DateTime ActionTimeUtc { get; set; }
+
+    /// <summary>
+    /// The <see cref="IrpTaskReportLink"/> key the visitor presented. The API re-checks that it still
+    /// names a live link bound to <see cref="TaskExecutionId"/> before applying the change, and deletes
+    /// the link afterwards, so a website that is compromised or buggy cannot change an execution it
+    /// holds no key for (NR-2026-037).
+    /// </summary>
+    public string ReportKey { get; set; } = "";
 }

@@ -25,6 +25,27 @@ public interface IEntitiesService
     /// <param name="entityDefinitionName"></param>
     /// <param name="properties"></param>
     public void ValidatePropertyList(string entityDefinitionName, List<EntitiesPropertyDto> properties);
+
+    /// <summary>
+    /// Refuses a write to the entity map the caller may not make, before anything is written (T241, T292):
+    /// <list type="bullet">
+    /// <item>a scoped caller may touch only entities inside their subtree — the entity itself and, on create or
+    /// re-parent, the new parent; creating or moving a root needs unrestricted scope. With hierarchical scope the
+    /// parent link <em>is</em> an access grant, so a re-parent into one's own subtree would otherwise be a way to
+    /// take another unit's records;</item>
+    /// <item>a re-parent may not make the entity its own ancestor;</item>
+    /// <item>setting or changing a <see cref="RiskContextProperties">risk-context property</see> needs
+    /// <paramref name="holdsRiskContextPermission"/> and unrestricted scope.</item>
+    /// </list>
+    /// </summary>
+    /// <param name="kind">Create, update or delete.</param>
+    /// <param name="entityId">The entity updated or deleted; ignored on create.</param>
+    /// <param name="incoming">The body of a create or update (parent and complete property set); null on delete.</param>
+    /// <param name="holdsRiskContextPermission">Whether the caller holds <c>entity_risk_context</c> (or the Admin role).</param>
+    /// <exception cref="Model.Exceptions.EntityWriteRefusedException">The write is refused; carries the error code.</exception>
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The entity updated or deleted does not exist.</exception>
+    public void AuthorizeEntityWrite(EntityWriteKind kind, int? entityId, EntityDto? incoming,
+        bool holdsRiskContextPermission);
     
     /// <summary>
     /// Creates a new EntityProperty

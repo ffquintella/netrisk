@@ -81,6 +81,12 @@ public class EntitiesViewModel: ViewModelBase
     public bool CanReadTrack9Catalogue => GUIClient.Tools.Track9.Track9WorkspaceAccess.CanReadRegister(AuthenticationService.AuthenticatedUserInfo, "data_catalogue_manage");
     public bool ShowTrack9DataCatalogue => IsTrack9DataEntity && CanReadTrack9Catalogue;
     public bool CanReadTrack9 => CanReadTrack9ThirdParties || CanReadTrack9Catalogue;
+
+    /// <summary>
+    /// Add, Edit and Delete (T241): <c>entities_manage</c> or the Admin role. A courtesy mirror of
+    /// <c>EntitiesController</c>, which refuses the write either way.
+    /// </summary>
+    public bool CanManageEntities => EntityAccess.CanManage(AuthenticationService.AuthenticatedUserInfo);
     public string StrTrack9Workspace => Localizer["Track9Workspace"];
 
     /// <summary>Stage 9.3 (S43 §7): continuity for processes and IT services.</summary>
@@ -162,6 +168,7 @@ public class EntitiesViewModel: ViewModelBase
         
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
+            this.RaisePropertyChanged(nameof(CanManageEntities));
             _ = InitializeAsync();
         };
         

@@ -2661,6 +2661,19 @@ public partial class NRDbContext : DbContext
                 .HasForeignKey(d => d.ReportTemplateVersionId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_report_schedules_template_version");
+
+            // T237 review: the creator whose scope the scheduled job reads under. Set null with the user, so a deleted
+            // creator's schedule stops rather than running as nobody.
+            entity.Property(e => e.CreatedById)
+                .HasColumnType("int(11)")
+                .HasColumnName("created_by_id");
+
+            entity.HasIndex(e => e.CreatedById, "idx_report_schedules_created_by_id");
+
+            entity.HasOne<User>().WithMany()
+                .HasForeignKey(e => e.CreatedById)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_report_schedules_created_by_id");
         });
 
         modelBuilder.Entity<Review>(entity =>

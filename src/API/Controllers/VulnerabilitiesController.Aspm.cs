@@ -442,7 +442,8 @@ public partial class VulnerabilitiesController
 
         if (scope.IsUnrestricted) return null;
 
-        var ids = scope.EntityIds.Distinct().ToList();
+        // By claim (T292): a single claim covering a subtree still names one tenant, the claimed entity.
+        var ids = scope.ClaimedEntityIds.Distinct().ToList();
         return ids.Count == 1 ? ids[0] : null;
     }
 

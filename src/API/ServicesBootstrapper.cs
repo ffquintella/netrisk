@@ -89,6 +89,8 @@ public static class ServicesBootstrapper
         services.AddSingleton<IJobManager>(sp => sp.GetRequiredService<JobManager>());
         services.AddSingleton<IConfiguration>(config);
         
+        // T292: one entity-tree cache per process, so a re-parent saved through any context invalidates it for all.
+        services.AddSingleton<ServerServices.Security.IEntityHierarchy, ServerServices.Security.EntityHierarchy>();
         services.AddSingleton<IDalService, DalService>();
         
         //services.AddTransient<DALService>();

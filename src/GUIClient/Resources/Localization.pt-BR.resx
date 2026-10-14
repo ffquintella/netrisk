@@ -510,6 +510,9 @@
     <data name="businessProcess" xml:space="preserve">
         <value>processo de negócio</value>
     </data>
+    <data name="activity" xml:space="preserve">
+        <value>atividade</value>
+    </data>
     <data name="Is Main Organization" xml:space="preserve">
         <value>Organização Principal</value>
     </data>
@@ -1971,6 +1974,12 @@
     <data name="TemplateDeletedMSG" xml:space="preserve">
         <value>Modelo excluído.</value>
     </data>
+    <data name="EntitiesManageRequiredMSG" xml:space="preserve">
+        <value>Somente leitura: editar entidades requer a permissão entities_manage.</value>
+    </data>
+    <data name="EntityRiskContextRequiredMSG" xml:space="preserve">
+        <value>Contexto de risco: editável somente com a permissão entity_risk_context e escopo global.</value>
+    </data>
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Preencha os campos obrigatórios antes de salvar.</value>
     </data>
@@ -2243,6 +2252,9 @@
     </data>
     <data name="TransitionRefusedMSG" xml:space="preserve">
         <value>A alteração de situação foi recusada: </value>
+    </data>
+    <data name="CloseReasonRequiredMSG" xml:space="preserve">
+        <value>Esta situação final exige um motivo nos comentários.</value>
     </data>
     <data name="RiskAcceptances" xml:space="preserve">
         <value>Aceitações de risco</value>
@@ -3296,6 +3308,9 @@
     </data>
     <data name="Criticality" xml:space="preserve">
         <value>Criticidade</value>
+    </data>
+    <data name="Internet Facing" xml:space="preserve">
+        <value>Exposta à internet</value>
     </data>
     <data name="FilterAll" xml:space="preserve">
         <value>Todos</value>
@@ -4917,4 +4932,13 @@ Salvar mesmo assim?</value>
   <data name="ThemeScrollBarPageRight" xml:space="preserve"><value>Página à direita</value></data>
   <data name="ThemeScrollBarScrollLeft" xml:space="preserve"><value>Rolar para a esquerda</value></data>
   <data name="ThemeScrollBarScrollRight" xml:space="preserve"><value>Rolar para a direita</value></data>
+    <data name="LifecyclePartiallyAppliedMSG" xml:space="preserve">
+        <value>O ciclo de vida do achado mudou para {0}, mas a situação do fluxo de trabalho não pôde ser salva: {1}. O registro agora mostra o ciclo de vida como o servidor o mantém; tente a alteração do fluxo de trabalho novamente.</value>
+    </data>
+    <data name="EntityFieldNotSet" xml:space="preserve">
+        <value>Não definido</value>
+    </data>
+    <data name="EntityBooleanNotSetMSG" xml:space="preserve">
+        <value>Não definido: nada é salvo para este campo até você escolher um valor.</value>
+    </data>
 </root>

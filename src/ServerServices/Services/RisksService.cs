@@ -296,8 +296,9 @@ public class RisksService(
             query = query.Where(r => r.Status != notStatus);
         }
 
-        // Apply dynamic entity scoping filter
-        query = query.ApplyEntityScope(userPrincipal);
+        // An explicit principal narrows further, expanded through the same tree as the context's own scope (T292).
+        if (userPrincipal != null)
+            query = query.ApplyEntityScope(EntityScopeExtensions.ScopeOf(userPrincipal, dalService.GetEntityTree));
 
         var risks = await query.ToListAsync();
 
@@ -1190,8 +1191,9 @@ public class RisksService(
         if (requested is null)
         {
             if (scope.IsUnrestricted) return null;
-            if (scope.EntityIds.Count == 1) return scope.EntityIds[0];
-            if (scope.EntityIds.Count == 0)
+            // By claim, not by the expanded set (T292): one claim covering a subtree is still one entity to file under.
+            if (scope.ClaimedEntityIds.Count == 1) return scope.ClaimedEntityIds[0];
+            if (scope.ClaimedEntityIds.Count == 0)
                 throw new DAL.Exceptions.EntityScopeViolationException(nameof(PendingRisk), null, scope.ToString());
 
             throw new InvalidParameterException(nameof(HypothesisRequest.EntityId),

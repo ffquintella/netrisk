@@ -68,7 +68,7 @@ public class Track9KriReassessmentSchemaTests(MariaDbContainerFixture fixture)
         "INSERT INTO `user` (`value`,`enabled`,`lockout`,`type`,`name`,`email`,`salt`,`password`,`role_id`,`admin`,`login`) " +
         "VALUES (980,1,0,'local','U980','u980@x.test','s',REPEAT('x',60),1,0,'user980')," +
         "(981,1,0,'local','U981','u981@x.test','s',REPEAT('x',60),1,0,'user981');" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9811,'New'),(9812,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9811, "New"), (9812, "New")) +
         "INSERT INTO incidents (Id, Year, Sequence, Name, Description, Category, CreationDate, LastUpdate, CreatedById, Status) " +
         "VALUES (9821, 2026, 9821, '2026-9821', 'Ransomware.', 'malware', NOW(), NOW(), 981, 2);" +
         KriRow(9801) + ";" +

@@ -5,6 +5,7 @@ using Model.Exceptions;
 using Model.Notifications;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 
 namespace ServerServices.Notifications;
@@ -182,8 +183,24 @@ public class NotificationSubscriptionsService(
         return true;
     }
 
+    /// <summary>
+    /// Subscriptions route events to channels for the whole organisation, and the delivery log holds every payload sent;
+    /// both need an unrestricted caller (T237 review). The dispatcher — inline in a request and in the job host, whose
+    /// principal is unrestricted — matches events of every entity against every subscription: a subscription written by
+    /// a caller scoped to one entity would mail them the others' risks, findings and incidents, and the log would show
+    /// them the same payloads. Reading the subscription matrix and the channels carries no event data and stays open
+    /// to <c>configuration</c>. <c>NotificationScopeTest</c> pins it.
+    /// </summary>
+    private void RequireUnrestrictedScope(string operation)
+    {
+        if (!DalService.GetCurrentEntityScope().IsUnrestricted)
+            throw new PermissionInvalidException(ContinuityAccess.GlobalScope, 0, operation);
+    }
+
     public async Task<NotificationSubscription> CreateSubscriptionAsync(NotificationSubscription subscription)
     {
+        RequireUnrestrictedScope("NotificationSubscriptions.Create");
+
         if (subscription == null)
             throw new InvalidParameterException(nameof(subscription), "A subscription is required.");
 
@@ -217,6 +234,8 @@ public class NotificationSubscriptionsService(
 
     public async Task<NotificationSubscription> UpdateSubscriptionAsync(NotificationSubscription subscription)
     {
+        RequireUnrestrictedScope("NotificationSubscriptions.Update");
+
         if (subscription == null)
             throw new InvalidParameterException(nameof(subscription), "A subscription is required.");
 
@@ -247,6 +266,8 @@ public class NotificationSubscriptionsService(
 
     public async Task DeleteSubscriptionAsync(int id)
     {
+        RequireUnrestrictedScope("NotificationSubscriptions.Delete");
+
         await using var db = DalService.GetContext();
 
         var stored = await db.NotificationSubscriptions.FirstOrDefaultAsync(s => s.Id == id)
@@ -260,6 +281,8 @@ public class NotificationSubscriptionsService(
     public async Task<List<NotificationDelivery>> GetDeliveriesAsync(int limit = 200,
         NotificationDeliveryStatus? status = null, int? subscriptionId = null)
     {
+        RequireUnrestrictedScope("NotificationSubscriptions.GetDeliveries");
+
         await using var db = DalService.GetContext();
 
         var query = db.NotificationDeliveries.AsQueryable();
@@ -275,6 +298,8 @@ public class NotificationSubscriptionsService(
 
     public async Task<NotificationDelivery> RequeueDeliveryAsync(int id)
     {
+        RequireUnrestrictedScope("NotificationSubscriptions.RequeueDelivery");
+
         await using var db = DalService.GetContext();
 
         var delivery = await db.NotificationDeliveries.FirstOrDefaultAsync(d => d.Id == id)

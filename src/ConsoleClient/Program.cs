@@ -96,6 +96,7 @@ public class Program
                 
                 services.AddSingleton<IHttpContextAccessor, BackgroundServiceHttpContextAccessor>();
                 
+                services.AddSingleton<ServerServices.Security.IEntityHierarchy, ServerServices.Security.EntityHierarchy>();
                 services.AddSingleton<IDalService, DalService>();
                 services.AddSingleton<IRiskCalculationService, RiskCalculationService>();
                 services.AddSingleton<IEnvironmentService, EnvironmentService>();

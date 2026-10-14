@@ -143,9 +143,12 @@ public class StatisticsService(ILogger logger, IDalService dalService)
                 }).ToList();
         
         result.General.Total = risksScored.Count;
-        result.General.High = risksScored.Count(r => r.CalculatedRisk > 7);
-        result.General.Medium = risksScored.Count(r => r.CalculatedRisk is > 4 and <= 7);
-        result.General.Low = risksScored.Count(r => r.CalculatedRisk <= 4);
+        // Three display buckets over the one band function (T238): Very High counts under High, and a
+        // score with no band (below zero) stays under Low, so the three still add up to Total.
+        var bands = risksScored.Select(r => RiskBand.Faixa(r.CalculatedRisk, RiskBand.DefaultRegisterLimits)).ToList();
+        result.General.High = bands.Count(b => b >= RiskBand.High);
+        result.General.Medium = bands.Count(b => b == RiskBand.Medium);
+        result.General.Low = bands.Count(b => b < RiskBand.Medium);
         
         var statuses = risksScored.Select(r => r.Status).Distinct().ToList();
         

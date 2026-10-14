@@ -174,4 +174,26 @@ public class FixRequestControllerTest : BaseControllerTest
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
     }
+
+    /// <summary>
+    /// A finding the caller cannot see (T237 review): the service refuses it as not found, and the controller answers 404
+    /// — not the 500 every exception used to become — and writes no comment.
+    /// </summary>
+    [Fact]
+    public async Task TestCreateOnAFindingOutsideTheCallersScopeIsNotFound()
+    {
+        var refusing = Substitute.For<IFixRequestsService>();
+        refusing.CreateFixRequestAsync(Arg.Any<FixRequest>())
+            .Returns<Task<FixRequest>>(_ => throw new Model.Exceptions.DataNotFoundException("vulnerabilities", "20"));
+        var controller = ResolveController<FixRequestController>(s =>
+        {
+            s.AddSingleton(refusing);
+            s.AddSingleton(Substitute.For<ICommentsService>());
+        });
+
+        var result = await controller.Create(new FixRequestDto { VulnerabilityId = 20, Identifier = "FR-8" });
+
+        Assert.IsType<NotFoundResult>(result.Result);
+        await refusing.DidNotReceive().SaveFixRequestAsync(Arg.Any<FixRequest>());
+    }
 }

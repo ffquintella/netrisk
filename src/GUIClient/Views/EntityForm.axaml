@@ -12,7 +12,7 @@
 
     <!-- IX-9: the form is XAML over the property definitions, not 450 lines of imperative
          control construction. One DataTemplate per field kind; the view-model decides the kind. -->
-    <Grid RowDefinitions="*,Auto,Auto">
+    <Grid RowDefinitions="*,Auto,Auto,Auto">
 
         <ScrollViewer Grid.Row="0">
             <ItemsControl ItemsSource="{Binding Fields}">
@@ -25,20 +25,26 @@
                                        IsVisible="{Binding !IsBoolean}"/>
 
                             <TextBox Text="{Binding TextValue}" Margin="0 2 0 0"
-                                     IsVisible="{Binding IsText}"/>
+                                     IsVisible="{Binding IsText}" IsEnabled="{Binding !IsReadOnly}"/>
 
+                            <!-- T241/T242: a nullable number with nothing stored is blank ("not set") and saves nothing. -->
                             <NumericUpDown Value="{Binding IntegerValue}" Margin="0 2 0 0"
                                            HorizontalAlignment="Left" MinWidth="160"
-                                           IsVisible="{Binding IsInteger}"/>
+                                           Watermark="{Binding StrNotSet}"
+                                           IsVisible="{Binding IsInteger}" IsEnabled="{Binding !IsReadOnly}"/>
 
+                            <!-- Null shows indeterminate; a click sets true or false, which is then saved. -->
                             <CheckBox Content="{Binding Label}" IsChecked="{Binding BooleanValue}"
-                                      IsVisible="{Binding IsBoolean}"/>
+                                      IsVisible="{Binding IsBoolean}" IsEnabled="{Binding !IsReadOnly}"/>
+
+                            <TextBlock Classes="hint" Text="{Binding StrBooleanNotSet}"
+                                       IsVisible="{Binding IsBooleanNotSet}"/>
 
                             <ComboBox ItemsSource="{Binding Options}"
                                       SelectedItem="{Binding SelectedOption}"
                                       Margin="0 2 0 0" MinWidth="240"
                                       HorizontalAlignment="Left"
-                                      IsVisible="{Binding IsSingleSelect}">
+                                      IsVisible="{Binding IsSingleSelect}" IsEnabled="{Binding !IsReadOnly}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate x:DataType="models:SelectEntity">
                                         <TextBlock Text="{Binding Label}"/>
@@ -48,11 +54,16 @@
 
                             <multiSelect:MultiSelect Height="250" Margin="0 2 0 0"
                                                      IsVisible="{Binding IsMultiSelect}"
+                                                     IsEnabled="{Binding !IsReadOnly}"
                                                      Title="{Binding Label}"
                                                      StrAvailable="{Binding StrAvailable}"
                                                      StrSelected="{Binding StrSelected}"
                                                      AvailableItems="{Binding AvailableItems}"
                                                      SelectedItems="{Binding SelectedItems, Mode=TwoWay}"/>
+
+                            <!-- T241: a risk-context field says why it is locked, under the control. -->
+                            <TextBlock Classes="hint" Text="{Binding ReadOnlyReason}"
+                                       IsVisible="{Binding HasReadOnlyReason}"/>
 
                             <!-- IX-4: the field states its own problem, inline, under the control. -->
                             <TextBlock Classes="warning" Text="{Binding Error}"
@@ -67,8 +78,13 @@
                    IsVisible="{Binding HasErrors}"
                    Text="{Binding ErrorSummary}"/>
 
+        <!-- T241: without entities_manage the form is read-only, and says so once rather than under every field. -->
+        <TextBlock Grid.Row="2" Classes="hint" HorizontalAlignment="Center"
+                   IsVisible="{Binding IsReadOnlyForm}"
+                   Text="{Binding StrEntitiesManageRequired}"/>
+
         <!-- IX-3: Save then Cancel, centred. The old form had a lone Save and no way to discard. -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
             <Button Classes="dialog1" Command="{Binding SaveCommand}"
                     IsEnabled="{Binding SaveEnabled}"
                     ToolTip.Tip="{Binding ErrorSummary}">

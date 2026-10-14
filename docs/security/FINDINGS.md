@@ -8,6 +8,8 @@
 > and fixed in the same change (T298), each with regression tests confirmed failing on the pre-fix
 > behaviour. No finding is open.
 > **Updated 2026-10-07:** NR-2026-036 (Medium, racy permission merge) raised and fixed (T301).
+> **Updated 2026-10-13:** NR-2026-037 (High, the website's task report page served and accepted
+> reports by sequential id without authentication) raised and fixed (T340). No finding is open.
 > Severity by the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) — likelihood × impact, stated per finding rather than asserted.
 > Method and boundaries: [THREAT_MODEL.md](THREAT_MODEL.md) · Requirement-by-requirement checklist: [ASVS_L2_CHECKLIST.md](ASVS_L2_CHECKLIST.md) · Burn-down: [BURN_DOWN.md](BURN_DOWN.md)
 
@@ -40,11 +42,11 @@ the reason stated — the same discipline the product's own risk-acceptance feat
 | Severity | Total | Fixed | Open | Accepted |
 |---|---|---|---|---|
 | Critical | 3 | 3 | 0 | 0 |
-| High | 9 | 9 | 0 | 0 |
+| High | 10 | 10 | 0 | 0 |
 | Medium | 19 | 18 | 0 | 1 |
 | Low | 3 | 2 | 0 | 1 |
 | Informational | 2 | 0 | 0 | 2 |
-| **Total** | **36** | **32** | **0** | **4** |
+| **Total** | **37** | **33** | **0** | **4** |
 
 **Open:** none.
 **Accepted:** NR-2026-024, NR-2026-027, NR-2026-029, NR-2026-030.
@@ -905,6 +907,14 @@ what the code now does.
   inherently probabilistic: it makes the failure very likely, it cannot prove it on every run.
 * **Not observed at runtime:** only over the EF in-memory provider.
 
+### NR-2026-037 — The website's task report page took a sequential id as its only credential *(High, fixed)*
+* **Tier:** WebSite + WebSiteData + ServerServices · [`src/WebSite/Controllers/IRTEReportController.cs`](../../src/WebSite/Controllers/IRTEReportController.cs), [`src/WebSiteData/Services/LocalServices.cs`](../../src/WebSiteData/Services/LocalServices.cs) `LocalIrpService`, [`src/ServerServices/Services/SyncIngestService.cs`](../../src/ServerServices/Services/SyncIngestService.cs), [`src/ServerServices/Services/IncidentResponsePlansService.cs`](../../src/ServerServices/Services/IncidentResponsePlansService.cs) `CreateTaskExecutionAsync` · **Task:** T340
+* **Severity:** High (likelihood: high — public, unauthenticated, the key an integer counted from 1; impact: medium-high — the name and description of every open incident and its response tasks, and the integrity of the response itself: any execution could be marked completed, skipped or failed).
+* **What was wrong.** `IRTEReportController.Index` did `int.Parse(key)` and rendered that execution's task and incident; `DoReport` queued a status change for whatever `TaskExecutionId` the form posted, with no antiforgery token; the API applied the queued change by that id. The e-mailed link was `?key=<task id>`, which the page read as an execution id. Found as a residual of the T237 review.
+* **Fix.** A per-execution key — `RandomGenerator.RandomToken(32)`, 256 bits — issued when the execution is created and stored only as `LinkKeyHash.Primary` (SHA-256) in a `links` row of type `irpTaskReport` (`SyncContracts.IrpTaskReportLink`) whose data is the execution id, expiring after 30 days and pushed on the fast sync lane. The page checks the key's shape before any lookup, resolves the execution only through it (`ILocalIrpService` has no lookup by id), answers every failure with the same Error redirect, and its POST (`[HttpPost]`, `[ValidateAntiForgeryToken]`) re-derives the execution from the key and consumes it atomically. The API re-checks that the key names a live link bound to the reported execution and that the status is one the page offers, rejects and acks anything else, and deletes the link once applied.
+* **Regression tests:** [`WebSite.Tests/Controllers/IRTEReportEnumerationRegressionTest.cs`](../../src/WebSite.Tests/Controllers/IRTEReportEnumerationRegressionTest.cs) — compiles against the pre-fix code and was run there: **9 of 9 failed**; [`IRTEReportControllerTest.cs`](../../src/WebSite.Tests/Controllers/IRTEReportControllerTest.cs), [`WebSite.Tests/Sync/LocalIrpServiceTest.cs`](../../src/WebSite.Tests/Sync/LocalIrpServiceTest.cs), [`ServerServices.Tests/ServiceTests/IrpTaskReportLinkInMemoryTest.cs`](../../src/ServerServices.Tests/ServiceTests/IrpTaskReportLinkInMemoryTest.cs) — its key-issuing and keyless-report assertions were run against the pre-fix code through a scratch probe and both failed.
+* **Consequences:** links e-mailed before the fix no longer open (fail closed). The website has no rate limit; the key's entropy is what stops guessing. **Not observed at runtime** against a running website and API.
+
 ---
 
 ## Triage into milestones 7.2–7.5
@@ -914,7 +924,7 @@ Every finding above is assigned, per §7.1.3.
 | Milestone | Findings |
 |---|---|
 | **7.2** Dependency & supply chain | NR-2026-031 (SBOM). Baseline scan: `dotnet list package --vulnerable --include-transitive` reported **no** vulnerable package across all 33 projects on 2026-08-26 — see [baseline-2026-08-26.md](baseline-2026-08-26.md). |
-| **7.3** AuthN/AuthZ & secrets | NR-2026-001, 002, 003, 007, 008, 008b, 009, 010, 012, 018, 025, 028, 033, 034, 035 |
+| **7.3** AuthN/AuthZ & secrets | NR-2026-001, 002, 003, 007, 008, 008b, 009, 010, 012, 018, 025, 028, 033, 034, 035, 037 |
 | **7.4** Data protection & transport | NR-2026-004, 005, 011, 013, 014, 015, 016, 019, 020, 026, 032 |
 | **7.5** Continuous security | The gates that keep the above from recurring: `security.yml` (CodeQL, gitleaks, vulnerable-dependency, submodule provenance), [SECURITY.md](../../SECURITY.md), [TRIAGE_SLA.md](TRIAGE_SLA.md), [BURN_DOWN.md](BURN_DOWN.md) |
 | **Risk-accepted** | NR-2026-024, 029, 030 (informational/low, reasons stated), NR-2026-027 (documented acceptance; the proposed provenance mitigation was implemented in Track 8 and the acceptance still stands) |

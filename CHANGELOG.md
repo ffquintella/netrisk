@@ -12,12 +12,21 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.40.0] - 2026-10-14
+
 ### Added
 
+- Add `criticality` (1 to 5) to applications and organization units and `internetFacing` to applications, and add the `activity` type under a business process, in entity-configuration version 2.7; the two properties are editable only with `entity_risk_context` and global scope, and every entity saved earlier stays valid (T242, S39)
 - Add headless UI flow tests for the desktop risk screen and the risk editor, close, chain and governance dialogs, run on demand or at release like the rest of the UI suite (T327, S54)
+- Record every change to the entity map — a created or deleted entity, a change of parent, and each value of an entity's name and of its risk-context inputs — in the field-level audit trail, which a user with a restricted scope reads only for entities inside their own subtree (T241, S39, S40)
+
+### Changed
+
+- Make entity scope hierarchical: an assignment to an entity now also grants the entities below it in the entity tree, never the one above it or its siblings, for every register's reads and for the write guard, and moving an entity to another parent moves access without a new login — immediately on the instance that saved the move and within 30 seconds on every other API or job-host instance (T292, S39, S40)
 
 ### Fixed
 
+- Stop a quantitatively scored risk just under the top loss threshold outscoring one at it, which let a mitigated residual score above its inherent, by mapping each loss threshold onto its register band limit (T339, S39)
 - Enable the desktop risk screen's Add, Edit, Close, Reopen and Delete buttons only for users the API would let perform them, instead of Add and Edit for everyone and Close for whoever may delete (T328, S54)
 - Show a management-reviewed risk's status in orange on the desktop risk screen instead of the colour of a closed risk (T329, S54)
 - Put the caret in the search box when Ctrl+F or the magnifier reveals the search row on the desktop risk, findings, incidents and entities screens (T330, S54)
@@ -27,6 +36,28 @@ follow [SemVer](http://semver.org/).
 - Stop the desktop risk screen and risk governance window logging a binding error each time a risk or task is selected (T334, S54)
 - Show whether the desktop risk editor is creating or editing a risk in its header (T335, S54)
 - Explain a duplicate risk subject in the desktop risk editor in the session language (T336, S54)
+- Stop the two-hourly matrix pass and the nightly residual pass overwriting the inherent and residual scores of quantitatively scored risks, and make the matrix job wait for its pass instead of reporting success before it ran (T236, S39)
+- Run background jobs with unrestricted entity scope, so the residual pass, review cadence, campaigns and scheduled Vision One and SecurityScorecard syncs see and write the register instead of reading nothing (T237, S39)
+- Register the five scheduled governance jobs the job host could not construct — residual pass, governance retention, risk-acceptance expiry, review cadence and review campaigns — and the services the website sync and issue-sync poll were missing (T237, S39)
+- Classify risk scores into bands through one function with inclusive lower bounds, so a score exactly on 4 or 7 lands in Medium or High on the dashboards and in the review cadence, a score of 0 gets a cadence, and Very High counts under High on the dashboards (T238, S39)
+- Route desktop close, reject and reopen of findings through the finding lifecycle, so a finding closed on the desktop is closed for the API, the SLA and the risk index too, and refuse a close the lifecycle refuses instead of leaving the two statuses disagreeing (T239, S39)
+- Backfill the lifecycle status of findings the desktop closed or rejected before this release, with a history row each, and count Mitigated, Outdated, FixVerified and FixNotRequired as closed in the Master Dashboard and host summaries like the lifecycle already did (T239, S39)
+- Reopen a closed finding's desktop status when a scan reports it again, and offer Reopen for every closed desktop status instead of four of them (T239, S39)
+- Show a desktop close, reject or reopen whose lifecycle change was saved but whose workflow status was not as that partial result, with the lifecycle state re-read from the server, instead of as a refused transition that left the old state on screen (T239, S39)
+- Leave an entity's nullable number and yes/no fields unset in the desktop entity form until the user sets them, so saving an entity no longer declares criticality 0 or not internet-facing for it, which a user with `entity_risk_context` and a restricted scope could not save at all (T241, T242, S39, S40)
+- Give each risk linked only through its entity list the scope of its most specific linked organisational unit, audited, which makes it visible to that unit's users, and attribute risk scenarios to the union of that scope and the entity list (T240, S39)
+- Lower the seeded Very High risk level from the unreachable 10.1 to 9.0 unless an administrator already changed it, so Very High review cadence and bands apply again (T238, S39)
+
+### Security
+
+- Require the new `entities_manage` permission to create, edit or delete entities, which any signed-in user could do, and keep a user with a restricted scope inside their own subtree, so moving an entity under their unit cannot hand them another unit's records (T241, T292, S40)
+- Require the new `entity_risk_context` permission and global scope to set or change an entity's criticality, internet exposure or security classification, and grant both new permissions to the Administrator role and `entities_manage` to RiskAnalyst in schema version 104 (T241, S39, S40)
+- Run a scheduled report under its creator's entity scope as it stands when it runs, instead of the job host's unrestricted scope, so a user's schedule can no longer mail other entities' incidents, and skip a schedule whose creator is disabled, locked out, without `reports` or unrecorded until an administrator saves it, with the creator stored in schema version 105 (T237, S39)
+- Require the `reports` permission for report schedules, which any signed-in user could manage, and let only a schedule's creator or an unrestricted user read, change, delete or trigger it (T237, S39)
+- Require unrestricted scope to create, change or delete a notification subscription and to read or requeue the delivery log, so a user scoped to one entity can no longer route every entity's events to a channel of their choosing (T237, S39)
+- Refuse a fix request for a finding outside the requester's entity scope, which the website sync would otherwise publish to whoever holds the request (T237, S39)
+- Stop copying the email address, phone number and other non-risk properties of people and other entities into the append-only audit trail; only an entity's name and risk-context inputs are recorded, and never a person's (T241, S39, S40)
+- Stop the public website showing and accepting incident-response task reports by sequential execution id, which let anyone read every open incident's tasks and mark any of them completed, skipped or failed: the e-mailed link now carries a single-use 256-bit key stored only as its SHA-256, the report form is antiforgery-protected and can change only the execution its key was issued for, and the API re-checks the key before applying a report, so links e-mailed before this release no longer open (T340)
 
 ## [2.39.0] - 2026-10-13
 

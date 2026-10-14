@@ -60,7 +60,7 @@ public class Track9AiGovernanceSchemaTests(MariaDbContainerFixture fixture)
         "(9901,'organizationData','2.6',NOW(),NOW(),990,990,'active',NULL);" +
         "INSERT INTO third_parties (id, name, status, is_cloud_provider, is_identity_provider, created_at) " +
         "VALUES (9911, 'Model Vendor', 2, 0, 0, NOW());" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9921,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9921, "New")) +
         Model(9931, "Admissions triage") + ";");
 
     private static string Model(int id, string name, string extra = "", string values = "") =>

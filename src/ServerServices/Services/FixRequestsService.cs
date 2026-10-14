@@ -12,9 +12,20 @@ public class FixRequestsService: ServiceBase, IFixRequestsService
     {
     }
 
+    /// <summary>
+    /// Stores a fix request — which the website sync then pushes, with the finding's title, description, solution and
+    /// host, to whoever holds its identifier (<c>SyncPushBuilder</c>, run by the job host under its unrestricted
+    /// principal). So the finding must be one the caller can see: a fix request is not entity-scoped itself, and without
+    /// this a scoped caller could name another entity's finding and have the job publish it (T237 review). Not found, not
+    /// forbidden, so the answer does not confirm the finding exists.
+    /// </summary>
     public async Task<FixRequest> CreateFixRequestAsync(FixRequest fixRequest)
     {
         await using var db = DalService.GetContext();
+
+        if (!await db.Vulnerabilities.AnyAsync(v => v.Id == fixRequest.VulnerabilityId))
+            throw new DataNotFoundException("vulnerabilities", fixRequest.VulnerabilityId.ToString(),
+                new Exception($"Finding {fixRequest.VulnerabilityId} was not found."));
         
         var result =  await db.FixRequests.AddAsync(fixRequest);
         

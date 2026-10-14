@@ -162,6 +162,45 @@ public class ResidualAndQuantitativeInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(4f, history[0].ResidualRisk!.Value, 3);
     }
 
+    /// <summary>
+    /// T236 (S39 D-03): a quantitatively scored risk keeps the inherent and residual scores its simulation mapped.
+    /// The matrix pass would write the (3, 3) cell over the inherent one (0 here, with no model value), and the
+    /// residual formula would write half the inherent over the residual — both silently, with the classic risk
+    /// beside it showing the passes did run.
+    /// </summary>
+    [Fact]
+    public async Task TestNeitherMatrixPassRewritesAQuantitativelyScoredRisk()
+    {
+        Seed(ctx =>
+        {
+            ctx.Risks.AddRange(NewRisk(1), NewRisk(2));
+            ctx.RiskScorings.AddRange(
+                new RiskScoring { Id = 1, ScoringMethod = 1, CalculatedRisk = 8f, ClassicImpact = 3, ClassicLikelihood = 3 },
+                new RiskScoring
+                {
+                    Id = 2, ScoringMethod = QuantitativeRiskService.QuantitativeScoringMethod,
+                    CalculatedRisk = 7.5f, ResidualRisk = 7.1f, ClassicImpact = 3, ClassicLikelihood = 3
+                });
+            ctx.Mitigations.AddRange(NewMitigation(1, 1, percent: 50), NewMitigation(2, 2, percent: 50));
+        });
+
+        await _calculation.CalculateRiskScoreAsync();
+        var changed = await _calculation.CalculateResidualRiskAsync();
+
+        await using var db = OpenContext();
+
+        var quantitative = db.RiskScorings.Single(s => s.Id == 2);
+        Assert.Equal(7.5f, quantitative.CalculatedRisk);
+        Assert.Equal(7.1f, quantitative.ResidualRisk!.Value, 3);
+        Assert.Empty(db.RiskScoringHistories.Where(h => h.RiskId == 2));
+
+        // The classic risk was rewritten by both passes: the matrix cell, then its treatment.
+        var classic = db.RiskScorings.Single(s => s.Id == 1);
+        Assert.Equal(0f, classic.CalculatedRisk);
+        Assert.Equal(0f, classic.ResidualRisk!.Value, 3);
+        Assert.Equal(1, changed);
+    }
+
     [Fact]
     public void TestTheStrategyIsSelectedByName()
     {
@@ -434,5 +473,71 @@ public class ResidualAndQuantitativeInMemoryTest : InMemoryServiceTestBase
         for (var i = 1; i < scores.Count; i++)
             Assert.True(scores[i] >= scores[i - 1],
                 $"{losses[i]:N0} scored {scores[i]} but {losses[i - 1]:N0} scored {scores[i - 1]}");
+    }
+
+    /// <summary>
+    /// T339: a dense sweep across the whole range, including the stretch just below each threshold
+    /// that the coarse sample above skipped. Before the fix 999,999 scored ~10 and 1,000,000 scored
+    /// 8.42, so a mitigated residual could outscore its inherent.
+    /// </summary>
+    [Fact]
+    public void TestTheBandMappingIsMonotonicAcrossAFineSweep()
+    {
+        var thresholds = QuantitativeRiskService.DefaultBandThresholds;
+        var losses = new List<double>();
+        for (var exponent = 0.0; exponent <= 9.0; exponent += 0.001)
+            losses.Add(System.Math.Pow(10, exponent));
+        foreach (var t in thresholds)
+            losses.AddRange([t - 1, t - 0.01, t, t + 0.01, t + 1]);
+        losses.Sort();
+
+        var previous = QuantitativeRiskService.MapToScore(losses[0], thresholds);
+        foreach (var loss in losses.Skip(1))
+        {
+            var score = QuantitativeRiskService.MapToScore(loss, thresholds);
+            Assert.True(score >= previous, $"{loss:N2} scored {score} below a smaller loss's {previous}");
+            Assert.InRange(score, 0f, 10f);
+            previous = score;
+        }
+    }
+
+    /// <summary>
+    /// T339: each monetary threshold lands exactly on the register limit of the band it opens
+    /// (<see cref="Tools.Risks.RiskBand.DefaultRegisterLimits"/>), so the quantitative band and the
+    /// register band agree, and the score just under a threshold stays in the band below it.
+    /// </summary>
+    [Theory]
+    [InlineData(10_000, 4.0, Tools.Risks.RiskBand.Medium)]
+    [InlineData(100_000, 7.0, Tools.Risks.RiskBand.High)]
+    [InlineData(1_000_000, 9.0, Tools.Risks.RiskBand.VeryHigh)]
+    public void TestEachThresholdMapsOntoTheRegisterLimitOfTheBandItOpens(double threshold, double limit,
+        int band)
+    {
+        var thresholds = QuantitativeRiskService.DefaultBandThresholds;
+        var limits = Tools.Risks.RiskBand.DefaultRegisterLimits;
+
+        var at = QuantitativeRiskService.MapToScore(threshold, thresholds);
+        var justBelow = QuantitativeRiskService.MapToScore(threshold - 1, thresholds);
+
+        Assert.Equal(limit, at, 3);
+        Assert.Equal(band, Tools.Risks.RiskBand.Faixa(at, limits));
+        Assert.Equal(band - 1, Tools.Risks.RiskBand.Faixa(justBelow, limits));
+        Assert.True(justBelow <= at, $"{threshold - 1:N0} scored {justBelow}, above {threshold:N0}'s {at}");
+    }
+
+    /// <summary>T339: halving a loss across the top threshold never raises the score.</summary>
+    [Fact]
+    public void TestHalvingALossNearTheTopThresholdNeverRaisesTheScore()
+    {
+        var thresholds = QuantitativeRiskService.DefaultBandThresholds;
+
+        foreach (var inherentLoss in new double[] { 1_000_000, 1_200_000, 1_500_000, 1_999_998 })
+        {
+            var inherent = QuantitativeRiskService.MapToScore(inherentLoss, thresholds);
+            var residual = QuantitativeRiskService.MapToScore(inherentLoss * 0.5, thresholds);
+
+            Assert.True(residual <= inherent,
+                $"residual {residual} for {inherentLoss * 0.5:N0} exceeds inherent {inherent} for {inherentLoss:N0}");
+        }
     }
 }

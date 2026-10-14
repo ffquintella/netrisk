@@ -271,6 +271,33 @@ public class MasterDashboardServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(0, second.Totals.OpenRisks);
     }
 
+    /// <summary>
+    /// T238 (S39 §4.5): the same bands as the statistics screen — inclusive lower bounds, Very High
+    /// counted under High — so the two screens agree on a score exactly on a bound.
+    /// </summary>
+    [Fact]
+    public async Task BoundaryScoresLandInTheBandTheyOpen()
+    {
+        float[] scores = [0f, 3.99f, 4f, 6.99f, 7f, 9f, 10f];
+        Seed(ctx =>
+        {
+            ctx.Entities.Add(NewEntity(1, "Alpha"));
+            for (var i = 0; i < scores.Length; i++)
+            {
+                ctx.Risks.Add(NewRisk(i + 1, 1));
+                ctx.RiskScorings.Add(new RiskScoring { Id = i + 1, CalculatedRisk = scores[i] });
+            }
+        });
+
+        var dashboard = await _svc.GetMasterDashboardAsync(useCache: false);
+
+        var alpha = dashboard.Entities.Single(e => e.EntityName == "Alpha");
+        Assert.Equal(scores.Length, alpha.OpenRisks);
+        Assert.Equal(2, alpha.RisksLow);
+        Assert.Equal(2, alpha.RisksMedium);
+        Assert.Equal(3, alpha.RisksHigh);
+    }
+
     [Fact]
     public async Task NonOrganisationalEntityAppearsOnlyWhenItCarriesWork()
     {

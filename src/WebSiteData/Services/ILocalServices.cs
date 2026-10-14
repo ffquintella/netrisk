@@ -36,10 +36,27 @@ public interface ILocalLinkService
     Task QueueLinkDeleteAsync(string type, string key);
 }
 
+/// <summary>
+/// The incident-response task report page's data (NR-2026-037). There is deliberately no lookup or
+/// write by task-execution id: the only way in is the e-mailed report key, so the page can reach
+/// exactly the one execution the key was issued for.
+/// </summary>
 public interface ILocalIrpService
 {
-    Task<LocalIrpTaskExecution?> GetTaskExecutionAsync(int id);
+    /// <summary>
+    /// The execution a live, unconsumed <c>irpTaskReport</c> link binds, or null for any key that is
+    /// malformed, unknown, of another link type, expired or already used — the caller cannot tell which.
+    /// </summary>
+    Task<LocalIrpTaskExecution?> GetTaskExecutionByReportKeyAsync(string reportKey);
+
     Task<LocalIrpTask?> GetTaskAsync(int taskId);
     Task<LocalIncident?> GetIncidentForTaskAsync(int taskId);
-    Task QueueTaskStatusChangeAsync(int taskExecutionId, int newStatus);
+
+    /// <summary>
+    /// Re-resolves <paramref name="reportKey"/>, consumes its link and queues the status change for the
+    /// execution the link binds, carrying the key so the API can re-check the binding. False, with
+    /// nothing queued, when the key does not resolve (see <see cref="GetTaskExecutionByReportKeyAsync"/>)
+    /// or was consumed by a concurrent report.
+    /// </summary>
+    Task<bool> QueueTaskReportAsync(string reportKey, int newStatus);
 }

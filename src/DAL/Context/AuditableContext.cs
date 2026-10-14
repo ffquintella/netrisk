@@ -20,15 +20,25 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
     /// from the calling principal; anything that opens a context without one is the system.
     /// </summary>
     public string AuditActor { get; set; } = SystemActor;
+
+    /// <summary>
+    /// Raised after a save that created, deleted or re-parented an <see cref="Entity"/> (T292). The DAL service
+    /// points it at the host's entity-tree cache, because what an entity claim grants is that entity's subtree:
+    /// a change of parent must move access on the next request, not after a new login.
+    /// </summary>
+    public Action? EntityTreeChanged { get; set; }
+
     public override int SaveChanges()
     {
         // Ahead of BeforeSaveChanges, whose try/catch logs and swallows anything thrown inside it
         // so that an auditing failure cannot break a save. A scope violation must not be swallowed.
         ChangeTracker.DetectChanges();
         EnforceEntityScopeOnWrites();
+        var treeChanges = TouchesEntityTree();
 
         BeforeSaveChanges().ConfigureAwait(false).GetAwaiter().GetResult();
         var result = base.SaveChanges();
+        if (treeChanges) EntityTreeChanged?.Invoke();
         return result;
     }
 
@@ -36,11 +46,19 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
     {
         ChangeTracker.DetectChanges();
         EnforceEntityScopeOnWrites();
+        var treeChanges = TouchesEntityTree();
 
         await BeforeSaveChanges();
         var result = await base.SaveChangesAsync(cancellationToken);
+        if (treeChanges) EntityTreeChanged?.Invoke();
         return result;
     }
+
+    /// <summary>Whether this save adds or removes an entity, or changes one's parent.</summary>
+    private bool TouchesEntityTree() =>
+        ChangeTracker.Entries<Entity>().Any(e =>
+            e.State is EntityState.Added or EntityState.Deleted ||
+            (e.State == EntityState.Modified && e.Property(x => x.Parent).IsModified));
     
 
     private async Task BeforeSaveChanges()
@@ -137,12 +155,13 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
 
             var scoped = entry.Entity;
 
-            // A caller who holds exactly one entity gets new records filed there automatically:
-            // requiring them to state the only entity they have would be busywork, and leaving it
-            // null would create a row they could not then see.
-            if (entry.State == EntityState.Added && scoped.EntityId == null && EntityScope.EntityIds.Count == 1)
+            // A caller who holds exactly one entity claim gets new records filed there automatically:
+            // requiring them to state the only entity they were assigned would be busywork, and leaving it
+            // null would create a row they could not then see. Since T292 that claim also covers its
+            // descendants; the record still goes under the claim itself, the one entity the caller was given.
+            if (entry.State == EntityState.Added && scoped.EntityId == null && EntityScope.ClaimedEntityIds.Count == 1)
             {
-                scoped.EntityId = EntityScope.EntityIds[0];
+                scoped.EntityId = EntityScope.ClaimedEntityIds[0];
                 continue;
             }
 

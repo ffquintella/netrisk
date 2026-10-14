@@ -29,6 +29,7 @@ using Model;
 using Model.Authentication;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Findings;
 using Model.Globalization;
 using Model.Vulnerability;
 using MsBox.Avalonia;
@@ -831,8 +832,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
             ObjectType = nameof(Vulnerability),
         };
         
-        
-        await VulnerabilitiesService.UpdateStatusAsync(SelectedVulnerability!.Id, (ushort) IntStatus.Verified);
+        // Through the lifecycle (T239): a reopen that only rewrote the workflow column would leave
+        // the finding closed for the API, the SLA and the risk index.
+        if (!await ApplyThroughLifecycleAsync(() => VulnerabilitiesService.ReopenThroughLifecycleAsync(
+                SelectedVulnerability!.Id, IntStatus.Verified, SelectedVulnerability.LifecycleStatus,
+                "Reopened in the desktop register by " + user)))
+            return;
+
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.AsParallel().IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Verified;
@@ -1155,7 +1161,12 @@ public class VulnerabilitiesViewModel: ViewModelBase
         };
         
         
-        await VulnerabilitiesService.UpdateStatusAsync(SelectedVulnerability!.Id, (ushort) IntStatus.Rejected);
+        // Through the lifecycle (S39 D-04, T239): Rejected is FalsePositive there, with the reason as
+        // its justification. Writing only the workflow column left the finding open everywhere else.
+        if (!await ApplyThroughLifecycleAsync(() => VulnerabilitiesService.CloseThroughLifecycleAsync(
+                SelectedVulnerability!.Id, IntStatus.Rejected, SelectedVulnerability.LifecycleStatus, reason)))
+            return;
+
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
         Vulnerabilities[idx].Status = (ushort) IntStatus.Rejected;
@@ -1363,6 +1374,13 @@ public class VulnerabilitiesViewModel: ViewModelBase
             ObjectType = nameof(Vulnerability),
         };
 
+        // Through the lifecycle first (S39 D-04, T239), so a refused transition changes nothing: the
+        // comments, the solution and the workflow column are only written once the lifecycle agrees.
+        if (!await ApplyThroughLifecycleAsync(() => VulnerabilitiesService.CloseThroughLifecycleAsync(
+                SelectedVulnerability!.Id, closeDialog.FinalStatus, SelectedVulnerability.LifecycleStatus,
+                closeDialog.Comments)))
+            return;
+
         SelectedVulnerability!.Comments += "\n---\n" + closeDialog.Comments;
 
 
@@ -1378,7 +1396,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
         
         VulnerabilitiesService.UpdateCommentsAsync(SelectedVulnerability!.Id, SelectedVulnerability.Comments);
         
-        VulnerabilitiesService.UpdateStatus(SelectedVulnerability!.Id, (ushort) closeDialog.FinalStatus);
         await VulnerabilitiesService.AddActionAsync(SelectedVulnerability!.Id, nrAction.UserId!.Value, nrAction);
         
         var idx = Vulnerabilities.IndexOf(SelectedVulnerability);
@@ -1391,6 +1408,83 @@ public class VulnerabilitiesViewModel: ViewModelBase
         SelectedVulnerability = selected;
         ProcessStatusButtons();
     }
+    /// <summary>
+    /// Runs a close, reject or reopen that goes through the finding lifecycle (T239) and mirrors the
+    /// resulting lifecycle state and timeline into the selected finding. Returns false, after telling
+    /// the operator why, when the server refused — the caller then changes nothing locally — and when
+    /// the change was partial: the lifecycle moved (and is shown as the server now holds it) but the
+    /// workflow status was not written, which is said as that rather than as a refused transition.
+    /// </summary>
+    private async Task<bool> ApplyThroughLifecycleAsync(Func<Task<LifecycleChangeOutcome>> change)
+    {
+        if (SelectedVulnerability == null) return false;
+
+        var findingId = SelectedVulnerability.Id;
+
+        LifecycleChangeOutcome outcome;
+        try
+        {
+            outcome = await change();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not change the status of finding {Finding}: {Message}", findingId, ex.Message);
+
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Error"],
+                    ContentMessage = Localizer["TransitionRefusedMSG"] + ex.Message,
+                    Icon = Icon.Error
+                })
+                .ShowAsync();
+
+            return false;
+        }
+
+        SelectedVulnerability.LifecycleStatus = outcome.LifecycleStatus;
+
+        if (outcome.IsPartial)
+        {
+            Logger.Warning("Finding {Finding} moved to {Lifecycle}; its workflow status was not saved: {Message}",
+                findingId, outcome.LifecycleStatus, outcome.WorkflowError);
+
+            await ReloadStatusHistoryAsync(findingId);
+            ProcessStatusButtons();
+
+            await MessageBoxManager
+                .GetMessageBoxStandard(new MessageBoxStandardParams
+                {
+                    ContentTitle = Localizer["Warning"],
+                    ContentMessage = string.Format(Localizer["LifecyclePartiallyAppliedMSG"],
+                        outcome.LifecycleStatus, outcome.WorkflowError),
+                    Icon = Icon.Warning
+                })
+                .ShowAsync();
+
+            return false;
+        }
+
+        await ReloadStatusHistoryAsync(findingId);
+
+        return true;
+    }
+
+    private async Task ReloadStatusHistoryAsync(int findingId)
+    {
+        try
+        {
+            SelectedStatusHistory = new ObservableCollection<FindingStatusHistory>(
+                await VulnerabilitiesService.GetStatusHistoryAsync(findingId));
+        }
+        catch (Exception ex)
+        {
+            // The change itself was saved; only the refreshed timeline is missing.
+            Logger.Warning("Could not reload the status history of finding {Finding}: {Message}",
+                findingId, ex.Message);
+        }
+    }
+
     private void BlockAllStatusButtons()
     {
         BtVerifyEnabled = false;
@@ -1409,9 +1503,20 @@ public class VulnerabilitiesViewModel: ViewModelBase
         }
         else
         {
+            // Every closed workflow value offers Reopen (T239). The switch below used to list only four
+            // of them, so a finding closed as NotRelevant, Retired or Mitigated could never be reopened.
+            if (Model.Status.ClosedStatuses.IsClosed(SelectedVulnerability.Status))
+            {
+                BlockAllStatusButtons();
+                BtReopenEnabled = true;
+                return;
+            }
+
             switch (SelectedVulnerability.Status)
             {
+                // Reopened is what a re-import writes when a scanner reports a closed finding again.
                 case (ushort) IntStatus.New:
+                case (ushort) IntStatus.Reopened:
                     BlockAllStatusButtons();
                     BtVerifyEnabled = true;
                     BtRejectEnabled = true;
@@ -1435,22 +1540,6 @@ public class VulnerabilitiesViewModel: ViewModelBase
                     BtCloseEnabled = true;
                     BtFixRequestedEnabled = true;
                     BtChatEnabled = true;
-                    break;
-                case (ushort) IntStatus.Closed:
-                    BlockAllStatusButtons();
-                    BtReopenEnabled = true;
-                    break;
-                case (ushort) IntStatus.Fixed:
-                    BlockAllStatusButtons();
-                    BtReopenEnabled = true;
-                    break;
-                case (ushort) IntStatus.Solved:
-                    BlockAllStatusButtons();
-                    BtReopenEnabled = true;
-                    break;
-                case (ushort) IntStatus.Rejected:
-                    BlockAllStatusButtons();
-                    BtReopenEnabled = true;
                     break;
                 default:
                     BlockAllStatusButtons();

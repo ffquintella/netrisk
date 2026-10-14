@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DAL.Entities;
 using Hangfire;
-using Microsoft.AspNetCore.Authorization;
+using API.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +32,17 @@ public class UpdateScheduleRequest
     public bool IsEnabled { get; set; }
 }
 
-[Authorize(Policy = "RequireValidUser")]
+/// <summary>
+/// Report schedules: a template, a cron and the addresses the rendered report is mailed to.
+///
+/// T237 review. The job that runs a schedule reads under its <b>creator's</b> entity scope as it stands at run time
+/// (<see cref="ScheduledReportJob"/>), so the creator is stamped here from the caller and never taken from the body.
+/// That makes a schedule its creator's: only they — or an unrestricted caller — may read, change, delete or trigger it,
+/// because whoever edits the recipients of somebody else's schedule would otherwise receive that person's entities. A
+/// schedule from before the column has no creator and is visible to unrestricted callers only; saving it makes it theirs.
+/// Every action needs <see cref="ScheduledReportJob.RequiredPermission"/>; it used to need only a valid user.
+/// </summary>
+[PermissionAuthorize(ScheduledReportJob.RequiredPermission)]
 [ApiController]
 [Route("[controller]")]
 public class ReportSchedulesController(
@@ -44,6 +54,13 @@ public class ReportSchedulesController(
 {
     private IDalService DalService { get; } = dalService;
 
+    /// <summary>An unrestricted caller (global scope or the Admin role) sees and manages every schedule.</summary>
+    private bool CallerIsUnrestricted() => DalService.GetCurrentEntityScope().IsUnrestricted;
+
+    /// <summary>Whether the caller may see and act on <paramref name="schedule"/>: its creator, or an unrestricted caller.</summary>
+    private bool CallerOwns(ReportSchedule schedule, int userId) =>
+        CallerIsUnrestricted() || schedule.CreatedById == userId;
+
     [HttpGet]
     [Route("")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ReportSchedule>))]
@@ -53,10 +70,15 @@ public class ReportSchedulesController(
         Logger.Information("User:{UserValue} listed all report schedules", user.Value);
 
         using var dbContext = DalService.GetContext();
-        var schedules = await dbContext.ReportSchedules
+        var query = dbContext.ReportSchedules
             .Include(s => s.ReportTemplateVersion)
                 .ThenInclude(v => v.Template)
-            .ToListAsync();
+            .AsQueryable();
+
+        // A scoped caller lists their own schedules only: another user's carries that user's recipients.
+        if (!CallerIsUnrestricted()) query = query.Where(s => s.CreatedById == user.Value);
+
+        var schedules = await query.ToListAsync();
 
         return Ok(schedules);
     }
@@ -76,7 +98,7 @@ public class ReportSchedulesController(
                 .ThenInclude(v => v.Template)
             .FirstOrDefaultAsync(s => s.Id == id);
 
-        if (schedule == null)
+        if (schedule == null || !CallerOwns(schedule, user.Value))
             return NotFound($"Report schedule with ID {id} not found");
 
         return Ok(schedule);
@@ -100,7 +122,9 @@ public class ReportSchedulesController(
             RecipientsJson = request.RecipientsJson,
             IsEnabled = request.IsEnabled,
             LastRunAt = null,
-            LastStatus = "Created"
+            LastStatus = "Created",
+            // Whose scope the job reads under (T237 review): the caller, never the body.
+            CreatedById = user.Value
         };
 
         dbContext.ReportSchedules.Add(schedule);
@@ -132,8 +156,12 @@ public class ReportSchedulesController(
         using var dbContext = DalService.GetContext();
         var schedule = await dbContext.ReportSchedules.FindAsync(id);
 
-        if (schedule == null)
+        if (schedule == null || !CallerOwns(schedule, user.Value))
             return NotFound($"Report schedule with ID {id} not found");
+
+        // A schedule from before the creator column runs for nobody; the unrestricted caller who saves it adopts it. An
+        // existing creator is kept: an administrator editing a user's schedule does not widen what it reads.
+        schedule.CreatedById ??= user.Value;
 
         schedule.ReportTemplateVersionId = request.ReportTemplateVersionId;
         schedule.FrequencyCron = request.FrequencyCron;
@@ -175,7 +203,7 @@ public class ReportSchedulesController(
         using var dbContext = DalService.GetContext();
         var schedule = await dbContext.ReportSchedules.FindAsync(id);
 
-        if (schedule == null)
+        if (schedule == null || !CallerOwns(schedule, user.Value))
             return NotFound($"Report schedule with ID {id} not found");
 
         dbContext.ReportSchedules.Remove(schedule);
@@ -199,7 +227,7 @@ public class ReportSchedulesController(
         using var dbContext = DalService.GetContext();
         var schedule = await dbContext.ReportSchedules.FindAsync(id);
 
-        if (schedule == null)
+        if (schedule == null || !CallerOwns(schedule, user.Value))
             return NotFound($"Report schedule with ID {id} not found");
 
         // Enqueue single immediate run in Hangfire

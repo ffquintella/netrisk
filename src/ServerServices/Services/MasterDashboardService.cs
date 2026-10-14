@@ -9,6 +9,7 @@ using Model;
 using Model.Dashboard;
 using Serilog;
 using ServerServices.Interfaces;
+using Tools.Risks;
 
 namespace ServerServices.Services;
 
@@ -166,7 +167,7 @@ public class MasterDashboardService(ILogger logger, IDalService dalService)
 
     /// <summary>
     /// Open risks grouped by entity. Risk severity bands mirror <c>StatisticsService</c>
-    /// (&gt;7 high, &gt;4 medium, else low) so the two screens agree.
+    /// (<c>RiskBand.Faixa</c>: 7 and above high, 4 up to 7 medium, below 4 low) so the two screens agree.
     /// </summary>
     private static async Task<Dictionary<int, RiskRollup>> ComputeRiskGroupsAsync(DAL.Context.AuditableContext dbContext)
     {
@@ -179,15 +180,21 @@ public class MasterDashboardService(ILogger logger, IDalService dalService)
                 (risk, scoring) => new { EntityId = risk.EntityId, scoring.CalculatedRisk })
             .ToListAsync();
 
+        // Three display buckets over the one band function (T238): Very High counts under High, and a
+        // score with no band (below zero) stays under Low, so the three still add up to Open.
         return rows
             .GroupBy(r => r.EntityId ?? UnassignedKey)
-            .ToDictionary(g => g.Key, g => new RiskRollup
+            .ToDictionary(g => g.Key, g =>
             {
-                Open = g.Count(),
-                High = g.Count(r => r.CalculatedRisk > 7),
-                Medium = g.Count(r => r.CalculatedRisk is > 4 and <= 7),
-                Low = g.Count(r => r.CalculatedRisk <= 4),
-                AverageScore = g.Average(r => (double)r.CalculatedRisk)
+                var bands = g.Select(r => RiskBand.Faixa(r.CalculatedRisk, RiskBand.DefaultRegisterLimits)).ToList();
+                return new RiskRollup
+                {
+                    Open = g.Count(),
+                    High = bands.Count(b => b >= RiskBand.High),
+                    Medium = bands.Count(b => b == RiskBand.Medium),
+                    Low = bands.Count(b => b < RiskBand.Medium),
+                    AverageScore = g.Average(r => (double)r.CalculatedRisk)
+                };
             });
     }
 

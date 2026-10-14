@@ -717,8 +717,9 @@ public class RiskChainServiceInMemoryTest : RiskChainTestBase
         Assert.Equal("Definition(person)", owner.Type);
         Assert.False(owner.Nullable);
 
-        // 2.6 since Stage 9.5 added securityClassificationLevel.sensitive (S46 §4.4); the 9.1 types are unchanged.
-        Assert.Equal("2.6", configuration.Version);
+        // 2.7 since T242 added criticality, internetFacing and the activity type (S39); 2.6 was Stage 9.5's
+        // securityClassificationLevel.sensitive (S46 §4.4). The 9.1 types are unchanged.
+        Assert.Equal("2.7", configuration.Version);
     }
 
     /// <summary>A1 — declaring and deleting a link each write the field-level trail.</summary>

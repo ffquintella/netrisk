@@ -56,6 +56,16 @@ public abstract class IntegrationsControllerBase(
         {
             return NotFound(ex.InnerException?.Message ?? ex.Message);
         }
+        catch (PermissionInvalidException ex)
+        {
+            // A service-level refusal — the caller holds the endpoint's permission but not the scope the operation
+            // needs (notification routing needs an unrestricted caller, T237 review). 403, as ContinuityController
+            // answers the same exception; it used to fall through to the 500 arm.
+            Logger.Warning("{Description} was refused: {Message}", description, ex.Message);
+
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { error = "insufficient_permission", ex.Permission, ex.Message });
+        }
         catch (SecretProtectionException ex)
         {
             // Same reasoning, and this one names an installation-wide problem: the key material the

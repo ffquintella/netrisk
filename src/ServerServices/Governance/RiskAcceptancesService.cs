@@ -8,6 +8,7 @@ using Model.TailRisk;
 using Serilog;
 using ServerServices.Interfaces;
 using ServerServices.Services;
+using Tools.Risks;
 
 namespace ServerServices.Governance;
 
@@ -562,14 +563,9 @@ public class RiskAcceptancesService(
     {
         if (levels.Count == 0 || score is null) return "insignificant";
 
-        var band = "insignificant";
-        foreach (var level in levels.OrderBy(l => l.Value))
-        {
-            if (score >= (double)level.Value) band = level.DisplayName;
-            else break;
-        }
-
-        return band;
+        var ordered = levels.OrderBy(l => l.Value).ToList();
+        var index = RiskBand.Faixa(score.Value, ordered.Select(l => (double)l.Value).ToList());
+        return index < 0 ? "insignificant" : ordered[index].DisplayName;
     }
 
     /// <summary>

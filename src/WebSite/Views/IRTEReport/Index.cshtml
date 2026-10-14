@@ -100,8 +100,10 @@
     </div>
 </div>
 
-<form asp-action="DoReport" method="post">
-    <input asp-for="TaskExecutionId" class="form-control" readonly hidden>
+@* NR-2026-037: the report key is the only value the server acts on (the execution is re-derived from
+   it); the antiforgery token is emitted by the form tag helper and checked by [ValidateAntiForgeryToken]. *@
+<form asp-action="DoReport" method="post" asp-antiforgery="true">
+    <input type="hidden" asp-for="Key">
     <div class="form-group row justify-content-center">
         <div class="col-md-3">
             @Html.Translate("Skip") 

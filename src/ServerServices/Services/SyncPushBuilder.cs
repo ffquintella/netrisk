@@ -10,8 +10,6 @@ namespace ServerServices.Services;
 
 public class SyncPushBuilder : ServiceBase, ISyncPushBuilder
 {
-    private const string PasswordResetLinkType = "passwordReset";
-
     private static readonly HashSet<int> TerminalFixStatuses = new()
     {
         (int)IntStatus.Fixed, (int)IntStatus.FixNotPossible, (int)IntStatus.Closed
@@ -165,7 +163,9 @@ public class SyncPushBuilder : ServiceBase, ISyncPushBuilder
     public Task<FastPushPayload> BuildFastAsync()
     {
         var payload = new FastPushPayload();
-        var links = _links.GetLinks(PasswordResetLinkType);
+        // Password-reset links and the incident-response task report links (NR-2026-037). Both carry
+        // only the key's digest; the website hashes the key a visitor presents and looks it up.
+        var links = SyncLinkTypes.Pushed.SelectMany(type => _links.GetLinks(type));
         foreach (var link in links)
         {
             payload.Links.Add(new LinkDto

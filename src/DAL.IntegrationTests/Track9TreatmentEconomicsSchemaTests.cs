@@ -55,7 +55,7 @@ public class Track9TreatmentEconomicsSchemaTests(MariaDbContainerFixture fixture
         "INSERT INTO `user` (`value`,`enabled`,`lockout`,`type`,`name`,`email`,`salt`,`password`,`role_id`,`admin`,`login`) " +
         "VALUES (960,1,0,'local','U960','u960@x.test','s',REPEAT('x',60),1,0,'user960')," +
         "(961,1,0,'local','U961','u961@x.test','s',REPEAT('x',60),1,0,'user961');" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9601,'New'),(9602,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9601, "New"), (9602, "New")) +
         "INSERT INTO `mitigations` (`id`,`risk_id`,`planning_strategy`,`mitigation_effort`,`mitigation_cost`," +
         "`mitigation_owner`,`current_solution`,`security_requirements`,`security_recommendations`,`submitted_by`," +
         "`planning_date`,`mitigation_percent`) VALUES " +

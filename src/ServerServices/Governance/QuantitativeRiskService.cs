@@ -285,20 +285,31 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
     /// Maps an annualized loss onto the 0–10 scale the register uses.
     ///
     /// Piecewise-linear inside each band rather than one number per band, so two risks in the same
-    /// band still order sensibly against each other. Above the top threshold the score approaches 10
-    /// logarithmically and never exceeds it — a loss ten times the top threshold is worse than one at
-    /// the threshold, and both are "as bad as this scale can say".
+    /// band still order sensibly against each other. Each monetary threshold lands exactly on the
+    /// register limit of the band it opens (<see cref="RiskBand.DefaultRegisterLimits"/>, S39 §4.5),
+    /// so the score is continuous and non-decreasing across every threshold. Above the top threshold
+    /// the score climbs from the Very High limit towards 10 logarithmically and never exceeds it — a
+    /// loss ten times the top threshold is worse than one at the threshold, and both are "as bad as
+    /// this scale can say".
+    ///
+    /// Before T339 the band below the top threshold ran up to 10 while the top band restarted at
+    /// 8.42, so a loss just under the top threshold outscored one at it, and a mitigated residual
+    /// could score above its inherent.
     /// </summary>
     public static float MapToScore(double annualizedLoss, IReadOnlyList<double> thresholds)
     {
         if (annualizedLoss <= 0 || thresholds.Count == 0) return 0;
 
-        // Band edges on the 0–10 scale, matching the seeded risk_levels: Low 0, Medium 4, High 7,
-        // Very High 10.
-        double[] scoreEdges = [0, 4, 7, 10];
+        // Band edges on the 0–10 scale: the register limits (Low 0, Medium 4, High 7, Very High 9).
+        // Threshold i opens band i + 1, so it maps to scoreEdges[i + 1]; extra thresholds clamp to
+        // the top edge, which keeps the mapping non-decreasing for any configured count.
+        var scoreEdges = RiskBand.DefaultRegisterLimits;
+        const double scaleMax = 10.0;
+
+        double Edge(int index) => scoreEdges[System.Math.Min(index, scoreEdges.Count - 1)];
 
         if (annualizedLoss < thresholds[0])
-            return (float)(scoreEdges[1] * (annualizedLoss / thresholds[0]));
+            return (float)(Edge(1) * (annualizedLoss / thresholds[0]));
 
         for (var i = 0; i < thresholds.Count - 1; i++)
         {
@@ -306,17 +317,19 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
 
             var span = thresholds[i + 1] - thresholds[i];
             var within = span <= 0 ? 0 : (annualizedLoss - thresholds[i]) / span;
-            var lower = scoreEdges[System.Math.Min(i + 1, scoreEdges.Length - 1)];
-            var upper = scoreEdges[System.Math.Min(i + 2, scoreEdges.Length - 1)];
+            var lower = Edge(i + 1);
+            var upper = Edge(i + 2);
 
             return (float)(lower + within * (upper - lower));
         }
 
-        var top = thresholds[^1];
-        var ratio = annualizedLoss / top;
-        var score = scoreEdges[^1] - 3.0 / (1 + System.Math.Log10(ratio + 1) * 3);
+        // At the top threshold the ratio is 1, log10(1) = 0 and the score is exactly the floor, so
+        // the top band continues where the band below it ended.
+        var floor = Edge(thresholds.Count);
+        var ratio = annualizedLoss / thresholds[^1];
+        var score = scaleMax - (scaleMax - floor) / (1 + System.Math.Log10(ratio) * 3);
 
-        return (float)System.Math.Min(10.0, System.Math.Max(scoreEdges[^2], score));
+        return (float)System.Math.Min(scaleMax, System.Math.Max(floor, score));
     }
 
     private static string BandName(double annualizedLoss, IReadOnlyList<double> thresholds)

@@ -11,6 +11,9 @@ using System.Reactive;
 using System.Windows.Input;
 using GUIClient.Interfaces;
 using GUIClient.Views;
+using DAL.Enums;
+using Model.Status;
+using System;
 
 namespace GUIClient.ViewModels;
 
@@ -43,6 +46,12 @@ public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDi
             set => this.RaiseAndSetIfChanged(ref _finalStatus, value);
         }
         
+        /// <summary>
+        /// The final statuses a close offers. Each maps to a lifecycle state through
+        /// <see cref="LegacyFindingStatus.ClosingTargets"/>, which is where the close is routed (T239).
+        /// Duplicated is not offered: the lifecycle's Duplicate needs the canonical finding, which this
+        /// dialog does not ask for — the triage dialog ("Change status") does.
+        /// </summary>
         public List<IntStatus> Statuses { get; } = new()
         {
             IntStatus.Closed,
@@ -51,7 +60,6 @@ public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDi
             IntStatus.NotRelevant,
             IntStatus.Rejected,
             IntStatus.Retired,
-            IntStatus.Duplicated,
             IntStatus.Outdated,
             IntStatus.Deleted,
         };
@@ -81,8 +89,22 @@ public class CloseDialogViewModel: ParameterizedDialogViewModelBaseAsync<CloseDi
     {
         BtSaveClicked = ReactiveCommand.Create(ExecuteSave);
         BtCancelClicked = ReactiveCommand.Create(ExecuteCancel);
-        
+
+        // A final status that suppresses the finding in the lifecycle (Rejected → FalsePositive,
+        // NotRelevant → OutOfScope) needs a stated reason there, and the comments are that reason.
+        // Refusing here beats the server refusing after the operator has typed everything else.
+        this.ValidationRule(
+            viewModel => viewModel.Comments,
+            this.WhenAnyValue(x => x.FinalStatus, x => x.Comments,
+                (status, comments) => !RequiresReason(status) || !string.IsNullOrWhiteSpace(comments)),
+            Localizer["CloseReasonRequiredMSG"]);
+
+        this.IsValid().Subscribe(valid => IsSaveEnabled = valid);
     }
+
+    /// <summary>Whether closing with <paramref name="status"/> needs a reason in the lifecycle.</summary>
+    public static bool RequiresReason(IntStatus status) =>
+        LegacyFindingStatus.ClosingTarget((int)status)?.RequiresJustification() == true;
 
 
     #region METHODS

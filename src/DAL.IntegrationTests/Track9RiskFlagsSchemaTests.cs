@@ -46,7 +46,7 @@ public class Track9RiskFlagsSchemaTests(MariaDbContainerFixture fixture)
     private static Task SeedAsync(MySqlConnection conn) => ExecAsync(conn,
         "INSERT INTO `user` (`value`,`enabled`,`lockout`,`type`,`name`,`email`,`salt`,`password`,`role_id`,`admin`,`login`) " +
         "VALUES (950,1,0,'local','U950','u950@x.test','s',REPEAT('x',60),1,0,'user950');" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9502,'New');");
+        MariaDbContainerFixture.InsertRisksSql((9502, "New")));
 
     private static async Task<MySqlException> RefusedAsync(MySqlConnection conn, string sql) =>
         await Assert.ThrowsAsync<MySqlException>(() => ExecAsync(conn, sql));

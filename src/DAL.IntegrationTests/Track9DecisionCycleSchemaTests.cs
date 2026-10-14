@@ -57,7 +57,7 @@ public class Track9DecisionCycleSchemaTests(MariaDbContainerFixture fixture)
         "INSERT INTO `user` (`value`,`enabled`,`lockout`,`type`,`name`,`email`,`salt`,`password`,`role_id`,`admin`,`login`) " +
         "VALUES (990,1,0,'local','U990','u990@x.test','s',REPEAT('x',60),1,0,'user990')," +
         "(991,1,0,'local','U991','u991@x.test','s',REPEAT('x',60),1,0,'user991');" +
-        "INSERT INTO `risks` (`id`,`status`) VALUES (9911,'Closed'),(9912,'New');" +
+        MariaDbContainerFixture.InsertRisksSql((9911, "Closed"), (9912, "New")) +
         "INSERT INTO closures (id, risk_id, user_id, closure_date, close_reason, note) VALUES (9931, 9911, 990, NOW(), 4, 'x');" +
         "INSERT INTO incidents (Id, Year, Sequence, Name, Description, Category, CreationDate, LastUpdate, CreatedById, Status) " +
         "VALUES (9921, 2026, 9921, '2026-9921', 'Ransomware.', 'malware', NOW(), NOW(), 991, 2);" +

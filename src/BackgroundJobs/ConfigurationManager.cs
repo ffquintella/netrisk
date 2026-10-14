@@ -30,11 +30,26 @@ public static class ConfigurationManager
     
     public static void ConfigureServices(IServiceCollection services, IConfiguration config, string logDir)
     {
+        RegisterServices(services, config);
+
+        ConfigureHangFire(services);
+    }
+
+    /// <summary>
+    /// The job host's container, without starting Hangfire — <see cref="ConfigureHangFire"/> blocks until
+    /// the process quits. Split out so <c>BackgroundJobs.Tests</c> can resolve every recurring job from the
+    /// same registrations production uses (T237, S39).
+    /// </summary>
+    public static void RegisterServices(IServiceCollection services, IConfiguration config)
+    {
 
         services.AddSingleton<IConfiguration>(config);
 
-        
-        services.AddScoped<IHttpContextAccessor, BackgroundServiceHttpContextAccessor>();
+        // T237 (S39 D-01): the job host's principal reads every entity. Without the scope claim it read
+        // DenyAll, and every job saw zero risks, hosts, incidents, findings and campaigns. Granted here
+        // and nowhere else — BackgroundScopeContainmentTest pins that.
+        services.AddScoped<IHttpContextAccessor>(_ =>
+            BackgroundServiceHttpContextAccessor.WithUnrestrictedEntityScope());
         services.AddScoped<IConfigurationsService, ConfigurationsService>();
         services.AddScoped<IFaceIDService, FaceIDService>();
         services.AddScoped<IPluginsService, PluginsService>();
@@ -44,6 +59,8 @@ public static class ConfigurationManager
         services.AddScoped<IRolesService, RolesService>();
         services.AddScoped<IPermissionsService, PermissionsService>();
         
+        // T292: shared by both DalService registrations below, so an invalidation through either reaches the other.
+        services.AddSingleton<ServerServices.Security.IEntityHierarchy, ServerServices.Security.EntityHierarchy>();
         services.AddSingleton<DalService>();
         services.AddSingleton<DatabaseService>();
         
@@ -64,6 +81,9 @@ public static class ConfigurationManager
             .AddSmtpSender(config["email:smtp:server"] ?? "localhost", int.Parse(config["email:smtp:port"] ?? "25"));
         services.AddTransient<IEmailService, EmailService>();
         services.AddTransient<IQuestPdfRenderingService, QuestPdfRenderingService>();
+        // T237 review: the report schedule runs under its creator's scope as it stands at run time, resolved here —
+        // never under this host's unrestricted principal (ScheduledReportScopeTest).
+        services.AddScoped<IUserEntityScopeResolver, UserEntityScopeResolver>();
         services.AddScoped<ScheduledReportJob>();
         //CLEANUP
         services.AddScoped<AuditCleanup>();
@@ -134,7 +154,26 @@ public static class ConfigurationManager
         // above, the same one the API archives through.
         services.AddScoped<BackgroundJobs.Jobs.Governance.RiskArchiveReviewJob>();
 
-        ConfigureHangFire(services);
+        // T237 (S39 D-01) — the five Track 8 jobs ConfigureGovernanceJobs schedules. They were never
+        // registered, and the activator answers an unregistered type with null, so Hangfire failed each run
+        // before the job's constructor. RecurringJobsContainerTest resolves every scheduled job from this
+        // container, so the next one scheduled and not registered fails a test instead of a night.
+        services.AddScoped<BackgroundJobs.Jobs.Governance.ResidualRiskCalculation>();
+        services.AddScoped<BackgroundJobs.Jobs.Governance.GovernanceRetentionJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Governance.RiskAcceptanceExpiryPass>();
+        services.AddScoped<BackgroundJobs.Jobs.Governance.RiskReviewCadenceJob>();
+        services.AddScoped<BackgroundJobs.Jobs.Governance.RiskReviewCampaignJob>();
+
+        // What the cadence job reads the register through, and what the website sync (through the response
+        // plans) and the issue-sync poll (through the Jira integration) need: none was registered here, so
+        // those three jobs failed to construct on every run too. The filter provider has an empty whitelist —
+        // no job takes a filter from a caller — because the API's lives in an assembly this host does not
+        // reference.
+        services.AddScoped<IEntitiesService, EntitiesService>();
+        services.AddScoped<IRisksService, RisksService>();
+        services.AddScoped<IMgmtReviewsService, MgmtReviewsService>();
+        services.AddScoped<ServerServices.Filtering.IEntityFilterMapperProvider,
+            ServerServices.Filtering.EmptyEntityFilterMapperProvider>();
 
     }
     

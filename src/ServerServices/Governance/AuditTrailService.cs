@@ -118,8 +118,23 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
             [nameof(AiModelDataLink)] = Through<AiModelDataLink>(),
             [nameof(AiModelMetricReading)] = Through<AiModelMetricReading>(),
             [nameof(AiModelOverride)] = Through<AiModelOverride>(),
-            [nameof(AiModelRisk)] = Through<AiModelRisk>()
+            [nameof(AiModelRisk)] = Through<AiModelRisk>(),
+
+            // T241 (S40 §7.5) — the entity map and its properties. The map has no scope filter (every authenticated user
+            // reads it), but its trail says who moved which unit's subtree or criticality and when, so a scoped reader
+            // gets it only for an entity inside their own subtree (T292); a property follows its entity.
+            [nameof(Entity)] = InEntityTree((_, id) => Task.FromResult<int?>(id)),
+            [nameof(EntitiesProperty)] = InEntityTree(async (db, id) => await db.EntitiesProperties.AsNoTracking()
+                .Where(p => p.Id == id).Select(p => (int?)p.Entity).FirstOrDefaultAsync())
         };
+
+    /// <summary>
+    /// Visible when the entity the row belongs to is inside the caller's hierarchical scope. No owner set: the entity
+    /// map is not filtered, so the check is the scope itself rather than a lookup through a filtered set. A row whose
+    /// entity is gone (a deleted property) is not visible, like any deleted record.
+    /// </summary>
+    private static RecordScope InEntityTree(Func<AuditableContext, int, Task<int?>> entityOf) =>
+        new(null, async (db, id) => await entityOf(db, id) is { } entityId && db.EntityScope.Allows(entityId));
 
     /// <summary>
     /// Visible when the record with that primary key — the key the interceptor writes as <c>entity_id</c> — is found through
