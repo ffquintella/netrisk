@@ -309,6 +309,25 @@ shipped `appsettings.json`. It is authored through the MSI `IniFile` table — n
 and removed on uninstall. The same file works for the macOS and Linux deployments: drop it next
 to the executable.
 
+A `[Server] Url` set in an overlay is **authoritative**. At every start-up the client copies it
+into the user's configuration store, which is where the connection URL is actually read from
+(`src/GUIClient/ManagedServerUrl.cs`). That skips the first-run window, and a changed deployment
+reaches clients that are already configured. Only the overlays count: the `127.0.0.1` placeholder
+in the shipped `appsettings.json` is never applied.
+
+**Environments.** `--environment=<name>` gives the client a separate data folder
+(`%APPDATA%\<name>\NRGUIClient`; `production` uses `%APPDATA%\NRGUIClient`). It also layers
+`netrisk.<name>.ini` after `netrisk.ini`, so one installation can serve several environments, each
+pointed at its own server:
+
+```ini
+; netrisk.homolog.ini — read only by `GUIClient --environment=homolog`
+[Server]
+Url=https://netrisk-homolog.example.com:5443/
+```
+
+Environment names are limited to letters, digits, `-` and `_`. Any other name gets no overlay.
+
 **WiX only runs on Windows.** On macOS/Linux `PackageWindowsMSI` logs a single warning and
 skips; the authoring is verified instead by `Packaging.Tests` (upgrade code, per-machine scope,
 secure properties, INI row, shortcut targets, no-extension requirement).

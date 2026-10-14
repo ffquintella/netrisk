@@ -10,9 +10,9 @@ namespace GUIClient;
 
 public class ConfigurationBootstrapper
 {
-    public static void RegisterConfiguration(IServiceCollection services)
+    public static void RegisterConfiguration(IServiceCollection services, string environment)
     {
-        var configuration = BuildConfiguration();
+        var configuration = BuildConfiguration(SourcesFor(environment));
 
         RegisterConfiguration(services, configuration);
         RegisterLoggingConfiguration(services, configuration);
@@ -21,16 +21,25 @@ public class ConfigurationBootstrapper
         RegisterMutableConfiguration(services);
     }
 
+    /// <summary>
+    /// The configuration files this build reads when running as <paramref name="environment"/>:
+    /// the shipped JSON, netrisk.ini, then netrisk.&lt;environment&gt;.ini.
+    /// </summary>
+    public static IReadOnlyList<ClientConfigurationSource> SourcesFor(string environment) =>
 #if DEBUG
-    private static IConfiguration BuildConfiguration() =>
-        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()),
-                ClientConfigurationSources.Development)
+        ClientConfigurationSources.ForEnvironment(ClientConfigurationSources.Development, environment);
+#else
+        ClientConfigurationSources.ForEnvironment(ClientConfigurationSources.Release, environment);
+#endif
+
+#if DEBUG
+    private static IConfiguration BuildConfiguration(IReadOnlyList<ClientConfigurationSource> sources) =>
+        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()), sources)
             .AddUserSecrets<Program>()
             .Build();
 #else
-    private static IConfiguration BuildConfiguration() =>
-        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()),
-                ClientConfigurationSources.Release)
+    private static IConfiguration BuildConfiguration(IReadOnlyList<ClientConfigurationSource> sources) =>
+        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()), sources)
             .Build();
 #endif
 

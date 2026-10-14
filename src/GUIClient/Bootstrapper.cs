@@ -7,7 +7,7 @@ public class Bootstrapper
     public static void Register(IServiceCollection services, string environment)
     {
         EnvironmentServicesBootstrapper.RegisterEnvironmentServices(services, environment);
-        ConfigurationBootstrapper.RegisterConfiguration(services);
+        ConfigurationBootstrapper.RegisterConfiguration(services, environment);
         LoggingBootstrapper.RegisterLogging(services);
         MapperBootstrapper.RegisterServices(services);
         GeneralServicesBootstrapper.RegisterServices(services);

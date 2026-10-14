@@ -1,6 +1,7 @@
 using Avalonia;
 using ReactiveUI.Avalonia;
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -62,6 +63,8 @@ namespace GUIClient
                 mutableConfigurationService.RemoveConfigurationValue("Server");
             }
 
+            ApplyManagedServerUrl(environment);
+
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args, ShutdownMode.OnMainWindowClose);
         }
@@ -78,6 +81,25 @@ namespace GUIClient
                 var ex = (Exception)args.ExceptionObject;
                 logger.LogCritical($"Unhandled application error: {ex}");
             };
+
+        /// <summary>
+        /// Copies a server URL deployed in netrisk.ini / netrisk.&lt;environment&gt;.ini into the
+        /// user's configuration store, where every caller reads it from. Runs after --cleanServer
+        /// on purpose: a managed URL is authoritative. See <see cref="ManagedServerUrl"/>.
+        /// </summary>
+        private static void ApplyManagedServerUrl(string environment)
+        {
+            var managed = ManagedServerUrl.Resolve(Directory.GetCurrentDirectory(),
+                ConfigurationBootstrapper.SourcesFor(environment));
+            if (managed == null) return;
+
+            var store = ServiceProvider.GetRequiredService<IMutableConfigurationService>();
+            if (!ManagedServerUrl.ShouldReplace(store.GetConfigurationValue("Server"), managed)) return;
+
+            store.SetConfigurationValue("Server", managed);
+            ServiceProvider.GetService<ILogger>()?.LogInformation(
+                "Server URL set to {Url} from the deployed configuration ({Environment})", managed, environment);
+        }
 
         private static void RegisterDependencies(string environment)
         {
