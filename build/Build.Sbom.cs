@@ -179,7 +179,7 @@ partial class Build
     /// tool ends up. Wrapped in a try/catch because a resolver that throws on "not found" would make
     /// "no SBOM tool" indistinguishable from "the build is broken".
     /// </summary>
-    private static Tool? ResolveCycloneDxTool()
+    private static Tool ResolveCycloneDxTool()
     {
         try
         {

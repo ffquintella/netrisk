@@ -9,7 +9,7 @@
     <NukeScriptDirectory>..</NukeScriptDirectory>
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
     <IsPackable>false</IsPackable>
-    <LangVersion>13</LangVersion>
+    <LangVersion>14</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,31 +24,14 @@
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->
-    <!-- Microsoft.Build 18.11.0, aligned with Tasks.Core / Utilities.Core below. From 18.10.1 on the
-         package ships only lib/ref net11.0 and net472 (18.9.6 still had net10.0), so a net10.0
-         consumer restores the .NETFramework asset of Microsoft.Build and of its net472-only
-         dependency Microsoft.IO.Redist (lib/net472 only), which NuGet reports as NU1701
-         (eight warnings across the restore passes of this project). Tasks.Core / Utilities.Core ship
-         netstandard2.0, which is why they raise none.
-         Resolved per package, not with a project-wide NoWarn: NU1701 is suppressed on exactly these
-         two PackageReferences, because the net472 asset is never loaded and never bound to.
-         Evidence, from obj/project.assets.json of this project:
-           Microsoft.Build/18.11.0   runtime = lib/net472/_._   (placeholder: nothing is copied or loaded;
-                                     ExcludeAssets="runtime" keeps it that way; the MSBuild that Nuke
-                                     actually loads is the SDK's, found by Microsoft.Build.Locator)
-                                     compile = ref/net472/Microsoft.Build.dll (reference assembly, never
-                                     loaded; Build.cs only has `using Microsoft.Build.Construction;` and
-                                     uses no type from it)
-           Microsoft.IO.Redist/6.1.0 compile = runtime = lib/net472/_._   (nothing at all; the explicit
-                                     reference below exists only to carry the scoped NoWarn, because a
-                                     transitive package cannot take one, and ExcludeAssets="all" keeps
-                                     it inert)
-         Revisit when Microsoft.Build ships a net10.0 asset again, or when Build.cs drops the unused
-         using: then both lines below can go. -->
-    <PackageReference Include="Microsoft.Build" Version="18.11.0" ExcludeAssets="runtime" NoWarn="NU1701" />
-    <PackageReference Include="Microsoft.IO.Redist" Version="6.1.0" ExcludeAssets="all" NoWarn="NU1701" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.11.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.11.0" ExcludeAssets="runtime" />
+    <!-- MSBuild packages pinned to 18.9.6, the newest release that ships net10.0 assets. From 18.10
+         on, the line targets .NET 11 (net11.0 + net472 only): on this net10.0 project it restores the
+         .NETFramework asset (NU1701) and its buildTransitive targets warn "doesn't support net10.0".
+         Move these only to a release that still ships net10.0, or together with a net11.0 retarget.
+         Runtime assets are excluded: the MSBuild Nuke loads is the SDK's, via Microsoft.Build.Locator. -->
+    <PackageReference Include="Microsoft.Build" Version="18.9.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.9.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.9.6" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
     <PackageReference Include="Tools.InnoSetup" Version="7.1.0" />
     <!-- Explicit overrides for vulnerable transitive packages.

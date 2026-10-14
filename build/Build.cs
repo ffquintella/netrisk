@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using InnoSetup.ScriptBuilder;
-using Microsoft.Build.Construction;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
