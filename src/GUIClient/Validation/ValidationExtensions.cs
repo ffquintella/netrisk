@@ -9,7 +9,7 @@ namespace GUIClient.Validation;
 /// The declaration surface for view-model validation. Deliberately mirrors the
 /// <c>ReactiveUI.Validation</c> API these call sites were originally written against, so
 /// the rules read the same, but the implementation is in-tree (see <see cref="ValidationContext"/>)
-/// rather than a package that has not been rebuilt for ReactiveUI 24.
+/// rather than a package that has not been rebuilt for ReactiveUI 24 or later.
 /// </summary>
 public static class ValidationExtensions
 {
@@ -24,8 +24,12 @@ public static class ValidationExtensions
         string message)
         where TViewModel : class, IReactiveObject, IValidatableViewModel
     {
+        // The Unsafe (reflection) overload, deliberately: since ReactiveUI 26 a plain WhenAnyValue is
+        // resolved by the ReactiveUI.Binding source generator from an inline lambda at the call site,
+        // and this selector is a caller-supplied expression over a type parameter, which no generated
+        // code can stand in for (RXUIBIND016 / RXUIBIND001; the plain call would throw at run time).
         var stream = viewModel
-            .WhenAnyValue(property)
+            .WhenAnyValueUnsafe(property)
             .Select(value =>
             {
                 try

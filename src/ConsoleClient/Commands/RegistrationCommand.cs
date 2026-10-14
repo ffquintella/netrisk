@@ -32,7 +32,7 @@ public class RegistrationCommand: Command<RegistrationSettings>
 
         return date.ToString("dd/MM/yyyy HH:mm:ss");
     }
-    protected override int Execute([NotNull] CommandContext context, [NotNull] RegistrationSettings settings, CancellationToken cancellationToken)
+    public override int Execute([NotNull] CommandContext context, [NotNull] RegistrationSettings settings, CancellationToken cancellationToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (settings == null) throw new ArgumentNullException(nameof(settings));

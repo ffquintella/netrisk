@@ -12,6 +12,28 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.41.0] - 2026-10-14
+
+### Changed
+
+- Refresh dependencies to their latest compatible releases (ReactiveUI 26 with ReactiveUI.Avalonia 12.1.6, Avalonia 12.1.4, EF Core, ASP.NET Core and Microsoft.Extensions.* 10.0.13, Fido2 4.3.0, Spectre.Console.Cli 0.57.2, Microsoft.Build 18.11.0 in the build project and others), holding back SkiaSharp 4 and HarfBuzzSharp 14 to match Avalonia's renderer
+- Render the governance evidence pack, detailed entities risks and host vulnerability prioritization reports with QuestPDF instead of PDFsharp/MigraDoc, whose 6.5 release moved to AGPL-3.0, keeping their sections, tables, page numbering and document metadata
+
+### Removed
+
+- Remove the partial, mislabelled `Arial*.ttf` font files from the server's bundled fonts, so PDF output only ever uses the complete Arial Unicode MS faces
+
+### Fixed
+
+- Draw a character none of the bundled fonts has, such as an emoji, as a replacement glyph in PDF reports and exports instead of failing the whole document
+- Render the regular text of template-driven PDF exports in a regular face and bold text in bold, instead of drawing everything in Arial Bold Italic
+- Show the most recent review date, not the earliest, as "Last Review" on the detailed entities risks report
+- Show a mitigation's effort label on the detailed entities risks report from its effort, not from its cost
+
+### Security
+
+- Bump `System.Security.Cryptography.Xml` and `System.Security.Cryptography.Pkcs` to 10.0.13, pinning `Pkcs` directly where `Cryptography.Xml` pulled the vulnerable 10.0.12 build, for the denial-of-service advisories CVE-2026-96958, CVE-2026-96959, CVE-2026-96960, CVE-2026-84008 and CVE-2026-70162
+
 ## [2.40.0] - 2026-10-14
 
 ### Added

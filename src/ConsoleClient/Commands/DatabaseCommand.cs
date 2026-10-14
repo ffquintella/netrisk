@@ -23,7 +23,7 @@ public class DatabaseCommand: Command<DatabaseSettings>
     }
 
     
-    protected override int Execute([NotNull] CommandContext context, [NotNull] DatabaseSettings settings, CancellationToken cancellationToken)
+    public override int Execute([NotNull] CommandContext context, [NotNull] DatabaseSettings settings, CancellationToken cancellationToken)
     {
         
         

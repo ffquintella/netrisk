@@ -9,6 +9,7 @@ using Model.Governance;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Reports;
+using ServerServices.Tests.Reports;
 using ServerServices.Tests.ServiceTests;
 using Xunit;
 
@@ -18,13 +19,14 @@ namespace ServerServices.Tests.Track8;
 /// The evidence pack rendered through the 2.1 reporting engine (Track 8 milestone 8.4.2).
 ///
 /// This renders a real PDF rather than asserting on intermediate calls, because the failure mode
-/// worth catching is the one MigraDoc produces at render time and not at build time: a table with
-/// more cells in a row than the table has columns throws only when the document is laid out, and a
-/// section that adds a table before a column exists throws only then too. A test that stubbed
-/// MigraDoc would pass on a report that cannot be produced.
+/// worth catching is the one the PDF engine produces at render time and not at build time: QuestPDF
+/// lays the document out only when it is generated, and content that cannot be placed — a table
+/// wider than the page, a fixed-size box its text overflows — throws only then. A test that stubbed
+/// the engine would pass on a report that cannot be produced.
 ///
-/// It is also the first test in the repository that exercises the PDF engine at all, which means the
-/// font resolver and the shipped logo asset are covered here as a side effect.
+/// The content tests read the text back out of the PDF (<see cref="PdfText"/>, PdfPig), so a section
+/// or a value the layout silently dropped fails here, and so does text drawn in any font but the
+/// bundled Arial Unicode MS. The shipped logo asset is covered as a side effect.
 /// </summary>
 [TestSubject(typeof(GovernanceEvidencePdfReport))]
 public class GovernanceEvidenceReportRenderTest : InMemoryServiceTestBase
@@ -184,9 +186,9 @@ public class GovernanceEvidenceReportRenderTest : InMemoryServiceTestBase
     }
 
     /// <summary>
-    /// A 4 000-character justification and a very long comment must not break layout. MigraDoc will
-    /// not throw on these, but a table whose column widths overflow the page silently loses the
-    /// right-hand columns — which in this report is the "to" value and the actor.
+    /// A 4 000-character justification and a very long comment must not break layout. A table cell
+    /// taller than a page has to split across pages, and a table whose column widths overflow the
+    /// page would lose the right-hand columns — which in this report is the "to" value and the actor.
     /// </summary>
     [Fact]
     public async Task TestPathologicallyLongFreeTextStillRenders()
@@ -271,5 +273,184 @@ public class GovernanceEvidenceReportRenderTest : InMemoryServiceTestBase
             GetService<IDalService>(), pack);
 
         Assert.True(IsPdf(await report.GenerateReportAsync("Sparse")));
+    }
+
+    /// <summary>
+    /// Every section and every value of a full pack is in the rendered text — the scope block, each
+    /// acceptance with its optional lines, the three tables with their headers, and the details the
+    /// comments above say an auditor looks for (the segregation override, the escalation, the link
+    /// from a campaign decision to its acceptance).
+    /// </summary>
+    [Fact]
+    public async Task TestAFullPackCarriesEverySectionAndValue()
+    {
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), FullPack());
+
+        var pdf = PdfText.Read(await report.GenerateReportAsync("Governance Evidence Pack"));
+
+        string[] expected =
+        [
+            // Title block and scope.
+            "Governance Evidence Pack",
+            "Entity: Retail Bank",
+            "Period: 2026-04-01 → 2026-06-30 (UTC)",
+            "GeneratedAt: 2026-08-26 10:00:00Z",
+            "RequestedBy: Ana Approver (ana, #10)",
+            "Contents: 2 RiskAcceptances, 2 MgmtReviews, 2 BusinessReviewDecisions, 2 FieldChanges",
+            // Acceptances.
+            "#1 Vendor patch deferred",
+            "Risk: #1 Unpatched payment gateway",
+            "StatusLabel: Active",
+            "AuthorizingManager: Ana Approver (ana, #10)",
+            "RequestedBy: Bob Reviewer (bob, #11)",
+            "Period: 2026-04-01 → 2026-10-01",
+            "ResidualRiskAtAcceptance: 4.25",
+            "Origin: BusinessReviewCampaign",
+            "BusinessJustification: The vendor patch breaks the settlement integration.",
+            "CompensatingControls: WAF rule + daily reconciliation",
+            "#2 Withdrawn",
+            "Revoked: 2026-05-05 — Cleo (cleo, #12) — SSO rolled out",
+            // Reviews.
+            "Date", "Reviewer", "Countersignature", "Comments",
+            "Cleo (cleo, #12) — 2026-05-03",
+            "Treat then re-rate",
+            "PendingCountersignature [SegregationOverride: Sole approver on site during the incident]",
+            // Campaign decisions.
+            "Campaign", "BusinessRank", "Decision", "DecidedBy", "Notes",
+            "Q2 2026 (Completed)",
+            "RiskAcceptance #1.",
+            "EscalatedTo: Dana Director (dana, #13). Above our appetite",
+            // Field changes.
+            "When", "Record", "Field", "Action", "From", "To", "Actor",
+            "2026-05-01 12:00", "Risk #1", "Mitigation Planned",
+            "RiskScoring #1", "ResidualRisk", "4.25"
+        ];
+
+        foreach (var text in expected)
+            Assert.True(pdf.Contains(text), $"the PDF does not contain \"{text}\"");
+
+        // The sections come in the order the class composes them.
+        Assert.True(pdf.IndexOf("#1 Vendor patch deferred") < pdf.IndexOf("Treat then re-rate"));
+        Assert.True(pdf.IndexOf("Treat then re-rate") < pdf.IndexOf("Q2 2026 (Completed)"));
+        Assert.True(pdf.IndexOf("Q2 2026 (Completed)") < pdf.IndexOf("Mitigation Planned"));
+
+        Assert.False(pdf.Contains("EvidenceTruncatedMSG"), "an untruncated pack carries the truncation notice");
+        Assert.False(pdf.Contains("NothingRecordedInThisPeriodMSG"), "a full pack says a section is empty");
+    }
+
+    /// <summary>
+    /// The engine's own guarantees: the document metadata, page numbering on every page, and every
+    /// glyph drawn in the bundled Arial Unicode MS rather than a fallback the host happened to have.
+    /// </summary>
+    [Fact]
+    public async Task TestTheRenderedPackCarriesMetadataPageNumbersAndTheBundledFont()
+    {
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), FullPack());
+
+        var pdf = PdfText.Read(await report.GenerateReportAsync("Governance Evidence Pack"));
+
+        Assert.Equal("Governance Evidence Pack", pdf.Title);
+        Assert.Equal("Netrisk - Risk Management System", pdf.Author);
+        Assert.Equal("Report", pdf.Subject);
+
+        for (var page = 1; page <= pdf.Pages; page++)
+            Assert.True(pdf.Contains($"{page} / {pdf.Pages}"), $"page {page} of {pdf.Pages} is not numbered");
+
+        Assert.NotEmpty(pdf.Fonts);
+        Assert.All(pdf.Fonts, font => Assert.StartsWith("ArialUnicodeMS", font));
+    }
+
+    /// <summary>An empty period names each of its four sections as empty, in words.</summary>
+    [Fact]
+    public async Task TestAnEmptyPackSaysEachSectionIsEmpty()
+    {
+        var pack = new GovernanceEvidencePack
+        {
+            EntityName = "(all entities)",
+            FromUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            ToUtc = new DateTime(2026, 3, 31, 0, 0, 0, DateTimeKind.Utc),
+            GeneratedAtUtc = new DateTime(2026, 8, 26, 10, 0, 0, DateTimeKind.Utc),
+            RequestedBy = "Ana (ana, #10)"
+        };
+
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), pack);
+
+        var pdf = PdfText.Read(await report.GenerateReportAsync("Empty"));
+
+        var empty = PdfText.Squash("NothingRecordedInThisPeriodMSG");
+        var occurrences = 0;
+        for (var at = pdf.IndexOf(empty); at >= 0; at = pdf.IndexOf(empty, at + 1))
+            occurrences++;
+
+        Assert.Equal(4, occurrences);
+        Assert.True(pdf.Contains("Contents: 0 RiskAcceptances, 0 MgmtReviews, 0 BusinessReviewDecisions, 0 FieldChanges"));
+    }
+
+    /// <summary>The truncation notice is rendered when, and only when, the pack was truncated.</summary>
+    [Fact]
+    public async Task TestATruncatedPackSaysSo()
+    {
+        var pack = FullPack();
+        pack.ChangesTruncated = true;
+
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), pack);
+
+        Assert.True(PdfText.Read(await report.GenerateReportAsync("Truncated")).Contains("EvidenceTruncatedMSG"));
+    }
+
+    /// <summary>
+    /// Long free text is kept whole outside the tables and in the review comments, which wrap — a
+    /// 4 000-character word is split across lines and pages rather than cut — while a field change is
+    /// clipped to 60 characters and an ellipsis, as <c>Truncate</c> says.
+    /// </summary>
+    [Fact]
+    public async Task TestPathologicallyLongFreeTextIsKeptOrClippedAsDesigned()
+    {
+        var pack = FullPack();
+
+        pack.Acceptances[0].BusinessJustification = new string('x', 4000);
+        pack.Reviews[0].Comments = new string('y', 2000);
+        pack.Changes[0].NewValue = new string('z', 3000);
+
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), pack);
+
+        var pdf = PdfText.Read(await report.GenerateReportAsync("Long text"));
+
+        Assert.True(pdf.Count('x') >= 4000, $"only {pdf.Count('x')} of 4000 'x' were rendered");
+        Assert.True(pdf.Count('y') >= 2000, $"only {pdf.Count('y')} of 2000 'y' were rendered");
+        Assert.True(pdf.Contains(new string('z', 60) + "…"));
+        Assert.False(pdf.Contains(new string('z', 61)));
+        // The columns right of the long values are still on the page.
+        Assert.True(pdf.Contains("Actor"));
+        Assert.True(pdf.Contains("system"));
+    }
+
+    /// <summary>
+    /// A character none of the bundled fonts has — an emoji typed into a review comment — is drawn as
+    /// a replacement glyph and the pack still renders, with the rest of the comment intact. QuestPDF's
+    /// default is to abort the whole document on it, which would make one emoji block an evidence
+    /// export; the previous PDF engine drew the missing glyph and carried on.
+    /// </summary>
+    [Fact]
+    public async Task TestTextOutsideTheBundledFontStillRenders()
+    {
+        var pack = FullPack();
+        pack.Reviews[0].Comments = "Approved \u2705 \U0001F44D after the retest";
+
+        var report = new GovernanceEvidencePdfReport(NewReport(), new KeyEchoLocalizer(),
+            GetService<IDalService>(), pack);
+
+        var data = await report.GenerateReportAsync("Glyphs");
+
+        Assert.True(PdfText.IsPdf(data));
+        var pdf = PdfText.Read(data);
+        Assert.True(pdf.Contains("Approved"));
+        Assert.True(pdf.Contains("after the retest"));
+        Assert.True(pdf.Contains("Mitigation Planned"), "the sections after the comment are missing");
     }
 }

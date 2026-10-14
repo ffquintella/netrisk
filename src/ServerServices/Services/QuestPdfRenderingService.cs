@@ -46,6 +46,9 @@ public class QuestPdfRenderingService(ILogger logger, IDalService dalService, IL
 
         // Enforce the QuestPDF Community license
         QuestPDF.Settings.License = LicenseType.Community;
+        // Process-wide, like the licence, and set identically by TemplatedPdfReport: a glyph no
+        // registered font has renders as a replacement character instead of failing the export.
+        QuestPDF.Settings.ThrowOnMissingTextGlyphs = false;
 
         try
         {
@@ -95,6 +98,7 @@ public class QuestPdfRenderingService(ILogger logger, IDalService dalService, IL
         Logger.Information("Rendering QuestPDF template preview image");
 
         QuestPDF.Settings.License = LicenseType.Community;
+        QuestPDF.Settings.ThrowOnMissingTextGlyphs = false;
 
         try
         {
@@ -156,8 +160,10 @@ public class DynamicQuestPdfDocument<T>(ReportLayout layout, ReportBranding bran
                 page.Margin(1.2f, Unit.Centimetre);
                 page.PageColor(Colors.White);
                 
-                // Set default style & fallback fonts (compact, to fit wide exports)
-                page.DefaultTextStyle(x => x.FontFamily(branding.FontName).FontSize(8));
+                // Default style (compact, to fit wide exports). The family goes through the same mapping as
+                // the hand-written reports, so "Arial" renders in the bundled Arial Unicode MS
+                // faces. (The old partial, mislabelled Fonts/Arial*.ttf files drew every run in Bold Italic.)
+                page.DefaultTextStyle(x => x.FontFamily(ServerServices.Reports.TemplatedPdfReport.ResolveFontFamily(branding.FontName)).FontSize(8));
 
                 // Header
                 page.Header().Element(ComposeHeader);

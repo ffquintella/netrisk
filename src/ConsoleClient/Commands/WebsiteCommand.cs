@@ -17,7 +17,7 @@ public class WebsiteCommand : Command<WebsiteSettings>
         _keyService = keyService;
     }
 
-    protected override int Execute([NotNull] CommandContext context, [NotNull] WebsiteSettings settings, CancellationToken cancellationToken)
+    public override int Execute([NotNull] CommandContext context, [NotNull] WebsiteSettings settings, CancellationToken cancellationToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (settings == null) throw new ArgumentNullException(nameof(settings));

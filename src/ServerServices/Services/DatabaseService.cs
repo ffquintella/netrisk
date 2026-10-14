@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Unicode;
 using Microsoft.Extensions.Configuration;
-using MigraDoc.DocumentObjectModel;
 using Model.Database;
 using Model.Exceptions;
 using MySqlConnector;
@@ -47,7 +46,7 @@ public class DatabaseService(
                     
                     foreach (var oldCatalogStrId in oldCatalogs)
                     {
-                        if(oldCatalogStrId.IsValueNullOrEmpty()) continue;
+                        if(string.IsNullOrEmpty(oldCatalogStrId)) continue;
                         var oldId = Int32.Parse(oldCatalogStrId);
                         var newCatalog = context.RiskCatalogs.FirstOrDefault(rc => rc.Id == oldId);
                         if (newCatalog == null) continue;

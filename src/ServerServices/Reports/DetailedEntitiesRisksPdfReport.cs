@@ -3,9 +3,9 @@ using System.Linq;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
-using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Shapes;
-using MigraDoc.DocumentObjectModel.Tables;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using ServerServices.Services;
 using Tools.Risks;
 
@@ -36,206 +36,147 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
     
     public int BodyFontSize { get; set; } = 12;
 
-    protected override async Task<Document> AddBody()
+    /// <summary>
+    /// One block per entity with risks: its place in the hierarchy, the narrative of each risk (with
+    /// its mitigation and score), the pre/post-treatment table, and a rule underneath.
+    ///
+    /// Each block keeps the font sizes the previous PDF engine actually rendered: it applied the last
+    /// paragraph-level size to the whole paragraph, so the entity heading and the risk narratives
+    /// came out at <see cref="BodyFontSize"/> and the default size respectively.
+    /// </summary>
+    protected override void ComposeBody(ColumnDescriptor body)
     {
-        if(Document == null)
-            throw new Exception("Document is null");
-        
-        return await Task.Run(() =>
+        using var dbContext = DalService.GetContext();
+
+        var entities = dbContext.Entities
+            .Include(e => e.Risks)
+            .ThenInclude(r => r.Mitigation).ThenInclude(m => m!.PlanningStrategyNavigation)
+            .Include(e => e.EntitiesProperties)
+            .Where(e => e.Risks.Count > 0)
+            .ToList();
+
+        var scores = dbContext.RiskScorings.ToList();
+
+        foreach (var entity in entities)
         {
-            if(ActiveSection == null)
-                throw new Exception("ActiveSection is null");
-            
-            var paragraph = ActiveSection.AddParagraph();
+            var parents = GetEntityParents(entity);
 
-            paragraph.Format.Font.Size = TitleFontSize;
-
-            //paragraph.AddFormattedText(report.Name, TextFormat.Bold);
-
-            using var dbContext = DalService.GetContext();
-            
-            var entities = dbContext.Entities
-                .Include(e => e.Risks)
-                .ThenInclude(r => r.Mitigation).ThenInclude(m => m!.PlanningStrategyNavigation)
-                .Include(e => e.EntitiesProperties)
-                .Where(e => e.Risks.Count > 0)
-                .ToList();
-
-            var scores = dbContext.RiskScorings.ToList();
-
-            foreach (var entity in entities)
+            body.Item().PaddingTop(10).Text(text =>
             {
-                paragraph = ActiveSection.AddParagraph();
-                paragraph.Format.Font.Size = BodyFontSize - 2;
+                text.DefaultTextStyle(style => style.FontSize(BodyFontSize));
 
-                var parents = GetEntityParents(entity);
-                
-                paragraph.AddFormattedText(parents , TextFormat.Italic);
-                paragraph.AddLineBreak();
-                paragraph.AddLineBreak();
-                
-                paragraph.Format.Font.Size = BodyFontSize + 2;
-                paragraph.AddFormattedText(Localizer["Entity"] + ": ", TextFormat.Bold);
-                paragraph.AddFormattedText(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value );
-                paragraph.AddFormattedText( " ( " + entity.DefinitionName + " )" );
-                paragraph.AddLineBreak();
-                paragraph.AddFormattedText( "-- " + Localizer["Risks"] + " --", TextFormat.Bold);
-                paragraph.AddLineBreak();
-                paragraph.AddLineBreak();
-                paragraph.Format.Font.Size = BodyFontSize;
-                
-                foreach (var risk in entity.Risks)
+                text.Span(parents).Italic();
+                text.Span("\n\n");
+
+                text.Span(Localizer["Entity"] + ": ").Bold();
+                text.Span(entity.EntitiesProperties.FirstOrDefault(ep => ep.Type == "name")!.Value);
+                text.Span(" ( " + entity.DefinitionName + " )");
+                text.Span("\n");
+                text.Span("-- " + Localizer["Risks"] + " --").Bold();
+                text.Span("\n");
+            });
+
+            foreach (var risk in entity.Risks)
+            {
+                // REVIEW
+                var lastReview = dbContext.MgmtReviews
+                    .Where(mr => mr.RiskId == risk.Id)
+                    .OrderByDescending(mr => mr.SubmissionDate)
+                    .FirstOrDefault();
+
+                var owner = dbContext.Users.FirstOrDefault(u => u.Value == risk.Owner);
+
+                User? submissionBy = null;
+                MitigationCost? mitigationCostStr = null;
+                MitigationEffort? mitigationEffortStr = null;
+
+                // Read before composing the text, and only for a mitigated risk: the queries dereference
+                // risk.Mitigation when EF extracts their parameters.
+                if (risk.Mitigation != null)
                 {
-                    paragraph = ActiveSection.AddParagraph();
-                    
-                    paragraph.AddFormattedText(  "ID: ", TextFormat.Bold);
-                    paragraph.AddFormattedText(risk.Id.ToString(), TextFormat.NotBold);
-                    
-                    // REVIEW 
-                    var lastReview = dbContext.MgmtReviews
-                        .Where(mr => mr.RiskId == risk.Id)
-                        .OrderBy(mr => mr.SubmissionDate)
-                        .FirstOrDefault();
-                    
-                    if(lastReview != null)
+                    submissionBy = dbContext.Users.FirstOrDefault(u => u.Value == risk.Mitigation.SubmittedBy);
+                    mitigationCostStr = dbContext.MitigationCosts.FirstOrDefault(mc => risk.Mitigation != null && mc.Value == risk.Mitigation.MitigationCost);
+                    mitigationEffortStr = dbContext.MitigationEfforts.FirstOrDefault(me => risk.Mitigation != null && me.Value == risk.Mitigation.MitigationEffort);
+                }
+
+                var score = scores.FirstOrDefault(s => s.Id == risk.Id);
+
+                body.Item().PaddingTop(4).Text(text =>
+                {
+                    text.Span("ID: ").Bold();
+                    text.Span(risk.Id.ToString());
+
+                    if (lastReview != null)
                     {
-                        paragraph.AddFormattedText( "( " + Localizer["Last Review"] + " ", TextFormat.NotBold);
-                        paragraph.AddFormattedText(lastReview.SubmissionDate.ToString("d") + ") ", TextFormat.NotBold);
+                        text.Span("( " + Localizer["Last Review"] + " ");
+                        text.Span(lastReview.SubmissionDate.ToString("d") + ") ");
                     }
-                    
-                    paragraph.AddLineBreak();
-                    
-                    paragraph.AddFormattedText(Localizer["Subject"] + ": ", TextFormat.Bold);
-                    paragraph.AddFormattedText(risk.Subject, TextFormat.NotBold);
-                    paragraph.AddLineBreak();
-                    
-                    paragraph.AddFormattedText(Localizer["Registration Date"] + ": ", TextFormat.Bold);
-                    paragraph.AddFormattedText(risk.SubmissionDate.ToString("d"), TextFormat.NotBold);
-                    paragraph.AddLineBreak();
-                    
-                    var owner = dbContext.Users.FirstOrDefault(u => u.Value == risk.Owner);
+
+                    text.Span("\n");
+
+                    Line(text, Localizer["Subject"], risk.Subject);
+                    Line(text, Localizer["Registration Date"], risk.SubmissionDate.ToString("d"));
 
                     if (owner != null)
-                    {
-                        paragraph.AddFormattedText(Localizer["Security Analyst Designated"] + ": ", TextFormat.Bold);
-                        paragraph.AddFormattedText(owner.Name, TextFormat.NotBold);
-                        paragraph.AddLineBreak();
-                    }
+                        Line(text, Localizer["Security Analyst Designated"], owner.Name);
 
-                    paragraph.AddFormattedText(Localizer["Notes"] + ": ", TextFormat.Bold);
-                    paragraph.AddText(risk.Notes);
-                    paragraph.AddLineBreak();
+                    Line(text, Localizer["Notes"], risk.Notes);
 
                     if (risk.Mitigation != null)
                     {
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Mitigation"] + "", TextFormat.Italic);
-                        paragraph.AddLineBreak();
-                        paragraph.AddFormattedText(Localizer["Mitigation Decision"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.PlanningStrategyNavigation.Name);
+                        text.Span("\n");
 
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Submission Date"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.SubmissionDate.ToString("d"));
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Last Update"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.SubmissionDate.ToString("d"));
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Current Solution"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.CurrentSolution);
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Security Requirements"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.SecurityRequirements);
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Security Recommendations"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.SecurityRecommendations);
-                        paragraph.AddLineBreak();
-                        
-                        var submissionBy = dbContext.Users.FirstOrDefault(u => u.Value == risk.Mitigation.SubmittedBy);
-                        if(submissionBy != null)
-                        {
-                            paragraph.AddFormattedText(Localizer["Submitted By"] + ": ", TextFormat.Bold);
-                            paragraph.AddText(submissionBy.Name);
-                            paragraph.AddLineBreak();
-                        }
-                        
-                        paragraph.AddFormattedText(Localizer["Planning Date"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.PlanningDate.ToString("d"));
-                        paragraph.AddLineBreak();
-                        
-                        paragraph.AddFormattedText(Localizer["Implementation %"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(risk.Mitigation.MitigationPercent.ToString());
-                        paragraph.AddLineBreak();
-                    
-                        var mitigationCostStr = dbContext.MitigationCosts.FirstOrDefault(mc => risk.Mitigation != null && mc.Value == risk.Mitigation.MitigationCost);
-                        var mitigationEffortStr = dbContext.MitigationEfforts.FirstOrDefault(mc => risk.Mitigation != null && mc.Value == risk.Mitigation.MitigationCost);
-                    
-                        paragraph.AddFormattedText(Localizer["Mitigation Cost"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(mitigationCostStr?.Name ?? "N/A");
-                        paragraph.AddLineBreak();
-                    
-                        paragraph.AddFormattedText(Localizer["Mitigation Effort"] + ": ", TextFormat.Bold);
-                        paragraph.AddText(mitigationEffortStr?.Name ?? "N/A");
-                        paragraph.AddLineBreak(); 
+                        text.Span(Localizer["Mitigation"]).Italic();
+                        text.Span("\n");
+                        Line(text, Localizer["Mitigation Decision"], risk.Mitigation.PlanningStrategyNavigation?.Name);
+                        Line(text, Localizer["Submission Date"], risk.Mitigation.SubmissionDate.ToString("d"));
+                        Line(text, Localizer["Last Update"], risk.Mitigation.SubmissionDate.ToString("d"));
+                        Line(text, Localizer["Current Solution"], risk.Mitigation.CurrentSolution);
+                        Line(text, Localizer["Security Requirements"], risk.Mitigation.SecurityRequirements);
+                        Line(text, Localizer["Security Recommendations"], risk.Mitigation.SecurityRecommendations);
+
+                        if (submissionBy != null)
+                            Line(text, Localizer["Submitted By"], submissionBy.Name);
+
+                        Line(text, Localizer["Planning Date"], risk.Mitigation.PlanningDate.ToString("d"));
+                        Line(text, Localizer["Implementation %"], risk.Mitigation.MitigationPercent.ToString());
+                        Line(text, Localizer["Mitigation Cost"], mitigationCostStr?.Name ?? "N/A");
+                        Line(text, Localizer["Mitigation Effort"], mitigationEffortStr?.Name ?? "N/A");
                     }
 
-                    paragraph.AddLineBreak();
-                    paragraph.AddFormattedText(Localizer["Score"], TextFormat.Italic);
-                    paragraph.AddLineBreak();
-                    paragraph.AddFormattedText(Localizer["Base Likelihood"] + ": ", TextFormat.Bold);
-                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ClassicLikelihood.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
-                    paragraph.AddLineBreak();
-                    paragraph.AddFormattedText(Localizer["Base Impact"] + ": ", TextFormat.Bold);
-                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ClassicImpact.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
-                    paragraph.AddLineBreak();
-                    paragraph.AddFormattedText(Localizer["Vulnerabilities Contribution"] + ": ", TextFormat.Bold);
-                    paragraph.AddText(scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore.ToString() ?? string.Empty);
-                    paragraph.AddLineBreak();
-                    
-                    paragraph.AddFormattedText(Localizer["Final Score"] + ": ", TextFormat.Bold);
+                    text.Span("\n");
+                    text.Span(Localizer["Score"]).Italic();
+                    text.Span("\n");
+                    Line(text, Localizer["Base Likelihood"], score?.ClassicLikelihood.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+                    Line(text, Localizer["Base Impact"], score?.ClassicImpact.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
+                    Line(text, Localizer["Vulnerabilities Contribution"], score?.ContributingScore.ToString() ?? string.Empty);
 
-                    var calculatedRisk = scores.FirstOrDefault(s => s.Id == risk.Id)?.CalculatedRisk;
-                    if (calculatedRisk == null) calculatedRisk = 0;
-                    
-                    float? contributingScore;
-                    if (scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore != null)
-                        contributingScore =
-                            (float?)scores.FirstOrDefault(s => s.Id == risk.Id)?.ContributingScore!.Value ?? 0;
-                    else contributingScore = null;
-                    
+                    var calculatedRisk = score?.CalculatedRisk ?? 0;
+
+                    float? contributingScore = score?.ContributingScore != null
+                        ? (float)score.ContributingScore.Value
+                        : null;
+
                     var finalScore = RiskCalculationTool.CalculateTotalRiskScore(
-                        calculatedRisk.Value,
+                        calculatedRisk,
                         contributingScore);
-                    
-                    paragraph.AddText(finalScore.ToString(CultureInfo.CurrentCulture) ?? string.Empty);
-                    paragraph.AddLineBreak();
-                    paragraph.AddLineBreak();
-                    
-                }
-                
-                AddPrePostTreatmentTable(entity, scores);
 
-                paragraph.AddLineBreak();
-                paragraph.AddLineBreak();
-                
-                var separator = ActiveSection.AddParagraph();
-                separator.Format.Borders.Bottom.Width = 0.5;
-                separator.Format.Borders.Bottom.Color = Colors.Black;
-                separator.Format.SpaceAfter = "1cm";
-                
-                paragraph = ActiveSection.AddParagraph();
-                paragraph.AddLineBreak();
-                
+                    Line(text, Localizer["Final Score"], finalScore.ToString(CultureInfo.CurrentCulture));
+                });
             }
-            
-            return Document;
-        });
+
+            AddPrePostTreatmentTable(body, entity, scores);
+
+            body.Item().PaddingTop(12).PaddingBottom(1, Unit.Centimetre).LineHorizontal(0.5f).LineColor(Colors.Black);
+        }
+    }
+
+    /// <summary>A bold "label: " and its value, ending the line.</summary>
+    private static void Line(TextDescriptor text, string label, string? value)
+    {
+        text.Span(label + ": ").Bold();
+        text.Span(value ?? string.Empty);
+        text.Span("\n");
     }
 
     /// <summary>
@@ -249,25 +190,11 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
     /// A risk with no residual score appears with a dash rather than being dropped. An untreated risk
     /// missing from a pre/post table reads as a register where everything has been treated.
     /// </summary>
-    private void AddPrePostTreatmentTable(Entity entity, List<RiskScoring> scores)
+    private void AddPrePostTreatmentTable(ColumnDescriptor body, Entity entity, List<RiskScoring> scores)
     {
-        if (ActiveSection == null) return;
         if (entity.Risks.Count == 0) return;
 
-        var heading = ActiveSection.AddParagraph();
-        heading.Format.SpaceBefore = 8;
-        heading.Format.Font.Size = BodyFontSize;
-        heading.AddFormattedText(Localizer["PrePostTreatment"], TextFormat.Bold);
-
-        var table = ActiveSection.AddTable();
-        table.Borders.Width = 0.25;
-        table.Format.Font.Size = BodyFontSize - 3;
-
-        foreach (var width in new[] { 30.0, 185.0, 55.0, 55.0, 45.0, 60.0 })
-            table.AddColumn(Unit.FromPoint(width));
-
-        var header = table.AddRow();
-        header.HeadingFormat = true;
+        body.Item().PaddingTop(8).Text(Localizer["PrePostTreatment"].Value).Bold().FontSize(BodyFontSize);
 
         var headers = new[]
         {
@@ -275,9 +202,6 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             Localizer["ResidualRisk"].Value, Localizer["Delta"].Value,
             Localizer["Implementation %"].Value
         };
-
-        for (var i = 0; i < headers.Length; i++)
-            header.Cells[i].AddParagraph().AddFormattedText(headers[i], TextFormat.Bold);
 
         var rows = entity.Risks
             .Select(risk => new
@@ -294,25 +218,41 @@ public class DetailedEntitiesRisksPdfReport(Report report, IStringLocalizer loca
             .ThenBy(r => r.Risk.Id)
             .ToList();
 
-        foreach (var row in rows)
+        body.Item().DefaultTextStyle(style => style.FontSize(BodyFontSize - 3)).Table(table =>
         {
-            var cells = table.AddRow();
-            var score = row.Score!;
+            table.ColumnsDefinition(columns =>
+            {
+                foreach (var width in new[] { 30f, 185f, 55f, 55f, 45f, 60f })
+                    columns.RelativeColumn(width);
+            });
 
-            cells.Cells[0].AddParagraph(row.Risk.Id.ToString(CultureInfo.CurrentCulture));
-            cells.Cells[1].AddParagraph(row.Risk.Subject ?? string.Empty);
-            cells.Cells[2].AddParagraph(score.CalculatedRisk.ToString("0.00", CultureInfo.CurrentCulture));
+            table.Header(header =>
+            {
+                foreach (var title in headers)
+                    Cell(header.Cell()).Text(title).Bold();
+            });
 
-            cells.Cells[3].AddParagraph(score.ResidualRisk?.ToString("0.00", CultureInfo.CurrentCulture) ?? "—");
+            foreach (var row in rows)
+            {
+                var score = row.Score!;
 
-            cells.Cells[4].AddParagraph(score.ResidualRisk == null
-                ? "—"
-                : (score.ResidualRisk.Value - score.CalculatedRisk).ToString("+0.00;-0.00;0.00",
-                    CultureInfo.CurrentCulture));
+                Cell(table.Cell()).Text(row.Risk.Id.ToString(CultureInfo.CurrentCulture));
+                Cell(table.Cell()).Text(row.Risk.Subject ?? string.Empty);
+                Cell(table.Cell()).Text(score.CalculatedRisk.ToString("0.00", CultureInfo.CurrentCulture));
 
-            cells.Cells[5].AddParagraph(row.Risk.Mitigation == null
-                ? "—"
-                : row.Risk.Mitigation.MitigationPercent.ToString(CultureInfo.CurrentCulture) + "%");
-        }
+                Cell(table.Cell()).Text(score.ResidualRisk?.ToString("0.00", CultureInfo.CurrentCulture) ?? "—");
+
+                Cell(table.Cell()).Text(score.ResidualRisk == null
+                    ? "—"
+                    : (score.ResidualRisk.Value - score.CalculatedRisk).ToString("+0.00;-0.00;0.00",
+                        CultureInfo.CurrentCulture));
+
+                Cell(table.Cell()).Text(row.Risk.Mitigation == null
+                    ? "—"
+                    : row.Risk.Mitigation.MitigationPercent.ToString(CultureInfo.CurrentCulture) + "%");
+            }
+        });
     }
+
+    private static IContainer Cell(IContainer cell) => cell.Border(0.25f).PaddingHorizontal(3).PaddingVertical(1);
 }

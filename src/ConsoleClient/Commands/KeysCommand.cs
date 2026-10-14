@@ -17,7 +17,7 @@ public class KeysCommand : Command<KeysSettings>
         _syncClient = syncClient;
     }
 
-    protected override int Execute([NotNull] CommandContext context, [NotNull] KeysSettings settings, CancellationToken cancellationToken)
+    public override int Execute([NotNull] CommandContext context, [NotNull] KeysSettings settings, CancellationToken cancellationToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));
         if (settings == null) throw new ArgumentNullException(nameof(settings));

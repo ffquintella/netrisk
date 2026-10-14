@@ -238,7 +238,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
                 Assert.True(result.ReplacedExisting);
             }
 
-            var row = Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+            var row = Assert.Single(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
 
             Assert.Equal("1.9.9", row.Version);
         }
@@ -327,7 +327,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
             }
 
             Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, firstDirectory)));
-            Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+            Assert.Single(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
         }
         finally
         {
@@ -364,7 +364,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
             Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, "FixtureVaultPlugin-1.0.0")));
             Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, "FixtureVaultPlugin-1.0.1")));
 
-            Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+            Assert.Single(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
         }
         finally
         {
@@ -395,7 +395,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 
         var enabled = await _plugins.GetEnabledPluginsAsync<INetriskSecretVaultPlugin>();
 
-        Assert.Single(enabled.Where(p => p.PluginName == PluginName));
+        Assert.Single(enabled, p => p.PluginName == PluginName);
     }
 
     /// <summary>
@@ -429,7 +429,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         Assert.Equal(PluginName, result.PluginName);
         Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, "Secrets")));
         Assert.False(await _plugins.PluginExistsAsync(PluginName));
-        Assert.Empty((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        Assert.DoesNotContain(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
     }
 
     /// <summary>
@@ -470,7 +470,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         Assert.True(result.Success, result.Message);
         Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, "FixtureVaultPlugin-1.0.0")));
         Assert.False(StillHoldsThePlugin(Path.Combine(_pluginsRoot, "FixtureVaultPlugin-1.0.1")));
-        Assert.Empty((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        Assert.DoesNotContain(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
     }
 
     /// <summary>
@@ -494,7 +494,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
         await _plugins.LoadPluginsAsync();
 
         Assert.False(await _plugins.PluginExistsAsync(PluginName));
-        Assert.Empty((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        Assert.DoesNotContain(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
     }
 
     [Fact]
@@ -521,7 +521,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 
         await _plugins.LoadPluginsAsync();
 
-        Assert.Empty((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+        Assert.DoesNotContain(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
         Assert.False(await _plugins.PluginExistsAsync(PluginName));
     }
 
@@ -550,7 +550,7 @@ public class PluginInstallationLifecycleTest : InMemoryServiceTestBase, IDisposa
 
             Assert.DoesNotContain(left, PluginPackageInstaller.IsStagingDirectory);
             Assert.Equal(Path.Combine(_pluginsRoot, result.PackageName), Assert.Single(left));
-            Assert.Single((await _plugins.GetPluginsAsync()).Where(p => p.Name == PluginName));
+            Assert.Single(await _plugins.GetPluginsAsync(), p => p.Name == PluginName);
         }
         finally
         {

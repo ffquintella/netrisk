@@ -1,5 +1,4 @@
 using ConsoleClient.Commands.Settings;
-using MigraDoc.DocumentObjectModel;
 using ServerServices.Interfaces;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -10,7 +9,7 @@ public class TechnologyCommand(ITechnologiesService technologiesService): Comman
 {
     private ITechnologiesService TechnologiesService { get; } = technologiesService;
     
-    protected override int Execute(CommandContext context, TechnologySettings settings, CancellationToken cancellationToken)
+    public override int Execute(CommandContext context, TechnologySettings settings, CancellationToken cancellationToken)
     {
 
         switch (settings.Operation)
@@ -18,14 +17,14 @@ public class TechnologyCommand(ITechnologiesService technologiesService): Comman
             case "list":
                 return List().Result;
             case "add":
-                if (settings.Parameter1.IsValueNullOrEmpty())
+                if (string.IsNullOrEmpty(settings.Parameter1))
                 {
                     AnsiConsole.MarkupLine("[red] Please provide a technology name![/]");
                     return -1;
                 }
                 return Add(settings.Parameter1!).Result;   
             case "remove":
-                if (settings.Parameter1.IsValueNullOrEmpty())
+                if (string.IsNullOrEmpty(settings.Parameter1))
                 {
                     AnsiConsole.MarkupLine("[red] Please provide a technology name![/]");
                     return -1;

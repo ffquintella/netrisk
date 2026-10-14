@@ -23,7 +23,7 @@ public class VaultCommand : Command<VaultSettings>
 
     public VaultCommand(ISecretReferenceNormalizer normalizer) => _normalizer = normalizer;
 
-    protected override int Execute([NotNull] CommandContext context, [NotNull] VaultSettings settings,
+    public override int Execute([NotNull] CommandContext context, [NotNull] VaultSettings settings,
         CancellationToken cancellationToken)
     {
         if (context == null) throw new ArgumentNullException(nameof(context));

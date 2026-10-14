@@ -222,7 +222,7 @@ public class AuditTrailScopeInMemoryTest : InMemoryServiceTestBase
     [Fact]
     public void TestEveryAuditedTypeHasAScopeDecision()
     {
-        Assert.Empty(GovernanceAuditInterceptor.AuditedTypes.Where(t => !AuditTrailService.RecordScopes.ContainsKey(t)));
+        Assert.DoesNotContain(GovernanceAuditInterceptor.AuditedTypes, t => !AuditTrailService.RecordScopes.ContainsKey(t));
     }
 
     /// <summary>

@@ -1,8 +1,8 @@
 using System.Globalization;
 using Microsoft.Extensions.Localization;
-using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Tables;
 using Model.Governance;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 using ServerServices.Services;
 using Report = DAL.Entities.Report;
 
@@ -33,23 +33,14 @@ public class GovernanceEvidencePdfReport(
 
     private static readonly CultureInfo Iso = CultureInfo.InvariantCulture;
 
-    protected override async Task<Document> AddBody()
+    protected override void ComposeBody(ColumnDescriptor body)
     {
-        if (Document == null) throw new Exception("Document is null");
+        AddScope(body);
 
-        return await Task.Run(() =>
-        {
-            if (ActiveSection == null) throw new Exception("ActiveSection is null");
-
-            AddScope();
-
-            AddAcceptances();
-            AddReviews();
-            AddCampaignDecisions();
-            AddChanges();
-
-            return Document;
-        });
+        AddAcceptances(body);
+        AddReviews(body);
+        AddCampaignDecisions(body);
+        AddChanges(body);
     }
 
     /// <summary>
@@ -57,92 +48,82 @@ public class GovernanceEvidencePdfReport(
     /// period cannot be filed against a finding — and the reader has no way to tell an empty section
     /// from a section that was never queried.
     /// </summary>
-    private void AddScope()
+    private void AddScope(ColumnDescriptor body)
     {
-        var paragraph = ActiveSection!.AddParagraph();
-        paragraph.Format.SpaceBefore = 10;
-        paragraph.Format.Font.Size = BodyFontSize + 1;
-
-        Line(paragraph, Localizer["Entity"], pack.EntityName);
-        Line(paragraph, Localizer["Period"],
-            $"{pack.FromUtc.ToString("yyyy-MM-dd", Iso)} → {pack.ToUtc.ToString("yyyy-MM-dd", Iso)} (UTC)");
-        Line(paragraph, Localizer["GeneratedAt"], pack.GeneratedAtUtc.ToString("u", Iso));
-        Line(paragraph, Localizer["RequestedBy"], pack.RequestedBy);
-        Line(paragraph, Localizer["Contents"],
-            $"{pack.Acceptances.Count} {Localizer["RiskAcceptances"]}, " +
-            $"{pack.Reviews.Count} {Localizer["MgmtReviews"]}, " +
-            $"{pack.CampaignDecisions.Count} {Localizer["BusinessReviewDecisions"]}, " +
-            $"{pack.Changes.Count} {Localizer["FieldChanges"]}");
+        body.Item().PaddingTop(10).DefaultTextStyle(style => style.FontSize(BodyFontSize + 1)).Column(lines =>
+        {
+            Line(lines, Localizer["Entity"], pack.EntityName);
+            Line(lines, Localizer["Period"],
+                $"{pack.FromUtc.ToString("yyyy-MM-dd", Iso)} → {pack.ToUtc.ToString("yyyy-MM-dd", Iso)} (UTC)");
+            Line(lines, Localizer["GeneratedAt"], pack.GeneratedAtUtc.ToString("u", Iso));
+            Line(lines, Localizer["RequestedBy"], pack.RequestedBy);
+            Line(lines, Localizer["Contents"],
+                $"{pack.Acceptances.Count} {Localizer["RiskAcceptances"]}, " +
+                $"{pack.Reviews.Count} {Localizer["MgmtReviews"]}, " +
+                $"{pack.CampaignDecisions.Count} {Localizer["BusinessReviewDecisions"]}, " +
+                $"{pack.Changes.Count} {Localizer["FieldChanges"]}");
+        });
 
         if (pack.ChangesTruncated)
-        {
-            var warning = ActiveSection.AddParagraph();
-            warning.Format.Font.Size = BodyFontSize;
-            warning.AddFormattedText(Localizer["EvidenceTruncatedMSG"], TextFormat.Bold);
-        }
+            body.Item().Text(Localizer["EvidenceTruncatedMSG"].Value).Bold().FontSize(BodyFontSize);
     }
 
-    private void AddAcceptances()
+    private void AddAcceptances(ColumnDescriptor body)
     {
-        Heading(Localizer["RiskAcceptances"]);
+        Heading(body, Localizer["RiskAcceptances"]);
 
-        if (Empty(pack.Acceptances.Count)) return;
+        if (Empty(body, pack.Acceptances.Count)) return;
 
         foreach (var acceptance in pack.Acceptances)
         {
-            var paragraph = ActiveSection!.AddParagraph();
-            paragraph.Format.SpaceBefore = 6;
-            paragraph.Format.Font.Size = BodyFontSize;
+            body.Item().PaddingTop(6).DefaultTextStyle(style => style.FontSize(BodyFontSize)).Column(lines =>
+            {
+                lines.Item().Text($"#{acceptance.Id} {acceptance.Name}").Bold();
 
-            paragraph.AddFormattedText($"#{acceptance.Id} {acceptance.Name}", TextFormat.Bold);
-            paragraph.AddLineBreak();
+                Line(lines, Localizer["Risk"],
+                    acceptance.RiskId == null ? "-" : $"#{acceptance.RiskId} {acceptance.RiskSubject}");
+                // StatusLabel, not Status: the resx already had a lowercase `status` key for the
+                // Sieve filter vocabulary, and resx names are case-insensitive, so this entry was
+                // being dropped at build time (MSB3568) and its pt-BR translation never reached a
+                // reader.
+                Line(lines, Localizer["StatusLabel"], acceptance.Status);
+                Line(lines, Localizer["AuthorizingManager"], acceptance.AuthorizingManager);
 
-            Line(paragraph, Localizer["Risk"],
-                acceptance.RiskId == null ? "-" : $"#{acceptance.RiskId} {acceptance.RiskSubject}");
-            // StatusLabel, not Status: the resx already had a lowercase `status` key for the
-            // Sieve filter vocabulary, and resx names are case-insensitive, so this entry was
-            // being dropped at build time (MSB3568) and its pt-BR translation never reached a
-            // reader.
-            Line(paragraph, Localizer["StatusLabel"], acceptance.Status);
-            Line(paragraph, Localizer["AuthorizingManager"], acceptance.AuthorizingManager);
+                if (acceptance.RequestedBy != null)
+                    Line(lines, Localizer["RequestedBy"], acceptance.RequestedBy);
 
-            if (acceptance.RequestedBy != null)
-                Line(paragraph, Localizer["RequestedBy"], acceptance.RequestedBy);
+                Line(lines, Localizer["Period"],
+                    $"{acceptance.StartDate.ToString("yyyy-MM-dd", Iso)} → " +
+                    $"{acceptance.ExpiresAt.ToString("yyyy-MM-dd", Iso)}");
 
-            Line(paragraph, Localizer["Period"],
-                $"{acceptance.StartDate.ToString("yyyy-MM-dd", Iso)} → " +
-                $"{acceptance.ExpiresAt.ToString("yyyy-MM-dd", Iso)}");
+                if (acceptance.ResidualScoreSnapshot != null)
+                    Line(lines, Localizer["ResidualRiskAtAcceptance"],
+                        acceptance.ResidualScoreSnapshot.Value.ToString("0.00", Iso));
 
-            if (acceptance.ResidualScoreSnapshot != null)
-                Line(paragraph, Localizer["ResidualRiskAtAcceptance"],
-                    acceptance.ResidualScoreSnapshot.Value.ToString("0.00", Iso));
+                if (acceptance.FromCampaign)
+                    Line(lines, Localizer["Origin"], Localizer["BusinessReviewCampaign"]);
 
-            if (acceptance.FromCampaign)
-                Line(paragraph, Localizer["Origin"], Localizer["BusinessReviewCampaign"]);
+                if (!string.IsNullOrWhiteSpace(acceptance.BusinessJustification))
+                    Line(lines, Localizer["BusinessJustification"], acceptance.BusinessJustification!);
 
-            if (!string.IsNullOrWhiteSpace(acceptance.BusinessJustification))
-                Line(paragraph, Localizer["BusinessJustification"], acceptance.BusinessJustification!);
+                if (!string.IsNullOrWhiteSpace(acceptance.CompensatingControls))
+                    Line(lines, Localizer["CompensatingControls"], acceptance.CompensatingControls!);
 
-            if (!string.IsNullOrWhiteSpace(acceptance.CompensatingControls))
-                Line(paragraph, Localizer["CompensatingControls"], acceptance.CompensatingControls!);
-
-            if (acceptance.RevokedAt != null)
-                Line(paragraph, Localizer["Revoked"],
-                    $"{acceptance.RevokedAt.Value.ToString("yyyy-MM-dd", Iso)} — " +
-                    $"{acceptance.RevokedBy} — {acceptance.RevocationReason}");
+                if (acceptance.RevokedAt != null)
+                    Line(lines, Localizer["Revoked"],
+                        $"{acceptance.RevokedAt.Value.ToString("yyyy-MM-dd", Iso)} — " +
+                        $"{acceptance.RevokedBy} — {acceptance.RevocationReason}");
+            });
         }
     }
 
-    private void AddReviews()
+    private void AddReviews(ColumnDescriptor body)
     {
-        Heading(Localizer["MgmtReviews"]);
+        Heading(body, Localizer["MgmtReviews"]);
 
-        if (Empty(pack.Reviews.Count)) return;
+        if (Empty(body, pack.Reviews.Count)) return;
 
-        var table = NewTable([70, 55, 110, 110, 145]);
-
-        HeaderRow(table, [Localizer["Date"], Localizer["Risk"], Localizer["Reviewer"],
-            Localizer["Countersignature"], Localizer["Comments"]]);
+        var rows = new List<IReadOnlyList<string>>();
 
         foreach (var review in pack.Reviews)
         {
@@ -158,7 +139,7 @@ public class GovernanceEvidencePdfReport(
             if (!string.IsNullOrWhiteSpace(review.SegregationOverrideReason))
                 countersignature += $" [{Localizer["SegregationOverride"]}: {review.SegregationOverrideReason}]";
 
-            Row(table, [
+            rows.Add([
                 review.SubmissionDate.ToString("yyyy-MM-dd", Iso),
                 $"#{review.RiskId}",
                 review.Reviewer,
@@ -166,18 +147,20 @@ public class GovernanceEvidencePdfReport(
                 review.Comments
             ]);
         }
+
+        AddTable(body, [70, 55, 110, 110, 145],
+            [Localizer["Date"], Localizer["Risk"], Localizer["Reviewer"],
+                Localizer["Countersignature"], Localizer["Comments"]],
+            rows);
     }
 
-    private void AddCampaignDecisions()
+    private void AddCampaignDecisions(ColumnDescriptor body)
     {
-        Heading(Localizer["BusinessReviewDecisions"]);
+        Heading(body, Localizer["BusinessReviewDecisions"]);
 
-        if (Empty(pack.CampaignDecisions.Count)) return;
+        if (Empty(body, pack.CampaignDecisions.Count)) return;
 
-        var table = NewTable([100, 45, 30, 70, 90, 155]);
-
-        HeaderRow(table, [Localizer["Campaign"], Localizer["Risk"], Localizer["BusinessRank"],
-            Localizer["Decision"], Localizer["DecidedBy"], Localizer["Notes"]]);
+        var rows = new List<IReadOnlyList<string>>();
 
         foreach (var decision in pack.CampaignDecisions)
         {
@@ -189,7 +172,7 @@ public class GovernanceEvidencePdfReport(
             if (decision.RiskAcceptanceId != null)
                 notes = $"{Localizer["RiskAcceptance"]} #{decision.RiskAcceptanceId}. {notes}".Trim();
 
-            Row(table, [
+            rows.Add([
                 $"{decision.CampaignName} ({decision.CampaignStatus})",
                 $"#{decision.RiskId}",
                 decision.Rank?.ToString(Iso) ?? "-",
@@ -198,21 +181,21 @@ public class GovernanceEvidencePdfReport(
                 notes
             ]);
         }
+
+        AddTable(body, [100, 45, 30, 70, 90, 155],
+            [Localizer["Campaign"], Localizer["Risk"], Localizer["BusinessRank"],
+                Localizer["Decision"], Localizer["DecidedBy"], Localizer["Notes"]],
+            rows);
     }
 
-    private void AddChanges()
+    private void AddChanges(ColumnDescriptor body)
     {
-        Heading(Localizer["FieldChanges"]);
+        Heading(body, Localizer["FieldChanges"]);
 
-        if (Empty(pack.Changes.Count)) return;
+        if (Empty(body, pack.Changes.Count)) return;
 
-        var table = NewTable([80, 75, 70, 45, 75, 80, 65]);
-
-        HeaderRow(table, [Localizer["When"], Localizer["Record"], Localizer["Field"],
-            Localizer["Action"], Localizer["From"], Localizer["To"], Localizer["Actor"]]);
-
-        foreach (var change in pack.Changes)
-            Row(table, [
+        var rows = pack.Changes
+            .Select(IReadOnlyList<string> (change) => [
                 change.OccurredAt.ToString("yyyy-MM-dd HH:mm", Iso),
                 $"{change.EntityType} #{change.EntityId}",
                 change.Field ?? "-",
@@ -220,7 +203,13 @@ public class GovernanceEvidencePdfReport(
                 Truncate(change.OldValue),
                 Truncate(change.NewValue),
                 change.Actor
-            ]);
+            ])
+            .ToList();
+
+        AddTable(body, [80, 75, 70, 45, 75, 80, 65],
+            [Localizer["When"], Localizer["Record"], Localizer["Field"],
+                Localizer["Action"], Localizer["From"], Localizer["To"], Localizer["Actor"]],
+            rows);
     }
 
     /// <summary>
@@ -234,63 +223,61 @@ public class GovernanceEvidencePdfReport(
         return value.Length <= max ? value : value[..max] + "…";
     }
 
-    private void Heading(string title)
+    private void Heading(ColumnDescriptor body, string title)
     {
-        var paragraph = ActiveSection!.AddParagraph();
-        paragraph.Format.SpaceBefore = 14;
-        paragraph.Format.SpaceAfter = 4;
-        paragraph.Format.Font.Size = BodyFontSize + 3;
-        paragraph.AddFormattedText(title, TextFormat.Bold);
+        body.Item().PaddingTop(14).PaddingBottom(4).Text(title).Bold().FontSize(BodyFontSize + 3);
     }
 
     /// <summary>
     /// An empty section says so in words. A blank space under a heading reads as "not exported"
     /// rather than "nothing happened", and those mean very different things to an auditor.
     /// </summary>
-    private bool Empty(int count)
+    private bool Empty(ColumnDescriptor body, int count)
     {
         if (count > 0) return false;
 
-        var paragraph = ActiveSection!.AddParagraph();
-        paragraph.Format.Font.Size = BodyFontSize;
-        paragraph.AddFormattedText(Localizer["NothingRecordedInThisPeriodMSG"], TextFormat.Italic);
+        body.Item().Text(Localizer["NothingRecordedInThisPeriodMSG"].Value).Italic().FontSize(BodyFontSize);
 
         return true;
     }
 
-    private Table NewTable(double[] widths)
+    /// <summary>
+    /// A bordered table whose header row repeats on every page it spans. The widths are relative:
+    /// they are the point widths the previous engine used, and they add up to more than the page is
+    /// wide, which that engine let run into the margin and QuestPDF refuses — scaled, the proportions
+    /// survive and every column stays on the page.
+    /// </summary>
+    private void AddTable(ColumnDescriptor body, float[] widths, IReadOnlyList<LocalizedString> headers,
+        IReadOnlyList<IReadOnlyList<string>> rows)
     {
-        var table = ActiveSection!.AddTable();
-        table.Borders.Width = 0.25;
-        table.Format.Font.Size = BodyFontSize - 1;
+        body.Item().DefaultTextStyle(style => style.FontSize(BodyFontSize - 1)).Table(table =>
+        {
+            table.ColumnsDefinition(columns =>
+            {
+                foreach (var width in widths)
+                    columns.RelativeColumn(width);
+            });
 
-        foreach (var width in widths)
-            table.AddColumn(Unit.FromPoint(width));
+            table.Header(header =>
+            {
+                foreach (var title in headers)
+                    Cell(header.Cell()).Text(title.Value).Bold();
+            });
 
-        return table;
+            foreach (var row in rows)
+                foreach (var value in row)
+                    Cell(table.Cell()).Text(value ?? "");
+        });
     }
 
-    private static void HeaderRow(Table table, IReadOnlyList<object> headers)
+    private static IContainer Cell(IContainer cell) => cell.Border(0.25f).PaddingHorizontal(3).PaddingVertical(1);
+
+    private static void Line(ColumnDescriptor lines, string label, string value)
     {
-        var row = table.AddRow();
-        row.HeadingFormat = true;
-
-        for (var i = 0; i < headers.Count; i++)
-            row.Cells[i].AddParagraph().AddFormattedText(headers[i].ToString() ?? "", TextFormat.Bold);
-    }
-
-    private static void Row(Table table, IReadOnlyList<string> values)
-    {
-        var row = table.AddRow();
-
-        for (var i = 0; i < values.Count; i++)
-            row.Cells[i].AddParagraph(values[i] ?? "");
-    }
-
-    private static void Line(Paragraph paragraph, string label, string value)
-    {
-        paragraph.AddFormattedText(label + ": ", TextFormat.Bold);
-        paragraph.AddText(value);
-        paragraph.AddLineBreak();
+        lines.Item().Text(text =>
+        {
+            text.Span(label + ": ").Bold();
+            text.Span(value);
+        });
     }
 }

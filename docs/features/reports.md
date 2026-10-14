@@ -13,7 +13,7 @@ User-generated reports over risks, vulnerabilities, incidents, and assessments. 
 
 Related statistics data is provided by [`IStatisticsService`](../../src/ServerServices/Interfaces) (risk, vulnerability, and control aggregates) and used as input by reports.
 
-PDF generation uses PDFsharp (referenced in the solution).
+PDF generation uses QuestPDF: the hand-written reports derive from [`TemplatedPdfReport`](../../src/ServerServices/Reports/TemplatedPdfReport.cs) and render in the bundled Arial Unicode MS faces under `ServerServices/Fonts`, and the template-driven reports and exports go through [`QuestPdfRenderingService`](../../src/ServerServices/Services/QuestPdfRenderingService.cs).
 
 ## API
 
@@ -33,7 +33,7 @@ PDF generation uses PDFsharp (referenced in the solution).
 
 - Persisted report definitions with parameters
 - Backed by shared `StatisticsService` for aggregates
-- PDF output via PDFsharp
+- PDF output via QuestPDF
 - Scheduled exports and custom templates are on the [roadmap](../../ROADMAP.md)
 
 ## Tests

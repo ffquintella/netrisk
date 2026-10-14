@@ -1,8 +1,7 @@
 using DAL.Entities;
 using Microsoft.Extensions.Localization;
-using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Shapes;
-using MigraDoc.DocumentObjectModel.Tables;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 using ServerServices.Services;
 
 namespace ServerServices.Reports;
@@ -11,213 +10,120 @@ public class HostVulnerabilitiesPrioritizationReport(Report report, IStringLocal
 {
     public int BodyFontSize { get; set; } = 12;
 
-    protected override async Task<Document> AddBody()
+    private static readonly Color TableBlue = Color.FromHex("#6464C8");
+
+    protected override void ComposeBody(ColumnDescriptor body)
     {
-        if(Document == null)
-            throw new Exception("Document is null");
+        using var dbContext = DalService.GetContext();
 
-        return await Task.Run(async () =>
+        // Read once for both the table and the narrative (it used to be queried twice), and grouped
+        // sequentially: the PLINQ (.AsParallel()) this used to run blocked its thread-pool thread
+        // waiting for its partitions, and under load that held the report — and starved unrelated
+        // work on the pool — for around ten seconds. Sequential grouping also makes the order of
+        // equally scored hosts stable.
+        var vulnerabilitiesHosts = dbContext.Vulnerabilities
+            .Where(v => v.Cvss3BaseScore > 5 && v.ExploitAvaliable == true && v.HostId != null && v.ExploitabilityEasy == "Exploits are available" && v.Cvss3TemporalScore > 5)
+            .AsEnumerable()
+            .GroupBy(v=> v.HostId)
+            .OrderByDescending( g => g.Sum(v=> v.Cvss3TemporalScore))
+            .ToList();
+
+        // Hosts that no longer exist are skipped in both the table and the narrative, as before.
+        var hosts = vulnerabilitiesHosts
+            .Select(group => (Host: dbContext.Hosts.Find(group.Key), Vulnerabilities: group.ToList()))
+            .Where(h => h.Host != null)
+            .Select(h => (Host: h.Host!, h.Vulnerabilities))
+            .ToList();
+
+        body.Item().PaddingTop(10).Text(Localizer["Host Vulnerability Prioritization Report"].Value)
+            .Bold().FontSize(BodyFontSize);
+
+        // The explanatory box. It was a fixed 7 cm x 3 cm text frame; the height is a minimum here,
+        // because a fixed height clips a longer translation and QuestPDF refuses content that does
+        // not fit rather than clipping it.
+        body.Item().PaddingTop(6)
+            .Width(7, Unit.Centimetre)
+            .MinHeight(3, Unit.Centimetre)
+            .Text(Localizer["This report uses the Common Vulnerability Scoring System (CVSS) as well as other metrics to prioritize vulnerabilities on the host."].Value)
+            .Bold().FontSize(BodyFontSize);
+
+        body.Item().PaddingTop(12).Element(container => AddStatisticsTable(container, hosts));
+
+        body.Item().PaddingTop(24).Text(text =>
         {
-            if (ActiveSection == null)
-                throw new Exception("ActiveSection is null");
+            text.DefaultTextStyle(style => style.FontSize(BodyFontSize));
 
-            var paragraph = ActiveSection.AddParagraph();
+            text.Span(Localizer["Hosts"]).Bold();
+            text.Span("\n");
 
-            paragraph.Format.Font.Size = TitleFontSize;
-            
-            paragraph.AddFormattedText(Localizer["Host Vulnerability Prioritization Report"] , TextFormat.Bold);
-            paragraph.AddLineBreak();
-            
-            
-            paragraph.Format.Font.Size = BodyFontSize;
-            
-            
-            // Create a new TextFrame
-            TextFrame textBox = new TextFrame();
-
-            // Set the height and width of the TextFrame
-            textBox.Height = "3.0cm";
-            textBox.Width = "7.0cm";
-
-            // Set the contents of the TextFrame
-            var tbp = textBox.AddParagraph();
-                tbp.Format.Font.Size = BodyFontSize;
-            tbp.AddFormattedText(Localizer["This report uses the Common Vulnerability Scoring System (CVSS) as well as other metrics to prioritize vulnerabilities on the host."] , TextFormat.Bold);
-            
-
-            // Add the TextFrame to a section
-            ActiveSection.Add(textBox);
-            
-            paragraph = ActiveSection.AddParagraph();
-            paragraph.AddLineBreak();
-
-            var table = ActiveSection.AddTable();
-            
-            // Add the statistics table
-            await AddStatisticsTable(table);
-            
-            paragraph = ActiveSection.AddParagraph();
-            
-            paragraph.AddLineBreak();
-            paragraph.AddLineBreak();
-            
-            paragraph.Format.Font.Size = BodyFontSize + 2;
-            paragraph.AddFormattedText(Localizer["Hosts"] , TextFormat.Bold);
-            paragraph.AddLineBreak();
-            
-            paragraph.Format.Font.Size = BodyFontSize;
-            
-            using var dbContext = DalService.GetContext();
-            
-            var vulnerabilitiesHosts = dbContext.Vulnerabilities
-                .Where(v => v.Cvss3BaseScore > 5 && v.ExploitAvaliable == true && v.HostId != null && v.ExploitabilityEasy == "Exploits are available" && v.Cvss3TemporalScore > 5)
-                .AsEnumerable()
-                .AsParallel()
-                .GroupBy(v=> v.HostId)
-                .OrderByDescending( g => g.Sum(v=> v.Cvss3TemporalScore))
-                .ToList();
-
-            foreach (var vulnerabilitiesHost in vulnerabilitiesHosts)
+            foreach (var (host, vulnerabilities) in hosts)
             {
-                var host = dbContext.Hosts.Find(vulnerabilitiesHost.Key);
-                
-                if(host == null)
-                    continue;
-                
-                paragraph.AddFormattedText(host.HostName!, TextFormat.Bold);
-                paragraph.AddLineBreak();
-                paragraph.AddText( "IP: " + host.Ip );
-                paragraph.AddLineBreak();
-                paragraph.AddText( "OS: " + host.Os );
-                paragraph.AddLineBreak();
-                paragraph.AddText( Localizer["Score"] + ": " + vulnerabilitiesHost.Sum(v=> v.Cvss3TemporalScore));
-                paragraph.AddLineBreak();
-                
-                paragraph.AddFormattedText( Localizer["Vulnerabilities"] , TextFormat.Italic);
-                paragraph.AddLineBreak();
+                text.Span(host.HostName ?? string.Empty).Bold();
+                text.Span("\n");
+                text.Span("IP: " + host.Ip + "\n");
+                text.Span("OS: " + host.Os + "\n");
+                text.Span(Localizer["Score"] + ": " + vulnerabilities.Sum(v=> v.Cvss3TemporalScore) + "\n");
 
-                paragraph.AddText( Localizer["Critical Count"] + ": " + vulnerabilitiesHost.Where(v => v.Cvss3BaseScore > 8 ).Count().ToString() );
-                paragraph.AddLineBreak();
-                paragraph.AddText( Localizer["High Count"] + ": " + vulnerabilitiesHost.Where(v => v.Cvss3BaseScore <= 8 &&  v.Cvss3BaseScore > 6 ).Count().ToString() );
-                paragraph.AddLineBreak();
-                paragraph.AddText( Localizer["Medium Count"] + ": " + vulnerabilitiesHost.Where(v => v.Cvss3BaseScore <= 6 &&  v.Cvss3BaseScore > 4 ).Count().ToString() );
-                paragraph.AddLineBreak();
-                paragraph.AddLineBreak();
-                
-                //Critical 
-                foreach (var vul in vulnerabilitiesHost.Where(v => v.Cvss3BaseScore > 8))
-                {        
-                    paragraph.AddFormattedText( "ID:" + vul.Id , TextFormat.Bold);
-                    paragraph.AddLineBreak();
-                    paragraph.AddText( Localizer["Description"] + ": " + vul.Description );
-                    paragraph.AddLineBreak();
-                    paragraph.AddText( Localizer["Solution"] + ": " + vul.Solution );
-                    paragraph.AddLineBreak();
-                    
+                text.Span(Localizer["Vulnerabilities"]).Italic();
+                text.Span("\n");
+
+                text.Span(Localizer["Critical Count"] + ": " + vulnerabilities.Count(v => v.Cvss3BaseScore > 8) + "\n");
+                text.Span(Localizer["High Count"] + ": " + vulnerabilities.Count(v => v.Cvss3BaseScore <= 8 && v.Cvss3BaseScore > 6) + "\n");
+                text.Span(Localizer["Medium Count"] + ": " + vulnerabilities.Count(v => v.Cvss3BaseScore <= 6 && v.Cvss3BaseScore > 4) + "\n");
+                text.Span("\n");
+
+                //Critical
+                foreach (var vul in vulnerabilities.Where(v => v.Cvss3BaseScore > 8))
+                {
+                    text.Span("ID:" + vul.Id).Bold();
+                    text.Span("\n");
+                    text.Span(Localizer["Description"] + ": " + vul.Description + "\n");
+                    text.Span(Localizer["Solution"] + ": " + vul.Solution + "\n");
                 }
             }
-            
-            return Document;
         });
-        
     }
-    
-    private async Task AddStatisticsTable(Table table)
+
+    /// <summary>
+    /// One row per host: its critical, high and medium counts and the total. The header row repeats
+    /// on every page the table spans.
+    /// </summary>
+    private void AddStatisticsTable(IContainer container, IReadOnlyList<(Host Host, List<Vulnerability> Vulnerabilities)> hosts)
     {
-        if(Document == null)
-            throw new Exception("Document is null");
-        
-        if(ActiveSection == null)
-            throw new Exception("ActiveSection is null");
-
-        await Task.Run(() =>
+        container.DefaultTextStyle(style => style.FontSize(9)).Table(table =>
         {
-            var style = Document.Styles.AddStyle("Table", "Normal");
-            style.Font.Name = "Verdana";
-            style.Font.Name = "Times New Roman";
-            style.Font.Size = 9;
-            
-            var tableBlue = new Color(100,100,200);
-            
-            // Create the item table
-            //var table = ActiveSection.AddTable();
-            table.Style = "Table";
-            table.Borders.Color = tableBlue;
-            table.Borders.Width = 0.25;
-            table.Borders.Left.Width = 0.5;
-            table.Borders.Right.Width = 0.5;
-            table.Rows.LeftIndent = 0;
-            
-            // Before you can add a row, you must define the columns
-            var column = table.AddColumn("3cm");
-            column.Format.Alignment = ParagraphAlignment.Center;
-            
-            column = table.AddColumn("2.5cm");
-            column.Format.Alignment = ParagraphAlignment.Right;
-            
-            column = table.AddColumn("2.5cm");
-            column.Format.Alignment = ParagraphAlignment.Right;
-            
-            column = table.AddColumn("2.5cm");
-            column.Format.Alignment = ParagraphAlignment.Right;
-            
-            column = table.AddColumn("2.5cm");
-            column.Format.Alignment = ParagraphAlignment.Right;
-            
-  
-            // Create the header of the table
-            Row row = table.AddRow();
-            row.HeadingFormat = true;
-            row.Format.Alignment = ParagraphAlignment.Center;
-            row.Format.Font.Bold = true;
-            row.Shading.Color = tableBlue;
-            
-            row.Cells[0].AddParagraph(Localizer["Computer"]);
-            row.Cells[0].Format.Font.Bold = false;
-            row.Cells[0].Format.Alignment = ParagraphAlignment.Left;
-            row.Cells[0].VerticalAlignment = VerticalAlignment.Bottom;
-            //row.Cells[0].MergeDown = 1;
-            row.Cells[1].AddParagraph(Localizer["Critical"]);
-            row.Cells[1].Format.Alignment = ParagraphAlignment.Left;
-            //row.Cells[1].MergeRight = 3;
-
-            row.Cells[2].AddParagraph(Localizer["High"]);
-            row.Cells[2].Format.Alignment = ParagraphAlignment.Left;
-            row.Cells[2].VerticalAlignment = VerticalAlignment.Bottom;
-
-            row.Cells[3].AddParagraph(Localizer["Medium"]);
-            row.Cells[3].Format.Alignment = ParagraphAlignment.Left;
-            row.Cells[3].VerticalAlignment = VerticalAlignment.Bottom;
-            
-            row.Cells[4].AddParagraph(Localizer["Total"]);
-            row.Cells[4].Format.Alignment = ParagraphAlignment.Left;
-            row.Cells[4].VerticalAlignment = VerticalAlignment.Bottom;
-            
-            using var dbContext = DalService.GetContext();
-            
-            var vulnerabilitiesHosts = dbContext.Vulnerabilities
-                .Where(v => v.Cvss3BaseScore > 5 && v.ExploitAvaliable == true && v.HostId != null && v.ExploitabilityEasy == "Exploits are available" && v.Cvss3TemporalScore > 5)
-                .AsEnumerable()
-                .AsParallel()
-                .GroupBy(v=> v.HostId)
-                .OrderByDescending( g => g.Sum(v=> v.Cvss3TemporalScore))
-                .ToList();
-
-            foreach (var vulnerabilitiesHost in vulnerabilitiesHosts)
+            table.ColumnsDefinition(columns =>
             {
-                var host = dbContext.Hosts.Find(vulnerabilitiesHost.Key);
-                
-                if(host == null)
-                    continue;
-                
-                row = table.AddRow();
-                row.Cells[0].AddParagraph(host.HostName!);
-                row.Cells[1].AddParagraph(vulnerabilitiesHost.Where(v => v.Cvss3BaseScore > 8 ).Count().ToString());
-                row.Cells[2].AddParagraph(vulnerabilitiesHost.Where(v => v.Cvss3BaseScore <= 8 &&  v.Cvss3BaseScore > 6 ).Count().ToString());
-                row.Cells[3].AddParagraph(vulnerabilitiesHost.Where(v => v.Cvss3BaseScore <= 6 &&  v.Cvss3BaseScore > 4 ).Count().ToString());
-                row.Cells[4].AddParagraph(vulnerabilitiesHost.Count().ToString());
+                columns.ConstantColumn(3, Unit.Centimetre);
+                columns.ConstantColumn(2.5f, Unit.Centimetre);
+                columns.ConstantColumn(2.5f, Unit.Centimetre);
+                columns.ConstantColumn(2.5f, Unit.Centimetre);
+                columns.ConstantColumn(2.5f, Unit.Centimetre);
+            });
+
+            table.Header(header =>
+            {
+                header.Cell().Element(HeaderCell).AlignLeft().Text(Localizer["Computer"].Value);
+                header.Cell().Element(HeaderCell).AlignLeft().Text(Localizer["Critical"].Value).Bold();
+                header.Cell().Element(HeaderCell).AlignLeft().Text(Localizer["High"].Value).Bold();
+                header.Cell().Element(HeaderCell).AlignLeft().Text(Localizer["Medium"].Value).Bold();
+                header.Cell().Element(HeaderCell).AlignLeft().Text(Localizer["Total"].Value).Bold();
+            });
+
+            foreach (var (host, vulnerabilities) in hosts)
+            {
+                table.Cell().Element(BodyCell).AlignCenter().Text(host.HostName ?? string.Empty);
+                table.Cell().Element(BodyCell).AlignRight().Text(vulnerabilities.Count(v => v.Cvss3BaseScore > 8).ToString());
+                table.Cell().Element(BodyCell).AlignRight().Text(vulnerabilities.Count(v => v.Cvss3BaseScore <= 8 && v.Cvss3BaseScore > 6).ToString());
+                table.Cell().Element(BodyCell).AlignRight().Text(vulnerabilities.Count(v => v.Cvss3BaseScore <= 6 && v.Cvss3BaseScore > 4).ToString());
+                table.Cell().Element(BodyCell).AlignRight().Text(vulnerabilities.Count.ToString());
             }
         });
-        
     }
+
+    private static IContainer BodyCell(IContainer cell) =>
+        cell.Border(0.25f).BorderColor(TableBlue).PaddingHorizontal(3).PaddingVertical(1);
+
+    private static IContainer HeaderCell(IContainer cell) =>
+        cell.Border(0.25f).BorderColor(TableBlue).Background(TableBlue).PaddingHorizontal(3).PaddingVertical(1).AlignBottom();
 }

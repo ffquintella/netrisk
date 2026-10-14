@@ -26,7 +26,7 @@ public class CiCommand(IDalService dalService, IFindingIngestionService ingestio
     /// with a usage error or a crash.</summary>
     public const int GateFailedExitCode = 2;
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, CiSettings settings,
+    public override async Task<int> ExecuteAsync(CommandContext context, CiSettings settings,
         CancellationToken cancellationToken)
     {
         if (!string.Equals(settings.Operation, "gate", StringComparison.OrdinalIgnoreCase))

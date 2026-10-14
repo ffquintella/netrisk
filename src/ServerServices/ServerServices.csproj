@@ -50,11 +50,12 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <!-- Track 4.3.1: XML-DSIG verification of SAML 2.0 assertions. -->
     <PackageReference Include="System.Security.Cryptography.Xml" />
+    <!-- Direct pin lifting the transitive Pkcs (via Cryptography.Xml) to the release fixing
+         GHSA-846f-f764-76mx / GHSA-2fmv-rv2c-59x7; flows to every project referencing this one. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <!-- Track 4.3.3: FIDO2/WebAuthn registration and assertion ceremonies. -->
     <PackageReference Include="Fido2" />
     <PackageReference Include="MySqlBackup.NET.MySqlConnector" />
-    <PackageReference Include="PDFsharp" />
-    <PackageReference Include="PDFsharp-MigraDoc" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Gridify" />
@@ -70,22 +71,6 @@
     </Content>
     <None Remove="EmailTemplates\UserCreated-pt.cshtml" />
     <Content Include="EmailTemplates\UserCreated-pt.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Fonts\Arial.ttf" />
-    <Content Include="Fonts\Arial.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Fonts\Arial-Bold.ttf" />
-    <Content Include="Fonts\Arial-Bold.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Fonts\Arial-BoldItalic.ttf" />
-    <Content Include="Fonts\Arial-BoldItalic.ttf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Fonts\Arial-Italic.ttf" />
-    <Content Include="Fonts\Arial-Italic.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="Images\NetRisk.png">
