@@ -12,7 +12,7 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
-## [2.41.1] - 2026-10-14
+## [2.41.2] - 2026-10-14
 
 ### Changed
 
