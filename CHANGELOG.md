@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.41.1] - 2026-10-14
+
 ### Changed
 
 - Pin the Nuke build project's MSBuild packages to 18.9.6, the newest release built for .NET 10, and compile the build projects as C# 14, removing the NU1701 and "doesn't support net10.0" warnings that the .NET 11-only 18.11 packages raised
