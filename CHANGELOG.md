@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.41.3] - 2026-10-14
+
+### Fixed
+
+- Apply the server URL deployed in `netrisk.ini` (by the MSI's `SERVERURL`, Puppet or any configuration management) at every client start-up instead of asking for it in the first-run window, and layer `netrisk.<name>.ini` on top when the client starts with `--environment=<name>` (T342)
+
 ## [2.41.2] - 2026-10-14
 
 ### Changed

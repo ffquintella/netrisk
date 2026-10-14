@@ -401,6 +401,8 @@ Windows/Linux runners. Operational guide: [docs/packaging/release-engineering.md
   - note: flatpak-builder/snapcraft are Linux-only; no .flatpak/.snap produced here, rendered recipes asserted in src/Packaging.Tests
 - [x] T341 Drop the macOS Intel (osx-x64) build, leaving Apple Silicon as the only macOS target, and refuse deployed Intel clients' upgrade requests as an unsupported platform
   - note: a client older than 2.4.5 reports bare `mac` on either architecture, so an Intel Mac that old cannot be told apart and is sent the Apple Silicon DMG; the client-side "no upgrade available" message is not covered by a test (UI tests not run, S54 §3)
+- [x] T342 Apply the `[Server] Url` from the `netrisk.ini` overlays at every client start-up, skipping the first-run window, and layer `netrisk.<name>.ini` for `--environment=<name>`
+  - note: the MSI's `SERVERURL` and configuration management wrote `netrisk.ini`, but the client only ever read the per-user store the first-run window fills
 
 ## Track 6 — Database Uniformization & Schema Health
 
