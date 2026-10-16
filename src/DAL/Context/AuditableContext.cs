@@ -34,6 +34,7 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
         // so that an auditing failure cannot break a save. A scope violation must not be swallowed.
         ChangeTracker.DetectChanges();
         EnforceEntityScopeOnWrites();
+        PermissionGrantRecorder.Record(this);
         var treeChanges = TouchesEntityTree();
 
         BeforeSaveChanges().ConfigureAwait(false).GetAwaiter().GetResult();
@@ -46,6 +47,10 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
     {
         ChangeTracker.DetectChanges();
         EnforceEntityScopeOnWrites();
+
+        // S40 §6.4, §11.4: who granted a watched permission, in this save and never swallowed — the approval's
+        // sod_self_granted_approver reads it, and a grant that commits without its author would pass that check.
+        PermissionGrantRecorder.Record(this);
         var treeChanges = TouchesEntityTree();
 
         await BeforeSaveChanges();

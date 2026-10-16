@@ -6,6 +6,7 @@ using BackgroundJobs.Jobs.Cleanup;
 using BackgroundJobs.Jobs.Findings;
 using BackgroundJobs.Jobs.Governance;
 using BackgroundJobs.Jobs.Integrations;
+using BackgroundJobs.Jobs.RiskIndex;
 using BackgroundJobs.Jobs.Sync;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,28 @@ public static class JobsManager
         ConfigureFindingJobs(jobs);
         ConfigureIntegrationJobs(jobs);
         ConfigureGovernanceJobs(jobs);
+        ConfigureRiskIndexJobs(jobs);
+    }
+
+    /// <summary>
+    /// M53, T247 (S39 §9.1; S40 §9.1). The retention pass at 02:40, after the governance retention (02:30) and the only
+    /// path that purges the index's history. The snapshot at 05:00: after the residual pass (02:20) and the posture syncs
+    /// (03:00, 04:00), before the expiry passes (06:00) and the digests (07:00). <c>RiskIndexJobScheduleTest</c> pins both.
+    /// </summary>
+    private static void ConfigureRiskIndexJobs(IRecurringJobManager jobs)
+    {
+        jobs
+            .AddOrUpdate<RiskIndexRetentionJob>(RiskIndexRetentionJob.JobId,
+                x => x.Run(), RiskIndexRetentionJob.Cron);
+
+        jobs
+            .AddOrUpdate<RiskIndexSnapshotJob>(RiskIndexSnapshotJob.JobId,
+                x => x.Run(), RiskIndexSnapshotJob.Cron);
+
+        // T250 (S40 §9.1, §9.6): the draft previews, every minute, single-flight.
+        jobs
+            .AddOrUpdate<RiskIndexPreviewJob>(RiskIndexPreviewJob.JobId,
+                x => x.Run(), RiskIndexPreviewJob.Cron);
     }
 
     /// <summary>

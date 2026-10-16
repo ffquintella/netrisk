@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -32,6 +33,15 @@ public sealed record ClientConfigurationSource(string FileName, ClientConfigurat
 /// </summary>
 public static class ClientConfigurationSources
 {
+    /// <summary>
+    /// The directory every source's <see cref="ClientConfigurationSource.FileName"/> is resolved
+    /// against: the one holding the client's own assemblies — where appsettings.json is published
+    /// and where the installers write netrisk.ini. Never the current directory: Finder starts a
+    /// macOS app bundle with it set to <c>/</c>, so a cwd-relative lookup aborts the client at
+    /// start-up looking for <c>/appsettings.json</c>.
+    /// </summary>
+    public static string BaseDirectory => AppContext.BaseDirectory;
+
     /// <summary>Name of the optional administrator overlay file.</summary>
     public const string OverlayIniFileName = "netrisk.ini";
 

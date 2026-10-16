@@ -61,6 +61,7 @@ public class FileCleanupTest
         { "incident response plan task", f => f.IncidentResponsePlanTaskId = 1 },
         { "incident response plan task execution", f => f.IncidentResponsePlanTaskExecutionId = 1 },
         { "assessment run answer", f => f.AssessmentRunAnswerId = 1 },
+        { "risk index profile (the committee's minutes, S40 §7.3)", f => f.RiskIndexProfileId = 1 },
     };
 
     [Theory]

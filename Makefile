@@ -139,10 +139,23 @@ docker-release:
 	  docker push "$$tag"; \
 	done
 
+## macos-pkg: build the macOS (Apple Silicon) GUI installer .pkg into output/publish
+# GUI only: wraps the Nuke PackageMacA64GUI target, which publishes GUIClient,
+# assembles NetRisk.app and builds GUIClient-Mac-a64-<version>.pkg (+ .sha256).
+# --skip-dmg leaves out the drag-and-drop DMG that target also makes.
+# Signing/notarization only happen when the NETRISK_* signing variables are
+# set -- otherwise the .pkg is unsigned.
+# Must run on macOS.
+macos-pkg:
+	@test "$$(uname -s)" = Darwin || { echo "macos-pkg must run on macOS"; exit 2; }
+	$(NUKE) PackageMacA64GUI --configuration Release --skip-dmg $(ARGS)
+	@ls -1 $(ROOT)/output/publish/GUIClient-Mac-*.pkg 2>/dev/null \
+	  || { echo "no .pkg produced -- see the Nuke output above"; exit 1; }
+
 ## clean: Nuke clean (build outputs and artifacts)
 clean:
 	$(NUKE) Clean
 
 .PHONY: help gui gui-hml api website jobs console build restore test coverage \
         nuke nuke-targets db-update migration-add migrations-list \
-        docker-release clean
+        docker-release macos-pkg clean

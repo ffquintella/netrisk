@@ -227,6 +227,10 @@
           "type": "string",
           "description": "Generate an SBOM for one component only (see Sbom.Components); default is every component that was published"
         },
+        "SkipDmg": {
+          "type": "boolean",
+          "description": "Build only the macOS .pkg installer, not the DMG (used by `make macos-pkg`)"
+        },
         "SnapGrade": {
           "type": "string",
           "description": "Snap grade: stable (default for Release) or devel"

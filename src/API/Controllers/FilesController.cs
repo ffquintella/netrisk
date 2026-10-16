@@ -337,6 +337,15 @@ public class FilesController: ApiBaseController
             // Deleting evidence here would bypass the submitted-run rule (S44 D6).
             if (file.AssessmentRunAnswerId is not null) return AssessmentEvidenceRefused(user, "delete");
 
+            // The committee's minutes are the evidence of a profile's approval (S40 §6.4): deleting them would leave an
+            // approved profile without the record the approval required.
+            if (file.RiskIndexProfileId is not null)
+            {
+                Logger.Warning("User:{User} tried to delete the committee evidence of risk index profile {Profile}",
+                    user.Value, file.RiskIndexProfileId);
+                return BadRequest(new { error = "risk_index_evidence", Message = "A profile's committee evidence is not deleted." });
+            }
+
             _filesService.DeleteByUniqueName(name);
             Logger.Information("User:{User} deleted file:{FileId}", user.Value, file.Id);
             

@@ -47,7 +47,8 @@ public class FileCleanup: BaseJob, IJob
                 IncidentResponsePlanExecutionId = f.IncidentResponsePlanExecutionId,
                 IncidentResponsePlanTaskId = f.IncidentResponsePlanTaskId,
                 IncidentResponsePlanTaskExecutionId = f.IncidentResponsePlanTaskExecutionId,
-                AssessmentRunAnswerId = f.AssessmentRunAnswerId
+                AssessmentRunAnswerId = f.AssessmentRunAnswerId,
+                RiskIndexProfileId = f.RiskIndexProfileId
             })
             .ToList();
 

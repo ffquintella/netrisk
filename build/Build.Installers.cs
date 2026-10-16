@@ -41,6 +41,9 @@ partial class Build
     [Parameter("Lay the DMG out with create-dmg (branded background, needs a GUI session)")]
     readonly bool BrandedDmg;
 
+    [Parameter("Build only the macOS .pkg installer, not the DMG (used by `make macos-pkg`)")]
+    readonly bool SkipDmg;
+
     string EffectiveMsixPublisher =>
         ParamOrEnv(MsixPublisher, "NETRISK_MSIX_PUBLISHER") ?? PackageIdentity.MsixDefaultPublisher;
 
@@ -426,9 +429,15 @@ partial class Build
             NotarizeAndStaple(appBundle, plan);
 
             var pkgPath = BuildMacInstallerPackage(appBundle, archLabel, version, plan);
-            var dmgPath = BuildMacDiskImage(appBundle, archLabel, version, plan);
-
             WriteChecksum(pkgPath);
+
+            if (FlagOrEnv(SkipDmg, "NETRISK_SKIP_DMG"))
+            {
+                Log.Information("DMG skipped (--skip-dmg); the installer is {Pkg}.", pkgPath);
+                return;
+            }
+
+            var dmgPath = BuildMacDiskImage(appBundle, archLabel, version, plan);
 
             // Keep the historical checksum file name for the DMG (GUIClient-Mac-<arch>-<version>.sha256):
             // the download page and release notes have referenced it since before this track.

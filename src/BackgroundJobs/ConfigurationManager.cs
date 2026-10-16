@@ -21,12 +21,18 @@ using ServerServices.Importers;
 using ServerServices.Importers.Dedup;
 using ServerServices.Governance;
 using ServerServices.Integrations;
+using ServerServices.RiskIndex;
 using ILogger = Serilog.ILogger;
 
 namespace BackgroundJobs;
 
 public static class ConfigurationManager
 {
+    /// <summary>
+    /// Hangfire workers (S40 §9.2): three, so the 05:00 index snapshot and the notification dispatch never wait behind
+    /// two long runs. <c>RiskIndexJobScheduleTest</c> pins it.
+    /// </summary>
+    public const int HangfireWorkerCount = 3;
     
     public static void ConfigureServices(IServiceCollection services, IConfiguration config, string logDir)
     {
@@ -164,6 +170,13 @@ public static class ConfigurationManager
         services.AddScoped<BackgroundJobs.Jobs.Governance.RiskReviewCadenceJob>();
         services.AddScoped<BackgroundJobs.Jobs.Governance.RiskReviewCampaignJob>();
 
+        // M53, T247 (S40 §9.2) — the index's daily snapshot and its retention, over the same service graph the API reads
+        // through. Both run under this host's unrestricted principal (T237) and never bypass the entity scope.
+        services.AddRiskIndex();
+        services.AddScoped<BackgroundJobs.Jobs.RiskIndex.RiskIndexSnapshotJob>();
+        services.AddScoped<BackgroundJobs.Jobs.RiskIndex.RiskIndexRetentionJob>();
+        services.AddScoped<BackgroundJobs.Jobs.RiskIndex.RiskIndexPreviewJob>();
+
         // What the cadence job reads the register through, and what the website sync (through the response
         // plans) and the issue-sync poll (through the Jira integration) need: none was registered here, so
         // those three jobs failed to construct on every run too. The filter provider has an empty whitelist —
@@ -193,7 +206,7 @@ public static class ConfigurationManager
         
         var serverOptions = new BackgroundJobServerOptions()
         {
-            WorkerCount = 2,
+            WorkerCount = HangfireWorkerCount,
             ShutdownTimeout = TimeSpan.FromSeconds(5)
         };
 

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ClientServices.Services;
@@ -34,12 +33,12 @@ public class ConfigurationBootstrapper
 
 #if DEBUG
     private static IConfiguration BuildConfiguration(IReadOnlyList<ClientConfigurationSource> sources) =>
-        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()), sources)
+        AddSources(new ConfigurationBuilder().SetBasePath(ClientConfigurationSources.BaseDirectory), sources)
             .AddUserSecrets<Program>()
             .Build();
 #else
     private static IConfiguration BuildConfiguration(IReadOnlyList<ClientConfigurationSource> sources) =>
-        AddSources(new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()), sources)
+        AddSources(new ConfigurationBuilder().SetBasePath(ClientConfigurationSources.BaseDirectory), sources)
             .Build();
 #endif
 
