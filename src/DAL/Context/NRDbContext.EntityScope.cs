@@ -142,6 +142,13 @@ public partial class NRDbContext
         // readings and overrides follow it, a risk link follows the risk and the model; their filters are below.
         ConfigureAiGovernance(modelBuilder);
 
+        // M53, T243 — the Consolidated Risk Index (S39 §12.5, S40 §7). Profiles are the organization's configuration and
+        // carry no scope; the snapshot and object rows carry their own entity, filtered below.
+        ConfigureRiskIndex(modelBuilder);
+
+        // M53 review (S40 §6.4, §11.4) — who granted the watched permissions; organization-wide, no scope.
+        ConfigurePermissionGrants(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -362,6 +369,33 @@ public partial class NRDbContext
 
         modelBuilder.Entity<AiModelRisk>().HasQueryFilter(e =>
             ScopeIsUnrestricted || (Risks.Any(r => r.Id == e.RiskId) && AiModels.Any(m => m.Id == e.ModelId)));
+
+        // M53, T243 (S40 §7.4) — defence in depth under the read service's own rule (claims ⊇ the node's members). A node
+        // row with no entity (the organization, an asset class or a source at the root) and an unassigned object are read
+        // only with unrestricted scope; an object row is filtered by the scope entity of its source row, the predicate
+        // the user would see live. Written only by the job, which runs unrestricted; both types are IEntityScoped.
+        modelBuilder.Entity<RiskIndexSnapshot>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        modelBuilder.Entity<RiskIndexObjectDay>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        // M53, T247 (S40 §7.4) — an attribution row by the scope entity of its source row (the same predicate as the object
+        // row), never by the entity it is attributed to; a class-day row by its node, the root's (null) only unrestricted.
+        // Both are IEntityScoped through an explicit implementation naming that column. A frozen incident closure follows
+        // its incident. Node members carry no filter: they are the map the read service compares the claims with.
+        modelBuilder.Entity<RiskIndexObjectAttribution>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.ScopeEntityId != null && ScopeEntityIds.Contains(e.ScopeEntityId.Value)));
+
+        modelBuilder.Entity<RiskIndexClassDay>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.NodeEntityId != null && ScopeEntityIds.Contains(e.NodeEntityId.Value)));
+
+        modelBuilder.Entity<RiskIndexIncidentClosure>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Incidents.Any(i => i.Id == e.IncidentId));
+
+        // M53, T250 (S40 §7.4) — a bridge row by its node, like the snapshot it bridges: the root's only unrestricted.
+        modelBuilder.Entity<RiskIndexBridge>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
 
         // A further step removed: these hang off a run, which hangs off the assessment that
         // carries the entity_id.

@@ -12,6 +12,18 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add the risk index profile, snapshot and object-day tables and the `risk_index_view`, `risk_index_configure` and `risk_index_approve` permissions in schema version 106 (T243, S39, S40)
+- Seed the Risk Manager and Risk Administrator roles where absent with every risk index permission and `entity_risk_context`, and grant Risk Analyst `risk_index_view` and `risk_index_configure`, leaving the Administrator role without them (T293, S39, S40)
+- Compute the consolidated cyber risk index (ICR) from a versioned profile — anchors, damped max-plus remainder, power mean with tail floor and population quotas, headline, coverage, quality and ignorance interval (T244, S39)
+- Credit risk reviews and read governance signals only from reliable fields: qualified reviews, acceptances by date, campaign decisions, tasks and SLA (T245, S39)
+- Resolve each organisational, process, activity and application node's members through the entity tree and its process and application links, with an "Unassigned" node for objects without a scope (T246, S39, S40)
+- Take a daily ICR snapshot at 05:00 UTC for every node, with per-class values, node members, object attributions and discontinuity markers, purge old rows with a retention job, and fail a test if any code outside the read layer uses the index to drive a decision (T247, S39, S40)
+- Break each node's index into Euler contributions, indicator sensitivities and an Aumann–Shapley attribution of the day-over-day change (T248, S39)
+- Serve the index overview, categories, trend, drill-down nodes, objects, inventory, change attribution and governance indicators through `/RiskIndex`, computing partial views only from records in the caller's scope, redacting object labels without the module permission, and caching by scope and permissions (T249, S40)
+- Manage index profiles through `/RiskIndex/Profiles` — draft, validate, preview the last 90 days, submit, approve with the committee reference and minutes attached, reject, suspend and bridge the activation — with approval refused to the author, editors, submitter, a user who granted themselves the approver role and an administrator without the explicit permission (T250, S39, S40)
+
 ## [2.41.4] - 2026-10-16
 
 ### Added

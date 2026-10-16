@@ -195,6 +195,63 @@ public class BackgroundScopeContainmentTest
         }
     }
 
+    // --- T237 review: work a request feeds the job host through a database queue ---------------------------------------
+
+    /// <summary>
+    /// A request can reach the job host's global grant without Hangfire: the API writes a queue row, and a recurring job of
+    /// the host consumes it. Each such queue is reviewed here — the identifiers of the queue and of the output it produces,
+    /// and the exact production files allowed to name them. A new reader or writer fails
+    /// <see cref="EveryRequestFedQueueIsNamedOnlyWhereReviewed"/> until it is reviewed like these.
+    /// </summary>
+    private sealed record RequestFedQueue(string Identifier, string Why, params string[] Files);
+
+    private static readonly RequestFedQueue[] RequestFedQueues =
+    [
+        // M53, T250 (S40 §9.6): the sensitivity preview is the organization's values by design, so it is computed under the
+        // global grant. Written by RequestPreviewAsync (risk_index_configure), consumed by RiskIndexPreviewJob, purged by the
+        // retention; its report is read only by GetPreviewAsync, which requires global scope and the shadow rule
+        // (ServerServices.Tests RiskIndexProfilesServiceTest.TestAScopedReaderReadsNoPreviewBridgeOrHistory and
+        // TestInShadowOnlyTheAuthorEditorsCommitteeAndAdminsReadThePreview).
+        new(@"\bRiskIndexPreviewRequests?\b", "the queue of draft previews",
+            Path.Combine("DAL", "Context", "NRDbContext.RiskIndex.cs"),
+            Path.Combine("DAL", "Entities", "RiskIndexPreviewRequest.cs"),
+            Path.Combine("ServerServices", "RiskIndex", "Profiles", "RiskIndexPreviewService.cs"),
+            Path.Combine("ServerServices", "RiskIndex", "Profiles", "RiskIndexProfilesService.cs"),
+            Path.Combine("ServerServices", "RiskIndex", "Snapshots", "RiskIndexRetentionService.cs")),
+
+        // ...and the copy of that report the submission attaches to the profile: the same reader, the same rule.
+        new(@"\bSensitivityReport\b", "the preview attached to a submitted profile",
+            Path.Combine("DAL", "Auditing", "GovernanceAuditInterceptor.cs"),
+            Path.Combine("DAL", "Context", "NRDbContext.RiskIndex.cs"),
+            Path.Combine("DAL", "Entities", "RiskIndexProfile.cs"),
+            Path.Combine("ServerServices", "RiskIndex", "Profiles", "RiskIndexProfilesService.cs")),
+
+        // The consumer itself: only the job host runs the preview computation.
+        new(@"\.ProcessNextAsync\(", "the preview computation under the global grant",
+            Path.Combine("BackgroundJobs", "Jobs", "RiskIndex", "RiskIndexPreviewJob.cs"))
+    ];
+
+    [Fact]
+    public void EveryRequestFedQueueIsNamedOnlyWhereReviewed()
+    {
+        var root = SrcRoot();
+        var sources = ProductionSources(root)
+            .Where(f => !Path.GetRelativePath(root, f).StartsWith(Path.Combine("DAL", "Migrations"), StringComparison.Ordinal))
+            .Select(f => (Path: Path.GetRelativePath(root, f), Text: File.ReadAllText(f)))
+            .ToList();
+
+        foreach (var queue in RequestFedQueues)
+        {
+            var pattern = new System.Text.RegularExpressions.Regex(queue.Identifier);
+            var naming = sources.Where(s => pattern.IsMatch(s.Text)).Select(s => s.Path).Order(StringComparer.Ordinal).ToList();
+
+            Assert.True(queue.Files.Order(StringComparer.Ordinal).SequenceEqual(naming),
+                $"{queue.Why} ({queue.Identifier}) is named outside its review; a reader or writer there would act on work a " +
+                "request fed the job host's global grant:\n  " + string.Join("\n  ", naming.Except(queue.Files)) +
+                "\nreviewed but no longer naming it:\n  " + string.Join("\n  ", queue.Files.Except(naming)));
+        }
+    }
+
     /// <summary>The structural half: the API cannot call into the job host's composition, because it does not load it.</summary>
     [Fact]
     public void TheApiDoesNotReferenceTheJobHost()

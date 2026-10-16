@@ -353,6 +353,20 @@ public class FilesControllerTest : BaseControllerTest
         _filesService.Received(1).DeleteByUniqueName("unique-1");
     }
 
+    /// <summary>S40 §6.4: the committee's minutes are the evidence of an approval; their uploader cannot delete them here.</summary>
+    [Fact]
+    public void TestDeleteFileRefusesACommitteeEvidenceFile()
+    {
+        var minutes = MakeFile(3, "unique-1");
+        minutes.RiskIndexProfileId = 40;
+        _filesService.GetByUniqueName("unique-1").Returns(minutes);
+
+        var result = _controller.DeleteFile("unique-1");
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        _filesService.DidNotReceive().DeleteByUniqueName(Arg.Any<string>());
+    }
+
     [Fact]
     public void TestDeleteFileUnauthorizedWhenServiceRejects()
     {

@@ -150,6 +150,9 @@ public abstract class InMemoryServiceTestBase
         // enforcement graph the API and the job host resolve.
         services.AddTrack8Governance();
 
+        // M53 (S40 §9.2): the index's services, as the API and the job host register them.
+        ServerServices.RiskIndex.RiskIndexServiceRegistration.AddRiskIndex(services);
+
         // A protector over a fixed root secret rather than the install's key file: a test must not
         // create files under the user's application-data folder, and a deterministic key means an
         // encrypted fixture round-trips.

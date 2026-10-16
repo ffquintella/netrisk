@@ -23,7 +23,10 @@ public static class FileParents
         IncidentResponsePlanExecution,
         IncidentResponsePlanTask,
         IncidentResponsePlanTaskExecution,
-        AssessmentRunAnswer
+        AssessmentRunAnswer,
+
+        /// <summary>The committee's minutes on an index profile (S40 §7.3): linked only by its own route, never here.</summary>
+        RiskIndexProfile
     }
 
     public readonly record struct Parent(Kind Kind, int Id);
@@ -46,6 +49,7 @@ public static class FileParents
         if (file.IncidentResponsePlanTaskExecutionId is { } taskExecution)
             parents.Add(new Parent(Kind.IncidentResponsePlanTaskExecution, taskExecution));
         if (file.AssessmentRunAnswerId is { } answer) parents.Add(new Parent(Kind.AssessmentRunAnswer, answer));
+        if (file.RiskIndexProfileId is { } profile) parents.Add(new Parent(Kind.RiskIndexProfile, profile));
 
         return parents;
     }

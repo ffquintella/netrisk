@@ -25,8 +25,19 @@ internal sealed class ScopedRecordCatalogue(DbContext context)
         typeof(Risk), typeof(Vulnerability), typeof(Host), typeof(Incident), typeof(Assessment), typeof(PendingRisk),
         typeof(Kri), typeof(RiskCommittee), typeof(ThirdParty), typeof(AiModel), typeof(RiskAcceptance),
         typeof(ScanImport), typeof(SlaConfiguration), typeof(RiskAppetite), typeof(EntityRiskReviewer),
-        typeof(RiskReviewCampaign), typeof(NrFile)
+        typeof(RiskReviewCampaign), typeof(NrFile), typeof(RiskIndexSnapshot), typeof(RiskIndexObjectDay),
+        typeof(RiskIndexObjectAttribution), typeof(RiskIndexClassDay), typeof(RiskIndexBridge)
     ];
+
+    /// <summary>
+    /// The direct types whose own entity column is not <c>EntityId</c> (M53, T247): an attribution is filtered by the scope
+    /// entity of its source row, a class day by its node. Both name that column to the write guard too.
+    /// </summary>
+    public static readonly Dictionary<Type, string> ScopeColumns = new()
+    {
+        [typeof(RiskIndexObjectAttribution)] = nameof(RiskIndexObjectAttribution.ScopeEntityId),
+        [typeof(RiskIndexClassDay)] = nameof(RiskIndexClassDay.NodeEntityId)
+    };
 
     /// <summary>
     /// Types whose filter goes through one or more parents, with the foreign key to each. A type with two
@@ -86,6 +97,7 @@ internal sealed class ScopedRecordCatalogue(DbContext context)
         [typeof(AiModelOverride)] = [("ModelId", typeof(AiModel))],
         [typeof(AiModelRisk)] = [("RiskId", typeof(Risk)), ("ModelId", typeof(AiModel))],
         [typeof(RiskReviewCampaignItem)] = [("CampaignId", typeof(RiskReviewCampaign))],
+        [typeof(RiskIndexIncidentClosure)] = [("IncidentId", typeof(Incident))],
     };
 
     public static IEnumerable<Type> AllTypes => DirectTypes.Concat(DerivedTypes.Keys);
@@ -130,8 +142,9 @@ internal sealed class ScopedRecordCatalogue(DbContext context)
         }
         else
         {
-            Set(row, "EntityId", entityId);
-            assigned.Add("EntityId");
+            var column = ScopeColumns.GetValueOrDefault(type, "EntityId");
+            Set(row, column, entityId);
+            assigned.Add(column);
         }
 
         foreach (var key in entityType.FindPrimaryKey()!.Properties.Where(p => !assigned.Contains(p.Name)))

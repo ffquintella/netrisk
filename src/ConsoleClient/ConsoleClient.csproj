@@ -878,6 +878,38 @@
     <Content Include="DB\Data\105.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="DB\Structure\106.sql" />
+    <Content Include="DB\Structure\106.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\106.sql" />
+    <Content Include="DB\Data\106.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\107.sql" />
+    <Content Include="DB\Structure\107.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\107.sql" />
+    <Content Include="DB\Data\107.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\108.sql" />
+    <Content Include="DB\Structure\108.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\108.sql" />
+    <Content Include="DB\Data\108.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\109.sql" />
+    <Content Include="DB\Structure\109.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\109.sql" />
+    <Content Include="DB\Data\109.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="DB\Data\24.sql" />

@@ -160,7 +160,12 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // is an Update row naming the old and new value, a value set or cleared a Create or Delete row. Only the rows
         // named in AuditedEntityPropertyKeys, and never a person's (T241/T242 review, LGPD): see IsAuditedEntityProperty.
         nameof(Entity),
-        nameof(EntitiesProperty)
+        nameof(EntitiesProperty),
+
+        // M53, T243 (S39 §12.5, §13.1; S40 §7.5): every transition and every field of an index profile — the weights the
+        // committee approved, by whom, under which reference and grant. Not the snapshot or object rows: insert-only,
+        // tens of thousands a day, they would bury the trail.
+        nameof(RiskIndexProfile)
     };
 
     /// <summary>
@@ -199,7 +204,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
         // Stage 9.7 (S48 §4.8): the two thresholds that derive flag 8.
         TailRiskSettingKeys.TailFlagMaxAnnualProbability,
-        TailRiskSettingKeys.TailFlagCatastrophicLoss
+        TailRiskSettingKeys.TailFlagCatastrophicLoss,
+
+        // M53, T243 (S40 §11.4, §6.4): which roles approve an index profile, and whether the index is still in shadow.
+        RiskIndexSettingKeys.ApproverRoles,
+        RiskIndexSettingKeys.Publication
     };
 
     /// <summary>
@@ -218,7 +227,12 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         "UpdatedAt",
 
         // The entity map's own churn stamp, written on every save of the form (T241); who saved is the row's actor.
-        nameof(Entity.Updated)
+        nameof(Entity.Updated),
+
+        // An index profile's attached preview (large, regenerable from its parameters' hash) and its draft concurrency
+        // token (S40 §7.5). No other audited type has a property of either name.
+        nameof(RiskIndexProfile.SensitivityReport),
+        nameof(RiskIndexProfile.Revision)
     };
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData,
