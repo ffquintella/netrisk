@@ -12,6 +12,16 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.41.4] - 2026-10-16
+
+### Added
+
+- Add `make macos-pkg`, which builds only the Apple Silicon desktop installer `.pkg` (the Nuke `--skip-dmg` switch leaves out the DMG) (T343)
+
+### Fixed
+
+- Stop the macOS desktop client aborting at launch from Finder by reading `appsettings.json` and the `netrisk.ini` overlays from its install directory instead of the current directory (T343)
+
 ## [2.41.3] - 2026-10-14
 
 ### Fixed

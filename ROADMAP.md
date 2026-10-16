@@ -403,6 +403,8 @@ Windows/Linux runners. Operational guide: [docs/packaging/release-engineering.md
   - note: a client older than 2.4.5 reports bare `mac` on either architecture, so an Intel Mac that old cannot be told apart and is sent the Apple Silicon DMG; the client-side "no upgrade available" message is not covered by a test (UI tests not run, S54 §3)
 - [x] T342 Apply the `[Server] Url` from the `netrisk.ini` overlays at every client start-up, skipping the first-run window, and layer `netrisk.<name>.ini` for `--environment=<name>`
   - note: the MSI's `SERVERURL` and configuration management wrote `netrisk.ini`, but the client only ever read the per-user store the first-run window fills
+- [x] T343 Add a `make macos-pkg` shortcut that builds only the Apple Silicon GUI `.pkg`, and resolve the client's configuration files from its install directory so a Finder-launched app starts
+  - note: the `.pkg` is unsigned unless signing variables are set; the DMG step's `hdiutil create failed - Resource busy` on this host was skipped (`--skip-dmg`), not investigated
 
 ## Track 6 — Database Uniformization & Schema Health
 
