@@ -346,3 +346,14 @@ appsettings.*.local.json
 # Signing material handled by the Track 5 packaging targets
 build/signing/
 *.notarization-profile
+
+# graphify knowledge-graph outputs: only the report, the HTML view and the community labels are
+# shared; the raw graph (~80 MB), the extraction cache and the per-machine state stay local.
+graphify-out/graph.json
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.graphify_*.json
+!graphify-out/.graphify_labels.json
