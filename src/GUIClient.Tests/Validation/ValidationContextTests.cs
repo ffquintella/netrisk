@@ -20,8 +20,9 @@ namespace GUIClient.Tests.Validation;
 public class ValidationContextTests
 {
     /// <summary>
-    /// ReactiveUI 24 requires explicit initialization; <c>WhenAnyValue</c> — which the rules are
-    /// built on — throws without it. The real app initializes via <c>UseReactiveUI</c>.
+    /// ReactiveUI 24 and later require explicit initialization. Under 24 the rules' property observation threw
+    /// without it; from 25 on it silently stops at the first value, so a rule never sees a later change. The real
+    /// app initializes via <c>UseReactiveUI</c>.
     /// </summary>
     static ValidationContextTests()
     {
@@ -51,6 +52,56 @@ public class ValidationContextTests
         {
             get => _choice;
             set => this.RaiseAndSetIfChanged(ref _choice, value);
+        }
+
+        // The remaining shapes are the ones the view-models' rules actually target besides string and int:
+        // a nullable enum (IntStatus?), a nullable reference type (Team?, UserListing?, ...) and a decimal.
+        private Level? _level;
+        public Level? Level
+        {
+            get => _level;
+            set => this.RaiseAndSetIfChanged(ref _level, value);
+        }
+
+        private Owner? _owner;
+        public Owner? Owner
+        {
+            get => _owner;
+            set => this.RaiseAndSetIfChanged(ref _owner, value);
+        }
+
+        private decimal _cost;
+        public decimal Cost
+        {
+            get => _cost;
+            set => this.RaiseAndSetIfChanged(ref _cost, value);
+        }
+
+        private TestChild _child = new();
+        public TestChild Child
+        {
+            get => _child;
+            set => this.RaiseAndSetIfChanged(ref _child, value);
+        }
+    }
+
+    private enum Level
+    {
+        Low,
+        High,
+    }
+
+    private sealed class Owner
+    {
+    }
+
+    private sealed class TestChild : ReactiveObject
+    {
+        private string _label = "";
+        public string Label
+        {
+            get => _label;
+            set => this.RaiseAndSetIfChanged(ref _label, value);
         }
     }
 
@@ -231,5 +282,73 @@ public class ValidationContextTests
 
         vm.ValidationContext.Dispose();
         vm.ValidationContext.Dispose();
+    }
+
+    // ReactiveUI 25+ (ReactiveUI.Binding) cannot generate the observation inside ValidationRule (the view-model is a type parameter),
+    // so the rule resolves its property expression by reflection at run time. These pin that resolution for every
+    // property shape the view-models declare rules on, not only the string/int ones above.
+
+    [Fact]
+    public void NullableEnumProperty_IsObservedThroughNullAndBack()
+    {
+        var vm = new TestViewModel();
+        vm.ValidationRule(x => x.Level, l => l.HasValue, "Pick a level.");
+
+        Assert.False(vm.ValidationContext.IsValid);
+        Assert.Equal("Pick a level.", vm.ValidationContext.MessageFor("Level"));
+
+        vm.Level = Level.High;
+        Assert.True(vm.ValidationContext.IsValid);
+
+        vm.Level = null;
+        Assert.False(vm.ValidationContext.IsValid);
+    }
+
+    [Fact]
+    public void NullableReferenceProperty_IsObserved()
+    {
+        var vm = new TestViewModel();
+        vm.ValidationRule(x => x.Owner, o => o != null, "Pick an owner.");
+
+        Assert.False(vm.ValidationContext.IsValid);
+        Assert.Equal("Pick an owner.", vm.ValidationContext.MessageFor("Owner"));
+
+        vm.Owner = new Owner();
+        Assert.True(vm.ValidationContext.IsValid);
+        Assert.Equal("", vm.ValidationContext.MessageFor("Owner"));
+    }
+
+    [Fact]
+    public void DecimalProperty_IsObserved()
+    {
+        var vm = new TestViewModel();
+        vm.ValidationRule(x => x.Cost, c => c > 0m, "Cost must be positive.");
+
+        Assert.False(vm.ValidationContext.IsValid);
+
+        vm.Cost = 0.01m;
+        Assert.True(vm.ValidationContext.IsValid);
+
+        vm.Cost = -1m;
+        Assert.False(vm.ValidationContext.IsValid);
+    }
+
+    [Fact]
+    public void NestedPath_FollowsTheLeafAndAReplacedParent()
+    {
+        var vm = new TestViewModel();
+        vm.ValidationRule(x => x.Child.Label, l => !string.IsNullOrEmpty(l), "Label required.");
+
+        Assert.False(vm.ValidationContext.IsValid);
+
+        vm.Child.Label = "set";
+        Assert.True(vm.ValidationContext.IsValid);
+
+        // Replacing the parent must move the observation to the new child, whose label is empty.
+        vm.Child = new TestChild();
+        Assert.False(vm.ValidationContext.IsValid);
+
+        vm.Child.Label = "set again";
+        Assert.True(vm.ValidationContext.IsValid);
     }
 }
