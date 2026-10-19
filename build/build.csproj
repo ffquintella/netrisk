@@ -30,8 +30,8 @@
          Move these only to a release that still ships net10.0, or together with a net11.0 retarget.
          Runtime assets are excluded: the MSBuild Nuke loads is the SDK's, via Microsoft.Build.Locator. -->
     <PackageReference Include="Microsoft.Build" Version="18.9.6" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.9.6" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.9.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.11.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.11.0" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
     <PackageReference Include="Tools.InnoSetup" Version="7.1.0" />
     <!-- Explicit overrides for vulnerable transitive packages.
