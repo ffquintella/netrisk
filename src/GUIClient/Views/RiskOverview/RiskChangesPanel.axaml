@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="420"
+             x:DataType="vm:RiskChangesViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskChangesPanel">
+
+    <!-- S40 §5.7 (T255): what moved between two snapshots, by effect, category and object, in
+         whole points ordered by magnitude — never re-sorted on the client. A line naming an object
+         opens its detail; nothing here acts on the object. -->
+    <StackPanel Spacing="6" IsVisible="{Binding IsActive}">
+        <WrapPanel>
+            <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+            </Border>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrPeriod}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="200" ItemsSource="{Binding Periods}" SelectedItem="{Binding SelectedPeriod}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChangesPeriodOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Classes="label-nm" Margin="0 0 12 4" VerticalAlignment="Center" Text="{Binding PeriodText}"/>
+            <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                   IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        </WrapPanel>
+
+        <!-- §5.7: unavailable in a partial view and in an unofficial preview, with the reason. -->
+        <Border Classes="riskPartialBanner" IsVisible="{Binding IsUnavailable}">
+            <StackPanel Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding UnavailableText}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+        <TextBlock Classes="hint" Margin="0" Text="{Binding StrEmpty}" IsVisible="{Binding IsEmpty}"/>
+
+        <Border Classes="riskPartialBanner" IsVisible="{Binding HasConfigurationNote}">
+            <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding ConfigurationNote}"/>
+        </Border>
+
+        <DataGrid MinHeight="120" MaxHeight="420" ItemsSource="{Binding Rows}" IsVisible="{Binding HasTable}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="False" CanUserResizeColumns="True"
+                  GridLinesVisibility="Horizontal" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrColEffect, Mode=OneTime}" Binding="{Binding Effect}" Width="130" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColCategory, Mode=OneTime}" Binding="{Binding Category}" Width="90" CanUserSort="False"/>
+                <DataGridTemplateColumn Header="{Binding StrColOrigin, Mode=OneTime}" Width="*" MinWidth="240" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskChangeRowViewModel">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip.Tip="{Binding OriginHint}">
+                                <material:MaterialIcon Classes="riskGlyph" Kind="LockOutline" IsVisible="{Binding IsRedacted}"/>
+                                <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Origin}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrColPoints, Mode=OneTime}" Binding="{Binding Points}" Width="80" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColPercent, Mode=OneTime}" Binding="{Binding Percent}" Width="110" CanUserSort="False"/>
+                <DataGridTemplateColumn Width="40" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskChangeRowViewModel">
+                            <Button Classes="detailButton" IsVisible="{Binding CanOpen}" Command="{Binding Open}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskChangesViewModel)DataContext).StrOpenDetailHint}">
+                                <material:MaterialIcon Kind="ChevronRight"/>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- The lines beyond the 100 largest, summed (§5.7). -->
+        <Grid ColumnDefinitions="130,90,*,80,110,40" IsVisible="{Binding HasRest}" Margin="10 0 0 0">
+            <TextBlock Grid.Column="0" Classes="label-nm" Text="{Binding RestRow.Effect}"/>
+            <TextBlock Grid.Column="2" Text="{Binding RestRow.Origin}"/>
+            <TextBlock Grid.Column="3" Text="{Binding RestRow.Points}"/>
+            <TextBlock Grid.Column="4" Text="{Binding RestRow.Percent}"/>
+        </Grid>
+
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding ResidualNote}" IsVisible="{Binding HasResidualNote}"/>
+
+        <StackPanel IsVisible="{Binding HasEvents}">
+            <TextBlock Classes="sectionCaption" Margin="0 4 0 2" Text="{Binding StrEvents}"/>
+            <ItemsControl ItemsSource="{Binding Events}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="sys:String">
+                        <Border Classes="riskChip">
+                            <TextBlock Text="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

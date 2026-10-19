@@ -1,0 +1,174 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:tools="clr-namespace:GUIClient.Tools.RiskIndex"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="420"
+             x:DataType="vm:RiskHeadlineViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskHeadlineCard">
+
+    <!-- S40 §5.2 (T251): the headline card. Every value here was computed by the server; the
+         card formats it. The band is text and glyph first; its fill (b1…b5, the ramp step) only
+         reinforces (§10.6, ui-standard §2.6). -->
+    <StackPanel Spacing="0">
+        <Border Classes="riskPartialBanner" IsVisible="{Binding IsPartial}" ToolTip.Tip="{Binding PartialHint}">
+            <TextBlock Classes="notice" Text="{Binding StrPartialBanner}"/>
+        </Border>
+
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="560"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}" IsEnabled="{Binding !IsBusy}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <progRing:ProgressRing Classes="busy" Width="40" Height="40" HorizontalAlignment="Left" Margin="10"
+                               IsActive="{Binding IsBusy}">
+            <progRing:ProgressRing.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="IsBusy"/>
+                    <Binding Path="!HasContent"/>
+                </MultiBinding>
+            </progRing:ProgressRing.IsVisible>
+        </progRing:ProgressRing>
+
+        <Border Classes="riskHeadline" IsVisible="{Binding HasContent}"
+                AutomationProperties.Name="{Binding AccessibleName}">
+            <Panel>
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Classes="sectionCaption" Margin="0" VerticalAlignment="Center"
+                                   Text="{Binding StrHeadlineTitle}"/>
+                        <Border Classes="tooltip" Margin="6 0 0 0" ToolTip.Tip="{Binding StrHeadlineHint}">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Point value (with or without interval): the integer, the scale and the band pill. -->
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowsValue}">
+                        <TextBlock Classes="riskHeadlineValue" Text="{Binding ValueText}"/>
+                        <TextBlock Classes="riskHeadlineScale" Text="{Binding StrScale}"/>
+                        <Border Classes="riskBand" IsVisible="{Binding ShowsBand}"
+                                Classes.b1="{Binding IsBandStep1}" Classes.b2="{Binding IsBandStep2}"
+                                Classes.b3="{Binding IsBandStep3}" Classes.b4="{Binding IsBandStep4}"
+                                Classes.b5="{Binding IsBandStep5}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Classes="riskGlyph" Kind="{Binding BandGlyph}"/>
+                                <TextBlock Classes="riskBandText" Text="{Binding BandLabel}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Indicative (§5.2.3): no band, no coloured pill, no arrow — and why. -->
+                    <StackPanel IsVisible="{Binding IsIndicative}">
+                        <Border Classes="riskBand indicative">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Classes="riskGlyph" Kind="{Binding StateGlyph}"/>
+                                <TextBlock Classes="riskBandText" Text="{Binding IndicativeText}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Classes="hint" Text="{Binding IndicativeReason}"/>
+                    </StackPanel>
+
+                    <!-- No data (§5.2.3): seals and chips still follow. -->
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding IsNoData}">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="{Binding StateGlyph}"/>
+                        <TextBlock Classes="notice" Margin="0" Text="{Binding StrNoData}"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding HasDelta}">
+                        <material:MaterialIcon Classes="riskGlyph riskDelta" Kind="{Binding DeltaGlyph}"
+                                               IsVisible="{Binding HasDeltaGlyph}"
+                                               Classes.worse="{Binding IsDeltaWorse}"
+                                               Classes.better="{Binding IsDeltaBetter}"
+                                               Classes.neutral="{Binding IsDeltaNeutral}"/>
+                        <TextBlock Classes="riskDelta" Text="{Binding DeltaText}"
+                                   Classes.worse="{Binding IsDeltaWorse}"
+                                   Classes.better="{Binding IsDeltaBetter}"
+                                   Classes.neutral="{Binding IsDeltaNeutral}"/>
+                    </StackPanel>
+
+                    <WrapPanel IsVisible="{Binding !IsNoData}">
+                        <TextBlock VerticalAlignment="Center" Margin="0 0 6 4" Text="{Binding StrQuality}"/>
+                        <Border Classes="riskChip info">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="{Binding QualityBandText}"/>
+                                <TextBlock Text="{Binding QualityValueText}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock VerticalAlignment="Center" Margin="0 0 12 4" Text="{Binding CoverageText}"/>
+                        <TextBlock VerticalAlignment="Center" Margin="0 0 0 4" Text="{Binding FreshnessText}"/>
+                    </WrapPanel>
+
+                    <Border Classes="tooltip" HorizontalAlignment="Left" IsVisible="{Binding HasInterval}"
+                            ToolTip.Tip="{Binding IntervalHint}">
+                        <TextBlock Text="{Binding IntervalText}"/>
+                    </Border>
+
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding BranchText}"
+                               IsVisible="{Binding BranchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <TextBlock Classes="notice" Margin="0" Text="{Binding UnflooredText}"
+                               IsVisible="{Binding UnflooredText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 8 0 2" Text="{Binding StrSeals}"/>
+                    <ItemsControl ItemsSource="{Binding Seals}" IsVisible="{Binding HasSeals}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="tools:HeadlineLink">
+                                <Border Classes="riskSeal">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}"/>
+                                        <!-- "›" (§5.2.2): the object list filtered by the seal (T255). -->
+                                        <Button Classes="detailButton" Margin="6 0 0 0" IsVisible="{Binding CanOpen}"
+                                                Command="{Binding $parent[UserControl].((vm:RiskHeadlineViewModel)DataContext).OpenLink}"
+                                                CommandParameter="{Binding}">
+                                            <material:MaterialIcon Kind="ChevronRight"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoSeals}" IsVisible="{Binding !HasSeals}"/>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 8 0 2" Text="{Binding StrChips}"/>
+                    <ItemsControl ItemsSource="{Binding Chips}" IsVisible="{Binding HasChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="tools:HeadlineLink">
+                                <Border Classes="riskChip warning">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Text}"/>
+                                        <Button Classes="detailButton" Margin="6 0 0 0" IsVisible="{Binding CanOpen}"
+                                                Command="{Binding $parent[UserControl].((vm:RiskHeadlineViewModel)DataContext).OpenLink}"
+                                                CommandParameter="{Binding}">
+                                            <material:MaterialIcon Kind="ChevronRight"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoChips}" IsVisible="{Binding !HasChips}"/>
+                </StackPanel>
+
+                <progRing:ProgressRing Classes="busy" Width="40" Height="40" ZIndex="1000"
+                                       HorizontalAlignment="Right" VerticalAlignment="Top"
+                                       IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            </Panel>
+        </Border>
+    </StackPanel>
+</UserControl>

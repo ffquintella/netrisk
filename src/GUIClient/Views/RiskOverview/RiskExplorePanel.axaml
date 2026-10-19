@@ -1,0 +1,107 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:riskOverview="clr-namespace:GUIClient.Views.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="480"
+             x:DataType="vm:RiskExploreViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskExplorePanel">
+
+    <!-- S40 §5.6.1–§5.6.2 (T254): always visible between the categories and the asset-class tabs.
+         The dimension selector exists only here; the chips cut the children, never the node. The
+         tree of the node's children takes 60 %, the node's own monthly summary the rest. -->
+    <Border Classes="riskPanel" IsVisible="{Binding IsActive}">
+        <StackPanel Spacing="6">
+            <WrapPanel>
+                <TextBlock Classes="sectionCaption" Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrTitle}"/>
+                <Border Classes="tooltip" Margin="0 0 16 4" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                    <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                </Border>
+                <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrDimension}"/>
+                <ComboBox Margin="0 0 16 4" MinWidth="170" ItemsSource="{Binding DimensionOptions}"
+                          SelectedItem="{Binding SelectedDimension}" IsEnabled="{Binding IsDimensionEnabled}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DimensionOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrFilters}"/>
+                <ItemsControl VerticalAlignment="Center" ItemsSource="{Binding Chips}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FilterChip">
+                            <Border Classes="riskChip" ToolTip.Tip="{Binding Hint}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                                    <Button Classes="link" Padding="0" Command="{Binding BtRemoveFilterClicked}"
+                                            CommandParameter="{Binding Kind}"
+                                            ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskExploreViewModel)DataContext).StrRemoveFilterHint}">
+                                        <material:MaterialIcon Classes="riskGlyph" Kind="Close"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Name="AddFilterButton" Classes="type2" Margin="0 0 0 4" IsEnabled="{Binding IsAddFilterEnabled}"
+                        ToolTip.Tip="{Binding StrAddFilterHint}">
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedLeft">
+                            <StackPanel Name="FilterMenuContent" Spacing="6" MinWidth="260" MaxWidth="520">
+                                <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoFilterValues}"
+                                           IsVisible="{Binding !HasFilterValues}"/>
+                                <ItemsControl ItemsSource="{Binding FilterMenu}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterMenuGroup">
+                                            <StackPanel Spacing="2" Margin="0 0 0 6">
+                                                <TextBlock Classes="label-nm" Text="{Binding Title}"/>
+                                                <ItemsControl ItemsSource="{Binding Values}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:FilterMenuValue">
+                                                            <Button Classes="link" Margin="0 0 10 2"
+                                                                    Command="{Binding BtAddFilterClicked}"
+                                                                    CommandParameter="{Binding Filter}">
+                                                                <TextBlock Text="{Binding Label}"/>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="FilterPlusOutline" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrAddFilter}"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+
+            <Grid ColumnDefinitions="3*,2*">
+                <riskOverview:RiskNodeTree Grid.Column="0" Margin="0 0 12 0" DataContext="{Binding Tree}"/>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Classes="label-nm" TextWrapping="Wrap" Text="{Binding MonthlyTitle}" IsVisible="{Binding ShowsMonthly}"/>
+                    <riskOverview:RiskMonthlySummary DataContext="{Binding Monthly}"
+                                                     IsVisible="{Binding $parent[UserControl].((vm:RiskExploreViewModel)DataContext).ShowsMonthly}"/>
+                    <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrMonthlyScopeHint}"
+                               IsVisible="{Binding !ShowsMonthly}"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

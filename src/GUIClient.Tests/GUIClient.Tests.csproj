@@ -36,6 +36,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\GUIClient\Tools\Track9\*.cs" LinkBase="Tools/Track9" />
+    <!-- The Cyber Risk Overview's pure half (M54, S40 §10.1, §12.4): the chart palette map, band glyphs, the headline
+         card's wording, the view gate, the top bar's rules and the API error text. ChartPalette.cs is the Avalonia
+         adapter that resolves the palette's tokens, so it stays out. -->
+    <Compile Include="..\GUIClient\Tools\RiskIndex\*.cs" Exclude="..\GUIClient\Tools\RiskIndex\ChartPalette.cs"
+             LinkBase="Tools/RiskIndex" />
+    <!-- Opening a record in another module (T255, S40 §10.3): the destination record, the module registry, the shell's
+         view enum they are keyed by, and the pure rules — who may open each module (the navigation bar's own rule), the
+         navigation decision and how a module finds the record. No Avalonia in any of them. -->
+    <Compile Include="..\GUIClient\Models\AvaliableViews.cs" LinkBase="Models" />
+    <Compile Include="..\GUIClient\Navigation\NavigationTarget.cs" LinkBase="Navigation" />
+    <Compile Include="..\GUIClient\Navigation\ISelectableModule.cs" LinkBase="Navigation" />
+    <Compile Include="..\GUIClient\Tools\Navigation\*.cs" LinkBase="Tools/Navigation" />
     <!-- The desktop mirror of the server's Admin role claim (the admin flag), which the Track 9 access rules and the
          device approval screen gate on. Pure: AuthenticatedUserInfo in, bool out. -->
     <Compile Include="..\GUIClient\Tools\AdminRoleClaim.cs" LinkBase="Tools" />

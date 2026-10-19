@@ -60,6 +60,7 @@ public sealed class RiskIndexException(int status, string code, string message,
 public static class RiskIndexErrors
 {
     public const string InShadow = "risk_index_in_shadow";
+    public const string NotPermitted = "not_permitted";
     public const string InvalidNode = "invalid_node";
     public const string OrgRequiresGlobalScope = "org_requires_global_scope";
     public const string NoSnapshot = "no_snapshot";
@@ -74,6 +75,7 @@ public static class RiskIndexErrors
     public const string InvalidSort = "invalid_sort";
     public const string InvalidPage = "invalid_page";
     public const string InvalidTab = "invalid_tab";
+    public const string InvalidMonths = "invalid_months";
     public const string InvalidPeriod = "invalid_period";
     public const string ChangesUnavailablePartial = "changes_unavailable_partial";
     public const string ObjectNotFound = "object_not_found";

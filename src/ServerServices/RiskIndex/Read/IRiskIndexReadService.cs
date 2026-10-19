@@ -46,6 +46,25 @@ public interface IRiskIndexReadService
     Task<RiskIndexInventoryDto> GetInventoryAsync(string? node, RiskIndexTabGroup? tab, DateOnly? date, RiskIndexCaller caller,
         CancellationToken ct = default);
 
+    /// <summary>
+    /// The monthly mean of the daily <c>C_k</c> of the node, or of the node ∩ an asset-class tab, over 6 or 12 months (S40
+    /// §5.5.1, §8.2; T253). Pre-computed nodes read their stored days (<c>risk_index_snapshots</c>, <c>risk_index_class_days</c>)
+    /// without touching the object rows; any other node is recomposed day by day under the derived budget.
+    /// </summary>
+    Task<RiskIndexMonthlySummaryDto> GetMonthlySummaryAsync(string? node, RiskIndexTabGroup? tab, int months, DateOnly? date,
+        RiskIndexCaller caller, CancellationToken ct = default);
+
+    /// <summary>The risk factors of the node ∩ an asset-class tab: volume and Euler points by dominant factor (S40 §5.5.1; T253).</summary>
+    Task<IReadOnlyList<RiskIndexRiskFactorDto>> GetRiskFactorsAsync(string? node, RiskIndexTabGroup? tab, DateOnly? date,
+        RiskIndexCaller caller, CancellationToken ct = default);
+
+    /// <summary>
+    /// The classes, sources, criticalities and environments present in the node (S40 §8.2 <c>GET /RiskIndex/Dimensions</c>;
+    /// T254), counted over the caller's visible objects only: what the Explore panel's "+ Filtro" offers.
+    /// </summary>
+    Task<RiskIndexDimensionsDto> GetDimensionsAsync(string? node, DateOnly? date, RiskIndexCaller caller,
+        CancellationToken ct = default);
+
     Task<RiskIndexChangesDto> GetChangesAsync(string? node, DateOnly? from, DateOnly? to, RiskIndexCaller caller,
         CancellationToken ct = default);
 
@@ -54,4 +73,10 @@ public interface IRiskIndexReadService
 
     Task<RiskIndexGovernanceIndicatorsDto> GetGovernanceIndicatorsAsync(string? node, DateOnly? date, RiskIndexCaller caller,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// The node's data quality (S40 §5.12, §8.2 <c>GET /RiskIndex/Quality</c>; T256): coverage and freshness as the overview,
+    /// the Unassigned and default-criticality fractions by weight, stale sources and the counts, over the visible objects.
+    /// </summary>
+    Task<RiskIndexQualityDto> GetQualityAsync(string? node, DateOnly? date, RiskIndexCaller caller, CancellationToken ct = default);
 }

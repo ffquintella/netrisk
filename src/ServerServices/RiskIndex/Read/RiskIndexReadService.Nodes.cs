@@ -62,8 +62,11 @@ public sealed partial class RiskIndexReadService
         switch (dimension)
         {
             case RiskIndexDimension.Unit:
+                // "Unassigned" has no entity: a null parent must not match the units that have none.
                 keys = day.Map.Ids.Where(id => UnitTypes.Contains(day.Map.DefinitionOf(id) ?? "") &&
-                                               (parent.IsRoot ? IsTopLevel(day, id) : day.Map.Tree.ParentOf(id) == parent.EntityId))
+                                               (parent.IsRoot
+                                                   ? IsTopLevel(day, id)
+                                                   : parent.EntityId is { } parentId && day.Map.Tree.ParentOf(id) == parentId))
                     .Order().Select(RiskIndexNodeKey.ForEntity).ToList();
                 if (parent.IsRoot) keys.Add(Unassigned());
                 break;

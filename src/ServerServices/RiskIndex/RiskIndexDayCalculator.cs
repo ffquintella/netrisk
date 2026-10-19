@@ -360,30 +360,14 @@ public sealed record RiskIndexComposeOptions(bool ClassDays = true, int? Sensiti
     public static readonly RiskIndexComposeOptions Replay = new(ClassDays: false, SensitivityCount: 0);
 }
 
-/// <summary>The asset-class tabs of the dashboard (S40 §5.5): which classes each holds and which categories it carries.</summary>
+/// <summary>The asset-class tabs of the dashboard (S40 §5.5): <see cref="RiskIndexTabMap"/>, the rule the desktop shares.</summary>
 public static class RiskIndexTabGroups
 {
-    public static readonly RiskIndexTabGroup[] All =
-    [
-        RiskIndexTabGroup.Devices, RiskIndexTabGroup.InternetFacing, RiskIndexTabGroup.Identities,
-        RiskIndexTabGroup.Applications, RiskIndexTabGroup.Clouds
-    ];
+    public static readonly RiskIndexTabGroup[] All = RiskIndexTabMap.All;
 
-    public static RiskIndexTabGroup Of(RiskIndexAssetClass assetClass) => assetClass switch
-    {
-        RiskIndexAssetClass.InternetFacing or RiskIndexAssetClass.ExternalDomain => RiskIndexTabGroup.InternetFacing,
-        RiskIndexAssetClass.Identity => RiskIndexTabGroup.Identities,
-        RiskIndexAssetClass.Application => RiskIndexTabGroup.Applications,
-        RiskIndexAssetClass.Cloud => RiskIndexTabGroup.Clouds,
-        _ => RiskIndexTabGroup.Devices // server, workstation, network, OT/IoT, unknown
-    };
+    public static RiskIndexTabGroup Of(RiskIndexAssetClass assetClass) => RiskIndexTabMap.Of(assetClass);
 
-    public static IReadOnlyList<RiskIndexCategory> Categories(RiskIndexTabGroup tab) => tab switch
-    {
-        RiskIndexTabGroup.Devices => [RiskIndexCategory.Exp, RiskIndexCategory.Ctl, RiskIndexCategory.Gov],
-        RiskIndexTabGroup.Applications => [RiskIndexCategory.Exp, RiskIndexCategory.Gov],
-        _ => [RiskIndexCategory.Exp]
-    };
+    public static IReadOnlyList<RiskIndexCategory> Categories(RiskIndexTabGroup tab) => RiskIndexTabMap.Categories(tab);
 }
 
 /// <summary>The index's service graph (S40 §9.2), called by the API and the job host when they wire the index in.</summary>

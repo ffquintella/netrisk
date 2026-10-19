@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="260"
+             x:DataType="vm:RiskCategoriesViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskCategoriesPanel">
+
+    <!-- S40 §5.4 (T253): the contributing categories. The meter is a Border.riskMeter with a
+         Border.riskMeterFill (§10.4: not LiveCharts), the band is text and glyph first, and a
+         category without a value keeps its line with "—" and the reason. -->
+    <Border Classes="riskPanel" IsVisible="{Binding HasRows}">
+        <StackPanel Spacing="2">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="sectionCaption" Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrTitle}"/>
+                <Border Classes="tooltip" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                    <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                </Border>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="50,210,44,130,150,110,60,*,64,32" Margin="0 0 0 2">
+                <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Classes="label-nm" Text="{Binding StrColCategory}"/>
+                <TextBlock Grid.Column="2" Grid.ColumnSpan="3" Classes="label-nm" Text="{Binding StrColValue}"/>
+                <TextBlock Grid.Column="5" Classes="label-nm" Text="{Binding StrColWeight}"/>
+                <TextBlock Grid.Column="6" Classes="label-nm" Text="{Binding StrColPoints}"/>
+                <TextBlock Grid.Column="7" Classes="label-nm" Text="{Binding StrColHeldBy}"/>
+                <TextBlock Grid.Column="8" Classes="label-nm" Text="{Binding StrColCoverage}"/>
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RiskCategoryRowViewModel">
+                        <StackPanel Classes="riskCategoryRow" Classes.dimmed="{Binding IsDimmed}">
+                            <Grid ColumnDefinitions="50,210,44,130,150,110,60,*,64,32" MinHeight="28">
+                                <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding Code}"/>
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"/>
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Classes="label-nm" Text="{Binding ValueText}"/>
+
+                                <Border Grid.Column="3" Classes="riskBand" IsVisible="{Binding HasBand}"
+                                        Classes.b1="{Binding IsBandStep1}" Classes.b2="{Binding IsBandStep2}"
+                                        Classes.b3="{Binding IsBandStep3}" Classes.b4="{Binding IsBandStep4}"
+                                        Classes.b5="{Binding IsBandStep5}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <material:MaterialIcon Classes="riskGlyph" Kind="{Binding BandGlyph}"/>
+                                        <TextBlock Classes="riskBandText" Text="{Binding BandLabel}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="4" Classes="riskMeter" Width="{Binding MeterWidth}" IsVisible="{Binding IsAvailable}">
+                                    <Border Classes="riskMeterFill" Width="{Binding MeterFill}"/>
+                                </Border>
+
+                                <!-- Unavailable or not applicable (§5.4): the reason where the band and meter would be. -->
+                                <StackPanel Grid.Column="3" Grid.ColumnSpan="2" Orientation="Horizontal" IsVisible="{Binding HasState}">
+                                    <material:MaterialIcon Classes="riskGlyph" Kind="{Binding StateGlyph}"/>
+                                    <TextBlock Classes="hint" Margin="0" VerticalAlignment="Center" TextWrapping="Wrap"
+                                               Text="{Binding StateText}"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="5" VerticalAlignment="Center" Text="{Binding WeightText}"/>
+                                <TextBlock Grid.Column="6" VerticalAlignment="Center" Text="{Binding PointsText}"/>
+                                <TextBlock Grid.Column="7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           Text="{Binding HeldByText}" ToolTip.Tip="{Binding HeldByHint}"/>
+                                <TextBlock Grid.Column="8" VerticalAlignment="Center" Text="{Binding CoverageText}"
+                                           ToolTip.Tip="{Binding CoverageHint}"/>
+                                <Button Grid.Column="9" Classes="detailButton" VerticalAlignment="Center"
+                                        Command="{Binding Open}" CommandParameter="{Binding Category}"
+                                        IsVisible="{Binding CanOpen}"
+                                        ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskCategoriesViewModel)DataContext).StrOpenHint}">
+                                    <material:MaterialIcon Kind="ChevronRight"/>
+                                </Button>
+                            </Grid>
+
+                            <!-- REG's seals (§5.4, S39 §6.6 item 2). -->
+                            <ItemsControl Margin="50 0 0 4" ItemsSource="{Binding Seals}" IsVisible="{Binding HasSeals}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="sys:String">
+                                        <Border Classes="riskSeal" Margin="0 0 8 0">
+                                            <TextBlock Text="{Binding}"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="hint" Margin="0 4 0 0" Text="{Binding StrRoundingNote}"/>
+            <TextBlock Classes="hint" Margin="0" Text="{Binding StrTerNote}" IsVisible="{Binding ShowsTerNote}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

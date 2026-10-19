@@ -7,7 +7,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using DAL.Entities;
 using ClientServices.Interfaces;
+using GUIClient.Models;
 using GUIClient.Tools;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.ViewModels.Assessments;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
@@ -21,7 +24,7 @@ using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;
 
-public class AssessmentViewModel: ViewModelBase
+public class AssessmentViewModel: ViewModelBase, ISelectableModule
 {
     #region LANGUAGES
     public string StrAssessments { get; }
@@ -42,6 +45,9 @@ public class AssessmentViewModel: ViewModelBase
     #region PROPERTIES
 
     private bool _isInitialized = false;
+
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
 
     private IAssessmentsService _assessmentsService;
     private readonly IDialogService _dialogService = GetService<IDialogService>();
@@ -187,8 +193,33 @@ public class AssessmentViewModel: ViewModelBase
     #endregion
 
     #region CONSTRUCTOR
+    /// <summary>
+    /// An assessment opened from another module (S40 §10.3, IX-7): from the loaded list, else the service's; one the user
+    /// cannot see or that does not exist is refused with a toast and nothing selected.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        var assessment = await RecordNavigation.FindAfterLoadAsync(_firstLoad, () => Assessments, a => a.Id == id, async () =>
+        {
+            var all = await _assessmentsService.GetAssessmentsAsync();
+            if (all is null) return null;
+            Assessments = new ObservableCollection<Assessment>(all);
+            _isInitialized = true;
+            return all;
+        }, ex => Logger.Warning("Assessment {Id} could not be opened: {Message}", id, ex.Message));
+        if (assessment is null)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        SelectedAssessment = assessment;
+        return true;
+    }
+
     public AssessmentViewModel() : base()
     {
+        RegisterSelectableModule(AvaliableViews.Assessment, this);
         
         _assessments = new ObservableCollection<Assessment>();
         _assessmentsService = GetService<IAssessmentsService>();
@@ -214,7 +245,7 @@ public class AssessmentViewModel: ViewModelBase
         {
             if (AuthenticationService.AuthenticatedUserInfo == null) return;
             if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments"))
-                _= InitializeAsync();
+                _firstLoad = InitializeAsync();
         };
     }
     #endregion

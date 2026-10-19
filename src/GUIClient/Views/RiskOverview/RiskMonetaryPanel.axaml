@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="140"
+             x:DataType="vm:RiskMonetaryPanelViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskMonetaryPanel">
+
+    <!-- S40 §5.10 (T256), interim mode: outside the index. The server has no monetary read yet,
+         so each line is the spec's unavailable state — no figure is ever made up here. -->
+    <StackPanel Spacing="4" IsVisible="{Binding IsActive}">
+        <Grid ColumnDefinitions="240,*" MinHeight="24">
+            <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrResidualLabel}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrResidualState}"/>
+            </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="240,*" MinHeight="24">
+            <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrInherentLabel}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrInherentState}"/>
+            </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="240,*" MinHeight="24">
+            <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrP95Label}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrP95State}"/>
+            </StackPanel>
+        </Grid>
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrNote}"/>
+    </StackPanel>
+</UserControl>

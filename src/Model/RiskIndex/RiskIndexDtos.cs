@@ -198,9 +198,60 @@ public record RiskIndexSourceVisibilityDto(string SourceKey, string Availability
 
 public record RiskIndexStateCountsDto(int Assessed, int Stale, int Presumed, int NotAssessed);
 
+/// <summary>
+/// The monthly category summary (S40 §5.5.1, §8.2 <c>GET /RiskIndex/MonthlySummary</c>; M54, T253): the mean of the daily
+/// <c>C_k</c> per month, one series per applicable category in the fixed order REG, EXP, AME, CTL, GOV, TER.
+/// </summary>
+public record RiskIndexMonthlySummaryDto(RiskIndexTabGroup? Tab, IReadOnlyList<RiskIndexCategory> SeriesOrder,
+    IReadOnlyList<RiskIndexMonthDto> Months, RiskIndexProvenance Provenance);
+
+/// <summary>
+/// One month (<c>yyyy-MM</c>). <see cref="MeanByCategory"/> has a key per series; null means no day of the month had a
+/// value for it — no bar, "—" in the table. <see cref="IsPartial"/> marks the month the snapshot date falls in before its
+/// last day; <see cref="HasProfileChange"/> a month whose days were computed under more than one profile.
+/// </summary>
+public record RiskIndexMonthDto(string YearMonth, bool IsPartial, bool HasProfileChange,
+    IReadOnlyDictionary<RiskIndexCategory, double?> MeanByCategory);
+
+/// <summary>
+/// One risk factor of an asset-class tab (S40 §5.5.1, §8.2 <c>GET /RiskIndex/RiskFactors</c>; T253): how many objects it
+/// dominates (volume, not risk) and the Euler points they carry. <see cref="ObjectFilter"/> is the <c>filters</c> term of
+/// <c>GET /RiskIndex/Objects</c> that lists them.
+/// </summary>
+public record RiskIndexRiskFactorDto(string FactorKey, string LabelKey, int Count, int Points, string ObjectFilter);
+
+/// <summary>
+/// The values present in a node for each filter kind (S40 §8.2 <c>GET /RiskIndex/Dimensions</c>; M54, T254): what the
+/// Explore panel's "+ Filtro" offers. Presence and counts are over the objects the caller can see only (S40 §11.8); a
+/// value with no visible object is not listed. <see cref="AssetClasses"/> holds the tab groups, then the single classes.
+/// </summary>
+public record RiskIndexDimensionsDto(IReadOnlyList<RiskIndexDimensionValueDto> AssetClasses,
+    IReadOnlyList<RiskIndexDimensionValueDto> Sources, IReadOnlyList<RiskIndexDimensionValueDto> Criticalities,
+    IReadOnlyList<RiskIndexDimensionValueDto> Environments);
+
+/// <summary>
+/// One value: its node-key <see cref="Term"/> (<c>c:server</c>, <c>s:V1-DEV</c>, <c>k:5</c>, <c>a:prod</c>), the resource key
+/// that names it, the deduplicated visible objects carrying it and its <see cref="Availability"/> (<c>present</c>).
+/// </summary>
+public record RiskIndexDimensionValueDto(string Term, string LabelKey, int VisibleObjects, string Availability);
+
 public record RiskIndexGovernanceIndicatorsDto(int AcceptancesExpiringSoon, int ExpiryWindowDays, int SegregationOverrides90d,
     double? CampaignCompletion, double? MeanDaysToDecide, int OverdueCampaigns, double? SlaCompliance,
     string FlagsStateKey, string GateBStateKey);
+
+/// <summary>
+/// A node's data quality (S40 §5.12, §8.2 <c>GET /RiskIndex/Quality</c>; M54, T256) over the caller's visible objects;
+/// fractions are by weight. A null count is not measured at this node: the tree counts exist at the organization only,
+/// and the snapshot does not store SSC pseudo-hosts nor hosts that left the inventory with a bad reading yet.
+/// </summary>
+public record RiskIndexQualityDto(double Coverage, double Freshness, double Quality, string QualityBandKey,
+    double UnassignedWeightFraction, bool UnassignedWarning, double DefaultCriticalityWeightFraction,
+    IReadOnlyList<RiskIndexStaleSourceDto> StaleSources, int PresumedCritical, int? DivergentLinks, int? OrphanApplications,
+    int? SscPseudoHosts, int? ExitedWithBadReading, int? FindingStatusDisagreements, int ResidualAboveInherent,
+    string EvidenceConfidenceStateKey);
+
+/// <summary>An enabled source none of whose readings in the node is current (<c>v &lt; 1</c>), with its freshest reading.</summary>
+public record RiskIndexStaleSourceDto(string SourceKey, DateTime? LastReadingUtc);
 
 // ---------- profiles (§8.4) ----------
 

@@ -234,6 +234,13 @@ namespace GUIClient.ViewModels
         
 
         
+        /// <summary>
+        /// Registers a module a record can be opened in (S40 §10.3). A host without the registry — design time, a test
+        /// container — skips it; navigation then opens the module without selecting.
+        /// </summary>
+        protected static void RegisterSelectableModule(GUIClient.Models.AvaliableViews view, GUIClient.Navigation.ISelectableModule module) =>
+            Program.ServiceProvider?.GetService<GUIClient.Navigation.SelectableModules>()?.Register(view, module);
+
         protected static T GetService<T>() where T : notnull
         {
             return Program.ServiceProvider.GetRequiredService<T>();

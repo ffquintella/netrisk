@@ -4944,4 +4944,1801 @@ Salvar mesmo assim?</value>
     <data name="EntityBooleanNotSetMSG" xml:space="preserve">
         <value>Não definido: nada é salvo para este campo até você escolher um valor.</value>
     </data>
+    <data name="NavRiskOverview" xml:space="preserve">
+        <value>Visão Geral de Risco Cibernético</value>
+    </data>
+    <data name="RiskOverviewTitle" xml:space="preserve">
+        <value>Visão Geral de Risco Cibernético</value>
+    </data>
+    <data name="RiskOverviewOrganization" xml:space="preserve">
+        <value>Organização</value>
+    </data>
+    <data name="RiskOverviewMyScope" xml:space="preserve">
+        <value>Meu escopo</value>
+    </data>
+    <data name="RiskOverviewSnapshot" xml:space="preserve">
+        <value>Snapshot</value>
+    </data>
+    <data name="RiskOverviewComputedAtFMT" xml:space="preserve">
+        <value>calculado às {0} UTC</value>
+    </data>
+    <data name="RiskOverviewProfileChipFMT" xml:space="preserve">
+        <value>Perfil v{0} · {1}</value>
+    </data>
+    <data name="RiskOverviewProfileChipHint" xml:space="preserve">
+        <value>Mostrar o perfil deste snapshot, seus parâmetros e as demais versões</value>
+    </data>
+    <data name="RiskOverviewPilotChip" xml:space="preserve">
+        <value>Piloto em sombra — visível só ao comitê (risk_index_approve) e aos administradores</value>
+    </data>
+    <data name="RiskOverviewHistoryChipFMT" xml:space="preserve">
+        <value>Histórico: {0}</value>
+    </data>
+    <data name="RiskOverviewBackToLatest" xml:space="preserve">
+        <value>Voltar ao último</value>
+    </data>
+    <data name="RiskOverviewRefresh" xml:space="preserve">
+        <value>Atualizar</value>
+    </data>
+    <data name="RiskOverviewLoading" xml:space="preserve">
+        <value>Carregando…</value>
+    </data>
+    <data name="RiskOverviewRetry" xml:space="preserve">
+        <value>Tentar novamente</value>
+    </data>
+    <data name="RiskOverviewLoadError" xml:space="preserve">
+        <value>Não foi possível carregar a Visão Geral de Risco Cibernético.</value>
+    </data>
+    <data name="RiskOverviewDateWithoutSnapshot" xml:space="preserve">
+        <value>Não há snapshot nesse dia.</value>
+    </data>
+    <data name="RiskOverviewHeadlineTitle" xml:space="preserve">
+        <value>ÍNDICE CONSOLIDADO DE RISCO</value>
+    </data>
+    <data name="RiskOverviewHeadlineHint" xml:space="preserve">
+        <value>O Índice Consolidado de Risco (ICR) resume registro, exposição, ameaças, controles e governança numa escala de 0 a 100. O servidor o calcula uma vez por dia às 05:00 UTC; esta tela apenas o lê.</value>
+    </data>
+    <data name="RiskOverviewHeadlineScale" xml:space="preserve">
+        <value>/100</value>
+    </data>
+    <data name="RiskOverviewQualityLabel" xml:space="preserve">
+        <value>Qualidade</value>
+    </data>
+    <data name="RiskQuality_high" xml:space="preserve">
+        <value>Alta</value>
+    </data>
+    <data name="RiskQuality_medium" xml:space="preserve">
+        <value>Média</value>
+    </data>
+    <data name="RiskQuality_low" xml:space="preserve">
+        <value>Baixa</value>
+    </data>
+    <data name="RiskOverviewCoverageFMT" xml:space="preserve">
+        <value>Cobertura {0}%</value>
+    </data>
+    <data name="RiskOverviewFreshnessFMT" xml:space="preserve">
+        <value>Frescor {0}%</value>
+    </data>
+    <data name="RiskOverviewDeltaWorseFMT" xml:space="preserve">
+        <value>{0} (pior) em 7 dias</value>
+    </data>
+    <data name="RiskOverviewDeltaBetterFMT" xml:space="preserve">
+        <value>{0} (melhor) em 7 dias</value>
+    </data>
+    <data name="RiskOverviewDeltaStableFMT" xml:space="preserve">
+        <value>estável em 7 dias (variação menor que {0})</value>
+    </data>
+    <data name="RiskOverviewDeltaStableNoThreshold" xml:space="preserve">
+        <value>estável em 7 dias (variação abaixo do limiar da seta)</value>
+    </data>
+    <data name="RiskOverviewDeltaDiscontinuityFMT" xml:space="preserve">
+        <value>sem comparação: descontinuidade em {0}</value>
+    </data>
+    <data name="RiskOverviewDeltaMissingBaseline" xml:space="preserve">
+        <value>sem comparação: sem snapshot entre t−10 e t−7</value>
+    </data>
+    <data name="RiskOverviewIntervalOnCardFMT" xml:space="preserve">
+        <value>Intervalo [{0}–{1}]</value>
+    </data>
+    <data name="RiskOverviewIntervalInDetail" xml:space="preserve">
+        <value>Intervalo de ignorância: no detalhe</value>
+    </data>
+    <data name="RiskOverviewBranchMean" xml:space="preserve">
+        <value>Manchete pela média ponderada (piso τ_G inativo)</value>
+    </data>
+    <data name="RiskOverviewBranchHeldByFMT" xml:space="preserve">
+        <value>Manchete sustentada por {0} (piso τ_G × C_k)</value>
+    </data>
+    <data name="RiskOverviewFloorReasonFMT" xml:space="preserve">
+        <value>Portão {0} — {1}</value>
+    </data>
+    <data name="RiskOverviewFloorFlagFMT" xml:space="preserve">
+        <value>(flag {0})</value>
+    </data>
+    <data name="RiskOverviewUnflooredFMT" xml:space="preserve">
+        <value>piso: {0} · sem piso {1} ({2})</value>
+    </data>
+    <data name="RiskOverviewSeals" xml:space="preserve">
+        <value>Selos</value>
+    </data>
+    <data name="RiskOverviewChips" xml:space="preserve">
+        <value>Chips</value>
+    </data>
+    <data name="RiskOverviewNoSeals" xml:space="preserve">
+        <value>Nenhum selo neste escopo</value>
+    </data>
+    <data name="RiskOverviewNoChips" xml:space="preserve">
+        <value>— (nenhum chip de evidência)</value>
+    </data>
+    <data name="RiskOverviewListAnd" xml:space="preserve">
+        <value> e </value>
+    </data>
+    <data name="RiskSeal_scenarios_above_appetiteMSG" xml:space="preserve">
+        <value>{0} cenário(s) acima do teto de apetite sem aceite válido</value>
+    </data>
+    <data name="RiskSeal_scenarios_accepted_above_appetiteMSG" xml:space="preserve">
+        <value>{0} cenário(s) aceito(s) acima do teto de apetite</value>
+    </data>
+    <data name="RiskSeal_acceptances_expiringMSG" xml:space="preserve">
+        <value>{0} aceite(s) a vencer</value>
+    </data>
+    <data name="RiskSeal_appetite_not_configuredMSG" xml:space="preserve">
+        <value>Teto de apetite não configurado</value>
+    </data>
+    <data name="RiskChip_no_critical_processMSG" xml:space="preserve">
+        <value>Nenhum processo declarado crítico</value>
+    </data>
+    <data name="RiskChip_unassigned_above_thresholdMSG" xml:space="preserve">
+        <value>Não atribuído acima do limiar</value>
+    </data>
+    <data name="RiskChip_partial_visibilityMSG" xml:space="preserve">
+        <value>Parcial — visibilidade restrita</value>
+    </data>
+    <data name="RiskChip_category_unavailableMSG" xml:space="preserve">
+        <value>{0} indisponível</value>
+    </data>
+    <data name="RiskChip_categories_unavailableMSG" xml:space="preserve">
+        <value>{0} indisponíveis</value>
+    </data>
+    <data name="RiskOverviewA11yFMT" xml:space="preserve">
+        <value>Índice consolidado de risco {0} de 100, faixa {1}{2}, cobertura {3} %</value>
+    </data>
+    <data name="RiskOverviewA11yIndicativeFMT" xml:space="preserve">
+        <value>Índice consolidado de risco indicativo {0} de 100, não classificado, cobertura {1} %</value>
+    </data>
+    <data name="RiskOverviewA11yNoData" xml:space="preserve">
+        <value>Índice consolidado de risco: sem dados</value>
+    </data>
+    <data name="RiskOverviewA11yWorseFMT" xml:space="preserve">
+        <value>piorou {0} pontos em 7 dias</value>
+    </data>
+    <data name="RiskOverviewA11yBetterFMT" xml:space="preserve">
+        <value>melhorou {0} pontos em 7 dias</value>
+    </data>
+    <data name="RiskOverviewA11yStable" xml:space="preserve">
+        <value>estável em 7 dias</value>
+    </data>
+    <data name="RiskProvenance_Official" xml:space="preserve">
+        <value>Oficial</value>
+    </data>
+    <data name="RiskProvenance_OfficialDerived" xml:space="preserve">
+        <value>Oficial derivado</value>
+    </data>
+    <data name="RiskProvenance_PartialRestricted" xml:space="preserve">
+        <value>Parcial — visibilidade restrita</value>
+    </data>
+    <data name="RiskProvenance_UnofficialPreview" xml:space="preserve">
+        <value>Prévia não oficial</value>
+    </data>
+    <data name="RiskMode_Interim" xml:space="preserve">
+        <value>Interino</value>
+    </data>
+    <data name="RiskMode_Full" xml:space="preserve">
+        <value>Pleno</value>
+    </data>
+    <data name="RiskMode_InterimHint" xml:space="preserve">
+        <value>Modo interino: o índice usa os dados disponíveis hoje; as entradas do modo pleno (piso do Portão A, estatística de cauda, KRIs) aparecem como não disponíveis.</value>
+    </data>
+    <data name="RiskMode_FullHint" xml:space="preserve">
+        <value>Modo pleno: o índice aplica também o piso do Portão A e as entradas do modo pleno da metodologia.</value>
+    </data>
+    <data name="RiskState_Shadow" xml:space="preserve">
+        <value>O índice está em piloto em sombra e ainda não foi publicado.</value>
+    </data>
+    <data name="RiskState_NoApprovedProfile" xml:space="preserve">
+        <value>Nenhum perfil aprovado: o índice ainda não é calculado.</value>
+    </data>
+    <data name="RiskState_AwaitingFirstSnapshot" xml:space="preserve">
+        <value>O primeiro snapshot será gravado às 05:00 UTC.</value>
+    </data>
+    <data name="RiskState_PublicationSuspendedFMT" xml:space="preserve">
+        <value>Publicação suspensa em {0} (perfil v{1} aposentado)</value>
+    </data>
+    <data name="RiskState_NoData" xml:space="preserve">
+        <value>Sem dados: nenhuma categoria tem fonte habilitada e inventário neste escopo</value>
+    </data>
+    <data name="RiskState_IndicativeFMT" xml:space="preserve">
+        <value>ICR indicativo: {0} · intervalo [{1}–{2}]</value>
+    </data>
+    <data name="RiskState_IndicativeReasonFMT" xml:space="preserve">
+        <value>cobertura de {0}%, abaixo de {1}%: o valor não é classificado</value>
+    </data>
+    <data name="RiskState_IndicativeReasonNoThresholdFMT" xml:space="preserve">
+        <value>cobertura de {0}%, abaixo do limiar indicativo: o valor não é classificado</value>
+    </data>
+    <data name="RiskState_PartialBanner" xml:space="preserve">
+        <value>Parcial — visibilidade restrita: o valor considera só os objetos do seu escopo e não é comparável ao valor oficial do nó</value>
+    </data>
+    <data name="RiskState_PartialCauseEav" xml:space="preserve">
+        <value>Este nó alcança um processo ou aplicação só por propriedade EAV. Tornar o processo filho da unidade na árvore de entidades torna o valor oficial.</value>
+    </data>
+    <data name="RiskState_PartialCauseEither" xml:space="preserve">
+        <value>Ou um processo ou aplicação deste nó está ligado só por propriedade EAV, ou objetos atribuídos a ele têm entidade de escopo fora da sua subárvore. Tornar o processo filho da unidade na árvore de entidades resolve o primeiro caso.</value>
+    </data>
+    <data name="RiskState_MyScopeNoHeadline" xml:space="preserve">
+        <value>Seu escopo cobre várias entidades, e a manchete da organização exige escopo global. Escolha uma entidade:</value>
+    </data>
+    <data name="RiskProfileInfoTitle" xml:space="preserve">
+        <value>Perfis do índice</value>
+    </data>
+    <data name="RiskProfileInfoCurrent" xml:space="preserve">
+        <value>Perfil do snapshot exibido</value>
+    </data>
+    <data name="RiskProfileVersion" xml:space="preserve">
+        <value>Versão</value>
+    </data>
+    <data name="RiskProfileName" xml:space="preserve">
+        <value>Nome</value>
+    </data>
+    <data name="RiskProfilePreset" xml:space="preserve">
+        <value>Preset</value>
+    </data>
+    <data name="RiskProfileStatus" xml:space="preserve">
+        <value>Situação</value>
+    </data>
+    <data name="RiskProfileMode" xml:space="preserve">
+        <value>Modo</value>
+    </data>
+    <data name="RiskProfileEffectiveFrom" xml:space="preserve">
+        <value>Vigente desde</value>
+    </data>
+    <data name="RiskProfileRetiredAt" xml:space="preserve">
+        <value>Aposentado em</value>
+    </data>
+    <data name="RiskProfileApprovedBy" xml:space="preserve">
+        <value>Aprovado por</value>
+    </data>
+    <data name="RiskProfileCommitteeRef" xml:space="preserve">
+        <value>Referência do Comitê de Risco de TI</value>
+    </data>
+    <data name="RiskProfileCreatedBy" xml:space="preserve">
+        <value>Criado por</value>
+    </data>
+    <data name="RiskProfileRebaselineNote" xml:space="preserve">
+        <value>Esta versão é um rebaseline: sua série não é comparada à da versão anterior.</value>
+    </data>
+    <data name="RiskProfileParameters" xml:space="preserve">
+        <value>Parâmetros</value>
+    </data>
+    <data name="RiskProfileParameterGroup" xml:space="preserve">
+        <value>Grupo</value>
+    </data>
+    <data name="RiskProfileParameterKey" xml:space="preserve">
+        <value>Parâmetro</value>
+    </data>
+    <data name="RiskProfileParameterValue" xml:space="preserve">
+        <value>Valor</value>
+    </data>
+    <data name="RiskProfileOtherVersions" xml:space="preserve">
+        <value>Outras versões</value>
+    </data>
+    <data name="RiskProfileCompareHint" xml:space="preserve">
+        <value>Selecione uma versão para ver os parâmetros que diferem deste.</value>
+    </data>
+    <data name="RiskProfileDiffFMT" xml:space="preserve">
+        <value>Parâmetros que diferem: v{0} → v{1}</value>
+    </data>
+    <data name="RiskProfileNoDifferences" xml:space="preserve">
+        <value>Nenhum parâmetro difere.</value>
+    </data>
+    <data name="RiskProfileListItemFMT" xml:space="preserve">
+        <value>v{0} · {1} · {2}</value>
+    </data>
+    <data name="RiskProfileStatus_Draft" xml:space="preserve">
+        <value>Rascunho</value>
+    </data>
+    <data name="RiskProfileStatus_PendingApproval" xml:space="preserve">
+        <value>Em aprovação</value>
+    </data>
+    <data name="RiskProfileStatus_Active" xml:space="preserve">
+        <value>Vigente</value>
+    </data>
+    <data name="RiskProfileStatus_Retired" xml:space="preserve">
+        <value>Aposentado</value>
+    </data>
+    <data name="RiskProfileStatus_Rejected" xml:space="preserve">
+        <value>Rejeitado</value>
+    </data>
+    <data name="RiskApi_risk_index_in_shadowMSG" xml:space="preserve">
+        <value>O índice está em piloto em sombra: só o comitê e os administradores o veem.</value>
+    </data>
+    <data name="RiskApi_org_requires_global_scopeMSG" xml:space="preserve">
+        <value>A manchete da organização exige escopo global.</value>
+    </data>
+    <data name="RiskApi_no_snapshotMSG" xml:space="preserve">
+        <value>Não há snapshot no dia pedido.</value>
+    </data>
+    <data name="RiskApi_node_not_foundMSG" xml:space="preserve">
+        <value>O nó não existe ou não tem snapshot neste dia.</value>
+    </data>
+    <data name="RiskApi_invalid_nodeMSG" xml:space="preserve">
+        <value>A chave do nó não é válida.</value>
+    </data>
+    <data name="RiskApi_snapshot_membership_missingMSG" xml:space="preserve">
+        <value>O snapshot deste dia não tem o registro de membros do nó, então ele não pode ser lido como oficial.</value>
+    </data>
+    <data name="RiskApi_derived_computation_busyMSG" xml:space="preserve">
+        <value>O servidor está ocupado calculando outras visões. Tente novamente em alguns segundos.</value>
+    </data>
+    <data name="RiskApi_derived_computation_timeoutMSG" xml:space="preserve">
+        <value>O cálculo desta visão demorou demais. Tente novamente ou escolha um escopo menor.</value>
+    </data>
+    <data name="RiskApi_invalid_periodMSG" xml:space="preserve">
+        <value>O período não é válido: no máximo 30 dias, com o início antes do fim.</value>
+    </data>
+    <data name="RiskApi_profile_not_foundMSG" xml:space="preserve">
+        <value>O perfil não existe.</value>
+    </data>
+    <data name="RiskProfileDiffSelected" xml:space="preserve">
+        <value>Versão selecionada</value>
+    </data>
+    <data name="RiskProfileDiffThis" xml:space="preserve">
+        <value>Este perfil</value>
+    </data>
+    <data name="RiskOverviewViewAsTable" xml:space="preserve">
+        <value>Ver como tabela</value>
+    </data>
+    <data name="RiskOverviewViewAsChart" xml:space="preserve">
+        <value>Ver como gráfico</value>
+    </data>
+    <data name="RiskTrendTitle" xml:space="preserve">
+        <value>Tendência</value>
+    </data>
+    <data name="RiskTrendHelp" xml:space="preserve">
+        <value>ICR* é o valor diário sem piso (S39 §4.4). A linha tracejada é a tendência (EWMA, S39 §9.3), que reinicia em todo marcador de descontinuidade. As áreas são as faixas do perfil vigente em cada trecho; o triângulo marca uma descontinuidade, o círculo vazio um dia sem snapshot, o quadrado vazio um dia indicativo e o losango vazio uma anotação de fornecedor. Clique em um dia para ver o painel como estava nele.</value>
+    </data>
+    <data name="RiskTrendWindow" xml:space="preserve">
+        <value>Janela</value>
+    </data>
+    <data name="RiskTrendWindowFMT" xml:space="preserve">
+        <value>{0} dias</value>
+    </data>
+    <data name="RiskTrendWindowPrecomputedOnly" xml:space="preserve">
+        <value>Disponível só para nós pré-calculados</value>
+    </data>
+    <data name="RiskTrendSeries" xml:space="preserve">
+        <value>Série</value>
+    </data>
+    <data name="RiskTrendSeriesIcr" xml:space="preserve">
+        <value>ICR</value>
+    </data>
+    <data name="RiskTrendPartialUnavailable" xml:space="preserve">
+        <value>Visão parcial — visibilidade restrita: não há tendência, porque a série exige todo o conjunto de objetos do nó.</value>
+    </data>
+    <data name="RiskTrendNoPoints" xml:space="preserve">
+        <value>Nenhum snapshot nesta janela.</value>
+    </data>
+    <data name="RiskTrendLegendLine" xml:space="preserve">
+        <value>ICR* diário</value>
+    </data>
+    <data name="RiskTrendLegendEwma" xml:space="preserve">
+        <value>Tendência (EWMA)</value>
+    </data>
+    <data name="RiskTrendLegendMarker" xml:space="preserve">
+        <value>descontinuidade</value>
+    </data>
+    <data name="RiskTrendLegendAnnotation" xml:space="preserve">
+        <value>anotação de fornecedor</value>
+    </data>
+    <data name="RiskTrendLegendGap" xml:space="preserve">
+        <value>lacuna</value>
+    </data>
+    <data name="RiskTrendLegendIndicative" xml:space="preserve">
+        <value>indicativo</value>
+    </data>
+    <data name="RiskTrendColDate" xml:space="preserve">
+        <value>Data</value>
+    </data>
+    <data name="RiskTrendColUnfloored" xml:space="preserve">
+        <value>ICR*</value>
+    </data>
+    <data name="RiskTrendColFloored" xml:space="preserve">
+        <value>ICR</value>
+    </data>
+    <data name="RiskTrendColEwma" xml:space="preserve">
+        <value>EWMA</value>
+    </data>
+    <data name="RiskTrendColDelta" xml:space="preserve">
+        <value>Δ</value>
+    </data>
+    <data name="RiskTrendColState" xml:space="preserve">
+        <value>Estado de exibição</value>
+    </data>
+    <data name="RiskTrendColInterval" xml:space="preserve">
+        <value>Intervalo</value>
+    </data>
+    <data name="RiskTrendColMarker" xml:space="preserve">
+        <value>Marcador</value>
+    </data>
+    <data name="RiskTrendColGap" xml:space="preserve">
+        <value>Lacuna</value>
+    </data>
+    <data name="RiskTrendBandRangeFMT" xml:space="preserve">
+        <value>{0} {1}–{2}</value>
+    </data>
+    <data name="RiskTrendBandTopFMT" xml:space="preserve">
+        <value>{0} ≥ {1}</value>
+    </data>
+    <data name="RiskTrendFlooredFMT" xml:space="preserve">
+        <value>ICR com piso: {0}</value>
+    </data>
+    <data name="RiskTrendDeltaFMT" xml:space="preserve">
+        <value>Δ {0} em relação ao dia anterior</value>
+    </data>
+    <data name="RiskTrendGapHint" xml:space="preserve">
+        <value>lacuna: sem snapshot neste dia</value>
+    </data>
+    <data name="RiskTrendIndicative" xml:space="preserve">
+        <value>indicativo, sem faixa</value>
+    </data>
+    <data name="RiskTrendUnavailableIntervalFMT" xml:space="preserve">
+        <value>{0}: {1} indisponíveis</value>
+    </data>
+    <data name="RiskTrendFloorLabel" xml:space="preserve">
+        <value>piso: Portão A</value>
+    </data>
+    <data name="RiskTrendOverlayFMT" xml:space="preserve">
+        <value>v{0} recalculado</value>
+    </data>
+    <data name="RiskTrendOverlayPartial" xml:space="preserve">
+        <value>(parcial)</value>
+    </data>
+    <data name="RiskTrendState_Point" xml:space="preserve">
+        <value>Ponto</value>
+    </data>
+    <data name="RiskTrendState_PointWithInterval" xml:space="preserve">
+        <value>Ponto com intervalo</value>
+    </data>
+    <data name="RiskTrendState_Indicative" xml:space="preserve">
+        <value>Indicativo</value>
+    </data>
+    <data name="RiskTrendState_NoData" xml:space="preserve">
+        <value>Sem dados</value>
+    </data>
+    <data name="RiskTrendState_Gap" xml:space="preserve">
+        <value>Lacuna (valor repetido)</value>
+    </data>
+    <data name="RiskMarker_ProfileFMT" xml:space="preserve">
+        <value>Perfil v{0} → v{1} (rebaseline)</value>
+    </data>
+    <data name="RiskMarker_Profile" xml:space="preserve">
+        <value>Perfil alterado</value>
+    </data>
+    <data name="RiskMarker_Mode" xml:space="preserve">
+        <value>Modo alterado</value>
+    </data>
+    <data name="RiskMarker_Appetite" xml:space="preserve">
+        <value>Teto de apetite alterado</value>
+    </data>
+    <data name="RiskMarker_EntityMap" xml:space="preserve">
+        <value>Mapa de entidades reestruturado</value>
+    </data>
+    <data name="RiskMarker_ExternalInput" xml:space="preserve">
+        <value>Insumo externo alterado</value>
+    </data>
+    <data name="RiskMarker_VersionDeltaFMT" xml:space="preserve">
+        <value>Δ da versão {0}</value>
+    </data>
+    <data name="RiskMarker_Restart" xml:space="preserve">
+        <value>seta e EWMA reiniciam</value>
+    </data>
+    <data name="RiskAnnotation_VendorModel" xml:space="preserve">
+        <value>Modelo do fornecedor</value>
+    </data>
+    <data name="RiskAnnotation_VendorRecalibration" xml:space="preserve">
+        <value>Recalibração do fornecedor</value>
+    </data>
+    <data name="RiskAnnotation_VendorBreachPenalty" xml:space="preserve">
+        <value>Penalidade de violação do fornecedor</value>
+    </data>
+    <data name="RiskAnnotation_Note" xml:space="preserve">
+        <value>Nota</value>
+    </data>
+    <data name="RiskCategoriesTitle" xml:space="preserve">
+        <value>Categorias contribuintes</value>
+    </data>
+    <data name="RiskCategoriesHelp" xml:space="preserve">
+        <value>O valor (C_k, 0–100) e a faixa de cada categoria, o peso configurado (e o efetivo quando uma categoria está indisponível), os pontos na manchete pela alocação de Euler, o objeto que a sustenta (ramo do piso) ou a média, e a cobertura (S39 §4.3–§4.8).</value>
+    </data>
+    <data name="RiskCategoriesColCategory" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="RiskCategoriesColValue" xml:space="preserve">
+        <value>Valor</value>
+    </data>
+    <data name="RiskCategoriesColWeight" xml:space="preserve">
+        <value>Peso</value>
+    </data>
+    <data name="RiskCategoriesColPoints" xml:space="preserve">
+        <value>Pontos</value>
+    </data>
+    <data name="RiskCategoriesColHeldBy" xml:space="preserve">
+        <value>Sustentado por</value>
+    </data>
+    <data name="RiskCategoriesColCoverage" xml:space="preserve">
+        <value>Cob.</value>
+    </data>
+    <data name="RiskCategoriesRoundingNote" xml:space="preserve">
+        <value>Pontos arredondados: a soma pode diferir do valor exibido em até ±2.</value>
+    </data>
+    <data name="RiskCategoriesTerNote" xml:space="preserve">
+        <value>TER (terceiros) entra a partir do M48.</value>
+    </data>
+    <data name="RiskCategoriesOpenHint" xml:space="preserve">
+        <value>Mostrar a tendência na série desta categoria</value>
+    </data>
+    <data name="RiskCategory_REG_Name" xml:space="preserve">
+        <value>Cenários do registro</value>
+    </data>
+    <data name="RiskCategory_EXP_Name" xml:space="preserve">
+        <value>Exposição técnica</value>
+    </data>
+    <data name="RiskCategory_AME_Name" xml:space="preserve">
+        <value>Ameaça e eventos</value>
+    </data>
+    <data name="RiskCategory_CTL_Name" xml:space="preserve">
+        <value>Controles e conformidade</value>
+    </data>
+    <data name="RiskCategory_GOV_Name" xml:space="preserve">
+        <value>Governança e tratamento</value>
+    </data>
+    <data name="RiskCategory_TER_Name" xml:space="preserve">
+        <value>Terceiros</value>
+    </data>
+    <data name="RiskCategoryHeldByMean" xml:space="preserve">
+        <value>média</value>
+    </data>
+    <data name="RiskCategoryHeldByTieFMT" xml:space="preserve">
+        <value>empate entre {0} objetos</value>
+    </data>
+    <data name="RiskCategoryHeldByFloorFMT" xml:space="preserve">
+        <value>{0} (piso)</value>
+    </data>
+    <data name="RiskCategoryRequiresPermissionFMT" xml:space="preserve">
+        <value>Requer a permissão {0}</value>
+    </data>
+    <data name="RiskCategoryPresumptionFMT" xml:space="preserve">
+        <value>{0} pontos de presunção</value>
+    </data>
+    <data name="RiskCategoryState_NotApplicable" xml:space="preserve">
+        <value>não se aplica a este tipo de nó</value>
+    </data>
+    <data name="RiskCategoryState_Unavailable" xml:space="preserve">
+        <value>Indisponível</value>
+    </data>
+    <data name="RiskCategoryState_UnavailableRequiresFMT" xml:space="preserve">
+        <value>Indisponível — requer {0}</value>
+    </data>
+    <data name="RiskCategoryState_UnavailableReasonFMT" xml:space="preserve">
+        <value>Indisponível — {0}</value>
+    </data>
+    <data name="RiskCategoryReason_source_disabled" xml:space="preserve">
+        <value>nenhuma fonte habilitada no perfil</value>
+    </data>
+    <data name="RiskCategoryReason_no_incident_intake" xml:space="preserve">
+        <value>intake de incidentes inativo</value>
+    </data>
+    <data name="RiskCategoryReason_requires_m39" xml:space="preserve">
+        <value>requer M39</value>
+    </data>
+    <data name="RiskCategoryReason_unavailable" xml:space="preserve">
+        <value>nada avaliado nem presumido</value>
+    </data>
+    <data name="RiskTabsTitle" xml:space="preserve">
+        <value>Classes de ativo</value>
+    </data>
+    <data name="RiskTabsNotComparableNotice" xml:space="preserve">
+        <value>Níveis não comparáveis entre abas: cada classe tem categorias diferentes.</value>
+    </data>
+    <data name="RiskTab_Devices" xml:space="preserve">
+        <value>Dispositivos</value>
+    </data>
+    <data name="RiskTab_InternetFacing" xml:space="preserve">
+        <value>Internet-facing</value>
+    </data>
+    <data name="RiskTab_Identities" xml:space="preserve">
+        <value>Identidades</value>
+    </data>
+    <data name="RiskTab_Applications" xml:space="preserve">
+        <value>Aplicações</value>
+    </data>
+    <data name="RiskTab_Clouds" xml:space="preserve">
+        <value>Nuvem</value>
+    </data>
+    <data name="RiskTabCategoriesFMT" xml:space="preserve">
+        <value>Categorias: {0}</value>
+    </data>
+    <data name="RiskTabCutByFMT" xml:space="preserve">
+        <value>O nó atual já é recortado por {0}</value>
+    </data>
+    <data name="RiskTabUnavailable" xml:space="preserve">
+        <value>Indisponível</value>
+    </data>
+    <data name="RiskTabIndicative" xml:space="preserve">
+        <value>Indicativo</value>
+    </data>
+    <data name="RiskTab_IdentitiesUnavailable" xml:space="preserve">
+        <value>Indisponível — requer contas do Vision One (T272).</value>
+    </data>
+    <data name="RiskTab_CloudsUnavailable" xml:space="preserve">
+        <value>Indisponível — requer ativos de nuvem do Vision One (T272).</value>
+    </data>
+    <data name="RiskTab_NoObjects" xml:space="preserve">
+        <value>Indisponível — nenhum objeto desta classe no nó.</value>
+    </data>
+    <data name="RiskMonthlyTitle" xml:space="preserve">
+        <value>Resumo mensal (média dos C_k diários)</value>
+    </data>
+    <data name="RiskMonthlyHelp" xml:space="preserve">
+        <value>Cada barra é a média mensal do valor diário da categoria neste nó e classe, na ordem fixa REG, EXP, AME, CTL, GOV, TER (S39 §9.3). * marca o mês corrente, parcial; † um mês cuja média mistura versões de perfil.</value>
+    </data>
+    <data name="RiskMonthlyMonths" xml:space="preserve">
+        <value>Meses</value>
+    </data>
+    <data name="RiskMonthlyMonthsFMT" xml:space="preserve">
+        <value>{0} meses</value>
+    </data>
+    <data name="RiskMonthlyEmpty" xml:space="preserve">
+        <value>Nenhum valor nestes meses.</value>
+    </data>
+    <data name="RiskMonthlyColMonth" xml:space="preserve">
+        <value>Mês</value>
+    </data>
+    <data name="RiskMonthlyColNote" xml:space="preserve">
+        <value>Nota</value>
+    </data>
+    <data name="RiskMonthlyPartialMonth" xml:space="preserve">
+        <value>mês parcial</value>
+    </data>
+    <data name="RiskMonthlyProfileChange" xml:space="preserve">
+        <value>troca de perfil</value>
+    </data>
+    <data name="RiskMonthlyMixesVersions" xml:space="preserve">
+        <value>a média mistura versões</value>
+    </data>
+    <data name="RiskFactorsTitle" xml:space="preserve">
+        <value>Fatores de risco</value>
+    </data>
+    <data name="RiskFactorsHelp" xml:space="preserve">
+        <value>Uma linha por fator que domina objetos desta classe, com os objetos que ele domina (volume) e os pontos que carrega pela alocação de Euler (S39 §3.5, §4.8): o objeto inteiro em EXP, que toma o máximo, e a repartição do MRA nas demais categorias.</value>
+    </data>
+    <data name="RiskFactorsVolumeNote" xml:space="preserve">
+        <value>Contagens são volume, não risco.</value>
+    </data>
+    <data name="RiskFactorsNone" xml:space="preserve">
+        <value>Nenhum fator sustenta valor nesta classe.</value>
+    </data>
+    <data name="RiskFactorsPoints" xml:space="preserve">
+        <value>pts</value>
+    </data>
+    <data name="RiskFactor_EXP_D" xml:space="preserve">
+        <value>objetos puxados pelo score de dispositivo do fornecedor</value>
+    </data>
+    <data name="RiskFactor_EXP_V" xml:space="preserve">
+        <value>objetos com achados expostos sem exploração conhecida</value>
+    </data>
+    <data name="RiskFactor_EXP_V_exploited" xml:space="preserve">
+        <value>objetos com achados de exploração conhecida</value>
+    </data>
+    <data name="RiskFactor_EXP_X" xml:space="preserve">
+        <value>objetos puxados pela nota externa</value>
+    </data>
+    <data name="RiskFactor_EXP_I" xml:space="preserve">
+        <value>identidades com exposição</value>
+    </data>
+    <data name="RiskFactor_EXP_N" xml:space="preserve">
+        <value>ativos de nuvem com exposição</value>
+    </data>
+    <data name="RiskFactor_CTL_A" xml:space="preserve">
+        <value>objetos com lacunas de avaliação</value>
+    </data>
+    <data name="RiskFactor_CTL_P" xml:space="preserve">
+        <value>objetos com plano de resposta não testado</value>
+    </data>
+    <data name="RiskFactor_CTL_C" xml:space="preserve">
+        <value>objetos com lacunas de configuração</value>
+    </data>
+    <data name="RiskFactor_GOV_T" xml:space="preserve">
+        <value>objetos com SLA vencido</value>
+    </data>
+    <data name="RiskFactor_GOV_A" xml:space="preserve">
+        <value>objetos acima do teto de apetite</value>
+    </data>
+    <data name="RiskFactor_GOV_C" xml:space="preserve">
+        <value>objetos com decisão de campanha pendente</value>
+    </data>
+    <data name="RiskFactor_GOV_R" xml:space="preserve">
+        <value>objetos com revisão vencida</value>
+    </data>
+    <data name="RiskFactor_GOV_G" xml:space="preserve">
+        <value>objetos com divergência de governança</value>
+    </data>
+    <data name="RiskFactor_AME_I" xml:space="preserve">
+        <value>alvos de incidentes</value>
+    </data>
+    <data name="RiskFactor_REG_R" xml:space="preserve">
+        <value>cenários pelo risco residual</value>
+    </data>
+    <data name="RiskFactor_TER" xml:space="preserve">
+        <value>terceiros</value>
+    </data>
+    <data name="RiskFactor_presumed" xml:space="preserve">
+        <value>objetos presumidos (sem leitura válida)</value>
+    </data>
+    <data name="RiskVisibilityTitle" xml:space="preserve">
+        <value>Visibilidade do inventário</value>
+    </data>
+    <data name="RiskVisibilityHelp" xml:space="preserve">
+        <value>O que o índice enxerga do inventário desta classe (S39 §8.1): objetos avaliados com leitura válida, obsoletos, presumidos (sem leitura válida) e não avaliados; e como os avaliados se distribuem pelas faixas de 100·R.</value>
+    </data>
+    <data name="RiskVisibility_Basis_exp_objectsFMT" xml:space="preserve">
+        <value>Inventário de EXP: {0} objetos</value>
+    </data>
+    <data name="RiskVisibility_AssessedFMT" xml:space="preserve">
+        <value>Avaliado {0}</value>
+    </data>
+    <data name="RiskVisibility_StaleFMT" xml:space="preserve">
+        <value>Obsoleto {0}</value>
+    </data>
+    <data name="RiskVisibility_PresumedFMT" xml:space="preserve">
+        <value>Presumido {0}</value>
+    </data>
+    <data name="RiskVisibility_NotAssessedFMT" xml:space="preserve">
+        <value>Não avaliado {0}</value>
+    </data>
+    <data name="RiskVisibilityDistribution" xml:space="preserve">
+        <value>Distribuição de R dos avaliados:</value>
+    </data>
+    <data name="RiskApi_invalid_tabMSG" xml:space="preserve">
+        <value>A aba de classe de ativo não é válida para este nó.</value>
+    </data>
+    <data name="RiskApi_invalid_monthsMSG" xml:space="preserve">
+        <value>O resumo cobre 6 ou 12 meses.</value>
+    </data>
+    <data name="RiskApi_trend_unavailable_partialMSG" xml:space="preserve">
+        <value>Uma visão parcial não tem tendência.</value>
+    </data>
+    <data name="RiskApi_window_requires_precomputed_nodeMSG" xml:space="preserve">
+        <value>365 dias estão disponíveis só para nós pré-calculados.</value>
+    </data>
+    <data name="RiskTrendIntervalFMT" xml:space="preserve">
+        <value>intervalo [{0}–{1}]</value>
+    </data>
+    <data name="RiskExploreUnassigned" xml:space="preserve">
+        <value>Não atribuído</value>
+    </data>
+    <data name="RiskObjectsTitle" xml:space="preserve">
+        <value>Objetos</value>
+    </data>
+    <data name="RiskExploreTitle" xml:space="preserve">
+        <value>Explorar</value>
+    </data>
+    <data name="RiskExploreHelp" xml:space="preserve">
+        <value>Desça a partir do nó atual: escolha a dimensão dos filhos, recorte-os com filtros e abra um filho para ver o módulo inteiro dele. Só se comparam nós do mesmo tipo, categorias e procedência.</value>
+    </data>
+    <data name="RiskExploreDimension" xml:space="preserve">
+        <value>Dimensão</value>
+    </data>
+    <data name="RiskExploreFilters" xml:space="preserve">
+        <value>Filtros:</value>
+    </data>
+    <data name="RiskExploreAddFilter" xml:space="preserve">
+        <value>Filtro</value>
+    </data>
+    <data name="RiskExploreAddFilterHint" xml:space="preserve">
+        <value>Acrescenta um filtro aos filhos listados (nunca ao nó atual)</value>
+    </data>
+    <data name="RiskExploreNoFilterValues" xml:space="preserve">
+        <value>Nenhum valor para filtrar neste nó.</value>
+    </data>
+    <data name="RiskExploreRemoveFilterHint" xml:space="preserve">
+        <value>Remover o filtro</value>
+    </data>
+    <data name="RiskExploreMonthlyScopeHint" xml:space="preserve">
+        <value>Abra uma das suas entidades para ver o resumo mensal dela.</value>
+    </data>
+    <data name="RiskExploreFilterRemovedFMT" xml:space="preserve">
+        <value>Filtro {0} removido: agora é a dimensão da árvore</value>
+    </data>
+    <data name="RiskExploreMonthlyTitleFMT" xml:space="preserve">
+        <value>Resumo mensal de {0}</value>
+    </data>
+    <data name="RiskExploreFilterValueFMT" xml:space="preserve">
+        <value>{0} ({1})</value>
+    </data>
+    <data name="RiskExploreColNode" xml:space="preserve">
+        <value>Nó</value>
+    </data>
+    <data name="RiskExploreColType" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="RiskExploreColIcr" xml:space="preserve">
+        <value>ICR</value>
+    </data>
+    <data name="RiskExploreColBand" xml:space="preserve">
+        <value>Faixa</value>
+    </data>
+    <data name="RiskExploreColDelta" xml:space="preserve">
+        <value>Δ7d</value>
+    </data>
+    <data name="RiskExploreColCoverage" xml:space="preserve">
+        <value>Cob.</value>
+    </data>
+    <data name="RiskExploreColObjects" xml:space="preserve">
+        <value>Objetos</value>
+    </data>
+    <data name="RiskExploreColShared" xml:space="preserve">
+        <value>Compart.</value>
+    </data>
+    <data name="RiskExploreColState" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="RiskExploreOpenNodeHint" xml:space="preserve">
+        <value>Abrir este nó</value>
+    </data>
+    <data name="RiskExploreSearchWatermark" xml:space="preserve">
+        <value>Filtrar por nome (Ctrl+F)</value>
+    </data>
+    <data name="RiskExploreSortNote" xml:space="preserve">
+        <value>Ordenar por ICR compara só nós do mesmo tipo, com as mesmas categorias aplicáveis e a mesma procedência. Δ não é ordenável.</value>
+    </data>
+    <data name="RiskExploreKeyboardHint" xml:space="preserve">
+        <value>Setas navegam, → e ← expandem e recolhem, Enter abre o nó, Alt+← sobe um nível.</value>
+    </data>
+    <data name="RiskExploreNoChildren" xml:space="preserve">
+        <value>Nenhum filho com objetos visíveis nesta dimensão.</value>
+    </data>
+    <data name="RiskObjectsHelp" xml:space="preserve">
+        <value>Uma linha por objeto e categoria do nó atual. A lista é ordenada e paginada pelo servidor; não há ordenação por sensibilidade nem por Δ.</value>
+    </data>
+    <data name="RiskObjectsColObject" xml:space="preserve">
+        <value>Objeto</value>
+    </data>
+    <data name="RiskObjectsColKind" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="RiskObjectsColClass" xml:space="preserve">
+        <value>Classe</value>
+    </data>
+    <data name="RiskObjectsColCategory" xml:space="preserve">
+        <value>Cat.</value>
+    </data>
+    <data name="RiskObjectsColR" xml:space="preserve">
+        <value>R (0–100)</value>
+    </data>
+    <data name="RiskObjectsColCriticality" xml:space="preserve">
+        <value>Crit. (origem)</value>
+    </data>
+    <data name="RiskObjectsColState" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="RiskObjectsColReading" xml:space="preserve">
+        <value>Leitura</value>
+    </data>
+    <data name="RiskObjectsColPoints" xml:space="preserve">
+        <value>Pontos</value>
+    </data>
+    <data name="RiskObjectsColShared" xml:space="preserve">
+        <value>Compart.</value>
+    </data>
+    <data name="RiskObjectsFilterCategory" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="RiskObjectsFilterState" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="RiskObjectsFilterClass" xml:space="preserve">
+        <value>Classe</value>
+    </data>
+    <data name="RiskObjectsFilterSource" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="RiskObjectsFilterCriticality" xml:space="preserve">
+        <value>Crit.</value>
+    </data>
+    <data name="RiskObjectsPageSize" xml:space="preserve">
+        <value>Por página</value>
+    </data>
+    <data name="RiskObjectsSearchWatermark" xml:space="preserve">
+        <value>Nome… (Ctrl+F)</value>
+    </data>
+    <data name="RiskObjectsSortNote" xml:space="preserve">
+        <value>Ordenação feita no servidor: só objeto, R, criticidade, leitura e pontos ordenam.</value>
+    </data>
+    <data name="RiskObjectsEmpty" xml:space="preserve">
+        <value>Nenhum objeto atende a estes filtros.</value>
+    </data>
+    <data name="RiskObjectsPreviousPage" xml:space="preserve">
+        <value>Página anterior</value>
+    </data>
+    <data name="RiskObjectsNextPage" xml:space="preserve">
+        <value>Próxima página</value>
+    </data>
+    <data name="RiskObjectsOpenDetailHint" xml:space="preserve">
+        <value>Detalhe do objeto</value>
+    </data>
+    <data name="RiskObjectsClearPresetHint" xml:space="preserve">
+        <value>Remover este filtro</value>
+    </data>
+    <data name="RiskObjectsAll" xml:space="preserve">
+        <value>Todas</value>
+    </data>
+    <data name="RiskObjectsTabScopeFMT" xml:space="preserve">
+        <value>Aba: {0}</value>
+    </data>
+    <data name="RiskFactorsOpenObjectsHint" xml:space="preserve">
+        <value>Listar os objetos deste fator</value>
+    </data>
+    <data name="RiskAssetClass_Server" xml:space="preserve">
+        <value>Servidor</value>
+    </data>
+    <data name="RiskAssetClass_Workstation" xml:space="preserve">
+        <value>Estação de trabalho</value>
+    </data>
+    <data name="RiskAssetClass_Network" xml:space="preserve">
+        <value>Equipamento de rede</value>
+    </data>
+    <data name="RiskAssetClass_Identity" xml:space="preserve">
+        <value>Identidade</value>
+    </data>
+    <data name="RiskAssetClass_Application" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
+    <data name="RiskAssetClass_InternetFacing" xml:space="preserve">
+        <value>Internet-facing</value>
+    </data>
+    <data name="RiskAssetClass_Cloud" xml:space="preserve">
+        <value>Nuvem</value>
+    </data>
+    <data name="RiskAssetClass_ExternalDomain" xml:space="preserve">
+        <value>Domínio externo</value>
+    </data>
+    <data name="RiskAssetClass_OtIot" xml:space="preserve">
+        <value>OT/IoT</value>
+    </data>
+    <data name="RiskAssetClass_Unknown" xml:space="preserve">
+        <value>Classe desconhecida</value>
+    </data>
+    <data name="RiskExploreFilterKind_AssetClass" xml:space="preserve">
+        <value>Classe de ativo</value>
+    </data>
+    <data name="RiskExploreFilterKind_Source" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="RiskExploreFilterKind_Criticality" xml:space="preserve">
+        <value>Criticidade</value>
+    </data>
+    <data name="RiskExploreFilterKind_Environment" xml:space="preserve">
+        <value>Ambiente</value>
+    </data>
+    <data name="RiskExploreDimension_Unit" xml:space="preserve">
+        <value>Unidade</value>
+    </data>
+    <data name="RiskExploreDimension_Process" xml:space="preserve">
+        <value>Processo</value>
+    </data>
+    <data name="RiskExploreDimension_Activity" xml:space="preserve">
+        <value>Atividade</value>
+    </data>
+    <data name="RiskExploreDimension_Application" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
+    <data name="RiskExploreDimension_AssetClass" xml:space="preserve">
+        <value>Classe de ativo</value>
+    </data>
+    <data name="RiskExploreDimension_Source" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="RiskExploreDimension_Criticality" xml:space="preserve">
+        <value>Criticidade</value>
+    </data>
+    <data name="RiskExploreDimension_Environment" xml:space="preserve">
+        <value>Ambiente</value>
+    </data>
+    <data name="RiskNodeType_organization" xml:space="preserve">
+        <value>Organização</value>
+    </data>
+    <data name="RiskNodeType_organizationUnit" xml:space="preserve">
+        <value>Unidade</value>
+    </data>
+    <data name="RiskNodeType_subOrganizationUnit" xml:space="preserve">
+        <value>Subunidade</value>
+    </data>
+    <data name="RiskNodeType_businessProcess" xml:space="preserve">
+        <value>Processo</value>
+    </data>
+    <data name="RiskNodeType_activity" xml:space="preserve">
+        <value>Atividade</value>
+    </data>
+    <data name="RiskNodeType_application" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
+    <data name="RiskNodeType_unassigned" xml:space="preserve">
+        <value>Não atribuído</value>
+    </data>
+    <data name="RiskNodeType_entity" xml:space="preserve">
+        <value>Entidade</value>
+    </data>
+    <data name="RiskEnvironment_prod" xml:space="preserve">
+        <value>Produção</value>
+    </data>
+    <data name="RiskEnvironment_none" xml:space="preserve">
+        <value>Sem ambiente</value>
+    </data>
+    <data name="RiskEnvironmentFMT" xml:space="preserve">
+        <value>Ambiente: {0}</value>
+    </data>
+    <data name="RiskExploreCriticalityFMT" xml:space="preserve">
+        <value>Criticidade {0}</value>
+    </data>
+    <data name="RiskExploreSealTermFMT" xml:space="preserve">
+        <value>{0}: {1}</value>
+    </data>
+    <data name="RiskExploreState_Official" xml:space="preserve">
+        <value>oficial</value>
+    </data>
+    <data name="RiskExploreState_OfficialDerived" xml:space="preserve">
+        <value>derivado</value>
+    </data>
+    <data name="RiskExploreState_PartialRestricted" xml:space="preserve">
+        <value>parcial</value>
+    </data>
+    <data name="RiskExploreState_UnofficialPreview" xml:space="preserve">
+        <value>prévia</value>
+    </data>
+    <data name="RiskExploreState_NoData" xml:space="preserve">
+        <value>sem dados</value>
+    </data>
+    <data name="RiskExploreState_Indicative" xml:space="preserve">
+        <value>indicativo</value>
+    </data>
+    <data name="RiskExploreState_IndicativeFMT" xml:space="preserve">
+        <value>indicativo {0} [{1}–{2}]</value>
+    </data>
+    <data name="RiskExploreState_UnassignedWeightFMT" xml:space="preserve">
+        <value>{0}% do peso</value>
+    </data>
+    <data name="RiskExploreNotComparablePartial" xml:space="preserve">
+        <value>não comparáveis com as linhas acima: visão parcial</value>
+    </data>
+    <data name="RiskExploreNotComparableType" xml:space="preserve">
+        <value>não comparáveis: tipo diferente</value>
+    </data>
+    <data name="RiskExploreNotComparableCategories" xml:space="preserve">
+        <value>não comparáveis: categorias diferentes</value>
+    </data>
+    <data name="RiskExploreNotComparableProvenance" xml:space="preserve">
+        <value>não comparáveis: procedência diferente</value>
+    </data>
+    <data name="RiskExploreOutsideEnvironmentFMT" xml:space="preserve">
+        <value>{0} objetos sem ambiente (só hosts têm) ficam fora deste recorte.</value>
+    </data>
+    <data name="RiskObjectKind_Scenario" xml:space="preserve">
+        <value>Cenário</value>
+    </data>
+    <data name="RiskObjectKind_Host" xml:space="preserve">
+        <value>Host</value>
+    </data>
+    <data name="RiskObjectKind_ExternalDomain" xml:space="preserve">
+        <value>Domínio externo</value>
+    </data>
+    <data name="RiskObjectKind_Application" xml:space="preserve">
+        <value>Aplicação</value>
+    </data>
+    <data name="RiskObjectKind_VendorAsset" xml:space="preserve">
+        <value>Ativo do fornecedor</value>
+    </data>
+    <data name="RiskObjectKind_TargetEntity" xml:space="preserve">
+        <value>Entidade</value>
+    </data>
+    <data name="RiskObjectKind_Tenant" xml:space="preserve">
+        <value>Tenant</value>
+    </data>
+    <data name="RiskObjectKind_Supplier" xml:space="preserve">
+        <value>Fornecedor</value>
+    </data>
+    <data name="RiskObjectKind_UnassignedGroup" xml:space="preserve">
+        <value>Grupo não atribuído</value>
+    </data>
+    <data name="RiskObjectState_Assessed" xml:space="preserve">
+        <value>avaliado</value>
+    </data>
+    <data name="RiskObjectState_AssessedClean" xml:space="preserve">
+        <value>avaliado (limpo)</value>
+    </data>
+    <data name="RiskObjectState_Stale" xml:space="preserve">
+        <value>obsoleto</value>
+    </data>
+    <data name="RiskObjectState_Presumed" xml:space="preserve">
+        <value>presumido</value>
+    </data>
+    <data name="RiskObjectState_NotAssessed" xml:space="preserve">
+        <value>não avaliado</value>
+    </data>
+    <data name="RiskCriticalitySource_manual" xml:space="preserve">
+        <value>manual</value>
+    </data>
+    <data name="RiskCriticalitySource_cmdb" xml:space="preserve">
+        <value>CMDB</value>
+    </data>
+    <data name="RiskCriticalitySource_visionone" xml:space="preserve">
+        <value>Vision One</value>
+    </data>
+    <data name="RiskCriticalitySource_entity" xml:space="preserve">
+        <value>entidade</value>
+    </data>
+    <data name="RiskCriticalitySource_impact" xml:space="preserve">
+        <value>impacto</value>
+    </data>
+    <data name="RiskCriticalitySource_external" xml:space="preserve">
+        <value>externa</value>
+    </data>
+    <data name="RiskCriticalitySource_default" xml:space="preserve">
+        <value>padrão</value>
+    </data>
+    <data name="RiskCriticalitySource_unknown" xml:space="preserve">
+        <value>desconhecida</value>
+    </data>
+    <data name="RiskObjectCriticalityFMT" xml:space="preserve">
+        <value>{0} ({1})</value>
+    </data>
+    <data name="RiskObjectsRangeFMT" xml:space="preserve">
+        <value>{0}–{1} de {2}</value>
+    </data>
+    <data name="RiskObjectsSort_label" xml:space="preserve">
+        <value>objeto</value>
+    </data>
+    <data name="RiskObjectsSort_r" xml:space="preserve">
+        <value>R</value>
+    </data>
+    <data name="RiskObjectsSort_contribution" xml:space="preserve">
+        <value>pontos</value>
+    </data>
+    <data name="RiskObjectsSort_criticality" xml:space="preserve">
+        <value>criticidade</value>
+    </data>
+    <data name="RiskObjectsSort_lastReading" xml:space="preserve">
+        <value>leitura</value>
+    </data>
+    <data name="RiskObjectsSortedAscFMT" xml:space="preserve">
+        <value>Ordenado por {0} (crescente)</value>
+    </data>
+    <data name="RiskObjectsSortedDescFMT" xml:space="preserve">
+        <value>Ordenado por {0} (decrescente)</value>
+    </data>
+    <data name="RiskObjectsSortedDefault" xml:space="preserve">
+        <value>Ordenado por pontos, maiores primeiro</value>
+    </data>
+    <data name="RiskApi_invalid_dimensionMSG" xml:space="preserve">
+        <value>A dimensão não é uma das que o detalhamento conhece.</value>
+    </data>
+    <data name="RiskApi_invalid_filterMSG" xml:space="preserve">
+        <value>O filtro não é válido para esta lista.</value>
+    </data>
+    <data name="RiskApi_invalid_sortMSG" xml:space="preserve">
+        <value>Esta coluna não pode ser ordenada.</value>
+    </data>
+    <data name="RiskApi_invalid_pageMSG" xml:space="preserve">
+        <value>A página ou o tamanho da página está fora do intervalo.</value>
+    </data>
+    <data name="NavModuleNotAllowedFMT" xml:space="preserve">
+        <value>Você não tem permissão para abrir {0}.</value>
+    </data>
+    <data name="NavIncidentsRequireFaceIdMSG" xml:space="preserve">
+        <value>Incidentes exigem verificação facial: abra o módulo pela barra de navegação.</value>
+    </data>
+    <data name="NavRecordOutOfScopeMSG" xml:space="preserve">
+        <value>O registro não está no seu escopo.</value>
+    </data>
+    <data name="RiskEffect_Risk" xml:space="preserve">
+        <value>Risco</value>
+    </data>
+    <data name="RiskEffect_Context" xml:space="preserve">
+        <value>Contexto</value>
+    </data>
+    <data name="RiskEffect_Coverage" xml:space="preserve">
+        <value>Cobertura</value>
+    </data>
+    <data name="RiskEffect_Configuration" xml:space="preserve">
+        <value>Configuração</value>
+    </data>
+    <data name="RiskEffect_Unattributed" xml:space="preserve">
+        <value>Não atribuído</value>
+    </data>
+    <data name="RiskEffect_Floor" xml:space="preserve">
+        <value>Piso</value>
+    </data>
+    <data name="RiskEffect_Restructuring" xml:space="preserve">
+        <value>Reestruturação</value>
+    </data>
+    <data name="RiskEffectOrigin_Configuration" xml:space="preserve">
+        <value>ponte de versão ou insumo externo</value>
+    </data>
+    <data name="RiskEffectOrigin_Coverage" xml:space="preserve">
+        <value>categoria que entrou ou saiu</value>
+    </data>
+    <data name="RiskEffectOrigin_Unattributed" xml:space="preserve">
+        <value>resíduo da integração</value>
+    </data>
+    <data name="RiskEffectOrigin_Floor" xml:space="preserve">
+        <value>ICR − ICR*</value>
+    </data>
+    <data name="RiskChangesPeriod_PreviousSnapshot" xml:space="preserve">
+        <value>Desde o snapshot anterior</value>
+    </data>
+    <data name="RiskChangesPeriod_Days7" xml:space="preserve">
+        <value>7 dias</value>
+    </data>
+    <data name="RiskChangesPeriod_Days30" xml:space="preserve">
+        <value>30 dias</value>
+    </data>
+    <data name="RiskChangesRest" xml:space="preserve">
+        <value>Demais</value>
+    </data>
+    <data name="RiskChangesRestFMT" xml:space="preserve">
+        <value>demais {0} linhas, somadas</value>
+    </data>
+    <data name="RiskChangesPeriodFMT" xml:space="preserve">
+        <value>{0} → {1} · ICR {2} · ICR* {3}</value>
+    </data>
+    <data name="RiskChangesResidualFMT" xml:space="preserve">
+        <value>Resíduo numérico da atribuição: {0} ponto(s).</value>
+    </data>
+    <data name="RiskChangesCrossedProfileFMT" xml:space="preserve">
+        <value>O período atravessa troca de perfil ({0}): o salto de versão entra como efeito de configuração, {1} ponto(s) ({2} da variação).</value>
+    </data>
+    <data name="RiskChangesReattributionFMT" xml:space="preserve">
+        <value>{0} — entrou ou saiu por reatribuição</value>
+    </data>
+    <data name="RiskChangesAuthorFMT" xml:space="preserve">
+        <value>{0} (por {1})</value>
+    </data>
+    <data name="RiskChangesTitle" xml:space="preserve">
+        <value>O que mudou</value>
+    </data>
+    <data name="RiskChangesHelp" xml:space="preserve">
+        <value>A variação do índice entre dois snapshots, atribuída por efeito, categoria e objeto (Aumann–Shapley). Pontos inteiros, ordenados por magnitude; as 100 maiores linhas e as demais somadas. Clique numa linha com objeto para abrir o detalhe.</value>
+    </data>
+    <data name="RiskChangesPeriod" xml:space="preserve">
+        <value>Período</value>
+    </data>
+    <data name="RiskChangesColEffect" xml:space="preserve">
+        <value>Efeito</value>
+    </data>
+    <data name="RiskChangesColCategory" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="RiskChangesColOrigin" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="RiskChangesColPoints" xml:space="preserve">
+        <value>Pontos</value>
+    </data>
+    <data name="RiskChangesColPercent" xml:space="preserve">
+        <value>% da variação</value>
+    </data>
+    <data name="RiskChangesEvents" xml:space="preserve">
+        <value>Eventos do dia</value>
+    </data>
+    <data name="RiskChangesEmpty" xml:space="preserve">
+        <value>Nada mudou no período.</value>
+    </data>
+    <data name="RiskChangesUnavailablePartial" xml:space="preserve">
+        <value>"O que mudou" não está disponível em visão parcial: a atribuição precisa de todo o conjunto de objetos do nó.</value>
+    </data>
+    <data name="RiskApi_changes_unavailable_partialMSG" xml:space="preserve">
+        <value>"O que mudou" não está disponível em visão parcial: a atribuição precisa de todo o conjunto de objetos do nó.</value>
+    </data>
+    <data name="RiskApi_changes_cross_profileMSG" xml:space="preserve">
+        <value>O período atravessa uma troca de perfil; num nó derivado a variação é calculada dentro de um só perfil. Escolha um período menor.</value>
+    </data>
+    <data name="RiskApi_object_not_foundMSG" xml:space="preserve">
+        <value>O objeto não existe neste snapshot ou não está no seu escopo.</value>
+    </data>
+    <data name="RiskContributionBranch_Mean" xml:space="preserve">
+        <value>média</value>
+    </data>
+    <data name="RiskContributionBranch_HeldBy" xml:space="preserve">
+        <value>piso: sustentado</value>
+    </data>
+    <data name="RiskContributionBranch_Presumption" xml:space="preserve">
+        <value>presunção</value>
+    </data>
+    <data name="RiskR1NoticeMSG" xml:space="preserve">
+        <value>Contribuição e sensibilidade mostram quanto o número depende de cada objeto. Não são ordem de tratamento: a priorização vem dos Portões C e D e dos fluxos de risco, não deste painel (S39 R-1).</value>
+    </data>
+    <data name="RiskContributionsRegisterWeightFMT" xml:space="preserve">
+        <value>Peso efetivo do registro: {0}% da manchete é sustentado pela severidade de cenários (REG + GOV cenários + CTL.P).</value>
+    </data>
+    <data name="RiskDecisionAcceptanceFMT" xml:space="preserve">
+        <value>aceite {0} até {1}</value>
+    </data>
+    <data name="RiskDecisionCampaignFMT" xml:space="preserve">
+        <value>última decisão de campanha: {0} em {1}</value>
+    </data>
+    <data name="RiskDecisionTasksFMT" xml:space="preserve">
+        <value>{0} tarefa(s) aberta(s), {1} vencida(s)</value>
+    </data>
+    <data name="RiskContributionsTitle" xml:space="preserve">
+        <value>Contribuições e sensibilidade do indicador</value>
+    </data>
+    <data name="RiskContributionsColObject" xml:space="preserve">
+        <value>Objeto</value>
+    </data>
+    <data name="RiskContributionsColCategory" xml:space="preserve">
+        <value>Cat.</value>
+    </data>
+    <data name="RiskContributionsColPoints" xml:space="preserve">
+        <value>Pontos</value>
+    </data>
+    <data name="RiskContributionsColShare" xml:space="preserve">
+        <value>Parte da cat.</value>
+    </data>
+    <data name="RiskContributionsColBranch" xml:space="preserve">
+        <value>Ramo</value>
+    </data>
+    <data name="RiskContributionsColSensitivity" xml:space="preserve">
+        <value>Sensib. (Δ ICR*)</value>
+    </data>
+    <data name="RiskContributionsColNextHolder" xml:space="preserve">
+        <value>Próximo a sustentar</value>
+    </data>
+    <data name="RiskContributionsColDecision" xml:space="preserve">
+        <value>Estado de decisão</value>
+    </data>
+    <data name="RiskContributionsSensitivityHint" xml:space="preserve">
+        <value>Quanto o ICR* mudaria se a leitura do objeto zerasse. Não é ordenável: o índice não ordena trabalho (S39 §1.3).</value>
+    </data>
+    <data name="RiskContributionsEmpty" xml:space="preserve">
+        <value>Nenhuma contribuição neste nó.</value>
+    </data>
+    <data name="RiskPopulation_Scenarios" xml:space="preserve">
+        <value>cenários</value>
+    </data>
+    <data name="RiskPopulation_Assets" xml:space="preserve">
+        <value>ativos</value>
+    </data>
+    <data name="RiskPopulation_Assessments" xml:space="preserve">
+        <value>avaliações</value>
+    </data>
+    <data name="RiskPopulation_Tenants" xml:space="preserve">
+        <value>tenants</value>
+    </data>
+    <data name="RiskPopulation_Targets" xml:space="preserve">
+        <value>entidades-alvo</value>
+    </data>
+    <data name="RiskPopulation_Suppliers" xml:space="preserve">
+        <value>fornecedores</value>
+    </data>
+    <data name="RiskNav_Risk" xml:space="preserve">
+        <value>Abrir risco</value>
+    </data>
+    <data name="RiskNav_Host" xml:space="preserve">
+        <value>Abrir host</value>
+    </data>
+    <data name="RiskNav_HostFindings" xml:space="preserve">
+        <value>Abrir achados do host</value>
+    </data>
+    <data name="RiskNav_ApplicationFindings" xml:space="preserve">
+        <value>Abrir achados da aplicação</value>
+    </data>
+    <data name="RiskNav_Incident" xml:space="preserve">
+        <value>Abrir incidente</value>
+    </data>
+    <data name="RiskNav_Assessment" xml:space="preserve">
+        <value>Abrir avaliação</value>
+    </data>
+    <data name="RiskNav_Entity" xml:space="preserve">
+        <value>Abrir entidade</value>
+    </data>
+    <data name="RiskObjectDetailNoNodes" xml:space="preserve">
+        <value>Não pertence a nenhum nó do mapa</value>
+    </data>
+    <data name="RiskObjectDetailNodesFMT" xml:space="preserve">
+        <value>Pertence a {0} nó(s): {1}</value>
+    </data>
+    <data name="RiskObjectDetailCriticalityFMT" xml:space="preserve">
+        <value>Criticidade efetiva {0} = máx(própria {1}, herdada {2}) + dados {3}</value>
+    </data>
+    <data name="RiskObjectDetailOriginFMT" xml:space="preserve">
+        <value>origem: {0}</value>
+    </data>
+    <data name="RiskObjectDetailDeclaredNotBia" xml:space="preserve">
+        <value>declarada, não BIA</value>
+    </data>
+    <data name="RiskObjectDetailAuthorFMT" xml:space="preserve">
+        <value>autor: {0}</value>
+    </data>
+    <data name="RiskObjectDetailAuthorAtFMT" xml:space="preserve">
+        <value>autor: {0} em {1}</value>
+    </data>
+    <data name="RiskObjectDetailInternetFacingYes" xml:space="preserve">
+        <value>Internet-facing: sim</value>
+    </data>
+    <data name="RiskObjectDetailInternetFacingNo" xml:space="preserve">
+        <value>Internet-facing: não</value>
+    </data>
+    <data name="RiskObjectDetailVendorIdFMT" xml:space="preserve">
+        <value>Id no fornecedor: {0}</value>
+    </data>
+    <data name="RiskObjectDetailTitleFMT" xml:space="preserve">
+        <value>Detalhe do objeto — {0}</value>
+    </data>
+    <data name="RiskObjectDetailSnapshotFMT" xml:space="preserve">
+        <value>Snapshot {0}</value>
+    </data>
+    <data name="RiskObjectDetailKindFMT" xml:space="preserve">
+        <value>Tipo: {0} · Classe: {1}</value>
+    </data>
+    <data name="RiskObjectDetailSignalFMT" xml:space="preserve">
+        <value>s {0}</value>
+    </data>
+    <data name="RiskObjectDetailMoreSignalsFMT" xml:space="preserve">
+        <value>e mais {0} sinal(is) não listado(s)</value>
+    </data>
+    <data name="RiskObjectDetailScenarioFMT" xml:space="preserve">
+        <value>Impacto {0} · rank {1} de {2} · T {3} d · atraso {4} d · cred {5} · σ_ref {6}</value>
+    </data>
+    <data name="RiskObjectDetailResidualFMT" xml:space="preserve">
+        <value>r_eff {0} ao lado do residual armazenado {1} (r_inh {2}): ajuste do indicador; o residual armazenado não é alterado (I9).</value>
+    </data>
+    <data name="RiskObjectDetailNotTreated" xml:space="preserve">
+        <value>Tratamento não avaliado</value>
+    </data>
+    <data name="RiskObjectDetailByCategory" xml:space="preserve">
+        <value>Por categoria</value>
+    </data>
+    <data name="RiskObjectDetailFactors" xml:space="preserve">
+        <value>Fatores</value>
+    </data>
+    <data name="RiskObjectDetailSignals" xml:space="preserve">
+        <value>Sinais</value>
+    </data>
+    <data name="RiskObjectDetailScenario" xml:space="preserve">
+        <value>Cenário</value>
+    </data>
+    <data name="RiskObjectDetailDecision" xml:space="preserve">
+        <value>Estado de decisão</value>
+    </data>
+    <data name="RiskObjectDetailChips" xml:space="preserve">
+        <value>Chips</value>
+    </data>
+    <data name="RiskObjectDetailNavigation" xml:space="preserve">
+        <value>Navegação</value>
+    </data>
+    <data name="RiskObjectDetailNoSignals" xml:space="preserve">
+        <value>Nenhum sinal.</value>
+    </data>
+    <data name="RiskObjectDetailNoChips" xml:space="preserve">
+        <value>Nenhum chip.</value>
+    </data>
+    <data name="RiskObjectDetailNoDestinations" xml:space="preserve">
+        <value>Este objeto não tem tela no NetRisk.</value>
+    </data>
+    <data name="RiskObjectDetailColCategory" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="RiskObjectDetailColR" xml:space="preserve">
+        <value>R</value>
+    </data>
+    <data name="RiskObjectDetailColState" xml:space="preserve">
+        <value>Estado</value>
+    </data>
+    <data name="RiskObjectDetailColPopulation" xml:space="preserve">
+        <value>População</value>
+    </data>
+    <data name="RiskObjectDetailColWeight" xml:space="preserve">
+        <value>Peso</value>
+    </data>
+    <data name="RiskObjectDetailColBranch" xml:space="preserve">
+        <value>Ramo</value>
+    </data>
+    <data name="RiskObjectDetailColFactor" xml:space="preserve">
+        <value>Fator</value>
+    </data>
+    <data name="RiskObjectDetailColType" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="RiskObjectDetailColX" xml:space="preserve">
+        <value>x</value>
+    </data>
+    <data name="RiskObjectDetailColV" xml:space="preserve">
+        <value>v</value>
+    </data>
+    <data name="RiskObjectDetailColUF" xml:space="preserve">
+        <value>u_f</value>
+    </data>
+    <data name="RiskObjectDetailColFEff" xml:space="preserve">
+        <value>F_eff</value>
+    </data>
+    <data name="RiskObjectDetailColReading" xml:space="preserve">
+        <value>Leitura</value>
+    </data>
+    <data name="RiskObjectDetailColSource" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="RiskObjectDetailLoading" xml:space="preserve">
+        <value>Carregando o detalhe do objeto…</value>
+    </data>
+    <data name="RiskQualityStripTitle" xml:space="preserve">
+        <value>Qualidade dos dados:</value>
+    </data>
+    <data name="RiskQualityStripHelp" xml:space="preserve">
+        <value>Sempre visível (S39 §8.6): onde os dados que sustentam o índice são fracos. Cada › abre a lista de objetos filtrada, ou o nó Não atribuído.</value>
+    </data>
+    <data name="RiskQualityStripPartial" xml:space="preserve">
+        <value>Visão parcial: os valores contam só o que você pode ver.</value>
+    </data>
+    <data name="RiskQualityStripMyScope" xml:space="preserve">
+        <value>A qualidade dos dados é medida por nó: abra uma das entidades do seu escopo.</value>
+    </data>
+    <data name="RiskQualityStripOpenHint" xml:space="preserve">
+        <value>Abrir a lista de objetos filtrada</value>
+    </data>
+    <data name="RiskQualityStripOpenNodeHint" xml:space="preserve">
+        <value>Abrir o nó Não atribuído</value>
+    </data>
+    <data name="RiskQualityStrip_unassigned" xml:space="preserve">
+        <value>Não atribuído</value>
+    </data>
+    <data name="RiskQualityStrip_default_criticality" xml:space="preserve">
+        <value>Criticidade padrão</value>
+    </data>
+    <data name="RiskQualityStrip_stale_sourceFMT" xml:space="preserve">
+        <value>Fonte obsoleta: {0}, {1}</value>
+    </data>
+    <data name="RiskQualityStrip_stale_sources_none" xml:space="preserve">
+        <value>Fontes obsoletas</value>
+    </data>
+    <data name="RiskQualityStrip_presumed_critical" xml:space="preserve">
+        <value>Críticos presumidos</value>
+    </data>
+    <data name="RiskQualityStrip_orphan_applications" xml:space="preserve">
+        <value>Aplicações órfãs</value>
+    </data>
+    <data name="RiskQualityStrip_ssc_pseudo_hosts" xml:space="preserve">
+        <value>Pseudo-hosts SSC</value>
+    </data>
+    <data name="RiskQualityStrip_exited_bad_reading" xml:space="preserve">
+        <value>Saídos com leitura ruim</value>
+    </data>
+    <data name="RiskQuality_AboveThreshold" xml:space="preserve">
+        <value>Acima do limiar de Não atribuído do perfil (limiar_nao_atribuido)</value>
+    </data>
+    <data name="RiskQuality_RootOnlyHint" xml:space="preserve">
+        <value>Medido só na raiz da organização</value>
+    </data>
+    <data name="RiskQuality_NotStoredHint" xml:space="preserve">
+        <value>Não disponível: o snapshot ainda não grava esta contagem</value>
+    </data>
+    <data name="RiskQuality_Evidence_requires_m40" xml:space="preserve">
+        <value>não disponível (requer M40)</value>
+    </data>
+    <data name="RiskQualityPanelTitle" xml:space="preserve">
+        <value>Qualidade dos dados — detalhe</value>
+    </data>
+    <data name="RiskQualityPanelColItem" xml:space="preserve">
+        <value>Item</value>
+    </data>
+    <data name="RiskQualityPanelColValue" xml:space="preserve">
+        <value>Valor</value>
+    </data>
+    <data name="RiskQualityPanelColThreshold" xml:space="preserve">
+        <value>Limiar</value>
+    </data>
+    <data name="RiskQualityPanelNote" xml:space="preserve">
+        <value>A confiança da evidência (M40) é mostrada à parte e nunca entra nesta qualidade (S39 §8.5).</value>
+    </data>
+    <data name="RiskQualityPanel_OneSource" xml:space="preserve">
+        <value>1 fonte</value>
+    </data>
+    <data name="RiskQualityPanel_unassigned" xml:space="preserve">
+        <value>Não atribuído (fração por peso)</value>
+    </data>
+    <data name="RiskQualityPanel_default_criticality" xml:space="preserve">
+        <value>Objetos com criticidade padrão (por peso)</value>
+    </data>
+    <data name="RiskQualityPanel_stale_sourceFMT" xml:space="preserve">
+        <value>Fonte obsoleta: {0} — última leitura {1}</value>
+    </data>
+    <data name="RiskQualityPanel_stale_sources_none" xml:space="preserve">
+        <value>Fontes obsoletas</value>
+    </data>
+    <data name="RiskQualityPanel_presumed_critical" xml:space="preserve">
+        <value>Ativos críticos presumidos (crit ≥ 4)</value>
+    </data>
+    <data name="RiskQualityPanel_divergent_links" xml:space="preserve">
+        <value>Vínculos divergentes (árvore × propriedade organizationUnit)</value>
+    </data>
+    <data name="RiskQualityPanel_orphan_applications" xml:space="preserve">
+        <value>Aplicações órfãs na raiz</value>
+    </data>
+    <data name="RiskQualityPanel_ssc_pseudo_hosts" xml:space="preserve">
+        <value>Pseudo-hosts da SecurityScorecard (fora do inventário)</value>
+    </data>
+    <data name="RiskQualityPanel_exited_bad_reading" xml:space="preserve">
+        <value>Saídos do inventário por inatividade com última leitura ruim</value>
+    </data>
+    <data name="RiskQualityPanel_finding_status_disagreements" xml:space="preserve">
+        <value>Achados com Status legado × LifecycleStatus divergentes</value>
+    </data>
+    <data name="RiskQualityPanel_residual_above_inherent" xml:space="preserve">
+        <value>Cenários com residual &gt; inerente</value>
+    </data>
+    <data name="RiskQualityPanel_evidence_confidence" xml:space="preserve">
+        <value>Confiança da evidência (M40)</value>
+    </data>
+    <data name="RiskGovernanceTitle" xml:space="preserve">
+        <value>Governança e revisões — indicadores (fora do ICR)</value>
+    </data>
+    <data name="RiskGovernanceVolumeNote" xml:space="preserve">
+        <value>contagens são volume, não risco</value>
+    </data>
+    <data name="RiskGovernanceLiveNote" xml:space="preserve">
+        <value>Contagens ao vivo, de agora: não seguem a data do snapshot mostrada.</value>
+    </data>
+    <data name="RiskGovernancePartial" xml:space="preserve">
+        <value>Visão parcial: as contagens incluem só o que você pode ver.</value>
+    </data>
+    <data name="RiskGovernanceMyScope" xml:space="preserve">
+        <value>Os indicadores são contados por nó: abra uma das entidades do seu escopo.</value>
+    </data>
+    <data name="RiskGovernance_AcceptancesExpiringFMT" xml:space="preserve">
+        <value>Aceitações válidas que vencem em ≤ {0} d: {1}</value>
+    </data>
+    <data name="RiskGovernance_SegregationOverridesFMT" xml:space="preserve">
+        <value>Uso de justificativa de exceção à segregação: {0} em 90 d</value>
+    </data>
+    <data name="RiskGovernance_CampaignsFMT" xml:space="preserve">
+        <value>Campanhas: conclusão {0} · tempo médio até decidir {1} · vencidas {2}</value>
+    </data>
+    <data name="RiskGovernance_DaysFMT" xml:space="preserve">
+        <value>{0} d</value>
+    </data>
+    <data name="RiskGovernance_SlaComplianceFMT" xml:space="preserve">
+        <value>Conformidade de SLA: {0}</value>
+    </data>
+    <data name="RiskGovernance_SlaNoneHint" xml:space="preserve">
+        <value>Nenhum achado aberto com prazo de SLA no nó</value>
+    </data>
+    <data name="RiskGovernance_FlagsFMT" xml:space="preserve">
+        <value>Flags (M43): {0}</value>
+    </data>
+    <data name="RiskGovernance_GateBFMT" xml:space="preserve">
+        <value>Portão B: {0}</value>
+    </data>
+    <data name="RiskGovernance_State_requires_m43" xml:space="preserve">
+        <value>não disponível (requer M43)</value>
+    </data>
+    <data name="RiskGovernance_State_requires_m45_m46" xml:space="preserve">
+        <value>não disponível (requer M45/M46)</value>
+    </data>
+    <data name="RiskGovernance_OpenModuleFMT" xml:space="preserve">
+        <value>Abre o módulo {0}, sem filtro: o módulo ainda não recebe o filtro do indicador</value>
+    </data>
+    <data name="RiskGovernance_ModuleNotAllowedFMT" xml:space="preserve">
+        <value>Requer acesso ao módulo {0}</value>
+    </data>
+    <data name="RiskMonetaryTitle" xml:space="preserve">
+        <value>Painel monetário — fora do índice</value>
+    </data>
+    <data name="RiskMonetary_ResidualLabel" xml:space="preserve">
+        <value>Σ E[L] residual</value>
+    </data>
+    <data name="RiskMonetary_ResidualUnavailable" xml:space="preserve">
+        <value>não disponível: requer a média residual persistida (quant_residual_ale_mean, T290)</value>
+    </data>
+    <data name="RiskMonetary_InherentLabel" xml:space="preserve">
+        <value>Σ E[L] inerente</value>
+    </data>
+    <data name="RiskMonetary_InherentUnavailable" xml:space="preserve">
+        <value>não disponível: o servidor ainda não oferece a leitura monetária</value>
+    </data>
+    <data name="RiskMonetary_P95Label" xml:space="preserve">
+        <value>P95 / CVaR do portfólio</value>
+    </data>
+    <data name="RiskMonetary_P95Unavailable" xml:space="preserve">
+        <value>não disponível (requer M45)</value>
+    </data>
+    <data name="RiskMonetaryNote" xml:space="preserve">
+        <value>Um total sempre diz quantos cenários estão quantificados, e percentis nunca são somados.</value>
+    </data>
+    <data name="RiskTopRisksTitle" xml:space="preserve">
+        <value>Top Risks</value>
+    </data>
+    <data name="RiskTopRisksPlaceholder" xml:space="preserve">
+        <value>Top Risks — não disponível até o M43 (T172). O painel hospeda a lista quando ela existir; não há aproximação no modo interino.</value>
+    </data>
+    <data name="RiskVisibilitySourcesTitle" xml:space="preserve">
+        <value>Por fonte</value>
+    </data>
+    <data name="RiskVisibilityOverall" xml:space="preserve">
+        <value>Geral</value>
+    </data>
+    <data name="RiskVisibilityNoSources" xml:space="preserve">
+        <value>O perfil não lê nenhuma fonte para esta aba.</value>
+    </data>
+    <data name="RiskVisibility_ReadingCurrentFMT" xml:space="preserve">
+        <value>Atual {0}</value>
+    </data>
+    <data name="RiskVisibility_ReadingStaleFMT" xml:space="preserve">
+        <value>Obsoleta {0}</value>
+    </data>
+    <data name="RiskVisibility_ReadingExpiredFMT" xml:space="preserve">
+        <value>Expirada {0}</value>
+    </data>
+    <data name="RiskVisibility_ReadingNoneFMT" xml:space="preserve">
+        <value>Sem leitura {0}</value>
+    </data>
+    <data name="RiskVisibility_LastReadingFMT" xml:space="preserve">
+        <value>última leitura {0}</value>
+    </data>
+    <data name="RiskVisibility_Disabled_source_not_enabled" xml:space="preserve">
+        <value>Fonte não habilitada no perfil vigente</value>
+    </data>
+    <data name="RiskVisibility_SourceDisabled" xml:space="preserve">
+        <value>Fonte indisponível</value>
+    </data>
+    <data name="RiskSource_V1-DEV" xml:space="preserve">
+        <value>Vision One — dispositivos</value>
+    </data>
+    <data name="RiskSource_V1-CVE" xml:space="preserve">
+        <value>Vision One — CVEs</value>
+    </data>
+    <data name="RiskSource_V1-IFA" xml:space="preserve">
+        <value>Vision One — internet-facing</value>
+    </data>
+    <data name="RiskSource_V1-ACC" xml:space="preserve">
+        <value>Vision One — contas</value>
+    </data>
+    <data name="RiskSource_V1-CLD" xml:space="preserve">
+        <value>Vision One — nuvem</value>
+    </data>
+    <data name="RiskSource_V1-APP" xml:space="preserve">
+        <value>Vision One — aplicações locais</value>
+    </data>
+    <data name="RiskSource_V1-SCS" xml:space="preserve">
+        <value>Vision One — configuração de segurança</value>
+    </data>
+    <data name="RiskSource_SSC-TOT" xml:space="preserve">
+        <value>SecurityScorecard</value>
+    </data>
+    <data name="RiskSource_TEN-NES" xml:space="preserve">
+        <value>Varreduras Nessus</value>
+    </data>
+    <data name="RiskSource_TEN-VM" xml:space="preserve">
+        <value>Tenable VM</value>
+    </data>
+    <data name="RiskSource_TEN-AES" xml:space="preserve">
+        <value>Tenable AES</value>
+    </data>
+    <data name="RiskSource_TEN-ACR" xml:space="preserve">
+        <value>Tenable ACR</value>
+    </data>
+    <data name="RiskSource_IMPORTERS" xml:space="preserve">
+        <value>Demais importadores</value>
+    </data>
+    <data name="RiskSource_ASM" xml:space="preserve">
+        <value>Avaliações</value>
+    </data>
 </root>

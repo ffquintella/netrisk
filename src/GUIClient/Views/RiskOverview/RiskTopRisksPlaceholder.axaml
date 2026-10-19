@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="80"
+             x:DataType="vm:RiskTopRisksPlaceholderViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskTopRisksPlaceholder">
+
+    <!-- S40 §5.11 (T256): the Top Risks space exists from the interim mode on and holds only this
+         placeholder until M43 (T172); there is no approximation in the interim. -->
+    <Border Classes="riskEmptyState" IsVisible="{Binding IsActive}">
+        <StackPanel Orientation="Horizontal">
+            <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+            <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding StrPlaceholder}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -12,6 +12,8 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Events;
 using GUIClient.Models;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.Tools;
 using GUIClient.Views;
 using Model.DTO;
@@ -25,7 +27,7 @@ using Serilog;
 
 namespace GUIClient.ViewModels;
 
-public class IncidentsViewModel: ViewModelBase
+public class IncidentsViewModel: ViewModelBase, ISelectableModule
 {
     #region LANGUAGE
     public string StrIncidents { get; } = Localizer["Incidents"] ;
@@ -66,6 +68,9 @@ public class IncidentsViewModel: ViewModelBase
     
     #region FIELDS
     private bool _dataLoaded;
+
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
     #endregion
 
     #region PROPERTIES
@@ -177,12 +182,43 @@ public class IncidentsViewModel: ViewModelBase
     #endregion
     
     #region CONSTRUCTOR
+    /// <summary>
+    /// An incident opened from another module (S40 §10.3, IX-7): from the loaded list, else the service's; one outside the
+    /// user's scope or missing is refused with a toast and nothing selected.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        var incident = await RecordNavigation.FindAfterLoadAsync(_firstLoad, () => Incidents, i => i.Id == id, async () =>
+        {
+            var all = (await IncidentsService.GetAllAsync()).OrderByDescending(i => i.Name).ToList();
+            Incidents = new ObservableCollection<Incident>(all);
+            ListedIncidents = Incidents;
+            _dataLoaded = true;
+            return all;
+        }, ex => Logger.Warning("Incident {Id} could not be opened: {Message}", id, ex.Message));
+        if (incident is null)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        if (ListedIncidents is null || !ListedIncidents.Contains(incident))
+        {
+            SearchText = string.Empty;
+            ListedIncidents = Incidents;
+        }
+
+        SelectedIncident = incident;
+        return true;
+    }
+
     public IncidentsViewModel(MainWindow parentWindow)
     {
+        RegisterSelectableModule(AvaliableViews.Incidents, this);
         ParentWindow = parentWindow;
         _exportService = GetService<IExportClientService>();
         
-        _ = LoadDataAsync();
+        _firstLoad = LoadDataAsync();
         
         BtAddIncidentClicked = ReactiveCommand.CreateFromTask<Window>(AddIncidentAsync);
         BtEditIncidentClicked = ReactiveCommand.CreateFromTask<Window>(EditIncidentAsync);

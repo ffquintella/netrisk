@@ -12,6 +12,7 @@ using ClientServices.Interfaces;
 using GUIClient.Views;
 using GUIClient.Models;
 using GUIClient.Tools;
+using GUIClient.Tools.Navigation;
 using Microsoft.AspNetCore.Authentication;
 using Model.Authentication;
 using Model.Configuration;
@@ -30,6 +31,7 @@ public class NavigationBarViewModel: ViewModelBase
 
     public string StrDashboard { get; set; }
     public string StrMasterDashboard => Localizer["Master Dashboard"];
+    public string StrRiskOverview => Localizer["NavRiskOverview"];
     public string StrAssessment { get; set; }
     public string StrEntities { get; set; }
     public string StrRisks { get; set; }
@@ -62,6 +64,10 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasRiskPermission = false;
     private bool _hasHostsPermission = false;
     private bool _hasReportsPermission = false;
+    private bool _hasRiskIndexViewPermission = false;
+    private bool _hasVulnerabilitiesPermission = false;
+    private bool _hasIncidentsPermission = false;
+    private bool _hasMasterDashboardPermission = false;
     private string? _loggedUser;
     private Timer? timer;
     private CancellationTokenSource _cts = new CancellationTokenSource();
@@ -97,7 +103,13 @@ public class NavigationBarViewModel: ViewModelBase
     public Boolean IsEnabled
     {
         get => _isEnabled;
-        set => this.RaiseAndSetIfChanged(ref _isEnabled, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isEnabled, value);
+            this.RaisePropertyChanged(nameof(HasVulnerabilitiesPermission));
+            this.RaisePropertyChanged(nameof(HasIncidentsPermission));
+            this.RaisePropertyChanged(nameof(HasMasterDashboardPermission));
+        }
     }
 
     public Boolean HasAssessmentPermission
@@ -155,6 +167,41 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasReportsPermission, value);
     }
     
+    /// <summary>
+    /// The Cyber Risk Overview's button (S40 §10.2, §5.13): <c>risk_index_view</c> or the administrator claim, the
+    /// mirror of the API's policy (<see cref="GUIClient.Tools.RiskIndex.RiskIndexAccess"/>). Disabled, never hidden.
+    /// </summary>
+    public Boolean HasRiskIndexViewPermission
+    {
+        get
+        {
+            if (!_isEnabled) return false;
+            return _hasRiskIndexViewPermission;
+        }
+        set => this.RaiseAndSetIfChanged(ref _hasRiskIndexViewPermission, value);
+    }
+
+    /// <summary>The Vulnerabilities button: <see cref="ModuleAccess"/>, as the record navigation reads it (S40 §10.3).</summary>
+    public Boolean HasVulnerabilitiesPermission
+    {
+        get => _isEnabled && _hasVulnerabilitiesPermission;
+        set => this.RaiseAndSetIfChanged(ref _hasVulnerabilitiesPermission, value);
+    }
+
+    /// <summary>The Incidents button: <see cref="ModuleAccess"/>, as the record navigation reads it (S40 §10.3).</summary>
+    public Boolean HasIncidentsPermission
+    {
+        get => _isEnabled && _hasIncidentsPermission;
+        set => this.RaiseAndSetIfChanged(ref _hasIncidentsPermission, value);
+    }
+
+    /// <summary>The Master Dashboard button: <see cref="ModuleAccess"/> (the admin flag).</summary>
+    public Boolean HasMasterDashboardPermission
+    {
+        get => _isEnabled && _hasMasterDashboardPermission;
+        set => this.RaiseAndSetIfChanged(ref _hasMasterDashboardPermission, value);
+    }
+
     private AuthenticatedUserInfo? _authenticatedUserInfo;
 
     public AuthenticatedUserInfo? AuthenticatedUserInfo
@@ -191,6 +238,7 @@ public class NavigationBarViewModel: ViewModelBase
     
     public ReactiveCommand<RxVoid, RxVoid> BtDashboardClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtMasterDashboardClicked { get; }
+    public ReactiveCommand<RxVoid, RxVoid> BtRiskOverviewClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAdministrationClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeviceClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAssessmentClicked { get; }
@@ -237,6 +285,7 @@ public class NavigationBarViewModel: ViewModelBase
         
         BtDashboardClicked = ReactiveCommand.Create(ExecuteOpenDashboard);
         BtMasterDashboardClicked = ReactiveCommand.Create(ExecuteOpenMasterDashboard);
+        BtRiskOverviewClicked = ReactiveCommand.Create(ExecuteOpenRiskOverview);
         BtAdministrationClicked = ReactiveCommand.Create(ExecuteOpenAdministration);
         BtDeviceClicked = ReactiveCommand.Create(ExecuteOpenDevice);
         BtAssessmentClicked = ReactiveCommand.Create(ExecuteOpenAssessment);
@@ -279,12 +328,18 @@ public class NavigationBarViewModel: ViewModelBase
             this.RaisePropertyChanged(nameof(CanOpenTrack9));
             LoggedUser = AuthenticationService!.AuthenticatedUserInfo!.UserName!;
             //if (AuthenticationService.AuthenticatedUserInfo.UserRole == "Administrator") IsAdmin = true;
-            if (AuthenticationService.AuthenticatedUserInfo.IsAdmin) IsAdmin = true;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("assessments") || IsAdmin) HasAssessmentPermission = true;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement") || IsAdmin) HasRiskPermission = true;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("asset") || IsAdmin) HasEntitiesPermission = true;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
-            if (AuthenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("hosts") || IsAdmin) HasHostsPermission = true;
+            var user = AuthenticationService.AuthenticatedUserInfo;
+            if (user.IsAdmin) IsAdmin = true;
+            // Every module button reads ModuleAccess, the rule the record navigation also applies (S40 §10.3).
+            HasAssessmentPermission = ModuleAccess.CanOpen(AvaliableViews.Assessment, user);
+            HasRiskPermission = ModuleAccess.CanOpen(AvaliableViews.Risk, user);
+            HasEntitiesPermission = ModuleAccess.CanOpen(AvaliableViews.Entities, user);
+            HasHostsPermission = ModuleAccess.CanOpen(AvaliableViews.Devices, user);
+            HasVulnerabilitiesPermission = ModuleAccess.CanOpen(AvaliableViews.Vulnerabilities, user);
+            HasIncidentsPermission = ModuleAccess.CanOpen(AvaliableViews.Incidents, user);
+            HasMasterDashboardPermission = ModuleAccess.CanOpen(AvaliableViews.MasterDashboard, user);
+            HasRiskIndexViewPermission = ModuleAccess.CanOpen(AvaliableViews.RiskOverview, user);
+            if (user.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
         }
         catch (Exception ex)
         {
@@ -345,6 +400,12 @@ public class NavigationBarViewModel: ViewModelBase
 
     /// <summary>Admin-only cross-entity dashboard (Track 2 milestone 2.3.3).</summary>
     public void ExecuteOpenMasterDashboard() => Navigation.NavigateTo(AvaliableViews.MasterDashboard);
+
+    /// <summary>The Cyber Risk Overview (S40 §10.2), gated by <see cref="HasRiskIndexViewPermission"/>.</summary>
+    public void ExecuteOpenRiskOverview()
+    {
+        if (HasRiskIndexViewPermission) Navigation.NavigateTo(AvaliableViews.RiskOverview);
+    }
 
     public void ExecuteOpenAssessment() => Navigation.NavigateTo(AvaliableViews.Assessment);
 

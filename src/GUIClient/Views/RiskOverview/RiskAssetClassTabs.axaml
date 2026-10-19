@@ -1,0 +1,314 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:tools="clr-namespace:GUIClient.Tools.RiskIndex"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="560"
+             x:DataType="vm:RiskAssetClassTabsViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskAssetClassTabs">
+
+    <!-- S40 §5.5–§5.5.1 (T253): one tab per asset class, each the node shown ∩ its class. The
+         header carries the level as text and glyph; an unavailable tab stays selectable with its
+         state card. Visibility shows one row per source (T256), then the general bar. -->
+    <Border Classes="riskPanel" IsVisible="{Binding IsActive}">
+        <StackPanel Spacing="4">
+            <TextBlock Classes="sectionCaption" Margin="0" Text="{Binding StrTitle}"/>
+            <TabControl Classes="riskTabs" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
+                <TabControl.Styles>
+                    <Style Selector="TabItem" x:DataType="vm:RiskAssetClassTabViewModel">
+                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}"/>
+                        <Setter Property="ToolTip.Tip" Value="{Binding HeaderTip}"/>
+                    </Style>
+                </TabControl.Styles>
+                <TabControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RiskAssetClassTabViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="{Binding Icon}"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
+                            <Border Classes="riskBand" IsVisible="{Binding HasLevel}"
+                                    Classes.indicative="{Binding IsLevelUnclassified}"
+                                    Classes.b1="{Binding IsLevelStep1}" Classes.b2="{Binding IsLevelStep2}"
+                                    Classes.b3="{Binding IsLevelStep3}" Classes.b4="{Binding IsLevelStep4}"
+                                    Classes.b5="{Binding IsLevelStep5}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Classes="riskGlyph" Kind="{Binding LevelGlyph}"/>
+                                    <TextBlock Classes="riskBandText" Text="{Binding LevelText}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate x:DataType="vm:RiskAssetClassTabViewModel">
+                        <StackPanel Spacing="6" Margin="0 6 0 0">
+                            <!-- Below the strip (§5.5): levels are not comparable across tabs. -->
+                            <TextBlock Classes="hint" Margin="0"
+                                       Text="{Binding $parent[UserControl].((vm:RiskAssetClassTabsViewModel)DataContext).StrNotComparable}"/>
+                            <Border Classes="riskEmptyState" IsVisible="{Binding IsUnavailable}">
+                                <StackPanel Orientation="Horizontal">
+                                    <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                                    <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding UnavailableText}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Grid ColumnDefinitions="3*,2*" IsVisible="{Binding HasContent}">
+                                <!-- Monthly summary (§5.5.1): grouped columns labelled "EXP 74", or the table. -->
+                                <StackPanel Grid.Column="0" Spacing="4" Margin="0 0 12 0">
+                                    <WrapPanel Classes="riskToolbar">
+                                        <TextBlock Classes="label-nm" Margin="0 0 6 4" VerticalAlignment="Center"
+                                                   Text="{Binding StrMonthlyTitle}"/>
+                                        <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center"
+                                                ToolTip.Tip="{Binding StrMonthlyHelp}">
+                                            <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                                        </Border>
+                                        <ComboBox Margin="0 0 12 4" MinWidth="110" ItemsSource="{Binding MonthsOptions}"
+                                                  SelectedItem="{Binding SelectedMonths}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:MonthsOption">
+                                                    <TextBlock Text="{Binding Label}"/>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <Button Classes="type3" Margin="0 0 12 4" Command="{Binding BtToggleMonthlyTableClicked}"
+                                                IsVisible="{Binding HasMonthly}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <material:MaterialIcon Kind="TableLarge" Width="18" Height="18" Margin="0 0 5 0"
+                                                                       IsVisible="{Binding !IsMonthlyTable}"/>
+                                                <material:MaterialIcon Kind="ChartBar" Width="18" Height="18" Margin="0 0 5 0"
+                                                                       IsVisible="{Binding IsMonthlyTable}"/>
+                                                <TextBlock Text="{Binding StrToggleView}"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                                               IsActive="{Binding IsMonthlyBusy}" IsVisible="{Binding IsMonthlyBusy}"/>
+                                    </WrapPanel>
+                                    <Border Classes="riskEmptyState" IsVisible="{Binding HasMonthlyError}">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420"
+                                                       Text="{Binding MonthlyError}" IsVisible="{Binding HasMonthlyError}"/>
+                                            <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                                                    <TextBlock Text="{Binding StrRetry}"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrMonthlyEmpty}"
+                                               IsVisible="{Binding IsMonthlyEmpty}"/>
+                                    <lvc:CartesianChart MinHeight="240" IsVisible="{Binding IsMonthlyChart}"
+                                                        Series="{Binding MonthlySeries}" XAxes="{Binding MonthlyXAxes}"
+                                                        YAxes="{Binding MonthlyYAxes}" LegendPosition="Hidden"
+                                                        TooltipPosition="Top"/>
+                                    <DataGrid MinHeight="160" MaxHeight="320" IsVisible="{Binding IsMonthlyTable}"
+                                              ItemsSource="{Binding MonthlyRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                              CanUserReorderColumns="True" CanUserResizeColumns="True" CanUserSortColumns="True"
+                                              GridLinesVisibility="Horizontal">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="{Binding StrColMonth, Mode=OneTime}" Binding="{Binding Month}" Width="90"/>
+                                            <DataGridTextColumn Header="{Binding StrColReg, Mode=OneTime}" Binding="{Binding Reg}" Width="60"
+                                                                IsVisible="{Binding ShowsReg}"/>
+                                            <DataGridTextColumn Header="{Binding StrColExp, Mode=OneTime}" Binding="{Binding Exp}" Width="60"
+                                                                IsVisible="{Binding ShowsExp}"/>
+                                            <DataGridTextColumn Header="{Binding StrColAme, Mode=OneTime}" Binding="{Binding Ame}" Width="60"
+                                                                IsVisible="{Binding ShowsAme}"/>
+                                            <DataGridTextColumn Header="{Binding StrColCtl, Mode=OneTime}" Binding="{Binding Ctl}" Width="60"
+                                                                IsVisible="{Binding ShowsCtl}"/>
+                                            <DataGridTextColumn Header="{Binding StrColGov, Mode=OneTime}" Binding="{Binding Gov}" Width="60"
+                                                                IsVisible="{Binding ShowsGov}"/>
+                                            <DataGridTextColumn Header="{Binding StrColTer, Mode=OneTime}" Binding="{Binding Ter}" Width="60"
+                                                                IsVisible="{Binding ShowsTer}"/>
+                                            <DataGridTextColumn Header="{Binding StrColNote, Mode=OneTime}" Binding="{Binding Note}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock Classes="hint" Margin="0" Text="{Binding MonthlyLegend}"
+                                               IsVisible="{Binding MonthlyLegend, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                </StackPanel>
+
+                                <!-- Risk factors (§5.5.1): volume and points; counts are volume, not risk. -->
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Classes="label-nm" Margin="0 0 6 4" VerticalAlignment="Center"
+                                                   Text="{Binding StrFactorsTitle}"/>
+                                        <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center"
+                                                ToolTip.Tip="{Binding StrFactorsHelp}">
+                                            <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                                        </Border>
+                                        <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                                               IsActive="{Binding IsFactorsBusy}" IsVisible="{Binding IsFactorsBusy}"/>
+                                    </StackPanel>
+                                    <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding FactorsError}"
+                                               IsVisible="{Binding HasFactorsError}"/>
+                                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrFactorsNone}" IsVisible="{Binding HasNoFactors}"/>
+                                    <Grid ColumnDefinitions="80,*,50,30" IsVisible="{Binding !HasNoFactors}">
+                                        <TextBlock Grid.Column="2" Classes="label-nm" HorizontalAlignment="Right"
+                                                   Text="{Binding StrFactorsPoints}"/>
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding Factors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:RiskFactorLine">
+                                                <Grid ColumnDefinitions="80,*,50,30" MinHeight="24">
+                                                    <TextBlock Grid.Column="0" Classes="label-nm" HorizontalAlignment="Right"
+                                                               Margin="0 0 8 0" VerticalAlignment="Center" Text="{Binding CountText}"/>
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap"
+                                                               Text="{Binding Label}"/>
+                                                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                               Text="{Binding PointsText}"/>
+                                                    <!-- "›" (§5.5.1, T254): the object list filtered by the factor. -->
+                                                    <Button Grid.Column="3" Classes="detailButton" HorizontalAlignment="Right"
+                                                            IsVisible="{Binding CanOpen}" Command="{Binding Open}"
+                                                            CommandParameter="{Binding ObjectFilter}"
+                                                            ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskAssetClassTabsViewModel)DataContext).StrFactorObjectsHint}">
+                                                        <material:MaterialIcon Kind="ChevronRight"/>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrFactorsVolumeNote}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Attack-surface visibility (§5.5.1): the general bar and the R distribution. -->
+                            <StackPanel Spacing="4" IsVisible="{Binding HasContent}">
+                                <WrapPanel Classes="riskToolbar">
+                                    <TextBlock Classes="label-nm" Margin="0 0 6 4" VerticalAlignment="Center"
+                                               Text="{Binding StrVisibilityTitle}"/>
+                                    <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center"
+                                            ToolTip.Tip="{Binding StrVisibilityHelp}">
+                                        <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                                    </Border>
+                                    <TextBlock Margin="0 0 12 4" VerticalAlignment="Center" Text="{Binding InventoryText}"/>
+                                    <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                                           IsActive="{Binding IsVisibilityBusy}"
+                                                           IsVisible="{Binding IsVisibilityBusy}"/>
+                                </WrapPanel>
+                                <TextBlock Classes="warning" TextWrapping="Wrap" Text="{Binding VisibilityError}"
+                                           IsVisible="{Binding HasVisibilityError}"/>
+                                <StackPanel Spacing="4" IsVisible="{Binding HasVisibility}">
+                                    <!-- Per source (§5.5.1, T256): current, stale, expired and no reading, each
+                                         counted and with its glyph; a source the profile does not enable says so. -->
+                                    <TextBlock Classes="label-nm" Margin="0" Text="{Binding StrSourcesTitle}"/>
+                                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoSources}"
+                                               IsVisible="{Binding HasNoSources}"/>
+                                    <ItemsControl ItemsSource="{Binding SourceRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:SourceVisibilityRowView">
+                                                <Grid ColumnDefinitions="220,*" Margin="0 2">
+                                                    <TextBlock Grid.Column="0" Margin="0 0 8 0" VerticalAlignment="Top"
+                                                               TextWrapping="Wrap" Text="{Binding Label}"/>
+                                                    <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding IsEnabled}">
+                                                        <ItemsControl ItemsSource="{Binding Segments}" IsVisible="{Binding HasBar}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="vm:VisibilitySegmentView">
+                                                                    <Border Classes="visibilitySegment" Width="{Binding Width}"
+                                                                            Classes.current="{Binding IsCurrent}"
+                                                                            Classes.stale="{Binding IsStale}"
+                                                                            Classes.expired="{Binding IsExpired}"
+                                                                            Classes.noReading="{Binding IsNoReading}"
+                                                                            ToolTip.Tip="{Binding Label}"/>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <ItemsControl ItemsSource="{Binding Segments}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <WrapPanel Classes="riskToolbar"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="vm:VisibilitySegmentView">
+                                                                    <StackPanel Orientation="Horizontal" Margin="0 0 14 0">
+                                                                        <material:MaterialIcon Classes="riskGlyph" Kind="{Binding Glyph}"/>
+                                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                                                                    </StackPanel>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <TextBlock Classes="hint" Margin="0" Text="{Binding LastReadingText}"
+                                                                   IsVisible="{Binding HasLastReading}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" IsVisible="{Binding IsDisabled}">
+                                                        <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                                                        <TextBlock Classes="hint" Margin="0" VerticalAlignment="Center"
+                                                                   TextWrapping="Wrap" Text="{Binding DisabledText}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- The general bar (S39 §8.1): assessed, stale, presumed and not assessed. -->
+                                    <TextBlock Classes="label-nm" Margin="0 6 0 0" Text="{Binding StrOverallTitle}"/>
+                                    <ItemsControl ItemsSource="{Binding Segments}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:VisibilitySegmentView">
+                                                <Border Classes="visibilitySegment" Width="{Binding Width}"
+                                                        Classes.assessed="{Binding IsAssessed}" Classes.stale="{Binding IsStale}"
+                                                        Classes.presumed="{Binding IsPresumed}"
+                                                        Classes.notAssessed="{Binding IsNotAssessed}"
+                                                        ToolTip.Tip="{Binding Label}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <ItemsControl ItemsSource="{Binding Segments}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Classes="riskToolbar"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:VisibilitySegmentView">
+                                                <StackPanel Orientation="Horizontal" Margin="0 0 14 0">
+                                                    <material:MaterialIcon Classes="riskGlyph" Kind="{Binding Glyph}"/>
+                                                    <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <WrapPanel Classes="riskToolbar">
+                                        <TextBlock Margin="0 0 8 4" VerticalAlignment="Center" Text="{Binding StrDistributionTitle}"/>
+                                        <ItemsControl ItemsSource="{Binding Distribution}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Classes="riskToolbar"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:DistributionItem">
+                                                    <Border Classes="riskBand" Margin="0 0 6 4"
+                                                            Classes.b1="{Binding IsBandStep1}" Classes.b2="{Binding IsBandStep2}"
+                                                            Classes.b3="{Binding IsBandStep3}" Classes.b4="{Binding IsBandStep4}"
+                                                            Classes.b5="{Binding IsBandStep5}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <material:MaterialIcon Classes="riskGlyph" Kind="{Binding Glyph}"/>
+                                                            <TextBlock Classes="riskBandText" Text="{Binding Text}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
+        </StackPanel>
+    </Border>
+</UserControl>

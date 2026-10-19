@@ -8,6 +8,7 @@ using DAL.Enums;
 using JetBrains.Annotations;
 using Model.RiskIndex;
 using ServerServices.RiskIndex;
+using ServerServices.RiskIndex.Engine;
 using ServerServices.RiskIndex.Read;
 using Xunit;
 
@@ -284,6 +285,59 @@ public class RiskIndexReadServiceTest : RiskIndexSeedTestBase
         Assert.True(named.Total > 0);
     }
 
+    /// <summary>
+    /// The appetite seals and the residual-above-inherent list pick scenarios by their register inputs and decisions, which
+    /// are riskmanagement's (S40 §5.9.2, §11.3): refused without it, the administrator role passing as it does elsewhere.
+    /// </summary>
+    [Theory]
+    [InlineData("seal=above_appetite")]
+    [InlineData("seal=accepted_above_appetite")]
+    [InlineData("seal=acceptance_expiring")]
+    [InlineData("chip=residual_above_inherent")]
+    public async Task TestTheRegisterFiltersNeedRiskManagement(string filter)
+    {
+        Publish();
+
+        var refused = await Assert.ThrowsAsync<RiskIndexException>(() =>
+            Service.GetObjectsAsync("org", null, new RiskIndexObjectQuery(filter), Caller(RiskIndexModulePermissions.Hosts)));
+        var permitted = await Service.GetObjectsAsync("org", null, new RiskIndexObjectQuery(filter),
+            Caller(RiskIndexModulePermissions.RiskManagement));
+        var admin = await Service.GetObjectsAsync("org", null, new RiskIndexObjectQuery(filter), Admin);
+
+        Assert.Equal((403, RiskIndexErrors.NotPermitted), (refused.Status, refused.Code));
+        Assert.Equal(permitted.Total, admin.Total);
+        Assert.All(permitted.Rows, r => Assert.Equal(RiskIndexObjectKind.Scenario, r.Object.Object.Kind));
+    }
+
+    /// <summary>The other lists stay open to a reader without riskmanagement; only the register's are refused.</summary>
+    [Fact]
+    public async Task TestTheOtherChipsStayOpenWithoutRiskManagement()
+    {
+        Publish();
+
+        var presumed = await Service.GetObjectsAsync("org", null,
+            new RiskIndexObjectQuery(RiskIndexQualityFilters.Filter(RiskIndexQualityFilters.PresumedCritical)), Caller());
+        var defaults = await Service.GetObjectsAsync("org", null,
+            new RiskIndexObjectQuery(RiskIndexQualityFilters.Filter(RiskIndexQualityFilters.DefaultCriticality)), Caller());
+
+        Assert.True(defaults.Total > 0);
+        Assert.All(presumed.Rows, r => Assert.Equal(RiskIndexObjectState.Presumed, r.State));
+    }
+
+    /// <summary>The seals keep their counts for every reader; only riskmanagement gets the list behind them (§5.2.2, §11.3).</summary>
+    [Fact]
+    public async Task TestTheSealsOpenTheirListOnlyWithRiskManagement()
+    {
+        Publish();
+
+        var redacted = await Service.GetOverviewAsync("org", null, Caller(RiskIndexModulePermissions.Hosts));
+        var named = await Service.GetOverviewAsync("org", null, Caller(RiskIndexModulePermissions.RiskManagement));
+
+        Assert.Contains(named.Seals, s => s.ObjectFilter == "seal=above_appetite");
+        Assert.All(redacted.Seals, s => Assert.Null(s.ObjectFilter));
+        Assert.Equal(named.Seals.Select(s => (s.Key, s.Count)), redacted.Seals.Select(s => (s.Key, s.Count)));
+    }
+
     /// <summary>S40 §12.2: the cache is keyed by the module permissions — the same node and scope, two payloads.</summary>
     [Fact]
     public async Task TestTheCacheIsKeyedByTheModulePermissions()
@@ -393,6 +447,38 @@ public class RiskIndexReadServiceTest : RiskIndexSeedTestBase
         Assert.Equal(RiskIndexErrors.InvalidFilter, refusal.Code);
     }
 
+    /// <summary>
+    /// "Não atribuído" has no unit children (S40 §5.6.1). Its key has no entity, so a parent match on "no parent" listed
+    /// every top-level unit without a parent — with objects — as a child of the unassigned node.
+    /// </summary>
+    [Fact]
+    public async Task TestTheUnassignedNodeListsNoUnitWithoutAParent()
+    {
+        const int orphanUnit = 50, orphanHost = 150;
+        SeedUnscoped(ctx =>
+        {
+            ctx.Entities.Add(new Entity
+            {
+                Id = orphanUnit, DefinitionName = "organizationUnit", DefinitionVersion = "2.7", Status = "active", Parent = null,
+                Created = Now.AddYears(-1), Updated = Now.AddYears(-1)
+            });
+            ctx.Hosts.Add(new Host
+            {
+                Id = orphanHost, HostName = "host-orphan", Ip = "10.0.1.50", EntityId = orphanUnit, Source = "test", Status = 1,
+                Criticality = 3, RiskScore = 70, RiskScoreUpdatedAt = Now, RegistrationDate = Now.AddDays(-100)
+            });
+        });
+        var next = D.AddDays(1);
+        Assert.Equal(RiskIndexSnapshotResult.Written,
+            (await GetService<IRiskIndexSnapshotService>().RunAsync(Now.AddDays(1))).Result);
+
+        var top = await Service.GetNodesAsync("org", RiskIndexDimension.Unit, null, next, Committee());
+        Assert.Contains(top.Rows, r => r.Node.Key == Key(orphanUnit));
+
+        var unassigned = await Service.GetNodesAsync("u", RiskIndexDimension.Unit, null, next, Committee());
+        Assert.Empty(unassigned.Rows);
+    }
+
     /// <summary>A partial parent lists only children with visible objects (S40 §5.6.5).</summary>
     [Fact]
     public async Task TestAScopedDrillDownOmitsChildrenWithNothingVisible()
@@ -404,6 +490,91 @@ public class RiskIndexReadServiceTest : RiskIndexSeedTestBase
         Assert.All(classes.Rows, r => Assert.True(r.ObjectCount > 0));
         Assert.All(classes.Rows, r => Assert.Equal(RiskIndexProvenance.PartialRestricted, r.Provenance));
         Assert.DoesNotContain(classes.Rows, r => r.Node.Key.Contains("c:application", StringComparison.Ordinal));
+    }
+
+    // --- the values present in a node (S40 §8.2 Dimensions; T254) -----------------------------------------------------
+
+    /// <summary>Every listed value is a filter term the node holds, with the same object count as the child it would make.</summary>
+    [Fact]
+    public async Task TestTheDimensionsListTheValuesTheNodeHolds()
+    {
+        var dimensions = await Service.GetDimensionsAsync(Key(UnitX), null, Committee());
+        var values = dimensions.AssetClasses.Concat(dimensions.Sources).Concat(dimensions.Criticalities)
+            .Concat(dimensions.Environments).ToList();
+
+        Assert.Contains(dimensions.AssetClasses, v => v.Term == "c:devices");
+        Assert.Contains(dimensions.AssetClasses, v => v.Term == "c:application");
+        Assert.NotEmpty(dimensions.Criticalities);
+        Assert.All(values, v =>
+        {
+            Assert.True(RiskIndexNodeKey.TryParse(v.Term, out var term) && term.HasFilters && term.EntityId is null, v.Term);
+            Assert.True(v.VisibleObjects > 0);
+            Assert.Equal(RiskIndexReadService.DimensionPresent, v.Availability);
+        });
+
+        // The tab groups come first, in tab order, and each class is counted like the drill-down's child for it.
+        Assert.StartsWith("c:devices", dimensions.AssetClasses[0].Term, StringComparison.Ordinal);
+        var children = await Service.GetNodesAsync(Key(UnitX), RiskIndexDimension.AssetClass, null, null, Committee());
+        Assert.NotEmpty(children.Rows);
+        foreach (var row in children.Rows)
+            Assert.Equal(row.ObjectCount,
+                dimensions.AssetClasses.Single(v => row.Node.Key.EndsWith(";" + v.Term, StringComparison.Ordinal)).VisibleObjects);
+    }
+
+    /// <summary>S40 §11.8: a scoped reader's values and counts cover the visible objects only — no hidden class leaks.</summary>
+    [Fact]
+    public async Task TestTheDimensionsOfAScopedReaderCountOnlyTheVisible()
+    {
+        var official = await Service.GetDimensionsAsync(Key(UnitX), null, Committee());
+        ScopeTo(UnitX, Lab);
+
+        var scoped = await Service.GetDimensionsAsync(Key(UnitX), null, Committee());
+
+        Assert.Contains(official.AssetClasses, v => v.Term == "c:application");
+        Assert.DoesNotContain(scoped.AssetClasses, v => v.Term == "c:application");
+        Assert.True(scoped.Criticalities.Sum(v => v.VisibleObjects) < official.Criticalities.Sum(v => v.VisibleObjects));
+    }
+
+    [Fact]
+    public async Task TestTheDimensionsRefuseLikeEveryRead()
+    {
+        var malformed = await Assert.ThrowsAsync<RiskIndexException>(() => Service.GetDimensionsAsync("e:abc", null, Committee()));
+        var scopeRoot = await Assert.ThrowsAsync<RiskIndexException>(() => Service.GetDimensionsAsync("scope", null, Committee()));
+        var unknown = await Assert.ThrowsAsync<RiskIndexException>(() => Service.GetDimensionsAsync(Key(999), null, Committee()));
+        var shadow = await Assert.ThrowsAsync<RiskIndexException>(() =>
+            Service.GetDimensionsAsync(Key(UnitX), null, Caller(RiskIndexModulePermissions.RiskManagement)));
+
+        Assert.Equal((400, RiskIndexErrors.InvalidNode), (malformed.Status, malformed.Code));
+        Assert.Equal((400, RiskIndexErrors.InvalidNode), (scopeRoot.Status, scopeRoot.Code));
+        Assert.Equal((404, RiskIndexErrors.NodeNotFound), (unknown.Status, unknown.Code));
+        Assert.Equal((403, RiskIndexErrors.InShadow), (shadow.Status, shadow.Code));
+    }
+
+    /// <summary>The pure count: an object counts once per value however many category rows it has; sources on exposure only.</summary>
+    [Fact]
+    public void TestTheDimensionCountsAreDeduplicatedObjects()
+    {
+        var host = new IcrObjectKey(RiskIndexObjectKind.Host, "1");
+        var app = new IcrObjectKey(RiskIndexObjectKind.Application, "2");
+        var v1 = RiskIndexSourceBits.Bit(RiskIndexSources.V1Device);
+        RiskIndexObjectRow Row(IcrObjectKey key, RiskIndexCategory category, RiskIndexAssetClass? cls, int crit, string? env,
+            int mask) => new()
+        {
+            Key = key, Category = category, Population = RiskIndexPopulation.Assets, AssetClass = cls, Criticality = crit,
+            Environment = env, SourceMask = mask
+        };
+
+        var dimensions = RiskIndexReadService.Dimensions([
+            Row(host, RiskIndexCategory.Exp, RiskIndexAssetClass.Server, 5, "prod", v1),
+            Row(host, RiskIndexCategory.Gov, RiskIndexAssetClass.Server, 5, "prod", v1),
+            Row(app, RiskIndexCategory.Gov, RiskIndexAssetClass.Application, 3, null, v1)
+        ]);
+
+        Assert.Equal(["c:devices", "c:applications", "c:server", "c:application"], dimensions.AssetClasses.Select(v => v.Term));
+        Assert.All(dimensions.AssetClasses, v => Assert.Equal(1, v.VisibleObjects));
+        Assert.Equal(("s:V1-DEV", 1), (Assert.Single(dimensions.Sources).Term, dimensions.Sources[0].VisibleObjects));
+        Assert.Equal(["k:3", "k:5"], dimensions.Criticalities.Select(v => v.Term));
+        Assert.Equal(("a:prod", "RiskEnvironment_prod"), (Assert.Single(dimensions.Environments).Term, dimensions.Environments[0].LabelKey));
     }
 
     [Fact]

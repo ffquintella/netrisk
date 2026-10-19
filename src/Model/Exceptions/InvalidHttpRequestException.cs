@@ -16,6 +16,14 @@ public class InvalidHttpRequestException: Exception
     /// </summary>
     public HttpStatusCode? StatusCode { get; init; }
 
+    /// <summary>
+    /// The stable <c>error</c> code of a structured refusal (<c>{ error, message }</c>), when the server sent one — the
+    /// risk index API's <c>risk_index_in_shadow</c>, <c>org_requires_global_scope</c>, <c>derived_computation_busy</c>…
+    /// (S40 §8.1). A screen translates it (<c>RiskApi_‹code›MSG</c>) and falls back to <see cref="Exception.Message"/>,
+    /// which then holds the server's own sentence. Null for callers that do not read the body.
+    /// </summary>
+    public string? ErrorCode { get; init; }
+
     public InvalidHttpRequestException(string message, string url, string method) : base(message)
     {
         Url = url;

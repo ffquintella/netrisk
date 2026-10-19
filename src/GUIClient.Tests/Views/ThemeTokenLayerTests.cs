@@ -108,6 +108,11 @@ public class ThemeTokenLayerTests
                                      .Select(match => match.Groups["key"].Value))
             .ToHashSet(StringComparer.Ordinal);
 
+        // The one sanctioned C# consumer (S40 §10.4, T257): chart colours are tokens named by ChartPaletteMap and resolved
+        // by its Avalonia adapter, because LintUi reads no C#. ChartPaletteMapTest holds the converse — every key it names
+        // is defined here — so this widens what counts as a reference without letting a stale token hide.
+        referenced.UnionWith(GUIClient.Tools.RiskIndex.ChartPaletteMap.AllTokenKeys());
+
         var unused = defined.Where(token => !referenced.Contains(token)).ToList();
 
         Assert.True(unused.Count == 0,

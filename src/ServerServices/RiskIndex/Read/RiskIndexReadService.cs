@@ -398,9 +398,15 @@ public sealed partial class RiskIndexReadService(
         budget.RunAsync(caller.UserId, async token =>
         {
             await using var db = dalService.GetContext();
-            var set = await RiskIndexStoredDays.LoadSetAsync(db, day.Date, day.Profile.Id, day.P, day.Map, token);
-            return Compose(node, day, set);
+            return await ComposeWithinAsync(db, node, day, token);
         }, ct);
+
+    /// <summary>The composition read through <paramref name="db"/>, for a computation that already holds a slot of the budget.</summary>
+    private static async Task<Composition> ComposeWithinAsync(NRDbContext db, Node node, Day day, CancellationToken token)
+    {
+        var set = await RiskIndexStoredDays.LoadSetAsync(db, day.Date, day.Profile.Id, day.P, day.Map, token);
+        return Compose(node, day, set);
+    }
 
     /// <summary>The pure part: which objects are the node's, and the S39 §4 formulas over them.</summary>
     internal static Composition Compose(Node node, Day day, RiskIndexObjectSet set)
@@ -480,9 +486,18 @@ public sealed partial class RiskIndexReadService(
         p.Bands.Select((b, i) => new RiskIndexBandDto(BandKey(i), b.LabelPtBr, b.LabelEnUs, i, RampStep(i, p.Bands.Count),
             b.LowerInclusive)).ToList();
 
-    /// <summary>The ramp step of a band's position (S40 §5.2.2: three bands are steps 1, 3 and 5).</summary>
-    internal static int RampStep(int index, int count) =>
-        count <= 1 ? 1 : 1 + (int)Math.Round(4.0 * index / (count - 1), MidpointRounding.AwayFromZero);
+    /// <summary>
+    /// The ramp step of a band's position — the table of S40 §10.4 that the desktop's <c>ChartPaletteMap.BandStep</c> also
+    /// encodes, so a band's <c>RampStep</c> here and its pill class there agree: 2 → 1, 5; 3 → 1, 3, 5; 4 → 1, 3, 4, 5;
+    /// 5 → 1…5. (Spacing the steps evenly gave 1, 2, 4, 5 for four bands.)
+    /// </summary>
+    internal static int RampStep(int index, int count) => count switch
+    {
+        2 => index == 0 ? 1 : 5,
+        3 => 1 + 2 * Math.Clamp(index, 0, 2),
+        4 => index <= 0 ? 1 : 2 + Math.Clamp(index, 1, 3),
+        _ => Math.Clamp(index + 1, 1, 5)
+    };
 
     internal static int? BandIndex(int? displayed, RiskIndexDisplayState state, RiskIndexParameters p)
     {

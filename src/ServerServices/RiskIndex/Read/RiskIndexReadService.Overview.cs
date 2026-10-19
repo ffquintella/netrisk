@@ -39,7 +39,8 @@ public sealed partial class RiskIndexReadService
                 var values = await ValuesAsync(resolved, day, caller, ct);
                 await using var db = dalService.GetContext();
                 var labels = await RiskIndexLabels.ResolveAsync(db, values.Categories.SelectMany(c => c.HeldBy), caller, ct);
-                var seals = await SealsAsync(db, resolved, day, ct);
+                var seals = await SealsAsync(db, resolved, day, RiskIndexRedactionPolicy.Holds(RiskIndexModulePermissions.RiskManagement,
+                    caller.IsAdmin, caller.Permissions), ct);
                 var delta = resolved.Official ? await Delta7dAsync(db, resolved, day, values, ct) : null;
 
                 var headline = Headline(values, day.P, delta);
@@ -287,8 +288,10 @@ public sealed partial class RiskIndexReadService
     /// <summary>
     /// The appetite and review seals of S39 §6.6 over the node's visible scenarios, from their stored register inputs:
     /// scenarios above the appetite ceiling without a valid acceptance, accepted above it, and acceptances expiring soon.
+    /// Every reader sees the counts; only <paramref name="mayOpenLists"/> (riskmanagement, §11.3) gets the list behind them.
     /// </summary>
-    private static async Task<IReadOnlyList<RiskIndexSealDto>> SealsAsync(NRDbContext db, Node node, Day day, CancellationToken ct)
+    private static async Task<IReadOnlyList<RiskIndexSealDto>> SealsAsync(NRDbContext db, Node node, Day day, bool mayOpenLists,
+        CancellationToken ct)
     {
         var scenarios = await db.RiskIndexObjectDays.AsNoTracking()
             .Where(o => o.SnapshotDate == day.Date && o.ProfileId == day.Profile.Id && o.Category == RiskIndexCategory.Reg &&
@@ -314,8 +317,8 @@ public sealed partial class RiskIndexReadService
         if (inNode.All(i => !i.AppetiteConfigured)) seals.Add(Seal("appetite_not_configured", null, null));
         return seals;
 
-        static RiskIndexSealDto Seal(string key, int? count, string? filter) =>
-            new(key, count, new Dictionary<string, string>(), filter);
+        RiskIndexSealDto Seal(string key, int? count, string? filter) =>
+            new(key, count, new Dictionary<string, string>(), mayOpenLists ? filter : null);
     }
 
     // ------------------------------------------------------------------------------------------------------------------

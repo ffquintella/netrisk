@@ -2,6 +2,8 @@ using GUIClient.ViewModels.Dialogs.Results;
 using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.Tools;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.ViewModels.Track9;
 using System;
 using System.Collections.Generic;
@@ -39,7 +41,7 @@ using Tools.Security;
 
 namespace GUIClient.ViewModels;
 
-public class RiskViewModel: ViewModelBase
+public class RiskViewModel: ViewModelBase, ISelectableModule
 {
 
     #region CONSTS
@@ -887,6 +889,9 @@ public class RiskViewModel: ViewModelBase
     #region PRIVATE FIELDS
     
     private bool _initialized;
+
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
     private List<RiskStatus> _filterStatuses;
     #endregion
     
@@ -1032,8 +1037,32 @@ public class RiskViewModel: ViewModelBase
     #endregion
     
     #region CONSTRUCTOR
+    /// <summary>
+    /// A risk opened from another module (S40 §10.3, IX-7): from the loaded register, else from the service's list; a risk
+    /// outside the user's scope or missing is refused with a toast and nothing selected.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        var risk = await RecordNavigation.FindAfterLoadAsync(_firstLoad, () => AllRisks, r => r.Id == id, async () =>
+        {
+            var all = await RisksService.GetAllRisksAsync();
+            AllRisks = new ObservableCollection<Risk>(all);
+            return all;
+        }, ex => Logger.Warning("Risk {Id} could not be opened: {Message}", id, ex.Message));
+        if (risk is null)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        if (!Risks.Contains(risk)) RiskFilter = "";
+        SelectedRisk = risk;
+        return true;
+    }
+
     public RiskViewModel()
     {
+        RegisterSelectableModule(AvaliableViews.Risk, this);
         StrRisk = Localizer["Risk"];
         StrDetails= Localizer["Details"];
         StrSubject = Localizer["Subject"] + ": ";
@@ -1130,7 +1159,7 @@ public class RiskViewModel: ViewModelBase
             if(AutenticationService.AuthenticatedUserInfo == null) return;
 
             if(AutenticationService.AuthenticatedUserInfo.UserPermissions!.Contains("riskmanagement"))
-                _= InitializeAsync();
+                _firstLoad = InitializeAsync();
             
             CanSubmitRisk = RiskRecordAccess.CanSubmit(AutenticationService.AuthenticatedUserInfo);
             CanCloseRisk = RiskRecordAccess.CanClose(AutenticationService.AuthenticatedUserInfo);

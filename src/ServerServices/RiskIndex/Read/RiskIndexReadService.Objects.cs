@@ -11,7 +11,8 @@ public sealed partial class RiskIndexReadService
     /// <summary>The filters <c>GET /RiskIndex/Objects</c> accepts (S40 §8.2), and nothing else.</summary>
     public static readonly IReadOnlySet<string> ObjectFilterKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "category", "state", "kind", "assetClass", "source", "criticality", "environment", "label", "isPresumed", "seal"
+        "category", "state", "kind", "assetClass", "source", "criticality", "environment", "label", "isPresumed", "seal", "factor",
+        RiskIndexQualityFilters.Key
     };
 
     /// <summary>
@@ -30,7 +31,9 @@ public sealed partial class RiskIndexReadService
         if (query.Page < 1 || query.PageSize is < 1 or > RiskIndexObjectQuery.MaxPageSize)
             throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidPage,
                 $"Page starts at 1 and PageSize is 1 to {RiskIndexObjectQuery.MaxPageSize}.");
-        var filters = ParseFilters(query.Filters);
+        var mayReadRegister = RiskIndexRedactionPolicy.Holds(RiskIndexModulePermissions.RiskManagement, caller.IsAdmin,
+            caller.Permissions);
+        var (filters, factor, onePerObject) = ParseFilters(query.Filters, mayReadRegister);
         var sorts = ParseSorts(query.Sorts);
 
         var day = await ResolveDayAsync(date, ct);
@@ -39,6 +42,17 @@ public sealed partial class RiskIndexReadService
             async () => new Box<IReadOnlyList<ObjectRow>>(await ObjectRowsAsync(resolved, day, caller, ct)));
 
         IEnumerable<ObjectRow> rows = all.Value.Where(r => filters.All(f => f(r)));
+        if (factor is not null)
+        {
+            // The RiskFactors lines' filter (S40 §5.5.1): the rows whose points the line counted — on a node cut by a tab, in
+            // the tab's categories only, as the line counts them. The factor JSON is read only when asked for.
+            var map = await cache.GetOrCreateAsync(CacheKey("object-factors", resolved, day, caller),
+                RiskIndexReadCache.SnapshotTimeToLive, async () => await ObjectFactorsAsync(day, all.Value, caller, ct));
+            var inTab = TabOf(resolved.Key) is { } tab ? RiskIndexTabGroups.Categories(tab) : null;
+            rows = rows.Where(r => (inTab is null || inTab.Contains(r.Dto.Category)) &&
+                                   map.TryGetValue((new IcrObjectKey(r.Dto.Object.Object.Kind, r.Dto.Object.Object.Ref), r.Dto.Category),
+                                       out var keys) && keys.Contains(factor));
+        }
         IOrderedEnumerable<ObjectRow>? ordered = null;
         foreach (var (sortKey, descending) in sorts)
         {
@@ -58,8 +72,15 @@ public sealed partial class RiskIndexReadService
         // The default order is the contribution, largest first — a composition, not a work list.
         var list = (ordered ?? rows.OrderByDescending(r => r.Dto.ContributionPoints)).ThenBy(r => r.Dto.Object.Object.Kind)
             .ThenBy(r => r.Dto.Object.Object.Ref, StringComparer.Ordinal).ThenBy(r => r.Dto.Category).ToList();
+        // A list opened from a count of objects (a factor line, presumed critical) lists each object once, by its first row
+        // in the order asked, so its total is the number that opened it (S40 §5.5.1, §5.12.1).
+        if (onePerObject) list = list.DistinctBy(r => r.Dto.Object.Object).ToList();
         return (list.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).Select(r => r.Dto).ToList(), list.Count);
     }
+
+    /// <summary>The tab a node is cut by: its tab term, or the tab of its asset class; null for an uncut node.</summary>
+    private static RiskIndexTabGroup? TabOf(RiskIndexNodeKey key) =>
+        key.TabGroup ?? (key.AssetClass is { } c ? RiskIndexTabGroups.Of(c) : null);
 
     /// <summary>One listed row with what the filters read beside the DTO.</summary>
     internal sealed record ObjectRow(RiskIndexObjectRowDto Dto, RiskIndexScenarioInputs? Scenario);
@@ -67,11 +88,7 @@ public sealed partial class RiskIndexReadService
     private async Task<IReadOnlyList<ObjectRow>> ObjectRowsAsync(Node node, Day day, RiskIndexCaller caller, CancellationToken ct)
     {
         var composition = await ComposeAsync(node, day, caller, ct);
-        var result = composition.Result;
-        var gains = result.Categories.Where(c => c.Status == IcrCategoryStatus.Available && c.Value > 0)
-            .ToDictionary(c => c.Category, c => result.CategoryContributions.GetValueOrDefault(c.Category) / c.Value);
-        var parts = result.Categories.SelectMany(c => c.Parts.Select(p => (c.Category, p.Key, p.Part)))
-            .GroupBy(x => (x.Category, x.Key)).ToDictionary(g => g.Key, g => g.Sum(x => x.Part));
+        var points = ObjectPoints(composition.Result);
 
         await using var db = dalService.GetContext();
         var labels = await RiskIndexLabels.ResolveAsync(db, composition.Rows.Select(r => r.Key), caller, ct);
@@ -79,14 +96,38 @@ public sealed partial class RiskIndexReadService
 
         return composition.Rows.Select(r =>
         {
-            var points = gains.GetValueOrDefault(r.Category) * parts.GetValueOrDefault((r.Category, r.Key));
             var sources = RiskIndexSourceBits.Sources.Where(s => RiskIndexSourceBits.Has(r.SourceMask, s)).ToList();
             readings.TryGetValue((r.Key, r.Category), out var reading);
             return new ObjectRow(new RiskIndexObjectRowDto(labels[r.Key], r.AssetClass?.ToString(), r.Category, r.R, r.Criticality,
-                r.CriticalitySource, r.State, r.Freshness, reading, points, r.State == RiskIndexObjectState.Presumed,
+                r.CriticalitySource, r.State, r.Freshness, reading, points.GetValueOrDefault((r.Category, r.Key)),
+                r.State == RiskIndexObjectState.Presumed,
                 Math.Max(0, r.Attribution.Count - 1), sources, r.Environment), r.ScenarioInputs);
         }).ToList();
     }
+
+    /// <summary>
+    /// The factor lines each listed (object, category) counts in (<see cref="RiskIndexFactorAttribution"/>). Reading and
+    /// splitting the factor JSON of a node is a derived computation, so it runs under the budget (S40 §8.1).
+    /// </summary>
+    private Task<Dictionary<(IcrObjectKey, RiskIndexCategory), IReadOnlySet<string>>> ObjectFactorsAsync(Day day,
+        IReadOnlyList<ObjectRow> rows, RiskIndexCaller caller, CancellationToken ct) =>
+        budget.RunAsync(caller.UserId, async token =>
+        {
+            await using var db = dalService.GetContext();
+            var pairs = rows.Select(r => (new IcrObjectKey(r.Dto.Object.Object.Kind, r.Dto.Object.Object.Ref), r.Dto.Category)).ToList();
+            var stored = await StoredFactorsAsync(db, day, pairs, token);
+            var map = new Dictionary<(IcrObjectKey, RiskIndexCategory), IReadOnlySet<string>>();
+            foreach (var row in rows)
+            {
+                var key = new IcrObjectKey(row.Dto.Object.Object.Kind, row.Dto.Object.Object.Ref);
+                stored.TryGetValue((key, row.Dto.Category), out var json);
+                map[(key, row.Dto.Category)] = RiskIndexFactorAttribution.Split(row.Dto.Category, row.Dto.State, row.Dto.R,
+                        row.Dto.Criticality, json.Factors ?? [], json.Signals ?? [], day.P)
+                    .Select(s => s.Key).ToHashSet(StringComparer.Ordinal);
+            }
+
+            return map;
+        }, ct);
 
     /// <summary>The freshest reading of each (object, category) of the node, from the stored factors.</summary>
     private static async Task<Dictionary<(IcrObjectKey, RiskIndexCategory), DateTime?>> LastReadingsAsync(
@@ -108,10 +149,17 @@ public sealed partial class RiskIndexReadService
         return result;
     }
 
-    private static List<Func<ObjectRow, bool>> ParseFilters(string? text)
+    /// <summary>
+    /// The filters of a list read. The appetite seals and the residual-above-inherent chip pick scenarios by their register
+    /// inputs and decisions, which only <c>riskmanagement</c> may read (S40 §5.9.2, §11.3): refused without it.
+    /// </summary>
+    private static (List<Func<ObjectRow, bool>> Filters, string? Factor, bool OnePerObject) ParseFilters(string? text,
+        bool mayReadRegister)
     {
+        string? factor = null;
+        var onePerObject = false;
         var filters = new List<Func<ObjectRow, bool>>();
-        if (string.IsNullOrWhiteSpace(text)) return filters;
+        if (string.IsNullOrWhiteSpace(text)) return (filters, null, false);
         if (text.Length > 512) throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidFilter, "The filter is too long.");
 
         foreach (var term in text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -123,6 +171,23 @@ public sealed partial class RiskIndexReadService
             var value = term[(eq + 1)..].Trim();
             if (!ObjectFilterKeys.Contains(name))
                 throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidFilter, $"'{Trim(name)}' is not a filter of this list.");
+
+            if (name.Equals("factor", StringComparison.OrdinalIgnoreCase))
+            {
+                if (factor is not null || !RiskIndexFactorAttribution.IsFactorKey(value)) Invalid(name);
+                factor = value;
+                onePerObject = true;
+                continue;
+            }
+
+            if (!mayReadRegister && (name.Equals("seal", StringComparison.OrdinalIgnoreCase) ||
+                                     (name.Equals(RiskIndexQualityFilters.Key, StringComparison.OrdinalIgnoreCase) &&
+                                      value == RiskIndexQualityFilters.ResidualAboveInherent)))
+                throw RiskIndexException.Forbidden(RiskIndexErrors.NotPermitted,
+                    "This list selects scenarios by their register decisions, which requires riskmanagement.");
+            if (name.Equals(RiskIndexQualityFilters.Key, StringComparison.OrdinalIgnoreCase) &&
+                value == RiskIndexQualityFilters.PresumedCritical)
+                onePerObject = true;
 
             filters.Add(name.ToLowerInvariant() switch
             {
@@ -138,6 +203,16 @@ public sealed partial class RiskIndexReadService
                 // Matches the label the caller sees: a redacted scenario's title never matches (S40 §8.2).
                 "label" => r => r.Dto.Object.Label.Contains(value, StringComparison.CurrentCultureIgnoreCase),
                 "ispresumed" => bool.TryParse(value, out var b) ? r => r.Dto.IsPresumed == b : Invalid(name),
+                // The data-quality items' lists (S40 §5.12; T256).
+                RiskIndexQualityFilters.Key => value switch
+                {
+                    RiskIndexQualityFilters.DefaultCriticality => r => string.Equals(r.Dto.CriticalitySource,
+                        RiskIndexQualityFilters.DefaultCriticalitySource, StringComparison.Ordinal),
+                    RiskIndexQualityFilters.PresumedCritical => r => r.Dto.State == RiskIndexObjectState.Presumed &&
+                                                                     r.Dto.Criticality >= RiskIndexQualityFilters.CriticalFrom,
+                    RiskIndexQualityFilters.ResidualAboveInherent => r => r.Scenario is { ResidualAboveInherent: true },
+                    _ => Invalid(name)
+                },
                 _ => value switch
                 {
                     "above_appetite" => r => r.Scenario is { AboveCeiling: true, AcceptedAboveCeiling: false },
@@ -148,7 +223,7 @@ public sealed partial class RiskIndexReadService
             });
         }
 
-        return filters;
+        return (filters, factor, onePerObject);
 
         static Func<ObjectRow, bool> Invalid(string name) =>
             throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidFilter, $"The value of '{Trim(name)}' is not valid.");

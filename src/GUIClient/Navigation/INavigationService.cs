@@ -16,6 +16,12 @@ public interface INavigationService
     void NavigateTo(AvaliableViews view);
 
     /// <summary>
+    /// Opens a record in its module (S40 §10.3): refused with a toast when the user may not open the module (the navigation
+    /// bar's rule, <c>ModuleAccess</c>); otherwise the module selects the record, or says it is not in the user's scope.
+    /// </summary>
+    void NavigateTo(NavigationTarget target);
+
+    /// <summary>
     /// Shows an auxiliary window (IX-1: modeless, parented to MainWindow, singleton). If one is
     /// already open it is activated rather than duplicated.
     /// </summary>

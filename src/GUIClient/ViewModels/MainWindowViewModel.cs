@@ -77,6 +77,27 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _masterDashboardViewModel, value);
         }
         
+        private bool _riskOverviewIsVisible;
+
+        /// <summary>The Cyber Risk Overview (S40 §10.2, M54).</summary>
+        public bool RiskOverviewIsVisible
+        {
+            get => _riskOverviewIsVisible;
+            set => this.RaiseAndSetIfChanged(ref _riskOverviewIsVisible, value);
+        }
+
+        private GUIClient.ViewModels.RiskOverview.RiskOverviewViewModel? _riskOverviewViewModel;
+
+        /// <summary>
+        /// Created on first navigation, like the Master Dashboard: its first load reads the index API, which only
+        /// <c>risk_index_view</c> holders may call. There is no refresh timer — the snapshot changes once a day (§10.2).
+        /// </summary>
+        public GUIClient.ViewModels.RiskOverview.RiskOverviewViewModel? RiskOverviewViewModel
+        {
+            get => _riskOverviewViewModel;
+            set => this.RaiseAndSetIfChanged(ref _riskOverviewViewModel, value);
+        }
+
         public bool HostsIsVisible
         {
             get => _hostsIsVisible;
@@ -319,6 +340,23 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Vulnerabilities:
                     VulnerabilitiesIsVisible = true;
                     break;
+                case AvaliableViews.RiskOverview:
+                    // Defence in depth behind the disabled navigation button: the API refuses anyway.
+                    if (!GUIClient.Tools.RiskIndex.RiskIndexAccess.CanView(AuthenticationService.AuthenticatedUserInfo))
+                    {
+                        Log.Warning("Refusing to open the Cyber Risk Overview without risk_index_view");
+                        ViewDashboardIsVisible = true;
+                        break;
+                    }
+
+                    if (RiskOverviewViewModel is null)
+                    {
+                        RiskOverviewViewModel = new GUIClient.ViewModels.RiskOverview.RiskOverviewViewModel();
+                        _ = RiskOverviewViewModel.InitializeAsync();
+                    }
+
+                    RiskOverviewIsVisible = true;
+                    break;
             }
         }
 
@@ -332,6 +370,7 @@ namespace GUIClient.ViewModels
             EntitiesIsVisible = false;
             VulnerabilitiesIsVisible = false;
             IncidentsIsVisble = false;
+            RiskOverviewIsVisible = false;
         }
 
         #endregion

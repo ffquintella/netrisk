@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="360"
+             x:DataType="vm:RiskQualityPanelViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskQualityPanel">
+
+    <!-- S40 §5.12.2 (T256): the detail under the always-visible strip, in a closed Expander. Every
+         row keeps its line — value, threshold, "›" to the filtered list when there is one; a count
+         this node does not measure reads "—" with why. Evidence confidence (M40) stays apart. -->
+    <StackPanel Spacing="4" IsVisible="{Binding IsActive}">
+        <Grid ColumnDefinitions="*,140,90,32" Margin="0 0 0 2">
+            <TextBlock Grid.Column="0" Classes="label-nm" Text="{Binding StrColItem}"/>
+            <TextBlock Grid.Column="1" Classes="label-nm" HorizontalAlignment="Right" Text="{Binding StrColValue}"/>
+            <TextBlock Grid.Column="2" Classes="label-nm" HorizontalAlignment="Right" Text="{Binding StrColThreshold}"/>
+            <progRing:ProgressRing Grid.Column="3" Classes="busy" Width="20" Height="20"
+                                   IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasError}">
+            <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                       Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+            <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrRetry}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding HasRows}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RiskQualityItemViewModel">
+                    <Grid ColumnDefinitions="*,140,90,32" MinHeight="26" ToolTip.Tip="{Binding Hint}">
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Label}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="AlertOutline" IsVisible="{Binding IsWarning}"/>
+                            <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Value}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding Threshold}"/>
+                        <Button Grid.Column="3" Classes="detailButton" HorizontalAlignment="Right" IsVisible="{Binding CanOpen}"
+                                Command="{Binding Open}" CommandParameter="{Binding Item}" ToolTip.Tip="{Binding OpenHint}">
+                            <material:MaterialIcon Kind="ChevronRight"/>
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrNote}"/>
+    </StackPanel>
+</UserControl>

@@ -20,6 +20,8 @@ using Avalonia.Threading;
 using ClientServices.Services;
 using GUIClient.Events;
 using GUIClient.Models;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.Tools;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Parameters;
@@ -42,7 +44,7 @@ using DynamicData;   // Kernel extension methods (IndexOf / AddRange)
 
 namespace GUIClient.ViewModels;
 
-public class VulnerabilitiesViewModel: ViewModelBase
+public class VulnerabilitiesViewModel: ViewModelBase, ISelectableModule
 {
     #region LANGUAGE
     public string StrIp => Localizer["IP"];
@@ -463,6 +465,9 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #region FIELDS
 
     private bool _initialized;
+
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
     
     private int _totalRows;
 
@@ -485,8 +490,47 @@ public class VulnerabilitiesViewModel: ViewModelBase
     #endregion
     
     #region CONSTRUCTOR
+    /// <summary>
+    /// The findings of a host or an application, opened from another module (S40 §10.3, IX-7): the sub-view's filter
+    /// (<c>host=‹id›</c>, <c>application=‹id›</c>) applied as "Aplicar filtro" does. The host or application is first asked of
+    /// its service; one outside the user's scope or missing is refused with a toast and the filter left as it was.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        if (RecordNavigation.FindingsFilter(subView, id) is not { } filter) return false;
+        // The first page still loading reads the saved filter and would land after this one, replacing its findings.
+        await RecordNavigation.AwaitLoadAsync(_firstLoad,
+            ex => Logger.Warning("The findings list did not load: {Message}", ex.Message));
+
+        var visible = false;
+        try
+        {
+            // The scoped listings the grid already reads (memoised), never a blocking per-id call.
+            visible = subView == NavigationTarget.HostSubView
+                ? (await HostsService.GetFilteredAsync(1, 1, RecordNavigation.HostFilter(id))).Any(h => h.Id == id)
+                : (await EntitiesService.GetAllAsync("application", true)).Any(e => e.Id == id);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("The findings of {SubView} {Id} could not be opened: {Message}", subView, id, ex.Message);
+        }
+
+        if (!visible)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        FilterText = filter;
+        Page = 1;
+        MutableConfigurationService.SetConfigurationValue("vulnerabilityFilter", FilterText);
+        await ExecuteReloadAsync();
+        return true;
+    }
+
     public VulnerabilitiesViewModel()
     {
+        RegisterSelectableModule(AvaliableViews.Vulnerabilities, this);
         _exportService = GetService<IExportClientService>();
         DetailRotation = new RotateTransform(90);
         
@@ -718,7 +762,7 @@ public class VulnerabilitiesViewModel: ViewModelBase
             //UsersService.LoadCache();
             AuthenticatedUserInfo = AuthenticationService.AuthenticatedUserInfo;
 
-            _= LoadDataAsync();
+            _firstLoad = LoadDataAsync();
             
             Impacts = new ObservableCollection<LocalizableListItem>(await ImpactsService.GetAllAsync());
             

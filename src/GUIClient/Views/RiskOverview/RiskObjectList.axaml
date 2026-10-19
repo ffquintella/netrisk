@@ -1,0 +1,158 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="520"
+             x:DataType="vm:RiskObjectListViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskObjectList">
+
+    <!-- S40 §5.9.1, §10.9 (T254): one line per (object, category) of the node, paged and sorted by
+         the server. The grid's Sorting is handled in the code-behind and never sorts on the client;
+         columns the server cannot sort have CanUserSort="False", and there is no Δ or sensitivity
+         column to sort. A row's "›" opens the object detail once T255 wires it (OpenDetail). -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFocusSearchClicked}"/>
+    </UserControl.KeyBindings>
+
+    <StackPanel Spacing="6" IsVisible="{Binding IsActive}">
+        <WrapPanel>
+            <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+            </Border>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrCategory}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="150" ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding SelectedCategory}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ListOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrState}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="120" ItemsSource="{Binding StateOptions}" SelectedItem="{Binding SelectedState}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ListOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrClass}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="120" ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ListOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrSource}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="110" ItemsSource="{Binding SourceOptions}" SelectedItem="{Binding SelectedSource}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ListOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Margin="0 0 6 4" VerticalAlignment="Center" Text="{Binding StrCriticality}"/>
+            <ComboBox Margin="0 0 12 4" MinWidth="80" ItemsSource="{Binding CriticalityOptions}" SelectedItem="{Binding SelectedCriticality}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ListOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox Margin="0 0 12 4" MinWidth="200" PlaceholderText="{Binding StrSearchWatermark}" Text="{Binding SearchText}"
+                     behaviors:FocusOnSignal.Signal="{Binding SearchFocusSignal}"/>
+            <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                   IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        </WrapPanel>
+
+        <WrapPanel IsVisible="{Binding HasPreset}">
+            <Border Classes="riskChip">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock VerticalAlignment="Center" Text="{Binding PresetText}"/>
+                    <Button Classes="link" Padding="0" Command="{Binding BtClearPresetClicked}" ToolTip.Tip="{Binding StrClearPresetHint}">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="Close"/>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </WrapPanel>
+
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+        <TextBlock Classes="hint" Margin="0" Text="{Binding StrEmpty}" IsVisible="{Binding IsEmpty}"/>
+
+        <DataGrid Name="ObjectsGrid" MinHeight="200" MaxHeight="520" ItemsSource="{Binding Rows}"
+                  SelectedItem="{Binding SelectedRow}" AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserReorderColumns="True" CanUserResizeColumns="True" CanUserSortColumns="True"
+                  GridLinesVisibility="Horizontal" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{Binding StrColObject, Mode=OneTime}" Width="2*" MinWidth="180" SortMemberPath="label">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskObjectRowViewModel">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip.Tip="{Binding LabelHint}">
+                                <material:MaterialIcon Classes="riskGlyph" Kind="LockOutline" IsVisible="{Binding IsRedacted}"/>
+                                <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Label}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrColKind, Mode=OneTime}" Binding="{Binding Kind}" Width="*" MinWidth="80" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColClass, Mode=OneTime}" Binding="{Binding AssetClass}" Width="*" MinWidth="90" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColCategory, Mode=OneTime}" Binding="{Binding Category}" Width="60" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColR, Mode=OneTime}" Binding="{Binding R}" Width="80" SortMemberPath="r"/>
+                <DataGridTextColumn Header="{Binding StrColCriticality, Mode=OneTime}" Binding="{Binding Criticality}" Width="*" MinWidth="110" SortMemberPath="criticality"/>
+                <DataGridTextColumn Header="{Binding StrColState, Mode=OneTime}" Binding="{Binding State}" Width="*" MinWidth="90" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColReading, Mode=OneTime}" Binding="{Binding Reading}" Width="90" SortMemberPath="lastReading"/>
+                <DataGridTextColumn Header="{Binding StrColPoints, Mode=OneTime}" Binding="{Binding Points}" Width="70" SortMemberPath="contribution"/>
+                <DataGridTextColumn Header="{Binding StrColShared, Mode=OneTime}" Binding="{Binding Shared}" Width="70" CanUserSort="False"/>
+                <DataGridTemplateColumn Width="40" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskObjectRowViewModel">
+                            <Button Classes="detailButton" IsVisible="{Binding CanOpen}" Command="{Binding Open}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskObjectListViewModel)DataContext).StrOpenDetailHint}">
+                                <material:MaterialIcon Kind="ChevronRight"/>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+            <TextBlock Grid.Column="0" Classes="hint" Margin="0 0 12 0" VerticalAlignment="Center" Text="{Binding SortText}"/>
+            <TextBlock Grid.Column="1" Classes="hint" Margin="0" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrSortNote}"/>
+            <TextBlock Grid.Column="2" Margin="12 0 6 0" VerticalAlignment="Center" Text="{Binding StrPageSize}"/>
+            <ComboBox Grid.Column="3" Margin="0 0 12 0" MinWidth="80" ItemsSource="{Binding PageSizeOptions}" SelectedItem="{Binding SelectedPageSize}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PageSizeOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Grid.Column="4" Margin="0 0 8 0" VerticalAlignment="Center" Text="{Binding RangeText}"/>
+            <StackPanel Grid.Column="5" Orientation="Horizontal">
+                <Button Classes="detailButton" Margin="0 0 4 0" Command="{Binding BtPreviousPageClicked}"
+                        IsEnabled="{Binding IsPreviousPageEnabled}" ToolTip.Tip="{Binding StrPrevious}">
+                    <material:MaterialIcon Kind="ChevronLeft"/>
+                </Button>
+                <Button Classes="detailButton" Command="{Binding BtNextPageClicked}"
+                        IsEnabled="{Binding IsNextPageEnabled}" ToolTip.Tip="{Binding StrNext}">
+                    <material:MaterialIcon Kind="ChevronRight"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

@@ -174,6 +174,12 @@ public class GeneralServicesBootstrapper
         services.AddTransient<IAiGovernanceService>(sp => new AiGovernanceRestService(
             sp.GetRequiredService<IRestService>()));
 
+        // Track 10 M54 (S40 §8.9): the Cyber Risk Overview's read API — overview, trend, drill-down, objects, changes,
+        // contributions, governance indicators, publication and the profile reads behind the profile chip.
+        services.AddTransient<IRiskIndexService>(sp => new RiskIndexRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(
@@ -241,7 +247,10 @@ public class GeneralServicesBootstrapper
 
         // Single route into the shell's view stack and its auxiliary windows (IX-7).
         services.AddSingleton<INavigationService>(sp =>
-            new NavigationService(sp.GetRequiredService<IMainWindowProvider>()));
+            new NavigationService(sp.GetRequiredService<IMainWindowProvider>(), sp));
+
+        // The modules a record can be opened in (S40 §10.3): each registers itself; navigation finds it here (IX-7).
+        services.AddSingleton<SelectableModules>();
 
         // Transient-feedback channel for IX-4. Singleton: the shell binds one toast host to it.
         services.AddSingleton<NotificationService>();

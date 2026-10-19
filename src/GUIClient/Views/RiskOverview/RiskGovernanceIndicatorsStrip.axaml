@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="90"
+             x:DataType="vm:RiskGovernanceIndicatorsViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskGovernanceIndicatorsStrip">
+
+    <!-- S40 §5.2.5 (T256): always visible below the quality strip — never an Expander, never
+         collapsed (RiskQualityStripAlwaysVisibleTest). Volume, not risk; outside the number. The
+         counts are live (T249), so the strip says they do not follow a past snapshot date. A "›"
+         opens the owning module, disabled with the reason without its permission. -->
+    <Border Classes="riskStrip">
+        <StackPanel Spacing="4">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrTitle}"/>
+                    <progRing:ProgressRing Classes="busy" Width="20" Height="20"
+                                           IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Classes="hint" Margin="0" VerticalAlignment="Center" Text="{Binding StrVolumeNote}"/>
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RiskGovernanceIndicatorViewModel">
+                        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0 0 24 4">
+                            <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}"/>
+                            <Border Classes="tooltip" VerticalAlignment="Center" IsVisible="{Binding HasModule}"
+                                    ToolTip.Tip="{Binding Hint}">
+                                <Button Classes="detailButton" IsEnabled="{Binding CanOpen}"
+                                        Command="{Binding Open}" CommandParameter="{Binding Indicator}">
+                                    <material:MaterialIcon Kind="ChevronRight"/>
+                                </Button>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrLiveNote}"/>
+            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrPartial}" IsVisible="{Binding IsPartial}"/>
+            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrMyScope}" IsVisible="{Binding IsMyScope}"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasError}">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

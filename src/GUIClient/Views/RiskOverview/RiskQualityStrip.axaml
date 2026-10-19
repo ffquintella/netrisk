@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="80"
+             x:DataType="vm:RiskQualityStripViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskQualityStrip">
+
+    <!-- S40 §5.12.1 (T256), S39 §8.6: always visible. Never inside an Expander and no IsVisible
+         bound to a collapsible state (RiskQualityStripAlwaysVisibleTest). Every item stays, a zero
+         reads "0" and an unmeasured count "—" with why; ⚠ marks one past its threshold; "›" opens
+         the object list filtered, or the Unassigned node. -->
+    <Border Classes="riskStrip">
+        <StackPanel Spacing="4">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" Margin="0 3 8 0">
+                    <TextBlock Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrTitle}"/>
+                    <Border Classes="tooltip" Margin="4 0 0 0" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                    </Border>
+                </StackPanel>
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Items}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RiskQualityItemViewModel">
+                            <Border Classes="riskChip" Classes.warning="{Binding IsWarning}"
+                                    Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding Hint}">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <material:MaterialIcon Classes="riskGlyph" Kind="AlertOutline" IsVisible="{Binding IsWarning}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                                    <TextBlock Classes="label-nm" VerticalAlignment="Center" Text="{Binding Value}"
+                                               IsVisible="{Binding HasValue}"/>
+                                    <Button Classes="detailButton" IsVisible="{Binding CanOpen}"
+                                            Command="{Binding Open}" CommandParameter="{Binding Item}"
+                                            ToolTip.Tip="{Binding OpenHint}">
+                                        <material:MaterialIcon Kind="ChevronRight"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <progRing:ProgressRing Grid.Column="2" Classes="busy" Width="20" Height="20" VerticalAlignment="Top"
+                                       IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            </Grid>
+            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrPartial}" IsVisible="{Binding IsPartial}"/>
+            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrMyScope}" IsVisible="{Binding IsMyScope}"/>
+            <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasError}">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

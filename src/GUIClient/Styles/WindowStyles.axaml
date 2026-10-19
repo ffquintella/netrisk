@@ -700,6 +700,294 @@
         <Setter Property="Margin" Value="0 0 4 0"/>
     </Style>
 
+    <!-- ==================================================================================
+         CYBER RISK OVERVIEW (S40 §10.6, T251/T257)
+
+         The headline card, its band pill, chips, seals, the 7-day line and the state cards.
+         A band pill's class is its ramp step (b1…b5) from ChartPaletteMap.BandStep, the same
+         function that names the chart token, so a band has one colour in a pill and a chart.
+         Three bands are b1, b3, b5. The pill always carries the label and a glyph (§2.6).
+         ================================================================================== -->
+    <Style Selector="Border.riskHeadline">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="Margin" Value="0 0 0 10"/>
+    </Style>
+
+    <Style Selector="TextBlock.riskHeadlineValue">
+        <Setter Property="FontSize" Value="40"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+    </Style>
+
+    <Style Selector="TextBlock.riskHeadlineScale">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="Margin" Value="4 0 12 8"/>
+    </Style>
+
+    <Style Selector="Border.riskBand">
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+        <Setter Property="CornerRadius" Value="11"/>
+        <Setter Property="Padding" Value="8 2"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticalityUnsetText}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.riskBand avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticalityUnsetText}"/>
+    </Style>
+
+    <Style Selector="Border.riskBand.b1">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality1}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b1 TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality1Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b1 avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality1Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b2">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality2}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b2 TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality2Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b2 avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality2Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b3">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality3}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b3 TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality3Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b3 avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality3Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b4">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality4}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b4 TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality4Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b4 avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality4Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b5">
+        <Setter Property="Background" Value="{DynamicResource NrCriticality5}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b5 TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality5Text}"/>
+    </Style>
+    <Style Selector="Border.riskBand.b5 avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrCriticality5Text}"/>
+    </Style>
+
+    <!-- An indicative value is not classified (§5.2.3): an outline, never a coloured fill. -->
+    <Style Selector="Border.riskBand.indicative">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="Border.riskBand.indicative TextBlock.riskBandText">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
+    </Style>
+    <Style Selector="Border.riskBand.indicative avalonia|MaterialIcon">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
+    </Style>
+
+    <Style Selector="Border.riskChip">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="8 2"/>
+        <Setter Property="Margin" Value="0 0 6 4"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.riskChip.info">
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusInfo}"/>
+    </Style>
+    <Style Selector="Border.riskChip.warning">
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusWarning}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+    <Style Selector="Border.riskChip.unavailable">
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
+    </Style>
+    <Style Selector="Border.riskChip.unavailable TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextMuted}"/>
+    </Style>
+
+    <Style Selector="Border.riskSeal">
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="BorderThickness" Value="3 0 0 0"/>
+        <Setter Property="Padding" Value="8 2"/>
+        <Setter Property="Margin" Value="0 0 0 4"/>
+    </Style>
+
+    <!-- The 7-day line: always a glyph and a word ("+4 (pior) em 7 dias"); the hue reinforces. -->
+    <Style Selector="TextBlock.riskDelta">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.riskDelta.worse">
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusErrorText}"/>
+    </Style>
+    <Style Selector="avalonia|MaterialIcon.riskDelta.worse">
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusErrorText}"/>
+    </Style>
+    <Style Selector="TextBlock.riskDelta.better">
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusSuccess}"/>
+    </Style>
+    <Style Selector="avalonia|MaterialIcon.riskDelta.better">
+        <Setter Property="Foreground" Value="{DynamicResource NrStatusSuccess}"/>
+    </Style>
+    <Style Selector="TextBlock.riskDelta.neutral">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+    </Style>
+    <Style Selector="avalonia|MaterialIcon.riskDelta.neutral">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextSecondary}"/>
+    </Style>
+
+    <Style Selector="Border.riskPartialBanner">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusWarning}"/>
+        <Setter Property="BorderThickness" Value="3 1 1 1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="10 6"/>
+        <Setter Property="Margin" Value="0 0 0 8"/>
+    </Style>
+
+    <!-- The R-1 notice above the contributions (S40 §5.8, §10.6): informational, never a warning. -->
+    <Style Selector="Border.riskNotice">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrStatusInfo}"/>
+        <Setter Property="BorderThickness" Value="3 1 1 1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="10 6"/>
+        <Setter Property="Margin" Value="0 0 0 8"/>
+    </Style>
+
+    <Style Selector="Border.riskEmptyState">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Margin" Value="0 0 0 10"/>
+    </Style>
+
+    <Style Selector="avalonia|MaterialIcon.riskGlyph">
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0 0 4 0"/>
+    </Style>
+
+    <!-- ==================================================================================
+         CYBER RISK OVERVIEW — panels below the card (S40 §10.6, T252/T253)
+
+         The trend, the contributing categories and the asset-class tabs sit on the panel
+         surface. The category meter and the visibility bar are Borders, not LiveCharts (§10.4),
+         so their colour lives here where LintUi sees it. A visibility segment always comes with
+         its glyph and count in the legend beside it: the fill only reinforces (§10.7).
+         ================================================================================== -->
+    <Style Selector="Border.riskPanel">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="0 0 0 10"/>
+    </Style>
+
+    <!-- Toolbars inside a tab: `TabControl WrapPanel` paints them with the tab-strip surface. -->
+    <Style Selector="WrapPanel.riskToolbar">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+    </Style>
+
+    <Style Selector="StackPanel.riskCategoryRow">
+        <Setter Property="Margin" Value="0 1"/>
+    </Style>
+    <!-- A category that does not apply to the node (§5.4): dimmed, still listed. -->
+    <Style Selector="StackPanel.riskCategoryRow.dimmed">
+        <Setter Property="Opacity" Value="0.55"/>
+    </Style>
+
+    <Style Selector="Border.riskMeter">
+        <Setter Property="Height" Value="12"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel1}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderStrong}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="2"/>
+    </Style>
+    <Style Selector="Border.riskMeterFill">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Background" Value="{DynamicResource NrAccentCyan}"/>
+        <Setter Property="CornerRadius" Value="1"/>
+    </Style>
+
+    <Style Selector="Border.visibilitySegment">
+        <Setter Property="Height" Value="14"/>
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderThickness" Value="0 0 1 0"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.assessed">
+        <Setter Property="Background" Value="{DynamicResource NrAccentCyan}"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.stale">
+        <Setter Property="Background" Value="{DynamicResource NrStatusWarning}"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.presumed">
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.notAssessed">
+        <Setter Property="Background" Value="{DynamicResource NrBorderStrong}"/>
+    </Style>
+    <!-- A source's readings (§5.5.1, T256): current, stale (shares .stale above), expired and none.
+         Each segment's glyph and count sit in the legend beside the bar (§10.7). -->
+    <Style Selector="Border.visibilitySegment.current">
+        <Setter Property="Background" Value="{DynamicResource NrAccentCyan}"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.expired">
+        <Setter Property="Background" Value="{DynamicResource NrStatusError}"/>
+    </Style>
+    <Style Selector="Border.visibilitySegment.noReading">
+        <Setter Property="Background" Value="{DynamicResource NrCriticalityUnset}"/>
+    </Style>
+
+    <!-- The always-visible strips (§5.0, §5.12.1, §5.2.5; T256): never an Expander, never collapsed.
+         An item is a riskChip; a past-threshold item adds .warning (with ⚠ beside its text). -->
+    <Style Selector="Border.riskStrip">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="10 6"/>
+        <Setter Property="Margin" Value="0 0 0 8"/>
+    </Style>
+
+    <!-- The asset-class tabs (§5.5): a header carries the class's level pill beside its name. -->
+    <Style Selector="TabControl.riskTabs">
+        <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
+    </Style>
+    <Style Selector="TabControl.riskTabs TabItem">
+        <Setter Property="Padding" Value="10 4"/>
+    </Style>
+
     <!-- The WrapPanel a run of chips flows in. `TabControl WrapPanel` above paints every WrapPanel
          under a TabControl with the tab-strip surface, because that is how it reaches the header
          row; a content panel inside a tab has to take the content surface back explicitly. -->

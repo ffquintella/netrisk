@@ -1,0 +1,161 @@
+<dialogs:DialogWindowBase x:TypeArguments="results:RiskIndexObjectDetailDialogResult"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+        xmlns:dialogs="clr-namespace:GUIClient.ViewModels.Dialogs"
+        xmlns:results="clr-namespace:GUIClient.ViewModels.Dialogs.Results"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="760"
+        x:DataType="vm:RiskIndexObjectDetailDialogViewModel"
+        x:Class="GUIClient.Views.Dialogs.RiskIndexObjectDetailDialog"
+        Title="{Binding Title}"
+        Width="1000" Height="760" MinWidth="820" MinHeight="560" CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- S40 §5.9.2 (T255): read-only utility dialog (IX-1). It closes with the destination chosen
+         and the caller navigates (IX-2); the action row is IX-3's view variant — "Fechar" alone,
+         centred — and the destinations are a "Navegação" section of the body. Esc closes. -->
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Classes="header" TextWrapping="Wrap" Text="{Binding Title}"/>
+                <TextBlock Grid.Column="1" Classes="hint" VerticalAlignment="Center" Text="{Binding Snapshot}"/>
+            </Grid>
+            <TextBlock Grid.Row="1" Classes="warning" TextWrapping="Wrap" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+
+            <ScrollViewer Grid.Row="2" Margin="0 8 0 0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="4" IsVisible="{Binding HasDetail}">
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="2">
+                            <TextBlock TextWrapping="Wrap" Text="{Binding KindAndClass}"/>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Nodes}"/>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Criticality}"/>
+                            <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding CriticalityOrigin}"/>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding InternetFacing}"
+                                       IsVisible="{Binding InternetFacing, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                            <SelectableTextBlock TextWrapping="Wrap" Text="{Binding VendorReference}"
+                                                 IsVisible="{Binding VendorReference, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- §11.3: without the owner module's permission, the note replaces the register's content. -->
+                    <Border Classes="riskPartialBanner"
+                            IsVisible="{Binding RedactionNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="LockOutline"/>
+                            <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding RedactionNote}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrByCategory}"/>
+                    <DataGrid ItemsSource="{Binding CategoryRows}" IsReadOnly="True" CanUserSortColumns="False" AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal" MaxHeight="200">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrColCategory, Mode=OneTime}" Binding="{Binding Category}" Width="90"/>
+                            <DataGridTextColumn Header="{Binding StrColR, Mode=OneTime}" Binding="{Binding R}" Width="80"/>
+                            <DataGridTextColumn Header="{Binding StrColState, Mode=OneTime}" Binding="{Binding State}" Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrColPopulation, Mode=OneTime}" Binding="{Binding Population}" Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrColWeight, Mode=OneTime}" Binding="{Binding Weight}" Width="80"/>
+                            <DataGridTextColumn Header="{Binding StrColBranch, Mode=OneTime}" Binding="{Binding Branch}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrFactors}"/>
+                    <DataGrid ItemsSource="{Binding FactorRows}" IsReadOnly="True" CanUserSortColumns="False" AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal" MaxHeight="240">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrColCategory, Mode=OneTime}" Binding="{Binding Category}" Width="90"/>
+                            <DataGridTextColumn Header="{Binding StrColFactor, Mode=OneTime}" Binding="{Binding Factor}" Width="90"/>
+                            <DataGridTextColumn Header="{Binding StrColType, Mode=OneTime}" Binding="{Binding Type}" Width="60"/>
+                            <DataGridTextColumn Header="{Binding StrColX, Mode=OneTime}" Binding="{Binding X}" Width="70"/>
+                            <DataGridTextColumn Header="{Binding StrColV, Mode=OneTime}" Binding="{Binding V}" Width="60"/>
+                            <DataGridTextColumn Header="{Binding StrColUF, Mode=OneTime}" Binding="{Binding UF}" Width="60"/>
+                            <DataGridTextColumn Header="{Binding StrColFEff, Mode=OneTime}" Binding="{Binding FEff}" Width="70"/>
+                            <DataGridTextColumn Header="{Binding StrColReading, Mode=OneTime}" Binding="{Binding Reading}" Width="140"/>
+                            <DataGridTextColumn Header="{Binding StrColSource, Mode=OneTime}" Binding="{Binding Source}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrSignals}"/>
+                    <ItemsControl ItemsSource="{Binding Signals}" IsVisible="{Binding HasSignals}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <SelectableTextBlock TextWrapping="Wrap" Text="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoSignals}" IsVisible="{Binding !HasSignals}"/>
+
+                    <StackPanel IsVisible="{Binding IsScenario}">
+                        <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrScenario}"/>
+                        <ItemsControl ItemsSource="{Binding ScenarioLines}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <TextBlock TextWrapping="Wrap" Text="{Binding}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrDecision}"/>
+                        <TextBlock TextWrapping="Wrap" Text="{Binding DecisionText}"/>
+                    </StackPanel>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrChips}"/>
+                    <ItemsControl ItemsSource="{Binding Chips}" IsVisible="{Binding HasChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <Border Classes="riskChip">
+                                    <TextBlock Text="{Binding}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoChips}" IsVisible="{Binding !HasChips}"/>
+
+                    <TextBlock Classes="sectionCaption" Margin="0 6 0 2" Text="{Binding StrNavigation}"/>
+                    <ItemsControl ItemsSource="{Binding Destinations}" IsVisible="{Binding HasDestinations}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RiskDetailDestinationViewModel">
+                                <Border Classes="tooltip" Margin="0 0 8 4" ToolTip.Tip="{Binding DisabledReason}">
+                                    <Button Classes="type3" IsEnabled="{Binding IsEnabled}"
+                                            Command="{Binding Open}" CommandParameter="{Binding}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <material:MaterialIcon Kind="OpenInApp" Width="18" Height="18" Margin="0 0 5 0"/>
+                                            <TextBlock Text="{Binding Label}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoDestinations}" IsVisible="{Binding !HasDestinations}"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 10 0 0">
+                <Button Classes="dialog2" Command="{Binding BtCloseClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Close" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrClose}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <progRing:ProgressRing Classes="busy" Width="100" Height="100" ZIndex="1000"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+    </Panel>
+</dialogs:DialogWindowBase>

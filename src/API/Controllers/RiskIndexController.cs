@@ -159,6 +159,49 @@ public class RiskIndexController(
         [FromQuery] RiskIndexTabGroup? tab = null, [FromQuery] DateOnly? date = null, CancellationToken ct = default) =>
         Run("reading the inventory", caller => readService.GetInventoryAsync(node, tab, date, caller, ct));
 
+    /// <summary>
+    /// The monthly mean of the daily <c>C_k</c> (S40 §5.5.1, §8.2; T253): of the node, or of the node ∩ <paramref name="tab"/>,
+    /// over 6 or 12 months. A pre-computed node reads its stored days; any other is recomposed under the derived budget.
+    /// </summary>
+    [HttpGet]
+    [Route("MonthlySummary")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexMonthlySummaryDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<RiskIndexMonthlySummaryDto>> GetMonthlySummary([FromQuery] string? node = null,
+        [FromQuery] RiskIndexTabGroup? tab = null, [FromQuery] int months = 6, [FromQuery] DateOnly? date = null,
+        CancellationToken ct = default) =>
+        Run("reading the monthly summary", caller => readService.GetMonthlySummaryAsync(node, tab, months, date, caller, ct));
+
+    /// <summary>The risk factors of the node ∩ an asset-class tab: volume and Euler points per dominant factor (S40 §5.5.1; T253).</summary>
+    [HttpGet]
+    [Route("RiskFactors")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<RiskIndexRiskFactorDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<IReadOnlyList<RiskIndexRiskFactorDto>>> GetRiskFactors([FromQuery] string? node = null,
+        [FromQuery] RiskIndexTabGroup? tab = null, [FromQuery] DateOnly? date = null, CancellationToken ct = default) =>
+        Run("reading the risk factors", caller => readService.GetRiskFactorsAsync(node, tab, date, caller, ct));
+
+    /// <summary>
+    /// The classes, sources, criticalities and environments present in the node, counted over the caller's visible objects
+    /// only (S40 §8.2, §11.8; T254): what the Explore panel's "+ Filtro" offers.
+    /// </summary>
+    [HttpGet]
+    [Route("Dimensions")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexDimensionsDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<RiskIndexDimensionsDto>> GetDimensions([FromQuery] string? node = null,
+        [FromQuery] DateOnly? date = null, CancellationToken ct = default) =>
+        Run("reading the dimensions", caller => readService.GetDimensionsAsync(node, date, caller, ct));
+
     [HttpGet]
     [Route("Changes")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexChangesDto))]
@@ -186,6 +229,21 @@ public class RiskIndexController(
     public Task<ActionResult<RiskIndexGovernanceIndicatorsDto>> GetGovernanceIndicators([FromQuery] string? node = null,
         [FromQuery] DateOnly? date = null, CancellationToken ct = default) =>
         Run("reading the governance indicators", caller => readService.GetGovernanceIndicatorsAsync(node, date, caller, ct));
+
+    /// <summary>
+    /// The node's data quality (S40 §5.12, §8.2; T256): the always-visible strip and its detail. Fractions by weight and
+    /// counts over the caller's visible objects; a value of the index, so the shadow rule applies.
+    /// </summary>
+    [HttpGet]
+    [Route("Quality")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexQualityDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<RiskIndexQualityDto>> GetQuality([FromQuery] string? node = null, [FromQuery] DateOnly? date = null,
+        CancellationToken ct = default) =>
+        Run("reading the data quality", caller => readService.GetQualityAsync(node, date, caller, ct));
 
     [HttpGet]
     [Route("Publication")]

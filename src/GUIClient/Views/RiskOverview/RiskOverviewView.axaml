@@ -1,0 +1,180 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:riskOverview="clr-namespace:GUIClient.Views.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             x:DataType="vm:RiskOverviewViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskOverviewView">
+
+    <!-- Painel somente leitura; arquétipo próprio, fora de IX-5 A–E (S40 §10.1). The module reads
+         the snapshot the server computed and never recomputes it. Panels load and fail on their
+         own (§5.13): the card and trend (T251, T252), the categories and asset-class tabs (T253),
+         Explore and the object list (T254), what moved and the contributions (T255), the always-visible
+         quality and governance strips and the quality, monetary and Top Risks panels (T256). Keyboard focus
+         moves in document order, which is §10.8's: top bar, card, trend, categories, Explore, tabs,
+         panels — no TabIndex is set, so keep the elements in that order. -->
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+            <TextBlock Classes="header" Text="{Binding StrTitle}"/>
+            <!-- The node's type seal (§5.6.3): "Processo", "Classe de ativo: Dispositivos". -->
+            <Border Classes="riskChip info" IsVisible="{Binding HasTypeSeal}">
+                <TextBlock Text="{Binding TypeSeal}"/>
+            </Border>
+        </StackPanel>
+
+        <!-- Breadcrumb and snapshot date (§5.1). -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 6 0 0">
+            <ItemsControl Grid.Column="0" VerticalAlignment="Center" ItemsSource="{Binding Breadcrumb}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BreadcrumbItem">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Classes="link" IsVisible="{Binding IsLink}"
+                                    Command="{Binding Open}" CommandParameter="{Binding Key}">
+                                <TextBlock Text="{Binding Label}"/>
+                            </Button>
+                            <material:MaterialIcon Classes="riskGlyph" Kind="ChevronRight" IsVisible="{Binding IsLink}"/>
+                            <TextBlock VerticalAlignment="Center" Classes="label-nm" Text="{Binding Label}"
+                                       IsVisible="{Binding IsCurrent}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasOverview}">
+                <TextBlock VerticalAlignment="Center" Text="{Binding StrSnapshot}"/>
+                <CalendarDatePicker Name="SnapshotPicker" MinWidth="150"
+                                    SelectedDate="{Binding SnapshotDate}"
+                                    DisplayDateStart="{Binding FirstSnapshotDate}"
+                                    DisplayDateEnd="{Binding LastSnapshotDate}"/>
+                <TextBlock VerticalAlignment="Center" Classes="hint" Margin="0" Text="{Binding ComputedAtText}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Chips and actions (§5.1). -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0 6 0 6">
+            <WrapPanel Grid.Column="0" IsVisible="{Binding HasOverview}">
+                <Border Classes="riskChip" ToolTip.Tip="{Binding StrProfileChipHint}">
+                    <Button Classes="link" Padding="0" Command="{Binding BtProfileInfoClicked}">
+                        <StackPanel Orientation="Horizontal">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="TuneVariant"/>
+                            <TextBlock Text="{Binding ProfileChipText}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="riskChip info" ToolTip.Tip="{Binding ModeHint}">
+                    <TextBlock Text="{Binding ModeText}"/>
+                </Border>
+                <Border Classes="riskChip" Classes.warning="{Binding IsProvenanceWarning}">
+                    <TextBlock Text="{Binding ProvenanceText}"/>
+                </Border>
+                <Border Classes="riskChip warning" IsVisible="{Binding ShowsPilotChip}">
+                    <TextBlock Text="{Binding StrPilotChip}"/>
+                </Border>
+                <Border Classes="riskChip warning" IsVisible="{Binding IsHistory}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock VerticalAlignment="Center" Text="{Binding HistoryChipText}"/>
+                        <Button Classes="link" Padding="0" Command="{Binding BtBackToLatestClicked}">
+                            <TextBlock Text="{Binding StrBackToLatest}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <Button Grid.Column="1" Classes="type2" VerticalAlignment="Top"
+                    Command="{Binding BtRefreshClicked}" IsEnabled="{Binding IsRefreshEnabled}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrRefresh}"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="0">
+                <!-- §5.13: shadow pilot, no approved profile, awaiting the first snapshot. -->
+                <Border Classes="riskEmptyState" IsVisible="{Binding HasEmptyState}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                        <TextBlock Classes="notice" Margin="0" Text="{Binding EmptyStateText}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="riskPartialBanner" IsVisible="{Binding IsSuspended}">
+                    <TextBlock Classes="notice" Margin="0" Text="{Binding SuspendedText}"/>
+                </Border>
+
+                <!-- "Meu escopo" (§5.1, S39 §10.4): several claimed entities and no headline. -->
+                <Border Classes="riskEmptyState" IsVisible="{Binding IsMyScope}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="notice" Margin="0" Text="{Binding StrMyScopeHint}"/>
+                        <ItemsControl ItemsSource="{Binding ScopeEntities}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:BreadcrumbItem">
+                                    <Button Classes="link" Command="{Binding Open}" CommandParameter="{Binding Key}">
+                                        <TextBlock Text="{Binding Label}"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding !HasEmptyState}">
+                    <riskOverview:RiskHeadlineCard Grid.Column="0" MinWidth="460" MaxWidth="620"
+                                                   DataContext="{Binding Headline}"/>
+                    <!-- Trend (§5.3, T252) beside the card. -->
+                    <riskOverview:RiskTrendChart Grid.Column="1" Margin="10 0 0 0" DataContext="{Binding Trend}"/>
+                </Grid>
+
+                <!-- Always visible (§5.0, §5.12.1, §5.2.5; T256): no Expander and no collapsible state —
+                     only the page's §5.13 empty states hide them (RiskQualityStripAlwaysVisibleTest). -->
+                <StackPanel IsVisible="{Binding !HasEmptyState}">
+                    <riskOverview:RiskQualityStrip DataContext="{Binding Quality}"/>
+                    <riskOverview:RiskGovernanceIndicatorsStrip DataContext="{Binding Governance}"/>
+                </StackPanel>
+
+                <!-- Contributing categories (§5.4, T253), the always-visible Explore panel (§5.6, T254),
+                     the asset-class tabs (§5.5, T253), what moved and the contributions (§5.7, §5.8, T255)
+                     and the objects of the node (§5.9.1, T254) — the three expanders open by default. -->
+                <StackPanel IsVisible="{Binding !HasEmptyState}">
+                    <riskOverview:RiskCategoriesPanel DataContext="{Binding Categories}"/>
+                    <riskOverview:RiskExplorePanel DataContext="{Binding Explore}"/>
+                    <riskOverview:RiskAssetClassTabs DataContext="{Binding AssetTabs}"/>
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrChangesTitle}"
+                              IsExpanded="{Binding Changes.IsExpanded}" IsVisible="{Binding Changes.IsActive}">
+                        <riskOverview:RiskChangesPanel DataContext="{Binding Changes}"/>
+                    </Expander>
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrContributionsTitle}"
+                              IsExpanded="{Binding Contributions.IsExpanded}" IsVisible="{Binding Contributions.IsActive}">
+                        <riskOverview:RiskContributionsPanel DataContext="{Binding Contributions}"/>
+                    </Expander>
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrObjectsTitle}"
+                              IsExpanded="{Binding ObjectList.IsExpanded}" IsVisible="{Binding ObjectList.IsActive}">
+                        <riskOverview:RiskObjectList DataContext="{Binding ObjectList}"/>
+                    </Expander>
+                    <!-- Closed by default (§5.0): the quality detail, the monetary panel, Top Risks (T256). -->
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrQualityPanelTitle}"
+                              IsExpanded="{Binding Quality.Panel.IsExpanded}" IsVisible="{Binding Quality.Panel.IsActive}">
+                        <riskOverview:RiskQualityPanel DataContext="{Binding Quality.Panel}"/>
+                    </Expander>
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrMonetaryTitle}"
+                              IsExpanded="{Binding Monetary.IsExpanded}" IsVisible="{Binding Monetary.IsActive}">
+                        <riskOverview:RiskMonetaryPanel DataContext="{Binding Monetary}"/>
+                    </Expander>
+                    <Expander HorizontalAlignment="Stretch" Margin="0 0 0 10" Header="{Binding StrTopRisksTitle}"
+                              IsExpanded="{Binding TopRisks.IsExpanded}" IsVisible="{Binding TopRisks.IsActive}">
+                        <riskOverview:RiskTopRisksPlaceholder DataContext="{Binding TopRisks}"/>
+                    </Expander>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

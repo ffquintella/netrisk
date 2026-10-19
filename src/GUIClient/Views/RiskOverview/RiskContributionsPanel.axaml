@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="420"
+             x:DataType="vm:RiskContributionsViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskContributionsPanel">
+
+    <!-- S40 §5.8 (T255): the top contributions of the snapshot, ordered by points. Object, category
+         and points sort (the whole list is here, so on the client); the sensitivity never sorts
+         (S39 §1.3, the declared deviation of ui-standard §6.1). No action button: a line only
+         opens the object's detail. -->
+    <StackPanel Spacing="6" IsVisible="{Binding IsActive}">
+        <!-- The R-1 notice (S39 R-1): contribution is not an order of treatment. -->
+        <Border Classes="riskNotice">
+            <StackPanel Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding StrR1Notice}"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="label-nm" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding RegisterWeightText}"/>
+            <progRing:ProgressRing Classes="busy" Width="20" Height="20" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        </StackPanel>
+
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+        <TextBlock Classes="hint" Margin="0" Text="{Binding StrEmpty}" IsVisible="{Binding IsEmpty}"/>
+
+        <DataGrid Name="ContributionsGrid" MinHeight="120" MaxHeight="420" ItemsSource="{Binding Rows}" IsVisible="{Binding HasTable}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserSortColumns="True" CanUserResizeColumns="True"
+                  GridLinesVisibility="Horizontal" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{Binding StrColObject, Mode=OneTime}" Width="2*" MinWidth="200" SortMemberPath="ObjectSort">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskContributionRowViewModel">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" ToolTip.Tip="{Binding ObjectHint}">
+                                <material:MaterialIcon Classes="riskGlyph" Kind="LockOutline" IsVisible="{Binding IsRedacted}"/>
+                                <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding Object}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrColCategory, Mode=OneTime}" Binding="{Binding Category}" Width="60" SortMemberPath="CategoryOrder"/>
+                <DataGridTextColumn Header="{Binding StrColPoints, Mode=OneTime}" Binding="{Binding Points}" Width="70" SortMemberPath="PointsValue"/>
+                <DataGridTextColumn Header="{Binding StrColShare, Mode=OneTime}" Binding="{Binding Share}" Width="100" CanUserSort="False"/>
+                <DataGridTextColumn Header="{Binding StrColBranch, Mode=OneTime}" Binding="{Binding Branch}" Width="130" CanUserSort="False"/>
+                <DataGridTemplateColumn Header="{Binding StrColSensitivity, Mode=OneTime}" Width="130" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskContributionRowViewModel">
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Sensitivity}"
+                                       ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskContributionsViewModel)DataContext).StrSensitivityHint}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{Binding StrColNextHolder, Mode=OneTime}" Width="*" MinWidth="140" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskContributionRowViewModel">
+                            <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding NextHolder}"
+                                       ToolTip.Tip="{Binding NextHolderHint}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrColDecision, Mode=OneTime}" Binding="{Binding Decision}" Width="*" MinWidth="180" CanUserSort="False"/>
+                <DataGridTemplateColumn Width="40" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:RiskContributionRowViewModel">
+                            <Button Classes="detailButton" Command="{Binding Open}" CommandParameter="{Binding}"
+                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskContributionsViewModel)DataContext).StrOpenDetailHint}">
+                                <material:MaterialIcon Kind="ChevronRight"/>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
+</UserControl>

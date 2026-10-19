@@ -9,6 +9,8 @@ using Avalonia.Controls;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Models;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
@@ -28,7 +30,7 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 
 namespace GUIClient.ViewModels;
 
-public class EntitiesViewModel: ViewModelBase
+public class EntitiesViewModel: ViewModelBase, ISelectableModule
 {
     #region LANGUAGE STRINGS
     
@@ -131,6 +133,9 @@ public class EntitiesViewModel: ViewModelBase
     private UserControl? _parentWindow;
     
     private Panel? _entityPanel = null;
+
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
     
     private Dictionary<int,bool> _expandedNodes = new();
     
@@ -138,8 +143,41 @@ public class EntitiesViewModel: ViewModelBase
     
     #region CONSTRUCTOR
 
+    /// <summary>
+    /// An entity opened from another module (S40 §10.3, IX-7): its node in the loaded tree, else in the tree read again from
+    /// the service; one outside the user's scope or missing is refused with a toast and nothing selected.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        // The tree still loading would land after the selection and replace it.
+        await RecordNavigation.AwaitLoadAsync(_firstLoad, ex => Logger.Warning("The entity tree did not load: {Message}", ex.Message));
+        var node = Nodes is { } loaded ? FindLeafNode(id, loaded) : null;
+        if (node is null)
+        {
+            try
+            {
+                await LoadDataAsync();
+                node = Nodes is { } reloaded ? FindLeafNode(id, reloaded) : null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("Entity {Id} could not be opened: {Message}", id, ex.Message);
+            }
+        }
+
+        if (node is null)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        SelectedNode = node;
+        return true;
+    }
+
     public EntitiesViewModel(UserControl parentWindow): this()
     {
+        RegisterSelectableModule(AvaliableViews.Entities, this);
         //if (view == null) throw new Exception("View is null");
         _parentWindow = parentWindow;
     }
@@ -169,7 +207,7 @@ public class EntitiesViewModel: ViewModelBase
         _autenticationService.AuthenticationSucceeded += (_, _) =>
         {
             this.RaisePropertyChanged(nameof(CanManageEntities));
-            _ = InitializeAsync();
+            _firstLoad = InitializeAsync();
         };
         
     }

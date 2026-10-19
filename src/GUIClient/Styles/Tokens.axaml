@@ -133,6 +133,27 @@
     <SolidColorBrush x:Key="NrCriticality5Text" Color="{DynamicResource SemiBlackColor}" />
     <SolidColorBrush x:Key="NrCriticalityUnsetText" Color="{DynamicResource SemiWhiteColor}" />
 
+    <!-- ===== Chart palette (S40 §10.4, T257) ================================================= -->
+
+    <!--
+        Consumed from C#, not from a sheet: Tools/RiskIndex/ChartPaletteMap names these keys and
+        ChartPalette resolves them into SkiaSharp colours for LiveCharts, so a chart never carries a
+        literal (LintUi reads no C#). Band areas reuse the criticality ramp above; these are the
+        roles the ramp does not cover. Series 1-6 are the categories REG, EXP, AME, CTL, GOV, TER,
+        always labelled ("EXP 74"), so the hue only reinforces. All Semi aliases: no new hex.
+    -->
+    <SolidColorBrush x:Key="NrChartSeries1" Color="{DynamicResource SemiBlue4Color}" />
+    <SolidColorBrush x:Key="NrChartSeries2" Color="{DynamicResource SemiPurple4Color}" />
+    <SolidColorBrush x:Key="NrChartSeries3" Color="{DynamicResource SemiPink4Color}" />
+    <SolidColorBrush x:Key="NrChartSeries4" Color="{DynamicResource SemiTeal4Color}" />
+    <SolidColorBrush x:Key="NrChartSeries5" Color="{DynamicResource SemiAmber4Color}" />
+    <SolidColorBrush x:Key="NrChartSeries6" Color="{DynamicResource SemiGrey5Color}" />
+    <SolidColorBrush x:Key="NrChartEwma" Color="{DynamicResource SemiGrey7Color}" />
+    <SolidColorBrush x:Key="NrChartMarker" Color="{DynamicResource SemiLightBlue5Color}" />
+    <SolidColorBrush x:Key="NrChartFloorShade" Color="{DynamicResource SemiGrey5Color}" />
+    <SolidColorBrush x:Key="NrChartGrid" Color="{DynamicResource SemiGrey2Color}" />
+    <SolidColorBrush x:Key="NrChartAxis" Color="{DynamicResource SemiGrey6Color}" />
+
     <!-- ===== Semi overrides ================================================================= -->
 
     <!--

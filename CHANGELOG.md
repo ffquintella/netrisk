@@ -12,6 +12,30 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add the Cyber Risk Overview module to the desktop client, gated by `risk_index_view`, with a headline card showing the integer index, band, unfloored value, quality, coverage, seals and chips (T251, S40)
+- Draw the index trend over 30, 90 and 365 days with band areas, the EWMA line, floor shading and discontinuity markers, with a table alternative and click-to-date (T252, S40)
+- Show the contributing categories and, per asset-class tab, the monthly category summary, top risk factors and attack-surface visibility through `GET /RiskIndex/MonthlySummary` and `GET /RiskIndex/RiskFactors` (T253, S40)
+- Drill down by unit, process, activity, application, asset class, source, criticality and environment through a breadcrumb and an always-visible Explore panel with one drill state, a node tree and a server-paged object list, backed by `GET /RiskIndex/Dimensions` (T254, S40)
+- Show what moved, the top contributions with the holder and indicator sensitivity, and an object detail with factor readings and freshness, and navigate from it to the underlying record only through modules the user may open (T255, S40)
+- Show inventory visibility per source, an always-visible data-quality strip with the unassigned and default-criticality fractions and the live governance indicators through `GET /RiskIndex/Quality` (T256, S40)
+- Derive chart colours from theme tokens through a tested palette helper (T257, S40)
+
+### Changed
+
+- Enable each navigation-bar module button from one tested rule shared with record navigation, so a re-login as another user no longer keeps stale enabled buttons (T255, S40)
+
+### Fixed
+
+- Return band colour steps 1, 3, 4, 5 for a four-band profile instead of 1, 2, 4, 5 (T251, S40)
+- List no parentless unit under the "Não atribuído" node (T254, S40)
+- Stop the official monthly summary failing with a server error on a day that holds snapshots of two profiles (T253, S40)
+
+### Security
+
+- Refuse the appetite and acceptance seal filters and the residual-above-inherent chip on the object list to a caller without `riskmanagement`, as the object detail already does (T256, S40)
+
 ## [2.42.0] - 2026-10-19
 
 ### Added

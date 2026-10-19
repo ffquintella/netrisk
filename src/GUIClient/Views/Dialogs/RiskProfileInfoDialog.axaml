@@ -1,0 +1,109 @@
+<dialogs:DialogWindowBase x:TypeArguments="results:DialogResultBase"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+        xmlns:dialogs="clr-namespace:GUIClient.ViewModels.Dialogs"
+        xmlns:results="clr-namespace:GUIClient.ViewModels.Dialogs.Results"
+        xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+        x:DataType="vm:RiskProfileInfoDialogViewModel"
+        x:Class="GUIClient.Views.Dialogs.RiskProfileInfoDialog"
+        Title="{Binding StrTitle}"
+        Width="900" Height="700" MinWidth="760" MinHeight="560" CanResize="True"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- S40 §5.1 (T251): read-only. The profile of the snapshot shown, its parameters, and every other
+         version compared parameter by parameter. Drafts and approval live in the configuration (M55). -->
+    <Panel>
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10">
+            <TextBlock Grid.Row="0" Classes="header" Text="{Binding StrTitle}"/>
+            <TextBlock Grid.Row="1" Classes="warning" TextWrapping="Wrap" Text="{Binding ErrorMessage}"
+                       IsVisible="{Binding HasError}"/>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,10,*" Margin="0 8 0 0">
+                <Grid Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*">
+                    <TextBlock Grid.Row="0" Classes="sectionCaption" Text="{Binding StrCurrent}"/>
+                    <Border Grid.Row="1" Classes="formCard">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="form_label" Text="{Binding StrVersion}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Classes="form_text" Text="{Binding VersionText}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="form_label" Text="{Binding StrName}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Classes="form_text" Text="{Binding NameText}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="form_label" Text="{Binding StrPreset}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Classes="form_text" Text="{Binding PresetText}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="form_label" Text="{Binding StrStatus}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Classes="form_text" Text="{Binding StatusText}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Classes="form_label" Text="{Binding StrMode}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Classes="form_text" Text="{Binding ModeText}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Classes="form_label" Text="{Binding StrEffectiveFrom}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Classes="form_text" Text="{Binding EffectiveFromText}"/>
+                            <TextBlock Grid.Row="6" Grid.Column="0" Classes="form_label" Text="{Binding StrRetiredAt}"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Classes="form_text" Text="{Binding RetiredAtText}"/>
+                            <TextBlock Grid.Row="7" Grid.Column="0" Classes="form_label" Text="{Binding StrApprovedBy}"/>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Classes="form_text" Text="{Binding ApprovedByText}"/>
+                            <TextBlock Grid.Row="8" Grid.Column="0" Classes="form_label" Text="{Binding StrCommitteeRef}"/>
+                            <TextBlock Grid.Row="8" Grid.Column="1" Classes="form_text" Text="{Binding CommitteeRefText}"/>
+                            <TextBlock Grid.Row="9" Grid.Column="0" Classes="form_label" Text="{Binding StrCreatedBy}"/>
+                            <TextBlock Grid.Row="9" Grid.Column="1" Classes="form_text" Text="{Binding CreatedByText}"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Grid.Row="2" Classes="hint" Text="{Binding StrRebaselineNote}" IsVisible="{Binding IsRebaseline}"/>
+                    <DataGrid Grid.Row="3" Margin="0 6 0 0" IsReadOnly="True" CanUserSortColumns="False"
+                              ItemsSource="{Binding Parameters}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrParameterGroup, Mode=OneTime}"
+                                                Binding="{Binding Group}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrParameterKey, Mode=OneTime}"
+                                                Binding="{Binding Key}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrParameterValue, Mode=OneTime}"
+                                                Binding="{Binding Value}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <Grid Grid.Column="2" RowDefinitions="Auto,Auto,Auto,Auto,*">
+                    <TextBlock Grid.Row="0" Classes="sectionCaption" Text="{Binding StrOtherVersions}"/>
+                    <TextBlock Grid.Row="1" Classes="hint" Margin="0 0 0 4" Text="{Binding StrCompareHint}"/>
+                    <ListBox Grid.Row="2" MaxHeight="180" ItemsSource="{Binding OtherVersions}"
+                             SelectedItem="{Binding SelectedVersion}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RiskProfileVersionItem">
+                                <TextBlock Text="{Binding Text}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Grid.Row="3" Margin="0 8 0 0">
+                        <TextBlock Classes="sectionCaption" Margin="0 0 0 4" Text="{Binding DiffTitle}"
+                                   IsVisible="{Binding DiffTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBlock Classes="hint" Text="{Binding StrNoDifferences}" IsVisible="{Binding HasNoDifferences}"/>
+                    </StackPanel>
+                    <DataGrid Grid.Row="4" IsReadOnly="True" CanUserSortColumns="False" ItemsSource="{Binding Differences}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrParameterKey, Mode=OneTime}"
+                                                Binding="{Binding Key}" Width="Auto"/>
+                            <DataGridTextColumn Header="{Binding StrDiffSelected, Mode=OneTime}"
+                                                Binding="{Binding Value}" Width="*"/>
+                            <DataGridTextColumn Header="{Binding StrDiffThis, Mode=OneTime}"
+                                                Binding="{Binding OtherValue}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Grid>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 10 0 0">
+                <Button Classes="dialog2" Command="{Binding BtCloseClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Close" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrClose}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <progRing:ProgressRing Classes="busy" Width="100" Height="100" ZIndex="1000"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+    </Panel>
+</dialogs:DialogWindowBase>

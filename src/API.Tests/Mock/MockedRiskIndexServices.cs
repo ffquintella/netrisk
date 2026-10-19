@@ -121,6 +121,46 @@ public static class MockedRiskIndexReadService
                 Gate(call.ArgAt<string?>(0));
                 return new RiskIndexGovernanceIndicatorsDto(3, 30, 1, 0.82, 9, 1, 0.71, "requires_m43", "requires_m45_m46");
             });
+        service.GetQualityAsync(Arg.Any<string?>(), Arg.Any<DateOnly?>(), Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                return new RiskIndexQualityDto(0.92, 0.99, 0.91, "high", 0.12, true, 0.34,
+                    [new RiskIndexStaleSourceDto("V1-DEV", new DateTime(2026, 9, 27, 3, 0, 0, DateTimeKind.Utc))], 7, 3, 18, null, null,
+                    141, 5, "requires_m40");
+            });
+        service.GetMonthlySummaryAsync(Arg.Any<string?>(), Arg.Any<RiskIndexTabGroup?>(), Arg.Any<int>(), Arg.Any<DateOnly?>(),
+                Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                if (call.ArgAt<int>(2) is not (6 or 12)) throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidMonths, "months");
+                var means = new Dictionary<RiskIndexCategory, double?> { [RiskIndexCategory.Exp] = 74.2, [RiskIndexCategory.Gov] = null };
+                return new RiskIndexMonthlySummaryDto(call.ArgAt<RiskIndexTabGroup?>(1), [RiskIndexCategory.Exp, RiskIndexCategory.Gov],
+                    [new RiskIndexMonthDto("2026-10", true, false, means)], RiskIndexProvenance.OfficialDerived);
+            });
+        service.GetRiskFactorsAsync(Arg.Any<string?>(), Arg.Any<RiskIndexTabGroup?>(), Arg.Any<DateOnly?>(), Arg.Any<RiskIndexCaller>(),
+                Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                if (call.ArgAt<RiskIndexTabGroup?>(1) is null) throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidTab, "tab");
+                return (IReadOnlyList<RiskIndexRiskFactorDto>)new List<RiskIndexRiskFactorDto>
+                {
+                    new("EXP.V", "RiskFactor_EXP_V", 1204, 18, "factor=EXP.V")
+                };
+            });
+        service.GetDimensionsAsync(Arg.Any<string?>(), Arg.Any<DateOnly?>(), Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                return new RiskIndexDimensionsDto(
+                    [new RiskIndexDimensionValueDto("c:devices", "RiskTab_Devices", 12, "present"),
+                        new RiskIndexDimensionValueDto("c:server", "RiskAssetClass_Server", 9, "present")],
+                    [new RiskIndexDimensionValueDto("s:V1-DEV", "RiskSource_V1-DEV", 7, "present")],
+                    [new RiskIndexDimensionValueDto("k:5", "RiskExploreCriticalityFMT", 3, "present")],
+                    [new RiskIndexDimensionValueDto("a:prod", "RiskEnvironment_prod", 10, "present")]);
+            });
         return service;
     }
 }

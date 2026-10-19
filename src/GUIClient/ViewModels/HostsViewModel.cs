@@ -10,6 +10,8 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using GUIClient.Extensions;
 using GUIClient.Models;
+using GUIClient.Navigation;
+using GUIClient.Tools.Navigation;
 using GUIClient.Tools;
 using GUIClient.Tools.Hosts;
 using GUIClient.ViewModels.Dialogs;
@@ -35,7 +37,7 @@ namespace GUIClient.ViewModels;
 /// and are discarded when a newer request has started (<see cref="_selectionVersion"/>,
 /// <see cref="_listVersion"/>).
 /// </summary>
-public class HostsViewModel : ViewModelBase
+public class HostsViewModel : ViewModelBase, ISelectableModule
 {
     public const int PageSize = 100;
 
@@ -130,6 +132,9 @@ public class HostsViewModel : ViewModelBase
     private bool _initialized;
     private bool _initializing;
 
+    /// <summary>The first load, started as the module is built or the user signs in; a link's selection waits for it.</summary>
+    private Task? _firstLoad;
+
     /// <summary>
     /// False until the view is attached. Until then a SelectedIndex write is the TabControl picking
     /// its own first tab while it loads, not the user, and must neither move nor overwrite the
@@ -153,8 +158,40 @@ public class HostsViewModel : ViewModelBase
 
     #endregion
 
+    /// <summary>
+    /// A host opened from another module (S40 §10.3, IX-7): the one on the page, else the service's answer for its id; a
+    /// host outside the user's scope or missing is refused with a toast and nothing selected.
+    /// </summary>
+    public async Task<bool> SelectRecordAsync(int id, string? subView)
+    {
+        // A first page still loading would land after the selection and drop it.
+        await RecordNavigation.AwaitLoadAsync(_firstLoad, ex => Logger.Warning("The hosts list did not load: {Message}", ex.Message));
+        var host = HostsList.FirstOrDefault(h => h.Id == id);
+        if (host is null)
+        {
+            try
+            {
+                host = (await HostsService.GetFilteredAsync(1, 1, RecordNavigation.HostFilter(id))).FirstOrDefault(h => h.Id == id);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning("Host {Id} could not be opened: {Message}", id, ex.Message);
+            }
+        }
+
+        if (host is null)
+        {
+            Toasts.Warning(Localizer[RecordNavigation.OutOfScopeKey]);
+            return false;
+        }
+
+        SelectedHost = host;
+        return true;
+    }
+
     public HostsViewModel()
     {
+        RegisterSelectableModule(AvaliableViews.Devices, this);
         _exportService = GetService<IExportClientService>();
         ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
 
@@ -201,7 +238,7 @@ public class HostsViewModel : ViewModelBase
             if (AuthenticationService.AuthenticatedUserInfo == null) return;
             if (AuthenticationService.AuthenticatedUserInfo.UserPermissions == null) return;
             if (AuthenticationService.AuthenticatedUserInfo.UserPermissions.Contains("hosts"))
-                Dispatcher.UIThread.Post(() => { _ = InitializeAsync(); });
+                Dispatcher.UIThread.Post(() => { _firstLoad = InitializeAsync(); });
         };
     }
 

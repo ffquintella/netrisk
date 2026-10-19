@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="320"
+             x:DataType="vm:RiskMonthlySummaryViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskMonthlySummary">
+
+    <!-- S40 §5.5.1, §5.6.1, §10.4, §10.8 (T254): a node's monthly category summary — grouped
+         columns labelled "EXP 74" in the fixed order, or the same values as a table. -->
+    <StackPanel Spacing="4">
+        <WrapPanel>
+            <Border Classes="tooltip" Margin="0 0 12 4" VerticalAlignment="Center" ToolTip.Tip="{Binding StrMonthlyHelp}">
+                <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+            </Border>
+            <ComboBox Margin="0 0 12 4" MinWidth="110" ItemsSource="{Binding MonthsOptions}" SelectedItem="{Binding SelectedMonths}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MonthsOption">
+                        <TextBlock Text="{Binding Label}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Classes="type3" Margin="0 0 12 4" Command="{Binding BtToggleMonthlyTableClicked}" IsVisible="{Binding HasMonthly}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="TableLarge" Width="18" Height="18" Margin="0 0 5 0" IsVisible="{Binding !IsMonthlyTable}"/>
+                    <material:MaterialIcon Kind="ChartBar" Width="18" Height="18" Margin="0 0 5 0" IsVisible="{Binding IsMonthlyTable}"/>
+                    <TextBlock Text="{Binding StrToggleView}"/>
+                </StackPanel>
+            </Button>
+            <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                   IsActive="{Binding IsMonthlyBusy}" IsVisible="{Binding IsMonthlyBusy}"/>
+        </WrapPanel>
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasMonthlyError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380"
+                           Text="{Binding MonthlyError}" IsVisible="{Binding HasMonthlyError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+        <TextBlock Classes="hint" Margin="0" Text="{Binding StrMonthlyEmpty}" IsVisible="{Binding IsMonthlyEmpty}"/>
+        <lvc:CartesianChart MinHeight="220" IsVisible="{Binding IsMonthlyChart}"
+                            Series="{Binding MonthlySeries}" XAxes="{Binding MonthlyXAxes}"
+                            YAxes="{Binding MonthlyYAxes}" LegendPosition="Hidden" TooltipPosition="Top"/>
+        <DataGrid MinHeight="140" MaxHeight="300" IsVisible="{Binding IsMonthlyGrid}"
+                  ItemsSource="{Binding MonthlyRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserReorderColumns="True" CanUserResizeColumns="True" CanUserSortColumns="True"
+                  GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{Binding StrColMonth, Mode=OneTime}" Binding="{Binding Month}" Width="90"/>
+                <DataGridTextColumn Header="{Binding StrColReg, Mode=OneTime}" Binding="{Binding Reg}" Width="60" IsVisible="{Binding ShowsReg}"/>
+                <DataGridTextColumn Header="{Binding StrColExp, Mode=OneTime}" Binding="{Binding Exp}" Width="60" IsVisible="{Binding ShowsExp}"/>
+                <DataGridTextColumn Header="{Binding StrColAme, Mode=OneTime}" Binding="{Binding Ame}" Width="60" IsVisible="{Binding ShowsAme}"/>
+                <DataGridTextColumn Header="{Binding StrColCtl, Mode=OneTime}" Binding="{Binding Ctl}" Width="60" IsVisible="{Binding ShowsCtl}"/>
+                <DataGridTextColumn Header="{Binding StrColGov, Mode=OneTime}" Binding="{Binding Gov}" Width="60" IsVisible="{Binding ShowsGov}"/>
+                <DataGridTextColumn Header="{Binding StrColTer, Mode=OneTime}" Binding="{Binding Ter}" Width="60" IsVisible="{Binding ShowsTer}"/>
+                <DataGridTextColumn Header="{Binding StrColNote, Mode=OneTime}" Binding="{Binding Note}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding MonthlyLegend}"
+                   IsVisible="{Binding MonthlyLegend, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:behaviors="clr-namespace:GUIClient.Behaviors"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="360"
+             x:DataType="vm:RiskNodeTreeViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskNodeTree">
+
+    <!-- S40 §5.6.1, §5.6.4, §10.8 (T254): the children of the current node. The columns are
+         built in the code-behind, like VulnerabilitiesView's, with headers from Str*. Arrows
+         move, →/← expand and collapse, Enter opens a node, Alt+← goes up, Ctrl+F filters (IX-8). -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+F" Command="{Binding BtFocusSearchClicked}"/>
+    </UserControl.KeyBindings>
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="RiskNodeNameCell" x:DataType="vm:RiskNodeTreeItem">
+            <Panel VerticalAlignment="Center">
+                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" IsVisible="{Binding IsNode}"
+                           ToolTip.Tip="{Binding Label}"/>
+                <TextBlock Classes="hint" Margin="0" Text="{Binding Label}" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding !IsNode}" ToolTip.Tip="{Binding Label}"/>
+            </Panel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="RiskNodeBandCell" x:DataType="vm:RiskNodeTreeItem">
+            <Panel VerticalAlignment="Center">
+                <Border Classes="riskBand" HorizontalAlignment="Left" IsVisible="{Binding HasBand}"
+                        Classes.b1="{Binding IsBandStep1}" Classes.b2="{Binding IsBandStep2}"
+                        Classes.b3="{Binding IsBandStep3}" Classes.b4="{Binding IsBandStep4}"
+                        Classes.b5="{Binding IsBandStep5}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="{Binding BandGlyph}"/>
+                        <TextBlock Classes="riskBandText" Text="{Binding BandLabel}"/>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="{Binding BandLabel}" IsVisible="{Binding ShowsNoBand}"/>
+            </Panel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="RiskNodeStateCell" x:DataType="vm:RiskNodeTreeItem">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" IsVisible="{Binding IsNode}">
+                <material:MaterialIcon Classes="riskGlyph" Kind="AlertOutline" IsVisible="{Binding StateWarning}"/>
+                <TextBlock VerticalAlignment="Center" Text="{Binding StateText}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="RiskNodeOpenCell" x:DataType="vm:RiskNodeTreeItem">
+            <Button Classes="detailButton" IsVisible="{Binding IsNode}"
+                    Command="{Binding Open}" CommandParameter="{Binding Key}"
+                    ToolTip.Tip="{Binding $parent[UserControl].((vm:RiskNodeTreeViewModel)DataContext).StrOpenNodeHint}">
+                <material:MaterialIcon Kind="ChevronRight"/>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="4">
+        <WrapPanel>
+            <TextBox Name="NodeSearchBox" MinWidth="220" Margin="0 0 12 4"
+                     PlaceholderText="{Binding StrSearchWatermark}" Text="{Binding SearchText}"
+                     behaviors:FocusOnSignal.Signal="{Binding SearchFocusSignal}"/>
+            <progRing:ProgressRing Classes="busy" Width="20" Height="20" Margin="0 0 0 4"
+                                   IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        </WrapPanel>
+
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="480"
+                           Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRetry}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+        <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoChildren}" IsVisible="{Binding IsEmpty}"/>
+
+        <TreeDataGrid Name="NodeTreeGrid" MinHeight="220" MaxHeight="420"
+                      ShowColumnHeaders="True" CanUserResizeColumns="True" CanUserSortColumns="True"/>
+
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding OutsideNote}" IsVisible="{Binding HasOutsideNote}"/>
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrSortNote}"/>
+        <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrKeyboardHint}"/>
+    </StackPanel>
+</UserControl>

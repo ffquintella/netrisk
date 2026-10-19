@@ -39,9 +39,13 @@ public class RiskIndexEndpointPermissionMapTest
         ["RiskIndexController.GetObjects"] = [View],
         ["RiskIndexController.GetObject"] = [View],
         ["RiskIndexController.GetInventory"] = [View],
+        ["RiskIndexController.GetMonthlySummary"] = [View],
+        ["RiskIndexController.GetRiskFactors"] = [View],
+        ["RiskIndexController.GetDimensions"] = [View],
         ["RiskIndexController.GetChanges"] = [View],
         ["RiskIndexController.GetContributions"] = [View],
         ["RiskIndexController.GetGovernanceIndicators"] = [View],
+        ["RiskIndexController.GetQuality"] = [View],
         ["RiskIndexController.GetPublication"] = [View],
         ["RiskIndexController.SetPublication"] = [View, Approve],
 

@@ -223,6 +223,34 @@ public class RiskIndexLifecycleIntegrationTests(MariaDbContainerFixture fixture)
         Assert.Equal(1.0, (await reads.GetGovernanceIndicatorsAsync(unit, null, admin)).SlaCompliance);
         Assert.NotNull(await reads.GetContributionsAsync(unit, null, null, admin));
         Assert.Equal(date.AddDays(-1), (await reads.GetChangesAsync(unit, null, null, admin)).From);
+
+        // T253: the tab reads translate on MariaDB — class days and category rows by node, the day-by-day recomposition of
+        // a derived node, and the factor and signal JSON behind the risk factors and the object list's factor filter.
+        var classSummary = await reads.GetMonthlySummaryAsync(unit, RiskIndexTabGroup.Devices, 6, null, admin);
+        Assert.Equal(RiskIndexProvenance.OfficialDerived, classSummary.Provenance);
+        Assert.NotNull(classSummary.Months[^1].MeanByCategory[RiskIndexCategory.Exp]);
+        var nodeSummary = await reads.GetMonthlySummaryAsync(unit, null, 12, null, admin);
+        Assert.Equal((RiskIndexProvenance.Official, 12), (nodeSummary.Provenance, nodeSummary.Months.Count));
+        Assert.NotNull(nodeSummary.Months[^1].MeanByCategory[RiskIndexCategory.Exp]);
+        var derivedSummary = await reads.GetMonthlySummaryAsync(unit + ";c:devices", null, 6, null, admin);
+        Assert.Equal(RiskIndexProvenance.OfficialDerived, derivedSummary.Provenance);
+        Assert.NotNull(derivedSummary.Months[^1].MeanByCategory[RiskIndexCategory.Exp]);
+        var factors = await reads.GetRiskFactorsAsync(unit, RiskIndexTabGroup.Devices, null, admin);
+        Assert.NotEmpty(factors);
+        var listed = await reads.GetObjectsAsync(unit + ";c:devices", null, new RiskIndexObjectQuery(factors[0].ObjectFilter), admin);
+        Assert.Equal(factors[0].Count, listed.Rows.Select(r => r.Object.Object).Distinct().Count());
+
+        // T256: the data quality translates on MariaDB — the node's object rows and their factor JSON for stale sources, the
+        // organization's stored tree counts, and the chip filters the quality items open.
+        var orgQuality = await reads.GetQualityAsync("org", null, admin);
+        Assert.NotNull(orgQuality.OrphanApplications);
+        Assert.InRange(orgQuality.DefaultCriticalityWeightFraction, 0, 1);
+        var unitQuality = await reads.GetQualityAsync(unit, null, admin);
+        Assert.Null(unitQuality.OrphanApplications);
+        var presumed = await reads.GetObjectsAsync(unit, null,
+            new RiskIndexObjectQuery(RiskIndexQualityFilters.Filter(RiskIndexQualityFilters.PresumedCritical)), admin);
+        Assert.Equal(unitQuality.PresumedCritical, presumed.Rows.Select(r => r.Object.Object).Distinct().Count());
+
         Assert.Equal(RiskIndexPublicationState.Shadow, (await reads.GetPublicationAsync()).State);
     }
 

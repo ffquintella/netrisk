@@ -915,7 +915,8 @@ process, activity, application, asset class and source. Methodology (pt-BR):
 (S39). Dashboard and configuration screens:
 [docs/features/risk-overview-dashboard.md](docs/features/risk-overview-dashboard.md) (S40). **Status:
 in progress — M52 delivered (T236–T242 and T292) and M53 delivered (T243–T250 and T293): the engine,
-the daily snapshot and the read and profile APIs exist; no dashboard yet (M54).**
+the daily snapshot and the read and profile APIs exist; and M54 delivered (T251–T257): the desktop
+Cyber Risk Overview module, not yet published (T258 pilot, T294 Master Dashboard retirement).**
 
 > **The index monitors; it never decides.** MIGR-TI/IA gates A→D stay the decision path: no service on
 > that path reads the index (enforced by `IcrIsNotADecisionInputTest`), the index is never registered as
@@ -1005,13 +1006,20 @@ the daily snapshot and the read and profile APIs exist; no dashboard yet (M54).*
 > spec: S40
 > depends-on: M53
 
-- [ ] T251 Add the Cyber Risk Overview module with the headline card — integer value, band label, unfloored value, quality and coverage, seals and chips — gated by `risk_index_view` (S40)
-- [ ] T252 Draw the trend with band areas, the EWMA line, floor shading and discontinuity markers over 30, 90 and 365 days (S40)
-- [ ] T253 Show the contributing categories and, per asset-class tab, the monthly category summary, top risk factors and attack-surface visibility (S40)
-- [ ] T254 Drill down by unit, process, activity, application, asset class, source, criticality and environment through a breadcrumb and an always-visible Explore panel with one drill state, with a node detail and object list (S40)
-- [ ] T255 Show "what moved", top contributions with "held by" and indicator sensitivity, and an object detail with factor readings and freshness (S40)
-- [ ] T256 Show inventory visibility per source (assessed, stale, presumed, not assessed), the always-visible data-quality strip with unassigned and default-criticality fractions, and the governance and review indicators shown beside the index (S40)
-- [ ] T257 Derive chart colours from theme tokens through a tested palette helper, since `LintUi` does not scan C# (S40)
+- [x] T251 Add the Cyber Risk Overview module with the headline card — integer value, band label, unfloored value, quality and coverage, seals and chips — gated by `risk_index_view` (S40)
+  - note: reference indicators (§5.2.4), Live preview and Export are not built, and "Abrir na configuração" waits for `ShowAdministration` (T259); the profile dialog shows raw parameter keys until M55 adds the `RiskParam_*` labels; the client service is `IRiskIndexService` (S40 §8.9) and reads `delta_seta` and `cov_indicativo` from the profile because the overview DTO lacks them; fixed in passing: the server's band ramp gave steps 1,2,4,5 for four bands instead of 1,3,4,5; the new chart tokens still need the ui-standard §2.6 proposal in the PR
+- [x] T252 Draw the trend with band areas, the EWMA line, floor shading and discontinuity markers over 30, 90 and 365 days (S40)
+  - note: no annotations table or API exists, so the trend renders an always-empty `Annotations` list (a schema change, left out); the server does not compute `AppetiteLine`, `TargetLine` or `FlooredRanges` (full mode, M59); a derived node's 365-day window is disabled
+- [x] T253 Show the contributing categories and, per asset-class tab, the monthly category summary, top risk factors and attack-surface visibility (S40)
+  - note: added `GET /RiskIndex/MonthlySummary` and `GET /RiskIndex/RiskFactors`; factor counts are objects, not findings, since stored rows keep at most 50 signals per factor; derived 6–12-month summaries read one day of object rows at a time and may return `503 derived_computation_timeout` on production volumes (a retry resumes from cached months)
+- [x] T254 Drill down by unit, process, activity, application, asset class, source, criticality and environment through a breadcrumb and an always-visible Explore panel with one drill state, with a node detail and object list (S40)
+  - note: added `GET /RiskIndex/Dimensions` (with `date`, beyond the spec's `node`); Ctrl+F filters only the tree's top-level rows, the client cache covers the overview and Explore reads but not trend, tabs or the object list, and tab order is document order; fixed in passing: the Unit children of "Não atribuído" listed parentless units
+- [x] T255 Show "what moved", top contributions with "held by" and indicator sensitivity, and an object detail with factor readings and freshness (S40)
+  - note: the server sends no change events or Floor row, `DecisionState` is always null, and no Incident or Assessment destination is emitted; across a profile change a derived node returns `409 changes_cross_profile`; the detail dialog is `DialogWindowBase<RiskIndexObjectDetailDialogResult>` because dialog results must derive from `DialogResultBase`; the navigation bar now assigns `ModuleAccess` instead of only ever enabling, so a re-login no longer keeps stale enabled buttons; the six target modules now wait for their first load before selecting a record
+- [x] T256 Show inventory visibility per source (assessed, stale, presumed, not assessed), the always-visible data-quality strip with unassigned and default-criticality fractions, and the governance and review indicators shown beside the index (S40)
+  - note: added `GET /RiskIndex/Quality` and the `chip=` filter on `/Objects`; counts the snapshot does not store (SSC pseudo-hosts, hosts that left with a bad reading) show "—"; the monetary panel and Top Risks are text-only because `GET /RiskIndex/Monetary` is not built and the residual needs T290; governance indicators are live counts, and their `›` opens Risks or Vulnerabilities unfiltered; `seal=` and `chip=residual_above_inherent` now require `riskmanagement` (S40 §5.9, §11.3)
+- [x] T257 Derive chart colours from theme tokens through a tested palette helper, since `LintUi` does not scan C# (S40)
+  - note: the chart tokens are only used from C#, so `ThemeTokenLayerTests` also counts `ChartPaletteMap.AllTokenKeys()` as references
 - [ ] T258 Approve a pilot profile, run the 8–12 week shadow pilot with backtesting, then approve the publication profile (as a rebaseline if calibration requires it) before publishing interim mode to the risk team (S39, S40)
   - note: starts once T251–T253 and T259–T262 are done; the pilot profile is approved through the M55 screens (S40 §14.1)
 - [ ] T294 Retire the Master Dashboard (module, navigation entry, `GET /Dashboard/Master`, its service, DTOs, client service and tests) once the interim index is published to scoped users (S40)

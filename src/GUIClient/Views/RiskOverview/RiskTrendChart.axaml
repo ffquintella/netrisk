@@ -1,0 +1,126 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
+             xmlns:tools="clr-namespace:GUIClient.Tools.RiskIndex"
+             mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="420"
+             x:DataType="vm:RiskTrendViewModel"
+             x:Class="GUIClient.Views.RiskOverview.RiskTrendChart">
+
+    <!-- S40 §5.3, §10.4, §10.8 (T252): the trend over the band areas of each profile stretch. Every
+         colour comes from the token palette (ChartPalette); every day is told apart by shape — line,
+         hollow circle (gap), hollow square (indicative), triangle (marker), hollow diamond (vendor
+         annotation) — and "Ver como tabela" repeats what the hints say. -->
+    <Border Classes="riskPanel" IsVisible="{Binding IsActive}">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+            <WrapPanel Grid.Row="0">
+                <TextBlock Classes="sectionCaption" Margin="0 0 12 4" VerticalAlignment="Center" Text="{Binding StrTitle}"/>
+                <TextBlock VerticalAlignment="Center" Margin="0 0 6 4" Text="{Binding StrWindow}" IsVisible="{Binding !IsPartial}"/>
+                <ComboBox Margin="0 0 12 4" MinWidth="110" ItemsSource="{Binding Windows}" SelectedItem="{Binding SelectedWindow}"
+                          IsVisible="{Binding !IsPartial}">
+                    <ComboBox.Styles>
+                        <Style Selector="ComboBoxItem" x:DataType="tools:TrendWindowOption">
+                            <Setter Property="IsEnabled" Value="{Binding IsEnabled}"/>
+                            <Setter Property="ToolTip.Tip" Value="{Binding DisabledReason}"/>
+                        </Style>
+                    </ComboBox.Styles>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="tools:TrendWindowOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock VerticalAlignment="Center" Margin="0 0 6 4" Text="{Binding StrSeries}" IsVisible="{Binding !IsPartial}"/>
+                <ComboBox Margin="0 0 12 4" MinWidth="90" ItemsSource="{Binding SeriesOptions}"
+                          SelectedItem="{Binding SelectedSeries}" IsVisible="{Binding !IsPartial}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="tools:TrendSeriesOption">
+                            <TextBlock Text="{Binding Label}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Classes="type3" Margin="0 0 12 4" Command="{Binding BtToggleTableClicked}"
+                        IsVisible="{Binding HasPoints}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Kind="TableLarge" Width="18" Height="18" Margin="0 0 5 0"
+                                               IsVisible="{Binding !IsTableView}"/>
+                        <material:MaterialIcon Kind="ChartLine" Width="18" Height="18" Margin="0 0 5 0"
+                                               IsVisible="{Binding IsTableView}"/>
+                        <TextBlock Text="{Binding StrToggleView}"/>
+                    </StackPanel>
+                </Button>
+                <Border Classes="tooltip" Margin="0 0 0 4" VerticalAlignment="Center" ToolTip.Tip="{Binding StrHelp}">
+                    <material:MaterialIcon Classes="riskGlyph" Kind="InformationOutline"/>
+                </Border>
+                <progRing:ProgressRing Classes="busy" Width="24" Height="24" Margin="8 0 0 4"
+                                       IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            </WrapPanel>
+
+            <!-- A partial view has no trend (§5.0); a failed read fails only this panel (§5.13). -->
+            <StackPanel Grid.Row="1" Spacing="4">
+                <Border Classes="riskEmptyState" IsVisible="{Binding IsPartial}">
+                    <StackPanel Orientation="Horizontal">
+                        <material:MaterialIcon Classes="riskGlyph" Kind="EyeOffOutline"/>
+                        <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding StrPartialNoTrend}"/>
+                    </StackPanel>
+                </Border>
+                <Border Classes="riskEmptyState" IsVisible="{Binding HasError}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="520"
+                                   Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+                        <Button Classes="type2" Command="{Binding BtRetryClicked}" IsEnabled="{Binding !IsBusy}">
+                            <StackPanel Orientation="Horizontal">
+                                <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding StrRetry}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <TextBlock Classes="hint" Margin="0" Text="{Binding StrNoPoints}" IsVisible="{Binding IsEmpty}"/>
+            </StackPanel>
+
+            <lvc:CartesianChart Grid.Row="2" MinHeight="300" IsVisible="{Binding IsChartView}"
+                                Series="{Binding Series}" Sections="{Binding Sections}"
+                                XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
+                                LegendPosition="Hidden" TooltipPosition="Top"
+                                DataPointerDownCommand="{Binding BtTrendPointClicked}"/>
+
+            <DataGrid Grid.Row="2" MinHeight="300" MaxHeight="420" IsVisible="{Binding IsTableView}"
+                      ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserReorderColumns="True" CanUserResizeColumns="True" CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrColDate, Mode=OneTime}" Binding="{Binding DateText}" Width="100"/>
+                    <DataGridTextColumn Header="{Binding StrColUnfloored, Mode=OneTime}" Binding="{Binding Unfloored}" Width="70"/>
+                    <DataGridTextColumn Header="{Binding StrColFloored, Mode=OneTime}" Binding="{Binding Floored}" Width="70"/>
+                    <DataGridTextColumn Header="{Binding StrColEwma, Mode=OneTime}" Binding="{Binding Ewma}" Width="70"/>
+                    <DataGridTextColumn Header="{Binding StrColDelta, Mode=OneTime}" Binding="{Binding Delta}" Width="60"/>
+                    <DataGridTextColumn Header="{Binding StrColState, Mode=OneTime}" Binding="{Binding State}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrColInterval, Mode=OneTime}" Binding="{Binding Interval}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrColMarker, Mode=OneTime}" Binding="{Binding Marker}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrColGap, Mode=OneTime}" Binding="{Binding Gap}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- The legend by shape (§10.7): the hue of each series only reinforces it. -->
+            <WrapPanel Grid.Row="3" Margin="0 4 0 0" IsVisible="{Binding IsChartView}">
+                <material:MaterialIcon Classes="riskGlyph" Kind="Minus"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendLine}"/>
+                <material:MaterialIcon Classes="riskGlyph" Kind="DotsHorizontal"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendEwma}"/>
+                <material:MaterialIcon Classes="riskGlyph" Kind="TriangleDown"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendMarker}"/>
+                <material:MaterialIcon Classes="riskGlyph" Kind="RhombusOutline"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendAnnotation}"/>
+                <material:MaterialIcon Classes="riskGlyph" Kind="CircleOutline"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendGap}"/>
+                <material:MaterialIcon Classes="riskGlyph" Kind="SquareOutline"/>
+                <TextBlock Classes="hint" Margin="2 0 12 0" Text="{Binding StrLegendIndicative}"/>
+            </WrapPanel>
+        </Grid>
+    </Border>
+</UserControl>

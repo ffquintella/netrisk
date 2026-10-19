@@ -56,9 +56,22 @@
                     </MultiBinding>
                 </ToolTip.Tip>
                 <Button Name="BtnMasterDashboard" Classes="nav-base nav-icon"
-                        IsEnabled="{Binding IsAdmin}"
+                        IsEnabled="{Binding HasMasterDashboardPermission}"
                         Command="{Binding BtMasterDashboardClicked}">
                     <material:MaterialIcon Kind="ViewDashboardVariantOutline" Width="20" Height="20"/>
+                </Button>
+            </Border>
+            <Border Classes="tooltip">
+                <ToolTip.Tip>
+                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
+                        <Binding Path="StrRiskOverview"/>
+                        <Binding Path="#BtnRiskOverview.IsEnabled"/>
+                    </MultiBinding>
+                </ToolTip.Tip>
+                <Button Name="BtnRiskOverview" Classes="nav-base nav-icon"
+                        IsEnabled="{Binding HasRiskIndexViewPermission}"
+                        Command="{Binding BtRiskOverviewClicked}">
+                    <material:MaterialIcon Kind="Gauge" Width="20" Height="20"/>
                 </Button>
             </Border>
             <Border Classes="tooltip" IsVisible="True">
@@ -108,8 +121,7 @@
                     </MultiBinding>
                 </ToolTip.Tip>
                 <Button Name="BtnVulnerability" Classes="nav-base nav-icon"
-                        IsEnabled="{Binding AuthenticatedUserInfo, 
-                            Converter={StaticResource AuthenticatedUserHasPermissionConverter}, ConverterParameter=vulnerabilities}"
+                        IsEnabled="{Binding HasVulnerabilitiesPermission}"
                         Command="{Binding BtVulnerabilityClicked}">
                     <material:MaterialIcon Kind="ShieldBug" Width="20" Height="20"/>
                 </Button>
@@ -122,8 +134,7 @@
                     </MultiBinding>
                 </ToolTip.Tip>
                 <Button Name="BtnIncident" Classes="nav-base nav-icon"
-                        IsEnabled="{Binding AuthenticatedUserInfo, 
-                            Converter={StaticResource AuthenticatedUserHasPermissionConverter}, ConverterParameter=incident_management}"
+                        IsEnabled="{Binding HasIncidentsPermission}"
                         Command="{Binding BtIncidentsClicked}">
                     <material:MaterialIcon Kind="AlertOctagram" Width="20" Height="20"/>
                 </Button>

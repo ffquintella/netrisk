@@ -10,5 +10,8 @@ public enum AvaliableViews
     Users,
     Entities,
     Vulnerabilities,
-    Incidents
+    Incidents,
+
+    /// <summary>The Cyber Risk Overview (S40, M54). Appended last: the values above are never renumbered.</summary>
+    RiskOverview
 }
