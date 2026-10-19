@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.42.0] - 2026-10-19
+
 ### Added
 
 - Add the risk index profile, snapshot and object-day tables and the `risk_index_view`, `risk_index_configure` and `risk_index_approve` permissions in schema version 106 (T243, S39, S40)
