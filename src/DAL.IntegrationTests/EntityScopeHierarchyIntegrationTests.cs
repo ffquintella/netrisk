@@ -31,10 +31,13 @@ public class EntityScopeHierarchyIntegrationTests(MariaDbContainerFixture fixtur
     private const int Org = 1, UnitX = 10, SubX = 11, ProcessUnderSubX = 12, UnitY = 20, SubY = 21, EavProcess = 30;
     private static readonly int[] AllEntities = [Org, UnitX, SubX, ProcessUnderSubX, UnitY, SubY, EavProcess];
 
-    /// <summary>The version that seeds the permissions, found by its content rather than written here (S42 §11).</summary>
+    /// <summary>
+    /// The version that seeds the permissions, found by its content rather than written here (S42 §11): the permission's
+    /// own VALUES row, since a later version may grant it by key (T293's Data script does).
+    /// </summary>
     private static int V =>
         Directory.GetFiles(Path.Combine(MariaDbContainerFixture.RepoDbDir(), "Data"), "*.sql")
-            .Where(path => File.ReadAllText(path).Contains("'entity_risk_context'", StringComparison.Ordinal))
+            .Where(path => File.ReadAllText(path).Contains("('entity_risk_context',", StringComparison.Ordinal))
             .Select(path => int.Parse(Path.GetFileNameWithoutExtension(path)))
             .Single();
 

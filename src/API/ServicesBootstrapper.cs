@@ -18,6 +18,8 @@ using SharedServices.Interfaces;
 using SharedServices.Services;
 using Mapster;
 
+using ServerServices.RiskIndex;
+
 namespace API;
 
 public static class ServicesBootstrapper
@@ -168,6 +170,10 @@ public static class ServicesBootstrapper
         // Track 8 (Risk governance). Same reasoning: the enforcement rules have to be identical
         // whether a decision arrives from the desktop app, the portal or a background job.
         services.AddTrack8Governance();
+
+        // M53 (S40 §9.2): the index's service graph — the day calculator, the snapshot and retention services the job host
+        // runs, and the read layer of wave 4. Registered here so both hosts resolve the same graph.
+        services.AddRiskIndex();
 
         services.AddSingleton<ISystemService, SystemService>();
     }

@@ -31,7 +31,8 @@ namespace ServerServices.Security;
 ///
 /// The unguessable unique name stays — defence in depth — but it is no longer the whole control.
 /// </summary>
-public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermissionsService permissions)
+public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermissionsService permissions,
+    IApprovalEvidenceReadRule? approvalEvidence = null)
     : ServiceBase(logger, dalService), IFileAccessAuthorizer
 {
     /// <summary>The permission that grants access to the risk register and everything hanging off it.</summary>
@@ -54,6 +55,14 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
     {
         ArgumentNullException.ThrowIfNull(file);
         ArgumentNullException.ThrowIfNull(user);
+
+        // The committee's minutes on an index profile (S40 §11.3) follow the profile's own read rule — global scope and the
+        // shadow pilot — which binds administrators too; only the uploader reads them back unconditionally.
+        if (file.RiskIndexProfileId is { } profileId && file.User != user.Value)
+        {
+            await EnsureCanReadApprovalEvidenceAsync(file, profileId, user);
+            return;
+        }
 
         if (user.Admin) return;
 
@@ -86,6 +95,23 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
             required);
 
         throw new UserNotAuthorizedException(user.Name, user.Value, required);
+    }
+
+    /// <summary>
+    /// The read rule of a file attached as approval evidence: asked of the parent's own module
+    /// (<see cref="IApprovalEvidenceReadRule"/>) with the caller's permissions read from the database. Without that module
+    /// registered, nobody but the uploader reads the file — the rule fails closed.
+    /// </summary>
+    private async Task EnsureCanReadApprovalEvidenceAsync(NrFile file, int profileId, User user)
+    {
+        var refusal = approvalEvidence is null
+            ? "risk_index_view"
+            : await approvalEvidence.RefusalAsync(profileId, user, await permissions.GetUserPermissionsAsync(user));
+        if (refusal is null) return;
+
+        Logger.Warning("Refused file {File} to user {User}: committee evidence of profile {Profile} ({Refusal})", file.Id,
+            user.Value, profileId, refusal);
+        throw new UserNotAuthorizedException(user.Name, user.Value, refusal);
     }
 
     /// <summary>
@@ -125,6 +151,12 @@ public class FileAccessAuthorizer(ILogger logger, IDalService dalService, IPermi
 
         var parents = FileParents.Declared(file);
         if (parents.Count == 0) return;
+
+        // The minutes are linked by POST /RiskIndex/Profiles/{id}/Attachments, which knows the profile's state and that the
+        // linker holds risk_index_approve explicitly (S40 §8.4). The generic routes know neither — administrators included.
+        if (parents.Any(p => p.Kind == FileParents.Kind.RiskIndexProfile))
+            throw new InvalidParameterException("file",
+                "A profile's evidence is linked through /RiskIndex/Profiles/{id}/Attachments.");
 
         if (parents.Count > 1)
             throw new InvalidParameterException("file", "An attachment belongs to exactly one parent record.");

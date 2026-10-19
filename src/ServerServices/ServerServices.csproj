@@ -14,6 +14,8 @@
          severity parsing, threshold selection, the token format. Widening them to public to make
          them testable would put them on the service's contract, which is the wrong trade. -->
     <InternalsVisibleTo Include="ServerServices.Tests" />
+    <!-- M53, T247: the index snapshot's batched write, timed on MariaDB without seeding a 35 000-object organization. -->
+    <InternalsVisibleTo Include="DAL.IntegrationTests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\libs\NessusParser\nessus-tools\nessus-tools.csproj" />

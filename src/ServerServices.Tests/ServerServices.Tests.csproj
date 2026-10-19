@@ -23,6 +23,20 @@
     <ProjectReference Include="..\API\API.csproj" />
     <ProjectReference Include="..\ServerServices\ServerServices.csproj" />
     <!--
+      IcrIsNotADecisionInputTest (M53, T247; S40 §11.5) reads the IL of every product assembly that can name an index
+      type from this test's own directory, and fails when one is missing. These references are what put them there.
+    -->
+    <ProjectReference Include="..\BackgroundJobs\BackgroundJobs.csproj" />
+    <ProjectReference Include="..\ConsoleClient\ConsoleClient.csproj" />
+    <ProjectReference Include="..\ClientServices\ClientServices.csproj" />
+    <ProjectReference Include="..\RiskPortal\RiskPortal.csproj" />
+    <ProjectReference Include="..\SharedServices\SharedServices.csproj" />
+    <ProjectReference Include="..\WebSite\WebSite.csproj" />
+    <ProjectReference Include="..\WebSiteData\WebSiteData.csproj" />
+    <ProjectReference Include="..\Tools\Tools.csproj" />
+    <ProjectReference Include="..\Model\Model.csproj" />
+    <ProjectReference Include="..\DAL\DAL.csproj" />
+    <!--
       The fixture vault plugin, referenced for build order only.
 
       ReferenceOutputAssembly="false" is essential and not an optimization: the plugin must be loaded

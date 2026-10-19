@@ -29,6 +29,12 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
     private static readonly RecordScope OrganizationWide = new(null, (_, _) => Task.FromResult(true));
 
     /// <summary>
+    /// Unfiltered, yet served to unrestricted callers only: an index profile's history is the weights and references the
+    /// committee approved, read with global scope (S40 §8.4, <c>profile_values_require_global_scope</c>).
+    /// </summary>
+    private static readonly RecordScope UnrestrictedOnly = new(null, (_, _) => Task.FromResult(false));
+
+    /// <summary>
     /// Whose scope decides that a caller may read one audited record's trail, per audited type.
     ///
     /// <c>audit_logs</c> carries no entity id, so a query over it is never filtered by the caller's scope. What is filtered is
@@ -125,7 +131,10 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
             // gets it only for an entity inside their own subtree (T292); a property follows its entity.
             [nameof(Entity)] = InEntityTree((_, id) => Task.FromResult<int?>(id)),
             [nameof(EntitiesProperty)] = InEntityTree(async (db, id) => await db.EntitiesProperties.AsNoTracking()
-                .Where(p => p.Id == id).Select(p => (int?)p.Entity).FirstOrDefaultAsync())
+                .Where(p => p.Id == id).Select(p => (int?)p.Entity).FirstOrDefaultAsync()),
+
+            // M53, T243 — an index profile is the organization's configuration, but its trail only for global scope.
+            [nameof(RiskIndexProfile)] = UnrestrictedOnly
         };
 
     /// <summary>

@@ -1,7 +1,6 @@
 using Avalonia;
 using ReactiveUI.Avalonia;
 using System;
-using System.IO;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -89,7 +88,7 @@ namespace GUIClient
         /// </summary>
         private static void ApplyManagedServerUrl(string environment)
         {
-            var managed = ManagedServerUrl.Resolve(Directory.GetCurrentDirectory(),
+            var managed = ManagedServerUrl.Resolve(ClientConfigurationSources.BaseDirectory,
                 ConfigurationBootstrapper.SourcesFor(environment));
             if (managed == null) return;
 
