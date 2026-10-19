@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.43.0] - 2026-10-19
+
 ### Added
 
 - Add the Cyber Risk Overview module to the desktop client, gated by `risk_index_view`, with a headline card showing the integer index, band, unfloored value, quality, coverage, seals and chips (T251, S40)
