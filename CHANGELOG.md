@@ -12,6 +12,10 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Abandoned
+
+- Drop the 8–12 week shadow pilot, the approval of its pilot and publication profiles and the publication of interim mode to the risk team, removed from scope on request (T258, S39, S40)
+
 ## [2.43.0] - 2026-10-19
 
 ### Added

@@ -916,7 +916,7 @@ process, activity, application, asset class and source. Methodology (pt-BR):
 [docs/features/risk-overview-dashboard.md](docs/features/risk-overview-dashboard.md) (S40). **Status:
 in progress — M52 delivered (T236–T242 and T292) and M53 delivered (T243–T250 and T293): the engine,
 the daily snapshot and the read and profile APIs exist; and M54 delivered (T251–T257): the desktop
-Cyber Risk Overview module, not yet published (T258 pilot, T294 Master Dashboard retirement).**
+Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abandoned; T294, Master Dashboard retirement, remains).**
 
 > **The index monitors; it never decides.** MIGR-TI/IA gates A→D stay the decision path: no service on
 > that path reads the index (enforced by `IcrIsNotADecisionInputTest`), the index is never registered as
@@ -1020,8 +1020,9 @@ Cyber Risk Overview module, not yet published (T258 pilot, T294 Master Dashboard
   - note: added `GET /RiskIndex/Quality` and the `chip=` filter on `/Objects`; counts the snapshot does not store (SSC pseudo-hosts, hosts that left with a bad reading) show "—"; the monetary panel and Top Risks are text-only because `GET /RiskIndex/Monetary` is not built and the residual needs T290; governance indicators are live counts, and their `›` opens Risks or Vulnerabilities unfiltered; `seal=` and `chip=residual_above_inherent` now require `riskmanagement` (S40 §5.9, §11.3)
 - [x] T257 Derive chart colours from theme tokens through a tested palette helper, since `LintUi` does not scan C# (S40)
   - note: the chart tokens are only used from C#, so `ThemeTokenLayerTests` also counts `ChartPaletteMap.AllTokenKeys()` as references
-- [ ] T258 Approve a pilot profile, run the 8–12 week shadow pilot with backtesting, then approve the publication profile (as a rebaseline if calibration requires it) before publishing interim mode to the risk team (S39, S40)
+- [-] T258 Approve a pilot profile, run the 8–12 week shadow pilot with backtesting, then approve the publication profile (as a rebaseline if calibration requires it) before publishing interim mode to the risk team (S39, S40)
   - note: starts once T251–T253 and T259–T262 are done; the pilot profile is approved through the M55 screens (S40 §14.1)
+  - note: abandoned 2026-10-19, removed from scope on request; the shadow pilot, the profile approvals it gated and publication to the risk team are no longer scheduled, so T294 and S40 §14 still name it until they are revisited
 - [ ] T294 Retire the Master Dashboard (module, navigation entry, `GET /Dashboard/Master`, its service, DTOs, client service and tests) once the interim index is published to scoped users (S40)
   - note: product-owner decision 2026-10-05; two dashboards with different numbers would confuse, and `PostureScore` is not methodology
 
