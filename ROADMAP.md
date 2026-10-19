@@ -914,7 +914,8 @@ process, activity, application, asset class and source. Methodology (pt-BR):
 [docs/methodology/icr-indice-consolidado-de-risco.md](docs/methodology/icr-indice-consolidado-de-risco.md)
 (S39). Dashboard and configuration screens:
 [docs/features/risk-overview-dashboard.md](docs/features/risk-overview-dashboard.md) (S40). **Status:
-in progress — M52 delivered (T236–T242 and T292); no index code yet.**
+in progress — M52 delivered (T236–T242 and T292) and M53 delivered (T243–T250 and T293): the engine,
+the daily snapshot and the read and profile APIs exist; no dashboard yet (M54).**
 
 > **The index monitors; it never decides.** MIGR-TI/IA gates A→D stay the decision path: no service on
 > that path reads the index (enforced by `IcrIsNotADecisionInputTest`), the index is never registered as
