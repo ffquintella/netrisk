@@ -20,8 +20,8 @@ Tracks hosts (computers, servers, network devices) as inventory assets. Hosts ow
 - `GetVulnerabilities` — vulnerabilities affecting this host
 - `GetEnvironmentsAsync` — distinct non-blank environments, for the Hosts view facet (S38)
 - `GetVulnerabilitySummaryAsync` / `GetVulnerabilitySummariesAsync` — open findings by severity for one
-  or up to 500 hosts in one grouped query; "open" is `Model.Status.ClosedStatuses`, the same set the
-  Master Dashboard counts by (S38)
+  or up to 500 hosts in one grouped query; "open" is `Model.Status.ClosedStatuses`, the set the
+  Master Dashboard counted by until T294 retired it (S38)
 
 ## API
 

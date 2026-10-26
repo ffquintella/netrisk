@@ -89,7 +89,9 @@ public class RiskIndexAccessTest
     public void TestTheModuleIsAppendedAtTheEndOfTheViewEnum()
     {
         var source = File.ReadAllText(Path.Combine(RiskIndexTestText.ClientDirectory(), "Models", "AvaliableViews.cs"));
-        var members = Regex.Matches(Regex.Replace(source, @"///[^\n]*", ""), @"^\s*(?<name>[A-Z]\w*)\s*,?\s*$", RegexOptions.Multiline);
+        // Members may carry an explicit value: T294 pinned them when it retired the Master Dashboard (value 1).
+        var members = Regex.Matches(Regex.Replace(source, @"///[^\n]*", ""), @"^\s*(?<name>[A-Z]\w*)\s*(?:=\s*\d+\s*)?,?\s*$",
+            RegexOptions.Multiline);
 
         Assert.Equal("RiskOverview", members[^1].Groups["name"].Value);
         Assert.Equal("Incidents", members[^2].Groups["name"].Value);

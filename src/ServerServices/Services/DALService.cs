@@ -24,8 +24,7 @@ public interface IDalService
     /// <param name="withIdentity">Attribute audit rows to the calling user.</param>
     /// <param name="bypassEntityScope">
     /// Opens the context unfiltered. Only for operations that are legitimately organisation-wide
-    /// and already gated by an admin-only policy — the Master Dashboard's rollup, schema upgrade
-    /// tooling, and the authentication handlers that must read a user's assignments before any
+    /// and already gated by an admin-only policy — schema upgrade tooling, and the authentication handlers that must read a user's assignments before any
     /// scope exists. Every other caller must leave this false.
     /// </param>
     AuditableContext GetContext(bool withIdentity = true, bool bypassEntityScope = false);

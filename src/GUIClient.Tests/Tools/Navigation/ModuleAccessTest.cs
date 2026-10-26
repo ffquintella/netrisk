@@ -35,7 +35,6 @@ public class ModuleAccessTest
         return view switch
         {
             AvaliableViews.Dashboard => true, // BtnDashboard has no IsEnabled binding
-            AvaliableViews.MasterDashboard => isAdmin, // IsEnabled="{Binding IsAdmin}"
             AvaliableViews.Assessment => permissions.Contains("assessments") || isAdmin,
             AvaliableViews.Risk => permissions.Contains("riskmanagement") || isAdmin,
             AvaliableViews.Entities => permissions.Contains("asset") || isAdmin,
@@ -103,7 +102,6 @@ public class ModuleAccessTest
         Assert.Equal("incident_management", ModuleAccess.RequiredPermission(AvaliableViews.Incidents));
         Assert.Equal("risk_index_view", ModuleAccess.RequiredPermission(AvaliableViews.RiskOverview));
         Assert.Null(ModuleAccess.RequiredPermission(AvaliableViews.Dashboard));
-        Assert.Null(ModuleAccess.RequiredPermission(AvaliableViews.MasterDashboard));
 
         // The permission alone opens the module; nothing else does.
         foreach (var view in Enum.GetValues<AvaliableViews>())
@@ -112,6 +110,26 @@ public class ModuleAccessTest
                 Assert.True(ModuleAccess.CanOpen(view, User(permission)), view.ToString());
                 Assert.False(ModuleAccess.CanOpen(view, User("reports")), view.ToString());
             }
+    }
+
+    /// <summary>
+    /// T294 retired the Master Dashboard, value 1. The surviving modules keep their numbers and 1 is never reused, so a
+    /// value that once meant the Master Dashboard cannot come back meaning another module.
+    /// </summary>
+    [Fact]
+    public void TestTheRetiredMasterDashboardValueIsNotReusedAndNoModuleWasRenumbered()
+    {
+        Assert.False(Enum.IsDefined(typeof(AvaliableViews), 1));
+        Assert.DoesNotContain("MasterDashboard", Enum.GetNames<AvaliableViews>());
+        Assert.Equal(0, (int)AvaliableViews.Dashboard);
+        Assert.Equal(2, (int)AvaliableViews.Devices);
+        Assert.Equal(3, (int)AvaliableViews.Assessment);
+        Assert.Equal(4, (int)AvaliableViews.Risk);
+        Assert.Equal(5, (int)AvaliableViews.Users);
+        Assert.Equal(6, (int)AvaliableViews.Entities);
+        Assert.Equal(7, (int)AvaliableViews.Vulnerabilities);
+        Assert.Equal(8, (int)AvaliableViews.Incidents);
+        Assert.Equal(9, (int)AvaliableViews.RiskOverview);
     }
 
     [Fact]
@@ -127,7 +145,6 @@ public class ModuleAccessTest
 
     /// <summary>The bar reads the rule: each module button binds its property, and the property is ModuleAccess's answer.</summary>
     [Theory]
-    [InlineData("BtnMasterDashboard", "HasMasterDashboardPermission", "MasterDashboard")]
     [InlineData("BtnRiskOverview", "HasRiskIndexViewPermission", "RiskOverview")]
     [InlineData("BtnAssessment", "HasAssessmentPermission", "Assessment")]
     [InlineData("BtnEntities", "HasEntitiesPermission", "Entities")]

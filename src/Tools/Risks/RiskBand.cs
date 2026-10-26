@@ -9,7 +9,7 @@ namespace Tools.Risks;
 /// Before this, five code paths classified the same 0–10 register score three different ways:
 /// <c>&gt;</c> against the lower bound (<c>MgmtReviewsService</c>, so a score of exactly 7.0 was
 /// Medium and exactly 0 had no band), <c>&gt;=</c> (<c>RiskAcceptancesService</c>), and fixed
-/// <c>&gt; 7</c> / <c>&gt; 4</c> cut-offs (<c>StatisticsService</c>, <c>MasterDashboardService</c>).
+/// <c>&gt; 7</c> / <c>&gt; 4</c> cut-offs (<c>StatisticsService</c>, and the Master Dashboard's service, retired by T294).
 /// The same risk could sit in different bands on the dashboard, in its review cadence and in the
 /// acceptance permission check.
 ///

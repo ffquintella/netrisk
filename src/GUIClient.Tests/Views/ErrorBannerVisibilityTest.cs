@@ -54,12 +54,13 @@ public class ErrorBannerVisibilityTest
     {
         var banners = ErrorBanners();
 
-        // The ten Track 9 banners this guard was written for, plus the dashboard, entity form, technique editor
-        // and the monitoring screens' load errors. A rename of the classes or of the binding syntax that made the
-        // scan match nothing would otherwise pass the test above vacuously.
+        // The ten Track 9 banners this guard was written for, plus the entity form, technique editor, the Cyber
+        // Risk Overview and the monitoring screens' load errors. A rename of the classes or of the binding syntax
+        // that made the scan match nothing would otherwise pass the test above vacuously. (The Master Dashboard's
+        // banner was the multi-line anchor until T294 retired the view; the entity form's took its place.)
         Assert.True(banners.Count >= 15, $"expected at least 15 error banners, found {banners.Count}");
         Assert.Contains(banners, b => b.View == "Views/Track9/ThirdPartyRegisterView.axaml" && b.Text.Contains("ErrorMessage"));
-        Assert.Contains(banners, b => b.View == "Views/MasterDashboardView.axaml" && b.HasVisibilityBinding);
+        Assert.Contains(banners, b => b.View == "Views/EntityForm.axaml" && b.HasVisibilityBinding);
     }
 
     [Fact]

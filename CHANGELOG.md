@@ -12,6 +12,10 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+
+- Retire the administrator Master Dashboard — its navigation button, view, `GET /Dashboard/Master` endpoint, service, DTOs and client service — so the Cyber Risk Overview is the only consolidated dashboard and `PostureScore` is gone, without waiting for interim mode to be published since its pilot was abandoned (T294, S40)
+
 ### Abandoned
 
 - Drop the 8–12 week shadow pilot, the approval of its pilot and publication profiles and the publication of interim mode to the risk team, removed from scope on request (T258, S39, S40)

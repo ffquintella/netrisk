@@ -153,7 +153,7 @@ public class EntityScopeQueryFilterTests(MariaDbContainerFixture fixture)
 
         await using var admin = fixture.NewContext();
 
-        // Including the unassigned row, which is what makes the Master Dashboard's totals
+        // Including the unassigned row, which is what makes an organisation-wide total
         // reconcile with the per-module screens.
         Assert.Equal(3, await admin.Risks.AsNoTracking().CountAsync());
     }

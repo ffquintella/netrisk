@@ -149,6 +149,11 @@ This track covers the GRC (Governance, Risk, and Compliance) core features, inci
 
 ### 2.3.3 Master Dashboard (cross-entity aggregate for administrators)
 
+> **Retired 2026-10-26 (T294, S40).** The view, `GET /Dashboard/Master`, its service, DTOs and client
+> service were removed: two dashboards with different numbers would confuse, and `PostureScore` was not
+> methodology. The Cyber Risk Overview (Track 10, M54) is the consolidated dashboard. The design below is
+> kept as history.
+
 **Design**
 - Admin-only view: per-entity cards (open risks by severity, open vulnerabilities, SLA breaches once 3.4 lands, incident counts) + trend lines; drill-down switches the entity scope.
 - One aggregated endpoint (`GET /dashboard/master`) computing per-entity rollups server-side (no N+1 per-entity client calls); short server-side cache (1–5 min).

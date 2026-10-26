@@ -288,8 +288,9 @@
     </Style>
 
     <!-- Transient notification toast (IX-4). One accent per severity, all from the token set. -->
-    <!-- Master Dashboard (Track 2 milestone 2.3.3) posture cards. Colours live here, not in the
-         view, so the views stay class-driven per the UI standard. -->
+    <!-- Panel cards (first drawn for the Master Dashboard, retired by T294; now shared by Hosts, API
+         tokens, the assessment builder and the Track 9 views). Colours live here, not in the view, so
+         the views stay class-driven per the UI standard. -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource NrSurfacePanel2}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource NrBorderSubtle}"/>
@@ -297,19 +298,6 @@
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="12"/>
         <Setter Property="Margin" Value="4"/>
-    </Style>
-
-    <!-- The organisation-wide totals card, accented with the primary action colour. -->
-    <Style Selector="Border.card.totals">
-        <Setter Property="BorderBrush" Value="{DynamicResource NrAccentPrimary}"/>
-        <Setter Property="BorderThickness" Value="2"/>
-    </Style>
-
-    <!-- Large single figure on a posture card. -->
-    <Style Selector="TextBlock.metric">
-        <Setter Property="FontSize" Value="26"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Margin" Value="0 2 0 0"/>
     </Style>
 
     <!-- Caption above a metric. -->

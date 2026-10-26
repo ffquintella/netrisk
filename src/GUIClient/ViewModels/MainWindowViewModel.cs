@@ -26,7 +26,6 @@ namespace GUIClient.ViewModels
         #region FIELDS
 
         private bool _viewDashboardIsVisible = true;
-        private bool _masterDashboardIsVisible = false;
         private bool _hostsIsVisible = false;
         private bool _assessmentIsVisible = false;
         private bool _riskIsVisible = false;
@@ -58,25 +57,6 @@ namespace GUIClient.ViewModels
             set => this.RaiseAndSetIfChanged(ref _viewDashboardIsVisible, value);
         }
 
-        /// <summary>Cross-entity admin dashboard (Track 2 milestone 2.3.3).</summary>
-        public bool MasterDashboardIsVisible
-        {
-            get => _masterDashboardIsVisible;
-            set => this.RaiseAndSetIfChanged(ref _masterDashboardIsVisible, value);
-        }
-
-        private MasterDashboardViewModel? _masterDashboardViewModel;
-
-        /// <summary>
-        /// Created on first navigation, not at start-up: the view's initial load calls an
-        /// admin-only endpoint, and most users never open it.
-        /// </summary>
-        public MasterDashboardViewModel? MasterDashboardViewModel
-        {
-            get => _masterDashboardViewModel;
-            set => this.RaiseAndSetIfChanged(ref _masterDashboardViewModel, value);
-        }
-        
         private bool _riskOverviewIsVisible;
 
         /// <summary>The Cyber Risk Overview (S40 §10.2, M54).</summary>
@@ -89,7 +69,7 @@ namespace GUIClient.ViewModels
         private GUIClient.ViewModels.RiskOverview.RiskOverviewViewModel? _riskOverviewViewModel;
 
         /// <summary>
-        /// Created on first navigation, like the Master Dashboard: its first load reads the index API, which only
+        /// Created on first navigation, not at start-up: its first load reads the index API, which only
         /// <c>risk_index_view</c> holders may call. There is no refresh timer — the snapshot changes once a day (§10.2).
         /// </summary>
         public GUIClient.ViewModels.RiskOverview.RiskOverviewViewModel? RiskOverviewViewModel
@@ -314,10 +294,6 @@ namespace GUIClient.ViewModels
                 case AvaliableViews.Dashboard:
                     ViewDashboardIsVisible = true;
                     break;
-                case AvaliableViews.MasterDashboard:
-                    MasterDashboardViewModel ??= new MasterDashboardViewModel();
-                    MasterDashboardIsVisible = true;
-                    break;
                 case AvaliableViews.Devices:
                     HostsIsVisible = true;
                     break;
@@ -363,7 +339,6 @@ namespace GUIClient.ViewModels
         private void HideAllViews()
         {
             ViewDashboardIsVisible = false;
-            MasterDashboardIsVisible = false;
             HostsIsVisible = false;
             AssessmentIsVisible = false;
             RiskIsVisible = false;

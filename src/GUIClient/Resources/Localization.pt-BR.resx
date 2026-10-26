@@ -1986,39 +1986,6 @@
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Preencha os campos obrigatórios antes de salvar.</value>
     </data>
-    <data name="Master Dashboard" xml:space="preserve">
-        <value>Painel Consolidado</value>
-    </data>
-    <data name="Cross-entity posture overview" xml:space="preserve">
-        <value>Visão consolidada por entidade</value>
-    </data>
-    <data name="Open Risks" xml:space="preserve">
-        <value>Riscos Abertos</value>
-    </data>
-    <data name="Open Vulnerabilities" xml:space="preserve">
-        <value>Vulnerabilidades Abertas</value>
-    </data>
-    <data name="Open Incidents" xml:space="preserve">
-        <value>Incidentes Abertos</value>
-    </data>
-    <data name="Average Risk Score" xml:space="preserve">
-        <value>Risco Médio</value>
-    </data>
-    <data name="Posture" xml:space="preserve">
-        <value>Postura</value>
-    </data>
-    <data name="All entities" xml:space="preserve">
-        <value>Todas as entidades</value>
-    </data>
-    <data name="No entity data available" xml:space="preserve">
-        <value>Nenhum dado de entidade disponível</value>
-    </data>
-    <data name="You need administrator rights to view this dashboard" xml:space="preserve">
-        <value>É necessário ser administrador para ver este painel</value>
-    </data>
-    <data name="The master dashboard could not be loaded" xml:space="preserve">
-        <value>Não foi possível carregar o painel consolidado</value>
-    </data>
     <data name="IRP Templates" xml:space="preserve">
         <value>Modelos de PRI</value>
     </data>

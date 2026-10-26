@@ -30,7 +30,6 @@ public class NavigationBarViewModel: ViewModelBase
     #region LANGUAGE
 
     public string StrDashboard { get; set; }
-    public string StrMasterDashboard => Localizer["Master Dashboard"];
     public string StrRiskOverview => Localizer["NavRiskOverview"];
     public string StrAssessment { get; set; }
     public string StrEntities { get; set; }
@@ -67,7 +66,6 @@ public class NavigationBarViewModel: ViewModelBase
     private bool _hasRiskIndexViewPermission = false;
     private bool _hasVulnerabilitiesPermission = false;
     private bool _hasIncidentsPermission = false;
-    private bool _hasMasterDashboardPermission = false;
     private string? _loggedUser;
     private Timer? timer;
     private CancellationTokenSource _cts = new CancellationTokenSource();
@@ -108,7 +106,6 @@ public class NavigationBarViewModel: ViewModelBase
             this.RaiseAndSetIfChanged(ref _isEnabled, value);
             this.RaisePropertyChanged(nameof(HasVulnerabilitiesPermission));
             this.RaisePropertyChanged(nameof(HasIncidentsPermission));
-            this.RaisePropertyChanged(nameof(HasMasterDashboardPermission));
         }
     }
 
@@ -195,13 +192,6 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasIncidentsPermission, value);
     }
 
-    /// <summary>The Master Dashboard button: <see cref="ModuleAccess"/> (the admin flag).</summary>
-    public Boolean HasMasterDashboardPermission
-    {
-        get => _isEnabled && _hasMasterDashboardPermission;
-        set => this.RaiseAndSetIfChanged(ref _hasMasterDashboardPermission, value);
-    }
-
     private AuthenticatedUserInfo? _authenticatedUserInfo;
 
     public AuthenticatedUserInfo? AuthenticatedUserInfo
@@ -237,7 +227,6 @@ public class NavigationBarViewModel: ViewModelBase
     #region COMMANDS
     
     public ReactiveCommand<RxVoid, RxVoid> BtDashboardClicked { get; }
-    public ReactiveCommand<RxVoid, RxVoid> BtMasterDashboardClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtRiskOverviewClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtAdministrationClicked { get; }
     public ReactiveCommand<RxVoid, RxVoid> BtDeviceClicked { get; }
@@ -284,7 +273,6 @@ public class NavigationBarViewModel: ViewModelBase
         };
         
         BtDashboardClicked = ReactiveCommand.Create(ExecuteOpenDashboard);
-        BtMasterDashboardClicked = ReactiveCommand.Create(ExecuteOpenMasterDashboard);
         BtRiskOverviewClicked = ReactiveCommand.Create(ExecuteOpenRiskOverview);
         BtAdministrationClicked = ReactiveCommand.Create(ExecuteOpenAdministration);
         BtDeviceClicked = ReactiveCommand.Create(ExecuteOpenDevice);
@@ -337,7 +325,6 @@ public class NavigationBarViewModel: ViewModelBase
             HasHostsPermission = ModuleAccess.CanOpen(AvaliableViews.Devices, user);
             HasVulnerabilitiesPermission = ModuleAccess.CanOpen(AvaliableViews.Vulnerabilities, user);
             HasIncidentsPermission = ModuleAccess.CanOpen(AvaliableViews.Incidents, user);
-            HasMasterDashboardPermission = ModuleAccess.CanOpen(AvaliableViews.MasterDashboard, user);
             HasRiskIndexViewPermission = ModuleAccess.CanOpen(AvaliableViews.RiskOverview, user);
             if (user.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
         }
@@ -397,9 +384,6 @@ public class NavigationBarViewModel: ViewModelBase
     public void ExecuteOpenEntities() => Navigation.NavigateTo(AvaliableViews.Entities);
 
     public void ExecuteOpenDashboard() => Navigation.NavigateTo(AvaliableViews.Dashboard);
-
-    /// <summary>Admin-only cross-entity dashboard (Track 2 milestone 2.3.3).</summary>
-    public void ExecuteOpenMasterDashboard() => Navigation.NavigateTo(AvaliableViews.MasterDashboard);
 
     /// <summary>The Cyber Risk Overview (S40 §10.2), gated by <see cref="HasRiskIndexViewPermission"/>.</summary>
     public void ExecuteOpenRiskOverview()

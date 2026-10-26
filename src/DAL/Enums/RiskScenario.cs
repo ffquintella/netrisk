@@ -42,8 +42,9 @@ public enum PendingRiskOrigin
 ///
 /// A near miss is an event that could have caused harm and did not. It is recorded on the same table,
 /// numbered in the same yearly sequence, because the methodology asks for both to feed the same
-/// learning loop (Phase 7 triggers, Phase 4 backtesting) — but it is not an incident, and the one
-/// aggregate that calls rows "open incidents" (the Master Dashboard posture) leaves it out.
+/// learning loop (Phase 7 triggers, Phase 4 backtesting) — but it is not an incident: an aggregate that
+/// calls rows "open incidents" must leave it out, and the ICR reads it as its own source
+/// (<c>RiskIndexSources.NearMisses</c>).
 /// Orthogonal to <c>incidents.Category</c>, which is the threat type (phishing, malware…): a phishing
 /// near miss and a phishing incident share the category and differ here.
 /// </summary>

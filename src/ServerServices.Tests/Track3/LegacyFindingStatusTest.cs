@@ -13,7 +13,7 @@ namespace ServerServices.Tests.Track3;
 /// The bridge between the legacy workflow column and the finding lifecycle (S39 D-04, T239).
 ///
 /// "Open means the same everywhere" holds only while three things agree: the closing map the desktop
-/// close routes through, <see cref="ClosedStatuses"/> (the Master Dashboard and the host summary),
+/// close routes through, <see cref="ClosedStatuses"/> (the host summary),
 /// and the transitions the state machine accepts. Each of those is pinned here.
 /// </summary>
 [TestSubject(typeof(LegacyFindingStatus))]

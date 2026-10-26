@@ -27,8 +27,8 @@ public static class ModuleAccess
 
     /// <summary>
     /// Whether <paramref name="user"/> may open <paramref name="view"/>: the permission or the admin flag, as the bar always
-    /// did; the Cyber Risk Overview also admits the <c>Admin</c> role (<c>RiskIndex.RiskIndexAccess</c>); the Master
-    /// Dashboard is the admin flag's alone. Users has no module in the shell, so it is never a destination.
+    /// did; the Cyber Risk Overview also admits the <c>Admin</c> role (<c>RiskIndex.RiskIndexAccess</c>). Users has no
+    /// module in the shell, so it is never a destination.
     /// </summary>
     public static bool CanOpen(AvaliableViews view, AuthenticatedUserInfo? user)
     {
@@ -36,7 +36,6 @@ public static class ModuleAccess
         return view switch
         {
             AvaliableViews.Dashboard => true,
-            AvaliableViews.MasterDashboard => user.IsAdmin,
             AvaliableViews.RiskOverview => RiskIndex.RiskIndexAccess.CanView(user),
             AvaliableViews.Users => false,
             _ when RequiredPermission(view) is { } permission => user.IsAdmin || Holds(user, permission),
@@ -47,7 +46,6 @@ public static class ModuleAccess
     /// <summary>The resource key that names the module in the navigation bar.</summary>
     public static string NameKey(AvaliableViews view) => view switch
     {
-        AvaliableViews.MasterDashboard => "Master Dashboard",
         AvaliableViews.Devices => "Devices",
         AvaliableViews.Assessment => "Assessment",
         AvaliableViews.Risk => "Risks",

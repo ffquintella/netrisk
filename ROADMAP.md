@@ -915,8 +915,8 @@ process, activity, application, asset class and source. Methodology (pt-BR):
 (S39). Dashboard and configuration screens:
 [docs/features/risk-overview-dashboard.md](docs/features/risk-overview-dashboard.md) (S40). **Status:
 in progress — M52 delivered (T236–T242 and T292) and M53 delivered (T243–T250 and T293): the engine,
-the daily snapshot and the read and profile APIs exist; and M54 delivered (T251–T257): the desktop
-Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abandoned; T294, Master Dashboard retirement, remains).**
+the daily snapshot and the read and profile APIs exist; and M54 delivered (T251–T257 and T294): the desktop
+Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abandoned), with the Master Dashboard retired (T294).**
 
 > **The index monitors; it never decides.** MIGR-TI/IA gates A→D stay the decision path: no service on
 > that path reads the index (enforced by `IcrIsNotADecisionInputTest`), the index is never registered as
@@ -935,7 +935,8 @@ Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abando
 > parent (T292); profiles are approved by the Risk Manager or Risk Administrator role (T293); Tenable
 > is integrated through Tenable Vulnerability Management cloud with a Tenable One licence, so Security
 > Center moves to the backlog (T269); Vision One CREM credits and API permissions are available
-> (T271–T273); the Master Dashboard is retired once the interim index is published (T294); at
+> (T271–T273); the Master Dashboard is retired once the interim index is published (T294, retired
+> early on 2026-10-26 by explicit request once T258 was abandoned); at
 > publication only the risk team (Risk Analysts, Risk Managers and Risk Administrators) sees the index
 > (T293); band labels are bilingual, Portuguese and English, like the rest of the product (T260); and
 > entity risk context stays editable only with global scope, with unit-manager editing kept for when
@@ -1023,8 +1024,10 @@ Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abando
 - [-] T258 Approve a pilot profile, run the 8–12 week shadow pilot with backtesting, then approve the publication profile (as a rebaseline if calibration requires it) before publishing interim mode to the risk team (S39, S40)
   - note: starts once T251–T253 and T259–T262 are done; the pilot profile is approved through the M55 screens (S40 §14.1)
   - note: abandoned 2026-10-19, removed from scope on request; the shadow pilot, the profile approvals it gated and publication to the risk team are no longer scheduled, so T294 and S40 §14 still name it until they are revisited
-- [ ] T294 Retire the Master Dashboard (module, navigation entry, `GET /Dashboard/Master`, its service, DTOs, client service and tests) once the interim index is published to scoped users (S40)
+- [x] T294 Retire the Master Dashboard (module, navigation entry, `GET /Dashboard/Master`, its service, DTOs, client service and tests) once the interim index is published to scoped users (S40)
   - note: product-owner decision 2026-10-05; two dashboards with different numbers would confuse, and `PostureScore` is not methodology
+  - note: the "once the interim index is published" gate was waived by explicit user request on 2026-10-26: T258, which led to publication, was abandoned, so the gate could never open; interim mode is still unpublished, so until it is the product shows no consolidated cross-entity figure
+  - note: kept because other features read them: `Model.Status.ClosedStatuses` (host summary), `Tools.Risks.RiskBand`, the `RequireAdminOnly` policy and the `card`, `metric_label` and `metric_detail` styles; removed with it: the `card.totals` and `metric` styles, eleven resource keys in the three `.resx` files and near-miss test N6, which pinned the dashboard's open-incident count. No permission or database row existed (the module was gated by the admin flag). `AvaliableViews` values are now explicit and 1 is not reused; `ControllerAuthorizationInventoryTest` and `MasterDashboardRetirementTest` pin criterion 45 of S40 §13
 
 ### [M55] ICR configuration screens
 > outcome: Weights and parameters change only through a validated draft profile with a sensitivity

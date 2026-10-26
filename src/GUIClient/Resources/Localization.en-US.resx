@@ -1917,39 +1917,6 @@
     <data name="EntityFormHasErrorsMSG" xml:space="preserve">
         <value>Fill in the required fields before saving.</value>
     </data>
-    <data name="Master Dashboard" xml:space="preserve">
-        <value>Master Dashboard</value>
-    </data>
-    <data name="Cross-entity posture overview" xml:space="preserve">
-        <value>Cross-entity posture overview</value>
-    </data>
-    <data name="Open Risks" xml:space="preserve">
-        <value>Open Risks</value>
-    </data>
-    <data name="Open Vulnerabilities" xml:space="preserve">
-        <value>Open Vulnerabilities</value>
-    </data>
-    <data name="Open Incidents" xml:space="preserve">
-        <value>Open Incidents</value>
-    </data>
-    <data name="Average Risk Score" xml:space="preserve">
-        <value>Average Risk Score</value>
-    </data>
-    <data name="Posture" xml:space="preserve">
-        <value>Posture</value>
-    </data>
-    <data name="All entities" xml:space="preserve">
-        <value>All entities</value>
-    </data>
-    <data name="No entity data available" xml:space="preserve">
-        <value>No entity data available</value>
-    </data>
-    <data name="You need administrator rights to view this dashboard" xml:space="preserve">
-        <value>You need administrator rights to view this dashboard</value>
-    </data>
-    <data name="The master dashboard could not be loaded" xml:space="preserve">
-        <value>The master dashboard could not be loaded</value>
-    </data>
     <data name="IRP Templates" xml:space="preserve">
         <value>IRP Templates</value>
     </data>

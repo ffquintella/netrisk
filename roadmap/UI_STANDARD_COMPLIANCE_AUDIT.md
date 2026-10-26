@@ -186,7 +186,7 @@ PASS.
 | `LoadConfigurationWindow.axaml` | PASS | — | clean at baseline |
 | `LoginWindow.axaml` | PASS | R5×2 | remediated |
 | `MainWindow.axaml` | PASS | R5×5 | 1 remediated, 4 waived |
-| `MasterDashboardView.axaml` | PASS | — | clean at baseline |
+| `MasterDashboardView.axaml` | — | — | clean at baseline; view retired by T294 (2026-10-26) |
 | `NavigationBar.axaml` | PASS | — | clean at baseline |
 | `NotificationHost.axaml` | PASS | — | clean at baseline |
 | `NotificationsWindow.axaml` | PASS | R5×1, R6×2 | remediated |

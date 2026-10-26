@@ -10,7 +10,8 @@ namespace ServerServices.RiskIndex.Read;
 /// The index's read cache (S40 §8.1, §11.3): an entry is keyed by what can change the payload — the endpoint and its
 /// arguments, the resolved date and profile, the caller's <b>expanded</b> scope with the hierarchy's revision, and the
 /// module permissions redaction consults. Two callers who differ in any of these never share an entry: that is the rule
-/// whose absence made the Master Dashboard's cache (<c>MasterDashboardService.cs:31</c>) the anti-example.
+/// whose absence made the Master Dashboard's cache (one process-wide entry for every caller; retired by T294) the
+/// anti-example.
 /// </summary>
 public interface IRiskIndexReadCache
 {

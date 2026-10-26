@@ -37,6 +37,7 @@
 | 2026-10-05 | **Público na publicação:** a equipe de riscos (analistas, gerentes e administradores de riscos); outros públicos depois, por concessão de `risk_index_view` (§15.2, T293) | Decisão do product owner |
 | 2026-10-05 | **Rótulos das faixas em português e inglês**, aprovados juntos no perfil, como o resto do sistema (§4.5, §12.2, §12.4) | Decisão do product owner |
 | 2026-10-05 | **Contexto de risco das entidades** (criticidade, internet-facing, classificação) editado só com escopo global; edição por gestores de unidade fica prevista para quando eles usarem o sistema (D-17, T295) | Decisão do product owner |
+| 2026-10-26 | **Master Dashboard retirado antes da publicação do modo interino** (T294) | A T258, que levava à publicação, foi abandonada em 2026-10-19; a condição nunca se cumpriria e foi dispensada por pedido explícito |
 
 ## Resumo executivo (leitura de 5 minutos)
 
@@ -280,7 +281,7 @@ O PDF (p.11) separa a "linha de destaque executivo" da "linha de tratamento". No
 | **ICR\*** | O ICR sem piso | Saída, sempre armazenada e exibida quando difere |
 | `entities.cyber_risk_index` | Coluna legada. Contém a média ponderada Vision One (`TrendMicroService.cs:691-694`, gravada em `:700`) **ou** `100 − score` da SecurityScorecard (`SecurityScorecardService.cs:363`); vence a última sincronização | **Nunca lida.** Fica rebaixada a legado e é substituída pela tabela de escores por fonte (§15) |
 | CRI do Vision One (`securityPosture.riskIndex`, `assetGroups`) | Índice do fornecedor, calculado sobre os mesmos dispositivos | Indicador de referência (KRI quando o M46 o registrar) e verificação de sanidade na calibração. Fora da soma, porque contaria os scores de dispositivo duas vezes |
-| `PostureScore` do Master Dashboard | Contagem ponderada e saturada (`MasterDashboardService.cs:270-282`) | Não usado. O Master Dashboard é retirado depois da publicação do modo interino (T294) |
+| `PostureScore` do Master Dashboard | Contagem ponderada e saturada (`MasterDashboardService.cs:270-282`) | Não usado. O Master Dashboard foi retirado em 2026-10-26 (T294) |
 | `ContributingScore` / escore total | Heurísticas de triagem que crescem com a contagem (`RiskCalculationService.cs:106-120`) | Não usados |
 | **Indicador** × **KRI** | Indicador é qualquer número exibido ao lado sem tolerância; KRI é o indicador registrado no M46 com tolerância e regra de obsolescência | No interino só há indicadores |
 
@@ -1621,7 +1622,7 @@ só-EAV ou objetos de escopo fora da subárvore.
 
 - **Diferente do Vision One**, cujo CRI ignora a visibilidade do usuário, o ICR respeita o escopo.
 - Todo cache é chaveado por (escopo, hash das claims, versão do perfil). O cache do Master Dashboard,
-  que não é chaveado (`MasterDashboardService.cs:31`), é o anti-exemplo.
+  que não era chaveado (`MasterDashboardService.cs:31`, removido pela T294), é o anti-exemplo.
 - **Permissões novas:** `risk_index_view`, `risk_index_configure` e `risk_index_approve`, mais a
   permissão de edição dos insumos de contexto de entidades da D-17.
   - São semeadas com `INSERT IGNORE` sem id explícito, no padrão de `Data/81.sql:21-23`.
@@ -2289,7 +2290,7 @@ a D-01 primeiro ativaria a sobrescrita no ciclo seguinte, sem histórico que per
 
 | Track / marco | Papel no ICR |
 |---|---|
-| Track 2, M8 (T37/T38; S6 §2.3.3) | O ICR entrega a tendência e o drill-down pedidos e nunca entregues no Master Dashboard, que é retirado depois da publicação do modo interino (T294) |
+| Track 2, M8 (T37/T38; S6 §2.3.3) | O ICR entrega a tendência e o drill-down pedidos e nunca entregues no Master Dashboard, retirado em 2026-10-26 (T294) |
 | Track 3, M10–M13 | Fonte de EXP.V, do predicado "aberto", da chave de dedup e do SLA (GOV.T). D-04 e D-21 são correções desses marcos |
 | Track 4, M18, M19, M20 | Vision One, SSC e Jira Assets já integrados. O "CRI de entidade" (T74) é redefinido como escore por fonte e indicador. O conector Tenable é o **M56** (hoje não há `IntegrationKind`) e a expansão do Vision One é o **M57**. D-20 é correção desses marcos |
 | Track 6 | Convenções das tabelas novas e dos scripts numerados |

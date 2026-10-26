@@ -54,6 +54,7 @@ defeito (S39 §14) · **[N]** requer dado ou integração nova.
 | 2026-10-08 | **Versões dos scripts numerados deslocadas pela décima terceira vez: 100 → 101 e 101 → 102.** A etapa 9.11 do Track 9 (catálogo de dados LGPD: base legal, finalidade, retenção, localização e RIPD, S52, M49) mesclou antes do M52 e tomou a versão 100 (`legal_requirements`, `data_catalogue_entries`, `data_catalogue_purposes`, `data_catalogue_locations`, `dpias`, `dpia_links` e `risk_legal_requirements`, mais a permissão `data_catalogue_manage` semeada), pela mesma regra desta §7.6. O par do ICR (M52 + T243) passa a ser a **101** e o armazenamento de fontes do M56/M57 a **102**; aplicada sobre as emendas anteriores, toda menção a "88" e "89" como versão de esquema neste documento lê-se agora como 101 e 102. A tabela da §7.6 passa a dizer 101/102. A S52 interessa ao índice no ponto que a S39 §16 reservou ao M49: a sensibilidade do dado para o Δ_dados do modo pleno pode vir do catálogo (`data_catalogue_entries.personal_data`, sensível, grande volume e pesquisa estratégica) além do nível de classificação, e a flag 5 passa a derivar também dele; a flag 2 continua declarada (S52 D7), então o piso PA-1 não muda | §7.6 e as referências a versão de esquema em §9, §12, §13 e §14 |
 | 2026-10-08 | **Versões dos scripts numerados deslocadas pela décima quarta vez: 101 → 102 e 102 → 103.** A etapa 9.12 do Track 9 (governança de IA: inventário de modelos, flag 11 e métricas de modelo, S53, M50) mesclou antes do M52 e tomou a versão 101 (`ai_models`, `ai_model_data_links`, `ai_model_metric_readings`, `ai_model_overrides` e `ai_model_risks`, mais a permissão `ai_governance_manage` semeada), pela mesma regra desta §7.6. O par do ICR (M52 + T243) passa a ser a **102** e o armazenamento de fontes do M56/M57 a **103**; aplicada sobre as emendas anteriores, toda menção a "88" e "89" como versão de esquema neste documento lê-se agora como 102 e 103. A tabela da §7.6 passa a dizer 102/103. A S53 interessa ao índice num ponto: a flag 11 passa a ser derivada (risco ligado a um modelo de IA não aposentado), mas não é condição do Portão A, então o piso PA-1 não muda; e a M10 do painel de métricas passa a ser calculada — indicador de governança, não entrada do ICR | §7.6 e as referências a versão de esquema em §9, §12, §13 e §14 |
 | 2026-10-16 | **Revisão de segurança do M53 (aprovação de perfis).** A concessão e a revogação das permissões vigiadas (§6.4), a entrada e a saída de um usuário num papel, a criação ou renomeação de um papel e cada nome que uma edição de `risk_index_approver_roles` acrescenta ou retira passam a ser gravadas em `permission_grant_events` (só de inserção, fora da retenção da auditoria, no mesmo `SaveChanges` da mudança, pelo `AuditableContext`) **em vez de** `audit_logs`, cuja retenção apagaria a evidência; `sod_self_granted_approver` recusa quem é autor da última mudança que pôs em vigor a concessão no papel, a pertença ao papel, a listagem do papel (ou o seu nome) ou a concessão direta. Quem criou, editou e submeteu o rascunho vem de `risk_index_profile_editors` e `risk_index_profiles.submitted_by_id`, não da trilha. `committee_attachment_required` e `POST/GET …/{id}/Attachments` entram (§8.4); publicar, suspender e anexar exigem a permissão explícita lida do banco. Versão de esquema **109** | §6.4, §7.2, §7.3, §8.4, §11.4, §11.7 |
+| 2026-10-26 | **Master Dashboard retirado antes da publicação do modo interino (T294).** A T258 (piloto em sombra, que levava à publicação) foi abandonada em 2026-10-19, então a condição "depois que o modo interino é publicado" nunca se cumpriria; a retirada foi feita por pedido explícito, dispensando-a. Saíram o botão da barra, a view, `GET /Dashboard/Master`, `MasterDashboardService`, os DTOs e o serviço cliente. As linhas de §1.2 e §3 que citam o Master Dashboard descrevem o código antes da retirada. O critério 45 passa a ter teste: `ControllerAuthorizationInventoryTest.TheRetiredMasterDashboardRouteIsGone` e `MasterDashboardRetirementTest` (`GUIClient.Tests`) | §2 item 13, §13 item 45 |
 
 ## Resumo executivo (leitura de 5 minutos)
 
@@ -304,8 +305,9 @@ não se repetem aqui.
     Vínculos só-EAV (`organizationUnit` de um processo, `applications`) não concedem acesso; esta
     especificação não cria outra regra de visibilidade.
 13. **O Master Dashboard não convive com o painel.** Ele é retirado pela T294 depois que o modo
-    interino é publicado aos usuários com escopo (decisão do product owner, 2026-10-05); até lá fica
-    como está, só para administradores.
+    interino é publicado aos usuários com escopo (decisão do product owner, 2026-10-05). *Retirado em
+    2026-10-26, antes da publicação: a T258 foi abandonada e a condição foi dispensada por pedido
+    explícito (ver Emendas).*
 
 ---
 
@@ -1898,7 +1900,7 @@ partição por mês fica como alternativa se a medição da §12.7 estourar o or
   pessoas com o mesmo escopo e permissões diferentes recebem cargas diferentes (§11.3). Snapshot oficial ou derivado:
   24 h (a data entra na chave, então o snapshot novo nunca colide com o antigo); prévia ao vivo:
   15 min (S39 §9.1). "Último snapshot" é resolvido antes, com cache de 60 s. O cache do Master
-  Dashboard, sem chave de escopo (`MasterDashboardService.cs:31`), é o anti-exemplo.
+  Dashboard, sem chave de escopo (`MasterDashboardService.cs:31`, removido pela T294), é o anti-exemplo.
 - **Orçamento de cálculo derivado.** Nós derivados e parciais são calculados das linhas de objeto sob
   demanda. Para que um usuário não esgote o servidor: o resumo mensal lê `risk_index_class_days` e os
   snapshots sempre que o nó é pré-calculado ou uma interseção nó × grupo de aba; os valores diários
@@ -3190,8 +3192,9 @@ cenário da Unidade X (S39 §11).
     `risk_index_configure`, e o `Administrator` não tem `risk_index_approve`; um Gerente de Riscos aprova
     um rascunho de outro autor e não aprova o próprio. (`Data88SeedsTest`, `RiskIndexProfilesServiceTest`.)
 45. Depois da T294, a barra de navegação não mostra o Master Dashboard, `GET /Dashboard/Master` deixa
-    de existir e nenhum teste ou view referencia `MasterDashboardService`. (`ControllerAuthorizationInventoryTest`
-    sem a rota; varredura de fonte em `GUIClient.Tests`.)
+    de existir e nenhum teste ou view referencia `MasterDashboardService`.
+    (`ControllerAuthorizationInventoryTest.TheRetiredMasterDashboardRouteIsGone`; varredura de fonte em
+    `GUIClient.Tests/Tools/Navigation/MasterDashboardRetirementTest`.)
 
 ---
 

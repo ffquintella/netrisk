@@ -101,7 +101,6 @@ public abstract class InMemoryServiceTestBase
         services.AddTransient<IAssessmentsService, AssessmentsService>();
         services.AddTransient<IAssessmentRunEvidenceService, AssessmentRunEvidenceService>();
         services.AddTransient<IStatisticsService, StatisticsService>();
-        services.AddSingleton<IMasterDashboardService, MasterDashboardService>();
         services.AddTransient<IIrpScheduleService, IrpScheduleService>();
         services.AddTransient<IMitigationsService, MitigationsService>();
         services.AddTransient<IMgmtReviewsService, MgmtReviewsService>();

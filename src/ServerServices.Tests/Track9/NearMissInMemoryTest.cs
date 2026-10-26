@@ -17,8 +17,8 @@ namespace ServerServices.Tests.Track9;
 
 /// <summary>
 /// Stage 9.2 (S42 §8) — a near miss distinguished from an incident (T153): the kind is stored and
-/// validated, defaults to Incident for a client that never sends it, and the one aggregate that calls
-/// rows "open incidents" — the Master Dashboard posture — leaves near misses out.
+/// validated, and defaults to Incident for a client that never sends it. (N6 pinned the Master Dashboard's
+/// open-incident count, which left near misses out; the dashboard was retired by T294 and N6 with it.)
 /// </summary>
 [TestSubject(typeof(IncidentsService))]
 public class NearMissInMemoryTest : InMemoryServiceTestBase
@@ -134,34 +134,5 @@ public class NearMissInMemoryTest : InMemoryServiceTestBase
 
         await Assert.ThrowsAsync<InvalidParameterException>(() => Incidents.UpdateAsync(edit, Actor));
         Assert.Equal(IncidentKind.NearMiss, (await Incidents.GetByIdAsync(created.Id)).Kind);
-    }
-
-    /// <summary>
-    /// N6 — the Master Dashboard counts an open incident and not an open near miss: a near miss is not
-    /// an incident, and counting it would penalize an entity's posture for reporting what did not
-    /// happen. The near miss is still in the incidents list.
-    /// </summary>
-    [Fact]
-    public async Task TestN6_TheMasterDashboardDoesNotCountANearMissAsAnOpenIncident()
-    {
-        Seed(ctx =>
-        {
-            ctx.Incidents.Add(new Incident
-            {
-                Id = 1, Name = "2026-1", Description = "d", EntityId = Unit, Status = (int)IntStatus.New,
-                Kind = IncidentKind.Incident
-            });
-            ctx.Incidents.Add(new Incident
-            {
-                Id = 2, Name = "2026-2", Description = "d", EntityId = Unit, Status = (int)IntStatus.New,
-                Kind = IncidentKind.NearMiss
-            });
-        });
-
-        var dashboard = await GetService<IMasterDashboardService>().GetMasterDashboardAsync(useCache: false);
-
-        Assert.Equal(1, dashboard.Entities.Single(e => e.EntityName == "Unit A").OpenIncidents);
-        Assert.Equal(1, dashboard.Totals.OpenIncidents);
-        Assert.Equal(2, (await Incidents.GetAllAsync()).Count);
     }
 }

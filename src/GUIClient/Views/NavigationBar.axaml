@@ -51,19 +51,6 @@
             <Border Classes="tooltip">
                 <ToolTip.Tip>
                     <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
-                        <Binding Path="StrMasterDashboard"/>
-                        <Binding Path="#BtnMasterDashboard.IsEnabled"/>
-                    </MultiBinding>
-                </ToolTip.Tip>
-                <Button Name="BtnMasterDashboard" Classes="nav-base nav-icon"
-                        IsEnabled="{Binding HasMasterDashboardPermission}"
-                        Command="{Binding BtMasterDashboardClicked}">
-                    <material:MaterialIcon Kind="ViewDashboardVariantOutline" Width="20" Height="20"/>
-                </Button>
-            </Border>
-            <Border Classes="tooltip">
-                <ToolTip.Tip>
-                    <MultiBinding Converter="{StaticResource ActionTooltipConverter}" ConverterParameter="permission">
                         <Binding Path="StrRiskOverview"/>
                         <Binding Path="#BtnRiskOverview.IsEnabled"/>
                     </MultiBinding>

@@ -7,10 +7,10 @@ namespace Model.Status;
 /// population. Everything not listed counts as open, so a status added later shows up as work
 /// outstanding rather than silently vanishing.
 ///
-/// One definition for every count of "open" findings: the Master Dashboard rollup and the per-host
-/// severity summary (S38 §5.3) both read this set, so the dashboard and the Hosts header cannot
-/// disagree about the same finding. It was a private field of <c>MasterDashboardService</c> until
-/// the host summary needed the same answer.
+/// One definition for every count of "open" findings: the per-host severity summary (S38 §5.3) reads
+/// this set, so no two screens can disagree about the same finding. It began as a private field of the
+/// Master Dashboard's service (retired by T294) and moved here when the host summary needed the same
+/// answer.
 ///
 /// For findings the set is exactly the keys of <see cref="LegacyFindingStatus.ClosingTargets"/>
 /// (S39 D-04, T239): every workflow value the desktop close dialog offers takes the finding out of

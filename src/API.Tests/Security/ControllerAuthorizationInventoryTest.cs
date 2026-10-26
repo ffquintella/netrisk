@@ -170,6 +170,54 @@ public class ControllerAuthorizationInventoryTest
     }
 
     /// <summary>
+    /// T294 (S40 §13, criterion 45): the Master Dashboard is retired, so no action answers
+    /// <c>/Dashboard/Master</c> and its controller is gone. Routes are composed the way attribute routing
+    /// composes them — the controller's template, then the action's, with <c>[controller]</c> resolved —
+    /// and a known live route anchors the sweep so a composition bug cannot make it pass vacuously.
+    /// </summary>
+    [Fact]
+    public void TheRetiredMasterDashboardRouteIsGone()
+    {
+        Assert.DoesNotContain(Controllers(), c => c.Name == "DashboardController");
+
+        var routes = Controllers()
+            .SelectMany(c => Actions(c).SelectMany(a => RouteTemplates(c, a)))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.Contains("System/Ping", routes);
+        Assert.DoesNotContain("Dashboard/Master", routes);
+    }
+
+    private static IEnumerable<string> RouteTemplates(Type controller, MethodInfo action)
+    {
+        var name = controller.Name.EndsWith("Controller", StringComparison.Ordinal)
+            ? controller.Name[..^"Controller".Length]
+            : controller.Name;
+
+        static List<string> Templates(IEnumerable<object> attributes) => attributes
+            .OfType<IRouteTemplateProvider>()
+            .Select(p => p.Template)
+            .Where(t => !string.IsNullOrEmpty(t))
+            .Select(t => t!)
+            .ToList();
+
+        var prefixes = Templates(controller.GetCustomAttributes(inherit: true));
+        if (prefixes.Count == 0) prefixes.Add("");
+        var suffixes = Templates(action.GetCustomAttributes(inherit: true));
+        if (suffixes.Count == 0) suffixes.Add("");
+
+        foreach (var prefix in prefixes)
+        foreach (var suffix in suffixes)
+        {
+            // An action template starting with "/" or "~/" overrides the controller's.
+            var template = suffix.StartsWith('/') || suffix.StartsWith("~/", StringComparison.Ordinal)
+                ? suffix.TrimStart('~')
+                : $"{prefix}/{suffix}";
+            yield return template.Replace("[controller]", name, StringComparison.OrdinalIgnoreCase).Trim('/');
+        }
+    }
+
+    /// <summary>
     /// Every allowlist entry states a reason. A bare "true" would make the list a rubber stamp.
     /// </summary>
     [Fact]

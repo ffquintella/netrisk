@@ -162,7 +162,7 @@ funcionarem sem depender de score.
 | Gatilho: incidente ou near miss | 🟡 | Incidente existe; *near miss* não é distinguido; incidente **não dispara** reavaliação de risco automaticamente |
 | Gatilho: mudança de arquitetura, novo fornecedor, nova regulação, novo modelo de IA | ❌ | Nenhum desses gatilhos existe |
 | **Gatilho: KRI acima da tolerância** | ❌ | **Não há KRI no sistema.** É a lacuna de maior alcance da Fase 7: os gatilhos, o Portão B por KRI e metade das métricas dependem dela |
-| Painel executivo | ✅ | `IStatisticsService` (números, top riscos, grupos, top entidades, risco no tempo, impacto × probabilidade, risco × custo); Master Dashboard multi-entidade (Track 2.3.3) |
+| Painel executivo | ✅ | `IStatisticsService` (números, top riscos, grupos, top entidades, risco no tempo, impacto × probabilidade, risco × custo); Visão Geral de Risco Cibernético (Track 10, M54), que substituiu o Master Dashboard multi-entidade da Track 2.3.3, retirado pela T294 |
 | Métrica: % de riscos com dono e evidência | 🟡 | Dono é consultável (`owner`, `manager`); "com evidência documentada" não, porque não há campo de evidência |
 | Métrica: tempo de discovery até decisão | ❌ | Não medida |
 | Métrica: **exposição agregada acima do apetite (E[L] e P95)** | ❌ | Depende de agregação de portfólio e de P95 — nenhum dos dois existe (§5) |
