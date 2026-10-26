@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.44.0] - 2026-10-26
+
 ### Removed
 
 - Retire the administrator Master Dashboard — its navigation button, view, `GET /Dashboard/Master` endpoint, service, DTOs and client service — so the Cyber Risk Overview is the only consolidated dashboard and `PostureScore` is gone, without waiting for interim mode to be published since its pilot was abandoned (T294, S40)
