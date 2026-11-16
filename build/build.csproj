@@ -43,7 +43,7 @@
          pin them to fixed versions. -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="11.0.0" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
-    <PackageReference Include="NuGet.Packaging" Version="7.9.0" />
+    <PackageReference Include="NuGet.Packaging" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
