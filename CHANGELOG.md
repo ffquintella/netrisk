@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.44.1] - 2026-11-16
+
+### Security
+
+- Pin `System.Formats.Cbor` to 10.0.15 to lift the transitive 9.0.0 pulled in by Fido2, fixing GHSA-vmv3-wvjp-wqpj (CVE-2026-118747) and the failing dependency scan
+
 ## [2.44.0] - 2026-10-26
 
 ### Removed
