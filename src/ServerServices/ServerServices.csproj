@@ -57,6 +57,9 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <!-- Track 4.3.3: FIDO2/WebAuthn registration and assertion ceremonies. -->
     <PackageReference Include="Fido2" />
+    <!-- Direct pin lifting the transitive System.Formats.Cbor (via Fido2 4.3.0, which asks for 9.0.0)
+         to the release fixing GHSA-vmv3-wvjp-wqpj; flows to every project referencing this one. -->
+    <PackageReference Include="System.Formats.Cbor" />
     <PackageReference Include="MySqlBackup.NET.MySqlConnector" />
     <PackageReference Include="QuestPDF" />
     <PackageReference Include="Serilog" />
