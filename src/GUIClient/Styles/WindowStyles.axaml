@@ -1028,6 +1028,13 @@
         <Setter Property="Background" Value="{DynamicResource NrSurfaceRowAlternate}" />
     </Style>
 
+    <!-- M65 (S55): the diff of a client configuration file and the bridge command, in a fixed-width face so the columns of
+         the JSON line up and the user reads exactly what will be written. Kept above agentChanged, which must stay last. -->
+    <Style Selector="TextBox.agentDiff">
+        <Setter Property="FontFamily" Value="Menlo, Consolas, DejaVu Sans Mono, monospace"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
     <!-- T356 (S55): a field an AI agent changed that the user has not marked as seen or edited yet. Last in the file so it
          wins over a field's own class (header, formData…). Colour is never the only signal: the value is also underlined,
          the control carries a tooltip saying which agent changed it, and the notice above names every field. -->

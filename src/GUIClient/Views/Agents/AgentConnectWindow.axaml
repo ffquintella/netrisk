@@ -1,0 +1,123 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:agents="clr-namespace:GUIClient.ViewModels.Agents"
+        mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="760"
+        Width="980" Height="760" MinWidth="760" MinHeight="560" CanResize="True"
+        x:DataType="agents:AgentConnectViewModel" x:Class="GUIClient.Views.Agents.AgentConnectWindow"
+        Title="{Binding StrTitle}">
+
+    <!-- M65 (T363–T365, S55): the AI clients on this computer, each with its configuration file and state. Register and
+         Unregister only prepare the change; the preview card shows the exact diff and nothing is written before Apply. -->
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="Black" TintOpacity="1"
+                                             MaterialOpacity="0.65"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+            <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
+
+            <Border Grid.Row="1" Classes="formCard" Margin="10 10 10 0">
+                <StackPanel>
+                    <TextBlock Text="{Binding StrIntro}" Classes="hint"/>
+                    <TextBlock Text="{Binding BridgeStatus}" Classes="notice"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10 8 10 5" Spacing="5">
+                <Button Classes="type2" Command="{Binding BtRegisterClicked}" IsEnabled="{Binding IsRegisterEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="LinkVariant" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRegister}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtUnregisterClicked}" IsEnabled="{Binding IsUnregisterEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="LinkVariantOff" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrUnregister}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type3" Command="{Binding BtChooseFileClicked}" IsEnabled="{Binding IsChooseFileEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="FolderOpen" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrChooseFile}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtRefreshClicked}" Margin="10 0 0 0">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Refresh" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrRefresh}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <DataGrid Grid.Row="3" Margin="10 0 10 0"
+                      ItemsSource="{Binding Clients}"
+                      SelectedItem="{Binding SelectedClient}"
+                      SelectionMode="Single"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="False"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrClient}" Binding="{Binding Name}" Width="2*" MinWidth="160"/>
+                    <DataGridTextColumn Header="{Binding StrState}" Binding="{Binding State}" Width="*" MinWidth="120"/>
+                    <DataGridTextColumn Header="{Binding StrDetail}" Binding="{Binding Detail}" Width="3*" MinWidth="200"/>
+                    <DataGridTextColumn Header="{Binding StrPath}" Binding="{Binding ConfigPath}" Width="3*" MinWidth="200"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Grid.Row="4" Margin="10 5 10 10">
+                <!-- A change to another application's configuration: always previewed, always one click per client. -->
+                <Border Classes="formCard caution" IsVisible="{Binding IsPreviewVisible}">
+                    <StackPanel>
+                        <Grid ColumnDefinitions="Auto,*">
+                            <avalonia:MaterialIcon Grid.Column="0" Kind="FileDocumentEditOutline" Classes="cautionIcon"
+                                                   Width="20" Height="20" VerticalAlignment="Top" Margin="0 0 8 0"/>
+                            <TextBlock Grid.Column="1" Text="{Binding PreviewTitle}" Classes="sectionCaption"/>
+                        </Grid>
+                        <TextBlock Text="{Binding StrPreviewHint}" Classes="hint"/>
+                        <TextBox Text="{Binding PreviewDiff}" Classes="agentDiff" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="NoWrap" Height="190" Margin="0 6 0 0"/>
+                        <TextBlock Text="{Binding PreviewNote}" Classes="notice"/>
+                        <Grid ColumnDefinitions="Auto,Auto,*" Margin="0 8 0 0">
+                            <Button Grid.Column="0" Classes="dialog1" Command="{Binding BtApplyClicked}" Margin="0 0 5 0">
+                                <StackPanel Orientation="Horizontal">
+                                    <avalonia:MaterialIcon Kind="Check" Width="20" Height="20" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding StrApply}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Classes="dialog2" Command="{Binding BtCancelClicked}">
+                                <StackPanel Orientation="Horizontal">
+                                    <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding StrCancel}"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- T365: a client NetRisk does not configure gets the steps instead of a button. -->
+                <Border Classes="formCard" IsVisible="{Binding IsGuideVisible}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding GuideTitle}" Classes="sectionCaption"/>
+                        <TextBlock Text="{Binding GuideText}" Classes="hint"/>
+                        <TextBlock Text="{Binding StrGuideCommand}" Classes="fieldLabel" Margin="0 6 0 0"/>
+                        <TextBox Text="{Binding GuideCommand}" Classes="agentDiff" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="NoWrap" Height="80"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Panel>
+</Window>

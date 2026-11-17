@@ -6,7 +6,8 @@ Status: **M61 implemented** (host, registration, keys, leases — see [Implement
 [Implementation notes (M63)](#implementation-notes-m63)). **M64 build part implemented** (settings switch and LGPD
 disclosure, data-class exclusion, user guide, observation harness — see [Implementation notes (M64)](#implementation-notes-m64)
 and [Observed run](#observed-run)); the T359 security review and the T360 run against the real GUI are still open. The T354
-and T356 remainders (creation, incident timeline, per-control highlight) are in [Implementation notes (T354/T356)](#implementation-notes-t354t356). User
+and T356 remainders (creation, incident timeline, per-control highlight) are in [Implementation notes (T354/T356)](#implementation-notes-t354t356).
+**M65 implemented** (one-click registration — see [Implementation notes (M65)](#implementation-notes-m65)). User
 guide: [docs/product-guides/agent-co-work.md](../product-guides/agent-co-work.md). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
@@ -119,11 +120,11 @@ approval dialog, and the key is never written to a config file.
 
 | Client | Detected by | Written to | Entry |
 |---|---|---|---|
-| Claude Code | `claude` on `PATH` or `~/.claude.json` | user-scope MCP config (via `claude mcp add` when the CLI is present, else a JSON merge) | stdio bridge |
-| Claude Desktop | app bundle / install dir | `claude_desktop_config.json` → `mcpServers` | stdio bridge |
-| GitHub Copilot (VS Code) | VS Code (stable/Insiders) user dir | user-level `mcp.json` → `servers` | stdio bridge |
-| GitHub Copilot CLI | `copilot` on `PATH` or its config dir | its `mcp-config.json` | stdio bridge |
-| ChatGPT | desktop app present | **not automatic** (see below) | guided |
+| Claude Code | `claude` on `PATH`, `~/.claude.json` or `~/.claude` | `~/.claude.json` → top-level `mcpServers` (user scope), by JSON merge — M65 does not run `claude mcp add` ([why](#implementation-notes-m65)) | stdio bridge |
+| Claude Desktop | config dir / app bundle / install dir | `claude_desktop_config.json` → `mcpServers` | stdio bridge |
+| GitHub Copilot (VS Code) | VS Code (stable/Insiders) user dir | user-level `mcp.json` → `servers` (Copilot's Local harness) | stdio bridge |
+| GitHub Copilot CLI (and VS Code's Copilot harness) | `copilot` on `PATH` or `~/.copilot` | `~/.copilot/mcp-config.json` → `mcpServers` | stdio bridge |
+| ChatGPT | desktop app or `~/.codex` present | **not automatic** (see below) | guided |
 
 Rules:
 
@@ -144,7 +145,8 @@ Rules:
 - **ChatGPT.** As of this design ChatGPT reaches MCP servers as *remote connectors* over a public HTTPS
   URL, which a loopback server deliberately is not, and has no local config file to write. The button
   therefore does not pretend: it shows what is supported and the steps, and the first release treats
-  ChatGPT as unsupported until a local mechanism exists. The client list is data (a table of
+  ChatGPT as unsupported until a local mechanism exists. (*Checked at M65, 2026-11-17: the ChatGPT desktop app now runs
+  local stdio servers from the Codex `config.toml`; the row stays guided and an automatic row is T390.*) The client list is data (a table of
   detector + writer), so adding one is a new row, not a redesign. **Verify each client's current
   config location and schema at implementation time; they change between releases.**
 - **Paths from the OS only.** Locations come from the platform's known folders, not from caller input,
@@ -899,6 +901,93 @@ screens and named in the notice only: an incident's category, reporter and timel
 The run dialog lights what was pending when it opened (a change while it is open is refused at save, as in M63); the run
 viewer and the entity tree do not highlight. On the list screens "edits it" means saving the item in its dialog, not
 typing in a field (the panels are read-only).
+
+## Implementation notes (M65)
+
+Code: `src/GUIClient/Agents/Core` — `AgentClients.cs` (the client table: known folders, per-platform locations, probes,
+formats; the bridge launch and locator), `AgentClientConfigEditor.cs` (the merge-only JSON editor, the proof, the diff),
+`AgentClientRegistrar.cs` (detection, states, plan, write) — all Avalonia-free and compiled into `GUIClient.Tests` by the
+existing `Agents\Core\*.cs` include; the window is `Views/Agents/AgentConnectWindow` with `ViewModels/Agents/AgentConnectViewModel`,
+opened by **Connect an agent…** in the Agents window. `Tools.Security.SafePathTool` gained `IsSafeFileName`/`FileWithin`
+(one segment, one leading dot allowed — `.claude.json`); `CombineWithin` is unchanged. Evidence: `AgentClientRegistrarMergeTest`,
+`AgentClientRegistrarRemoveTest`, `AgentClientDetectionTest` (`GUIClient.Tests/Agents`), `SafePathToolTest` (`Tools.Tests`).
+
+**Verified on 2026-11-17** (re-check before changing a row; they change between releases):
+
+| Client | Source | What it says |
+|---|---|---|
+| Claude Code | code.claude.com/docs `mcp`, `settings`, `claude-directory` | user scope is stored in `~/.claude.json` (moved by `CLAUDE_CONFIG_DIR`); stdio entry `{type: "stdio", command, args, env}`; the file also holds account details. The top-level `mcpServers` key for user scope is not spelled out — local scope is `projects[<path>].mcpServers`; confirmed on a real file |
+| Claude Desktop | modelcontextprotocol.io "Connect to local MCP servers" | macOS `~/Library/Application Support/Claude/`, Windows `%APPDATA%\Claude\`, Linux `~/.config/Claude/` `claude_desktop_config.json` → `mcpServers` → `{command, args, env}` |
+| VS Code | code.visualstudio.com `agents/reference/mcp-configuration`, `configure/settings` | profile `mcp.json` → `servers` → `{type: "stdio", command, args, env}`, in the `User` folder beside `settings.json`; it is the **Local harness, deprecated for removal in February 2027** — the Copilot harness reads `$COPILOT_HOME/mcp-config.json` or `~/.copilot/mcp-config.json` (`mcpServers`, `type` `stdio`, `tools`). The `Code - Insiders` folder name is the VS Code convention, not on that page |
+| Copilot CLI | docs.github.com "Add MCP servers" (CLI), Copilot SDK MCP page | `~/.copilot/mcp-config.json` → `mcpServers`; examples use `type: "local"` and `tools: ["*"]`; the SDK documents `local` or `stdio`, VS Code `stdio` for the same file — NetRisk writes `stdio` and reads either as current |
+| ChatGPT | learn.chatgpt.com `docs/extend/mcp` | the desktop app, Codex CLI and IDE extension share `~/.codex/config.toml` (`[mcp_servers.<name>]` with `command`, `args`, `env`); ChatGPT on the web reads no local file and reaches MCP through remote connectors only |
+
+Each security claim and the test that establishes it (each guard below was removed once and its test failed, except
+where noted):
+
+- **Merge only — nothing but the `netrisk` entry changes.** The editor splices text instead of re-serialising, so other
+  servers, keys, order, indentation, VS Code comments and trailing commas, a BOM and CRLF survive; every edit is proved
+  by parsing before and after (`AgentClientConfigEditor.OnlyEntryDiffers`) and the proof is **repeated at the write
+  site** on the bytes actually on disk: `TestOtherServersAndKeysAreKeptByteForByte` (the original is the new file minus
+  one contiguous insertion), `TestVsCodeCommentsAndTrailingCommasSurvive`, `TestAByteOrderMarkAndWindowsLineEndingsSurvive`,
+  `TestTheLastCheckRefusesAPlanThatWouldTouchAnythingButTheEntry` (mutated: caught), and on removal
+  `TestUnregisterRemovesOnlyTheNetriskEntryWhereverItIs`, `TestRegisterThenUnregisterRestoresTheOriginalBytes`.
+- **A file that does not parse is left untouched and reported** — invalid JSON, a comment or trailing comma in a strict
+  file, trailing garbage, a non-object root or servers member, a duplicated servers member or `netrisk` entry, a JSONC
+  file holding only comments: `TestAMalformedFileIsLeftUntouchedAndReported` (eight cases), `TestAJsoncFileWithOnlyCommentsIsNotReplaced`,
+  `TestUnregisterLeavesAMalformedFileUntouched`.
+- **No port, token or key is written.** The entry is built only by `AgentBridgeLaunch.Create`, which admits the bridge's
+  absolute path, a `--environment` name the bridge accepts and `DOTNET_ROOT`: `TestTheEntryLaunchesTheBridgeAndCarriesNoPortTokenOrKey`
+  (a live discovery file with a launch token is on disk; no client file contains its URL, port or token),
+  `TestTheLaunchAdmitsOnlyAnAbsoluteBridgeAKnownEnvironmentAndDotnetRoot`.
+- **Containment and paths from the OS only.** Locations are a known folder plus reviewed constant segments; every read and
+  write goes through `SafePathTool.FileWithin(configDirectory, name)`: `TestEveryPathComesFromAKnownFolderAndStaysInsideIt`,
+  `TestEachClientsConfigPathPerPlatform` (15 rows), `TestAPickedFileWhoseNameIsOutsideTheAllowlistIsRefused`, `SafePathToolTest`'s
+  `FileWithin*`/`FileNames*` cases. A symbolic-link config file is refused (replacing it would turn the user's link into
+  a plain file and write somewhere other than the path shown): `TestASymbolicLinkIsNotFollowed` (mutated: caught; Unix only).
+- **`.bak`, atomic write, permissions.** The original is copied to `<file>.netrisk-<UTC yyyyMMddTHHmmssfffZ>[-n].bak` with
+  the original's mode, then the new content goes to a `CreateNew` temporary file beside it with that mode and is renamed
+  over the original: `TestABackupOfTheOriginalIsKeptBesideItWithItsPermissions` (0600 stays 0600 — `~/.claude.json` holds
+  account details and other servers' tokens), `TestTheWriteLeavesNoTemporaryFileAndKeepsTheModeOfTheOriginal`,
+  `TestAMissingFileIsCreatedOwnerOnlyInTheClientsDirectory`, `TestASecondBackupInTheSameMillisecondGetsItsOwnName`. The
+  mode is set twice (`UnixCreateMode` at creation, `SetUnixFileMode` after, against a stricter umask), so removing either
+  one alone is not caught — by design. On Windows the files inherit the folder's ACL (the user's own profile).
+- **Explicit per-client consent; nothing written from a stale preview.** Register/Unregister only build a plan (diff,
+  exact bytes); Apply writes only that plan, and only if the file is byte-for-byte what the preview read:
+  `TestAFileChangedAfterThePreviewIsNotWritten` (mutated: caught). **Idempotent:** `TestRegisteringTwiceChangesNothing`,
+  `TestUnregisterWhenNothingIsRegisteredWritesNothing` (no write, no `.bak`).
+- **Detection starts nothing.** Probes check a file, a folder or an executable in an absolute `PATH` entry:
+  `TestAClientIsDetectedByItsFileItsFolderOrItsExecutableOnPath`, `TestAnExecutableProbeIgnoresRelativePathEntries`. States:
+  `TestTheStatesNotRegisteredRegisteredAndStale`; undetected and picked files: `TestAnUndetectedClientIsListedWithItsReasonAndCanBePointedAtAFile`;
+  `TestAMissingConfigDirectoryIsReportedAndNotCreated`; ChatGPT: `TestChatGptIsGuidedAndNeverWritten`; the table:
+  `TestTheClientTableIsDataWithADetectorAndAWriterPerRow`; every computed state/problem/client key in all three resource
+  files: `TestEveryClientStateProblemAndGuideKeyResolvesIn`.
+
+Decisions:
+
+- **Claude Code by JSON merge only, not `claude mcp add`.** The spec allowed either. The CLI writes `~/.claude.json`
+  itself, so the exact diff could not be shown before the write (S55 "Preview and consent"), the `.bak`, atomicity and
+  malformed-file guarantees would be the CLI's, not ours, and NetRisk would spawn a binary resolved from `PATH` with the
+  user's environment. Rejected for those reasons. Residual: Claude Code rewrites `~/.claude.json` while it runs; the
+  byte-for-byte re-check refuses a write if it changed after the preview, but a rewrite in the instant between that check
+  and the rename can be lost (either ours or Claude Code's) — the window asks the user to close the client first and
+  start it again afterwards.
+- **The servers object is never removed**, even when Unregister leaves it empty ("deletes only the `netrisk` entry").
+- **The entry is inserted as the first server**, in the file's own indentation and line endings; a one-line file gets a
+  compact entry. A `netrisk` entry already there is replaced in place.
+- **The diff has no context lines** (neighbouring lines are other servers' settings, which can hold their tokens); long
+  lines are cut and the diff is bounded, so a one-line file cannot flood the preview.
+- **`DOTNET_ROOT` in the entry** when NetRisk runs on a shared .NET (`<root>/shared/Microsoft.NETCore.App/<v>` with
+  `<root>/dotnet`) — the observed run found clients start the framework-dependent bridge with a minimal environment.
+  "Stale" compares command, arguments and environment, so a moved .NET also shows stale.
+- **`CLAUDE_CONFIG_DIR` and `COPILOT_HOME` are not read** (OS known folders only); a user who set one uses *Choose file…*.
+- **The Copilot row covers two clients**: Copilot CLI and VS Code's current Copilot harness read the same file.
+
+Gaps and follow-ups: no installer ships the bridge (T373), so a packaged build reports it missing and only Unregister
+works there — the bridge is found beside NetRisk or in the source build tree (`…/McpBridge/bin/<cfg>/<tfm>`); ChatGPT/Codex
+`config.toml` is not written (T390); VS Code non-default profiles (`User/profiles/<id>/mcp.json`) are not detected —
+*Choose file…* covers them; the view-model is not unit-tested (Avalonia), and GUIClient.UiTests were not run (S54 §3);
+the log line records client, action and outcome only — no path (it names the OS user) and no file content.
 
 ## Out of scope (first release)
 

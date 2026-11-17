@@ -14,6 +14,11 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Add a "Connect an agent" window to the Agents window that lists Claude Code, Claude Desktop, GitHub Copilot in VS Code and VS Code Insiders, and GitHub Copilot CLI with each one's configuration file and whether NetRisk is not registered, registered or registered but stale, and lets the user point at a configuration file of a client it did not find (T363, S55)
+- Register and unregister the NetRisk stdio bridge in each of those clients with one reviewed click, showing the exact diff first, changing only the `netrisk` entry, keeping a timestamped `.bak` beside the file, writing atomically and leaving a file that does not parse untouched (T364, S55)
+- Show ChatGPT in the same list as not configured automatically, with the steps and the bridge command to enter in the ChatGPT desktop app, from a client table where a new client is a new row (T365, S55)
+- Test the client configuration merge, removal and per-platform detection with `AgentClientRegistrarMergeTest`, `AgentClientRegistrarRemoveTest` and `AgentClientDetectionTest`, and let `SafePathTool` contain a dotfile name such as `.claude.json` (T366, S55)
+
 - Let an agent create a risk or an incident for the user, with the owner and reporter fixed to the user, no person field settable, every creation confirmed through a full new-item dialog that states the response plans and notifications it may trigger, and add a text entry to an incident's timeline (T354, S55)
 - Add `POST /Incidents/{id}/Timeline` and the `IIncidentsService.AddTimelineEntryAsync` client call, authorised like an incident update, with the author and time stamped by the server (T354, S55)
 - Highlight each control an agent changed on the risk, incident, finding, host, entity and assessment run screens until the user marks it seen, edits it or saves, and show appended entries without marking the open form stale (T356, S55)

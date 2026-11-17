@@ -48,14 +48,39 @@ read your private discovery file. Agents on other computers cannot connect.
 ## Registering an agent
 
 Agents reach NetRisk through the small **`netrisk-mcp-bridge`** program that comes with the client, which they start as a
-"stdio" MCP server. Adding it to an agent is, for now, a manual step:
+"stdio" MCP server.
 
-- **Claude Code**: `claude mcp add netrisk -- <path to>/netrisk-mcp-bridge`
-  (add `-e DOTNET_ROOT=<your .NET folder>` if .NET is not installed in its default location).
-- **Other MCP clients**: add a stdio server whose command is the bridge's path.
+### Connect an agent (one click)
 
-> **One-click registration** — a *Connect an agent* button that writes this entry into Claude Code, Claude Desktop and
-> GitHub Copilot for you — is planned (milestone M65) and **not available yet**.
+In **Application → AI agents…**, choose **Connect an agent…**. NetRisk lists the AI clients it knows — Claude Code,
+Claude Desktop, GitHub Copilot in VS Code and VS Code Insiders, GitHub Copilot CLI (whose file VS Code's current Copilot
+also reads) and ChatGPT — with each one's configuration file and its state:
+
+| State | Meaning |
+|---|---|
+| Not detected | NetRisk did not find it. If it is installed somewhere else, select it and **Choose file…** to point at its configuration file. |
+| Not registered | Installed, without a NetRisk entry. |
+| Registered | Its entry starts this NetRisk's bridge. |
+| Registered, but stale | It has an entry, but for another bridge path or settings (for example after NetRisk moved). Register it again. |
+| Cannot be changed | The file cannot be used as it is (the *Detail* column says why — for example it is not valid JSON). NetRisk leaves it alone. |
+| Not automatic | ChatGPT: see the steps shown under the list. |
+
+1. **Close the client** if it is running (it may rewrite its own file while open).
+2. Select it and choose **Register…** (or **Unregister…**). NetRisk shows the exact lines that will change in that file;
+   nothing is written yet.
+3. Choose **Apply** to write it, or **Cancel**. NetRisk keeps a copy of the file beside it
+   (`<file>.netrisk-<date and time>.bak`), changes only its own `netrisk` entry and leaves every other server and setting
+   as it was. A file that is not valid is never changed.
+4. Start the client again so it reads the change.
+
+The entry only tells the client how to start the bridge: it holds **no port, token or key**, and it grants nothing — the
+agent still has to register and you still approve it (below). **Unregister** removes only the `netrisk` entry.
+
+If NetRisk says the bridge was not found, your installation does not include it yet; Unregister still works. Clients
+NetRisk does not configure — and **ChatGPT**, whose desktop app has its own MCP settings — are set up by hand: add a
+"stdio" server whose command is the bridge's path (the ChatGPT steps in the window show the exact command). For Claude
+Code by hand: `claude mcp add netrisk -- <path to>/netrisk-mcp-bridge` (add `-e DOTNET_ROOT=<your .NET folder>` if .NET
+is not installed in its default location; *Connect an agent* adds it for you when needed).
 
 Then ask the agent to connect to NetRisk. It calls `register_agent`, shows you a fingerprint such as `AAE5-84D5`, and
 NetRisk opens **An AI agent wants to connect**:
@@ -235,7 +260,9 @@ sandbox or file-access restriction they offer, to the same effect.
 |---|---|
 | The agent says NetRisk is not running or not reachable | Sign in to NetRisk and tick the server switch; the bridge finds the running client through the discovery file. |
 | The status line says the server could not start | Untick and tick the switch again; check the client log. |
-| The agent fails to start the bridge with "You must install .NET" | Pass the .NET location to the bridge (`-e DOTNET_ROOT=…` in `claude mcp add`). |
+| The agent fails to start the bridge with "You must install .NET" | Register it again from **Connect an agent…**, or pass the .NET location to the bridge by hand (`-e DOTNET_ROOT=…` in `claude mcp add`). |
+| *Connect an agent* shows a client as **Cannot be changed** | Read the *Detail* column: fix the file in that client (or remove a duplicate `netrisk` entry) and choose **Refresh**. NetRisk never rewrites a file it cannot read. |
+| *Connect an agent* says the file changed after the preview | The client saved its file meanwhile. Close the client and choose **Register…** again. |
 | `unauthorized` | The key is unknown or revoked: the agent must register again. |
 | `access_expired` | Access ended or was never granted: the agent asks again with `request_access`. |
 | `paused` | You paused access; resume it from the status bar. |

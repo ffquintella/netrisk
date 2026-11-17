@@ -57,6 +57,49 @@ public static class SafePathTool
         var root = Path.GetFullPath(baseDirectory);
         var combined = Path.GetFullPath(Path.Combine(new[] { root }.Concat(segments).ToArray()));
 
+        EnsureWithin(root, combined, nameof(segments));
+        return combined;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="fileName"/> is safe as the name of a file directly inside a directory — the
+    /// <see cref="IsSafeSegment"/> allowlist, except that one leading dot is allowed, so that a dotfile such as
+    /// <c>.claude.json</c> can be named (Track 11, M65: the configuration files of the AI clients on the machine).
+    /// Still never empty, never <c>.</c> or a run of two dots, never a separator, at most 128 characters.
+    /// </summary>
+    public static bool IsSafeFileName(string? fileName)
+    {
+        if (string.IsNullOrEmpty(fileName)) return false;
+        var rest = fileName[0] == '.' ? fileName[1..] : fileName;
+        return IsSafeSegment(rest) && fileName.Length <= 128;
+    }
+
+    /// <summary>
+    /// The full path of <paramref name="fileName"/> directly inside <paramref name="baseDirectory"/>, proved to be
+    /// inside it. Like <see cref="CombineWithin"/> for exactly one segment, with <see cref="IsSafeFileName"/> as the
+    /// rule for that segment.
+    /// </summary>
+    /// <exception cref="ArgumentException">The name is unsafe, or the result escapes the base.</exception>
+    public static string FileWithin(string baseDirectory, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+            throw new ArgumentException("The base directory must be set.", nameof(baseDirectory));
+        if (!IsSafeFileName(fileName))
+            throw new ArgumentException($"'{fileName}' is not a valid file name.", nameof(fileName));
+
+        var root = Path.GetFullPath(baseDirectory);
+        var combined = Path.GetFullPath(Path.Combine(root, fileName));
+
+        EnsureWithin(root, combined, nameof(fileName));
+        if (!string.Equals(Path.GetDirectoryName(combined), Path.TrimEndingDirectorySeparator(root),
+                StringComparison.Ordinal))
+            throw new ArgumentException("The resolved path is not directly inside the base directory.",
+                nameof(fileName));
+        return combined;
+    }
+
+    private static void EnsureWithin(string root, string combined, string parameter)
+    {
         // The trailing separator matters: without it "/tmp/netrisk-api-evil" starts with
         // "/tmp/netrisk-api" and would pass.
         var rootWithSeparator = root.EndsWith(Path.DirectorySeparatorChar)
@@ -64,9 +107,6 @@ public static class SafePathTool
             : root + Path.DirectorySeparatorChar;
 
         if (!combined.StartsWith(rootWithSeparator, StringComparison.Ordinal))
-            throw new ArgumentException(
-                "The resolved path escapes the base directory.", nameof(segments));
-
-        return combined;
+            throw new ArgumentException("The resolved path escapes the base directory.", parameter);
     }
 }

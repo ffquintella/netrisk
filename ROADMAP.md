@@ -1184,11 +1184,17 @@ grants, shortens or refuses it. Design, trust model and threat table:
 > spec: S55
 > depends-on: M61
 
-- [ ] T363 Detect installed Claude Code, Claude Desktop, GitHub Copilot (VS Code and CLI) and report each one's config path and registration state (S55)
-- [ ] T364 Write and remove the `netrisk` stdio entry in each client's config by merge only, with a diff preview, explicit per-client consent, atomic write and a `.bak` (S55)
-- [ ] T365 Show ChatGPT as unsupported with guided steps, keeping clients as a detector-and-writer table so a new one is a new row (S55)
+- [x] T363 Detect installed Claude Code, Claude Desktop, GitHub Copilot (VS Code and CLI) and report each one's config path and registration state (S55)
+  - note: detection only looks at the file system (config file or folder, an executable in an absolute `PATH` entry); `CLAUDE_CONFIG_DIR` and `COPILOT_HOME` are not read (paths come from OS known folders only), so a user who set one picks the file; a client whose settings folder does not exist yet is reported, never created
+  - note: verified 2026-11-17 — VS Code's profile `mcp.json` (`servers`) belongs to Copilot's Local harness, deprecated for removal in February 2027; the Copilot harness in VS Code reads `~/.copilot/mcp-config.json`, so the Copilot CLI row covers VS Code's current harness too
+- [x] T364 Write and remove the `netrisk` stdio entry in each client's config by merge only, with a diff preview, explicit per-client consent, atomic write and a `.bak` (S55)
+  - note: Claude Code is written by JSON merge only, never through `claude mcp add` — the CLI writes the file itself, so no exact diff could be shown before the write, and spawning a `PATH`-resolved binary adds risk; a symbolic-link config file is refused rather than replaced
+  - note: the bridge must be beside NetRisk or in the source build tree; no installer ships it yet (T373), so in a packaged build Register reports the bridge missing; the entry carries `DOTNET_ROOT` when NetRisk runs on a shared .NET (observed-run finding)
+- [x] T365 Show ChatGPT as unsupported with guided steps, keeping clients as a detector-and-writer table so a new one is a new row (S55)
   - note: ChatGPT consumes remote HTTPS connectors and has no local config; revisit if a local mechanism ships
-- [ ] T366 Add `AgentClientRegistrarMergeTest`, `AgentClientRegistrarRemoveTest` and `AgentClientDetectionTest` (S55)
+  - note: a local mechanism has shipped (verified 2026-11-17): the ChatGPT desktop app runs stdio servers from the Codex `~/.codex/config.toml` (`[mcp_servers.<name>]`); the row stays guided — the steps tell the user to add the bridge in the app's MCP settings — and an automatic row needs a TOML writer (T390)
+- [x] T366 Add `AgentClientRegistrarMergeTest`, `AgentClientRegistrarRemoveTest` and `AgentClientDetectionTest` (S55)
+  - note: the window itself is not unit-tested (Avalonia); UI tests not run (S54 §3)
 
 ## Track 12 — Platform Currency
 
@@ -1254,6 +1260,8 @@ installers at once, so it is scheduled as its own track and does not ride along 
 - [ ] T388 Bind the website fix-report comment author to the report key and the fix team, so `FixReportController` and `SyncIngestService.ApplyCommentAsync` stop accepting any fixer id and fixer-typed name for a comment
   - note: found by the T375 review; anyone holding a report key can attribute a comment to any NetRisk user
 - [ ] T389 Write comment dates in UTC on the user path to match the website path and the Track 6 convention
+- [ ] T390 Register the bridge in the Codex `config.toml` the ChatGPT desktop app and Codex CLI share, as a new client row with a merge-only TOML writer (S55)
+  - note: found by M65 (T365): ChatGPT's desktop app now runs local stdio servers from `~/.codex/config.toml`; until then the row is guided
 
 ## Specs
 

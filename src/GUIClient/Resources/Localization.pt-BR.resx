@@ -7086,4 +7086,175 @@ Ligar o co-trabalho com agentes?</value>
     <data name="ErrorSendingCommentMSG" xml:space="preserve">
         <value>O comentário não pôde ser enviado e não foi salvo. Verifique se você ainda tem acesso a esta solicitação de correção e tente novamente.</value>
     </data>
+    <data name="AgentConnectButton" xml:space="preserve">
+        <value>Conectar um agente…</value>
+    </data>
+    <data name="AgentConnectTitle" xml:space="preserve">
+        <value>Conectar um agente</value>
+    </data>
+    <data name="AgentConnectIntroMSG" xml:space="preserve">
+        <value>O NetRisk pode adicionar uma entrada "netrisk" à configuração dos clientes de IA deste computador, para que você não edite os arquivos deles à mão. A entrada apenas inicia a ponte MCP do NetRisk: não contém porta, token nem chave e não concede nada — o agente ainda se registra e você o aprova. Cada alteração é mostrada antes de ser gravada, mantém uma cópia do arquivo ao lado dele e não altera mais nada nele. Feche o cliente antes, se estiver aberto, e abra-o de novo depois para que ele leia a alteração.</value>
+    </data>
+    <data name="AgentConnectBridgeFound" xml:space="preserve">
+        <value>Ponte: {0}</value>
+    </data>
+    <data name="AgentConnectRegister" xml:space="preserve">
+        <value>Registrar…</value>
+    </data>
+    <data name="AgentConnectUnregister" xml:space="preserve">
+        <value>Remover registro…</value>
+    </data>
+    <data name="AgentConnectChooseFile" xml:space="preserve">
+        <value>Escolher arquivo…</value>
+    </data>
+    <data name="AgentConnectChooseFileTitle" xml:space="preserve">
+        <value>Escolha o arquivo de configuração de {0}</value>
+    </data>
+    <data name="AgentConnectRefresh" xml:space="preserve">
+        <value>Atualizar</value>
+    </data>
+    <data name="AgentConnectColumnClient" xml:space="preserve">
+        <value>Cliente</value>
+    </data>
+    <data name="AgentConnectColumnState" xml:space="preserve">
+        <value>Situação</value>
+    </data>
+    <data name="AgentConnectColumnDetail" xml:space="preserve">
+        <value>Detalhe</value>
+    </data>
+    <data name="AgentConnectColumnPath" xml:space="preserve">
+        <value>Arquivo de configuração</value>
+    </data>
+    <data name="AgentConnectDetectedBy" xml:space="preserve">
+        <value>Encontrado: {0}</value>
+    </data>
+    <data name="AgentConnectManualPath" xml:space="preserve">
+        <value>Um arquivo escolhido por você</value>
+    </data>
+    <data name="AgentConnectPreviewRegisterTitle" xml:space="preserve">
+        <value>Adicionar a entrada netrisk a {0}</value>
+    </data>
+    <data name="AgentConnectPreviewUnregisterTitle" xml:space="preserve">
+        <value>Remover a entrada netrisk de {0}</value>
+    </data>
+    <data name="AgentConnectPreviewHintMSG" xml:space="preserve">
+        <value>Estas são as únicas linhas que mudam neste arquivo. Nada é gravado até você escolher Aplicar.</value>
+    </data>
+    <data name="AgentConnectPreviewBackupMSG" xml:space="preserve">
+        <value>O arquivo atual é mantido ao lado dele como {0}.netrisk-&lt;data e hora&gt;.bak.</value>
+    </data>
+    <data name="AgentConnectPreviewNewFileMSG" xml:space="preserve">
+        <value>O arquivo ainda não existe: ele é criado, legível apenas por você.</value>
+    </data>
+    <data name="AgentConnectApply" xml:space="preserve">
+        <value>Aplicar</value>
+    </data>
+    <data name="AgentConnectDoneMSG" xml:space="preserve">
+        <value>{0}: concluído. Reinicie-o para que ele leia a alteração.</value>
+    </data>
+    <data name="AgentConnectFailedMSG" xml:space="preserve">
+        <value>{0}: nada foi gravado. {1}</value>
+    </data>
+    <data name="AgentConnectNoChangeMSG" xml:space="preserve">
+        <value>{0}: o arquivo já diz isso; nada a alterar.</value>
+    </data>
+    <data name="AgentConnectGuideTitle" xml:space="preserve">
+        <value>Passos para {0}</value>
+    </data>
+    <data name="AgentConnectGuideCommand" xml:space="preserve">
+        <value>Comando, argumentos e ambiente a informar:</value>
+    </data>
+    <data name="AgentConnectStateNotDetected" xml:space="preserve">
+        <value>Não detectado</value>
+    </data>
+    <data name="AgentConnectStateNotRegistered" xml:space="preserve">
+        <value>Não registrado</value>
+    </data>
+    <data name="AgentConnectStateRegistered" xml:space="preserve">
+        <value>Registrado</value>
+    </data>
+    <data name="AgentConnectStateStale" xml:space="preserve">
+        <value>Registrado, mas desatualizado</value>
+    </data>
+    <data name="AgentConnectStateUnreadable" xml:space="preserve">
+        <value>Não pode ser alterado</value>
+    </data>
+    <data name="AgentConnectStateGuided" xml:space="preserve">
+        <value>Não automático — veja os passos</value>
+    </data>
+    <data name="AgentConnectStateUnsupported" xml:space="preserve">
+        <value>Não disponível neste sistema</value>
+    </data>
+    <data name="AgentConnectProblemNotDetected" xml:space="preserve">
+        <value>Não encontrado neste computador. Se estiver instalado em outro local, escolha o arquivo de configuração dele.</value>
+    </data>
+    <data name="AgentConnectProblemNoLocation" xml:space="preserve">
+        <value>Este cliente não tem arquivo de configuração neste sistema.</value>
+    </data>
+    <data name="AgentConnectProblemDirectoryMissing" xml:space="preserve">
+        <value>A pasta de configurações dele ainda não existe: inicie o cliente uma vez e atualize.</value>
+    </data>
+    <data name="AgentConnectProblemUnsafeFileName" xml:space="preserve">
+        <value>Este nome de arquivo não é aceito (apenas letras, dígitos, '.', '-' e '_'). Escolha outro arquivo.</value>
+    </data>
+    <data name="AgentConnectProblemSymbolicLink" xml:space="preserve">
+        <value>O arquivo de configuração é um link simbólico; o NetRisk não o segue. Escolha o arquivo para o qual ele aponta.</value>
+    </data>
+    <data name="AgentConnectProblemUnreadable" xml:space="preserve">
+        <value>O arquivo de configuração não pôde ser lido.</value>
+    </data>
+    <data name="AgentConnectProblemTooLarge" xml:space="preserve">
+        <value>O arquivo de configuração é maior do que o NetRisk lê (32 MB).</value>
+    </data>
+    <data name="AgentConnectProblemUnparseable" xml:space="preserve">
+        <value>O arquivo de configuração não é válido. O NetRisk não o alterou; corrija-o primeiro no cliente.</value>
+    </data>
+    <data name="AgentConnectProblemRootNotAnObject" xml:space="preserve">
+        <value>O arquivo de configuração não contém um objeto JSON. O NetRisk não o alterou.</value>
+    </data>
+    <data name="AgentConnectProblemContainerNotAnObject" xml:space="preserve">
+        <value>A seção de servidores do arquivo não é um objeto. O NetRisk não o alterou.</value>
+    </data>
+    <data name="AgentConnectProblemDuplicateContainer" xml:space="preserve">
+        <value>O arquivo declara a seção de servidores duas vezes. O NetRisk não o alterou.</value>
+    </data>
+    <data name="AgentConnectProblemDuplicateEntry" xml:space="preserve">
+        <value>O arquivo contém mais de uma entrada netrisk. O NetRisk não o alterou; remova uma à mão.</value>
+    </data>
+    <data name="AgentConnectProblemVerificationFailed" xml:space="preserve">
+        <value>O NetRisk não conseguiu provar que a alteração mexe apenas na própria entrada, então nada foi gravado.</value>
+    </data>
+    <data name="AgentConnectProblemBridgeNotFound" xml:space="preserve">
+        <value>A ponte MCP do NetRisk (netrisk-mcp-bridge) não foi encontrada ao lado do NetRisk, então não há o que registrar. Remover o registro continua funcionando.</value>
+    </data>
+    <data name="AgentConnectProblemChangedSincePreview" xml:space="preserve">
+        <value>O arquivo mudou depois da pré-visualização. Nada foi gravado; pré-visualize de novo.</value>
+    </data>
+    <data name="AgentConnectProblemWriteFailed" xml:space="preserve">
+        <value>O arquivo não pôde ser gravado. Ele não foi alterado.</value>
+    </data>
+    <data name="AgentConnectProblemGuided" xml:space="preserve">
+        <value>O NetRisk não altera a configuração deste cliente.</value>
+    </data>
+    <data name="AgentConnectClientClaudeCode" xml:space="preserve">
+        <value>Claude Code</value>
+    </data>
+    <data name="AgentConnectClientClaudeDesktop" xml:space="preserve">
+        <value>Claude Desktop</value>
+    </data>
+    <data name="AgentConnectClientVsCode" xml:space="preserve">
+        <value>GitHub Copilot no VS Code (mcp.json)</value>
+    </data>
+    <data name="AgentConnectClientVsCodeInsiders" xml:space="preserve">
+        <value>GitHub Copilot no VS Code Insiders (mcp.json)</value>
+    </data>
+    <data name="AgentConnectClientCopilot" xml:space="preserve">
+        <value>GitHub Copilot CLI e Copilot no VS Code (mcp-config.json)</value>
+    </data>
+    <data name="AgentConnectClientChatGpt" xml:space="preserve">
+        <value>ChatGPT</value>
+    </data>
+    <data name="AgentConnectChatGptGuideMSG" xml:space="preserve">
+        <value>O NetRisk não configura o ChatGPT. O ChatGPT na web só alcança servidores MCP como conectores remotos em um endereço HTTPS público, o que o servidor do NetRisk — local a este computador por projeto — não é. O aplicativo ChatGPT para desktop pode executar servidores locais: em Configurações, em servidores MCP, adicione um servidor, escolha STDIO e informe o comando, os argumentos e o ambiente abaixo. Depois peça ao agente que se conecte ao NetRisk e aprove-o como qualquer outro agente.</value>
+    </data>
 </root>

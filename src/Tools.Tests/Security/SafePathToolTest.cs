@@ -89,4 +89,58 @@ public class SafePathToolTest
         Assert.Throws<ArgumentException>(() => SafePathTool.CombineWithin("", "x"));
         Assert.Throws<ArgumentException>(() => SafePathTool.CombineWithin("   ", "x"));
     }
+
+    // ---- FileWithin / IsSafeFileName (Track 11, M65: the AI clients' configuration files) ------------------------
+
+    [Theory]
+    [InlineData(".claude.json")]
+    [InlineData("claude_desktop_config.json")]
+    [InlineData("mcp-config.json")]
+    [InlineData(".claude.json.netrisk-20261117T101500123Z.bak")]
+    public void FileNamesMayStartWithOneDot(string fileName) =>
+        Assert.True(SafePathTool.IsSafeFileName(fileName));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(".")]
+    [InlineData("..")]
+    [InlineData("...")]
+    [InlineData("..claude.json")]
+    [InlineData(".a..b")]
+    [InlineData("../.claude.json")]
+    [InlineData("dir/.claude.json")]
+    [InlineData("dir\\.claude.json")]
+    [InlineData("/etc/passwd")]
+    [InlineData("with space.json")]
+    [InlineData("stream:name")]
+    [InlineData("null\0byte")]
+    public void FileNamesStillRefuseEverythingElse(string? fileName) =>
+        Assert.False(SafePathTool.IsSafeFileName(fileName));
+
+    [Fact]
+    public void FileNamesAreBoundedLikeSegments() =>
+        Assert.False(SafePathTool.IsSafeFileName("." + new string('a', 128)));
+
+    [Fact]
+    public void FileWithinBuildsTheDotfilePathDirectlyInsideTheBase()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "netrisk-safepath-home");
+
+        Assert.Equal(Path.GetFullPath(Path.Combine(root, ".claude.json")), SafePathTool.FileWithin(root, ".claude.json"));
+        Assert.Equal(Path.GetFullPath(Path.Combine(root, ".claude.json")),
+            SafePathTool.FileWithin(root + Path.DirectorySeparatorChar, ".claude.json"));
+    }
+
+    [Fact]
+    public void FileWithinRefusesToLeaveTheBaseOrDescendIntoIt()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "netrisk-safepath-home");
+
+        Assert.Throws<ArgumentException>(() => SafePathTool.FileWithin(root, "../.claude.json"));
+        Assert.Throws<ArgumentException>(() => SafePathTool.FileWithin(root, ".."));
+        Assert.Throws<ArgumentException>(() => SafePathTool.FileWithin(root, "sub/mcp.json"));
+        Assert.Throws<ArgumentException>(() => SafePathTool.FileWithin(root, "/etc/passwd"));
+        Assert.Throws<ArgumentException>(() => SafePathTool.FileWithin("", ".claude.json"));
+    }
 }

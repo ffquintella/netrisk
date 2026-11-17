@@ -90,6 +90,12 @@ public class AgentsViewModel : ViewModelBase
     public string StrDataClassesLocked { get; } = Localizer["AgentDataClassesLockedMSG"];
     public string StrDataClassesFloor { get; } = Localizer["AgentDataClassesFloorMSG"];
     public string StrDataClassesSave { get; } = Localizer["AgentDataClassesSave"];
+    public string StrConnect { get; } = Localizer["AgentConnectButton"];
+
+    /// <summary>M65: opens "Connect an agent", which registers the server in the AI clients on this computer.</summary>
+    public ReactiveCommand<RxVoid, RxVoid> BtConnectClicked { get; } = ReactiveCommand.Create(() =>
+        GetService<GUIClient.Navigation.INavigationService>()
+            .ShowAuxiliaryWindow<GUIClient.Views.Agents.AgentConnectWindow>(() => new AgentConnectViewModel()));
 
     /// <summary>T362: one row per data class, checked when withheld from agents.</summary>
     public ObservableCollection<AgentDataClassRow> DataClasses { get; } = new();
