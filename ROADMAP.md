@@ -1189,6 +1189,29 @@ grants, shortens or refuses it. Design, trust model and threat table:
   - note: ChatGPT consumes remote HTTPS connectors and has no local config; revisit if a local mechanism ships
 - [ ] T366 Add `AgentClientRegistrarMergeTest`, `AgentClientRegistrarRemoveTest` and `AgentClientDetectionTest` (S55)
 
+## Track 12 — Platform Currency
+
+Keeps the codebase on a supported .NET release. A platform upgrade touches every tier and the
+installers at once, so it is scheduled as its own track and does not ride along with feature work.
+
+### [M66] Upgrade all projects to .NET 11
+> outcome: Every project, the build, the installers and the CI run on .NET 11, with no behaviour change
+> and the full suite green on the new runtime.
+> spec: S56
+> depends-on: M64
+
+- [ ] T380 Raise `global.json` to the .NET 11 SDK and every project's `TargetFramework` from `net10.0` to `net11.0` (32 projects under `src/` and `build/`) (S56)
+  - note: `src/Directory.Build.props` holds only the product version, so each csproj names the framework; centralising it there makes the next upgrade one line (S56 decision 2). Confirm the SDK is a stable release and drop `allowPrerelease` if it is; .NET 11 is an STS release, so check its support window against Microsoft's policy before fixing the release it ships in
+- [ ] T381 Upgrade the packages tied to the runtime (`Microsoft.*`, EF Core 11, the MariaDB provider, Hangfire, Avalonia, ReactiveUI, Mapster, Sieve, Testcontainers) to versions that support .NET 11, and record any that block the upgrade (S56)
+  - note: the EF Core provider is the likely blocker — verify the MariaDB provider targets EF Core 11 before starting, and re-check the `char(n)` string-column trap and `StringColumnTypeGuardTest` against the new model-building conventions
+- [ ] T382 Prove the schema path is unchanged: regenerate the model snapshot with `migrationAdd.sh` and expect an empty migration, then run `SchemaUpgradeRetryTests` and `SchemaUpgradeIdempotenceTest` (S56)
+- [ ] T383 Update the packaging targets for the new runtime: self-contained publish, the MSI, MSIX, Flatpak and Snap runtime or base references, the `netrisk-mcp-bridge` runtime requirement, and `src/Packaging.Tests` (S56)
+  - note: Flatpak and Snap runtimes pin their own .NET and may lag the SDK; the Windows and Linux installers cannot be built on a Mac, so the upgrade is verified statically here and on a packaging runner
+- [ ] T384 Rewrite every `net10.0` path and statement in the build and tooling: `build/Build.UiTests.cs`, `scripts/agents/observe-mcp.sh`, `src/GUIClient.Tests/Agents/AgentObservedRunTest.cs`, the `bin/Debug/net10.0` recipes in `CLAUDE.md` and `docs/`, and the GitHub workflows (S56)
+- [ ] T385 Check the plugin contract on .NET 11: rebuild `libs/netrisk-plugin-sdk` and every in-tree plugin against it, and state whether plugins built for .NET 10 still load (S56)
+  - note: the SDK is a submodule, so its own target framework and version bump follow the submodule-bump gate (`check-submodule-bump.sh`)
+- [ ] T386 Run the whole suite on .NET 11 as the release gate: every unit project, `DAL.IntegrationTests` against MariaDB, `./build.sh LintUi`, and `./build.sh TestUi` once (S54), then compare startup and a representative report's time with the .NET 10 build (S56)
+
 ## Backlog
 
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
@@ -1290,3 +1313,4 @@ grants, shortens or refuses it. Design, trust model and threat table:
 | S53 | Stage 9.12 — AI governance: model inventory, flag 11 and model metrics specification | docs/roadmap/track9/9.12-ai-governance.md |
 | S54 | Headless desktop UI tests: tool choice and on-demand/release execution rule | docs/testing/desktop-ui-tests.md |
 | S55 | Agent co-work MCP server: registration, access leases and tool surface | docs/features/agent-mcp-server.md |
+| S56 | Upgrade to .NET 11: inventory, decisions, ordered work and release gate | docs/features/dotnet-11-upgrade.md |
