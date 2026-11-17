@@ -1169,8 +1169,9 @@ grants, shortens or refuses it. Design, trust model and threat table:
 
 - [x] T359 Run the security review against the S55 threat table, including a prompt-injection exercise through attacker-controlled item text (S55)
   - note: independent review plus prompt-injection exercise found two blockers and six should-fix items, all fixed with regression tests; it also found that an agent with an unrestricted shell as the same OS user can read the client settings store (session token, agent policy) — a stated assumption of S55 mitigated by sandbox guidance and a floor of excluded classes, not closed (T370, T371)
-- [ ] T360 Observe a real MCP client register, be approved, work under a lease and be refused after expiry, and record the evidence (S55)
+- [-] T360 Observe a real MCP client register, be approved, work under a lease and be refused after expiry, and record the evidence (S55)
   - note: the automated half ran for real — the official MCP Python SDK through the real stdio bridge to the real server and lease runtime, with the dialogs, clock, signed-in user and API as stand-ins (`scripts/agents/observe-mcp.sh`); the run against the real GUI and `claude mcp add` is still to be done from the checklist in S55
+  - note: abandoned 2026-11-17, removed from scope on request; the run against the real GUI and `claude mcp add` is no longer scheduled, so the automated observation (`scripts/agents/observe-mcp.sh`) is the only evidence recorded and the S55 checklist stays unexecuted
 - [x] T361 Add the settings switch, the LGPD disclosure in the lease dialog and the user guide under `docs/product-guides/` (S55)
   - note: the switch lives in the Agents window (Application → AI agents…) since there is no per-user settings window; the server runs only when the switch is on and the current disclosure version was accepted; the guide does not document one-click registration, which is M65
 - [x] T362 Let item data-classification (S52) exclude classes from agent tools (S55)
