@@ -95,18 +95,27 @@ internal sealed class ScriptedPrompter : IAgentApprovalPrompter
     }
 }
 
+/// <summary>The stand-in's declared result shape: what <see cref="StubTool"/> returns unless a test says otherwise.</summary>
+internal sealed record StubResult(string Status, string Tool);
+
 /// <summary>A business tool stand-in that records what reached it.</summary>
 internal sealed class StubTool : IAgentTool
 {
-    public StubTool(string name, bool requiresEdit)
+    /// <summary>What a stub tool needs by default; <see cref="AgentRig.DefaultUser"/> holds it.</summary>
+    public const string StubPermission = "stub_read";
+
+    public StubTool(string name, bool requiresEdit, AgentToolPermission? permission = null)
     {
         Name = name;
         RequiresEdit = requiresEdit;
+        Permission = permission ?? AgentToolPermission.AnyOf(StubPermission);
     }
 
     public string Name { get; }
     public string Description => "Stub " + Name;
     public bool RequiresEdit { get; }
+    public AgentToolPermission Permission { get; }
+    public Type ResultType => typeof(StubResult);
     public List<(AgentToolCall Call, System.Text.Json.Nodes.JsonObject Arguments)> Invocations { get; } = new();
 
     public System.Text.Json.Nodes.JsonObject InputSchema() => new()
@@ -115,11 +124,15 @@ internal sealed class StubTool : IAgentTool
         ["properties"] = new System.Text.Json.Nodes.JsonObject { ["id"] = new System.Text.Json.Nodes.JsonObject { ["type"] = "integer" } }
     };
 
+    /// <summary>Runs inside the call, before the result is returned: a test signs out, ends the lease, or shapes the result.</summary>
+    public Func<AgentToolCall, System.Text.Json.Nodes.JsonObject>? OnInvoke { get; set; }
+
     public Task<System.Text.Json.Nodes.JsonObject> InvokeAsync(AgentToolCall call,
         System.Text.Json.Nodes.JsonObject arguments, CancellationToken cancellationToken)
     {
         lock (Invocations) Invocations.Add((call, arguments));
-        return Task.FromResult(new System.Text.Json.Nodes.JsonObject { ["status"] = "ok", ["tool"] = Name });
+        var result = OnInvoke?.Invoke(call) ?? new System.Text.Json.Nodes.JsonObject { ["status"] = "ok", ["tool"] = Name };
+        return Task.FromResult(result);
     }
 }
 
@@ -131,18 +144,51 @@ internal sealed class AgentRig
     public const string LaunchToken = "launch-token-for-tests_0123456789abcdefABCDEF";
 
     public AgentRig(AgentRegistryOptions? registry = null, AgentLeaseOptions? leases = null,
-        IAgentApprovalPrompter? prompter = null, TimeSpan? decisionWait = null, IReadOnlyList<IAgentTool>? tools = null)
+        IAgentApprovalPrompter? prompter = null, TimeSpan? decisionWait = null, IReadOnlyList<IAgentTool>? tools = null,
+        Model.Authentication.AuthenticatedUserInfo? user = null)
     {
         Prompter = prompter ?? new ScriptedPrompter();
         Registry = new AgentRegistry(Store, Time, Audit, registry);
         Registry.SetUser(UserId);
         Leases = new AgentLeaseManager(Time, Audit, leases);
         Approvals = new AgentApprovalCoordinator(Registry, Leases, Prompter, Audit, Time);
+        User = user ?? DefaultUser();
         Dispatcher = new McpDispatcher(Registry, Leases, Approvals, Time,
-            new McpServerOptions { DecisionWait = decisionWait ?? TimeSpan.FromMilliseconds(50) }, tools);
+            new McpServerOptions
+            {
+                DecisionWait = decisionWait ?? TimeSpan.FromMilliseconds(50),
+                ReviewedTools = ReviewedWithStandIns(tools)
+            }, tools, () => User, Audit);
         Guard = new LoopbackRequestGuard(Port, LaunchToken);
         Endpoint = new McpEndpoint(Guard, Dispatcher, Audit, Time);
     }
+
+    /// <summary>The production inventory plus the test's own stand-ins.</summary>
+    public static IReadOnlyDictionary<string, ReviewedAgentTool> ReviewedWithStandIns(IEnumerable<IAgentTool>? tools)
+    {
+        var reviewed = AgentToolInventory.Reviewed.ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+        // Stand-ins (any tool the production inventory does not name) are reviewed as they declare themselves; production
+        // tools keep their real review, so a catalog tool that drifted still fails.
+        foreach (var tool in tools ?? Enumerable.Empty<IAgentTool>())
+            if (!AgentToolInventory.Reviewed.ContainsKey(tool.Name))
+                reviewed[tool.Name] = new ReviewedAgentTool(tool.Name, tool.Permission.Description, tool.RequiresEdit);
+        return reviewed;
+    }
+
+    /// <summary>The signed-in user the dispatcher sees, read on every call; a test may swap it.</summary>
+    public Model.Authentication.AuthenticatedUserInfo? User { get; set; }
+
+    /// <summary>The rig's user: <see cref="UserId"/>, not an administrator, holding only the stub tools' permission.</summary>
+    public static Model.Authentication.AuthenticatedUserInfo DefaultUser(params string[] permissions) => new()
+    {
+        UserId = UserId,
+        UserName = "Ana Analyst",
+        UserAccount = "ana",
+        UserEmail = "ana@example.test",
+        UserRole = "Analyst",
+        IsAdmin = false,
+        UserPermissions = permissions.Length > 0 ? permissions.ToList() : new List<string> { StubTool.StubPermission }
+    };
 
     public ManualTimeProvider Time { get; } = new();
     public RecordingAuditSink Audit { get; } = new();

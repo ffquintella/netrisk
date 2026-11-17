@@ -73,6 +73,11 @@ public class MemoryCacheService: IMemoryCacheService
         }
     }
 
+    public void Clear()
+    {
+        lock (_gate) _internalCache.Clear();
+    }
+
     public bool HasCache<T>(string key)
     {
         lock (_gate)

@@ -1,7 +1,8 @@
 # Agent co-work MCP server (GUI)
 
-Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61));
-no business tool exists yet (M62+). The rest of this page is the design.
+Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61))
+and **M62 implemented** (read tools — see [Implementation notes (M62)](#implementation-notes-m62)); no edit tool exists
+yet (M63). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
 MCP client) can work *beside* the logged-in user: read and edit the same items, with the same
@@ -235,6 +236,94 @@ Known limitations and follow-ups:
 - **Lock** ends leases on Windows only (`SystemEvents.SessionSwitch`); macOS and Linux have no lock signal wired.
 - **Connecting process.** The registration dialog does not name the process behind the connection.
 - **Packaging.** The installers do not ship `netrisk-mcp-bridge` yet.
+
+## Implementation notes (M62)
+
+Code: `src/GUIClient/Agents/Core` — `AgentToolAccess.cs` (permission rules, the reviewed inventory, the registry),
+`AgentToolResults.cs` (errors, envelope, limits), `AgentResultShape.cs` (allowlist shapes, credential names),
+`AgentDataPolicy.cs` (entity properties, personal data, secret values) — the tools in `Core/Tools`, and the Cyber Risk
+Overview's two in `src/GUIClient/Tools/RiskIndex/RiskOverviewAgentTools.cs`. ClientServices gained
+`IEntitiesService.GetAllFromServerAsync`, `IHostsService.ClearCache`, `IMemoryCacheService.Clear` and `SessionCacheReset`.
+Evidence: `AgentToolsNeverEscalateTest`, `AgentToolInventoryTest`, `AgentToolResultShapeTest`, `AgentToolSessionCacheTest`
+(`GUIClient.Tests/Agents`); `SessionCacheResetTest` and the new cases in `EntitiesRestServiceTest`,
+`HostsRestServiceStubTest`, `MemoryCacheServiceTest` (`ClientServices.Tests`).
+
+**Tools (all read; none edits).** Each rule mirrors the API policy of the endpoints the tool calls; the reviewed list
+is `AgentToolInventory` and the registry refuses any tool not on it or differing from it:
+
+| Tool | ClientServices call | Rule (server policy) |
+|---|---|---|
+| `whoami` | `AgentSessionUser.Of(IAuthenticationService)` (no API call) | signed-in user |
+| `search_risks`, `get_risk`, `get_risk_mitigation` | `IRisksService.GetAllRisksAsync`, `GetRiskScoringAsync`; `IMitigationService.GetByRiskIdAsync` | role `Administrator` or `riskmanagement` (`RequireRiskmanagement`) |
+| `list_risk_reviews` | `IRisksService.GetRiskMgmtReviews` | any `review_*`, no role (`RequireMgmtReviewAccess`) |
+| `search_findings`, `get_finding`, `get_finding_lifecycle` | `IVulnerabilitiesService.GetFilteredAsync`, `GetOneAsync`, `GetStatusHistoryAsync` | `vulnerabilities` or Admin claim |
+| `search_incidents`, `get_incident` | `IIncidentsService.GetAllAsync`, `GetIncidentResponsPlanIdsByIdAsync` | `incident_management` or Admin claim |
+| `search_response_plans`, `get_response_plan` | `IIncidentResponsePlansService.GetAllAsync`, `GetByIdAsync`, `GetExecutionsByPlanIdAsync` | `incident-response-plans` or Admin claim |
+| `list_assessments`, `list_assessment_runs`, `get_assessment_run_answers`, `list_assessment_evidence` | `IAssessmentsService.GetAssessmentsAsync`, `GetAssessmentRuns`, `GetAssessmentRunAnsers`; `IAssessmentEvidenceService.GetRunEvidenceAsync` | claim `assessments`, no role (`RequireAssessmentAccess`) |
+| `search_entities`, `get_entity`, `get_entity_relationships` | `IEntitiesService.GetAllFromServerAsync` | module Entities (`asset`) — stricter than the server (valid user) |
+| `search_hosts`, `get_host` | `IHostsService.GetFilteredAsync` (by id for `get_host`), `GetAllHostServiceAsync`, `GetVulnerabilitySummaryAsync` | `hosts` or Admin claim |
+| `get_risk_overview`, `list_risk_overview_children` | `IRiskIndexService.GetOverviewAsync`, `GetNodesAsync` | `risk_index_view` or Admin claim |
+
+`get_status` stays a bootstrap tool (M61), outside the lease gate.
+
+- **One gate, checked twice.** `McpDispatcher` runs a business tool only after: valid key → lease (M61) → the signed-in
+  user (`AgentSessionUser.Of`: only while `IsAuthenticated`, since logout and an expired token leave the user info set)
+  is the registration's user → the user holds the tool's permission. The same check runs again when the tool returns;
+  a sign-out, another user, a lost permission, or an ended, paused or replaced lease drops the result. `tools/list` shows
+  a business tool only to a user holding its permission; with nobody signed in, only the three bootstrap tools.
+- **Fresh reads only.** No tool answers from a process-wide cache: entities come from `GetAllFromServerAsync`, which
+  neither reads nor writes the 60-minute cache, and `get_host` from the filtered list by id rather than `GetOne`'s host
+  cache. `SessionCacheReset` also clears the memory cache and the host cache on every sign-in and expired session, for the
+  GUI as well (attached in `App`).
+- **API refusal = clean error.** `AgentToolErrors` maps exception types and status codes only (`refused`, `not_found`,
+  `invalid`, `invalid_filter`, `no_answer`, `server_error`, `server_unavailable`, `tool_failed`); server text and
+  exception messages are never relayed; a null ClientServices answer fails the tool.
+- **Allowlist shapes, enforced.** Each tool declares a record `ResultType`. The registry refuses a tool whose type names
+  a credential (`AgentSecretNames`: words and joined forms, Portuguese included) or is anything but scalars, enums, lists
+  and records outside the DAL/Model/framework namespaces. The dispatcher checks every result against its declared type
+  and drops one carrying an undeclared field — for any `IAgentTool`, not only `AgentReadTool<>`.
+- **Entity properties** are returned only if their key is on `AgentDataPolicy.SafeEntityProperties` (the reviewed
+  properties of `EntitiesConfiguration.yaml` 2.7) and neither the key nor the value reads like a secret (vault reference,
+  PEM, `Bearer`, JWT, `password=`-style pairs, long base64/hex runs). Withheld properties are counted per item and per
+  kind in the envelope (`withheld_secret_fields`, `withheld_personal_fields`, `withheld_undeclared_fields`).
+- **Personal data — pending the DPO decision.** `AgentDataPolicy.WithholdPersonalContactData` (true) withholds e-mail,
+  phone and similar contact identifiers from every result; names that identify an item are kept. It is the one switch
+  to relax once the S52 data-class exclusion and the DPO review exist.
+- **Untrusted envelope (T352).** `{status, tool, data_trust: "untrusted", notice, withheld_*, data}`; the text content is
+  the notice, then the data inside one `<netrisk-untrusted-data tool="…">` tag. The encoder keeps letters as themselves
+  but always escapes `<`, `>`, `&` and quotes, so item text cannot close the tag. Vault references in any string are
+  replaced by `[redacted: vault reference]`.
+- **Bounds.** Pages default 20, max 50; lists of long-text items inside one item (plan tasks and executions, incident
+  timeline, reviews, lifecycle, runs, answers) are paged 20 at a time (`task_page`, `execution_page`, `timeline_page`,
+  `page`, `items_per_page` 1–20); other nested lists cap at 100. Titles clip at 300 and text at 2,000 characters with a
+  marker; text arguments over their maximum are refused; a result over 400,000 characters answers `result_too_large`.
+  `AgentToolResultShapeTest.TestEveryToolAnswersItsWorstCaseWithinTheSizeCap` proves every tool's worst case fits.
+
+Deviations and known gaps:
+
+- **Entity tools are stricter than the server** (the GUI's Entities module rule; the API needs only a valid user).
+  `search_incidents`/`get_incident` call `GET /Incidents`, which also requires a FaceID transaction when the FaceID plugin
+  is on — the client cannot see that, so such a user gets a clean `refused`.
+- **Not in M62:** risk *history* (no ClientServices read for a risk's audit trail); a separate incident timeline read (the
+  timeline is the record's dated fields and recorded actions); CMDB relationships beyond parent and direct children;
+  assessment draft answers.
+- **Follow-ups (Backlog):** single-item ClientServices reads for risks, incidents and entities — `get_risk`, `get_incident`
+  and `get_entity*` load the list today, and the searches over risks, incidents, plans, assessments and entities filter
+  and page client-side (only findings and hosts page on the server); `IEntitiesService.GetEntity` throws
+  `NullObjectException` on a cold cache (pre-existing, not fixed).
+- **Assessment refusals read `no_answer`, not `refused`:** `AssessmentsRestService` swallows the status into null and
+  `AssessmentEvidenceRestService` throws without one.
+- **Heuristics remain heuristics.** Credential and contact names, and secret-looking values, are pattern rules; free
+  text outside entity properties (descriptions, notes) is only scanned for vault references. Text made entirely of
+  characters the encoder must escape can still exceed the cap at the default page size; `items_per_page` lowers it.
+- **The envelope is advisory.** It labels data; it cannot make an agent obey. The prompt-injection exercise is T359.
+- **`tools/list` is not filtered by lease mode** (no edit tool exists yet); M63 should hide edit tools under a read lease.
+- Three ClientServices calls are synchronous (`GetRiskMgmtReviews`, `GetAssessmentRuns`, `GetAssessmentRunAnsers`) and
+  block a pool thread inside the dispatcher.
+- The GUI composes the tools with `AgentReadToolCatalog.Create(IServiceProvider)`, which the inventory test also builds
+  from a service collection; the bootstrapper's own `IAgentToolSource` registration and the `App` attach of
+  `SessionCacheReset` are not covered by a test (GUIClient is not testable headless). `GUIClient.Tests` now references
+  `ClientServices` (bringing `Tools`) and `NSubstitute`.
 
 ## Out of scope (first release)
 

@@ -69,6 +69,8 @@ public class EntitiesRestServiceTest : BaseServiceTest
             => key == "*"
                 ? _values.Keys.Any(k => k.Type == typeof(T))
                 : _values.ContainsKey((typeof(T), key));
+
+        public void Clear() => _values.Clear();
     }
 
     private readonly StubRestBackend _backend = new();
@@ -137,6 +139,40 @@ public class EntitiesRestServiceTest : BaseServiceTest
     };
 
     // ---------------------------------------------------------------- ClearCache
+
+    [Fact]
+    public async Task TestGetAllFromServerAsksTheServerEvenWithAWarmCacheAndLeavesTheCacheAlone()
+    {
+        _cache.Set<List<Entity>>("All", [NamedEntity(1, "Cached from an earlier session")]);
+        _backend.OnGet("/Entities", new List<Entity> { NamedEntity(2, "Beta"), NamedEntity(1, "Alpha") });
+
+        var entities = await _service.GetAllFromServerAsync();
+
+        Assert.Equal(new[] { "Alpha", "Beta" },
+            entities.Select(e => e.EntitiesProperties.First(p => p.Type == "name").Value));
+        Assert.Equal("GET", _backend.LastRequest.Method);
+        Assert.Equal("/Entities", _backend.LastRequest.Path);
+        Assert.Contains("propertyLoad", _backend.LastRequest.Query);
+        Assert.Equal("Cached from an earlier session",
+            _cache.Get<List<Entity>>("All")!.Single().EntitiesProperties.Single().Value);
+    }
+
+    [Fact]
+    public async Task TestGetAllFromServerThrowsWhenTheServerRefuses()
+    {
+        var refusing = new StubRestBackend { ThrowsOnErrorResponses = true };
+        refusing.OnStatus(Method.Get, "/Entities", HttpStatusCode.Forbidden);
+        var service = ServiceRegistration.GetServiceProvider(s =>
+            {
+                s.AddSingleton<IRestService>(refusing);
+                s.AddSingleton<IMemoryCacheService>(new FakeMemoryCache());
+                s.AddSingleton(_authentication);
+            })
+            .GetRequiredService<IEntitiesService>();
+
+        var thrown = await Assert.ThrowsAsync<RestComunicationException>(() => service.GetAllFromServerAsync());
+        Assert.Equal(HttpStatusCode.Forbidden, (thrown.InnerException as System.Net.Http.HttpRequestException)?.StatusCode);
+    }
 
     [Fact]
     public void TestClearCacheDropsEveryCachedEntityList()

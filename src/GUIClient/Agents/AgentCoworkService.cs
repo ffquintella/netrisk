@@ -23,8 +23,12 @@ public sealed class AgentCoworkService
     private readonly ILogger _log = Log.ForContext<AgentCoworkService>();
     private bool _attached;
 
+    /// <param name="tools">
+    /// The M62 read tools (<c>ReadTools.AgentReadToolCatalog</c>), built by the composition root over the GUI's own
+    /// ClientServices instances, so an agent's call takes the user's session and the same API path as the user's screens.
+    /// </param>
     public AgentCoworkService(IMutableConfigurationService configuration, IEnvironmentService environment,
-        IAuthenticationService authentication, IAgentApprovalPrompter prompter)
+        IAuthenticationService authentication, IAgentApprovalPrompter prompter, IReadOnlyList<IAgentTool> tools)
     {
         _configuration = configuration;
         _environment = environment;
@@ -32,7 +36,14 @@ public sealed class AgentCoworkService
         var version = typeof(AgentCoworkService).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
         Runtime = new AgentCoworkRuntime(new MutableConfigurationAgentRegistrationStore(configuration), prompter,
             new SerilogAgentAuditSink(), TimeProvider.System,
-            new AgentCoworkOptions { Server = new McpServerOptions { ServerVersion = version } });
+            new AgentCoworkOptions
+            {
+                Server = new McpServerOptions { ServerVersion = version },
+                Tools = tools,
+                // The permission source the GUI already uses for the session (T350), read on every call. Logout and an
+                // expired token clear IsAuthenticated but leave AuthenticatedUserInfo set, so the flag decides.
+                CurrentUser = () => AgentSessionUser.Of(_authentication)
+            });
         Runtime.StateChanged += () => StateChanged?.Invoke();
     }
 
@@ -159,7 +170,8 @@ public sealed class SerilogAgentAuditSink : IAgentAuditSink
     public void Record(AgentAuditEvent auditEvent)
     {
         var warning = auditEvent.Kind is AgentAuditKind.RequestRejected or AgentAuditKind.AuthenticationFailed
-            or AgentAuditKind.RegistrationRefused or AgentAuditKind.AccessRefused;
+            or AgentAuditKind.RegistrationRefused or AgentAuditKind.AccessRefused or AgentAuditKind.ToolRefused
+            or AgentAuditKind.ToolFailed;
         _log.Write(warning ? Serilog.Events.LogEventLevel.Warning : Serilog.Events.LogEventLevel.Information,
             "Agent audit {Kind} agent={AgentId} name={AgentName}: {Detail}",
             auditEvent.Kind, auditEvent.AgentId, auditEvent.AgentName, auditEvent.Detail);

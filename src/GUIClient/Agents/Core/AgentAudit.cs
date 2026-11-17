@@ -25,7 +25,13 @@ public enum AgentAuditKind
     AccessRequestExpired,
     LeaseEnded,
     LeasePaused,
-    LeaseResumed
+    LeaseResumed,
+
+    /// <summary>A leased tool call refused before it ran: no signed-in user, another user, or a permission it lacks.</summary>
+    ToolRefused,
+
+    /// <summary>A tool that ran and failed — the API refused it, or the server or the tool failed. No item data.</summary>
+    ToolFailed
 }
 
 /// <summary>

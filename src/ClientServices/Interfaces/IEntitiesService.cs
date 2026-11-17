@@ -45,6 +45,12 @@ public interface IEntitiesService
      /// <param name="loadProperties"></param>
      /// <returns></returns>
     public Task<List<Entity>> GetAllAsync(string? definitionName = null, bool loadProperties = true);
+
+    /// <summary>
+    /// Every entity, always read from the API with the current session: neither reads nor writes the cache. For callers
+    /// that must not be answered from data an earlier read (or an earlier session) left behind — the agent tools (S55).
+    /// </summary>
+    public Task<List<Entity>> GetAllFromServerAsync(bool loadProperties = true);
     
     /// <summary>
     /// Creates a new entity

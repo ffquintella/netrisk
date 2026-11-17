@@ -24,6 +24,12 @@ public class HostsRestService: RestServiceBase, IHostsService
     {
     }
 
+    public void ClearCache()
+    {
+        _cachedHosts = new List<Host>();
+        _fullCache = false;
+    }
+
     public Host? GetOne(int id)
     {
         if(_fullCache) return _cachedHosts.FirstOrDefault(h => h.Id == id);

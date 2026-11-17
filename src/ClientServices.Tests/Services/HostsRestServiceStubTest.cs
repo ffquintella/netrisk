@@ -990,4 +990,21 @@ public class HostsRestServiceStubTest : BaseServiceTest
         await Assert.ThrowsAsync<RestComunicationException>(
             () => _service.FindServiceAsync(1, "ssh", 22, "tcp"));
     }
+
+    // M62 security review: the host cache is process-wide; a session change must empty it.
+
+    [Fact]
+    public async Task TestClearCacheMakesGetOneAskTheServerAgain()
+    {
+        _backend.OnGet("/Hosts", new List<Host> { AHost(1, "alpha") });
+        await _service.GetAllAsync();
+        Assert.Equal("alpha", _service.GetOne(1)!.HostName); // answered from the cache
+        var before = _backend.Requests.Count;
+
+        _service.ClearCache();
+        _backend.OnStatus(Method.Get, "/Hosts/1", HttpStatusCode.Forbidden);
+
+        Assert.ThrowsAny<Exception>(() => _service.GetOne(1));
+        Assert.True(_backend.Requests.Count > before, "GetOne answered from a cache the session change should have cleared");
+    }
 }

@@ -159,6 +159,10 @@ namespace GUIClient
                     _trayIconManager.Initialize();
                     desktop.Exit += (_, _) => _trayIconManager?.Dispose();
 
+                    // Every sign-in and every expired session clears the process-wide read caches, so nothing one user
+                    // read is served to the next (M62 security review; the agent tools and the GUI alike).
+                    GetService<ClientServices.Services.SessionCacheReset>().Attach(GetService<IAuthenticationService>());
+
                     // Agent co-work (Track 11): starts with the session when enabled; leases end on exit.
                     var agents = GetService<GUIClient.Agents.AgentCoworkService>();
                     agents.Attach();

@@ -1138,10 +1138,13 @@ grants, shortens or refuses it. Design, trust model and threat table:
 > spec: S55
 > depends-on: M61
 
-- [ ] T350 Build the tool registry with per-tool required permission and read/edit declaration, filtering `tools/list` by the user's permissions (S55)
-- [ ] T351 Add read tools for risks, vulnerabilities and findings, incidents and plans, assessments, entities, hosts and the Cyber Risk Overview, plus `get_status` and `whoami` (S55)
-- [ ] T352 Tag every tool result as untrusted data and strip credential, vault-reference and key fields from every result shape (S55)
-- [ ] T353 Add `AgentToolsNeverEscalateTest` and `AgentToolInventoryTest` (S55)
+- [x] T350 Build the tool registry with per-tool required permission and read/edit declaration, filtering `tools/list` by the user's permissions (S55)
+  - note: the registry refuses any tool not on the reviewed inventory kept in Core, and the runtime refuses to start with one; the incident tools stay listed for a user whose FaceID requirement the client cannot see, and the API then refuses cleanly
+- [x] T351 Add read tools for risks, vulnerabilities and findings, incidents and plans, assessments, entities, hosts and the Cyber Risk Overview, plus `get_status` and `whoami` (S55)
+  - note: risk history, a separate incident timeline read, entity relationships beyond parent and children, and assessment draft answers are not exposed because no ClientServices call exists for them; the tool set is 23 read tools
+- [x] T352 Tag every tool result as untrusted data and strip credential, vault-reference and key fields from every result shape (S55)
+  - note: the allowlist is enforced by declared result types and a reviewed entity-property list, but credential and personal-data screening of free text is pattern matching; person contact fields (e-mail, phone) are withheld by `AgentDataPolicy.WithholdPersonalContactData` pending the DPO decision and S52
+- [x] T353 Add `AgentToolsNeverEscalateTest` and `AgentToolInventoryTest` (S55)
 
 ### [M63] Edit tools and co-work experience
 > outcome: With a read-and-edit lease the agent can change items under the user's eyes — live activity panel,
@@ -1200,6 +1203,9 @@ grants, shortens or refuses it. Design, trust model and threat table:
 
 - [x] T339 Make the quantitative loss-to-score mapping non-decreasing across the top monetary threshold, landing each threshold on its register band limit (S39)
   - note: `QuantitativeRiskService.MapToScore` ran the High band up to 10 and restarted Very High at 8.42, so 999,999 outscored 1,000,000 and a 50%-mitigated residual (8.90) could exceed its inherent (8.58); High now spans 7–9 and Very High starts at 9 (`RiskBand.DefaultRegisterLimits`), so stored quantitative scores in 100,000–1,000,000 drop until the next recompute
+- [ ] T367 Add single-item ClientServices reads for risks, incidents and entities so the agent read tools stop loading the whole register to answer `get_risk`, `get_incident` and `get_entity` (S55)
+- [ ] T368 Fix `EntitiesRestService.GetEntity`, which throws `NullObjectException` when its cache is empty
+  - note: found while building M62; the agent tools avoid it by reading from the server
 
 ## Specs
 

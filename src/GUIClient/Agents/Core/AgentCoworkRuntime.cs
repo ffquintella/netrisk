@@ -13,8 +13,14 @@ public sealed class AgentCoworkOptions
     public AgentLeaseOptions Leases { get; init; } = new();
     public TimeSpan SweepInterval { get; init; } = TimeSpan.FromSeconds(15);
 
-    /// <summary>Business tools (M62+), each reachable only through the dispatcher's lease gate. None in M61.</summary>
+    /// <summary>Business tools (M62+), each reachable only through the dispatcher's lease gate.</summary>
     public IReadOnlyList<IAgentTool> Tools { get; init; } = Array.Empty<IAgentTool>();
+
+    /// <summary>
+    /// The signed-in user as the client holds it, read on every call: what <c>tools/list</c> is filtered by and what a
+    /// tool's permission is checked against. Absent means nobody, so no business tool is listed or runs.
+    /// </summary>
+    public Func<Model.Authentication.AuthenticatedUserInfo?>? CurrentUser { get; init; }
 }
 
 /// <summary>
@@ -42,7 +48,8 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
         Registry = new AgentRegistry(store, time, audit, _options.Registry);
         Leases = new AgentLeaseManager(time, audit, _options.Leases);
         Approvals = new AgentApprovalCoordinator(Registry, Leases, prompter, audit, time);
-        Dispatcher = new McpDispatcher(Registry, Leases, Approvals, time, _options.Server, _options.Tools);
+        Dispatcher = new McpDispatcher(Registry, Leases, Approvals, time, _options.Server, _options.Tools,
+            _options.CurrentUser, audit);
 
         // Revocation is immediate: the key stops authenticating in Revoke, and the lease and any request end here.
         // Requests first: a grant landing between the two would otherwise leave a lease on a revoked agent.

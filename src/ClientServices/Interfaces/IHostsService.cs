@@ -8,6 +8,12 @@ namespace ClientServices.Interfaces;
 public interface IHostsService
 {
     /// <summary>
+    /// Forgets every host <see cref="GetOne"/> and <see cref="GetAll"/> have cached. Called when the signed-in session
+    /// changes (<c>SessionCacheReset</c>), so one user's hosts are never served to the next.
+    /// </summary>
+    public void ClearCache();
+
+    /// <summary>
     /// Get one host
     /// </summary>
     /// <param name="id"></param>

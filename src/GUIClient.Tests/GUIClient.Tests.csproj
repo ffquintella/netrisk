@@ -24,6 +24,8 @@
     <!-- Reads API/EntitiesConfiguration.yaml with the deserializer settings EntitiesService uses, so
          the entity-schema label and icon guards see the schema exactly as the client receives it. -->
     <PackageReference Include="YamlDotNet" />
+    <!-- The agent read tools (M62) wrap ClientServices interfaces; their tests substitute them. -->
+    <PackageReference Include="NSubstitute" />
   </ItemGroup>
   <ItemGroup>
     <!-- Model, and deliberately not GUIClient. The vault field state below is a GUIClient file that
@@ -33,6 +35,11 @@
     <!-- DAL, for the integration_sync_logs entity and the integration enums the sync-log feed below
          is written in terms of. EF Core is headless; Avalonia is what this project must not pull. -->
     <ProjectReference Include="..\DAL\DAL.csproj" />
+    <!-- ClientServices, for the agent read tools (Track 11, M62, S55): each tool is a thin wrapper over a ClientServices
+         call, so the tests drive the real REST services against a refusing HTTP backend to prove an API refusal comes
+         back as a clean tool error. ClientServices is headless (RestSharp, no Avalonia) and brings Tools with it, which
+         is why the Tools files this project used to compile in directly are no longer listed below. -->
+    <ProjectReference Include="..\ClientServices\ClientServices.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\GUIClient\Tools\Track9\*.cs" LinkBase="Tools/Track9" />
@@ -96,12 +103,10 @@
          headline, the parameter form's validation and who sees what. The parameter bounds are compiled in
          from Tools so the form and the server share one definition. -->
     <Compile Include="..\GUIClient\Tools\ContinuitySummary.cs" LinkBase="Tools" />
-    <Compile Include="..\Tools\Continuity\ContinuitySettings.cs" LinkBase="Tools/Continuity" />
     <!-- The exploitation signals' pure half (Stage 9.4, T302, S45 §7): percentages and dates, the computed
          keys, the EPSS term of the findings filter, the technique editor's input and who writes what. The
          technique identifier rule is compiled in from Tools so the editor and the server share one. -->
     <Compile Include="..\GUIClient\Tools\ExploitationSignalsSummary.cs" LinkBase="Tools" />
-    <Compile Include="..\Tools\ExploitationSignals\Identifiers.cs" LinkBase="Tools/ExploitationSignals" />
     <!-- How an entity-scoped governance row names its scope (8.3.3): pure formatting too, and the
          rule that keeps a raw entity id out of the appetite grid. -->
     <Compile Include="..\GUIClient\Tools\EntityScopeLabel.cs" LinkBase="Tools" />
@@ -142,11 +147,10 @@
     <Compile Include="..\GUIClient\Tools\Hosts\*.cs" LinkBase="Tools/Hosts" />
     <!-- Agent co-work (Track 11, M61, S55): the loopback MCP host, registrations, keys and leases. All of it is
          Avalonia-free by design so the security properties are tested here; the dialogs and the Agents window are
-         the only GUI parts. RandomGenerator and HashTool come straight from Tools, as the keys are issued with them
-         (this project does not reference Tools). -->
+         the only GUI parts. RandomGenerator and HashTool come from Tools through the ClientServices reference.
+         M62 adds the read tools under Core/Tools, written against ClientServices interfaces. -->
     <Compile Include="..\GUIClient\Agents\Core\*.cs" LinkBase="Agents" />
-    <Compile Include="..\Tools\RandomGenerator.cs" LinkBase="Tools" />
-    <Compile Include="..\Tools\Security\HashTool.cs" LinkBase="Tools/Security" />
+    <Compile Include="..\GUIClient\Agents\Core\Tools\*.cs" LinkBase="Agents/Tools" />
     <!-- The stdio bridge's forwarding loop (T345), driven against a real in-process loopback server. -->
     <Compile Include="..\McpBridge\StdioBridge.cs" LinkBase="McpBridge" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->

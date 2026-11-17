@@ -24,6 +24,20 @@ public class MemoryCacheServiceTest
     private readonly IMemoryCacheService _cache = new MemoryCacheService();
 
     [Fact]
+    public void TestClearDropsEveryEntryOfEveryType()
+    {
+        // M62 security review: a session change must leave nothing a previous user read.
+        _cache.Set("risk-1", new Risk { Id = 1, Subject = "S1" });
+        _cache.Set("All", new List<Entity> { new() { Id = 1 } });
+
+        _cache.Clear();
+
+        Assert.Null(_cache.Get<Risk>("risk-1"));
+        Assert.False(_cache.HasCache<List<Entity>>("All"));
+        Assert.False(_cache.HasCache<Risk>("*"));
+    }
+
+    [Fact]
     public void TestSetThenGetRoundTrips()
     {
         _cache.Set("risk-1", new Risk { Id = 1, Subject = "S1" });

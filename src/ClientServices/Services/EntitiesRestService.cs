@@ -137,6 +137,31 @@ public class EntitiesRestService(
         }
     }
     
+    public async Task<List<Entity>> GetAllFromServerAsync(bool loadProperties = true)
+    {
+        using var client = RestService.GetClient();
+        var request = new RestRequest("/Entities");
+        if (loadProperties) request.AddParameter("propertyLoad", loadProperties);
+
+        try
+        {
+            var response = await client.GetAsync<List<Entity>>(request);
+            if (response == null)
+            {
+                Logger.Error("Error getting entities from the server");
+                throw new RestComunicationException("Error getting entities");
+            }
+
+            return response.OrderBy(e => e.EntitiesProperties?.FirstOrDefault(p => p.Type == "name")?.Value).ToList();
+        }
+        catch (HttpRequestException ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.Unauthorized) authenticationService.DiscardAuthenticationToken();
+            Logger.Error("Error getting entities from the server message: {Message}", ex.Message);
+            throw new RestComunicationException("Error getting entities", ex);
+        }
+    }
+
     private List<DAL.Entities.Entity> GetCachedEntities(string? definitionName = null)
     {
         List<DAL.Entities.Entity>? result;

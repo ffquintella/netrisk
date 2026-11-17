@@ -14,10 +14,17 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Give a leased agent 23 read-only tools over risks, findings, incidents, response plans, assessments, entities, hosts and the Cyber Risk Overview, listed and run only for what the signed-in user may read and refused after any change of user, permission or lease (T350, T351, S55)
+- Wrap every agent tool result as untrusted data and return only allowlisted fields, withholding credential-like values, vault references and personal contact data (T352, S55)
+- Cover the agent tools with `AgentToolsNeverEscalateTest` and `AgentToolInventoryTest`, which fail on an unreviewed tool or an edit tool before M63 (T353, S55)
 - Host a loopback-only MCP server in the desktop client, off by default, with Host/Origin and launch-token guards and an owner-only discovery file, plus a stdio bridge for clients that cannot speak HTTP (T344, T345, S55)
 - Let an AI agent register through `register_agent`, with the user approving it in the GUI against a fingerprint and receiving a once-shown agent key stored only as its SHA-256, and list, rename, pause and revoke agents in an Agents window (T346, T347, S55)
 - Grant agents access in 10-minute blocks through `request_access`, approved, shortened or downgraded to read-only by the user, with in-memory leases ending on expiry, logout, exit, pause or revoke (T348, S55)
 - Cover agent key handling, leases, the loopback guard and the lease gate with `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (T349, S55)
+
+### Security
+
+- Clear the client memory and host caches on every sign-in and expired session, so a second user in the same process never reads the previous user's cached hosts or entities (T351, S55)
 
 ## [2.44.1] - 2026-11-16
 
