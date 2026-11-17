@@ -30,6 +30,12 @@ public sealed record AgentRiskDetail(int Id, string Subject, string Status, stri
     int? MitigationId, int? IncidentResponsePlanId, bool ReviewRequested, string? ReviewRequestedReason,
     AgentRiskScore? Score, string Version);
 
+/// <summary>One entry of a NetRisk list an edit tool takes an id from (T354).</summary>
+public sealed record AgentOption(int Id, string Name);
+
+/// <summary>The risk categories and sources create_risk takes ids from (T354).</summary>
+public sealed record AgentRiskOptions(IReadOnlyList<AgentOption> Categories, IReadOnlyList<AgentOption> Sources);
+
 public sealed record AgentRiskMitigation(int Id, int RiskId, DateTime SubmissionDate, DateTime LastUpdate,
     string? PlanningStrategy, string? Effort, string? Cost, int OwnerId, string? OwnerName, string? CurrentSolution,
     string? SecurityRequirements, string? SecurityRecommendations, DateOnly PlanningDate, int PercentComplete);

@@ -180,6 +180,17 @@ public class NonIdempotentWritesAreNotRetriedTest : BaseServiceTest
     }
 
     [Fact]
+    public async Task AppendingAnIncidentTimelineEntryIsSentOnce()
+    {
+        var backend = Retrying();
+        var service = ResolveWith<IIncidentsService>(backend);
+
+        backend.OnStatus(Method.Post, "/Incidents/4/Timeline", HttpStatusCode.BadGateway);
+
+        await SentOnce(backend, () => service.AddTimelineEntryAsync(4, "Contained"));
+    }
+
+    [Fact]
     public async Task ListingIncidentsIsStillRetried()
     {
         var backend = Retrying();

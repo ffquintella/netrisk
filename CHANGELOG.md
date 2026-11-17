@@ -14,6 +14,9 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Let an agent create a risk or an incident for the user, with the owner and reporter fixed to the user, no person field settable, every creation confirmed through a full new-item dialog that states the response plans and notifications it may trigger, and add a text entry to an incident's timeline (T354, S55)
+- Add `POST /Incidents/{id}/Timeline` and the `IIncidentsService.AddTimelineEntryAsync` client call, authorised like an incident update, with the author and time stamped by the server (T354, S55)
+- Highlight each control an agent changed on the risk, incident, finding, host, entity and assessment run screens until the user marks it seen, edits it or saves, and show appended entries without marking the open form stale (T356, S55)
 - Let the user enable the agent server from the Agents window behind a one-time LGPD confirmation, show what an agent can and cannot read in the lease dialog, and document agent co-work in a user guide (T361, S55)
 - Withhold from every agent tool the items classified as sensitive personal data, children's data or sensitive classification, through their entity, catalogue, risk chain and flag links, failing closed when a class cannot be read, with a floor the per-desktop policy cannot remove (T362, S55)
 - Observe the agent server with the official MCP Python SDK through the real stdio bridge, and record the transcript and a checklist for the run against the real GUI (T360, S55)
@@ -34,6 +37,9 @@ follow [SemVer](http://semver.org/).
 ### Fixed
 
 - Reject a website comment the server refuses as processed instead of retrying it on every sync cycle, and show an error in the fix chat when a comment cannot be sent (T375)
+- Delete an incident's timeline entries with the incident, which a foreign key without a cascade would otherwise refuse with a 500 once an entry exists (T354)
+- Refuse an agent finding note over 255 characters up front instead of failing on the server after approval (T354)
+- Keep an agent's highlight when a host or assessment run save fails, and report a failed assessment run save instead of closing the dialog as if it had saved (T356)
 
 ### Security
 

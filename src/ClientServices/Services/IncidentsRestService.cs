@@ -156,6 +156,33 @@ public class IncidentsRestService(IRestService restService) : RestServiceBase(re
         }
     }
 
+    public async Task<IncidentTimelineEntryDto> AddTimelineEntryAsync(int incidentId, string text)
+    {
+        using var client = MutatingClient();
+
+        var request = new RestRequest($"/Incidents/{incidentId}/Timeline");
+        request.AddJsonBody(new NewIncidentTimelineEntryDto { Text = text });
+
+        try
+        {
+            var response = await client.PostAsync<IncidentTimelineEntryDto>(request);
+
+            if (response == null)
+            {
+                Logger.Error("Error adding an incident timeline entry");
+                throw new InvalidHttpRequestException("Error adding an incident timeline entry",
+                    $"/Incidents/{incidentId}/Timeline", "POST");
+            }
+
+            return response;
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error adding an incident timeline entry message:{Message}", ex.Message);
+            throw new RestComunicationException("Error adding an incident timeline entry", ex);
+        }
+    }
+
     public async Task<Incident> UpdateAsync(Incident incident)
     {
         using var client = MutatingClient();

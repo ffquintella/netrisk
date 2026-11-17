@@ -87,10 +87,15 @@ the server off, or revoke the agent. It never renews itself: more time is a new 
 - **Read**: the agent can search and read risks, mitigations and reviews, findings and their lifecycle, incidents and
   response plans, assessments, runs, answers and evidence lists, entities and hosts, and the Cyber Risk Overview — only
   what **you** can read.
-- **Read and edit**: in addition, nine edit tools change a few descriptive fields of one item at a time: risk text, a
-  finding's open-work status, fix team or a note, incident text, an unanswered assessment question or a run's comments,
-  an entity's descriptive fields, a host's comment or OS. Each change uses the item's `version`; if the item changed since
-  the agent read it, the change is refused and nothing is written.
+- **Read and edit**: in addition, twelve edit tools change a few descriptive fields of one item at a time: risk text, a
+  finding's open-work status, fix team or a note, incident text or a new incident timeline entry, an unanswered
+  assessment question or a run's comments, an entity's descriptive fields, a host's comment or OS. Each change uses the
+  item's `version`; if the item changed since the agent read it, the change is refused and nothing is written. The agent
+  can also **create a risk or an incident** with descriptive text only: you become its owner or reporter, it starts as
+  New, and every person, entity, status and score stays for you to set. **A new risk or incident always waits for your
+  approval** — whatever you chose for confirmations — in a dialog that lists everything the new item will get and what
+  NetRisk then does by itself: it notifies the subscribers of new risks or incidents, and a new incident may start the
+  response plans whose automation matches it.
 
 Under a read grant the edit tools do not exist for the agent; if it tries one anyway it is refused as `read_only`.
 
@@ -115,7 +120,9 @@ then confirm in the normal access dialog.
 
 **Activity** lists every call: time, tool, item, read or edit, and the result (for example `ok`, `withheld`,
 `read_only`, `access_expired`). Screens show when an agent is reading or editing an item, and refresh when it changed one;
-if you were editing the same item, your save is refused so nothing is overwritten — reopen the item.
+if you were editing the same item, your save is refused so nothing is overwritten — reopen the item. Each field an agent
+changed stays **highlighted** — underlined on a coloured background, with a tooltip naming the agent — and the notice above
+names every changed field, until you click **Mark as seen** or edit and save the item yourself.
 
 ## Revoking and stopping
 

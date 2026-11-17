@@ -859,6 +859,7 @@ public class EditIncidentViewModel
             }
             
             var incident = await IncidentsService.UpdateAsync(Incident);   
+            _agentGuard?.Saved(); // T356: the user saved the incident; the agent's changes are no longer highlighted
             Incident = incident;
             
             if(changedIrps) await IncidentsService.AssociateIncidentResponsPlanIdsByIdAsync(Incident.Id, NewIncidentResponsePlanIds);

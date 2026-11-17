@@ -296,7 +296,16 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
         try
         {
-            if(_operation == OperationType.Edit) HostsService.UpdateAsync(Host);
+            if (_operation == OperationType.Edit)
+            {
+                // T356 review: the awaited update (UpdateAsync is async void: a refused PUT was never seen here). A failure
+                // reaches the catch below; only a confirmed save ends the agent's highlights on the host.
+                await GUIClient.ViewModels.Agents.AgentEditGuard.SaveAsync(_agentGuard, async () =>
+                {
+                    await HostsService.UpdateHostAsync(Host);
+                    return true;
+                });
+            }
             else if (_operation == OperationType.Create)
             {
                 var newHost = await HostsService.Create(Host);

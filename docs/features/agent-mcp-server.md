@@ -5,7 +5,8 @@ Status: **M61 implemented** (host, registration, keys, leases — see [Implement
 (edit tools, confirm-each-write, activity panel, presence, agent attribution — see
 [Implementation notes (M63)](#implementation-notes-m63)). **M64 build part implemented** (settings switch and LGPD
 disclosure, data-class exclusion, user guide, observation harness — see [Implementation notes (M64)](#implementation-notes-m64)
-and [Observed run](#observed-run)); the T359 security review and the T360 run against the real GUI are still open. User
+and [Observed run](#observed-run)); the T359 security review and the T360 run against the real GUI are still open. The T354
+and T356 remainders (creation, incident timeline, per-control highlight) are in [Implementation notes (T354/T356)](#implementation-notes-t354t356). User
 guide: [docs/product-guides/agent-co-work.md](../product-guides/agent-co-work.md). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
@@ -734,6 +735,170 @@ GUI and a real agent.
 
 **Not in this delivery:** T359 (the independent security review, including the prompt-injection exercise), ROADMAP and
 CHANGELOG updates, and M65 (one-click registration — the guide says it is not available).
+
+## Implementation notes (T354/T356)
+
+The remainder of T354 (creation, incident timeline) and of T356 (per-control highlight). Code: `AgentEditing.cs`
+(`AgentEditPlan.NewItem`, `AgentCreatedItem`, `IAgentEditTool.CreatesItems`, `AgentEditLimits.ActionNoteLength`),
+`McpDispatcher.EditAsync`, `AgentApprovals.cs` (`WritePrompt.NewItem`), `Core/Tools/AgentEditToolCatalog.cs` (the three new
+edit tools), `AgentReadToolCatalog.cs` (the new list tool), `AgentToolAccess.cs` (inventory), `AgentActivity.cs` (unacknowledged
+changes) and the new `AgentHighlights.cs`; GUI glue in `ViewModels/Agents` (`AgentItemWatcher`, `AgentEditGuard.Saved`,
+`AgentWriteDialogViewModel`), `Converters/AgentHighlightConverter.cs`, `Styles/WindowStyles.axaml` (`agentChanged`), and the
+views listed under T356. Server: `POST /Incidents/{id}/Timeline` (`IncidentsController.AddTimelineEntryAsync`),
+`IIncidentsService.AddTimelineEntryAsync` (server and ClientServices), `Model/DTO/IncidentTimelineEntryDto.cs`.
+
+Evidence: `AgentEditToolTest` (creation, timeline and note-bound cases), `AgentToolInventoryTest`, `AgentToolsNeverEscalateTest`,
+`AgentDataClassExclusionTest` (`TestACreationTheServerFilesUnderAWithheldEntityReturnsNoIdOrVersion`,
+`TestAnIncidentTimelineEntryIsNeverAppendedToAWithheldIncident`), `AgentScreenGuardTest` (the T356 cases); server
+`IncidentTimelineInMemoryTest`; API `IncidentsControllerTest` (timeline region) plus the unchanged
+`ControllerAuthorizationInventoryTest`, `AgentContextHeaderTest` and `ThirdLineReadOnlyInventoryTest`, which enumerate the new
+action; ClientServices `IncidentsRestServiceTest` and `NonIdempotentWritesAreNotRetriedTest`. Each new guard was removed once
+and its test failed (18 mutations: always-confirm, plan/tool mismatch, withheld-after-create, budget count, timeline
+classification, note bound, subject and sequence re-checks, category list, highlight map, presence union, acknowledge,
+view binding, saved hook; server scope, length and control checks; an anonymous or extra policy on the new action).
+
+**New tools.** All `kind=edit` except the list tool; every rule mirrors each endpoint the tool calls, the read it makes first
+and the write, plus "not the third line".
+
+| Tool | ClientServices calls | Rule | May set | Never sets |
+|---|---|---|---|---|
+| `list_risk_categories_and_sources` (read) | `GetRiskCategoriesAsync`, `GetRiskSourcesAsync` | role Administrator or `riskmanagement` — stricter than the server (valid user), like the entity tools | — | — |
+| `create_risk` | the two lists, `RiskSubjectExists`, `GetRiskScore(1, 1)`, `CreateRisk`, `CreateRiskScoring`, `GetAllRisksAsync` (read-back) | role Administrator or `riskmanagement`, claim `submit_risks` (the `update_risk` rule) | subject (required, unique), notes, the four scenario fields; a category and a source **from the server's lists** (ids; shown by name) | owner, manager, submitter (fixed, below), status, score, entity, chain, catalogs, mitigation, review, closure, flags |
+| `create_incident` | `GetNextSequenceAsync` (prepare and write), `CreateAsync`, `GetAllAsync` (read-back) | `incident_management` | description (required), report, impact, cause, solution, recommendations, notes | name (generated), status, category, kind, assignee, reporter, reporting/impacted/owning entity, dates, duration, response plans (but see the server's own automation below) |
+| `add_incident_timeline_entry` | `GetAllAsync`, `AddTimelineEntryAsync` (new) | `incident_management` | one appended text entry (≤ 255 characters), stamped now as the user by the server | existing entries, anything of the incident |
+
+**What a new item gets** — every line is in the "new item" dialog (`WritePrompt.NewItem`; all values new, no "before"):
+a risk gets subject and the given texts, the chosen category and source, status `New`, owner and submitter = the signed-in
+user, submission date now, the screen's default score (classic, likelihood 1 × impact 1, `GetRiskScore(1, 1)`, its own
+`risk_scoring` row); the agent sets no manager, entity, catalog, mitigation, IRP or review. An incident gets
+`SI-<year>-<next number:0000>` (the screen's naming), description and the given texts, status `New` (server), category
+`not_specified`, kind `Incident`, report date now, duration 1 h (the screen's defaults), `reported_by_id` and `created_by_id`
+= the signed-in user; the agent sets no assignee, reporting or impacted entity, owning entity, start date or plan.
+**What the server then does by itself (correction, T354 review #4):** `IncidentsService.CreateAsync` runs
+`IrpAutomationService.TriggerForIncidentAsync` — an enabled automation template that matches can **start a response plan**
+for the new incident — and publishes `incident.created` to notification subscribers; `RisksService.CreateRiskAsync`
+publishes `risk.created`. The tool descriptions say so, and the confirmation dialog shows it as a separate line under the
+item (`AgentEditPlan.SideEffectsKey` → `WritePrompt.SideEffectsKey`; keys `AgentCreateIncidentSideEffectsMSG`,
+`AgentCreateRiskSideEffectsMSG` in all three `Localization*.resx`).
+
+**Creation rules.** A tool declared `CreatesItems` (only `create_risk`, `create_incident`) **always** waits for the user,
+whatever the lease says: the dispatcher adds it to the confirm condition and refuses (`tool_failed`, nothing written) a
+`NewItem` plan from any other tool. A creation counts against the write budget like any write. It re-checks at the write
+what it checked at prepare: the subject is still free (else `stale`), the incident number is still the one approved (else
+`stale` — the name the user approved is the name written). It reads the new item back and classifies it (T362): the server
+files a new item under a scoped user's single entity claim (`AuditableContext`, Track 2), which the client cannot see
+before writing; if that entity is withheld, or the item cannot be read back while the policy is active, the agent gets
+`created_withheld` with the field names only — no id, no version. A risk whose score row fails after the risk was created
+is answered `created_incomplete` (id, version, `not_written: ["score"]`), never "nothing was written". Presence records the
+new item under its id; the risk and incident screens add it to their list (`RefreshRiskAfterAgentChangeAsync`,
+`RefreshIncidentAfterAgentChangeAsync`) and highlight it.
+
+**Server.** `POST /Incidents/{id}/Timeline` takes `{ text }` only; the author and time come from the server. It inherits the
+class's `[PermissionAuthorize("incident_management")]` exactly as `PUT /Incidents/{id}` (no FaceID, which guards only the list
+read), finds the incident through the caller's entity scope (out of scope = 404), trims and refuses empty, control-laden or
+over-255-character text (400), and appends an `nr_actions` row (`ObjectType = "Incident"`, `IncidentId`) without touching
+the incident row, so its `version` does not move. **No migration:** `nr_actions.IncidentId` and `fk_inc_actions` exist since
+`Structure/39.sql`. Attribution is the M63 mechanism as it stands: the middleware's `Agent-assisted request` log line and
+the legacy JSON `audit` row (user only); `nr_actions` is not in `GovernanceAuditInterceptor.AuditedTypes` (vulnerability
+imports write thousands), so no `audit_logs` row. The ClientServices call is sent once (not retried).
+
+**Fix found on the way.** `nr_actions.Message` is `varchar(255)`, but `add_finding_note` accepted 2,000 characters: a longer
+note reached the server only after the user approved it and failed there (strict mode) or was cut. Both note tools are now
+bounded by `AgentEditLimits.ActionNoteLength` (255), refused before any dialog
+(`TestAnActionNoteOverTheColumnBoundIsRefusedBeforeTheUserIsAsked`).
+
+**Not delivered, and why.**
+- **Risk comments.** No ClientServices call reads or the GUI shows a risk's comments; `POST /Comments` is gated on a valid
+  user only (no risk permission) and, for any type but `Host`, takes the author's user id from the request body — a defect
+  reported here, not fixed: a client can attribute a risk or fix-request comment to another user. An agent tool on it would
+  write text nobody sees under an attribution the server does not check.
+- **Mitigation drafts.** No draft exists in the model: `IMitigationService.Create` *plans* the mitigation — the server sets
+  the risk to `Mitigation Planned` and requires an owner (a person), strategy, effort, cost and date. A draft needs new
+  storage, i.e. a schema change (numbered SQL), which needs the coordinator's decision.
+- **Finding analyst assignment.** The analyst is a person picked from the user list; per the M63 rule people and assignee
+  fields stay human-set (and personal data stays out pending the DPO). Excluded.
+- **Attachments.** Arbitrary file content is a new risk surface (malware, data exfiltration into the register); no
+  ClientServices call limits type or content. Out.
+- **The timeline entry is not visible in the GUI**: the incident screen has no timeline/actions view, and `GET /Incidents`
+  does not include `Actions`, so `get_incident`'s timeline never lists recorded actions (an M62 gap this makes visible). The
+  user sees the entry in the confirm dialog and the activity panel only. Follow-up: an incident timeline read and view.
+
+**Deviations (decisions made).**
+- **Category and source come from the agent.** The brief asked for category to stay at the screen's default; the risk screen
+  has none (the user must pick one, and the server refuses a risk without both). Decision: the agent proposes ids from the
+  server's lists (a new read tool exposes them), the tool refuses an id not on them, and every creation is approved on
+  screen with both shown by name — the human decides. Rejected: not delivering `create_risk`, and inventing a default
+  (the lowest id), which would file wrong data silently. `AgentToolInventoryTest` admits `category_id` on `create_risk` only,
+  as an integer, on a creating tool.
+- **Always confirming creations** overrides a lease without confirm-each-write, on purpose (a new register item is larger
+  than a field edit and carries the agent's category).
+- **The screen's own required fields are not filled.** The risk screen requires a manager and an entity, the incident screen
+  a reporter, an impacted entity and an assignee — all people or entity links the agent may not set. The items are created
+  without them; the user's next save on the screen requires them.
+- **The reporter is `ReportedById`** (the system-user column, Track 6), which the incident screen does not show (it shows
+  the free-text or person-entity reporter).
+- **The duplicate-scenario warning** (S42 §7, a question the screen asks) is not run for an agent's risk; the subject check is.
+- **A score of 0** (the REST client's answer when the score call fails) is refused (`no_answer`) rather than saved.
+- **No atomicity** across the risk and its score row (the screen has the same two calls); reported as `created_incomplete`.
+- **Entity scope is detected, not prevented**: the client cannot know the user's entity claims before writing.
+
+**T356 — highlight per control.** `AgentPresence` now keeps, per item, the union of fields agents changed that the user has
+neither marked as seen nor edited (`Unacknowledged`, `Acknowledge`, `UserEdited`; no time limit; cleared with presence on
+sign-out or server stop). `AgentHighlightScreen` maps each field the edit tools write to a control identity per screen, or
+declares it shown only in the notice; `AgentHighlightScreens` holds the six maps (risks, incidents, findings, hosts, entity
+form, assessment run dialog). `AgentScreenGuardTest` runs every edit tool with every argument and fails on a field the
+screen of its kind neither shows nor names; an unknown field is named, never dropped. The watcher exposes `Highlights`; each
+mapped control binds `Classes.agentChanged` and `ToolTip.Tip` through `AgentHighlightConverter` with its identity; the notice
+names every pending field and offers **Mark as seen** (`type2`). The style class (`TextBlock.agentChanged`: warning
+background token + underline; `TextBox.agentChanged`: warning border, thicker left edge) is last in `WindowStyles.axaml`;
+colour is never alone (underline, tooltip from `AgentChangedFieldTip`, notice text). The highlight ends when the user marks
+it as seen, edits the field (entity form fields, the run dialog's comments) or saves the item (`AgentEditGuard.Saved()`
+after the save in `EditRiskViewModel`, `EditIncidentViewModel`, `EditVulnerabilitiesDialogViewModel`,
+`EditHostDialogViewModel`, `EntityFormViewModel`, `AssessmentRunDialogViewModel`). Four new keys in all three
+`Localization*.resx`; `./build.sh LintUi` reports zero violations.
+
+**Security review fixes (T354/T356 review).**
+1. *Blocker — a timeline entry made its incident undeletable.* `fk_inc_actions` (`Structure/39.sql`) has no ON DELETE
+   (RESTRICT) and the new endpoint is the first writer of `nr_actions.IncidentId`. `IncidentsService.DeleteByIdAsync` now
+   deletes the incident's `nr_actions` rows in the same `SaveChanges` before the incident — the entries are the incident's
+   own history (nothing else references them; the legacy `audit` table records each deleted row), so they go with it
+   rather than linger unlinked. No schema change. Tests: `IncidentTimelineInMemoryTest.TestDeletingAnIncidentDeletesItsTimelineEntriesInTheSameSave`;
+   FK-enforced on MariaDB 10.11 (Docker): `IncidentTimelineDeleteIntegrationTests` (`TestTheForeignKeyRestrictsDeletingAnIncidentAnEntryPointsAt`,
+   `TestAnIncidentWithTimelineEntriesIsDeletedWithThem`). **Attachments — not changed, recorded:** `fk_inc_attachments`
+   is RESTRICT too, and incident attachments (`nr_files.IncidentId`, written by the GUI's incident screen) already make an
+   incident with a file undeletable (500) — pre-existing. Deleting the files with the incident destroys uploaded evidence,
+   and nulling the link orphans them (`FileAccessAuthorizer` then grants no parent permission); both are product and
+   retention decisions, not a cheap fix.
+2. *False conflict after an append.* `AgentEditPlan.MovesVersion = false` on `add_incident_timeline_entry` and
+   `add_finding_note`; `AgentPresence.RecordChange(…, movesVersion: false)` records presence, the notice and the highlight
+   but not `ChangedSince`, so an open form's save is no longer refused over an append that left the record and version
+   untouched. `answer_assessment_question` still conflicts with an open run dialog (conservative: not reviewed for it).
+   Tests: `AgentScreenGuardTest.TestAnAppendIsShownButNeverMakesAnOpenFormsCopyStale`,
+   `TestAnEditOfTheRecordItselfStillMakesAnOpenFormsCopyStale`.
+3. *A save that failed silently ended the highlight.* `AgentSaveGuard.SaveAsync`/`Save` (Core) end the highlights and
+   reset the guard only when the save reports success; an exception or `false` leaves both. The host dialog now awaits
+   `UpdateHostAsync` (the `async void UpdateAsync` hid every failure); `IAssessmentsService.UpdateAssessmentRun` now returns
+   whether the server took it (still logs, never throws), and the run dialog stays open with `ErrorSavingAssessmentRunMSG`
+   when it did not — before, it closed as saved. Tests: `AgentScreenGuardTest.TestAFailedSaveKeepsTheAgentsHighlightAndTheGuard`,
+   `TestTheHostAndRunDialogsEndTheHighlightOnlyAfterAConfirmedSave`; `AssessmentsRestServiceTest.TestUpdateAssessmentRun*`.
+4. *"No response plan" was false* — corrected above. Tests: `AgentEditToolTest.TestANewItemsDialogStatesWhatNetRiskStartsAndNotifies`,
+   `TestAnUpdateStatesNoSideEffectAndTheIncidentDescriptionNoLongerDeniesThem`, `TestTheSideEffectAndRunSaveMessagesResolveIn`,
+   `TestTheWriteDialogShowsTheSideEffectLine`.
+
+**Follow-ups recorded (not built).** Duplicate incident numbers for entity-scoped users: `GetNextSequenceAsync` takes the
+maximum over the caller's scoped view, and nothing makes `(Year, Sequence)` unique (pre-existing; `create_incident`'s
+re-check cannot see other entities' incidents). `nr_actions.DateTime` is written with `DateTime.Now`, not UTC — like the
+older writers (finding notes, importers), a Track 6 temporal-convention drift. `CommentsController.CreateAsync` takes the
+author from the body for non-host comments (pre-existing; filed separately by the reviewer).
+
+Gaps (T356): nothing of this was seen on screen — UI tests not run (S54 §3), and the views changed (`RiskView`,
+`IncidentsView`, `VulnerabilitiesView`, `HostsView`, `EntityForm`, `AssessmentRunDialog`) are covered by source checks
+only; whether the theme's own TextBox states keep the `agentChanged` border is unverified. The findings screen has no
+single status or note control: lifecycle changes light the Timeline header, notes the Actions header. Not shown on their
+screens and named in the notice only: an incident's category, reporter and timeline entries; a run's analyst and answers.
+The run dialog lights what was pending when it opened (a change while it is open is refused at save, as in M63); the run
+viewer and the entity tree do not highlight. On the list screens "edits it" means saving the item in its dialog, not
+typing in a field (the panels are read-only).
 
 ## Out of scope (first release)
 

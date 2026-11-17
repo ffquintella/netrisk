@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GUIClient.Agents;
 
@@ -63,6 +64,10 @@ public sealed class AgentPresence
     private readonly Dictionary<AgentItemRef, AgentItemPresence> _present = new();
     private readonly Dictionary<AgentItemRef, AgentItemChange> _changes = new();
 
+    // T356: per item, every field an agent changed that the user has not acknowledged or edited since — highlighted on
+    // screen until then. A union over the agent's writes; no time limit.
+    private readonly Dictionary<AgentItemRef, AgentItemChange> _unacknowledged = new();
+
     /// <summary>Raised after an item was touched or changed.</summary>
     public event Action? Changed;
 
@@ -79,16 +84,62 @@ public sealed class AgentPresence
         Changed?.Invoke();
     }
 
-    public void RecordChange(AgentItemRef item, string agentName, IReadOnlyList<string> fields, DateTimeOffset at)
+    /// <param name="movesVersion">
+    /// False for an append that leaves the item's record as it was (T356 review): presence, the notice and the highlight
+    /// show it, but <see cref="ChangedSince"/> does not, so a screen's copy of the item is not refused over it.
+    /// </param>
+    public void RecordChange(AgentItemRef item, string agentName, IReadOnlyList<string> fields, DateTimeOffset at,
+        bool movesVersion = true)
     {
         var change = new AgentItemChange(item, agentName, at, fields.ToList());
         lock (_gate)
         {
-            _changes[item] = change;
+            if (movesVersion) _changes[item] = change;
             _present[item] = new AgentItemPresence(item, agentName, true, at);
+            var pending = _unacknowledged.TryGetValue(item, out var before)
+                ? before.Fields.Concat(fields).Distinct(StringComparer.Ordinal).ToList()
+                : fields.Distinct(StringComparer.Ordinal).ToList();
+            if (pending.Count > 0) _unacknowledged[item] = new AgentItemChange(item, agentName, at, pending);
         }
         ItemChanged?.Invoke(change);
         Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// T356: the fields agents changed on <paramref name="item"/> that the user has not acknowledged or edited yet (the
+    /// latest agent and time), or null. What a screen highlights.
+    /// </summary>
+    public AgentItemChange? Unacknowledged(AgentItemRef item)
+    {
+        lock (_gate) return _unacknowledged.TryGetValue(item, out var change) ? change : null;
+    }
+
+    /// <summary>T356: the user marked the agent's changes to <paramref name="item"/> as seen; nothing stays highlighted.</summary>
+    public void Acknowledge(AgentItemRef item)
+    {
+        bool removed;
+        lock (_gate) removed = _unacknowledged.Remove(item);
+        if (removed) Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// T356: the user edited <paramref name="fields"/> of <paramref name="item"/> (every field when null — the user saved
+    /// the whole item): their highlight ends.
+    /// </summary>
+    public void UserEdited(AgentItemRef item, IEnumerable<string>? fields = null)
+    {
+        bool changed;
+        lock (_gate)
+        {
+            if (!_unacknowledged.TryGetValue(item, out var pending)) return;
+            var left = fields is null
+                ? new List<string>()
+                : pending.Fields.Except(fields, StringComparer.Ordinal).ToList();
+            changed = left.Count != pending.Fields.Count;
+            if (left.Count == 0) _unacknowledged.Remove(item);
+            else if (changed) _unacknowledged[item] = pending with { Fields = left };
+        }
+        if (changed) Changed?.Invoke();
     }
 
     /// <summary>The items touched within <see cref="Window"/> of <paramref name="now"/>, most recent first.</summary>
@@ -122,6 +173,7 @@ public sealed class AgentPresence
         {
             _present.Clear();
             _changes.Clear();
+            _unacknowledged.Clear();
         }
         Changed?.Invoke();
     }
@@ -172,4 +224,23 @@ public sealed class AgentSaveGuard
 
     /// <summary>The screen holds the server's copy again (it saved, or reloaded): only later changes conflict.</summary>
     public void Reset(DateTimeOffset now) => Since = now;
+
+    /// <summary>
+    /// T356 review: runs the screen's own save of the item. Only a save that reports success makes the screen's copy
+    /// current and ends the agent's highlights on the item (the user edited it); one that throws or reports failure leaves
+    /// both as they were, and the exception reaches the screen.
+    /// </summary>
+    public async Task<bool> SaveAsync(Func<Task<bool>> save, Func<DateTimeOffset> now) =>
+        Saved(await save().ConfigureAwait(false), now);
+
+    /// <summary>The same for a synchronous save (<see cref="SaveAsync"/>).</summary>
+    public bool Save(Func<bool> save, Func<DateTimeOffset> now) => Saved(save(), now);
+
+    private bool Saved(bool succeeded, Func<DateTimeOffset> now)
+    {
+        if (!succeeded) return false;
+        Reset(now());
+        _presence?.UserEdited(Item);
+        return true;
+    }
 }

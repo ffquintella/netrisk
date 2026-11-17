@@ -63,9 +63,17 @@ public static class AgentWritePermissions
     public static AgentToolPermission FindingNote { get; } =
         AgentToolPermission.Granted("vulnerabilities").And(AgentToolPermission.NotThirdLine);
 
+    // T354: GET /Risks/Categories and /Sources (valid user), GET /Risks/Exists and POST /Risks, POST /Risks/{id}/Scoring
+    // (RequireSubmitRisk), GET /Risks/ScoreValue-1-1 and GET /Risks (RequireRiskmanagement): the update_risk rule exactly.
+    public static AgentToolPermission CreateRisk { get; } = UpdateRisk;
+
     // Class [PermissionAuthorize("incident_management")] (GET /Incidents also needs FaceID when on, invisible here).
     public static AgentToolPermission Incident { get; } =
         AgentToolPermission.Granted("incident_management").And(AgentToolPermission.NotThirdLine);
+
+    // T354: GET /Incidents/NextSequence, POST /Incidents and POST /Incidents/{id}/Timeline: the class rule, as PUT has.
+    public static AgentToolPermission CreateIncident { get; } = Incident;
+    public static AgentToolPermission IncidentTimeline { get; } = Incident;
 
     // RequireAssessmentAccess on every AssessmentsController action: the claim, no role.
     public static AgentToolPermission Assessment { get; } =
@@ -190,6 +198,120 @@ public static class AgentEditToolCatalog
                         return await TryVersion(async () => AgentVersions.Risk(await FreshRisk(s, id)));
                     }, version);
             });
+
+        yield return new AgentEditTool("create_risk",
+            "Create one new risk with a subject, notes and the four scenario fields, filed under a category and a source " +
+            "from NetRisk's own lists (ids from list_risk_categories_and_sources). The signed-in user becomes its owner and " +
+            "submitter; it starts as New with the screen's default score (likelihood 1, impact 1) and no manager, entity, " +
+            "catalog, mitigation or review: those stay with the user. NetRisk sends its risk-created notification to its " +
+            "subscribers. The user approves every new risk on screen first.",
+            AgentWritePermissions.CreateRisk,
+            AgentSchema.Object(
+                Text("subject", AgentEditLimits.TitleLength, "The subject; required and unique."),
+                Text("notes", AgentEditLimits.TextLength, "Notes."),
+                Text("scenario_cause", AgentEditLimits.TextLength, "Scenario cause."),
+                Text("scenario_vulnerability", AgentEditLimits.TextLength, "Scenario vulnerability."),
+                Text("scenario_central_event", AgentEditLimits.TextLength, "Scenario central event."),
+                Text("scenario_consequences", AgentEditLimits.TextLength, "Scenario consequences."),
+                AgentSchema.Id("category_id", "A risk category from NetRisk's list; the user sees it by name before approving."),
+                AgentSchema.Id("source_id", "A risk source from NetRisk's list; the user sees it by name before approving.")),
+            async (call, args, ct) =>
+            {
+                var userId = call.User?.UserId ?? throw new AgentToolException("unavailable", "Nobody is signed in to NetRisk.");
+                var subject = args.Text("subject", AgentEditLimits.TitleLength, required: true)!;
+                var texts = new (string Field, string? Value)[]
+                {
+                    ("notes", args.Text("notes", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("scenario_cause", args.Text("scenario_cause", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("scenario_vulnerability", args.Text("scenario_vulnerability", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("scenario_central_event", args.Text("scenario_central_event", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("scenario_consequences", args.Text("scenario_consequences", AgentEditLimits.TextLength, allowEmpty: true))
+                };
+                var categoryId = args.Id("category_id");
+                var sourceId = args.Id("source_id");
+
+                // EditRiskViewModel's pickers are these lists; an id that is not on them is refused the same way.
+                var category = (await s.Risks.GetRiskCategoriesAsync() ?? throw AgentToolErrors.NoAnswerError())
+                               .FirstOrDefault(c => c.Value == categoryId) ?? throw AgentToolErrors.NotFoundError("risk category");
+                var sources = s.Risks.GetRiskSourcesAsync() is { } pending ? await pending : null;
+                var source = (sources ?? throw AgentToolErrors.NoAnswerError())
+                             .FirstOrDefault(x => x.Value == sourceId) ?? throw AgentToolErrors.NotFoundError("risk source");
+                // EditRiskViewModel's rules: a subject is required (Text refuses blank) and unique.
+                if (await Task.Run(() => s.Risks.RiskSubjectExists(subject))) throw SubjectTaken();
+                // The screen's default for a new risk: likelihood 1, impact 1, classic scoring. A score NetRisk cannot
+                // compute is refused here rather than saved as 0 (the screen would save 0).
+                var score = await Task.Run(() => s.Risks.GetRiskScore(1, 1));
+                if (!(score > 0)) throw AgentToolErrors.NoAnswerError();
+
+                var changes = new List<AgentFieldChange> { new("subject", null, subject) };
+                changes.AddRange(texts.Where(t => !string.IsNullOrEmpty(t.Value)).Select(t => new AgentFieldChange(t.Field, null, t.Value)));
+                changes.Add(new AgentFieldChange("category", null, Label(category.Name) + " (#" + categoryId + ")"));
+                changes.Add(new AgentFieldChange("source", null, Label(source.Name) + " (#" + sourceId + ")"));
+                changes.Add(new AgentFieldChange("status", null, "New"));
+                changes.Add(new AgentFieldChange("owner", null, "#" + userId + " (" + AgentSessionUserLabel(call) + ")"));
+                changes.Add(new AgentFieldChange("score", null,
+                    "classic: likelihood 1 x impact 1 = " + score.ToString("0.##", CultureInfo.InvariantCulture)));
+                string? Value(string field) => texts.First(t => t.Field == field).Value;
+
+                return AgentEditPlan.NewItem(AgentItemKinds.Risk, Label(subject), changes, async cancellation =>
+                {
+                    // Review M63 #2 for a creation: still unique now, not only when the plan was made.
+                    if (await Task.Run(() => s.Risks.RiskSubjectExists(subject)))
+                        throw new AgentToolException(AgentToolErrors.Stale,
+                            "Another risk with this subject was created after your change was prepared. Nothing was written.");
+                    var now = DateTime.Now;
+                    var created = await Task.Run(() => s.Risks.CreateRisk(new Risk
+                    {
+                        Subject = subject, Notes = Value("notes") ?? "", ScenarioCause = Blank(Value("scenario_cause")),
+                        ScenarioVulnerability = Blank(Value("scenario_vulnerability")),
+                        ScenarioCentralEvent = Blank(Value("scenario_central_event")),
+                        ScenarioConsequences = Blank(Value("scenario_consequences")),
+                        Category = categoryId, Source = sourceId, Status = "New", Owner = userId, SubmittedBy = userId,
+                        SubmissionDate = now, LastUpdate = now,
+                        Assessment = "", RiskCatalogMapping = "", ThreatCatalogMapping = "", ReferenceId = ""
+                    })) ?? throw AgentToolErrors.NoAnswerError();
+
+                    var notWritten = new List<string>();
+                    try
+                    {
+                        // As the screen does, right after the risk: its own row, so it can fail on its own.
+                        await Task.Run(() => s.Risks.CreateRiskScoring(new RiskScoring
+                        {
+                            Id = created.Id, ScoringMethod = 1, ClassicLikelihood = 1, ClassicImpact = 1, CalculatedRisk = score
+                        }));
+                    }
+                    catch (Exception)
+                    {
+                        notWritten.Add("score");
+                    }
+                    return await CreatedAsync(call, created.Id, () => FreshRisk(s, created.Id), AgentItemLinks.ForRisk,
+                        AgentVersions.Risk, notWritten, cancellation);
+                }, RiskCreationSideEffectsKey);
+            }, createsItems: true);
+    }
+
+    private static AgentToolException SubjectTaken() =>
+        new(AgentToolErrors.Invalid, "Another risk already has this subject. Nothing was written.");
+
+    /// <summary>
+    /// T354, T362: what a creation made, read back fresh. The server may file a new item under the user's only entity
+    /// (Track 2 scope); one the policy withholds — or one that cannot be read back to tell — is reported without its id.
+    /// </summary>
+    private static async Task<AgentCreatedItem> CreatedAsync<T>(AgentToolCall call, int id, Func<Task<T>> fresh,
+        Func<T, AgentItemLinks> links, Func<T, string> version, IReadOnlyList<string> notWritten,
+        System.Threading.CancellationToken ct)
+    {
+        T item;
+        try
+        {
+            item = await fresh();
+        }
+        catch (Exception)
+        {
+            return new AgentCreatedItem(id, null, Withheld: call.Classification.IsActive, notWritten);
+        }
+        var withheld = await call.Classification.IsExcludedAsync(links(item), ct);
+        return new AgentCreatedItem(id, withheld ? null : version(item), withheld, notWritten);
     }
 
     private static async Task<Risk> FreshRisk(AgentEditServices s, int id)
@@ -288,13 +410,15 @@ public static class AgentEditToolCatalog
             AgentSchema.Object(AgentSchema.Id("finding_id", "The finding (vulnerability) id."),
                 (("note"), new System.Text.Json.Nodes.JsonObject
                 {
-                    ["type"] = "string", ["maxLength"] = AgentEditLimits.NoteLength,
+                    ["type"] = "string", ["maxLength"] = AgentEditLimits.ActionNoteLength,
                     ["description"] = "The note. " + StoredAsUserText
                 }, true)),
             async (call, args, ct) =>
             {
                 var id = args.Id("finding_id");
-                var note = args.Text("note", AgentEditLimits.NoteLength, required: true)!;
+                // T354 fix: the note lands in nr_actions.Message (varchar(255)); a longer one was refused by the server
+                // only after the user had approved it. Refused here instead, never cut.
+                var note = args.Text("note", AgentEditLimits.ActionNoteLength, required: true)!;
                 var finding = await FreshFinding(s, id);
                 await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), edit: true, ct);
                 var userId = call.User?.UserId ?? throw new AgentToolException("unavailable", "Nobody is signed in to NetRisk.");
@@ -307,7 +431,7 @@ public static class AgentEditToolCatalog
                             DateTime = DateTime.Now, Message = note, ObjectType = nameof(Vulnerability), UserId = userId
                         });
                         return null;
-                    });
+                    }) { MovesVersion = false }; // T356 review: an append; the finding's record and version are as they were
             });
     }
 
@@ -366,7 +490,120 @@ public static class AgentEditToolCatalog
                         return saved is null ? null : await TryVersion(async () => AgentVersions.Incident(await FreshIncident(s, id)));
                     }, version);
             });
+
+        yield return new AgentEditTool("create_incident",
+            "Create one new incident with its description (required), report, impact, cause, solution, recommendations and " +
+            "notes. NetRisk names it SI-<year>-<next number> as the screen does; it starts as New, category " +
+            "'not_specified', kind Incident, reported now by the signed-in user, with no assignee and no reporting or " +
+            "impacted entity: those stay with the user. On creation NetRisk itself may start the response plans whose " +
+            "automation templates match the incident, and notifies incident-created subscribers. The user approves every " +
+            "new incident on screen first, with that stated.",
+            AgentWritePermissions.CreateIncident,
+            AgentSchema.Object(
+                Text("description", AgentEditLimits.TextLength, "The description; required."),
+                Text("report", AgentEditLimits.TextLength, "Report text."),
+                Text("impact", AgentEditLimits.TextLength, "Impact."),
+                Text("cause", AgentEditLimits.TextLength, "Cause."),
+                Text("solution", AgentEditLimits.TextLength, "Solution."),
+                Text("recommendations", AgentEditLimits.TextLength, "Recommendations."),
+                Text("notes", AgentEditLimits.TextLength, "Notes.")),
+            async (call, args, ct) =>
+            {
+                var userId = call.User?.UserId ?? throw new AgentToolException("unavailable", "Nobody is signed in to NetRisk.");
+                // EditIncidentViewModel refuses to save without a description.
+                var description = args.Text("description", AgentEditLimits.TextLength, required: true)!;
+                var texts = new (string Field, string? Value)[]
+                {
+                    ("report", args.Text("report", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("impact", args.Text("impact", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("cause", args.Text("cause", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("solution", args.Text("solution", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("recommendations", args.Text("recommendations", AgentEditLimits.TextLength, allowEmpty: true)),
+                    ("notes", args.Text("notes", AgentEditLimits.TextLength, allowEmpty: true))
+                };
+                string? Value(string field) => Blank(texts.First(t => t.Field == field).Value);
+
+                // The screen's naming: the next number of this year, read now and again at the write.
+                var year = DateTime.Now.Year;
+                var sequence = await s.Incidents.GetNextSequenceAsync(year);
+                if (sequence < 1) throw AgentToolErrors.NoAnswerError();
+                var name = IncidentName(year, sequence);
+
+                var changes = new List<AgentFieldChange> { new("name", null, name), new("description", null, description) };
+                changes.AddRange(texts.Where(t => !string.IsNullOrEmpty(t.Value)).Select(t => new AgentFieldChange(t.Field, null, t.Value)));
+                changes.Add(new AgentFieldChange("status", null, "New"));
+                changes.Add(new AgentFieldChange("category", null, NewIncidentCategory));
+                changes.Add(new AgentFieldChange("kind", null, nameof(IncidentKind.Incident)));
+                changes.Add(new AgentFieldChange("reported_by", null, "#" + userId + " (" + AgentSessionUserLabel(call) + ")"));
+                changes.Add(new AgentFieldChange("duration", null, "1 h"));
+
+                return AgentEditPlan.NewItem(AgentItemKinds.Incident, name, changes, async cancellation =>
+                {
+                    // Review M63 #2 for a creation: the name the user approved must still be the one NetRisk gives it.
+                    if (await s.Incidents.GetNextSequenceAsync(year) != sequence)
+                        throw new AgentToolException(AgentToolErrors.Stale,
+                            "Another incident was created after your change was prepared, so this one would get another " +
+                            "number. Nothing was written; send it again to prepare it with the new number.");
+                    var now = DateTime.Now;
+                    var created = await s.Incidents.CreateAsync(new Incident
+                    {
+                        Year = year, Sequence = sequence, Name = name, Description = description,
+                        Report = Value("report"), Impact = Value("impact"), Cause = Value("cause"),
+                        Solution = Value("solution"), Recommendations = Value("recommendations"), Notes = Value("notes"),
+                        Status = 0, Category = NewIncidentCategory, Kind = IncidentKind.Incident,
+                        CreationDate = now, LastUpdate = now, ReportDate = now, Duration = TimeSpan.FromHours(1),
+                        CreatedById = userId, ReportedById = userId
+                    }) ?? throw AgentToolErrors.NoAnswerError();
+                    return await CreatedAsync(call, created.Id, () => FreshIncident(s, created.Id), AgentItemLinks.ForIncident,
+                        AgentVersions.Incident, Array.Empty<string>(), cancellation);
+                }, IncidentCreationSideEffectsKey);
+            }, createsItems: true);
+
+        yield return new AgentEditTool("add_incident_timeline_entry",
+            "Append one dated entry to an incident's timeline: text only, stamped now as the signed-in user. Entries are " +
+            "appended; nothing else of the incident changes and existing entries are never edited.",
+            AgentWritePermissions.IncidentTimeline,
+            AgentSchema.Object(AgentSchema.Id("incident_id", "The incident id."),
+                ("text", new System.Text.Json.Nodes.JsonObject
+                {
+                    ["type"] = "string", ["maxLength"] = AgentEditLimits.ActionNoteLength,
+                    ["description"] = "The entry. " + StoredAsUserText
+                }, true)),
+            async (call, args, ct) =>
+            {
+                var id = args.Id("incident_id");
+                var text = args.Text("text", AgentEditLimits.ActionNoteLength, required: true)!;
+                var incident = await FreshIncident(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForIncident(incident), edit: true, ct);
+                return new AgentEditPlan(new AgentItemRef(AgentItemKinds.Incident, id), Label(incident.Name),
+                    new[] { new AgentFieldChange(TimelineEntryField, null, text) }, "created",
+                    async _ =>
+                    {
+                        // Append-only (POST /Incidents/{id}/Timeline): the incident row and its version are not touched.
+                        await s.Incidents.AddTimelineEntryAsync(id, text);
+                        return null;
+                    }) { MovesVersion = false };
+            });
     }
+
+    /// <summary>
+    /// T354 review: what the server does itself when a new incident lands — IncidentsService.CreateAsync runs the IRP
+    /// automation (TriggerForIncidentAsync) and the incident.created notification. Shown in the confirmation dialog.
+    /// </summary>
+    public const string IncidentCreationSideEffectsKey = "AgentCreateIncidentSideEffectsMSG";
+
+    /// <summary>T354 review: RisksService.CreateRiskAsync sends the risk.created notification. Shown in the dialog.</summary>
+    public const string RiskCreationSideEffectsKey = "AgentCreateRiskSideEffectsMSG";
+
+    /// <summary>The diff line of an appended incident timeline entry (T354).</summary>
+    public const string TimelineEntryField = "timeline_entry";
+
+    /// <summary>A new incident's category on the screen until the user picks one (<c>Incident.Category</c>'s default).</summary>
+    public const string NewIncidentCategory = "not_specified";
+
+    /// <summary>EditIncidentViewModel.AdjustIncidentName: <c>SI-&lt;year&gt;-&lt;sequence:0000&gt;</c>.</summary>
+    public static string IncidentName(int year, int sequence) =>
+        "SI-" + year.ToString(CultureInfo.InvariantCulture) + "-" + sequence.ToString("0000.##", CultureInfo.InvariantCulture);
 
     private static async Task<Incident> FreshIncident(AgentEditServices s, int id)
     {

@@ -106,6 +106,7 @@ public class AgentToolsNeverEscalateTest
         ["search_risks"] = u => u.UserRole == "Administrator" || Holds(u, "riskmanagement"),       // RequireRiskmanagement
         ["get_risk"] = u => u.UserRole == "Administrator" || Holds(u, "riskmanagement"),
         ["get_risk_mitigation"] = u => u.UserRole == "Administrator" || Holds(u, "riskmanagement"),
+        ["list_risk_categories_and_sources"] = _ => true,                                          // RequireValidUser
         ["list_risk_reviews"] = u => AgentReadToolCatalog.ReviewPermissions.Any(p => Holds(u, p)), // RequireMgmtReviewAccess
         ["search_findings"] = u => AdminClaim(u) || Holds(u, "vulnerabilities"),                   // [PermissionAuthorize]
         ["get_finding"] = u => AdminClaim(u) || Holds(u, "vulnerabilities"),
@@ -139,13 +140,26 @@ public class AgentToolsNeverEscalateTest
         ["comment_assessment_run"] = u => Holds(u, "assessments") && !ThirdLine(u),
         ["update_entity_fields"] = u => (AdminClaim(u) || Holds(u, "entities_manage")) && !ThirdLine(u),
         ["update_host_fields"] = u => (AdminClaim(u) || Holds(u, "hosts")) && (AdminClaim(u) || Holds(u, "hosts_create"))
-                                      && !ThirdLine(u)
+                                      && !ThirdLine(u),
+
+        // T354 remainder: POST /Risks, /Risks/{id}/Scoring, GET /Risks/Exists (RequireSubmitRisk), GET /Risks/ScoreValue
+        // and GET /Risks (RequireRiskmanagement), the category and source lists (valid user); the incident class rule for
+        // GET /Incidents/NextSequence, POST /Incidents and the new POST /Incidents/{id}/Timeline.
+        ["create_risk"] = u => (u.UserRole == "Administrator" || Holds(u, "riskmanagement")) && Holds(u, "submit_risks")
+                               && !ThirdLine(u),
+        ["create_incident"] = u => (AdminClaim(u) || Holds(u, "incident_management")) && !ThirdLine(u),
+        ["add_incident_timeline_entry"] = u => (AdminClaim(u) || Holds(u, "incident_management")) && !ThirdLine(u)
     };
 
     private static bool ThirdLine(AuthenticatedUserInfo u) => Holds(u, Model.DecisionCycle.ThirdLineAssurance.PermissionKey);
 
     /// <summary>The entity read tools keep the GUI's stricter module rule; every other tool mirrors the server exactly.</summary>
-    private static readonly string[] StricterThanTheServer = { "search_entities", "get_entity", "get_entity_relationships" };
+    private static readonly string[] StricterThanTheServer =
+    {
+        "search_entities", "get_entity", "get_entity_relationships",
+        // T354: the lists create_risk takes ids from keep the risk module's rule; the endpoints need a valid user only.
+        "list_risk_categories_and_sources"
+    };
 
     /// <summary>Users that probe every policy shape: no permission, each role variant, each single permission, all.</summary>
     public static TheoryData<string> Users()

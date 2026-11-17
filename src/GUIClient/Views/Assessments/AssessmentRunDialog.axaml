@@ -38,7 +38,9 @@
             <TextBlock Classes="label"
                        Text="{Binding StrComments}" Margin="5 10 5 0"/>
             <TextBox TabIndex="3" MinWidth="700" Height="80" AcceptsReturn="True" Margin="10 5 5 10"
-                     Text="{Binding Comments, Mode=TwoWay}"/>
+                     Text="{Binding Comments, Mode=TwoWay}"
+                     Classes.agentChanged="{Binding CommentsAgentChanged}"
+                     ToolTip.Tip="{Binding CommentsAgentTip}"/>
 
         </StackPanel>
 

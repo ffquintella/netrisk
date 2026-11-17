@@ -150,32 +150,32 @@ public class AssessmentsRestServiceTest : BaseServiceTest
     {
         _backend.OnStatus(Method.Put, "/Assessments/1/Runs/10", HttpStatusCode.OK);
 
-        _service.UpdateAssessmentRun(new AssessmentRunDto
+        Assert.True(_service.UpdateAssessmentRun(new AssessmentRunDto
         {
             Id = 10, AssessmentId = 1, EntityId = 3, Comments = "reviewed", ProgressPercentage = 100
-        });
+        }));
 
         Assert.Equal("PUT /Assessments/1/Runs/10", _backend.LastRequest.ToString());
         Assert.Contains("reviewed", _backend.LastRequest.Body);
     }
 
     [Fact]
-    public void TestUpdateAssessmentRunSwallowsANonOkStatus()
+    public void TestUpdateAssessmentRunReportsANonOkStatusAsFalse()
     {
         _backend.OnStatus(Method.Put, "/Assessments/1/Runs/10", HttpStatusCode.NotFound);
 
-        // The method only logs the failure — the GUI is not told about it.
-        _service.UpdateAssessmentRun(new AssessmentRunDto { Id = 10, AssessmentId = 1, EntityId = 3 });
+        // Still logged, not thrown — but the run dialog is now told (T356 review: it used to close as if saved).
+        Assert.False(_service.UpdateAssessmentRun(new AssessmentRunDto { Id = 10, AssessmentId = 1, EntityId = 3 }));
 
         Assert.True(_backend.Sent(Method.Put, "/Assessments/1/Runs/10"));
     }
 
     [Fact]
-    public void TestUpdateAssessmentRunSwallowsATransportFailure()
+    public void TestUpdateAssessmentRunReportsATransportFailureAsFalse()
     {
         _backend.OnTransportFailure(Method.Put, "/Assessments/1/Runs/10");
 
-        _service.UpdateAssessmentRun(new AssessmentRunDto { Id = 10, AssessmentId = 1, EntityId = 3 });
+        Assert.False(_service.UpdateAssessmentRun(new AssessmentRunDto { Id = 10, AssessmentId = 1, EntityId = 3 }));
 
         Assert.True(_backend.Sent(Method.Put, "/Assessments/1/Runs/10"));
     }

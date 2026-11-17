@@ -67,6 +67,16 @@ internal sealed class AgentEditFixtures
     /// <summary>The run's answers as the server holds them now; question 2 is answered, question 1 is not.</summary>
     public List<AssessmentRunsAnswer> RunAnswers { get; } = new() { new() { Id = 1, RunId = 1, QuestionId = 2, AnswerId = 3 } };
 
+    /// <summary>What the create tools made (T354): the server's rows, read back by the tools' fresh reads.</summary>
+    public List<Risk> CreatedRisks { get; } = new();
+    public List<Incident> CreatedIncidents { get; } = new();
+
+    /// <summary>The next incident number the server hands out now.</summary>
+    public int NextIncidentSequence { get; set; } = 5;
+
+    /// <summary>An entity the server files a new item under (Track 2 scope), or null.</summary>
+    public int? FiledUnderEntity { get; set; }
+
     public IRisksService Risks { get; } = Substitute.For<IRisksService>();
     public IVulnerabilitiesService Findings { get; } = Substitute.For<IVulnerabilitiesService>();
     public ITeamsService TeamsService { get; } = Substitute.For<ITeamsService>();
@@ -77,8 +87,30 @@ internal sealed class AgentEditFixtures
 
     public AgentEditFixtures()
     {
-        Risks.GetAllRisksAsync(Arg.Any<bool>()).Returns(_ => Task.FromResult(new List<Risk> { Risk }));
+        Risks.GetAllRisksAsync(Arg.Any<bool>()).Returns(_ => Task.FromResult(new List<Risk> { Risk }.Concat(CreatedRisks).ToList()));
         Risks.RiskSubjectExists("Taken subject").Returns(true);
+        Risks.GetRiskCategoriesAsync().Returns(_ => Task.FromResult(new List<Category>
+        {
+            new() { Value = 1, Name = "Access" }, new() { Value = 2, Name = "Monitoring" }
+        }));
+        Risks.GetRiskSourcesAsync().Returns(_ => Task.FromResult<List<Source>?>(new List<Source>
+        {
+            new() { Value = 1, Name = "People" }, new() { Value = 2, Name = "Process" }
+        }));
+        Risks.GetRiskScore(1, 1).Returns(1.5f);
+        Risks.CreateRisk(Arg.Any<Risk>()).Returns(call =>
+        {
+            var sent = call.Arg<Risk>();
+            var created = new Risk
+            {
+                Id = 100 + CreatedRisks.Count, Subject = sent.Subject, Notes = sent.Notes, Status = "New", Owner = sent.Owner,
+                Category = sent.Category, Source = sent.Source, EntityId = FiledUnderEntity, ScenarioCause = sent.ScenarioCause,
+                SubmissionDate = new DateTime(2026, 11, 17), LastUpdate = new DateTime(2026, 11, 17)
+            };
+            CreatedRisks.Add(created);
+            return created;
+        });
+        Risks.CreateRiskScoring(Arg.Any<RiskScoring>()).Returns(call => call.Arg<RiskScoring>());
 
         Findings.GetOneAsync(1).Returns(_ => Task.FromResult(Finding));
         Findings.UpdateLifecycleStatusAsync(1, Arg.Any<FindingStatus>(), Arg.Any<string?>(), Arg.Any<int?>())
@@ -86,8 +118,24 @@ internal sealed class AgentEditFixtures
         Findings.AddActionAsync(1, Arg.Any<int>(), Arg.Any<NrAction>()).Returns(call => Task.FromResult(call.ArgAt<NrAction>(2)));
         TeamsService.GetAllAsync().Returns(_ => Task.FromResult(Teams));
 
-        Incidents.GetAllAsync().Returns(_ => Task.FromResult(new List<Incident> { Incident }));
+        Incidents.GetAllAsync().Returns(_ => Task.FromResult(new List<Incident> { Incident }.Concat(CreatedIncidents).ToList()));
         Incidents.UpdateAsync(Arg.Any<Incident>()).Returns(call => Task.FromResult(call.Arg<Incident>()));
+        Incidents.GetNextSequenceAsync(Arg.Any<int>()).Returns(_ => Task.FromResult(NextIncidentSequence));
+        Incidents.CreateAsync(Arg.Any<Incident>()).Returns(call =>
+        {
+            var sent = call.Arg<Incident>();
+            var created = new Incident
+            {
+                Id = 200 + CreatedIncidents.Count, Year = sent.Year, Sequence = sent.Sequence, Name = sent.Name,
+                Description = sent.Description, Cause = sent.Cause, Status = 1, Category = sent.Category, Kind = sent.Kind,
+                ReportedById = sent.ReportedById, EntityId = FiledUnderEntity, LastUpdate = new DateTime(2026, 11, 17)
+            };
+            CreatedIncidents.Add(created);
+            NextIncidentSequence++;
+            return Task.FromResult(created);
+        });
+        Incidents.AddTimelineEntryAsync(Arg.Any<int>(), Arg.Any<string>()).Returns(call => Task.FromResult(
+            new IncidentTimelineEntryDto { Id = 9, IncidentId = call.ArgAt<int>(0), Text = call.ArgAt<string>(1), UserId = AgentRig.UserId }));
 
         Assessments.GetAssessmentRuns(1).Returns(_ => new List<AssessmentRun> { Run });
         Assessments.GetAssessmentQuestions(1).Returns(new List<AssessmentQuestion>
@@ -149,6 +197,12 @@ internal sealed class AgentEditFixtures
             ["entity_id"] = 1, ["version"] = AgentVersions.Entity(Entity), ["description"] = "Runs the monthly payroll"
         },
         "update_host_fields" => new JsonObject { ["host_id"] = 1, ["version"] = AgentVersions.Host(Host), ["comment"] = "DMZ" },
+        "create_risk" => new JsonObject
+        {
+            ["subject"] = "Payroll phishing", ["notes"] = "From the awareness review", ["category_id"] = 1, ["source_id"] = 2
+        },
+        "create_incident" => new JsonObject { ["description"] = "Mail account takeover", ["cause"] = "Reused password" },
+        "add_incident_timeline_entry" => new JsonObject { ["incident_id"] = 1, ["text"] = "Contained at the gateway" },
         _ => throw new Xunit.Sdk.XunitException($"No test arguments for edit tool '{tool}': add it to AgentEditFixtures.")
     };
 

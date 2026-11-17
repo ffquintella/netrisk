@@ -756,6 +756,7 @@ public class EditRiskViewModel
             if (_operationType == OperationType.Edit)
             {
                 _risksService.SaveRisk(Risk);
+                _agentGuard?.Saved(); // T356: the user saved the risk; the agent's changes to it are no longer highlighted
                 if (RiskScoring != null && Risk.Id != RiskScoring.Id)
                 {
                     riskScoring.Id = Risk.Id;

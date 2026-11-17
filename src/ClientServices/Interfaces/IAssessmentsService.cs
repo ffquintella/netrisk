@@ -63,7 +63,8 @@ public interface IAssessmentsService
     /// Updates an existing AssessmentRun
     /// </summary>
     /// <param name="assessmentRun"></param>
-    void  UpdateAssessmentRun(AssessmentRunDto assessmentRun);
+    /// <returns>Whether the server took the update (200). A refusal or a transport failure is logged and answers false.</returns>
+    bool UpdateAssessmentRun(AssessmentRunDto assessmentRun);
     
     /// <summary>
     /// Creates a new AssessmentRunAnswer

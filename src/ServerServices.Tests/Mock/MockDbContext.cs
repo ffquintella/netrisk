@@ -41,7 +41,11 @@ public class MockDbContext
         
         var incidents = GetIncidentsDbSet();
         context.Incidents.Returns(incidents);
-        
+
+        // T354 review: deleting an incident also deletes its timeline entries (nr_actions); none are seeded here.
+        var nrActions = MockDbSetCreator.CreateDbSet(new List<NrAction>());
+        context.NrActions.Returns(nrActions);
+
         var incidentResponsePlanExecutions = GetIncidentResponsePlanExecutionsDbSet();
         context.IncidentResponsePlanExecutions.Returns(incidentResponsePlanExecutions);
         

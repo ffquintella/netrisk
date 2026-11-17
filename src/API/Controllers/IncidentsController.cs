@@ -244,6 +244,43 @@ public class IncidentsController(
     }
     
     
+    /// <summary>
+    /// Appends one dated, text-only entry to the incident's timeline (S55, T354). Authorised exactly as updating the
+    /// incident (the class's <c>incident_management</c>); the server stamps the time and the author.
+    /// </summary>
+    [HttpPost]
+    [Route("{id}/Timeline")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(IncidentTimelineEntryDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IncidentTimelineEntryDto>> AddTimelineEntryAsync(int id,
+        [FromBody] NewIncidentTimelineEntryDto? entry)
+    {
+        var user = await GetUserAsync();
+
+        try
+        {
+            var added = await IncidentsService.AddTimelineEntryAsync(id, entry?.Text, user);
+            Logger.Information("User:{User} added timeline entry {EntryId} to incident {Id}", user.Value, added.Id, id);
+            return Created($"Incidents/{id}/Timeline/{added.Id}", added);
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("Incident {id} not found", id);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while adding a timeline entry to an incident: {Message}", ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpDelete]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Incident>))]

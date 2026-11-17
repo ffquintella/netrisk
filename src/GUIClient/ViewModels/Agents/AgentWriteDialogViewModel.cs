@@ -70,6 +70,21 @@ public class AgentWriteDialogViewModel : ParameterizedDialogViewModelBase<Dialog
         set => this.RaiseAndSetIfChanged(ref _itemText, value);
     }
 
+    private string _sideEffectsText = "";
+    /// <summary>T354 review: what NetRisk itself does when this change lands (a new incident's response plans, notices).</summary>
+    public string SideEffectsText
+    {
+        get => _sideEffectsText;
+        set => this.RaiseAndSetIfChanged(ref _sideEffectsText, value);
+    }
+
+    private bool _hasSideEffects;
+    public bool HasSideEffects
+    {
+        get => _hasSideEffects;
+        set => this.RaiseAndSetIfChanged(ref _hasSideEffects, value);
+    }
+
     private string _queueText = "";
     public string QueueText
     {
@@ -123,8 +138,13 @@ public class AgentWriteDialogViewModel : ParameterizedDialogViewModelBase<Dialog
         AgentName = prompt.AgentName;
         Fingerprint = prompt.AgentFingerprint;
         ToolName = prompt.ToolName;
-        ItemText = string.Format(Localizer["AgentWriteItemValueMSG"], KindLabel(prompt.Item.Kind), prompt.Item.Id,
-            prompt.ItemLabel);
+        // T354: a new item has no id yet; the dialog says so, and every row below is a value the new item gets.
+        ItemText = prompt.NewItem
+            ? string.Format(Localizer["AgentWriteNewItemMSG"], KindLabel(prompt.Item.Kind), prompt.ItemLabel)
+            : string.Format(Localizer["AgentWriteItemValueMSG"], KindLabel(prompt.Item.Kind), prompt.Item.Id,
+                prompt.ItemLabel);
+        HasSideEffects = prompt.SideEffectsKey is not null;
+        SideEffectsText = prompt.SideEffectsKey is { } sideEffects ? Localizer[sideEffects].Value : "";
         HasQueue = prompt.WaitingCount > 0;
         QueueText = string.Format(Localizer["AgentWriteQueueMSG"], prompt.WaitingCount);
         var empty = Localizer["AgentWriteEmptyValue"];

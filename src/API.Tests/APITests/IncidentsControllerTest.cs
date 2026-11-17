@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using API.Controllers;
 using DAL.Entities;
@@ -393,6 +394,89 @@ public class IncidentsControllerTest : BaseControllerTest
 
         var statusResult = Assert.IsType<StatusCodeResult>(result);
         Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
+    }
+
+    #endregion
+
+    #region AddTimelineEntryAsync (S55 T354)
+
+    [Fact]
+    public async Task TestAddTimelineEntryAppendsAsTheAuthenticatedUserAndAnswersCreated()
+    {
+        _incidentsService.AddTimelineEntryAsync(1, "Contained", Arg.Any<User>())
+            .Returns(new IncidentTimelineEntryDto { Id = 9, IncidentId = 1, UserId = 1, Text = "Contained" });
+
+        var result = await _controller.AddTimelineEntryAsync(1, new NewIncidentTimelineEntryDto { Text = "Contained" });
+
+        var created = Assert.IsType<CreatedResult>(result.Result);
+        var entry = Assert.IsType<IncidentTimelineEntryDto>(created.Value);
+        Assert.Equal(9, entry.Id);
+        Assert.Equal("Incidents/1/Timeline/9", created.Location);
+        // The author is the authenticated user the controller resolved, never anything the body could carry.
+        await _incidentsService.Received(1).AddTimelineEntryAsync(1, "Contained", Arg.Is<User>(u => u.Value == 1));
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryRefusesInvalidTextAsBadRequest()
+    {
+        _incidentsService.AddTimelineEntryAsync(1, Arg.Any<string?>(), Arg.Any<User>())
+            .Returns<Task<IncidentTimelineEntryDto>>(_ => throw new InvalidParameterException("text", "too long"));
+
+        var result = await _controller.AddTimelineEntryAsync(1, new NewIncidentTimelineEntryDto { Text = "x" });
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryWithNoBodyIsPassedOnAsNoTextAndRefused()
+    {
+        _incidentsService.AddTimelineEntryAsync(1, null, Arg.Any<User>())
+            .Returns<Task<IncidentTimelineEntryDto>>(_ => throw new InvalidParameterException("text", "empty"));
+
+        var result = await _controller.AddTimelineEntryAsync(1, null);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryToAnUnknownOrOutOfScopeIncidentIsNotFound()
+    {
+        _incidentsService.AddTimelineEntryAsync(999, Arg.Any<string?>(), Arg.Any<User>())
+            .Returns<Task<IncidentTimelineEntryDto>>(_ => throw new DataNotFoundException("incidents", "999"));
+
+        var result = await _controller.AddTimelineEntryAsync(999, new NewIncidentTimelineEntryDto { Text = "x" });
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryReturns500OnError()
+    {
+        _incidentsService.AddTimelineEntryAsync(2, Arg.Any<string?>(), Arg.Any<User>())
+            .Returns<Task<IncidentTimelineEntryDto>>(_ => throw new Exception("boom"));
+
+        var result = await _controller.AddTimelineEntryAsync(2, new NewIncidentTimelineEntryDto { Text = "x" });
+
+        var statusResult = Assert.IsType<StatusCodeResult>(result.Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, statusResult.StatusCode);
+    }
+
+    [Fact]
+    public void TestAddTimelineEntryIsAuthorisedExactlyAsUpdatingTheIncident()
+    {
+        // Same policy as PUT /Incidents/{id}: the class's incident_management, and no action-level attribute that could
+        // loosen or tighten it (FaceID applies to the list read only).
+        static string[] Policies(System.Reflection.MemberInfo member) => member
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), inherit: true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Select(a => a.Policy ?? "").ToArray();
+
+        var add = typeof(IncidentsController).GetMethod(nameof(IncidentsController.AddTimelineEntryAsync))!;
+        var update = typeof(IncidentsController).GetMethod(nameof(IncidentsController.UpdateAsync))!;
+
+        Assert.Equal(Policies(update), Policies(add));
+        Assert.Empty(Policies(add));
+        Assert.Contains(typeof(IncidentsController).GetCustomAttributes(typeof(API.Security.PermissionAuthorizeAttribute), true)
+            .Cast<API.Security.PermissionAuthorizeAttribute>(), a => a.Permission == "incident_management");
     }
 
     #endregion

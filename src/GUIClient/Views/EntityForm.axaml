@@ -24,8 +24,10 @@
                             <TextBlock Text="{Binding Label}" Classes="form_label"
                                        IsVisible="{Binding !IsBoolean}"/>
 
+                            <!-- T356: an agent's change not yet seen is highlighted, with a tooltip saying so. -->
                             <TextBox Text="{Binding TextValue}" Margin="0 2 0 0"
-                                     IsVisible="{Binding IsText}" IsEnabled="{Binding !IsReadOnly}"/>
+                                     IsVisible="{Binding IsText}" IsEnabled="{Binding !IsReadOnly}"
+                                     Classes.agentChanged="{Binding IsAgentChanged}" ToolTip.Tip="{Binding AgentChangedTip}"/>
 
                             <!-- T241/T242: a nullable number with nothing stored is blank ("not set") and saves nothing. -->
                             <NumericUpDown Value="{Binding IntegerValue}" Margin="0 2 0 0"
@@ -85,7 +87,14 @@
                        Text="{Binding StrEntitiesManageRequired}"/>
             <!-- T356: an agent is on this entity, or just changed it; a save over its change is refused. -->
             <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
-                <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                <StackPanel>
+                    <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                    <Button Classes="type2" HorizontalAlignment="Left" Margin="0 4 0 0"
+                            IsVisible="{Binding AgentWatch.HasHighlights, FallbackValue=False}"
+                            Command="{Binding AgentWatch.BtAcknowledgeClicked}">
+                        <TextBlock Text="{Binding AgentWatch.StrAcknowledge}"/>
+                    </Button>
+                </StackPanel>
             </Border>
         </StackPanel>
 

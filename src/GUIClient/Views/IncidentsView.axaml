@@ -106,12 +106,20 @@
                         <TextBlock Classes="header2" Text="{Binding StrMetada, Mode=OneTime}"/>
                         <!-- T356: an agent is on this incident, or just changed it (the fields it changed are named). -->
                         <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
-                            <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                                <!-- T356: the changed fields stay highlighted until the user marks them as seen or edits the item. -->
+                                <Button Classes="type2" HorizontalAlignment="Left" Margin="0 4 0 0"
+                                        IsVisible="{Binding AgentWatch.HasHighlights, FallbackValue=False}"
+                                        Command="{Binding AgentWatch.BtAcknowledgeClicked}">
+                                    <TextBlock Text="{Binding AgentWatch.StrAcknowledge}"/>
+                                </Button>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                     <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="5">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrName}" Classes="form_label"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedIncident.Name}" Classes="form_text2"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedIncident.Name}" Classes="form_text2" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Name, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Name}"/>
                         
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding StrCreationDate}" Classes="form_label"/>
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding SelectedIncident.CreationDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
@@ -126,20 +134,20 @@
                         <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding SelectedIncident.UpdatedById, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
                       
                         <TextBlock Grid.Row="1" Grid.Column="4" Text="{Binding StrStatus}" Classes="form_label"/>
-                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding SelectedIncident.Status, Converter={StaticResource IntStatusToStringConverter}}" Classes="form_text2"/>
+                        <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding SelectedIncident.Status, Converter={StaticResource IntStatusToStringConverter}}" Classes="form_text2" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Status, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Status}"/>
                         
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrStartDate}" Classes="form_label"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedIncident.StartDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="form_text2"/>
                         
                         <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding StrDuration}" Classes="form_label"/>
-                        <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding SelectedIncident.Duration, Converter={StaticResource TimeSpanToHoursStringConverter}}" Classes="form_text2"/>
+                        <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding SelectedIncident.Duration, Converter={StaticResource TimeSpanToHoursStringConverter}}" Classes="form_text2" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Duration, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Duration}"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="4" Text="{Binding StrAssignedTo}" Classes="form_label"/>
                         <TextBlock Grid.Row="2" Grid.Column="5" Text="{Binding SelectedIncident.AssignedToId, Converter={StaticResource UserIdToUserNameConverter}}" Classes="form_text2"/>
 
                         <!-- Stage 9.2 (T153, S42 §7): incident or near miss. -->
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrIncidentKind}" Classes="form_label"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedIncidentKind}" Classes="form_text2"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedIncidentKind}" Classes="form_text2" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Kind, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Kind}"/>
 
                         
                     </Grid>
@@ -158,19 +166,19 @@
                         <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding SelectedIncident.ImpactedEntityId, Converter={StaticResource EntityIdToNameConverter}}" Classes="form_long_text"/>
                         
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrReport}" Classes="form_label"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Report}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Report, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Report}"/>
                         
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrDescription}" Classes="form_label"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Description}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Description}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Description, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Description}"/>
                         
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding StrImpact}" Classes="form_label"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Impact}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Impact, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Impact}"/>
                         
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrCause}" Classes="form_label"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Cause}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Cause}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Cause, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Cause}"/>
                         
                         <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrSolution}" Classes="form_label"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Solution}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Solution}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Solution, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Solution}"/>
                         
                     </Grid>
                     
@@ -178,9 +186,9 @@
                     
                     <Grid Grid.Row="5" ColumnDefinitions="Auto, *, Auto, *, Auto, *" RowDefinitions="Auto,Auto" ColumnSpacing="5">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding StrRecommendation}" Classes="form_label"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Recommendations}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Recommendations}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Recommendations, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Recommendations}"/>
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding StrNotes}" Classes="form_label"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Notes}" Classes="form_long_text"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedIncident.Notes}" Classes="form_long_text" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Notes, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Notes}"/>
                     </Grid>
                     
                     <TextBlock Grid.Row="6" Classes="header2" Text="{Binding StrAttachments, Mode=OneTime}" Margin="0 10 0 0 "/>

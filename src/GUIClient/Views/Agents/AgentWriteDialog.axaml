@@ -22,7 +22,11 @@
         <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ToolName}" Classes="formData"/>
 
         <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding StrItem}" Classes="fieldLabel"/>
-        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding ItemText}" Classes="form_long_text"/>
+        <StackPanel Grid.Row="7" Grid.Column="1">
+            <TextBlock Text="{Binding ItemText}" Classes="form_long_text"/>
+            <!-- T354 review: what NetRisk does by itself when this lands (a new incident may start response plans). -->
+            <TextBlock Text="{Binding SideEffectsText}" Classes="notice" TextWrapping="Wrap" IsVisible="{Binding HasSideEffects}"/>
+        </StackPanel>
 
         <ScrollViewer Grid.Row="8" Grid.Column="1" MaxHeight="380" Margin="0 10 0 0"
                       HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">

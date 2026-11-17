@@ -64,7 +64,13 @@ public interface IIncidentsService
     /// <returns></returns>
     public Task<Incident> UpdateAsync(Incident incident, User user);
 
-    
+    /// <summary>
+    /// Appends one dated, text-only entry to an incident's timeline (S55, T354) as <paramref name="user"/>, now. The incident
+    /// is found through the caller's entity scope; nothing else of it changes. Throws InvalidParameterException for empty,
+    /// over-long (<see cref="IncidentTimelineEntryDto.MaxTextLength"/>) or control-laden text, DataNotFoundException otherwise.
+    /// </summary>
+    public Task<IncidentTimelineEntryDto> AddTimelineEntryAsync(int incidentId, string? text, User user);
+
     /// <summary>
     /// Delete an incident
     /// </summary>

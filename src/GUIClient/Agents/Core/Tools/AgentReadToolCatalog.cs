@@ -124,6 +124,23 @@ public static class AgentReadToolCatalog
                 return AgentReadMap.RiskDetail(risk, scoring);
             });
 
+        // T354: the lists create_risk takes ids from (EditRiskViewModel's two pickers). GET /Risks/Categories and /Sources
+        // need only a valid user; the tool keeps the risk module's rule, stricter than the server, as the entity tools do.
+        yield return new AgentReadTool<AgentRiskOptions>("list_risk_categories_and_sources",
+            "The risk categories and risk sources NetRisk offers, by id and name: the ids create_risk takes.",
+            risks, AgentSchema.Object(),
+            async (_, _, _) =>
+            {
+                var categories = await s.Risks.GetRiskCategoriesAsync() ?? throw AgentToolErrors.NoAnswerError();
+                var sources = (s.Risks.GetRiskSourcesAsync() is { } pending ? await pending : null)
+                              ?? throw AgentToolErrors.NoAnswerError();
+                return new AgentRiskOptions(
+                    categories.OrderBy(c => c.Value).Take(AgentResultLimits.MaxNestedItems)
+                        .Select(c => new AgentOption(c.Value, AgentReadMap.Title(c.Name) ?? "")).ToList(),
+                    sources.OrderBy(x => x.Value).Take(AgentResultLimits.MaxNestedItems)
+                        .Select(x => new AgentOption(x.Value, AgentReadMap.Title(x.Name) ?? "")).ToList());
+            });
+
         yield return new AgentReadTool<AgentRiskMitigation>("get_risk_mitigation",
             "The mitigation plan of one risk: strategy, effort, cost, owner, solution and progress.",
             risks, AgentSchema.Object(AgentSchema.Id("risk_id", "The risk id.")),

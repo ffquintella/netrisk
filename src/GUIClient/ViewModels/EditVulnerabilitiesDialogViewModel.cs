@@ -646,6 +646,7 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
                 var risks = SelectedRisks;
                 Vulnerability.Risks.Clear();
                 await VulnerabilitiesService.UpdateAsync(Vulnerability);
+                _agentGuard?.Saved(); // T356: the user saved the finding; the agent's changes are no longer highlighted
                 await VulnerabilitiesService.AddActionAsync(Vulnerability!.Id, nraction.UserId!.Value, nraction);
                 
 

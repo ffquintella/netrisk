@@ -114,7 +114,34 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
     public string? Comments
     {
         get => _comments;
-        set => this.RaiseAndSetIfChanged(ref _comments, value);
+        set
+        {
+            var edited = !string.Equals(_comments, value, StringComparison.Ordinal);
+            this.RaiseAndSetIfChanged(ref _comments, value);
+            // T356: the user edited the comments an agent changed; their highlight ends.
+            if (edited && CommentsAgentChanged)
+            {
+                CommentsAgentChanged = false;
+                CommentsAgentTip = null;
+                _agentGuard?.UserEdited("comments");
+            }
+        }
+    }
+
+    private bool _commentsAgentChanged;
+    /// <summary>T356: an agent changed the comments and the user has not marked them as seen or edited them.</summary>
+    public bool CommentsAgentChanged
+    {
+        get => _commentsAgentChanged;
+        set => this.RaiseAndSetIfChanged(ref _commentsAgentChanged, value);
+    }
+
+    private string? _commentsAgentTip;
+    /// <summary>T356: the tooltip of the highlighted comments (localized), or null.</summary>
+    public string? CommentsAgentTip
+    {
+        get => _commentsAgentTip;
+        set => this.RaiseAndSetIfChanged(ref _commentsAgentTip, value);
     }
     
     #endregion
@@ -234,7 +261,14 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
 
             try
             {
-                AssessmentsService.UpdateAssessmentRun(assessRun);
+                // T356 review: UpdateAssessmentRun reports whether the server took it (it used to swallow a refusal and the
+                // dialog closed as saved); only a confirmed save ends the agent's highlights on the run.
+                if (!GUIClient.ViewModels.Agents.AgentEditGuard.Save(_agentGuard,
+                        () => AssessmentsService.UpdateAssessmentRun(assessRun)))
+                {
+                    Toasts.Error(Localizer["ErrorSavingAssessmentRunMSG"]);
+                    return;
+                }
 
                 var result = new AssessmentRunDialogResult()
                 {
@@ -277,6 +311,12 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                     _assessmentRun!.Id);
 
                 Comments = _assessmentRun!.Comments;
+                // T356: the comments an agent changed and the user has not seen yet are highlighted until edited.
+                var pending = _agentGuard.Unacknowledged();
+                var highlights = GUIClient.Agents.AgentHighlightScreens.AssessmentRunDialog.StateFor(pending,
+                    pending is null ? null : string.Format(Localizer["AgentChangedFieldTip"], pending.AgentName));
+                CommentsAgentChanged = highlights.IsLit("Comments");
+                CommentsAgentTip = highlights.TipFor("Comments");
             }
             else
             {

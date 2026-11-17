@@ -60,6 +60,13 @@ public sealed record AgentEditResult(string Outcome, string ItemType, int ItemId
     IReadOnlyList<string> ChangedFields);
 
 /// <summary>
+/// What a creation made (T354): the new item's id and version; <see cref="Withheld"/> when the server filed it where the
+/// classification policy withholds it (the agent then gets no id); <see cref="NotWritten"/> names fields a later step of
+/// the creation could not save (the item exists without them).
+/// </summary>
+public sealed record AgentCreatedItem(int Id, string? Version, bool Withheld = false, IReadOnlyList<string>? NotWritten = null);
+
+/// <summary>
 /// An edit an edit tool has prepared and not yet made: the item, the exact field changes, and the one call that makes it.
 /// The dispatcher shows it for confirmation when the lease asks for that, checks the gate again, and only then applies it.
 /// </summary>
@@ -78,6 +85,42 @@ public sealed class AgentEditPlan
         Outcome = outcome;
         _apply = apply;
     }
+
+    /// <summary>
+    /// T354: a new item of <paramref name="kind"/> (id 0 until created). Every change is a new value; the user approves it
+    /// as a whole "new item", and the dispatcher reports the id <paramref name="create"/> returns.
+    /// </summary>
+    public static AgentEditPlan NewItem(string kind, string itemLabel, IReadOnlyList<AgentFieldChange> changes,
+        Func<CancellationToken, Task<AgentCreatedItem>> create, string? sideEffectsKey = null)
+    {
+        AgentEditPlan? plan = null;
+        plan = new AgentEditPlan(new AgentItemRef(kind, 0), itemLabel,
+            changes.Select(c => c with { Before = null }).ToList(), "created", async ct =>
+            {
+                var created = await create(ct).ConfigureAwait(false);
+                plan!.Created = created;
+                return created.Version;
+            }) { CreatesItem = true, SideEffectsKey = sideEffectsKey };
+        return plan;
+    }
+
+    /// <summary>True for a plan that creates a new item (<see cref="NewItem"/>): <see cref="Item"/> has id 0 until then.</summary>
+    public bool CreatesItem { get; private init; }
+
+    /// <summary>
+    /// T356 review: false for an append (a finding note, an incident timeline entry) that leaves the item's own record
+    /// and version as they were. It is shown and highlighted, but a screen's older copy of the item is not stale after it.
+    /// </summary>
+    public bool MovesVersion { get; init; } = true;
+
+    /// <summary>
+    /// T354 review: a localization key for what NetRisk itself does when the change lands (notifications, automations), shown
+    /// in the confirmation dialog; null when nothing beyond the change happens.
+    /// </summary>
+    public string? SideEffectsKey { get; init; }
+
+    /// <summary>What the creation made, once applied; null before, and for every other plan.</summary>
+    public AgentCreatedItem? Created { get; private set; }
 
     public AgentItemRef Item { get; }
 
@@ -103,6 +146,12 @@ public sealed class AgentEditPlan
 public interface IAgentEditTool : IAgentTool
 {
     Task<AgentEditPlan> PrepareAsync(AgentToolCall call, JsonObject arguments, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// T354: a tool that creates new items. Every one of its writes waits for the user's approval, whatever the lease, and
+    /// only such a tool may hand the dispatcher a <see cref="AgentEditPlan.NewItem"/> plan.
+    /// </summary>
+    bool CreatesItems => false;
 }
 
 /// <summary>The bounds on what an agent may write (NRM §5.3.5 a maximum size on every input).</summary>
@@ -112,6 +161,9 @@ public static class AgentEditLimits
     public const int TextLength = 4000;
     public const int NoteLength = 2000;
     public const int VersionLength = 32;
+
+    /// <summary>A finding note or an incident timeline entry: <c>nr_actions.Message</c> is <c>varchar(255)</c> (T354).</summary>
+    public const int ActionNoteLength = Model.DTO.IncidentTimelineEntryDto.MaxTextLength;
 
     /// <summary>T359 review #5: a value of more lines, or more blank lines in a row, could hide text below the fold.</summary>
     public const int MaxLines = 20;
@@ -305,18 +357,22 @@ public sealed class AgentEditTool : IAgentEditTool
     private readonly Func<AgentToolCall, AgentEditArgs, CancellationToken, Task<AgentEditPlan>> _prepare;
 
     public AgentEditTool(string name, string description, AgentToolPermission permission, JsonObject schema,
-        Func<AgentToolCall, AgentEditArgs, CancellationToken, Task<AgentEditPlan>> prepare)
+        Func<AgentToolCall, AgentEditArgs, CancellationToken, Task<AgentEditPlan>> prepare, bool createsItems = false)
     {
         Name = name;
         Description = description;
         Permission = permission;
         _schema = schema;
         _prepare = prepare;
+        CreatesItems = createsItems;
     }
 
     public string Name { get; }
     public string Description { get; }
     public bool RequiresEdit => true;
+
+    /// <inheritdoc />
+    public bool CreatesItems { get; }
     public AgentToolPermission Permission { get; }
     public Type ResultType => typeof(AgentEditResult);
 

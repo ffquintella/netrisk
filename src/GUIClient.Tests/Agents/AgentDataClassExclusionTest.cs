@@ -150,8 +150,16 @@ public class AgentDataClassExclusionTest
 
     public static TheoryData<string> EditTools() => AgentEditFixtures.AllTools();
 
+    /// <summary>Every edit tool that works on an existing item: all but the creating ones (tested below).</summary>
+    public static TheoryData<string> ExistingItemEditTools()
+    {
+        var data = new TheoryData<string>();
+        foreach (var tool in new AgentEditFixtures().Catalog().OfType<IAgentEditTool>().Where(t => !t.CreatesItems)) data.Add(tool.Name);
+        return data;
+    }
+
     [Theory]
-    [MemberData(nameof(EditTools))]
+    [MemberData(nameof(ExistingItemEditTools))]
     public async Task TestNoEditToolTouchesAnExcludedItem(string tool)
     {
         var world = new ClassifiedWorld();
@@ -200,11 +208,48 @@ public class AgentDataClassExclusionTest
     [MemberData(nameof(EditTools))]
     public async Task TestAnEditToolStillWritesAnIncludedItem(string tool)
     {
+        // Approved on screen: a creation always asks (T354), and the other tools write the same with or without asking.
         var world = new ClassifiedWorld();
-        var answer = await world.Rig().CallAsync(tool, world.EditArguments(tool, excluded: false));
+        var answer = await world.Rig(new ScriptedPrompter { OnWrite = (_, _) => Task.FromResult(true) })
+            .CallAsync(tool, world.EditArguments(tool, excluded: false));
 
         Assert.NotEqual(AgentToolErrors.Withheld, answer.Status);
+        Assert.Equal("ok", answer.Status);
         Assert.True(world.Writes() > 0, answer.Body);
+    }
+
+    // ---- T354: a new item the server files where the policy withholds it --------------------------------------------
+
+    [Theory]
+    [InlineData("create_risk")]
+    [InlineData("create_incident")]
+    public async Task TestACreationTheServerFilesUnderAWithheldEntityReturnsNoIdOrVersion(string tool)
+    {
+        // A user with a single entity claim gets every new record filed there (AuditableContext, Track 2): here the clinic
+        // application, whose security level is sensitive. The client cannot see the claim before it writes.
+        var world = new ClassifiedWorld { FileNewItemsUnder = 20 };
+        var rig = world.Rig(new ScriptedPrompter { OnWrite = (_, _) => Task.FromResult(true) });
+
+        var answer = await rig.CallAsync(tool, world.EditArguments(tool, excluded: false));
+
+        Assert.False(answer.IsError, answer.Body);                    // it exists: never "nothing was written"
+        Assert.Equal(McpDispatcher.CreatedWithheld, answer.Status);
+        Assert.Null(answer.Structured["item_id"]);
+        Assert.Null(answer.Structured["version"]);
+        Assert.DoesNotContain(ClassifiedWorld.Marker, answer.Body, StringComparison.Ordinal);
+        Assert.True(world.Writes() > 0);
+        Assert.Contains(rig.Rig.Activity.Entries(), e => e.Tool == tool && e.Result == McpDispatcher.CreatedWithheld);
+    }
+
+    [Fact]
+    public async Task TestAnIncidentTimelineEntryIsNeverAppendedToAWithheldIncident()
+    {
+        var world = new ClassifiedWorld();
+        var answer = await world.Rig(new ScriptedPrompter { OnWrite = (_, _) => Task.FromResult(true) })
+            .CallAsync("add_incident_timeline_entry", world.EditArguments("add_incident_timeline_entry", excluded: true));
+
+        Assert.Equal(AgentToolErrors.Withheld, answer.Status);
+        world.AssertNothingWritten();
     }
 
     [Fact]
@@ -532,6 +577,9 @@ internal sealed class ClassifiedWorld
 
     public AgentExclusionPolicy Policy { get; set; } = AgentExclusionPolicy.Default;
     public bool FailEntities { get; set; }
+
+    /// <summary>T354: the entity the server files a new risk or incident under (the user's single claim), or none.</summary>
+    public int? FileNewItemsUnder { get; set; }
     public bool FailChains { get; set; }
 
     /// <summary>Each risk's chain links, as GET /RiskChain/Risks/{id} returns them (the GUI's "Entity" field is a Legacy link).</summary>
@@ -668,6 +716,29 @@ internal sealed class ClassifiedWorld
         IncidentsService.GetIncidentResponsPlanIdsByIdAsync(Arg.Any<int>()).Returns(_ => Task.FromResult(new List<int>()));
         IncidentsService.UpdateAsync(Arg.Any<Incident>()).Returns(c => Task.FromResult(c.Arg<Incident>()));
 
+        // T354: the create tools and the incident timeline.
+        RisksService.GetRiskCategoriesAsync().Returns(_ => Task.FromResult(new List<Category> { new() { Value = 1, Name = "Access" } }));
+        RisksService.GetRiskSourcesAsync().Returns(_ => Task.FromResult<List<Source>?>(new List<Source> { new() { Value = 1, Name = "People" } }));
+        RisksService.GetRiskScore(1, 1).Returns(1.5f);
+        RisksService.CreateRisk(Arg.Any<Risk>()).Returns(c =>
+        {
+            var created = new Risk { Id = 50, Subject = c.Arg<Risk>().Subject, Status = "New", EntityId = FileNewItemsUnder,
+                LastUpdate = new DateTime(2026, 11, 17) };
+            Risks.Add(created);
+            return created;
+        });
+        RisksService.CreateRiskScoring(Arg.Any<RiskScoring>()).Returns(c => c.Arg<RiskScoring>());
+        IncidentsService.GetNextSequenceAsync(Arg.Any<int>()).Returns(_ => Task.FromResult(3));
+        IncidentsService.CreateAsync(Arg.Any<Incident>()).Returns(c =>
+        {
+            var created = new Incident { Id = 50, Name = c.Arg<Incident>().Name, Description = c.Arg<Incident>().Description,
+                EntityId = FileNewItemsUnder, ReportDate = new DateTime(2026, 11, 17) };
+            Incidents.Add(created);
+            return Task.FromResult(created);
+        });
+        IncidentsService.AddTimelineEntryAsync(Arg.Any<int>(), Arg.Any<string>())
+            .Returns(c => Task.FromResult(new IncidentTimelineEntryDto { Id = 1, IncidentId = c.ArgAt<int>(0) }));
+
         AssessmentsService.GetAssessmentsAsync().Returns(_ => Task.FromResult<List<Assessment>?>(Assessments.ToList()));
         AssessmentsService.GetAssessmentRuns(Arg.Any<int>()).Returns(c => Runs.Where(r => r.AssessmentId == c.Arg<int>()).ToList());
         AssessmentsService.GetAssessmentRunAnsers(Arg.Any<int>(), Arg.Any<int>()).Returns(c => c.ArgAt<int>(1) == 1
@@ -747,7 +818,8 @@ internal sealed class ClassifiedWorld
                 AssessmentsService, EntitiesService, HostsService)))
             .ToList();
 
-    public AgentReadRig Rig() => AgentReadRig.OverTools(Tools(), Classification(), AgentReadRig.Everything());
+    public AgentReadRig Rig(ScriptedPrompter? prompter = null) =>
+        AgentReadRig.OverTools(Tools(), Classification(), AgentReadRig.Everything(), prompter: prompter);
 
     public JsonObject EditArguments(string tool, bool excluded)
     {
@@ -768,16 +840,22 @@ internal sealed class ClassifiedWorld
             "comment_assessment_run" => new JsonObject { ["assessment_id"] = 1, ["run_id"] = run.Id, ["version"] = AgentVersions.AssessmentRun(run), ["comments"] = "Reviewed" },
             "update_entity_fields" => new JsonObject { ["entity_id"] = entity.Id, ["version"] = AgentVersions.Entity(entity), ["description"] = "New" },
             "update_host_fields" => new JsonObject { ["host_id"] = host.Id, ["version"] = AgentVersions.Host(host), ["comment"] = "New" },
+            "add_incident_timeline_entry" => new JsonObject { ["incident_id"] = incident.Id, ["text"] = "Contained" },
+            // A creation names no existing item: what makes one withheld is where the server files it (FileNewItemsUnder).
+            "create_risk" => new JsonObject { ["subject"] = "New portal risk", ["category_id"] = 1, ["source_id"] = 1 },
+            "create_incident" => new JsonObject { ["description"] = "New portal incident" },
             _ => throw new Xunit.Sdk.XunitException("No arguments for " + tool)
         };
     }
 
     /// <summary>How many write calls reached ClientServices.</summary>
     public int Writes() =>
-        RisksService.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IRisksService.SaveRisk)) +
+        RisksService.ReceivedCalls().Count(c => c.GetMethodInfo().Name is nameof(IRisksService.SaveRisk)
+            or nameof(IRisksService.CreateRisk) or nameof(IRisksService.CreateRiskScoring)) +
         FindingsService.ReceivedCalls().Count(c => c.GetMethodInfo().Name is nameof(IVulnerabilitiesService.UpdateLifecycleStatusAsync)
             or nameof(IVulnerabilitiesService.UpdateAsync) or nameof(IVulnerabilitiesService.AddActionAsync)) +
-        IncidentsService.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IIncidentsService.UpdateAsync)) +
+        IncidentsService.ReceivedCalls().Count(c => c.GetMethodInfo().Name is nameof(IIncidentsService.UpdateAsync)
+            or nameof(IIncidentsService.CreateAsync) or nameof(IIncidentsService.AddTimelineEntryAsync)) +
         AssessmentsService.ReceivedCalls().Count(c => c.GetMethodInfo().Name is nameof(IAssessmentsService.CreateRunAnswer)
             or nameof(IAssessmentsService.UpdateAssessmentRun)) +
         EntitiesService.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IEntitiesService.SaveEntityAsync)) +

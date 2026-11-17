@@ -280,14 +280,22 @@
                                 <StackPanel Orientation="Vertical">
                                     <!-- T356: an agent is on this finding, or just changed it (the fields are named). -->
                                     <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
-                                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                                            <!-- T356: the changed fields stay highlighted until the user marks them as seen or edits the item. -->
+                                            <Button Classes="type2" HorizontalAlignment="Left" Margin="0 4 0 0"
+                                                    IsVisible="{Binding AgentWatch.HasHighlights, FallbackValue=False}"
+                                                    Command="{Binding AgentWatch.BtAcknowledgeClicked}">
+                                                <TextBlock Text="{Binding AgentWatch.StrAcknowledge}"/>
+                                            </Button>
+                                        </StackPanel>
                                     </Border>
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
                                     FallbackValue=''}" Classes="formData" />
                                     <TextBlock Text="{Binding StrFixTeam}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityFixTeam.Name, 
-                                    FallbackValue=''}" Classes="formData" />
+                                    FallbackValue=''}" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=FixTeam, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=FixTeam}"/>
                                     <TextBlock Text="{Binding StrSolution}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerability.Solution,
                                     FallbackValue=''}" TextWrapping="Wrap" Classes="formData" />
@@ -395,7 +403,7 @@
                             <!-- ACTIONS -->
                             <Border Grid.Column="1" Grid.Row="4" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{Binding StrActions}" Classes="header"/>
+                                    <TextBlock Text="{Binding StrActions}" Classes="header" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Actions, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Actions}"/>
                                     <ItemsRepeater  ItemsSource="{Binding SelectedActions}" >
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="entities:NrAction">
@@ -426,7 +434,7 @@
                             <Border Grid.Column="1" Grid.Row="5" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding StrTimeline}" Classes="header"/>
+                                        <TextBlock Text="{Binding StrTimeline}" Classes="header" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Timeline, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Timeline}"/>
                                         <Button Classes="subButton" Margin="10 0 0 0"
                                                 Command="{Binding BtChangeLifecycleStatusClicked}"
                                                 ToolTip.Tip="{Binding StrChangeStatus}">

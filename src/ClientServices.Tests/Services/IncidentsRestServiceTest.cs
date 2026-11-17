@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
@@ -279,6 +281,53 @@ public class IncidentsRestServiceTest : BaseServiceTest
 
         await Assert.ThrowsAsync<RestComunicationException>(
             () => _service.CreateAsync(new Incident { Name = "x", Description = "x" }));
+    }
+
+    // ------------------------------------------------------------------- AddTimelineEntryAsync (S55 T354)
+
+    [Fact]
+    public async Task TestAddTimelineEntryAsyncPostsOnlyTheText()
+    {
+        _backend.OnPost("/Incidents/11/Timeline", new IncidentTimelineEntryDto
+        {
+            Id = 4, IncidentId = 11, UserId = 1, Text = "Contained", At = new DateTime(2026, 11, 17, 10, 0, 0)
+        });
+
+        var entry = await _service.AddTimelineEntryAsync(11, "Contained");
+
+        Assert.Equal(4, entry.Id);
+        Assert.Equal("Contained", entry.Text);
+        Assert.Equal("POST /Incidents/11/Timeline", _backend.LastRequest.ToString());
+        // Only the text travels: the server stamps the author and the time.
+        var body = System.Text.Json.JsonDocument.Parse(_backend.LastRequest.Body).RootElement;
+        Assert.Equal(new[] { "text" }, body.EnumerateObject().Select(p => p.Name.ToLowerInvariant()).ToArray());
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryAsyncThrowsWhenTheServerAnswersNothing()
+    {
+        _backend.OnStatus(Method.Post, "/Incidents/11/Timeline", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.AddTimelineEntryAsync(11, "x"));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]
+    [InlineData(HttpStatusCode.Forbidden)]
+    public async Task TestAddTimelineEntryAsyncWrapsARefusalWithItsStatus(HttpStatusCode status)
+    {
+        _backend.OnStatus(Method.Post, "/Incidents/11/Timeline", status);
+
+        var error = await Assert.ThrowsAsync<RestComunicationException>(() => _service.AddTimelineEntryAsync(11, "x"));
+        Assert.Equal(status, Assert.IsType<HttpRequestException>(error.InnerException).StatusCode);
+    }
+
+    [Fact]
+    public async Task TestAddTimelineEntryAsyncWrapsATransportFailure()
+    {
+        _backend.OnTransportFailure(Method.Post, "/Incidents/11/Timeline");
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.AddTimelineEntryAsync(11, "x"));
     }
 
     // ------------------------------------------------------------------- UpdateAsync

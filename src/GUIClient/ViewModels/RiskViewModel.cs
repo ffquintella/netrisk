@@ -367,9 +367,15 @@ public class RiskViewModel: ViewModelBase, ISelectableModule
     /// </summary>
     private async Task RefreshRiskAfterAgentChangeAsync(int id)
     {
-        if (AllRisks is null || AllRisks.All(r => r.Id != id)) return;
+        if (AllRisks is null) return;
         var fresh = (await RisksService.GetAllRisksAsync(includeClosed: true)).FirstOrDefault(r => r.Id == id);
         if (fresh is null) return;
+        if (AllRisks.All(r => r.Id != id))
+        {
+            // T354: a risk the agent created (the user approved it) joins the register list, highlighted (T356).
+            AllRisks.Add(fresh);
+            return;
+        }
         var wasSelected = SelectedRisk?.Id == id;
         ReplaceRisk(AllRisks, id, fresh);
         if (!ReferenceEquals(Risks, AllRisks)) ReplaceRisk(Risks, id, fresh);

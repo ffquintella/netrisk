@@ -205,7 +205,15 @@
                 <StackPanel Spacing="3">
                     <!-- T356: an agent is on this host, or just changed it (the fields are named). -->
                     <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
-                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                            <!-- T356: the changed fields stay highlighted until the user marks them as seen or edits the item. -->
+                            <Button Classes="type2" HorizontalAlignment="Left" Margin="0 4 0 0"
+                                    IsVisible="{Binding AgentWatch.HasHighlights, FallbackValue=False}"
+                                    Command="{Binding AgentWatch.BtAcknowledgeClicked}">
+                                <TextBlock Text="{Binding AgentWatch.StrAcknowledge}"/>
+                            </Button>
+                        </StackPanel>
                     </Border>
                     <WrapPanel Orientation="Horizontal">
                         <TextBlock Classes="title" Text="{Binding SelectedHost.HostName}" VerticalAlignment="Center"/>
@@ -358,7 +366,7 @@
                                 <TextBlock Grid.Row="4" Grid.Column="0" Classes="form_label" Text="{Binding StrMacAddress}"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.MacAddress}"/>
                                 <TextBlock Grid.Row="5" Grid.Column="0" Classes="form_label" Text="{Binding StrOperatingSystem}"/>
-                                <TextBlock Grid.Row="5" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Os}"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.Os}" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Os, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Os}"/>
                                 <TextBlock Grid.Row="6" Grid.Column="0" Classes="form_label" Text="{Binding StrOsVersion}"/>
                                 <TextBlock Grid.Row="6" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.OsVersion}"/>
                                 <TextBlock Grid.Row="7" Grid.Column="0" Classes="form_label" Text="{Binding StrStatus}"/>
@@ -389,7 +397,7 @@
                                 <TextBlock Grid.Row="19" Grid.Column="0" Classes="form_label" Text="{Binding StrRiskScoreUpdatedAt}"/>
                                 <TextBlock Grid.Row="19" Grid.Column="1" Classes="form_text" Text="{Binding SelectedHost.RiskScoreUpdatedAt}"/>
                                 <TextBlock Grid.Row="20" Grid.Column="0" Classes="form_label" Text="{Binding StrComment}"/>
-                                <TextBlock Grid.Row="20" Grid.Column="1" Classes="form_long_text" Text="{Binding SelectedHost.Comment}"/>
+                                <TextBlock Grid.Row="20" Grid.Column="1" Classes="form_long_text" Text="{Binding SelectedHost.Comment}" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.IsLit}, ConverterParameter=Comment, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static converters:AgentHighlightConverter.Tip}, ConverterParameter=Comment}"/>
                             </Grid>
                         </ScrollViewer>
 

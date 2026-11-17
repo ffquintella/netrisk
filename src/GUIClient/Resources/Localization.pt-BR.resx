@@ -7062,6 +7062,27 @@ Ligar o co-trabalho com agentes?</value>
     <data name="AgentWriteSizeMSG" xml:space="preserve">
         <value>Antes: {0} linhas, {1} caracteres · depois: {2} linhas, {3} caracteres</value>
     </data>
+    <data name="AgentWriteNewItemMSG" xml:space="preserve">
+        <value>{0} novo (ainda não criado): {1}</value>
+    </data>
+    <data name="AgentChangedFieldTip" xml:space="preserve">
+        <value>Alterado pelo agente {0} e ainda não marcado como visto.</value>
+    </data>
+    <data name="AgentAcknowledgeChanges" xml:space="preserve">
+        <value>Marcar como visto</value>
+    </data>
+    <data name="AgentHighlightedItemMSG" xml:space="preserve">
+        <value>O agente {0} alterou este item: {1}. Os campos destacados mostram os novos valores até você marcá-los como vistos ou editar o item.</value>
+    </data>
+    <data name="AgentCreateIncidentSideEffectsMSG" xml:space="preserve">
+        <value>Ao ser criado, o NetRisk pode iniciar os planos de resposta a incidentes cuja automação corresponda a este incidente e notifica os assinantes de novos incidentes.</value>
+    </data>
+    <data name="AgentCreateRiskSideEffectsMSG" xml:space="preserve">
+        <value>Ao ser criado, o NetRisk notifica os assinantes de novos riscos.</value>
+    </data>
+    <data name="ErrorSavingAssessmentRunMSG" xml:space="preserve">
+        <value>Não foi possível salvar a execução da avaliação. Nada foi alterado; tente novamente.</value>
+    </data>
     <data name="ErrorSendingCommentMSG" xml:space="preserve">
         <value>O comentário não pôde ser enviado e não foi salvo. Verifique se você ainda tem acesso a esta solicitação de correção e tente novamente.</value>
     </data>

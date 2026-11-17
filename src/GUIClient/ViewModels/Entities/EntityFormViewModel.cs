@@ -117,8 +117,13 @@ public class EntityFormViewModel : ViewModelBase
     {
         _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.ForSince(GUIClient.Agents.AgentItemKinds.Entity,
             entity.Id, loadedAt);
-        AgentWatch ??= new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Entity,
-            () => _entity?.Id, _ => System.Threading.Tasks.Task.CompletedTask);
+        if (AgentWatch is null)
+        {
+            AgentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Entity,
+                () => _entity?.Id, _ => System.Threading.Tasks.Task.CompletedTask);
+            // T356: each field an agent changed is highlighted until the user marks it as seen or edits it.
+            AgentWatch.WhenAnyValue(w => w.Highlights).Subscribe(_ => ApplyAgentHighlights());
+        }
         _entity = entity;
         AgentWatch.Refresh();
         _definition = configuration.Definitions[entity.DefinitionName];
@@ -161,6 +166,26 @@ public class EntityFormViewModel : ViewModelBase
         Fields = fields;
         IsDirty = false;
         Recompute();
+        ApplyAgentHighlights();
+        // Set after loading, so only the user's own edits end a field's highlight (T356).
+        foreach (var field in fields)
+            field.UserEdited = edited =>
+            {
+                edited.IsAgentChanged = false;
+                edited.AgentChangedTip = null;
+                AgentWatch?.UserEdited(edited.PropertyKey);
+            };
+    }
+
+    /// <summary>T356: lights the fields of <see cref="GUIClient.Agents.AgentHighlightScreens.EntityForm"/> the watcher reports changed.</summary>
+    private void ApplyAgentHighlights()
+    {
+        var highlights = AgentWatch?.Highlights ?? GUIClient.Agents.AgentFieldHighlights.None;
+        foreach (var field in Fields)
+        {
+            field.IsAgentChanged = highlights.IsLit(field.PropertyKey);
+            field.AgentChangedTip = highlights.TipFor(field.PropertyKey);
+        }
     }
 
     /// <summary>What T241 decides about one field: read-only or not, why, and the values to save back if read-only.</summary>
@@ -366,7 +391,7 @@ public class EntityFormViewModel : ViewModelBase
         if (result == null) return;
 
         _entity = result;
-        _agentGuard?.Reset(); // the form holds the server's copy again
+        _agentGuard?.Saved(); // the form holds the server's copy again; the user's save ends the agent highlights (T356)
         IsDirty = false;
         Recompute();
 

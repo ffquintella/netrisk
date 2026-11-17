@@ -61,5 +61,11 @@ public interface IIncidentsService
     /// <param name="ids">IncidentResponsePlan Ids</param>
     /// <returns></returns>
     public Task AssociateIncidentResponsPlanIdsByIdAsync(int id, List<int> ids);
-    
+
+    /// <summary>
+    /// Appends one dated, text-only entry to an incident's timeline (<c>POST /Incidents/{id}/Timeline</c>, S55 T354).
+    /// Sent once (a POST is not retried); a refusal throws with the server's status code, an empty answer throws.
+    /// </summary>
+    public Task<IncidentTimelineEntryDto> AddTimelineEntryAsync(int incidentId, string text);
+
 }

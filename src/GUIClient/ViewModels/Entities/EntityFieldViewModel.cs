@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AvaloniaExtraControls.Models;
 using Model.Entities;
@@ -76,10 +77,31 @@ public class EntityFieldViewModel : ReactiveObject
         get => _textValue;
         set
         {
+            var edited = !string.Equals(_textValue, value, StringComparison.Ordinal);
             this.RaiseAndSetIfChanged(ref _textValue, value);
             RaiseValidityChanged();
+            if (edited) UserEdited?.Invoke(this);
         }
     }
+
+    private bool _isAgentChanged;
+    /// <summary>T356: an agent changed this field and the user has not marked it as seen or edited it (highlighted).</summary>
+    public bool IsAgentChanged
+    {
+        get => _isAgentChanged;
+        set => this.RaiseAndSetIfChanged(ref _isAgentChanged, value);
+    }
+
+    private string? _agentChangedTip;
+    /// <summary>T356: the highlighted field's tooltip (localized), or null.</summary>
+    public string? AgentChangedTip
+    {
+        get => _agentChangedTip;
+        set => this.RaiseAndSetIfChanged(ref _agentChangedTip, value);
+    }
+
+    /// <summary>T356: raised when the user edits the value (set by the form after loading, so loading raises nothing).</summary>
+    public Action<EntityFieldViewModel>? UserEdited { get; set; }
 
     private decimal? _integerValue;
 

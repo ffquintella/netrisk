@@ -23,6 +23,8 @@ public interface IAgentApprovalPrompter
 /// <summary>
 /// What the per-write dialog shows (T357): the agent, the tool, the item and every field's old and new value. The values
 /// are item text and agent text — shown to the user as plain text, never logged and never sent back to the agent.
+/// <see cref="NewItem"/> (T354): the item does not exist yet; every value is what the new item gets.
+/// <see cref="SideEffectsKey"/>: the localization key of what NetRisk itself does when it lands (notifications, automations).
 /// </summary>
 public sealed record WritePrompt(
     string AgentName,
@@ -31,7 +33,9 @@ public sealed record WritePrompt(
     AgentItemRef Item,
     string ItemLabel,
     IReadOnlyList<AgentFieldChange> Changes,
-    int WaitingCount);
+    int WaitingCount,
+    bool NewItem = false,
+    string? SideEffectsKey = null);
 
 /// <summary>
 /// The approval dialogs come forward on their own, possibly while the user is typing elsewhere: Deny has the focus,

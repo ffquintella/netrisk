@@ -111,9 +111,15 @@ public class IncidentsViewModel: ViewModelBase, ISelectableModule
     /// <summary>Replaces the incident an agent changed with the server's copy, in place, keeping the search (T356).</summary>
     private async Task RefreshIncidentAfterAgentChangeAsync(int id)
     {
-        if (Incidents is null || Incidents.All(i => i.Id != id)) return;
+        if (Incidents is null) return;
         var fresh = (await IncidentsService.GetAllAsync()).FirstOrDefault(i => i.Id == id);
         if (fresh is null) return;
+        if (Incidents.All(i => i.Id != id))
+        {
+            // T354: an incident the agent created (the user approved it) joins the list, highlighted (T356).
+            Incidents.Add(fresh);
+            return;
+        }
         var wasSelected = SelectedIncident?.Id == id;
         foreach (var list in new[] { Incidents, ListedIncidents }.Distinct())
         {

@@ -51,6 +51,10 @@ public class AgentEditToolTest
         f.Assessments.DidNotReceive().UpdateAssessmentRun(Arg.Any<AssessmentRunDto>());
         f.Entities.DidNotReceive().SaveEntityAsync(Arg.Any<EntityDto>());
         f.Hosts.DidNotReceive().UpdateHostAsync(Arg.Any<Host>());
+        f.Risks.DidNotReceive().CreateRisk(Arg.Any<Risk>());
+        f.Risks.DidNotReceive().CreateRiskScoring(Arg.Any<RiskScoring>());
+        f.Incidents.DidNotReceive().CreateAsync(Arg.Any<Incident>());
+        f.Incidents.DidNotReceive().AddTimelineEntryAsync(Arg.Any<int>(), Arg.Any<string>());
     }
 
     // ---- happy paths ---------------------------------------------------------------------------------------------
@@ -460,6 +464,10 @@ public class AgentEditToolTest
                 f.Entity.EntitiesProperties.Single(p => p.Type == "criticality").Value = "5";
                 break;
             case "update_host_fields": f.Host.Status = 2; f.Host.TeamId = 4; break;
+            // T354: another risk took the subject, another incident took the number, someone changed the incident.
+            case "create_risk": f.Risks.RiskSubjectExists("Payroll phishing").Returns(true); break;
+            case "create_incident": f.NextIncidentSequence++; break;
+            case "add_incident_timeline_entry": f.Incident.Status = 3; break;
             default: throw new Xunit.Sdk.XunitException("No concurrent change defined for " + tool);
         }
     }
@@ -482,11 +490,12 @@ public class AgentEditToolTest
         var answer = await rig.CallAsync(tool);
 
         Assert.Single(prompter.WritePrompts);
-        if (tool == "add_finding_note")
+        if (tool is "add_finding_note" or "add_incident_timeline_entry")
         {
-            // Append-only: the note lands and nothing of the finding is written back.
+            // Append-only: the note or entry lands and nothing of the finding or incident is written back.
             Assert.False(answer.IsError, answer.Status);
             await f.Findings.DidNotReceive().UpdateAsync(Arg.Any<Vulnerability>());
+            await f.Incidents.DidNotReceive().UpdateAsync(Arg.Any<Incident>());
             return;
         }
         Assert.Equal(AgentToolErrors.Stale, answer.Status);
@@ -541,5 +550,346 @@ public class AgentEditToolTest
                     !((string?)property["description"])!.Contains("version"))
                     Assert.EndsWith(AgentEditToolCatalog.StoredAsUserText, (string?)property["description"]);
         }
+    }
+
+    // ---- T354 remainder: creations, the incident timeline, the action-note bound --------------------------------------
+
+    private static ScriptedPrompter Approving() => new() { OnWrite = (_, _) => Task.FromResult(true) };
+
+    [Fact]
+    public async Task TestCreateRiskFilesANewRiskWithOnlyTheScreensDefaultsAndTheUserAsOwner()
+    {
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+
+        var answer = await rig.CallAsync("create_risk");
+
+        Assert.False(answer.IsError, answer.Body);
+        f.Risks.Received(1).CreateRisk(Arg.Is<Risk>(r => r.Subject == "Payroll phishing" && r.Notes == "From the awareness review"
+            && r.Category == 1 && r.Source == 2 && r.Status == "New" && r.Owner == AgentRig.UserId
+            && r.SubmittedBy == AgentRig.UserId && r.Manager == null && r.EntityId == null && r.MitigationId == null
+            && r.CloseId == null && r.Assessment == "" && r.RiskCatalogs.Count == 0));
+        f.Risks.Received(1).CreateRiskScoring(Arg.Is<RiskScoring>(sc => sc.Id == 100 && sc.ScoringMethod == 1
+            && sc.ClassicLikelihood == 1 && sc.ClassicImpact == 1 && Math.Abs(sc.CalculatedRisk - 1.5) < 0.001));
+        Assert.Equal("created", (string?)answer.Data!["outcome"]);
+        Assert.Equal(100, (int)answer.Data["item_id"]!);
+        Assert.Equal(AgentVersions.Risk(f.CreatedRisks[0]), (string?)answer.Data["version"]);
+        Assert.DoesNotContain("Payroll phishing", answer.Body); // the agent's text is not echoed
+        // The new risk is presence-recorded under its id: the risk screen refreshes and highlights it (T356).
+        Assert.NotNull(rig.Rig.Presence.Unacknowledged(new AgentItemRef(AgentItemKinds.Risk, 100)));
+        Assert.Contains(rig.Rig.Activity.Entries(), e => e.Tool == "create_risk" && e.Item == new AgentItemRef(AgentItemKinds.Risk, 100));
+    }
+
+    [Fact]
+    public async Task TestACreationIsShownToTheUserAsAWholeNewItem()
+    {
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+
+        await rig.CallAsync("create_risk");
+
+        var prompt = Assert.Single(prompter.WritePrompts);
+        Assert.True(prompt.NewItem);
+        Assert.Equal(0, prompt.Item.Id);
+        Assert.All(prompt.Changes, c => Assert.Null(c.Before));
+        // Everything the new risk gets, including what the tool fixes: nothing is set out of the user's sight.
+        Assert.Equal(new[] { "subject", "notes", "category", "source", "status", "owner", "score" },
+            prompt.Changes.Select(c => c.Field));
+        Assert.Equal("Access (#1)", prompt.Changes.Single(c => c.Field == "category").After);
+        Assert.Equal("Process (#2)", prompt.Changes.Single(c => c.Field == "source").After);
+        Assert.StartsWith("#" + AgentRig.UserId + " (", prompt.Changes.Single(c => c.Field == "owner").After);
+    }
+
+    [Theory]
+    [InlineData("create_risk")]
+    [InlineData("create_incident")]
+    public async Task TestACreationWaitsForTheUserEvenWhenTheLeaseDoesNotAsk(string tool)
+    {
+        // A lease without confirm-each-write, and no approval queue running: nobody can be asked, so nothing is created.
+        var (rig, f) = Rig();
+
+        var answer = await rig.CallAsync(tool);
+
+        Assert.Equal(AgentToolErrors.NotConfirmed, answer.Status);
+        AssertNothingWritten(f);
+    }
+
+    [Theory]
+    [InlineData("create_risk")]
+    [InlineData("create_incident")]
+    public async Task TestADeniedCreationCreatesNothing(string tool)
+    {
+        var f = new AgentEditFixtures();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: new ScriptedPrompter());
+
+        var answer = await rig.CallAsync(tool);
+
+        Assert.Equal(AgentToolErrors.WriteDenied, answer.Status);
+        AssertNothingWritten(f);
+    }
+
+    [Fact]
+    public async Task TestACreationCountsAgainstTheWriteBudget()
+    {
+        // A lease without confirm-each-write: 19 notes go through unasked; the creation asks (always) and is counted, so
+        // the next note is the 21st write and must ask too (T359 review #6). Uncounted, it would slip through.
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = new AgentRig(prompter: prompter, tools: AgentAllTools.Catalog(f), user: AgentReadRig.Everything());
+        var (agent, key) = rig.RegisterApproved();
+        rig.Grant(agent, 1, AgentAccessMode.ReadWrite);
+        rig.Approvals.Start();
+        async Task Call(string tool)
+        {
+            var arguments = f.ArgumentsFor(tool);
+            arguments["agent_key"] = key;
+            var response = await rig.SendAsync(AgentRig.Post(AgentRig.ToolCall(1, tool, arguments.ToJsonString())));
+            Assert.DoesNotContain("\"isError\":true", response.Body);
+        }
+
+        for (var i = 0; i < AgentWriteBudget.WritesWithoutConfirmation - 1; i++) await Call("add_finding_note");
+        Assert.Empty(prompter.WritePrompts);
+        await Call("create_incident");
+        Assert.Single(prompter.WritePrompts);
+        await Call("add_finding_note");
+        Assert.Equal(2, prompter.WritePrompts.Count);
+    }
+
+    [Fact]
+    public async Task TestCreateRiskRefusesATakenSubjectAnUnknownCategoryOrSourceAndAMissingSubject()
+    {
+        var f = new AgentEditFixtures();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+        var arguments = f.ArgumentsFor("create_risk");
+
+        Assert.Equal(AgentToolErrors.Invalid, (await rig.CallAsync("create_risk", With(arguments, "subject", "Taken subject"))).Status);
+        Assert.Equal(AgentToolErrors.NotFound, (await rig.CallAsync("create_risk", With(arguments, "category_id", 99))).Status);
+        Assert.Equal(AgentToolErrors.NotFound, (await rig.CallAsync("create_risk", With(arguments, "source_id", 99))).Status);
+        Assert.Equal(AgentToolErrors.Invalid, (await rig.CallAsync("create_risk", With(arguments, "subject", null))).Status);
+        Assert.Equal(AgentToolErrors.Invalid, (await rig.CallAsync("create_risk", With(arguments, "category_id", null))).Status);
+        AssertNothingWritten(f);
+    }
+
+    [Theory]
+    [InlineData("owner")]
+    [InlineData("manager")]
+    [InlineData("owner_id")]
+    [InlineData("entity_id")]
+    [InlineData("status")]
+    [InlineData("score")]
+    public async Task TestNoPersonLinkStatusOrScoreIsAcceptedOnANewRisk(string argument)
+    {
+        var f = new AgentEditFixtures();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+
+        var answer = await rig.CallAsync("create_risk", With(f.ArgumentsFor("create_risk"), argument, 4));
+
+        Assert.Equal(AgentToolErrors.Invalid, answer.Status);
+        AssertNothingWritten(f);
+    }
+
+    [Theory]
+    [InlineData("assignee")]
+    [InlineData("assigned_to_id")]
+    [InlineData("reported_by")]
+    [InlineData("impacted_entity_id")]
+    [InlineData("status")]
+    [InlineData("name")]
+    public async Task TestNoPersonEntityStatusOrNameIsAcceptedOnANewIncident(string argument)
+    {
+        var f = new AgentEditFixtures();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+
+        var answer = await rig.CallAsync("create_incident", With(f.ArgumentsFor("create_incident"), argument, 4));
+
+        Assert.Equal(AgentToolErrors.Invalid, answer.Status);
+        AssertNothingWritten(f);
+    }
+
+    [Fact]
+    public async Task TestARiskScoreNetRiskCannotComputeIsRefusedNotSavedAsZero()
+    {
+        var f = new AgentEditFixtures();
+        f.Risks.GetRiskScore(1, 1).Returns(0f); // RisksRestService answers 0 when the call fails
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+
+        Assert.Equal(AgentToolErrors.NoAnswer, (await rig.CallAsync("create_risk")).Status);
+        AssertNothingWritten(f);
+    }
+
+    [Fact]
+    public async Task TestARiskWhoseScoreCouldNotBeSavedIsReportedAsCreatedIncomplete()
+    {
+        var f = new AgentEditFixtures();
+        f.Risks.CreateRiskScoring(Arg.Any<RiskScoring>()).Returns(_ => throw new InvalidOperationException("refused"));
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+
+        var answer = await rig.CallAsync("create_risk");
+
+        Assert.False(answer.IsError, answer.Body); // the risk exists: never "nothing was written"
+        Assert.Equal(McpDispatcher.CreatedIncomplete, answer.Status);
+        Assert.Equal(100, (int)answer.Structured["item_id"]!);
+        Assert.Equal(new[] { "score" }, answer.Structured["not_written"]!.AsArray().Select(n => (string)n!));
+        Assert.DoesNotContain("score", answer.Structured["changed_fields"]!.AsArray().Select(n => (string)n!));
+    }
+
+    [Fact]
+    public async Task TestCreateIncidentNamesItAsTheScreenDoesWithNoPeopleOrEntitiesAndTheUserAsReporter()
+    {
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+        var year = DateTime.Now.Year;
+
+        var answer = await rig.CallAsync("create_incident");
+
+        Assert.False(answer.IsError, answer.Body);
+        await f.Incidents.Received(1).CreateAsync(Arg.Is<Incident>(i => i.Name == $"SI-{year}-0005" && i.Year == year
+            && i.Sequence == 5 && i.Description == "Mail account takeover" && i.Cause == "Reused password" && i.Status == 0
+            && i.Category == "not_specified" && i.Kind == IncidentKind.Incident && i.ReportedById == AgentRig.UserId
+            && i.CreatedById == AgentRig.UserId && i.AssignedToId == null && i.ReportEntityId == null
+            && i.ImpactedEntityId == null && i.EntityId == null && i.Duration == TimeSpan.FromHours(1)));
+        await f.Incidents.DidNotReceive().AssociateIncidentResponsPlanIdsByIdAsync(Arg.Any<int>(), Arg.Any<List<int>>());
+        Assert.Equal(200, (int)answer.Data!["item_id"]!);
+        var prompt = Assert.Single(prompter.WritePrompts);
+        Assert.True(prompt.NewItem);
+        Assert.Equal($"SI-{year}-0005", prompt.ItemLabel);
+        Assert.Equal(new[] { "name", "description", "cause", "status", "category", "kind", "reported_by", "duration" },
+            prompt.Changes.Select(c => c.Field));
+    }
+
+    [Fact]
+    public async Task TestCreateIncidentRequiresADescription()
+    {
+        var f = new AgentEditFixtures();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: Approving());
+
+        var answer = await rig.CallAsync("create_incident", new JsonObject { ["cause"] = "x" });
+
+        Assert.Equal(AgentToolErrors.Invalid, answer.Status);
+        AssertNothingWritten(f);
+    }
+
+    [Fact]
+    public async Task TestAddIncidentTimelineEntryAppendsTextOnlyAndLeavesTheIncidentAlone()
+    {
+        var (rig, f) = Rig();
+
+        var answer = await rig.CallAsync("add_incident_timeline_entry");
+
+        Assert.False(answer.IsError, answer.Body);
+        Assert.Equal("created", (string?)answer.Data!["outcome"]);
+        Assert.Equal(new[] { AgentEditToolCatalog.TimelineEntryField },
+            answer.Data["changed_fields"]!.AsArray().Select(n => (string)n!));
+        await f.Incidents.Received(1).AddTimelineEntryAsync(1, "Contained at the gateway");
+        await f.Incidents.DidNotReceive().UpdateAsync(Arg.Any<Incident>());
+        Assert.DoesNotContain("Contained at the gateway", answer.Body);
+    }
+
+    [Theory]
+    [InlineData("add_incident_timeline_entry", "text")]
+    [InlineData("add_finding_note", "note")]
+    public async Task TestAnActionNoteOverTheColumnBoundIsRefusedBeforeTheUserIsAsked(string tool, string argument)
+    {
+        // nr_actions.Message is varchar(255): a longer note used to reach the server after the user approved it, and fail
+        // there (add_finding_note accepted 2,000 characters). Refused here, never cut.
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+        var longest = new string('a', AgentEditLimits.ActionNoteLength);
+
+        var refused = await rig.CallAsync(tool, With(f.ArgumentsFor(tool), argument, longest + "b"));
+
+        Assert.Equal(AgentToolErrors.Invalid, refused.Status);
+        Assert.Empty(prompter.WritePrompts);
+        AssertNothingWritten(f);
+        Assert.False((await rig.CallAsync(tool, With(f.ArgumentsFor(tool), argument, longest))).IsError);
+        Assert.Equal(255, AgentEditLimits.ActionNoteLength);
+    }
+
+    [Fact]
+    public async Task TestACreationPlanFromAToolNotDeclaredAsCreatingIsRefused()
+    {
+        // Defence in depth for the confirmation rule: only a declared creating tool — always confirmed — may create.
+        var sneaky = new AgentEditTool("edit_item", "stand-in", AgentToolPermission.Claim(StubTool.StubPermission),
+            AgentSchema.Object(), (_, _, _) => Task.FromResult(AgentEditPlan.NewItem(AgentItemKinds.Risk, "x",
+                new[] { new AgentFieldChange("subject", null, "x") },
+                _ => Task.FromResult(new AgentCreatedItem(5, "rev-0")))));
+        var rig = new AgentRig(tools: new IAgentTool[] { sneaky });
+        var (agent, key) = rig.RegisterApproved();
+        rig.Grant(agent, 1, AgentAccessMode.ReadWrite);
+
+        var response = await rig.SendAsync(AgentRig.Post(AgentRig.ToolCall(1, "edit_item", $"{{\"agent_key\":\"{key}\"}}")));
+
+        Assert.Contains(AgentToolErrors.ToolFailed, response.Body);
+        Assert.Null(rig.Presence.Unacknowledged(new AgentItemRef(AgentItemKinds.Risk, 5)));
+    }
+
+    // ---- T354 review: what NetRisk itself does when a new item lands is stated in the dialog -----------------------------
+
+    [Theory]
+    [InlineData("create_incident", AgentEditToolCatalog.IncidentCreationSideEffectsKey)]
+    [InlineData("create_risk", AgentEditToolCatalog.RiskCreationSideEffectsKey)]
+    public async Task TestANewItemsDialogStatesWhatNetRiskStartsAndNotifies(string tool, string key)
+    {
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+
+        await rig.CallAsync(tool);
+
+        Assert.Equal(key, Assert.Single(prompter.WritePrompts).SideEffectsKey);
+    }
+
+    [Fact]
+    public async Task TestAnUpdateStatesNoSideEffectAndTheIncidentDescriptionNoLongerDeniesThem()
+    {
+        var f = new AgentEditFixtures();
+        var prompter = Approving();
+        var rig = AgentReadRig.OverAllFixtures(edits: f, prompter: prompter);
+
+        await rig.CallAsync("update_incident");
+
+        Assert.Null(Assert.Single(prompter.WritePrompts).SideEffectsKey);
+        var description = f.Catalog().Single(t => t.Name == "create_incident").Description;
+        Assert.Contains("response plans", description);
+        Assert.Contains("notifies", description);
+        Assert.DoesNotContain("no response plan", description);
+    }
+
+    [Theory]
+    [InlineData("Localization.resx")]
+    [InlineData("Localization.en-US.resx")]
+    [InlineData("Localization.pt-BR.resx")]
+    public void TestTheSideEffectAndRunSaveMessagesResolveIn(string file)
+    {
+        var values = System.Xml.Linq.XDocument.Load(GUIClient.Tests.Resources.EntityConfigurationSchema.ResourcePath(file)).Root!
+            .Elements("data").ToDictionary(d => (string)d.Attribute("name")!, d => (string?)d.Element("value") ?? "");
+
+        foreach (var key in new[]
+                 {
+                     AgentEditToolCatalog.IncidentCreationSideEffectsKey, AgentEditToolCatalog.RiskCreationSideEffectsKey,
+                     "ErrorSavingAssessmentRunMSG"
+                 })
+            Assert.False(string.IsNullOrWhiteSpace(values.GetValueOrDefault(key)), $"{file} does not declare {key}");
+        if (!file.Contains("pt-BR")) Assert.Contains("response plans", values[AgentEditToolCatalog.IncidentCreationSideEffectsKey]);
+    }
+
+    [Fact]
+    public void TestTheWriteDialogShowsTheSideEffectLine()
+    {
+        var root = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+        while (root is not null && !System.IO.File.Exists(System.IO.Path.Combine(root.FullName, "GUIClient", "GUIClient.csproj")))
+            root = root.Parent;
+        Assert.NotNull(root);
+        var gui = System.IO.Path.Combine(root!.FullName, "GUIClient");
+        var viewModel = System.IO.File.ReadAllText(System.IO.Path.Combine(gui, "ViewModels", "Agents", "AgentWriteDialogViewModel.cs"));
+        var view = System.IO.File.ReadAllText(System.IO.Path.Combine(gui, "Views", "Agents", "AgentWriteDialog.axaml"));
+
+        Assert.Contains("SideEffectsText = prompt.SideEffectsKey is { } sideEffects ? Localizer[sideEffects].Value", viewModel);
+        Assert.Contains(@"Text=""{Binding SideEffectsText}""", view);
+        Assert.Contains(@"IsVisible=""{Binding HasSideEffects}""", view);
     }
 }

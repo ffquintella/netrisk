@@ -143,6 +143,8 @@ public static class AgentToolInventory
         new ReviewedAgentTool("search_risks", RiskRule, false),
         new ReviewedAgentTool("get_risk", RiskRule, false),
         new ReviewedAgentTool("get_risk_mitigation", RiskRule, false),
+        // T354: GET /Risks/Categories and /Sources need a valid user; kept at the risk module's rule (stricter).
+        new ReviewedAgentTool("list_risk_categories_and_sources", RiskRule, false),
         // RequireMgmtReviewAccess: one of the review permissions, no role.
         new ReviewedAgentTool("list_risk_reviews",
             "any of review_insignificant, review_low, review_medium, review_high, review_veryhigh", false),
@@ -191,7 +193,16 @@ public static class AgentToolInventory
         // PUT /Entities/{id}: [PermissionAuthorize(entities_manage)].
         new ReviewedAgentTool("update_entity_fields", "permission entities_manage" + NotThirdLine, true),
         // PUT /Hosts/{id}: class hosts + hosts_create.
-        new ReviewedAgentTool("update_host_fields", "permission hosts and permission hosts_create" + NotThirdLine, true)
+        new ReviewedAgentTool("update_host_fields", "permission hosts and permission hosts_create" + NotThirdLine, true),
+
+        // ---- T354 remainder. Creations always wait for the user (IAgentEditTool.CreatesItems); no person field is set
+        // by the agent. POST /Risks + /Risks/{id}/Scoring + GET /Risks/Exists (RequireSubmitRisk), GET /Risks/ScoreValue
+        // and GET /Risks (RequireRiskmanagement), the category and source lists (valid user).
+        new ReviewedAgentTool("create_risk", RiskRule + " and claim submit_risks" + NotThirdLine, true),
+        // GET /Incidents/NextSequence and POST /Incidents: class incident_management, as PUT.
+        new ReviewedAgentTool("create_incident", "permission incident_management" + NotThirdLine, true),
+        // POST /Incidents/{id}/Timeline (new, T354): class incident_management, as PUT; GET /Incidents first.
+        new ReviewedAgentTool("add_incident_timeline_entry", "permission incident_management" + NotThirdLine, true)
     }.ToDictionary(t => t.Name, StringComparer.Ordinal);
 }
 

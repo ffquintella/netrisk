@@ -233,6 +233,43 @@ public class IncidentsService(
 
     }
 
+    public async Task<IncidentTimelineEntryDto> AddTimelineEntryAsync(int incidentId, string? text, User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        var entry = text?.Trim() ?? "";
+        if (entry.Length == 0)
+            throw new InvalidParameterException("text", "A timeline entry needs text.");
+        if (entry.Length > IncidentTimelineEntryDto.MaxTextLength)
+            throw new InvalidParameterException("text",
+                $"A timeline entry holds at most {IncidentTimelineEntryDto.MaxTextLength} characters.");
+        if (entry.Any(c => char.IsControl(c) && c is not ('\n' or '\r' or '\t')))
+            throw new InvalidParameterException("text", "A timeline entry cannot carry control characters.");
+
+        await using var dbContext = DalService.GetContext();
+
+        // Through the scoped context (Track 2): an incident outside the caller's entities is "not found", never appended to.
+        if (!await dbContext.Incidents.AnyAsync(x => x.Id == incidentId))
+            throw new DataNotFoundException("Incidents", "Incident not found");
+
+        // Append-only: the incident row itself is not touched, so its last update (and an agent's version of it) stays.
+        var action = new NrAction
+        {
+            ObjectType = nameof(Incident),
+            IncidentId = incidentId,
+            UserId = user.Value,
+            DateTime = DateTime.Now,
+            Message = entry
+        };
+        dbContext.NrActions.Add(action);
+        await dbContext.SaveChangesAsync();
+
+        return new IncidentTimelineEntryDto
+        {
+            Id = action.Id, IncidentId = incidentId, At = action.DateTime, UserId = action.UserId, Text = entry
+        };
+    }
+
     /// <summary>
     /// Stage 9.2 (S42 §5.4): an incident is an <c>Incident</c> or a <c>NearMiss</c>. Any other number
     /// would be stored as a third kind nothing reads, and the record would silently stop counting as
@@ -257,8 +294,13 @@ public class IncidentsService(
             throw new DataNotFoundException("Incidents", "Incident not found");
         }
 
+        // T354 review: the incident's timeline entries (nr_actions.IncidentId, fk_inc_actions — RESTRICT since 39.sql)
+        // are deleted with it, in the same save; otherwise one appended entry makes the incident undeletable. They are
+        // the incident's own history, so they go rather than linger unlinked; the audit table records each deleted row.
+        var timeline = await dbContext.NrActions.Where(a => a.IncidentId == id).ToListAsync();
+        dbContext.NrActions.RemoveRange(timeline);
         dbContext.Incidents.Remove(existingIncident);
-        
+
         await dbContext.SaveChangesAsync();
 
     }

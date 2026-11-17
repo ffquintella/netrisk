@@ -61,7 +61,7 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
 
 
 
-    public void UpdateAssessmentRun(AssessmentRunDto assessmentRun)
+    public bool UpdateAssessmentRun(AssessmentRunDto assessmentRun)
     {
         using var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/{assessmentRun.AssessmentId}/Runs/{assessmentRun.Id}");
@@ -75,12 +75,15 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 Logger.Error("Error updating assessment run: {0}", response.ErrorMessage);
+                return false;
             }
-            
+
+            return true;
         }
         catch (Exception ex)
         {
             Logger.Error("Error updating assessment run: {0}", ex.Message);
+            return false;
         }
     }
 

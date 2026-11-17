@@ -208,8 +208,9 @@ internal sealed class AgentReadRig
 
     /// <summary>Any tool set, with a lease of <paramref name="mode"/> and the given classification (T362).</summary>
     public static AgentReadRig OverTools(IReadOnlyList<IAgentTool> tools, AgentClassificationOptions classification,
-        AuthenticatedUserInfo? user = null, AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null) =>
-        new(tools, user, mode, edits, null, classification);
+        AuthenticatedUserInfo? user = null, AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null,
+        ScriptedPrompter? prompter = null) =>
+        new(tools, user, mode, edits, prompter, classification);
 
     /// <summary>Read and edit tools over the real REST services, with a read-write lease.</summary>
     public static AgentReadRig OverAllRealServices(RealClientServices services, AuthenticatedUserInfo? user = null) =>
@@ -267,6 +268,7 @@ internal static class AgentReadToolArguments
         ["search_risks"] = "{}",
         ["get_risk"] = "{\"risk_id\":1}",
         ["get_risk_mitigation"] = "{\"risk_id\":1}",
+        ["list_risk_categories_and_sources"] = "{}",
         ["list_risk_reviews"] = "{\"risk_id\":1}",
         ["search_findings"] = "{}",
         ["get_finding"] = "{\"finding_id\":1}",
@@ -374,6 +376,14 @@ internal sealed class AgentReadFixtures
         var risks = Substitute.For<IRisksService>();
         risks.GetAllRisksAsync(Arg.Any<bool>()).Returns(_ => Task.FromResult(Risks.ToList()));
         risks.GetRiskScoringAsync(1).Returns(new RiskScoring { Id = 1, CalculatedRisk = 7.5f, ClassicImpact = 3, ClassicLikelihood = 2.5f });
+        risks.GetRiskCategoriesAsync().Returns(new List<Category>
+        {
+            new() { Value = 1, Name = "Access" }, new() { Value = 2, Name = "Monitoring " + Injection }
+        });
+        risks.GetRiskSourcesAsync().Returns(Task.FromResult<List<Source>?>(new List<Source>
+        {
+            new() { Value = 1, Name = "People" }, new() { Value = 2, Name = "Process " + Vault }
+        }));
         risks.GetRiskMgmtReviews(1).Returns(new List<MgmtReview>
         {
             new() { Id = 1, RiskId = 1, Reviewer = 4, Comments = "Accept? " + Vault, NextReview = new DateOnly(2026, 6, 1) }
@@ -522,6 +532,8 @@ internal static class AgentReadWorstCase
         risks.GetAllRisksAsync(Arg.Any<bool>()).Returns(_ => Task.FromResult(Many(i => Fill(new Risk
             { Id = i, OwnerUser = Fill(new User()), ManagerUser = Fill(new User()), CategoryNavigation = Fill(new Category()) }))));
         risks.GetRiskScoringAsync(Arg.Any<int>()).Returns(new RiskScoring { Id = 1 });
+        risks.GetRiskCategoriesAsync().Returns(_ => Many(i => Fill(new Category { Value = i })));
+        risks.GetRiskSourcesAsync().Returns(_ => Task.FromResult<List<Source>?>(Many(i => Fill(new Source { Value = i }))));
         risks.GetRiskMgmtReviews(Arg.Any<int>()).Returns(_ => Many(i => Fill(new MgmtReview
             { Id = i, ReviewNavigation = Fill(new Review()), NextStepNavigation = Fill(new NextStep()), ReviewerNavigation = Fill(new User()) })));
 

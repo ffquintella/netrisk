@@ -93,11 +93,22 @@ public class AgentToolInventoryTest
 
         Assert.Equal(AgentToolInventory.Reviewed.Values.Where(t => t.RequiresEdit).Select(t => t.Name).OrderBy(n => n),
             edits.Select(t => t.Name).OrderBy(n => n));
-        Assert.Equal(9, edits.Count);
+        Assert.Equal(12, edits.Count);
         Assert.All(edits, t => Assert.IsAssignableFrom<IAgentEditTool>(t));
         Assert.All(Catalog().Where(t => !t.RequiresEdit), t => Assert.False(t is IAgentEditTool, t.Name));
         // Every edit rule refuses the third line, as ThirdLineReadOnlyRequirement does on every API policy.
         Assert.All(edits, t => Assert.EndsWith(" and not the third line", t.Permission.Description));
+    }
+
+    [Fact]
+    public void TestOnlyTheTwoCreateToolsCreateItemsAndNoReadToolDoes()
+    {
+        // T354: a creating tool's every write waits for the user (McpDispatcher), so the set is reviewed here by name.
+        var creating = Catalog().OfType<IAgentEditTool>().Where(t => t.CreatesItems).Select(t => t.Name).OrderBy(n => n);
+
+        Assert.Equal(new[] { "create_incident", "create_risk" }, creating);
+        Assert.All(Catalog().Where(t => t.Name.StartsWith("create_", StringComparison.Ordinal)),
+            t => Assert.True(((IAgentEditTool)t).CreatesItems, t.Name));
     }
 
     [Fact]
@@ -133,6 +144,15 @@ public class AgentToolInventoryTest
             var allowed = tool.InputSchema()["properties"]!["status"]!["enum"]!.AsArray().Select(v => (string)v!).ToList();
             Assert.Equal(new[] { "active", "verified" }, allowed);
             arguments.Remove("status");
+        }
+        // T354: a new risk must be filed under a category — the server requires one and the screen offers no default. The
+        // agent proposes one from NetRisk's own list (an integer id, checked against that list), and a creating tool is
+        // never written without the user approving the whole new item on screen.
+        if (name == "create_risk")
+        {
+            Assert.True(Assert.IsAssignableFrom<IAgentEditTool>(tool).CreatesItems);
+            Assert.Equal("integer", (string?)tool.InputSchema()["properties"]!["category_id"]!["type"]);
+            arguments.Remove("category_id");
         }
         var forbidden = arguments.Where(a => ForbiddenArgumentStems.Any(stem => a.Contains(stem, StringComparison.Ordinal))
                                              || AgentSecretNames.IsCredentialLike(a)).ToList();

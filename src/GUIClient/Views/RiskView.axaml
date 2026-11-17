@@ -279,7 +279,15 @@
                     <TextBlock Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
                     <!-- T356: an agent is on this risk, or just changed it (the fields it changed are named). -->
                     <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}" Margin="5 0 0 6">
-                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                            <!-- T356: the changed fields stay highlighted until the user marks them as seen or edits the item. -->
+                            <Button Classes="type2" HorizontalAlignment="Left" Margin="0 4 0 0"
+                                    IsVisible="{Binding AgentWatch.HasHighlights, FallbackValue=False}"
+                                    Command="{Binding AgentWatch.BtAcknowledgeClicked}">
+                                <TextBlock Text="{Binding AgentWatch.StrAcknowledge}"/>
+                            </Button>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
                 <Grid Grid.Row="1" ColumnDefinitions="4*, *" Margin=" 5 0 0 0 ">
@@ -288,14 +296,14 @@
                             <TextBlock Text=" "/>
                             <StackPanel Orientation="Horizontal" Width="100"><TextBlock Text="{Binding StrIdLabel}" Classes="label"/><TextBlock Text="{Binding SelectedRiskId}" Classes="formData"/></StackPanel>
                             <StackPanel Orientation="Horizontal" Width="80"><TextBlock Text="{Binding StrCtrlNumber}" Classes="label"/><TextBlock Text="{Binding SelectedRiskCtrlNumber}" Classes="formData"/></StackPanel>
-                            <StackPanel Orientation="Horizontal" Width="180"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRiskStatus}" Foreground="{Binding SelectedRiskStatus, Converter={StaticResource StatusToColourConverter}}" Classes="formData"/></StackPanel>
+                            <StackPanel Orientation="Horizontal" Width="180"><TextBlock Text="{Binding StrStatus}" Classes="label"/><TextBlock Text="{Binding SelectedRiskStatus}" Foreground="{Binding SelectedRiskStatus, Converter={StaticResource StatusToColourConverter}}" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Status, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Status}"/></StackPanel>
                             <StackPanel Orientation="Horizontal" Width="120"><TextBlock Text="{Binding StrDate}" Classes="label"/><TextBlock Text="{Binding StrCreation}" Classes="label"/><TextBlock Text="{Binding SelectedRiskSubmissionDate, Converter={StaticResource DateToFormatedStringConverter}}" Classes="formData"/></StackPanel>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData"/></StackPanel>
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData"/></StackPanel>
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubject}" Classes="label"/><TextBlock Text="{Binding SelectedRisk.Subject}" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Subject, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Subject}"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSource}" Classes="label"/><TextBlock Text="{Binding HdRisk.Source}" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Source, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Source}"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrCategory}" Classes="label"/><TextBlock Text="{Binding HdRisk.Category}" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Category, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Category}"/></StackPanel>
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrSubmittedBy}" Classes="label"/><TextBlock Text="{Binding HdRisk.SubmittedBy}" Width="150" Classes="formData"/></StackPanel>
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrOwner}" Classes="label"/><TextBlock Text="{Binding HdRisk.Owner}" Width="150" Classes="formData" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Owner, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Owner}"/><TextBlock Text="{Binding StrManager}" Classes="label"/><TextBlock Text="{Binding HdRisk.Manager}" Width="150" Classes="formData"/></StackPanel>
                         <StackPanel Orientation="Horizontal" IsVisible="{Binding HdRisk.Entity, Converter={x:Static ObjectConverters.IsNotNull}}"><TextBlock Text="{Binding StrEntity}" Classes="label"/><TextBlock Text="{Binding HdRisk.EntityName}" Classes="formData"/></StackPanel>
 
                         <!-- Stage 9.2 (S42 §7): the structured scenario and the evidence confidence. Every row
@@ -303,10 +311,10 @@
                              risk honestly is. -->
                         <StackPanel Margin="0 5 0 0">
                             <TextBlock Classes="header2" Text="{Binding StrStructuredScenario}" HorizontalAlignment="Stretch"/>
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCause}" Classes="label"/><TextBlock Text="{Binding ScenarioCauseSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioVulnerability}" Classes="label"/><TextBlock Text="{Binding ScenarioVulnerabilitySummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCentralEvent}" Classes="label"/><TextBlock Text="{Binding ScenarioCentralEventSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
-                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioConsequences}" Classes="label"/><TextBlock Text="{Binding ScenarioConsequencesSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCause}" Classes="label"/><TextBlock Text="{Binding ScenarioCauseSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=ScenarioCause, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=ScenarioCause}"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioVulnerability}" Classes="label"/><TextBlock Text="{Binding ScenarioVulnerabilitySummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=ScenarioVulnerability, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=ScenarioVulnerability}"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioCentralEvent}" Classes="label"/><TextBlock Text="{Binding ScenarioCentralEventSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=ScenarioCentralEvent, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=ScenarioCentralEvent}"/></StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrScenarioConsequences}" Classes="label"/><TextBlock Text="{Binding ScenarioConsequencesSummary}" Classes="formData" TextWrapping="Wrap" MaxWidth="700" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=ScenarioConsequences, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=ScenarioConsequences}"/></StackPanel>
                             <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding StrEvidenceConfidence}" Classes="label"/><TextBlock Text="{Binding EvidenceConfidenceSummary}" Classes="formData"/></StackPanel>
                         </StackPanel>
 
@@ -411,7 +419,7 @@
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Background="{Binding TotalRiskScore, Converter={StaticResource RiskValueToColourConverter}}">
                                 <TextBlock Text="{Binding StrTotalScore}" />
-                                <TextBlock Text="{Binding TotalRiskScore, StringFormat=N2}" Margin="5 0"/>
+                                <TextBlock Text="{Binding TotalRiskScore, StringFormat=N2}" Margin="5 0" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Score, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Score}"/>
                             </StackPanel>
 
                             <!-- Track 8 milestone 8.2.2 — the post-treatment score beside the
@@ -514,7 +522,7 @@
                     <!-- NOTES -->
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="{Binding StrNotes}" Classes="label"/>
-                        <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80"/>
+                        <TextBox Text="{Binding SelectedRisk.Notes}" IsReadOnly="True" TextWrapping="Wrap" Height="80" Classes.agentChanged="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.IsLit}, ConverterParameter=Notes, FallbackValue=False}" ToolTip.Tip="{Binding AgentWatch.Highlights, Converter={x:Static convertes:AgentHighlightConverter.Tip}, ConverterParameter=Notes}"/>
                     </StackPanel>
                     <!-- FILES -->
                     <StackPanel Orientation="Vertical" >
