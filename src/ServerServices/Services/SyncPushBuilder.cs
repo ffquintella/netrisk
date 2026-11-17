@@ -75,9 +75,10 @@ public class SyncPushBuilder : ServiceBase, ISyncPushBuilder
             if (fr.LastReportingUserId != null) userIds.Add(fr.LastReportingUserId.Value);
 
             var comments = await _comments.GetFixRequestCommentsAsync(fr.Id);
+            // The public website never learns who wrote an anonymous comment (T375 review).
             payload.Comments.AddRange(comments.Select(c => new CommentDto
             {
-                Id = c.Id, FixRequestId = fr.Id, UserId = c.UserId, IsAnonymous = c.IsAnonymous,
+                Id = c.Id, FixRequestId = fr.Id, UserId = c.IsAnonymous ? null : c.UserId, IsAnonymous = c.IsAnonymous,
                 CommenterName = c.CommenterName, Date = c.Date, Text = c.Text
             }));
         }

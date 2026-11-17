@@ -31,8 +31,14 @@ follow [SemVer](http://semver.org/).
 - Grant agents access in 10-minute blocks through `request_access`, approved, shortened or downgraded to read-only by the user, with in-memory leases ending on expiry, logout, exit, pause or revoke (T348, S55)
 - Cover agent key handling, leases, the loopback guard and the lease gate with `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (T349, S55)
 
+### Fixed
+
+- Reject a website comment the server refuses as processed instead of retrying it on every sync cycle, and show an error in the fix chat when a comment cannot be sent (T375)
+
 ### Security
 
+- Record the signed-in user as the author of every comment instead of the id the client sends, check that the caller may read the commented host, risk, vulnerability or fix request, and never return the author of an anonymous comment from the comment endpoints or the website sync; desktop builds before this change get an error in the fix chat and must be upgraded (T375)
+- Require a participant of the fix request or the `vulnerabilities` permission to read a fix request's comments, and apply entity scope to a host's comments (T375)
 - Escape invisible, bidirectional, private-use and look-alike characters in agent tool results, and clean and count the labels and values in the write confirmation, so item text cannot forge the untrusted-data tag or hide what a write changes (T359, S55)
 - Start the agent server only when its switch is on and the current LGPD disclosure was accepted, so a switch set in the store alone starts nothing (T361, S55)
 - Accept the agent audit header only at the exact length of an issued registration id and always keep the login whole in the audit actor, so a client cannot erase its login from the audit trail with an oversized header (T358, S55)

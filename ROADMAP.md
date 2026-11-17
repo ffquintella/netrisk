@@ -1220,6 +1220,12 @@ grants, shortens or refuses it. Design, trust model and threat table:
 - [ ] T372 Add a bulk risk-chain read endpoint so classifying a risk search stops costing one chain read per risk (S55)
 - [ ] T373 Package `netrisk-mcp-bridge` self-contained in the installers so MCP clients that start it with a minimal environment need no `DOTNET_ROOT` (S55)
 - [ ] T374 Store the agent excluded-class policy organisation-wide on the server instead of per desktop (S55)
+- [x] T375 Stamp the authenticated user as the author of every comment in `CommentsController.CreateAsync`, which takes the user id from the request body for risk, vulnerability and fix-request comments, and add permission and entity-scope checks on the commented item
+  - note: fixed: `POST /Comments` stamps the signed-in user as author for every type and takes no author, date or name from the client, checks the caller may read the commented record (host `hosts`, risk `riskmanagement`, vulnerability `vulnerabilities`, fix request participants, entity scope for all), validates type, reply target and text, and an anonymous comment stores the real author but never returns it from any read path or the website sync; `GET /Comments/fixrequest/{id}` and `GET /Comments/host/{id}` now check the record and scope; the website fix-report form still supplies its own author through the sync (T388); old desktop builds get a 400 in the fix chat and must upgrade
+- [ ] T387 Require the participant rule on `EmailController` `Vulnerability/Update/{id}`, which lets any in-scope valid user send arbitrary text in a system email to the fix team
+- [ ] T388 Bind the website fix-report comment author to the report key and the fix team, so `FixReportController` and `SyncIngestService.ApplyCommentAsync` stop accepting any fixer id and fixer-typed name for a comment
+  - note: found by the T375 review; anyone holding a report key can attribute a comment to any NetRisk user
+- [ ] T389 Write comment dates in UTC on the user path to match the website path and the Track 6 convention
 
 ## Specs
 

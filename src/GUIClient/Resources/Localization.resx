@@ -7055,4 +7055,7 @@ Switch agent co-work on?</value>
     <data name="AgentWriteSizeMSG" xml:space="preserve">
         <value>Before: {0} lines, {1} characters · after: {2} lines, {3} characters</value>
     </data>
+    <data name="ErrorSendingCommentMSG" xml:space="preserve">
+        <value>The comment could not be sent and was not saved. Check that you can still see this fix request and try again.</value>
+    </data>
 </root>

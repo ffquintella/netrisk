@@ -177,9 +177,22 @@ public class SyncIngestService : ServiceBase, ISyncIngestService
 
     private async Task ApplyCommentAsync(CommentCreateDto dto)
     {
-        await _comments.CreateCommentsAsync(
-            dto.UserId, dto.Date, null, "FixRequest", dto.IsAnonymous, dto.CommenterName, dto.Text,
-            dto.FixRequestId, null, null, null);
+        // A comment the service refuses (blank, over-long or control-character text; a fix request that is gone) is
+        // refused for good: rejected and acked, not retried and logged as an error every cycle (T375 review).
+        try
+        {
+            await _comments.CreateCommentsAsync(
+                dto.UserId, dto.Date, null, "FixRequest", dto.IsAnonymous, dto.CommenterName, dto.Text,
+                dto.FixRequestId, null, null, null);
+        }
+        catch (InvalidParameterException ex)
+        {
+            throw new SyncActionRejectedException($"the comment is invalid: {ex.Message}");
+        }
+        catch (DataNotFoundException)
+        {
+            throw new SyncActionRejectedException($"fix request {dto.FixRequestId} does not exist");
+        }
     }
 
     private void ApplyPasswordChange(PasswordChangeDto dto)

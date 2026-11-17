@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Model.Exceptions;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 using ServerServices.Tests.DI;
@@ -130,21 +131,21 @@ public class CommentsServiceTests: BaseServiceTest
     [Fact]
     public async Task TestCreateHostCommentRequiresHostId()
     {
-        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+        await Assert.ThrowsAsync<InvalidParameterException>(() => _commentsService.CreateCommentsAsync(1,
             DateTime.Now, null, "Host", false, "Name", "Text", null, null, null, null));
     }
 
     [Fact]
     public async Task TestCreateHostCommentRequiresText()
     {
-        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+        await Assert.ThrowsAsync<InvalidParameterException>(() => _commentsService.CreateCommentsAsync(1,
             DateTime.Now, null, "Host", false, "Name", "  ", null, null, null, 1));
     }
 
     [Fact]
     public async Task TestCreateHostCommentRejectsUnknownHost()
     {
-        await Assert.ThrowsAsync<Exception>(() => _commentsService.CreateCommentsAsync(1,
+        await Assert.ThrowsAsync<DataNotFoundException>(() => _commentsService.CreateCommentsAsync(1,
             DateTime.Now, null, "Host", false, "Name", "Text", null, null, null, 99999));
     }
 

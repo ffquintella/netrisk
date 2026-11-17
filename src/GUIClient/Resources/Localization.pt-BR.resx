@@ -7062,4 +7062,7 @@ Ligar o co-trabalho com agentes?</value>
     <data name="AgentWriteSizeMSG" xml:space="preserve">
         <value>Antes: {0} linhas, {1} caracteres · depois: {2} linhas, {3} caracteres</value>
     </data>
+    <data name="ErrorSendingCommentMSG" xml:space="preserve">
+        <value>O comentário não pôde ser enviado e não foi salvo. Verifique se você ainda tem acesso a esta solicitação de correção e tente novamente.</value>
+    </data>
 </root>
