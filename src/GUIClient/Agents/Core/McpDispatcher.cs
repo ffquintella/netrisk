@@ -69,7 +69,13 @@ public sealed class McpDispatcher
     private readonly IAgentAuditSink _audit;
     private readonly AgentActivityLog _activity;
     private readonly AgentPresence _presence;
+    private readonly AgentClassificationOptions _classification;
     private readonly object _sessionsGate = new();
+
+    // T359 review #6: the writes that landed under each lease. Past the budget, every further write of that lease waits
+    // for the user even when the lease did not ask for confirmation.
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<AgentLease, System.Runtime.CompilerServices.StrongBox<int>>
+        _writesByLease = new();
 
     // Review M63 #6: the agents with a change waiting for the user (confirm-each-write), at most one each.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _pendingWrites = new(StringComparer.Ordinal);
@@ -79,11 +85,17 @@ public sealed class McpDispatcher
     /// The signed-in user as the client holds it (<c>IAuthenticationService.AuthenticatedUserInfo</c>), read on every
     /// call. Absent means nobody: no business tool is listed or runs.
     /// </param>
+    /// <param name="classification">
+    /// T362: the data classification and the exclusion policy every tool call applies. Absent means
+    /// <see cref="AgentClassificationOptions.Unconfigured"/>: every item with a classified link is withheld.
+    /// </param>
     public McpDispatcher(AgentRegistry registry, AgentLeaseManager leases, AgentApprovalCoordinator approvals,
         TimeProvider time, McpServerOptions? options = null, IReadOnlyList<IAgentTool>? tools = null,
         Func<AuthenticatedUserInfo?>? currentUser = null, IAgentAuditSink? audit = null,
-        AgentActivityLog? activity = null, AgentPresence? presence = null)
+        AgentActivityLog? activity = null, AgentPresence? presence = null,
+        AgentClassificationOptions? classification = null)
     {
+        _classification = classification ?? AgentClassificationOptions.Unconfigured;
         _activity = activity ?? new AgentActivityLog();
         _presence = presence ?? new AgentPresence();
         _registry = registry;
@@ -243,7 +255,7 @@ public sealed class McpDispatcher
 
         if (item is not null)
             OutsideAgentScope(() => _presence.Touch(item, agent.Name, tool.RequiresEdit, _time.GetUtcNow()));
-        var call = new AgentToolCall(agent, lease!, user);
+        var call = new AgentToolCall(agent, lease!, user) { ClassificationOptions = _classification };
 
         var result = tool is IAgentEditTool edit
             ? await EditAsync(edit, call, forwarded, cancellationToken).ConfigureAwait(false)
@@ -313,10 +325,26 @@ public sealed class McpDispatcher
     {
         var agent = call.Agent;
 
+        // T359 review #6: a lease without confirm-each-write may make AgentWriteBudget.WritesWithoutConfirmation writes;
+        // after that each write is confirmed like under a confirming lease, and the activity panel says so once.
+        var landed = _writesByLease.GetOrCreateValue(call.Lease);
+        bool confirm;
+        lock (landed)
+        {
+            confirm = call.Lease.ConfirmEachWrite || landed.Value >= AgentWriteBudget.WritesWithoutConfirmation;
+            if (!call.Lease.ConfirmEachWrite && landed.Value == AgentWriteBudget.WritesWithoutConfirmation)
+            {
+                landed.Value++; // the notice is recorded once per lease
+                OutsideAgentScope(() => _activity.Record(new AgentActivityEntry(_time.GetUtcNow(), agent.Id, agent.Name,
+                    tool.Name, true, null, AgentWriteBudget.ConfirmationRequired)));
+                RecordTool(AgentAuditKind.ToolRefused, agent, tool, "write budget reached: confirmation now required");
+            }
+        }
+
         // Review M63 #6: under confirm-each-write an agent has at most one change waiting for the user; a parallel edit
         // is refused before it reads anything, so a stuck or hostile agent cannot pile dialogs up.
         var holdsSlot = false;
-        if (call.Lease.ConfirmEachWrite)
+        if (confirm)
         {
             if (!_pendingWrites.TryAdd(agent.Id, 0))
             {
@@ -348,7 +376,7 @@ public sealed class McpDispatcher
                 return Checked(agent, tool, AgentJson.ToObject(new AgentEditResult("unchanged", plan.Item.Kind, plan.Item.Id,
                     plan.CurrentVersion, Array.Empty<string>()), typeof(AgentEditResult)), call.Withheld);
 
-            if (call.Lease.ConfirmEachWrite)
+            if (confirm)
             {
                 // Nobody can be asked (the approval queue is stopped): never a silent write, never a false "declined".
                 if (!_approvals.IsRunning)
@@ -387,6 +415,7 @@ public sealed class McpDispatcher
         }
 
         // The write landed: views refresh, a form holding an older copy refuses to save over it (T356).
+        lock (landed) landed.Value++;
         OutsideAgentScope(() => _presence.RecordChange(plan.Item, agent.Name, fields, _time.GetUtcNow()));
         RecordTool(AgentAuditKind.ToolEdited, agent, tool, plan.Item + " fields " + string.Join(",", fields));
 
@@ -442,8 +471,14 @@ public sealed class McpDispatcher
         try
         {
             OnLeaseChanged();
+            // T359 review #5: the label and the values are shown cleaned — one line for the label, no invisible or
+            // bidirectional characters, runs of blank lines collapsed and counted (AgentWriteDisplay).
             approved = await _approvals.ConfirmWriteAsync(new WritePrompt(agent.Name, agent.Fingerprint, tool.Name,
-                plan.Item, plan.ItemLabel, plan.Changes, 0), waiting.Token).ConfigureAwait(false);
+                plan.Item, AgentWriteDisplay.Line(plan.ItemLabel),
+                plan.Changes.Select(c => new AgentFieldChange(AgentWriteDisplay.Line(c.Field),
+                    c.Before is null ? null : AgentWriteDisplay.Block(c.Before),
+                    c.After is null ? null : AgentWriteDisplay.Block(c.After))).ToList(), 0),
+                waiting.Token).ConfigureAwait(false);
         }
         finally
         {

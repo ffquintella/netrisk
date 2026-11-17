@@ -134,13 +134,21 @@ public static class AgentReadMap
 
     public static AgentEntityRef EntityRef(Entity e) => new(e.Id, Required(e.DefinitionName), EntityName(e));
 
-    public static AgentEntityDetail EntityDetail(Entity e, AgentWithholding withheld)
+    /// <param name="hiddenReferences">
+    /// T362: ids of withheld entities. A reference property (<see cref="AgentDataPolicy.EntityReferenceProperties"/>)
+    /// pointing at one is withheld and counted as classified, so a visible entity never names a withheld one.
+    /// </param>
+    public static AgentEntityDetail EntityDetail(Entity e, AgentWithholding withheld, IReadOnlySet<int>? hiddenReferences = null)
     {
         var properties = (e.EntitiesProperties ?? Array.Empty<EntitiesProperty>()).ToList();
         var kept = new List<EntitiesProperty>();
         foreach (var property in properties)
         {
-            if (AgentDataPolicy.Screen(property.Type, property.Value) is { } kind) withheld.Add(kind);
+            if (hiddenReferences is { Count: > 0 } && AgentDataPolicy.EntityReferenceProperties.Contains(property.Type ?? "") &&
+                int.TryParse(property.Value?.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var target) && hiddenReferences.Contains(target))
+                withheld.Add(AgentWithheldKind.Classified);
+            else if (AgentDataPolicy.Screen(property.Type, property.Value) is { } kind) withheld.Add(kind);
             else kept.Add(property);
         }
         return new AgentEntityDetail(e.Id, Required(e.DefinitionName), EntityName(e), Title(e.Status), e.Parent, e.Created,

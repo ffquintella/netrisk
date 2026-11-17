@@ -152,11 +152,12 @@ public sealed class ClientServicesAccessorCollection : ICollectionFixture<Servic
 internal sealed class AgentReadRig
 {
     private AgentReadRig(IReadOnlyList<IAgentTool> tools, AuthenticatedUserInfo? user,
-        AgentAccessMode mode = AgentAccessMode.Read, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null)
+        AgentAccessMode mode = AgentAccessMode.Read, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null,
+        AgentClassificationOptions? classification = null)
     {
         Tools = tools;
         Edits = edits ?? new AgentEditFixtures();
-        Rig = new AgentRig(prompter: prompter, tools: Tools, user: user ?? Everything());
+        Rig = new AgentRig(prompter: prompter, tools: Tools, user: user ?? Everything(), classification: classification);
         var (agent, key) = Rig.RegisterApproved();
         Agent = agent;
         // With a prompter the lease confirms each write and the approval queue runs (T357).
@@ -198,11 +199,17 @@ internal sealed class AgentReadRig
     /// so the edit tools are listed and run; confirm-each-write off unless the test turns it on).
     /// </summary>
     public static AgentReadRig OverAllFixtures(AuthenticatedUserInfo? user = null,
-        AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null)
+        AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null,
+        AgentClassificationOptions? classification = null)
     {
         edits ??= new AgentEditFixtures();
-        return new AgentReadRig(AgentAllTools.Catalog(edits), user, mode, edits, prompter);
+        return new AgentReadRig(AgentAllTools.Catalog(edits), user, mode, edits, prompter, classification);
     }
+
+    /// <summary>Any tool set, with a lease of <paramref name="mode"/> and the given classification (T362).</summary>
+    public static AgentReadRig OverTools(IReadOnlyList<IAgentTool> tools, AgentClassificationOptions classification,
+        AuthenticatedUserInfo? user = null, AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null) =>
+        new(tools, user, mode, edits, null, classification);
 
     /// <summary>Read and edit tools over the real REST services, with a read-write lease.</summary>
     public static AgentReadRig OverAllRealServices(RealClientServices services, AuthenticatedUserInfo? user = null) =>
@@ -271,7 +278,7 @@ internal static class AgentReadToolArguments
         ["list_assessments"] = "{}",
         ["list_assessment_runs"] = "{\"assessment_id\":1}",
         ["get_assessment_run_answers"] = "{\"assessment_id\":1,\"run_id\":1}",
-        ["list_assessment_evidence"] = "{\"run_id\":1}",
+        ["list_assessment_evidence"] = "{\"assessment_id\":1,\"run_id\":1}",
         ["search_entities"] = "{}",
         ["get_entity"] = "{\"entity_id\":1}",
         ["get_entity_relationships"] = "{\"entity_id\":1}",

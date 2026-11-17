@@ -40,6 +40,17 @@
 
         <StackPanel Grid.Row="13" Grid.Column="1" MaxWidth="440">
             <TextBlock Text="{Binding StrNotice}" Classes="notice" Margin="0 12 0 0"/>
+            <!-- T361: the LGPD disclosure, with the data classes withheld now (T362). -->
+            <Border Classes="formCard caution" Margin="0 8 0 0">
+                <Grid ColumnDefinitions="Auto,*">
+                    <avalonia:MaterialIcon Grid.Column="0" Kind="ShieldAlertOutline" Classes="cautionIcon" Width="20" Height="20"
+                                           VerticalAlignment="Top" Margin="0 0 8 0"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding StrLgpd}" Classes="hint"/>
+                        <TextBlock Text="{Binding StrSandbox}" Classes="notice"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
             <StackPanel Margin="10 10 0 10" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Name="BtGrant" Classes="dialog1" Command="{Binding BtGrantClicked}">
                     <StackPanel Orientation="Horizontal">

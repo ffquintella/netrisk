@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Agents;
 using GUIClient.Agents.ReadTools;
@@ -32,11 +33,17 @@ public sealed class RiskOverviewAgentTools : IAgentToolSource
             "band, 7-day change, categories and data quality. Informational only: it decides nothing.",
             overview,
             AgentSchema.Object(AgentSchema.Text("node_ref", 200, "A node_ref from an earlier overview answer; omit for the top.")),
-            async (_, args, cancellationToken) =>
+            async (call, args, cancellationToken) =>
             {
-                var answer = await riskIndex.GetOverviewAsync(args.Text("node_ref", 200), null, cancellationToken)
+                var nodeRef = args.Text("node_ref", 200);
+                await EnsureNodeVisibleAsync(call, nodeRef, cancellationToken);
+                var answer = await riskIndex.GetOverviewAsync(nodeRef, null, cancellationToken)
                              ?? throw AgentToolErrors.NoAnswerError();
-                return Overview(answer);
+                await EnsureNodeVisibleAsync(call, answer.Node.Key, cancellationToken);
+                // T362: an entity node withheld by the classification policy is never named — in the path either.
+                var breadcrumb = await call.Classification.KeepAsync(answer.Breadcrumb ?? Array.Empty<RiskIndexNodeRef>(),
+                    n => Links(n.Key), cancellationToken);
+                return Overview(answer, breadcrumb);
             });
 
         yield return new AgentReadTool<AgentOverviewChildren>("list_risk_overview_children",
@@ -51,25 +58,38 @@ public sealed class RiskOverviewAgentTools : IAgentToolSource
                         .Select(n => (JsonNode?)JsonValue.Create(n)).ToArray()),
                     ["description"] = "How to break the node down (default Unit)."
                 }, false)),
-            async (_, args, cancellationToken) =>
+            async (call, args, cancellationToken) =>
             {
                 var dimensionText = args.Text("dimension", 32);
                 var dimension = RiskIndexDimension.Unit;
                 if (dimensionText is not null && (!Enum.TryParse(dimensionText, ignoreCase: true, out dimension)
                                                   || !Enum.IsDefined(dimension)))
                     throw new AgentToolException(AgentToolErrors.Invalid, "Argument 'dimension' is not a known dimension.");
-                var answer = await riskIndex.GetNodesAsync(args.Text("node_ref", 200), dimension, null, null,
+                var nodeRef = args.Text("node_ref", 200);
+                await EnsureNodeVisibleAsync(call, nodeRef, cancellationToken);
+                var answer = await riskIndex.GetNodesAsync(nodeRef, dimension, null, null,
                     cancellationToken) ?? throw AgentToolErrors.NoAnswerError();
-                return Children(answer);
+                var rows = await call.Classification.KeepAsync(answer.Rows ?? Array.Empty<RiskIndexNodeRowDto>(),
+                    r => Links(r.Node.Key), cancellationToken);
+                return Children(answer, rows);
             });
     }
+
+    /// <summary>T362: a node keyed on an entity (<c>e:id</c>) carries that entity's classification; other nodes none.</summary>
+    private static AgentItemLinks Links(string? key) =>
+        RiskIndexNodeKey.TryParse(key, out var parsed) && parsed.EntityId is { } entityId
+            ? AgentItemLinks.ForEntity(entityId)
+            : AgentItemLinks.Nothing;
+
+    private static Task EnsureNodeVisibleAsync(AgentToolCall call, string? key, System.Threading.CancellationToken ct) =>
+        call.Classification.EnsureVisibleAsync(Links(key), cancellationToken: ct);
 
     private static string? Title(string? value) => AgentResultLimits.Clip(value, AgentResultLimits.TitleLength);
 
     private static AgentOverviewNode Node(RiskIndexNodeRef n) => new(Title(n.Key) ?? "", Title(n.Label) ?? "", Title(n.NodeType) ?? "");
 
-    private static AgentRiskOverview Overview(RiskIndexOverviewDto o) => new(Node(o.Node),
-        (o.Breadcrumb ?? Array.Empty<RiskIndexNodeRef>()).Select(Node).ToList(), o.SnapshotDate, o.ComputedAtUtc,
+    private static AgentRiskOverview Overview(RiskIndexOverviewDto o, IEnumerable<RiskIndexNodeRef> breadcrumb) => new(Node(o.Node),
+        breadcrumb.Select(Node).ToList(), o.SnapshotDate, o.ComputedAtUtc,
         o.Provenance.ToString(), o.Mode.ToString(),
         o.Headline is { } h
             ? new AgentOverviewHeadline(h.Displayed, Title(h.BandKey), h.DisplayState.ToString(), h.Delta7d?.Points,
@@ -81,7 +101,8 @@ public sealed class RiskOverviewAgentTools : IAgentToolSource
         o.Quality is { } q ? new AgentOverviewQuality(q.Coverage, q.Freshness, q.Quality, Title(q.QualityBandKey)) : null,
         o.ObjectCount);
 
-    private static AgentOverviewChildren Children(RiskIndexNodeChildrenDto c) => new(Node(c.Parent), c.Dimension.ToString(),
-        AgentCappedList<AgentOverviewChild>.Of(c.Rows, r => new AgentOverviewChild(Node(r.Node), r.Displayed, Title(r.BandKey),
+    private static AgentOverviewChildren Children(RiskIndexNodeChildrenDto c, IEnumerable<RiskIndexNodeRowDto> rows) =>
+        new(Node(c.Parent), c.Dimension.ToString(),
+        AgentCappedList<AgentOverviewChild>.Of(rows, r => new AgentOverviewChild(Node(r.Node), r.Displayed, Title(r.BandKey),
             r.State.ToString(), r.Delta7d, r.Coverage, r.ObjectCount, r.HasChildren)));
 }

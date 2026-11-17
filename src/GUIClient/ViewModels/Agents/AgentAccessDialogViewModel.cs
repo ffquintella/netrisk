@@ -29,6 +29,22 @@ public class AgentAccessDialogViewModel : ParameterizedDialogViewModelBase<Agent
     public string StrConfirmEachWrite { get; } = Localizer["AgentConfirmEachWrite"];
     public string StrConfirmEachWriteHint { get; } = Localizer["AgentConfirmEachWriteHintMSG"];
 
+    /// <summary>
+    /// T361: the LGPD disclosure — item content, personal data included, goes to the agent's model provider; what is
+    /// withheld, with the data classes the policy excludes now (T362); and that the agent must be one the organisation
+    /// approved.
+    /// </summary>
+    /// <summary>T359 review #2: the same-user agent assumption — MCP-layer limits do not bind an agent with a shell.</summary>
+    public string StrSandbox { get; } = Localizer["AgentAccessSandboxMSG"];
+
+    public string StrLgpd { get; } = string.Format(Localizer["AgentAccessLgpdMSG"],
+        ExcludedClassesText(GetService<AgentCoworkService>().ExclusionPolicy));
+
+    /// <summary>The policy's classes as localized labels, or "none".</summary>
+    public static string ExcludedClassesText(AgentExclusionPolicy policy) => policy.IsActive
+        ? string.Join("; ", policy.Excluded.OrderBy(c => c).Select(c => Localizer[AgentDataClasses.LabelKey(c)]))
+        : Localizer["AgentDataClassesNone"];
+
     private IReadOnlyList<int> _blocks = AgentAccessChoices.Blocks(1);
     private IReadOnlyList<AgentAccessMode> _modes = AgentAccessChoices.Modes(AgentAccessMode.Read);
 

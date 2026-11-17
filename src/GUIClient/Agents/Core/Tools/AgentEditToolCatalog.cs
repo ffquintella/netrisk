@@ -146,7 +146,7 @@ public static class AgentEditToolCatalog
                 Text("scenario_vulnerability", AgentEditLimits.TextLength, "New scenario vulnerability."),
                 Text("scenario_central_event", AgentEditLimits.TextLength, "New scenario central event."),
                 Text("scenario_consequences", AgentEditLimits.TextLength, "New scenario consequences.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("risk_id");
                 var version = args.Version();
@@ -167,6 +167,8 @@ public static class AgentEditToolCatalog
                 if (updates.All(u => u.Value is null)) throw NothingToChange();
 
                 var risk = await FreshRisk(s, id);
+                // T362: a withheld item is refused before anything else is compared or validated.
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForRisk(risk), edit: true, ct);
                 if (AgentVersions.Risk(risk) != version) throw AgentEditArgs.Stale("get_risk");
 
                 // EditRiskViewModel's rules: a subject is required (Text refuses blank) and unique, compared trimmed.
@@ -212,7 +214,7 @@ public static class AgentEditToolCatalog
                     ["description"] = "The new lifecycle state."
                 }, true),
                 Text("justification", AgentEditLimits.NoteLength, "Why; recorded in the finding's lifecycle history.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("finding_id");
                 var version = args.Version();
@@ -222,6 +224,7 @@ public static class AgentEditToolCatalog
                 var justification = args.Text("justification", AgentEditLimits.NoteLength);
 
                 var finding = await FreshFinding(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), edit: true, ct);
                 if (AgentVersions.Finding(finding) != version) throw AgentEditArgs.Stale("get_finding");
 
                 var changes = finding.LifecycleStatus == target
@@ -246,13 +249,14 @@ public static class AgentEditToolCatalog
             AgentWritePermissions.FindingAssignment,
             AgentSchema.Object(AgentSchema.Id("finding_id", "The finding (vulnerability) id."), VersionArgument,
                 AgentSchema.Id("fix_team_id", "The team that should fix it.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("finding_id");
                 var version = args.Version();
                 var teamId = args.Id("fix_team_id");
 
                 var finding = await FreshFinding(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), edit: true, ct);
                 if (AgentVersions.Finding(finding) != version) throw AgentEditArgs.Stale("get_finding");
 
                 // The GUI picks the team from the team list; an id that is not on it is refused the same way.
@@ -287,11 +291,12 @@ public static class AgentEditToolCatalog
                     ["type"] = "string", ["maxLength"] = AgentEditLimits.NoteLength,
                     ["description"] = "The note. " + StoredAsUserText
                 }, true)),
-            async (call, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("finding_id");
                 var note = args.Text("note", AgentEditLimits.NoteLength, required: true)!;
                 var finding = await FreshFinding(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), edit: true, ct);
                 var userId = call.User?.UserId ?? throw new AgentToolException("unavailable", "Nobody is signed in to NetRisk.");
                 return new AgentEditPlan(new AgentItemRef(AgentItemKinds.Finding, id), Label(finding.Title),
                     new[] { new AgentFieldChange("note", null, note) }, "created",
@@ -328,7 +333,7 @@ public static class AgentEditToolCatalog
                 Text("solution", AgentEditLimits.TextLength, "New solution."),
                 Text("recommendations", AgentEditLimits.TextLength, "New recommendations."),
                 Text("notes", AgentEditLimits.TextLength, "New notes.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("incident_id");
                 var version = args.Version();
@@ -347,6 +352,7 @@ public static class AgentEditToolCatalog
                 if (updates.All(u => u.Value is null)) throw NothingToChange();
 
                 var incident = await FreshIncident(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForIncident(incident), edit: true, ct);
                 if (AgentVersions.Incident(incident) != version) throw AgentEditArgs.Stale("get_incident");
 
                 var changes = Diff(incident, updates.Where(u => u.Value is not null).Select(u => (u.Field, u.Value, u.Get)));
@@ -379,7 +385,7 @@ public static class AgentEditToolCatalog
             AgentWritePermissions.Assessment,
             AgentSchema.Object(AgentSchema.Id("assessment_id", "The assessment id."), AgentSchema.Id("run_id", "The run id."),
                 AgentSchema.Id("question_id", "The question id."), AgentSchema.Id("answer_id", "The chosen answer option id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var assessmentId = args.Id("assessment_id");
                 var runId = args.Id("run_id");
@@ -387,6 +393,7 @@ public static class AgentEditToolCatalog
                 var answerId = args.Id("answer_id");
 
                 var run = FreshRun(s, assessmentId, runId);
+                await EnsureRunVisibleAsync(call, run, ct);
                 var question = (s.Assessments.GetAssessmentQuestions(assessmentId) ?? throw AgentToolErrors.NoAnswerError())
                                .FirstOrDefault(q => q.Id == questionId) ?? throw AgentToolErrors.NotFoundError("question in this assessment");
                 var option = (s.Assessments.GetAssessmentAnswers(assessmentId) ?? throw AgentToolErrors.NoAnswerError())
@@ -426,7 +433,7 @@ public static class AgentEditToolCatalog
                     ["type"] = "string", ["maxLength"] = AgentEditLimits.NoteLength,
                     ["description"] = "The new comments. " + StoredAsUserText
                 }, true)),
-            async (call, args, _) =>
+            async (call, args, ct) =>
             {
                 var userId = call.User?.UserId ?? throw new AgentToolException("unavailable", "Nobody is signed in to NetRisk.");
                 var assessmentId = args.Id("assessment_id");
@@ -435,6 +442,7 @@ public static class AgentEditToolCatalog
                 var comments = args.Text("comments", AgentEditLimits.NoteLength, required: true)!;
 
                 var run = FreshRun(s, assessmentId, runId);
+                await EnsureRunVisibleAsync(call, run, ct);
                 if (AgentVersions.AssessmentRun(run) != version) throw AgentEditArgs.Stale("list_assessment_runs");
 
                 var changes = string.Equals(run.Comments, comments, StringComparison.Ordinal)
@@ -474,6 +482,10 @@ public static class AgentEditToolCatalog
     private static string AgentSessionUserLabel(AgentToolCall call) =>
         AgentResultLimits.Clip(call.User?.UserName ?? call.User?.UserAccount, 80) ?? "";
 
+    /// <summary>T362: the run's own entity or host, and its assessment's entity (<see cref="AgentItemLinks.ForRun"/>).</summary>
+    private static Task EnsureRunVisibleAsync(AgentToolCall call, AssessmentRun run, System.Threading.CancellationToken ct) =>
+        call.Classification.EnsureVisibleAsync(AgentItemLinks.ForRun(run), edit: true, ct);
+
     private static AssessmentRun FreshRun(AgentEditServices s, int assessmentId, int runId) =>
         (s.Assessments.GetAssessmentRuns(assessmentId) ?? throw AgentToolErrors.NoAnswerError())
         .FirstOrDefault(r => r.Id == runId) ?? throw AgentToolErrors.NotFoundError("run of this assessment");
@@ -492,7 +504,7 @@ public static class AgentEditToolCatalog
                 Text("description", AgentEditLimits.TextLength, "New description."),
                 Text("objective", AgentEditLimits.TextLength, "New objective."),
                 Text("technology", AgentEditLimits.TitleLength, "New technology.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("entity_id");
                 var version = args.Version();
@@ -504,6 +516,7 @@ public static class AgentEditToolCatalog
                 // Always from the API with this session; IEntitiesService.GetEntity reads a process-wide cache.
                 var entity = (await s.Entities.GetAllFromServerAsync() ?? throw AgentToolErrors.NoAnswerError())
                              .FirstOrDefault(e => e.Id == id) ?? throw AgentToolErrors.NotFoundError("entity");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForEntity(entity.Id), edit: true, ct);
                 if (AgentVersions.Entity(entity) != version) throw AgentEditArgs.Stale("get_entity");
                 if (ProtectedDefinitions.Contains(entity.DefinitionName))
                     throw new AgentToolException(AgentToolErrors.Refused,
@@ -562,7 +575,7 @@ public static class AgentEditToolCatalog
             AgentSchema.Object(AgentSchema.Id("host_id", "The host id."), VersionArgument,
                 Text("comment", AgentEditLimits.NoteLength, "New comment."),
                 Text("os", 255, "New operating-system text.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("host_id");
                 var version = args.Version();
@@ -571,6 +584,7 @@ public static class AgentEditToolCatalog
                 if (comment is null && os is null) throw NothingToChange();
 
                 var host = await FreshHost(s, id);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForHost(host), edit: true, ct);
                 if (AgentVersions.Host(host) != version) throw AgentEditArgs.Stale("get_host");
 
                 var changes = new List<AgentFieldChange>();

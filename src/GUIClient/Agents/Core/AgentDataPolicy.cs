@@ -15,7 +15,13 @@ public enum AgentWithheldKind
     Secret,
 
     /// <summary>An entity property the reviewed schema does not declare safe.</summary>
-    Undeclared
+    Undeclared,
+
+    /// <summary>
+    /// A whole item — or a reference to one — whose data class the organisation withholds from agents (T362,
+    /// <see cref="AgentExclusionPolicy"/>), or whose class could not be established.
+    /// </summary>
+    Classified
 }
 
 /// <summary>What a tool left out of its answer. The dispatcher reports the counts in the envelope; never the values.</summary>
@@ -24,10 +30,12 @@ public sealed class AgentWithholding
     private int _personal;
     private int _secret;
     private int _undeclared;
+    private int _classified;
 
     public int Personal => _personal;
     public int Secret => _secret;
     public int Undeclared => _undeclared;
+    public int Classified => _classified;
 
     public void Add(AgentWithheldKind kind)
     {
@@ -35,6 +43,7 @@ public sealed class AgentWithholding
         {
             case AgentWithheldKind.Personal: System.Threading.Interlocked.Increment(ref _personal); break;
             case AgentWithheldKind.Secret: System.Threading.Interlocked.Increment(ref _secret); break;
+            case AgentWithheldKind.Classified: System.Threading.Interlocked.Increment(ref _classified); break;
             default: System.Threading.Interlocked.Increment(ref _undeclared); break;
         }
     }
@@ -63,6 +72,17 @@ public static class AgentDataPolicy
         "technology", "organizationUnit", "applications", "technicalOwner", "strategicObjectives", "sensitive", "processes",
         "parentOrganizationUnit", "parentApplication", "objective", "numberOfEmployees", "members", "leader",
         "isMainOrganization", "internetFacing", "horizon", "environment", "data", "responsible"
+    };
+
+    /// <summary>
+    /// The properties of <c>API/EntitiesConfiguration.yaml</c> (2.7) typed <c>Definition(…)</c>: their value is the id of
+    /// another entity. T362 withholds one that points at an entity the classification policy withholds.
+    /// </summary>
+    public static readonly IReadOnlySet<string> EntityReferenceProperties = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "applications", "data", "leader", "mainOrganization", "members", "organizationUnit", "parentApplication",
+        "parentOrganizationUnit", "processes", "responsible", "securityClassification", "strategicObjectives",
+        "technicalOwner"
     };
 
     // Contact identifiers by name: the schema's own (email, phoneNumber) and the usual others, in English and Portuguese.

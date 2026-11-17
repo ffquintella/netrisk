@@ -6983,4 +6983,76 @@ Save anyway?</value>
     <data name="AgentConflictMSG" xml:space="preserve">
         <value>Not saved: agent {0} changed this item while you were editing it ({1}). Close this window and open the item again so nothing is overwritten.</value>
     </data>
+    <data name="AgentServerDisclosureTitle" xml:space="preserve">
+        <value>Before agents can connect</value>
+    </data>
+    <data name="AgentServerDisclosureMSG" xml:space="preserve">
+        <value>Agent co-work lets an AI agent on this computer read and, if you allow it, change NetRisk items as you, with your permissions, during the minutes you grant.
+
+LGPD: what the agent reads is sent to the agent's AI model provider, outside NetRisk and possibly outside Brazil — item text as written (titles, descriptions, notes, comments, scanner output), including any personal data or password someone typed there, and people's names in records. Beyond the fields no tool returns at all (stored credentials, host scanner properties), NetRisk withholds only: entity properties named like contact data or credentials, vault references, and items in the data classes withheld in the Agents window. It is your responsibility to use only an agent approved by your organisation.
+
+An agent that can run commands or read files on this computer as you can read your NetRisk session and settings directly, past every limit NetRisk sets. Run it sandboxed, deny it the NetRisk profile folder, and never grant edit access to an agent with an unrestricted shell.
+
+Switch agent co-work on?</value>
+    </data>
+    <data name="AgentDataDisclosureMSG" xml:space="preserve">
+        <value>LGPD: what an agent reads goes to its AI model provider, outside NetRisk and possibly outside Brazil — item text as written (titles, descriptions, notes, comments, scanner output, people's names), including any personal data or password typed there. Beyond the fields no tool returns at all (stored credentials, host scanner properties), NetRisk withholds only entity properties named like contact data or credentials, vault references, and items in the classes on the right. It is your responsibility to use only an agent approved by your organisation. An agent with a shell or file access on this computer can bypass these limits: run it sandboxed.</value>
+    </data>
+    <data name="AgentAccessLgpdMSG" xml:space="preserve">
+        <value>LGPD: what the agent reads — item text as written, including any personal data or password typed in it, and people's names — goes to its AI model provider. Withheld: entity properties named like contact data or credentials, vault references, and items in these data classes: {0}. It is your responsibility to grant access only to an agent approved by your organisation.</value>
+    </data>
+    <data name="AgentDataClassesSection" xml:space="preserve">
+        <value>Data withheld from agents</value>
+    </data>
+    <data name="AgentDataClassesHintMSG" xml:space="preserve">
+        <value>Withheld from agents: entities in a checked class (by the LGPD data catalogue or a security level marked sensitive) and everything under them in the entity map; risks linked to one through their entity or chain, or carrying flag 5; findings linked through their application, host or risks; incidents, hosts, assessments and runs whose entity is withheld. Incident response plans are not classified. A search only says how many items were withheld. An item whose classification is missing or cannot be read is withheld as well. This list applies to agents on this computer only.</value>
+    </data>
+    <data name="AgentDataClassesLockedMSG" xml:space="preserve">
+        <value>Only a user with the data-catalogue permission (the DPO's office) or an administrator can change this list.</value>
+    </data>
+    <data name="AgentDataClassesSavedMSG" xml:space="preserve">
+        <value>Saved. The next agent call uses the new list.</value>
+    </data>
+    <data name="AgentDataClassesNotSavedMSG" xml:space="preserve">
+        <value>Not saved: changing this list needs the data-catalogue permission.</value>
+    </data>
+    <data name="AgentDataClassesNone" xml:space="preserve">
+        <value>none</value>
+    </data>
+    <data name="AgentDataClassesSave" xml:space="preserve">
+        <value>Save</value>
+    </data>
+    <data name="AgentServerDisclosureDeclinedMSG" xml:space="preserve">
+        <value>Agent co-work stays off.</value>
+    </data>
+    <data name="AgentDataClassPersonalData" xml:space="preserve">
+        <value>Personal data</value>
+    </data>
+    <data name="AgentDataClassSensitivePersonalData" xml:space="preserve">
+        <value>Sensitive personal data (LGPD art. 11)</value>
+    </data>
+    <data name="AgentDataClassChildrenData" xml:space="preserve">
+        <value>Data of children or adolescents (LGPD art. 14)</value>
+    </data>
+    <data name="AgentDataClassLargeVolume" xml:space="preserve">
+        <value>Large volume of data</value>
+    </data>
+    <data name="AgentDataClassStrategicResearch" xml:space="preserve">
+        <value>Strategic research</value>
+    </data>
+    <data name="AgentDataClassSensitiveClassification" xml:space="preserve">
+        <value>Security classification marked sensitive</value>
+    </data>
+    <data name="AgentDataClassesFloorMSG" xml:space="preserve">
+        <value>Sensitive personal data and data of children or adolescents are always withheld (organisation minimum): they cannot be unchecked.</value>
+    </data>
+    <data name="AgentAccessSandboxMSG" xml:space="preserve">
+        <value>An agent that can run commands or read files on this computer as you can read your NetRisk session and settings directly, past every limit here. Run it sandboxed, deny it the NetRisk profile folder, and never grant edit access to an agent with an unrestricted shell.</value>
+    </data>
+    <data name="AgentWriteChange" xml:space="preserve">
+        <value>What changes</value>
+    </data>
+    <data name="AgentWriteSizeMSG" xml:space="preserve">
+        <value>Before: {0} lines, {1} characters · after: {2} lines, {3} characters</value>
+    </data>
 </root>

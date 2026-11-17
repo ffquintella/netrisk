@@ -181,6 +181,9 @@ internal sealed class StubEditTool : IAgentEditTool
 
     public IReadOnlyList<AgentFieldChange> Changes { get; set; } = new[] { new AgentFieldChange("notes", "old text", "new text") };
 
+    /// <summary>The item's title as NetRisk holds it — item text the write dialog shows (T359 review #5).</summary>
+    public string Label { get; set; } = "Risk one";
+
     public System.Text.Json.Nodes.JsonObject InputSchema() => new()
     {
         ["type"] = "object",
@@ -192,7 +195,7 @@ internal sealed class StubEditTool : IAgentEditTool
     {
         Interlocked.Increment(ref Prepared);
         AgentHeaderSeen.Add(ClientServices.Http.AgentCallContext.Current);
-        return Task.FromResult(new AgentEditPlan(new AgentItemRef(AgentItemKinds.Risk, 1), "Risk one", Changes, "updated",
+        return Task.FromResult(new AgentEditPlan(new AgentItemRef(AgentItemKinds.Risk, 1), Label, Changes, "updated",
             _ =>
             {
                 AgentHeaderSeen.Add(ClientServices.Http.AgentCallContext.Current);
@@ -215,7 +218,8 @@ internal sealed class AgentRig
 
     public AgentRig(AgentRegistryOptions? registry = null, AgentLeaseOptions? leases = null,
         IAgentApprovalPrompter? prompter = null, TimeSpan? decisionWait = null, IReadOnlyList<IAgentTool>? tools = null,
-        Model.Authentication.AuthenticatedUserInfo? user = null, TimeSpan? writeConfirmationWait = null)
+        Model.Authentication.AuthenticatedUserInfo? user = null, TimeSpan? writeConfirmationWait = null,
+        AgentClassificationOptions? classification = null)
     {
         Prompter = prompter ?? new ScriptedPrompter();
         Registry = new AgentRegistry(Store, Time, Audit, registry);
@@ -229,7 +233,10 @@ internal sealed class AgentRig
                 DecisionWait = decisionWait ?? TimeSpan.FromMilliseconds(50),
                 WriteConfirmationWait = writeConfirmationWait ?? TimeSpan.FromSeconds(30),
                 ReviewedTools = ReviewedWithStandIns(tools)
-            }, tools, () => User, Audit, Activity, Presence);
+            }, tools, () => User, Audit, Activity, Presence,
+            // T362: tests that are not about the data-class exclusion run with nothing excluded; AgentDataClassExclusionTest
+            // passes its own (and proves an unconfigured dispatcher withholds).
+            classification ?? AgentClassificationOptions.Off);
         Guard = new LoopbackRequestGuard(Port, LaunchToken);
         Endpoint = new McpEndpoint(Guard, Dispatcher, Audit, Time);
     }

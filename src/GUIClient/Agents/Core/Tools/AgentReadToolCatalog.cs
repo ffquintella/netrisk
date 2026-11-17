@@ -87,13 +87,15 @@ public static class AgentReadToolCatalog
                 AgentSchema.Text("status", 64, "Exact risk status, e.g. 'New' or 'Mitigation Planned'."),
                 AgentSchema.Flag("include_closed", "Include closed risks (default false).")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var query = args.Text("query", AgentResultLimits.MaxQueryLength);
                 var status = args.Text("status", 64);
                 var (page, pageSize) = args.Paging();
                 var all = await s.Risks.GetAllRisksAsync(args.Flag("include_closed", false)) ?? throw AgentToolErrors.NoAnswerError();
-                var matching = all
+                // T362: withheld before the query is matched, so the count says nothing about what a withheld risk says.
+                var visible = await call.Classification.KeepAsync(all, AgentItemLinks.ForRisk, ct);
+                var matching = visible
                     .Where(r => query is null || Contains(r.Subject, query) || Contains(r.ReferenceId, query))
                     .Where(r => status is null || string.Equals(r.Status, status, StringComparison.OrdinalIgnoreCase))
                     .OrderByDescending(r => r.LastUpdate).ThenBy(r => r.Id);
@@ -103,12 +105,13 @@ public static class AgentReadToolCatalog
         yield return new AgentReadTool<AgentRiskDetail>("get_risk",
             "One risk: subject, status, owner, assessment and notes, scenario, links and current score.",
             risks, AgentSchema.Object(AgentSchema.Id("risk_id", "The risk id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("risk_id");
                 // IRisksService has no single-risk read; the register list (closed included) is the call the GUI uses.
                 var all = await s.Risks.GetAllRisksAsync(includeClosed: true) ?? throw AgentToolErrors.NoAnswerError();
                 var risk = all.FirstOrDefault(r => r.Id == id) ?? throw AgentToolErrors.NotFoundError("risk");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForRisk(risk), cancellationToken: ct);
                 DAL.Entities.RiskScoring? scoring;
                 try
                 {
@@ -124,8 +127,9 @@ public static class AgentReadToolCatalog
         yield return new AgentReadTool<AgentRiskMitigation>("get_risk_mitigation",
             "The mitigation plan of one risk: strategy, effort, cost, owner, solution and progress.",
             risks, AgentSchema.Object(AgentSchema.Id("risk_id", "The risk id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
+                await EnsureRiskVisibleAsync(s, call, args.Id("risk_id"), ct);
                 var mitigation = await s.Mitigations.GetByRiskIdAsync(args.Id("risk_id"))
                                  ?? throw AgentToolErrors.NotFoundError("mitigation for a risk");
                 return AgentReadMap.Mitigation(mitigation);
@@ -136,14 +140,15 @@ public static class AgentReadToolCatalog
             "The management reviews of one risk, newest first: decision, reviewer, next step and next review date.",
             AgentToolPermission.AnyOf(ReviewPermissions),
             AgentSchema.Object(AgentSchema.Id("risk_id", "The risk id."), NestedPage("page", "reviews"), ItemsPerPage),
-            (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("risk_id");
                 var page = NestedPageOf(args, "page");
+                await EnsureRiskVisibleAsync(s, call, id, ct);
                 var reviews = s.Risks.GetRiskMgmtReviews(id) ?? throw AgentToolErrors.NoAnswerError();
-                return Task.FromResult(new AgentRiskReviews(id, AgentPage<AgentRiskReview>.Of(
+                return new AgentRiskReviews(id, AgentPage<AgentRiskReview>.Of(
                     reviews.OrderByDescending(r => r.SubmissionDate), page, ItemsPerPageOf(args),
-                    AgentReadMap.Review)));
+                    AgentReadMap.Review));
             });
     }
 
@@ -160,23 +165,27 @@ public static class AgentReadToolCatalog
                 AgentSchema.Text("filter", AgentResultLimits.MaxFilterLength,
                     "Filter expression as typed in the findings screen; the server validates it.")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var filter = args.Text("filter", AgentResultLimits.MaxFilterLength) ?? "";
                 var (page, pageSize) = args.Paging();
                 var answer = await s.Findings.GetFilteredAsync(pageSize, page, filter) ?? throw AgentToolErrors.NoAnswerError();
-                var items = (answer.Item1 ?? throw AgentToolErrors.NoAnswerError())
-                    .Take(pageSize).Select(AgentReadMap.FindingSummary).ToList();
-                var total = Math.Max(answer.Item2, items.Count);
+                var pageItems = (answer.Item1 ?? throw AgentToolErrors.NoAnswerError()).Take(pageSize).ToList();
+                // T362: the server pages and filters, so a withheld finding is dropped from this page and counted; the
+                // page may come back shorter than page_size, and the total still counts it (a known gap, spec M64).
+                var items = (await call.Classification.KeepAsync(pageItems, AgentItemLinks.ForFinding, ct))
+                    .Select(AgentReadMap.FindingSummary).ToList();
+                var total = Math.Max(answer.Item2, pageItems.Count);
                 return new AgentPage<AgentFindingSummary>(items, total, page, pageSize, (long)page * pageSize < total);
             });
 
         yield return new AgentReadTool<AgentFindingDetail>("get_finding",
             "One vulnerability or finding: description, solution, scores, detection dates, host and status.",
             findings, AgentSchema.Object(AgentSchema.Id("finding_id", "The finding (vulnerability) id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var finding = await s.Findings.GetOneAsync(args.Id("finding_id")) ?? throw AgentToolErrors.NoAnswerError();
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), cancellationToken: ct);
                 return AgentReadMap.FindingDetail(finding);
             });
 
@@ -184,10 +193,15 @@ public static class AgentReadToolCatalog
             "The triage lifecycle history of one finding, newest first: each status change, its source and justification.",
             findings,
             AgentSchema.Object(AgentSchema.Id("finding_id", "The finding (vulnerability) id."), NestedPage("page", "changes"), ItemsPerPage),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("finding_id");
                 var page = NestedPageOf(args, "page");
+                if (call.Classification.IsActive)
+                {
+                    var finding = await s.Findings.GetOneAsync(id) ?? throw AgentToolErrors.NoAnswerError();
+                    await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForFinding(finding), cancellationToken: ct);
+                }
                 var history = await s.Findings.GetStatusHistoryAsync(id) ?? throw AgentToolErrors.NoAnswerError();
                 return new AgentFindingLifecycle(id, AgentPage<AgentFindingLifecycleEntry>.Of(
                     history.OrderByDescending(h => h.ChangedAt), page, ItemsPerPageOf(args),
@@ -208,13 +222,13 @@ public static class AgentReadToolCatalog
                 AgentSchema.Text("query", AgentResultLimits.MaxQueryLength, "Text to find in the name, code or category."),
                 AgentSchema.Int("status", 0, 1000, "Exact incident status id.")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var query = args.Text("query", AgentResultLimits.MaxQueryLength);
                 var status = args.OptionalInt("status", 0, 1000);
                 var (page, pageSize) = args.Paging();
                 var all = await s.Incidents.GetAllAsync() ?? throw AgentToolErrors.NoAnswerError();
-                var matching = all
+                var matching = (await call.Classification.KeepAsync(all, AgentItemLinks.ForIncident, ct))
                     .Where(i => query is null || Contains(i.Name, query) || Contains(i.Category, query)
                                 || Contains(AgentReadMap.IncidentCode(i), query))
                     .Where(i => status is null || i.Status == status)
@@ -226,13 +240,14 @@ public static class AgentReadToolCatalog
             "One incident with its description, impact, cause, solution, linked response plans and a dated timeline.",
             incidents,
             AgentSchema.Object(AgentSchema.Id("incident_id", "The incident id."), NestedPage("timeline_page", "timeline entries"), ItemsPerPage),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("incident_id");
                 var timelinePage = NestedPageOf(args, "timeline_page");
                 // IIncidentsService has no single-incident read; the list is the call the GUI uses.
                 var all = await s.Incidents.GetAllAsync() ?? throw AgentToolErrors.NoAnswerError();
                 var incident = all.FirstOrDefault(i => i.Id == id) ?? throw AgentToolErrors.NotFoundError("incident");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForIncident(incident), cancellationToken: ct);
                 var planIds = await s.Incidents.GetIncidentResponsPlanIdsByIdAsync(id) ?? throw AgentToolErrors.NoAnswerError();
                 return AgentReadMap.IncidentDetail(incident, planIds, timelinePage, ItemsPerPageOf(args));
             });
@@ -283,12 +298,12 @@ public static class AgentReadToolCatalog
             {
                 AgentSchema.Text("query", AgentResultLimits.MaxQueryLength, "Text to find in the assessment name.")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var query = args.Text("query", AgentResultLimits.MaxQueryLength);
                 var (page, pageSize) = args.Paging();
                 var all = await s.Assessments.GetAssessmentsAsync() ?? throw AgentToolErrors.NoAnswerError();
-                var matching = all.Where(a => query is null || Contains(a.Name, query)).OrderBy(a => a.Id);
+                var matching = (await call.Classification.KeepAsync(all, a => AgentItemLinks.ForEntity(a.EntityId), ct)).Where(a => query is null || Contains(a.Name, query)).OrderBy(a => a.Id);
                 return AgentPage<AgentAssessmentSummary>.Of(matching, page, pageSize, AgentReadMap.Assessment);
             });
 
@@ -296,13 +311,15 @@ public static class AgentReadToolCatalog
             "The runs of one assessment, newest first: entity or host assessed, status and progress.",
             assessments,
             AgentSchema.Object(AgentSchema.Id("assessment_id", "The assessment id."), NestedPage("page", "runs"), ItemsPerPage),
-            (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("assessment_id");
                 var page = NestedPageOf(args, "page");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForAssessment(id), cancellationToken: ct);
                 var runs = s.Assessments.GetAssessmentRuns(id) ?? throw AgentToolErrors.NoAnswerError();
-                return Task.FromResult(new AgentAssessmentRuns(id, AgentPage<AgentAssessmentRun>.Of(
-                    runs.OrderByDescending(r => r.RunDate), page, ItemsPerPageOf(args), AgentReadMap.AssessmentRun)));
+                var visible = await call.Classification.KeepAsync(runs, AgentItemLinks.ForRun, ct);
+                return new AgentAssessmentRuns(id, AgentPage<AgentAssessmentRun>.Of(
+                    visible.OrderByDescending(r => r.RunDate), page, ItemsPerPageOf(args), AgentReadMap.AssessmentRun));
             });
 
         yield return new AgentReadTool<AgentAssessmentRunAnswers>("get_assessment_run_answers",
@@ -310,23 +327,29 @@ public static class AgentReadToolCatalog
             assessments,
             AgentSchema.Object(AgentSchema.Id("assessment_id", "The assessment id."), AgentSchema.Id("run_id", "The run id."),
                 NestedPage("page", "answers"), ItemsPerPage),
-            (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var assessmentId = args.Id("assessment_id");
                 var runId = args.Id("run_id");
                 var page = NestedPageOf(args, "page");
+                await EnsureRunVisibleAsync(s, call, assessmentId, runId, ct);
                 var answers = s.Assessments.GetAssessmentRunAnsers(assessmentId, runId) ?? throw AgentToolErrors.NoAnswerError();
-                return Task.FromResult(new AgentAssessmentRunAnswers(assessmentId, runId, AgentPage<AgentAssessmentAnswer>.Of(
+                return new AgentAssessmentRunAnswers(assessmentId, runId, AgentPage<AgentAssessmentAnswer>.Of(
                     answers.OrderBy(a => a.QuestionId).ThenBy(a => a.Id), page, ItemsPerPageOf(args),
-                    AgentReadMap.RunAnswer)));
+                    AgentReadMap.RunAnswer));
             });
 
         yield return new AgentReadTool<AgentAssessmentEvidenceList>("list_assessment_evidence",
             "The evidence files attached to the answers of one assessment run: name, type, size and date (not the content).",
-            assessments, AgentSchema.Object(AgentSchema.Id("run_id", "The run id.")),
-            async (_, args, _) =>
+            assessments,
+            AgentSchema.Object(AgentSchema.Id("assessment_id", "The assessment the run belongs to."),
+                AgentSchema.Id("run_id", "The run id.")),
+            async (call, args, ct) =>
             {
+                var assessmentId = args.Id("assessment_id");
                 var runId = args.Id("run_id");
+                // T362: the run is classified through its assessment, which the evidence endpoint does not name.
+                await EnsureRunVisibleAsync(s, call, assessmentId, runId, ct);
                 var evidence = await s.AssessmentEvidence.GetRunEvidenceAsync(runId) ?? throw AgentToolErrors.NoAnswerError();
                 return new AgentAssessmentEvidenceList(runId, AgentCappedList<AgentAssessmentEvidence>.Of(
                     evidence.OrderBy(e => e.QuestionId).ThenBy(e => e.Timestamp), AgentReadMap.Evidence));
@@ -347,13 +370,13 @@ public static class AgentReadToolCatalog
                 AgentSchema.Text("query", AgentResultLimits.MaxQueryLength, "Text to find in the entity name."),
                 AgentSchema.Text("type", 64, "Entity type (definition name), e.g. 'application'.")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var query = args.Text("query", AgentResultLimits.MaxQueryLength);
                 var type = args.Text("type", 64);
                 var (page, pageSize) = args.Paging();
                 var all = await s.Entities.GetAllFromServerAsync() ?? throw AgentToolErrors.NoAnswerError();
-                var matching = all
+                var matching = (await call.Classification.KeepAsync(all, e => AgentItemLinks.ForEntity(e.Id), ct))
                     .Where(e => type is null || string.Equals(e.DefinitionName, type, StringComparison.OrdinalIgnoreCase))
                     .Where(e => query is null || Contains(AgentReadMap.EntityName(e), query))
                     .OrderBy(e => e.Id);
@@ -364,27 +387,38 @@ public static class AgentReadToolCatalog
             "One entity with its properties. Only properties reviewed as safe are returned; credential-like and personal " +
             "contact properties are withheld and counted.",
             entities, AgentSchema.Object(AgentSchema.Id("entity_id", "The entity id.")),
-            async (call, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("entity_id");
                 // Always from the API with this session; IEntitiesService.GetEntity reads a process-wide cache.
                 var all = await s.Entities.GetAllFromServerAsync() ?? throw AgentToolErrors.NoAnswerError();
                 var entity = all.FirstOrDefault(e => e.Id == id) ?? throw AgentToolErrors.NotFoundError("entity");
-                return AgentReadMap.EntityDetail(entity, call.Withheld);
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForEntity(entity.Id), cancellationToken: ct);
+                // A link to a withheld entity (a process's 'data', an application's module…) is withheld as well.
+                var hidden = await WithheldReferencesAsync(call, entity, ct);
+                return AgentReadMap.EntityDetail(entity, call.Withheld, hidden);
             });
 
         yield return new AgentReadTool<AgentEntityRelationships>("get_entity_relationships",
             "The parent and the direct children of one entity in the entity map.",
             entities, AgentSchema.Object(AgentSchema.Id("entity_id", "The entity id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("entity_id");
                 var all = await s.Entities.GetAllFromServerAsync() ?? throw AgentToolErrors.NoAnswerError();
                 var entity = all.FirstOrDefault(e => e.Id == id) ?? throw AgentToolErrors.NotFoundError("entity");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForEntity(entity.Id), cancellationToken: ct);
                 var parent = entity.Parent is { } parentId ? all.FirstOrDefault(e => e.Id == parentId) : null;
+                // A visible entity's parent is visible too (classes are inherited downwards); its children may not be.
+                if (parent is not null && await call.Classification.IsEntityExcludedAsync(parent.Id, ct))
+                {
+                    call.Withheld.Add(AgentWithheldKind.Classified);
+                    parent = null;
+                }
+                var children = await call.Classification.KeepAsync(all.Where(e => e.Parent == id).OrderBy(e => e.Id),
+                    e => AgentItemLinks.ForEntity(e.Id), ct);
                 return new AgentEntityRelationships(id, parent is null ? null : AgentReadMap.EntityRef(parent),
-                    AgentCappedList<AgentEntityRef>.Of(all.Where(e => e.Parent == id).OrderBy(e => e.Id),
-                        AgentReadMap.EntityRef));
+                    AgentCappedList<AgentEntityRef>.Of(children, AgentReadMap.EntityRef));
             });
 
         yield return new AgentReadTool<AgentPage<AgentHostSummary>>("search_hosts",
@@ -395,32 +429,88 @@ public static class AgentReadToolCatalog
                 AgentSchema.Text("query", AgentResultLimits.MaxQueryLength, "Text to find in the host name."),
                 AgentSchema.Int("status", 0, 1000, "Exact host status id.")
             }.Concat(AgentSchema.Paging()).ToArray()),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var filter = HostsFilterComposer.Compose(args.Text("query", AgentResultLimits.MaxQueryLength),
                     args.OptionalInt("status", 0, 1000), null, null, null);
                 var (page, pageSize) = args.Paging();
                 var (items, total) = await s.Hosts.GetFilteredAsync(pageSize, page, filter, IHostsService.DefaultSort);
-                var mapped = (items ?? throw AgentToolErrors.NoAnswerError()).Take(pageSize)
+                var pageItems = (items ?? throw AgentToolErrors.NoAnswerError()).Take(pageSize).ToList();
+                // T362: server-paged, like findings — a withheld host leaves the page and is counted.
+                var mapped = (await call.Classification.KeepAsync(pageItems, AgentItemLinks.ForHost, ct))
                     .Select(AgentReadMap.HostSummary).ToList();
-                total = Math.Max(total, mapped.Count);
+                total = Math.Max(total, pageItems.Count);
                 return new AgentPage<AgentHostSummary>(mapped, total, page, pageSize, (long)page * pageSize < total);
             });
 
         yield return new AgentReadTool<AgentHostDetail>("get_host",
             "One host with its network services and a count of its open findings by severity.",
             hosts, AgentSchema.Object(AgentSchema.Id("host_id", "The host id.")),
-            async (_, args, _) =>
+            async (call, args, ct) =>
             {
                 var id = args.Id("host_id");
                 // The filtered list endpoint, by id: always the API with this session. IHostsService.GetOne answers from a
                 // process-wide cache that outlives a session.
                 var (items, _) = await s.Hosts.GetFilteredAsync(1, 1, RecordNavigation.HostFilter(id), null);
                 var host = items?.FirstOrDefault(h => h.Id == id) ?? throw AgentToolErrors.NotFoundError("host");
+                await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForHost(host), cancellationToken: ct);
                 var services = await s.Hosts.GetAllHostServiceAsync(id) ?? throw AgentToolErrors.NoAnswerError();
                 var summary = await s.Hosts.GetVulnerabilitySummaryAsync(id);
                 return AgentReadMap.HostDetail(host, services, summary);
             });
+    }
+
+    /// <summary>
+    /// T362, for the tools that name a risk but do not read it (mitigation, reviews): the risk is read and classified
+    /// first, only while the policy is active. A risk this user cannot read cannot be classified, so it is withheld.
+    /// </summary>
+    private static async Task EnsureRiskVisibleAsync(AgentReadServices s, AgentToolCall call, int riskId,
+        System.Threading.CancellationToken ct)
+    {
+        if (!call.Classification.IsActive) return;
+        List<DAL.Entities.Risk>? all;
+        try
+        {
+            all = await s.Risks.GetAllRisksAsync(includeClosed: true);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            all = null;
+        }
+        if (all is null)
+        {
+            call.Withheld.Add(AgentWithheldKind.Classified);
+            throw AgentToolErrors.WithheldError(edit: false);
+        }
+        var risk = all.FirstOrDefault(r => r.Id == riskId) ?? throw AgentToolErrors.NotFoundError("risk");
+        await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForRisk(risk), cancellationToken: ct);
+    }
+
+    /// <summary>T362: an assessment run is classified by its own entity or host and by its assessment's entity.</summary>
+    internal static async Task EnsureRunVisibleAsync(AgentReadServices s, AgentToolCall call, int assessmentId, int runId,
+        System.Threading.CancellationToken ct)
+    {
+        if (!call.Classification.IsActive) return;
+        await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForAssessment(assessmentId), cancellationToken: ct);
+        var run = (s.Assessments.GetAssessmentRuns(assessmentId) ?? throw AgentToolErrors.NoAnswerError())
+                  .FirstOrDefault(r => r.Id == runId) ?? throw AgentToolErrors.NotFoundError("run of this assessment");
+        await call.Classification.EnsureVisibleAsync(AgentItemLinks.ForRun(run), cancellationToken: ct);
+    }
+
+    /// <summary>The ids of the withheld entities an entity's reference properties point at (T362).</summary>
+    private static async Task<IReadOnlySet<int>> WithheldReferencesAsync(AgentToolCall call, DAL.Entities.Entity entity,
+        System.Threading.CancellationToken ct)
+    {
+        var hidden = new HashSet<int>();
+        if (!call.Classification.IsActive) return hidden;
+        foreach (var property in entity.EntitiesProperties ?? Array.Empty<DAL.Entities.EntitiesProperty>())
+        {
+            if (!AgentDataPolicy.EntityReferenceProperties.Contains(property.Type ?? "") ||
+                !int.TryParse(property.Value?.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var target)) continue;
+            if (await call.Classification.IsEntityExcludedAsync(target, ct)) hidden.Add(target);
+        }
+        return hidden;
     }
 
     private static (string, System.Text.Json.Nodes.JsonObject, bool) NestedPage(string name, string what) =>

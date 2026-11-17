@@ -3,7 +3,10 @@
 Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61)),
 **M62 implemented** (read tools — see [Implementation notes (M62)](#implementation-notes-m62)) and **M63 implemented**
 (edit tools, confirm-each-write, activity panel, presence, agent attribution — see
-[Implementation notes (M63)](#implementation-notes-m63)). The rest of this page is the design.
+[Implementation notes (M63)](#implementation-notes-m63)). **M64 build part implemented** (settings switch and LGPD
+disclosure, data-class exclusion, user guide, observation harness — see [Implementation notes (M64)](#implementation-notes-m64)
+and [Observed run](#observed-run)); the T359 security review and the T360 run against the real GUI are still open. User
+guide: [docs/product-guides/agent-co-work.md](../product-guides/agent-co-work.md). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
 MCP client) can work *beside* the logged-in user: read and edit the same items, with the same
@@ -16,7 +19,14 @@ GUI; it is a product feature with its own trust model.
    `ClientServices` → API path with the logged user's session. Server-side authorization is the only
    authority; the MCP layer adds restrictions, never privileges. A tool the user cannot perform is not
    listed (`tools/list` is filtered by the user's permissions) and, if called anyway, the API refuses it.
-2. **The session token never leaves the GUI.** The agent receives an *agent key*, not the user's JWT.
+2. **The session token never leaves the GUI** — *for an agent confined to MCP.* The agent receives an *agent key*,
+   not the user's JWT. **Assumption (T359 review):** the agent cannot read the user's files. An agent that runs as the
+   same OS user with a shell or file access (Claude Code's Bash, for one) can open the client profile folder, where
+   `configuration.db` is encrypted with a password built from two files in the same folder: it can read the JWT, flip
+   `AgentExcludedDataClasses` (down to the floor) and `AgentMcpServerEnabled`, and call the API directly — every MCP-layer
+   control is then advisory. Mitigations today: the user guide's sandbox and deny-rule guidance, the warning in the
+   first-enable and access dialogs, and the constant floor of the exclusion policy. Stronger fixes are follow-ups
+   (below, "same-user agent").
 3. **Nothing is standing.** Registration is a one-time human decision; access is a short lease the human
    grants block by block.
 4. **Humans keep the decisions.** Actions that carry segregation of duties (approvals, risk acceptance
@@ -166,11 +176,12 @@ untouched, `.bak` written, idempotent on re-run), `AgentClientRegistrarRemoveTes
 
 | Risk | Answer |
 |---|---|
-| **Prompt injection** — vulnerability titles, incident text or comments are attacker-influenced and reach the agent | Agent authority = lease mode; no tool can approve, delete or escalate; confirm-each-write; tool outputs tagged as untrusted data; activity panel makes odd behaviour visible |
+| **Prompt injection** — vulnerability titles, incident text or comments are attacker-influenced and reach the agent | Agent authority = lease mode; no tool can approve, delete or escalate; confirm-each-write, and after 20 unconfirmed writes in a lease every write is confirmed; tool outputs tagged as untrusted data, with invisible, bidirectional and look-alike characters escaped; the write dialog shows cleaned text and the changed span; activity panel makes odd behaviour visible. **Does not hold against an agent with a shell or file access as the same OS user:** a prompt-injected Claude Code can read the session token from the profile folder (see "Same-user agent") |
 | **Data leaves the machine** — items go to the agent's model provider (LGPD, FGV norm) | Lease dialog states it; per-item classification (S52) can exclude classes from agent tools; off by default; noted in the DPIA/ROPA records |
 | Stolen agent key | Useless without a human-granted lease; leases are minutes; revocation list; key hashed at rest |
 | Registering rewrites another app's config | Detect → diff preview → explicit click, merge-only, `.bak`, no secret written |
-| Malicious local process | Loopback + origin checks, discovery file permissions, registration needs on-screen approval with fingerprint |
+| Malicious local process | Loopback + origin checks, discovery file permissions, registration needs on-screen approval with fingerprint. **A process of the same OS user** — including the agent itself when it has a shell — can read the profile folder and the session token in it; nothing at the MCP layer stops it |
+| **Same-user agent** (T359 review) — the documented client, Claude Code, has Bash and runs as the user | Stated in the first-enable and access dialogs and the user guide: run the agent sandboxed, deny it the profile folder (`<ApplicationData>/NRGUIClient`), never grant edit leases to an agent with an unrestricted shell; the exclusion policy cannot go below its constant floor (sensitive personal data, children's data). **Follow-ups:** key `configuration.db` through `IMasterKeyProvider` (keychain/DPAPI/TPM) instead of files beside it; server-issued, agent-scoped, short-lived API tokens so an agent never needs the user's JWT and the server can tell its calls apart; OS-level sandboxing of the agent process |
 | Approval fatigue | Pending requests collapse and are rate-limited; default lease is one block; read-only is the default mode in the dialog |
 | Privilege confusion | One path to the API, user's session, server decides; tool list filtered; test enumerates every tool against a user without the permission |
 
@@ -183,7 +194,9 @@ untouched, `.bak` written, idempotent on re-run), `AgentClientRegistrarRemoveTes
 - `AgentToolInventoryTest`: fails on a tool not in the reviewed allowlist, and on any tool whose name
   matches delete/approve/sign/permission/secret.
 - `AgentLoopbackGuardTest`: non-loopback Host and foreign Origin refused.
-- Observed at runtime: a real MCP client registering, being approved, being refused after expiry.
+- Observed at runtime: a real MCP client registering, being approved, being refused after expiry — [Observed run](#observed-run).
+- `AgentDataClassExclusionTest` (T362): a withheld item is never returned by any read tool, any search or any edit tool;
+  included items are unaffected; whatever cannot be classified is withheld.
 
 ## Implementation notes (M61)
 
@@ -450,6 +463,277 @@ ClientServices calls are synchronous and block a pool thread; the team list used
 `TeamsRestService`'s process-wide cache (validation and the dialog label only, nothing returned to the agent).
 GUIClient.UiTests not run (S54 §3); the views changed (`MainWindow`, `RiskView`, `IncidentsView`, `VulnerabilitiesView`,
 `HostsView`, `EntityForm`, `AgentAccessDialog`) still compile with them.
+
+## Observed run
+
+**T360 — 2026-11-17, automated part only.** A **real MCP client** — the official MCP Python SDK, package `mcp` 2.3.0
+(`ClientSession` over `stdio_client`, protocol negotiated `2025-06-18`), taken from the local `uv` cache with `--offline`
+— launched the **real stdio bridge** (`netrisk-mcp-bridge`, Debug build) which found the **real loopback server and
+runtime** (`AgentCoworkRuntime`, `McpLoopbackServer` on `127.0.0.1`, owner-only discovery file, launch token) through the
+discovery file. No network was used. Reproduce with `scripts/agents/observe-mcp.sh [transcript.md]`, which runs the opt-in
+`GUIClient.Tests` `AgentObservedRunTest` (`NETRISK_OBSERVE_MCP=1`) and the client script
+`scripts/agents/observe_mcp_client.py`; neither is packaged.
+
+**Stand-ins, and only these:** the two approval dialogs (a scripted prompter approves the registration and grants one
+10-minute *read* block — the dialogs themselves were not on screen), the clock (a manual `TimeProvider` the host advanced
+by 11 minutes when the client asked, instead of waiting ten real minutes), the signed-in user (an `AuthenticatedUserInfo`
+holding every tool permission) and the API behind the tools (`AgentDataClassExclusionTest`'s substituted ClientServices,
+so the T362 exclusion is visible). **T360 stays open:** the run with the real Avalonia GUI and a real agent (below) has not
+been done.
+
+```text
+client: netrisk-t360-observer on the official MCP Python SDK, package mcp 2.3.0
+ 1. -> initialize (through netrisk-mcp-bridge over stdio)
+    <- protocol=2025-06-18 server=netrisk observation
+ 2. -> tools/list (no key yet)
+    <- 26 tools: get_assessment_run_answers, get_entity, get_entity_relationships, get_finding, get_finding_lifecycle,
+       get_host, get_incident, get_response_plan, get_risk, get_risk_mitigation, get_risk_overview, get_status,
+       list_assessment_evidence, list_assessment_runs, list_assessments, list_risk_overview_children, list_risk_reviews,
+       register_agent, request_access, search_entities, search_findings, search_hosts, search_incidents,
+       search_response_plans, search_risks, whoami
+ 3. -> tools/call register_agent {"name": "T360 observer", "description": "Observed run of the agent co-work server (S55 T360)"}
+    <- is_error=False {"status": "pending", "pending_id": "BqHi…7rIu", "fingerprint": "AAE5-84D5", "retry_after_seconds": 2, …}
+ 4. -> tools/call register_agent {"pending_id": "BqHi…7rIu"}
+    (the host's stand-in for the approval dialog approves)
+    <- is_error=False {"status": "approved", "agent_id": "azdJo96Hh7CubwXQmQbyvw", "agent_key": "<redacted: 48 chars>", "fingerprint": "AAE5-84D5", …}
+ 5. -> tools/call request_access {"agent_key": "<redacted: 48 chars>", "blocks": 1, "mode": "read", "reason": "T360: observe a read lease"}
+    (the host's stand-in for the access dialog grants 1 block, read)
+    <- is_error=False {"status": "granted", "mode": "read", "minutes": 10, "expires_at": "2026-11-17T12:10:00.0000000Z", "remaining_seconds": 600, "paused": false, "confirm_each_write": false, "edit_tools": []}
+ 6. -> tools/call get_status {"agent_key": "<redacted: 48 chars>"}
+    <- is_error=False {"status": "ok", "agent_name": "T360 observer", "fingerprint": "AAE5-84D5", "lease": {"status": "active", "mode": "read", "minutes": 10, …}, "block_minutes": 10, "max_blocks": 6}
+ 7. -> tools/list (this MCP session now belongs to the agent; read lease)
+    <- 26 tools; edit tools listed: []
+ 8. -> tools/call search_risks {"agent_key": "<redacted: 48 chars>"}
+    <- is_error=False {"status": "ok", "tool": "search_risks", "data_trust": "untrusted", "withheld_personal_fields": 0, "withheld_secret_fields": 0, "withheld_undeclared_fields": 0, "withheld_classified_items": 4, "data.items": [{"id": 1, "subject": "Portal outage", "status": "New"}], "data.total": 1}
+ 9. -> tools/call get_risk {"agent_key": "<redacted: 48 chars>", "risk_id": 1}
+    <- is_error=False {"status": "ok", "tool": "get_risk", "data_trust": "untrusted", …, "withheld_classified_items": 0, "data": {"id": 1, "subject": "Portal outage", "status": "New", …}}
+10. -> tools/call get_risk (an item the T362 policy withholds) {"agent_key": "<redacted: 48 chars>", "risk_id": 2}
+    <- is_error=True {"status": "withheld", "message": "This item is withheld from agents by the data-classification policy set in NetRisk (LGPD). Nothing was returned. Ask the user to work on it in NetRisk directly."}
+11. -> tools/call update_risk (an edit under a read lease) {"agent_key": "<redacted: 48 chars>", "risk_id": 1, "version": "rev-fcf6209922b93b7b", "notes": "Changed by the T360 observer"}
+    <- is_error=True {"status": "read_only", "message": "Your lease is read-only and this tool edits. Ask with request_access, mode read_write, if needed."}
+12. -> (host) advance the test clock by 11 minutes: the 10-minute lease expires
+13. -> tools/call search_risks (after expiry) {"agent_key": "<redacted: 48 chars>"}
+    <- is_error=True {"status": "access_expired", "message": "No access lease is active. Call request_access to ask the user for access."}
+14. -> tools/call get_status (after expiry) {"agent_key": "<redacted: 48 chars>"}
+    <- is_error=False {"status": "ok", …, "lease": null, "pending_request_id": null, …}
+
+host-side activity panel (AgentActivityLog): search_risks ok · get_risk risk 1 ok · get_risk risk 2 withheld ·
+  update_risk risk 1 read_only · search_risks access_expired
+host-side audit events: ServerStarted, RegistrationRequested, RegistrationApproved, KeyIssued, AccessRequested,
+  AccessGranted, ToolFailed (the withheld read), ToolRefused (read_only), LeaseEnded, ToolRefused (expired)
+```
+
+(Long ids and messages are shortened with `…` above; the harness writes the whole transcript, and never the key. Re-run
+after the T359 fixes on 2026-11-17: same steps and statuses; `search_risks` now withholds 4 — the test world gained a risk
+linked only through the GUI's "Entity" field — and the harness also checks the raw tool results, not only the transcript.)
+
+What the run showed beyond the scenario:
+
+- **The bridge needs `DOTNET_ROOT` from the client.** The SDK starts a stdio server with a minimal environment (PATH,
+  HOME…), so the framework-dependent `netrisk-mcp-bridge` failed with "You must install .NET" where .NET is not in its
+  default location (Homebrew here). The harness passes `DOTNET_ROOT`; a user must too (`claude mcp add -e DOTNET_ROOT=…`).
+  Follow-up for packaging: ship the bridge self-contained (with the M61 gap "installers do not ship the bridge").
+- `tools/list` without a key lists the business read tools the signed-in user may run (M62 behaviour; calls still need a
+  key and a lease) and no edit tool until the session's agent holds a read-write lease (M63).
+- A withheld read is recorded as `ToolFailed` in the local audit log and as `withheld` in the activity panel.
+
+### Manual checklist — the real GUI and a real agent (T360, still to do)
+
+Use a test database and test data only: Claude Code sends what it reads to Anthropic.
+
+1. Build the solution; start the GUI and sign in as a test user with `riskmanagement` (and, for step 11,
+   `data_catalogue_manage`).
+2. **Application → AI agents…**: tick *Allow AI agents on this computer to connect to NetRisk*. Check the LGPD
+   confirmation appears (first time only), answer **No** and check the box returns to off; tick again, answer **Yes**,
+   and check the status line shows `127.0.0.1:<port>` and that `<client data folder>/agents/mcp-discovery.json` exists
+   with mode `0600`.
+3. Note the bridge path (`src/McpBridge/bin/Debug/net10.0/netrisk-mcp-bridge` in a dev build) and run
+   `claude mcp add netrisk -e DOTNET_ROOT="$DOTNET_ROOT" -- <bridge path>`; `claude mcp list` must show `netrisk`
+   connected. Record `claude --version`. Configure the profile-folder deny rules and the sandboxed Bash from the user
+   guide ("Run the agent sandboxed") and check that asking Claude Code to list that folder fails; record the result.
+4. In Claude Code ask it to register with NetRisk. Check the fingerprint it prints equals the one in *An AI agent wants
+   to connect*; check Approve is disabled for about a second; approve.
+5. Ask for one block of read access with a reason. In *An AI agent is asking for access* check the reason, one block and
+   read preselected, and the LGPD box naming the withheld classes; grant.
+6. Check the status bar (agent, *Read*, `m:ss` counting down) and open **Activity**.
+7. Ask the agent to search risks and open one: Activity shows `ok`; the risk screen shows "agent … is reading this item".
+8. Ask it to change that risk's notes: refused `read_only`; nothing changes on screen.
+9. **End access**, then ask for read-and-edit with *Confirm each change before it is saved* on; ask for the same change;
+   check *An AI agent wants to change an item* shows the field before → after; approve; check the risk screen refreshes
+   and the risk's audit trail shows "<login> via agent <id>".
+10. In the Agents window, as the `data_catalogue_manage` user, check the data-class list is editable (and, as another
+    user, read-only). Catalogue a data record as sensitive personal data and link a risk to it; ask the agent for that
+    risk: `withheld`; ask it to search risks: the risk is absent and `withheld_classified_items` counts it.
+11. Let the lease run out (or wait for the one-minute warning and let it pass): the next call is refused
+    `access_expired` and the status bar disappears.
+12. Untick the server switch: the agent reports NetRisk is not reachable; the discovery file is gone. Tick it again, then
+    sign out: the server closes.
+13. Record the date, Claude Code version, GUI build and any deviation here under "Observed run", then tick T360.
+
+## Implementation notes (M64)
+
+Code: `src/GUIClient/Agents/Core/AgentDataClassification.cs` (classes, policy, item links, the classification source,
+the entity classifier and the per-call `AgentClassificationScope`); the read tools (`AgentReadToolCatalog`,
+`AgentReadMap`, `RiskOverviewAgentTools`), the edit tools (`AgentEditToolCatalog`), the envelope and error
+(`AgentToolResults`, `AgentDataPolicy`), the wiring (`AgentToolCall`, `McpDispatcher`, `AgentCoworkRuntime`,
+`AgentCoworkService`, `GeneralServicesBootstrapper`); the settings and disclosure in `Views/Agents/AgentsWindow`,
+`AgentAccessDialog` and their view-models; `Model/DataCatalogue/DataRecordSummaryDto` and `DataCatalogueService` (server).
+Evidence: `AgentDataClassExclusionTest` (85 cases), `DataCatalogueServiceInMemoryTest.TestC1b_…`, the opt-in
+`AgentObservedRunTest`. Each new guard was removed once and its test failed (twelve mutations: visibility check, search
+filter, uncatalogued record, edit check, entity references, unconfigured default, count before query, inheritance,
+unreadable policy, flag 5, host link, change permission).
+
+**T362 — data classes.** NetRisk keeps two classifications, both on the entity map: the S52 catalogue of a data record
+(`organizationData` → `PersonalDataCategory` and the marks *children or adolescents*, *large volume*, *strategic
+research*) and the S46 security classification (`securityClassification` → a `securityClassificationLevel` whose
+`sensitive` is true) on data records, data groups and applications. The classes an organisation may withhold are exactly
+those terms: `personal_data`, `sensitive_personal_data`, `children_data`, `large_volume`, `strategic_research`,
+`sensitive_classification`. **Default withheld: `sensitive_personal_data`, `children_data`, `sensitive_classification`**
+(the categories the LGPD treats specially — art. 11 and art. 14 — and anything marked sensitive in S46).
+
+- **Fails closed — S52 D4, "absent is never compliant".** An item whose classification cannot be established holds *every*
+  class: a data record not catalogued or with its category undeclared; any record when the catalogue cannot be read (a
+  user without `RequireDataCatalogueRead` gets a 403, so every data record is withheld from their agent); a mark not
+  declared (`involves_minors` null) or not sent by an older server (the new summary fields null) counts as set; a
+  classification reference to a missing level or an unreadable `sensitive` value; a link to an entity that is not on the
+  list, or a parent cycle; any failure to read the entity list, the risk flags, a risk's chain (or a chain whose host
+  link is redacted for this user), the hosts or the assessments a call needs. A stored policy that does not parse —
+  an unknown name, or an empty entry such as `","` — excludes every class; only `""` means "nothing beyond the floor".
+  Duplicate catalogue rows for one record are united, never one picked. A dispatcher built without a classification gets
+  `AgentClassificationOptions.Unconfigured` (default policy, a source that answers nothing), so forgetting the wiring
+  withholds rather than leaks.
+- **Floor (T359 review #2c).** `AgentExclusionPolicy.Floor` — sensitive personal data and children's data — is always
+  excluded: every stored value and every choice in the window is the floor plus what it names, so editing the settings
+  store cannot go below it (`TestAStoredPolicyCannotGoBelowTheFloor`, `TestAnEmptyStoredPolicyStillWithholdsSensitivePersonalData`).
+  It is a constant: NetRisk has no server-side DPO setting for an organisation-wide minimum yet (follow-up). A policy
+  with nothing excluded exists only for tests (`internal`).
+- **What classifies an item (the strictest rule where an item has no classification of its own):** an entity — its own
+  classes and every ancestor's, so a module under a sensitive application is withheld; a risk — its `EntityId` column,
+  **its chain** (`GET /RiskChain/Risks/{id}`, read for every risk a call touches, eight at a time) and flag 5 (declared or
+  derived), which does not say which of its four conditions holds and so counts as all four; mitigation and reviews —
+  their risk (read first, while the policy is active); a finding — its entity, its host's entity and **every risk it is
+  associated with** (`Vulnerability.Risks`, classified as risks are); an
+  incident — its entity, impacted entity and reporting entity; a host — its entity; an assessment — its entity; a run —
+  its entity, its host and its assessment's entity; answers and evidence — their run; a Cyber Risk Overview node keyed
+  `e:<id>` — that entity (breadcrumb nodes and children are filtered too). An entity property typed `Definition(…)`
+  (`AgentDataPolicy.EntityReferenceProperties`) that points at a withheld entity is withheld. **No classification
+  source:** incident response plans (`search_response_plans`, `get_response_plan`) link to no entity and their executions
+  name no incident, so they are returned as before; `whoami` carries no item.
+- **Behaviour.** A search drops withheld items and reports `withheld_classified_items` in the envelope; asking by id
+  answers `withheld` (no data, no class named); an edit tool refuses with `withheld` right after its fresh read, before the
+  version or any validation, and nothing is written. For the searches NetRisk pages client-side (risks, incidents,
+  assessments, runs, entities, relationships, overview children) the count is taken **before** the query is matched, so
+  it is the same whatever the query and cannot test what a withheld item says.
+- **Who changes it.** The policy is the per-user setting `AgentExcludedDataClasses` in the encrypted client store, read
+  on every tool call. The Agents window edits it only for a user holding `data_catalogue_manage` (or the Admin role
+  claim), never the third line (`AgentExclusionPolicy.ChangePermission`, checked again in `AgentCoworkService`); everyone
+  else sees it read-only. No tool, argument or agent call reaches it.
+- **Server change.** `GET /DataCatalogue/Records` now also returns `InvolvesMinors`, `LargeVolume` and `StrategicResearch`
+  per record (nullable; null for a record not catalogued), so one read classifies every record. Backward compatible; an
+  older server's missing fields read as "set".
+
+Deviations and gaps (T362):
+
+- **Withheld by id is distinguishable from absent.** `withheld` tells the agent an item with that id exists; rejected
+  alternative: answering `not_found`, which would hide the policy from the agent and the user's activity panel. It never
+  says which class.
+- **Server-paged searches leak a count per filter.** `search_findings` and `search_hosts` page and filter on the server,
+  so the page drops withheld items after the agent's filter: the page can be shorter than `page_size`, `total` still
+  counts withheld items, and the withheld count depends on the filter — a crafted filter can test whether a withheld
+  finding or host matches it (a count, never content). Closing it needs the exclusion applied server-side (follow-up).
+- **Not re-checked at the write.** An edit is classified at prepare; a reclassification during the confirmation wait is
+  not seen by the write (one more read set per write was judged not worth it; the window is the dialog's 45 s).
+- **The policy is per desktop**, not an organisation-wide setting: a DPO's choice applies to agents on that DPO's client
+  only; other users run under the default and cannot weaken it. Follow-up: a server-side setting the client reads.
+- **Correction (T359 review, blocker 1).** The first M64 delivery classified a risk only by `Risk.EntityId`, which the GUI
+  never sets: its "Entity" field (`EditRiskViewModel` → `AssociateEntityToRisk` → `PUT /Risks/{id}/Entity`) writes the
+  `risk_to_entity` many-to-many, which the server mirrors into `risk_chain_links` as a Legacy link for every chain-type
+  entity (S41 §5.4; `Data/88.sql` backfilled the old rows). A risk linked in the GUI to a sensitive data record was
+  therefore returned whole — the earlier note "withheld through its own `EntityId` at once" was false for the GUI path,
+  and the tests missed it because they seeded `EntityId`. A risk is now classified through its chain as well, and a
+  finding through its risks; `TestAnItemLinkedOnlyThroughTheGuiRiskAssociationIsWithheld`,
+  `TestASearchDropsAndCountsAnItemLinkedThroughTheGuiRiskAssociation`,
+  `TestNoEditToolTouchesAnItemLinkedThroughTheGuiRiskAssociation` and `TestARiskWhoseChainCannotBeReadIsWithheld` seed
+  the link the way the GUI writes it (no `EntityId`, a Legacy chain link). Non-chain types (organisation units, people…)
+  stay only in `risk_to_entity`, which the client reads one risk and one entity at a time (`GET /Risks/{id}/Entity`); they
+  carry no S52/S46 class, so they are not read. **Re-audit of every other source** against how the GUI writes it: an
+  incident's three entity fields are set by `EditIncidentViewModel`; a finding's application by
+  `EditVulnerabilitiesDialogViewModel` and its risks by `AssociateRisksAsync`; a run's entity and host by
+  `AssessmentRunDialogViewModel`; a host's entity is set by the server (imports, scope), never by the GUI; the entity map
+  by `Parent`. Response plans link to risks and incidents but describe procedures and stay unclassified.
+- **Flag 5 is reconciled nightly** (and on refresh / Gate A); the chain itself is read live on every call, so flag 5 only
+  adds the declared flag and the derivations the chain does not show.
+- `list_assessment_evidence` now requires `assessment_id` (the evidence endpoint does not name the run's assessment).
+- The entity `version` digest still covers the value of a withheld reference (an entity id); recovering it would take
+  guessing ids against a hash — existence of an id, not content.
+- `person` entities carry no S52 class: their contact fields stay withheld (M62) and their names are returned.
+- Cost while active: per call, the entity list, the catalogue, flag 5, the hosts of the page and the assessments, each at
+  most once and only when needed, **plus one chain read per risk** the call touches (a search over the register reads one
+  per risk, eight at a time). No bulk endpoint returns every risk's chain; one would remove the per-risk reads
+  (follow-up).
+- A withheld item's read is counted in the local audit log as `ToolFailed`.
+
+**Same-user agent (T359 review, blocker 2).** Every control above lives in the MCP layer of the desktop client. An agent
+running as the same OS user with a shell or file access — Claude Code, the documented client, has Bash — can read the
+client profile folder (`<ApplicationData>/NRGUIClient`, or `<ApplicationData>/<environment>/NRGUIClient` outside
+production; `%APPDATA%` on Windows, `~/.config` on macOS and Linux), whose `configuration.db` is LiteDB encrypted with a
+password built from `device_token.txt` and `device_id.txt` beside it, and which holds the user's JWT
+(`AuthToken`), `AgentExcludedDataClasses`, `AgentMcpServerEnabled` and `AgentRegistrations`. Such an agent can call the API
+as the user and change the settings: principle 2 holds only for an agent confined to MCP. Not re-architected in M64. What
+was done: the assumption is stated in the principles, the threat table, both dialogs (`AgentAccessSandboxMSG`, the
+first-enable disclosure) and the user guide, which gives Claude Code deny rules and sandbox guidance (not a guarantee);
+and the exclusion policy got its constant floor. **Follow-ups:** key the store through `IMasterKeyProvider`
+(keychain/DPAPI/TPM) instead of files beside it; server-issued, agent-scoped, short-lived tokens so an agent never needs
+the user's JWT; OS-level sandboxing of the agent process.
+
+**Other T359 review fixes.**
+
+- **#3 Disclosure gate.** `AgentServerGate.MayRun` — the switch on *and* the current disclosure version accepted — decides
+  `AgentCoworkService.IsEnabled`, so a switch set by M61–M63 or by editing the store shows off and starts nothing until
+  the user accepts the disclosure; the start re-checks it under the runtime's lifecycle lock (`StartAsync(stillWanted:)`),
+  closing the race with a switch turned off meanwhile. Tests: `AgentReviewFixesTest.TestTheServerRunsOnlyWhenOnAndTheDisclosureWasAccepted`,
+  `TestAStartNoLongerWantedUnderTheLifecycleLockStartsNothing`.
+- **#4 Invisible and look-alike characters.** `AgentJson.Neutralize` writes every format (bidi, zero-width), private-use,
+  unassigned, separator and control character, and every non-ASCII character whose NFKC form contains `< > " & '`, as a
+  visible `\uXXXX` — in the structured content and in the rendered text. Test: `AgentToolResultShapeTest.TestNoUnsafeCharacterReachesTheAgentRaw`.
+- **#5 Write dialog.** The prompt's label is one cleaned line and its values lose invisible characters, with runs of blank
+  lines collapsed into a counted marker (`AgentWriteDisplay`); the dialog shows each value's size and the changed span;
+  an agent's text of more than 20 lines or more than 3 blank lines in a row is refused (`AgentEditLimits`). Tests:
+  `TestTheWriteDialogShowsNoHiddenCharacterAndNoInjectedLine`, `TestTheChangedSpanShowsAOneSentenceChangeInsideALongText`,
+  `TestAnAgentValueThatCouldHideTextBelowTheFoldIsRefused`.
+- **#6 Write budget.** A lease without confirm-each-write may make 20 writes (`AgentWriteBudget`); every later write of
+  that lease waits for the user, and the activity panel shows `confirmation_required` once. Test:
+  `TestALeaseWithoutConfirmationMustConfirmEveryWriteAfterItsBudget`. Finding notes, incidents and assessment answers
+  are still not in `audit_logs` (only the server log line, M63).
+- **#7 Disclosure text.** The three dialog strings and the Agents window now say what is true: free text goes out as
+  written — personal data or passwords typed in it included, only vault references redacted; only entity properties are
+  screened by name; the links that classify an item are listed and response plans are unclassified; the list applies to
+  this computer only.
+- **#8 Harness.** The observation test kills the `uv` → `python` → bridge tree and deletes its folder in a `finally`, and
+  checks the raw tool results the client received (`.raw.json`, key redacted) for leaks, not only the shortened transcript.
+- **Recorded, not changed:** lock ends leases on Windows only; whole-list reads for single risks, incidents and entities;
+  `IEntitiesService.GetEntity` null on a cold cache; the bridge is framework-dependent and needs `DOTNET_ROOT` from the
+  client, and no installer ships it; an edit is not re-classified at the write.
+
+**T361 — settings and disclosure.** The switch existed since M61 in the Agents window (**Application → AI agents…**);
+NetRisk has no per-user settings window, so the Agents window is where agent co-work is configured. It is now a caution
+card (`Border.formCard.caution`: turning it on weakens the default posture) with the LGPD disclosure, beside a card with
+the data classes withheld. Switching on asks once — per disclosure version, `AgentMcpServerDisclosureAccepted = "1"` —
+with the full disclosure; **No** leaves it off. Toggling starts or stops the server live (`SetEnabledAsync`), and sign-out
+closes it (both M61). The access dialog shows the LGPD disclosure with the classes withheld at that moment, and the
+same-user agent warning. Twenty-two new keys in all three `Localization*.resx` (pt-BR translated); `./build.sh LintUi` reports zero violations. Not done: the
+registration dialog carries no LGPD text (registering grants no access; the access dialog is where data starts to
+flow); the view-models are not unit-tested (Avalonia), only the computed class-label keys
+(`TestEveryClassLabelResolvesIn`) and the existing localization/style-class guards cover them; UI tests not run (S54 §3).
+
+**T360 — observation.** See [Observed run](#observed-run): the automated run used a real MCP client, the real bridge and
+the real server with the stand-ins listed there. The harness is a `GUIClient.Tests` class skipped unless
+`NETRISK_OBSERVE_MCP=1`, plus a Python script; it adds no dependency to the solution and fetches nothing (the `mcp`
+package must already be in the `uv` cache). **T360 remains open** until the manual checklist has been run with the real
+GUI and a real agent.
+
+**Not in this delivery:** T359 (the independent security review, including the prompt-injection exercise), ROADMAP and
+CHANGELOG updates, and M65 (one-click registration — the guide says it is not available).
 
 ## Out of scope (first release)
 

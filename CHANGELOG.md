@@ -14,6 +14,10 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Let the user enable the agent server from the Agents window behind a one-time LGPD confirmation, show what an agent can and cannot read in the lease dialog, and document agent co-work in a user guide (T361, S55)
+- Withhold from every agent tool the items classified as sensitive personal data, children's data or sensitive classification, through their entity, catalogue, risk chain and flag links, failing closed when a class cannot be read, with a floor the per-desktop policy cannot remove (T362, S55)
+- Observe the agent server with the official MCP Python SDK through the real stdio bridge, and record the transcript and a checklist for the run against the real GUI (T360, S55)
+- Force confirmation of every further write after the first 20 writes of an edit lease that did not ask for confirm-each-write (T359, S55)
 - Let an agent with a read-and-edit lease change a risk, a finding's status, assignment and notes, an incident, an assessment answer and run comment, and entity and host descriptive fields through nine edit tools that read the item fresh, refuse a stale write, and never set owners, approvers, scores, closure or risk acceptance (T354, S55)
 - Show agent activity live in a status bar and an activity panel with remaining lease time, Pause and End access, an expiry warning and a one-click "Grant another 10 min" request (T355, S55)
 - Add a confirm-each-write option to a lease that shows the exact old and new value of every field and waits for the user before an edit runs, one pending write per agent (T357, S55)
@@ -29,6 +33,8 @@ follow [SemVer](http://semver.org/).
 
 ### Security
 
+- Escape invisible, bidirectional, private-use and look-alike characters in agent tool results, and clean and count the labels and values in the write confirmation, so item text cannot forge the untrusted-data tag or hide what a write changes (T359, S55)
+- Start the agent server only when its switch is on and the current LGPD disclosure was accepted, so a switch set in the store alone starts nothing (T361, S55)
 - Accept the agent audit header only at the exact length of an issued registration id and always keep the login whole in the audit actor, so a client cannot erase its login from the audit trail with an oversized header (T358, S55)
 - Clear the client memory and host caches on every sign-in and expired session, so a second user in the same process never reads the previous user's cached hosts or entities (T351, S55)
 

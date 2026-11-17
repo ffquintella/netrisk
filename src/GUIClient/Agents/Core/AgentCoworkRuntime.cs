@@ -21,6 +21,32 @@ public sealed class AgentCoworkOptions
     /// tool's permission is checked against. Absent means nobody, so no business tool is listed or runs.
     /// </summary>
     public Func<Model.Authentication.AuthenticatedUserInfo?>? CurrentUser { get; init; }
+
+    /// <summary>
+    /// T362: the data classification every tool applies and the exclusion policy, read per call. Left unset it is
+    /// <see cref="AgentClassificationOptions.Unconfigured"/>, which withholds every classified link rather than leak.
+    /// </summary>
+    public AgentClassificationOptions Classification { get; init; } = AgentClassificationOptions.Unconfigured;
+}
+
+/// <summary>
+/// Whether the server may run for the signed-in user (T361, T359 review #3): the switch is on <b>and</b> the user accepted
+/// the current LGPD disclosure. A switch turned on by editing the settings store, or under M61–M63 before the disclosure
+/// existed, starts nothing until the user has accepted it in the Agents window.
+/// </summary>
+public static class AgentServerGate
+{
+    public const string EnabledSettingName = "AgentMcpServerEnabled";
+    public const string DisclosureSettingName = "AgentMcpServerDisclosureAccepted";
+
+    /// <summary>Bump to ask every user again when the disclosure text changes materially.</summary>
+    public const string DisclosureVersion = "1";
+
+    public static bool DisclosureAccepted(string? disclosureSetting) =>
+        string.Equals(disclosureSetting, DisclosureVersion, StringComparison.Ordinal);
+
+    public static bool MayRun(string? enabledSetting, string? disclosureSetting) =>
+        string.Equals(enabledSetting, "true", StringComparison.Ordinal) && DisclosureAccepted(disclosureSetting);
 }
 
 /// <summary>
@@ -49,7 +75,7 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
         Leases = new AgentLeaseManager(time, audit, _options.Leases);
         Approvals = new AgentApprovalCoordinator(Registry, Leases, prompter, audit, time);
         Dispatcher = new McpDispatcher(Registry, Leases, Approvals, time, _options.Server, _options.Tools,
-            _options.CurrentUser, audit, Activity, Presence);
+            _options.CurrentUser, audit, Activity, Presence, _options.Classification);
 
         // Revocation is immediate: the key stops authenticating in Revoke, and the lease and any request end here.
         // Requests first: a grant landing between the two would otherwise leave a lease on a revoked agent.
@@ -78,11 +104,17 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
     public event Action? StateChanged;
 
     /// <summary>Starts (or keeps) the server for <paramref name="userId"/> and writes the discovery file.</summary>
-    public async Task StartAsync(int userId, string discoveryPath, CancellationToken cancellationToken = default)
+    /// <param name="stillWanted">
+    /// Checked again once the lifecycle lock is held (review M64 follow-up): a switch turned off between the caller's check
+    /// and this start starts nothing. Null means "yes".
+    /// </param>
+    public async Task StartAsync(int userId, string discoveryPath, CancellationToken cancellationToken = default,
+        Func<bool>? stillWanted = null)
     {
         await _lifecycle.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (stillWanted is not null && !stillWanted()) return;
             if (_server is not null)
             {
                 if (_runningUserId == userId) return;

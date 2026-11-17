@@ -106,6 +106,9 @@ public class DataCatalogueService(ILogger logger, IDalService dalService)
                     Name = world.Names.GetValueOrDefault(id),
                     Catalogued = entry is not null,
                     PersonalData = entry?.PersonalData,
+                    InvolvesMinors = entry?.InvolvesMinors,
+                    LargeVolume = entry?.LargeVolume,
+                    StrategicResearch = entry?.StrategicResearch,
                     PurposeCount = entry?.Purposes.Count ?? 0,
                     ApprovedDpiaCount = world.DpiasOf(id).Count(d => d.Status == DpiaStatus.Approved),
                     FindingCodes = DataCatalogueFindingsEvaluator.Evaluate(world.FactsOf(id), now).Select(f => f.Code).ToList()

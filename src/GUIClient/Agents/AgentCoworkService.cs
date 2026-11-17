@@ -15,7 +15,7 @@ namespace GUIClient.Agents;
 public sealed class AgentCoworkService
 {
     /// <summary>The per-user setting. Absent means off (S55: "off by default").</summary>
-    public const string EnabledSettingName = "AgentMcpServerEnabled";
+    public const string EnabledSettingName = AgentServerGate.EnabledSettingName;
 
     private readonly IMutableConfigurationService _configuration;
     private readonly IEnvironmentService _environment;
@@ -27,8 +27,13 @@ public sealed class AgentCoworkService
     /// The M62 read tools (<c>ReadTools.AgentReadToolCatalog</c>), built by the composition root over the GUI's own
     /// ClientServices instances, so an agent's call takes the user's session and the same API path as the user's screens.
     /// </param>
+    /// <param name="classification">
+    /// T362: where the S52/S46 data classification is read, through the same ClientServices; the exclusion policy is read
+    /// from this user's settings store on every call (<see cref="ExclusionPolicy"/>).
+    /// </param>
     public AgentCoworkService(IMutableConfigurationService configuration, IEnvironmentService environment,
-        IAuthenticationService authentication, IAgentApprovalPrompter prompter, IReadOnlyList<IAgentTool> tools)
+        IAuthenticationService authentication, IAgentApprovalPrompter prompter, IReadOnlyList<IAgentTool> tools,
+        IAgentClassificationSource classification)
     {
         _configuration = configuration;
         _environment = environment;
@@ -42,15 +47,45 @@ public sealed class AgentCoworkService
                 Tools = tools,
                 // The permission source the GUI already uses for the session (T350), read on every call. Logout and an
                 // expired token clear IsAuthenticated but leave AuthenticatedUserInfo set, so the flag decides.
-                CurrentUser = () => AgentSessionUser.Of(_authentication)
+                CurrentUser = () => AgentSessionUser.Of(_authentication),
+                Classification = new AgentClassificationOptions(classification, () => ExclusionPolicy)
             });
         Runtime.StateChanged += () => StateChanged?.Invoke();
     }
 
     public AgentCoworkRuntime Runtime { get; }
 
-    public bool IsEnabled =>
-        string.Equals(_configuration.GetConfigurationValue(EnabledSettingName), "true", StringComparison.Ordinal);
+    /// <summary>
+    /// On only when switched on <b>and</b> the current LGPD disclosure was accepted (<see cref="AgentServerGate.MayRun"/>):
+    /// a switch set without it — by M61–M63, or by editing the store — shows off and starts nothing.
+    /// </summary>
+    public bool IsEnabled => AgentServerGate.MayRun(_configuration.GetConfigurationValue(EnabledSettingName),
+        _configuration.GetConfigurationValue(AgentServerGate.DisclosureSettingName));
+
+    /// <summary>T361: whether the user accepted the current version of the LGPD disclosure (asked before the first start).</summary>
+    public bool DisclosureAccepted =>
+        AgentServerGate.DisclosureAccepted(_configuration.GetConfigurationValue(AgentServerGate.DisclosureSettingName));
+
+    public void AcceptDisclosure() =>
+        _configuration.SetConfigurationValue(AgentServerGate.DisclosureSettingName, AgentServerGate.DisclosureVersion);
+
+    /// <summary>T362: the data classes withheld from agents, read on every tool call. Unreadable reads as every class.</summary>
+    public AgentExclusionPolicy ExclusionPolicy =>
+        AgentExclusionPolicy.Parse(_configuration.GetConfigurationValue(AgentExclusionPolicy.SettingName));
+
+    /// <summary>
+    /// T362: changes the policy — only for a signed-in user holding <see cref="AgentExclusionPolicy.ChangePermission"/>.
+    /// No agent call reaches this; it is the Agents window's Save. False when refused.
+    /// </summary>
+    public bool SetExclusionPolicy(AgentExclusionPolicy policy)
+    {
+        if (!AgentExclusionPolicyAccess.CanChange(AgentSessionUser.Of(_authentication))) return false;
+        _configuration.SetConfigurationValue(AgentExclusionPolicy.SettingName, policy.Serialize());
+        _log.Information("Agent data-class exclusion changed to {Policy} by user {UserId}", policy.ToString(),
+            _authentication.AuthenticatedUserInfo?.UserId);
+        StateChanged?.Invoke();
+        return true;
+    }
 
     /// <summary>Set when the server could not start; cleared on the next successful start.</summary>
     public bool StartFailed { get; private set; }
@@ -99,7 +134,8 @@ public sealed class AgentCoworkService
 
         try
         {
-            await Runtime.StartAsync(userId, DiscoveryPath).ConfigureAwait(false);
+            // Checked again under the runtime's lifecycle lock: a switch turned off meanwhile starts nothing.
+            await Runtime.StartAsync(userId, DiscoveryPath, stillWanted: () => IsEnabled).ConfigureAwait(false);
             StartFailed = false;
         }
         catch (Exception ex)

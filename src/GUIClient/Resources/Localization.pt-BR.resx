@@ -6990,4 +6990,76 @@ Salvar mesmo assim?</value>
     <data name="AgentConflictMSG" xml:space="preserve">
         <value>Não salvo: o agente {0} alterou este item enquanto você o editava ({1}). Feche esta janela e abra o item novamente para que nada seja sobrescrito.</value>
     </data>
+    <data name="AgentServerDisclosureTitle" xml:space="preserve">
+        <value>Antes de permitir que agentes se conectem</value>
+    </data>
+    <data name="AgentServerDisclosureMSG" xml:space="preserve">
+        <value>O co-trabalho com agentes permite que um agente de IA deste computador leia e, se você permitir, altere itens do NetRisk como você, com as suas permissões, durante os minutos que você conceder.
+
+LGPD: o que o agente lê é enviado ao provedor do modelo de IA do agente, fora do NetRisk e possivelmente fora do Brasil — o texto dos itens como foi escrito (títulos, descrições, notas, comentários, saída de scanners), inclusive qualquer dado pessoal ou senha que alguém tenha digitado ali, e nomes de pessoas nos registros. Além dos campos que nenhuma ferramenta devolve (credenciais armazenadas, propriedades de scanner dos hosts), o NetRisk retém somente: propriedades de entidades com nome de dado de contato ou de credencial, referências a cofres e itens das classes de dados retidas na janela Agentes. É sua responsabilidade usar somente um agente aprovado pela sua organização.
+
+Um agente que pode executar comandos ou ler arquivos neste computador como você consegue ler diretamente a sua sessão e as suas configurações do NetRisk, passando por cima de todo limite que o NetRisk impõe. Execute-o em sandbox, negue a ele a pasta de perfil do NetRisk e nunca conceda acesso de edição a um agente com shell irrestrito.
+
+Ligar o co-trabalho com agentes?</value>
+    </data>
+    <data name="AgentDataDisclosureMSG" xml:space="preserve">
+        <value>LGPD: o que um agente lê vai para o provedor do modelo de IA dele, fora do NetRisk e possivelmente fora do Brasil — o texto dos itens como foi escrito (títulos, descrições, notas, comentários, saída de scanners, nomes de pessoas), inclusive qualquer dado pessoal ou senha digitados ali. Além dos campos que nenhuma ferramenta devolve (credenciais armazenadas, propriedades de scanner dos hosts), o NetRisk retém somente propriedades de entidades com nome de dado de contato ou de credencial, referências a cofres e os itens das classes à direita. É sua responsabilidade usar somente um agente aprovado pela sua organização. Um agente com shell ou acesso a arquivos neste computador pode contornar esses limites: execute-o em sandbox.</value>
+    </data>
+    <data name="AgentAccessLgpdMSG" xml:space="preserve">
+        <value>LGPD: o que o agente lê — o texto dos itens como foi escrito, inclusive qualquer dado pessoal ou senha digitados nele, e nomes de pessoas — vai para o provedor do modelo de IA dele. Retidos: propriedades de entidades com nome de dado de contato ou de credencial, referências a cofres e os itens destas classes de dados: {0}. É sua responsabilidade conceder acesso somente a um agente aprovado pela sua organização.</value>
+    </data>
+    <data name="AgentDataClassesSection" xml:space="preserve">
+        <value>Dados retidos dos agentes</value>
+    </data>
+    <data name="AgentDataClassesHintMSG" xml:space="preserve">
+        <value>Retidos dos agentes: entidades de uma classe marcada (pelo catálogo de dados LGPD ou por um nível de segurança marcado como sensível) e tudo abaixo delas no mapa de entidades; riscos ligados a uma delas pela entidade ou pela cadeia, ou com a flag 5; achados ligados pela aplicação, pelo host ou pelos riscos; incidentes, hosts, avaliações e execuções cuja entidade é retida. Planos de resposta a incidentes não são classificados. Uma busca só informa quantos itens foram retidos. Um item cuja classificação falta ou não pode ser lida também é retido. Esta lista vale só para agentes deste computador.</value>
+    </data>
+    <data name="AgentDataClassesLockedMSG" xml:space="preserve">
+        <value>Somente um usuário com a permissão do catálogo de dados (o escritório do encarregado/DPO) ou um administrador pode alterar esta lista.</value>
+    </data>
+    <data name="AgentDataClassesSavedMSG" xml:space="preserve">
+        <value>Salvo. A próxima chamada de agente já usa a nova lista.</value>
+    </data>
+    <data name="AgentDataClassesNotSavedMSG" xml:space="preserve">
+        <value>Não salvo: alterar esta lista exige a permissão do catálogo de dados.</value>
+    </data>
+    <data name="AgentDataClassesNone" xml:space="preserve">
+        <value>nenhuma</value>
+    </data>
+    <data name="AgentDataClassesSave" xml:space="preserve">
+        <value>Salvar</value>
+    </data>
+    <data name="AgentServerDisclosureDeclinedMSG" xml:space="preserve">
+        <value>O co-trabalho com agentes continua desligado.</value>
+    </data>
+    <data name="AgentDataClassPersonalData" xml:space="preserve">
+        <value>Dados pessoais</value>
+    </data>
+    <data name="AgentDataClassSensitivePersonalData" xml:space="preserve">
+        <value>Dados pessoais sensíveis (LGPD art. 11)</value>
+    </data>
+    <data name="AgentDataClassChildrenData" xml:space="preserve">
+        <value>Dados de crianças ou adolescentes (LGPD art. 14)</value>
+    </data>
+    <data name="AgentDataClassLargeVolume" xml:space="preserve">
+        <value>Grande volume de dados</value>
+    </data>
+    <data name="AgentDataClassStrategicResearch" xml:space="preserve">
+        <value>Pesquisa estratégica</value>
+    </data>
+    <data name="AgentDataClassSensitiveClassification" xml:space="preserve">
+        <value>Classificação de segurança marcada como sensível</value>
+    </data>
+    <data name="AgentDataClassesFloorMSG" xml:space="preserve">
+        <value>Dados pessoais sensíveis e dados de crianças ou adolescentes são sempre retidos (mínimo da organização): não podem ser desmarcados.</value>
+    </data>
+    <data name="AgentAccessSandboxMSG" xml:space="preserve">
+        <value>Um agente que pode executar comandos ou ler arquivos neste computador como você consegue ler diretamente a sua sessão e as suas configurações do NetRisk, passando por cima de todo limite daqui. Execute-o em sandbox, negue a ele a pasta de perfil do NetRisk e nunca conceda acesso de edição a um agente com shell irrestrito.</value>
+    </data>
+    <data name="AgentWriteChange" xml:space="preserve">
+        <value>O que muda</value>
+    </data>
+    <data name="AgentWriteSizeMSG" xml:space="preserve">
+        <value>Antes: {0} linhas, {1} caracteres · depois: {2} linhas, {3} caracteres</value>
+    </data>
 </root>

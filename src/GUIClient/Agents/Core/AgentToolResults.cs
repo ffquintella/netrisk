@@ -51,6 +51,17 @@ public static class AgentToolErrors
     public const string NotConfirmed = "not_confirmed";
 
     /// <summary>
+    /// T362: the item's data class is withheld from agents by the organisation's policy, or its class could not be
+    /// established (which withholds too). The answer never says which class.
+    /// </summary>
+    public const string Withheld = "withheld";
+
+    public static AgentToolException WithheldError(bool edit) => new(Withheld,
+        "This item is withheld from agents by the data-classification policy set in NetRisk (LGPD). " +
+        (edit ? "Nothing was written." : "Nothing was returned.") +
+        " Ask the user to work on it in NetRisk directly.");
+
+    /// <summary>
     /// A ClientServices call that answers a failure with null (several swallow the status): the refusal cannot be told
     /// apart from an outage, so the tool says neither and returns nothing.
     /// </summary>
@@ -153,14 +164,20 @@ public static class AgentUntrustedData
             ["withheld_personal_fields"] = withheld?.Personal ?? 0,
             ["withheld_secret_fields"] = withheld?.Secret ?? 0,
             ["withheld_undeclared_fields"] = withheld?.Undeclared ?? 0,
+            // T362: items (or references to them) whose data class the organisation withholds; a count, never which.
+            ["withheld_classified_items"] = withheld?.Classified ?? 0,
             ["data"] = clean
         };
     }
 
-    /// <summary>The MCP text content: the notice, then the data inside the tag. The tool name is a validated identifier.</summary>
+    /// <summary>
+    /// The MCP text content: the notice, then the data inside the tag. The tool name is a validated identifier. Every
+    /// invisible, bidirectional, private-use or unassigned character, and every look-alike of <c>&lt; &gt; " &amp; '</c>,
+    /// is written as a <c>\uXXXX</c> escape (T359 review #4), so item text can neither fake the tag nor hide in the text.
+    /// </summary>
     public static string Render(string toolName, JsonObject envelope) =>
         $"NetRisk tool '{toolName}' returned untrusted data. {Notice}\n<{Tag} tool=\"{toolName}\">\n" +
-        (envelope["data"]?.ToJsonString(AgentJson.Text) ?? "null") + $"\n</{Tag}>";
+        AgentJson.Neutralize(envelope["data"]?.ToJsonString(AgentJson.Text) ?? "null") + $"\n</{Tag}>";
 
     /// <summary>Replaces every vault reference in every string value, at any depth.</summary>
     public static void Redact(JsonNode? node)
@@ -184,11 +201,17 @@ public static class AgentUntrustedData
         }
     }
 
+    /// <summary>
+    /// A vault reference becomes <see cref="RedactedVaultReference"/>; an unsafe character (<see cref="AgentJson.IsUnsafe"/>)
+    /// becomes the visible text <c>\uXXXX</c>, in the structured content as in the rendered text.
+    /// </summary>
     private static JsonValue? Scrub(JsonValue value)
     {
         if (value.GetValueKind() != JsonValueKind.String) return null;
         var text = value.GetValue<string>();
-        return VaultReference.IsMatch(text) ? JsonValue.Create(VaultReference.Replace(text, RedactedVaultReference)) : null;
+        var scrubbed = VaultReference.IsMatch(text) ? VaultReference.Replace(text, RedactedVaultReference) : text;
+        scrubbed = AgentJson.Neutralize(scrubbed);
+        return ReferenceEquals(scrubbed, text) ? null : JsonValue.Create(scrubbed);
     }
 }
 
@@ -237,6 +260,61 @@ public static class AgentJson
 
     /// <summary>For the text rendering: <c>&lt;</c>, <c>&gt;</c> and quotes escaped, so item text cannot close the tag.</summary>
     public static JsonSerializerOptions Text { get; } = new() { Encoder = SafeEncoder };
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, bool> LookAlikes = new();
+
+    /// <summary>
+    /// A character that must never reach an agent as itself (T359 review #4): format characters (bidi overrides and
+    /// isolates, zero-width), private use, unassigned, line and paragraph separators, controls, lone surrogates, and any
+    /// non-ASCII character whose compatibility form (NFKC) contains <c>&lt; &gt; " &amp; '</c> (the fullwidth ＜ ＞ ＂…).
+    /// </summary>
+    public static bool IsUnsafe(int codePoint)
+    {
+        if (codePoint < 0x80) return codePoint < 0x20 && codePoint is not ('\n' or '\r' or '\t') || codePoint == 0x7F;
+        if (codePoint is >= 0xD800 and <= 0xDFFF) return true;
+        var category = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(codePoint);
+        if (category is System.Globalization.UnicodeCategory.Format or System.Globalization.UnicodeCategory.PrivateUse
+            or System.Globalization.UnicodeCategory.OtherNotAssigned or System.Globalization.UnicodeCategory.LineSeparator
+            or System.Globalization.UnicodeCategory.ParagraphSeparator or System.Globalization.UnicodeCategory.Control
+            or System.Globalization.UnicodeCategory.Surrogate)
+            return true;
+        return LookAlikes.GetOrAdd(codePoint, cp =>
+        {
+            var normalized = char.ConvertFromUtf32(cp).Normalize(System.Text.NormalizationForm.FormKC);
+            return normalized.IndexOfAny(new[] { '<', '>', '"', '&', '\'' }) >= 0;
+        });
+    }
+
+    /// <summary>
+    /// <paramref name="text"/> with every <see cref="IsUnsafe"/> character written as <c>\uXXXX</c> (two escapes for a
+    /// character outside the BMP). In JSON text this is a valid escape — the characters never occur outside strings — and
+    /// in a plain string it is visible text. Returns the same instance when nothing changed.
+    /// </summary>
+    public static string Neutralize(string text)
+    {
+        System.Text.StringBuilder? builder = null;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            int codePoint;
+            var width = 1;
+            if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+            {
+                codePoint = char.ConvertToUtf32(c, text[i + 1]);
+                width = 2;
+            }
+            else codePoint = c;
+
+            if (IsUnsafe(codePoint))
+            {
+                builder ??= new System.Text.StringBuilder(text, 0, i, text.Length + 16);
+                for (var k = 0; k < width; k++) builder.Append("\\u").Append(((int)text[i + k]).ToString("X4"));
+            }
+            else builder?.Append(text, i, width);
+            i += width - 1;
+        }
+        return builder?.ToString() ?? text;
+    }
 
     /// <summary>
     /// Serializes <paramref name="value"/> as <paramref name="declaredType"/> — never its runtime type — so only the

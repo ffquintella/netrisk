@@ -112,6 +112,22 @@ public static class AgentEditLimits
     public const int TextLength = 4000;
     public const int NoteLength = 2000;
     public const int VersionLength = 32;
+
+    /// <summary>T359 review #5: a value of more lines, or more blank lines in a row, could hide text below the fold.</summary>
+    public const int MaxLines = 20;
+    public const int MaxConsecutiveBlankLines = 3;
+}
+
+/// <summary>
+/// T359 review #6: how many writes a lease without confirm-each-write may make before every further write of that lease
+/// waits for the user's approval. A constant, so no agent request can raise it.
+/// </summary>
+public static class AgentWriteBudget
+{
+    public const int WritesWithoutConfirmation = 20;
+
+    /// <summary>The activity panel's result for the notice that the budget was reached.</summary>
+    public const string ConfirmationRequired = "confirmation_required";
 }
 
 /// <summary>
@@ -211,12 +227,29 @@ public sealed class AgentEditArgs
         if (text.Length == 0 && (required || !allowEmpty)) throw Invalid(name, "must not be empty");
         if (text.Length > maxLength) throw Invalid(name, $"must be at most {maxLength} characters");
         if (text.Any(c => char.IsControl(c) && c is not ('\n' or '\r' or '\t')) ||
-            text.Any(c => CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.Format))
+            text.Any(c => CharUnicodeInfo.GetUnicodeCategory(c) is UnicodeCategory.Format or UnicodeCategory.LineSeparator
+                or UnicodeCategory.ParagraphSeparator or UnicodeCategory.PrivateUse or UnicodeCategory.OtherNotAssigned))
             throw Invalid(name, "contains control or formatting characters");
+        if (TooManyLineBreaks(text))
+            throw Invalid(name, $"has too many line breaks (at most {AgentEditLimits.MaxLines} lines and " +
+                                $"{AgentEditLimits.MaxConsecutiveBlankLines} blank lines in a row)");
         if (AgentDataPolicy.LooksLikeSecretValue(text))
             throw new AgentToolException(AgentToolErrors.Invalid,
                 $"Argument '{name}' looks like a credential, which NetRisk never accepts from an agent. Nothing was written.");
         return text;
+    }
+
+    private static bool TooManyLineBreaks(string text)
+    {
+        var lines = text.Replace("\r\n", "\n").Split('\n', '\r');
+        if (lines.Length > AgentEditLimits.MaxLines) return true;
+        var blank = 0;
+        foreach (var line in lines)
+        {
+            blank = line.Trim().Length == 0 ? blank + 1 : 0;
+            if (blank > AgentEditLimits.MaxConsecutiveBlankLines) return true;
+        }
+        return false;
     }
 
     /// <summary>One of <paramref name="allowed"/> (lower-case snake case), or null when absent.</summary>

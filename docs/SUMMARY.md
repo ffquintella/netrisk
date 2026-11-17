@@ -8,6 +8,7 @@
 * [⚙️ Installation](product-guides/installation.md)
 * [💻 Usage](product-guides/usage/README.md)
   * [🔦 Filters](product-guides/usage/filters.md)
+* [🤖 Agent co-work](product-guides/agent-co-work.md)
 
 ## Fundamentals
 

@@ -136,6 +136,29 @@ public class DataCatalogueServiceInMemoryTest : DecisionCycleTestBase
         Assert.Contains(history, a => a.EntityType == nameof(DataCatalogueLocation));
     }
 
+    /// <summary>
+    /// C1b (T362, S55) — the compliance list carries the three marks of each record, so a client classifies every record
+    /// from one read; a record not catalogued carries none of them (null: "unknown", never "no").
+    /// </summary>
+    [Fact]
+    public async Task TestC1b_TheRecordListCarriesTheMarksOfEachRecord()
+    {
+        var request = Personal();
+        request.InvolvesMinors = true;
+        request.LargeVolume = true;
+        request.StrategicResearch = false;
+        await Svc.SaveRecordAsync(Data, request, Cro);
+
+        var list = await Svc.GetRecordsAsync(withFindingsOnly: false);
+
+        var data = list.Single(r => r.EntityId == Data);
+        Assert.Equal((PersonalDataCategory.Personal, true, true, false),
+            (data.PersonalData, data.InvolvesMinors, data.LargeVolume, data.StrategicResearch));
+        var health = list.Single(r => r.EntityId == Health);
+        Assert.False(health.Catalogued);
+        Assert.Equal(((bool?)null, (bool?)null, (bool?)null), (health.InvolvesMinors, health.LargeVolume, health.StrategicResearch));
+    }
+
     /// <summary>C2 — every invalid field is refused naming it, and nothing is written.</summary>
     [Fact]
     public async Task TestC2_AnInvalidRecordIsRefusedNamingTheField()

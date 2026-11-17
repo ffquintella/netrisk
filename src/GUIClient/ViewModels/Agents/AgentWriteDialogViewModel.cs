@@ -15,6 +15,12 @@ public class AgentWriteChangeRow
     public string Field { get; init; } = "";
     public string Before { get; init; } = "";
     public string After { get; init; } = "";
+
+    /// <summary>T359 review #5: the changed span only, so a one-sentence change inside a long text cannot pass unseen.</summary>
+    public string Change { get; init; } = "";
+
+    /// <summary>Lines and characters before and after, so text below the fold is announced.</summary>
+    public string Size { get; init; } = "";
 }
 
 /// <summary>
@@ -31,6 +37,7 @@ public class AgentWriteDialogViewModel : ParameterizedDialogViewModelBase<Dialog
     public string StrChanges { get; } = Localizer["AgentWriteChanges"];
     public string StrBefore { get; } = Localizer["AgentWriteBefore"];
     public string StrAfter { get; } = Localizer["AgentWriteAfter"];
+    public string StrChange { get; } = Localizer["AgentWriteChange"];
     public string StrNotice { get; } = Localizer["AgentWriteNoticeMSG"];
     public string StrApprove { get; } = Localizer["AgentWriteApprove"];
     public string StrDeny { get; } = Localizer["AgentDeny"];
@@ -121,11 +128,19 @@ public class AgentWriteDialogViewModel : ParameterizedDialogViewModelBase<Dialog
         HasQueue = prompt.WaitingCount > 0;
         QueueText = string.Format(Localizer["AgentWriteQueueMSG"], prompt.WaitingCount);
         var empty = Localizer["AgentWriteEmptyValue"];
-        Changes = prompt.Changes.Select(c => new AgentWriteChangeRow
+        // The prompt's label and values are already cleaned in Core (AgentWriteDisplay, review #5).
+        Changes = prompt.Changes.Select(c =>
         {
-            Field = c.Field,
-            Before = string.IsNullOrEmpty(c.Before) ? empty : c.Before,
-            After = string.IsNullOrEmpty(c.After) ? empty : c.After
+            var (beforeLines, beforeChars) = AgentWriteDisplay.Size(c.Before);
+            var (afterLines, afterChars) = AgentWriteDisplay.Size(c.After);
+            return new AgentWriteChangeRow
+            {
+                Field = c.Field,
+                Before = string.IsNullOrEmpty(c.Before) ? empty : c.Before,
+                After = string.IsNullOrEmpty(c.After) ? empty : c.After,
+                Change = AgentWriteDisplay.ChangedSpan(c.Before, c.After),
+                Size = string.Format(Localizer["AgentWriteSizeMSG"], beforeLines, beforeChars, afterLines, afterChars)
+            };
         }).ToList();
     }
 

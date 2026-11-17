@@ -55,7 +55,15 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<GUIClient.Agents.IAgentApprovalPrompter>(),
             // M62/M63: the read and edit tools wrap the same ClientServices the GUI's screens use (S55: one path to the API),
             // composed by the one factory the inventory test also builds; the registry refuses any tool not reviewed.
-            GUIClient.Agents.EditTools.AgentToolCatalog.Create(sp)));
+            GUIClient.Agents.EditTools.AgentToolCatalog.Create(sp),
+            // T362: the S52/S46 classification every tool applies, read through the same ClientServices.
+            new GUIClient.Agents.ClientServicesClassificationSource(
+                sp.GetRequiredService<IEntitiesService>(),
+                sp.GetRequiredService<IDataCatalogueService>(),
+                sp.GetRequiredService<IRiskFlagsService>(),
+                sp.GetRequiredService<IHostsService>(),
+                sp.GetRequiredService<IAssessmentsService>(),
+                sp.GetRequiredService<IRiskChainService>())));
         // The Cyber Risk Overview's agent tools come from its module (S40 §11.5: only the module names the index contracts).
         services.AddSingleton<GUIClient.Agents.IAgentToolSource>(sp =>
             new GUIClient.Tools.RiskIndex.RiskOverviewAgentTools(sp.GetRequiredService<IRiskIndexService>()));

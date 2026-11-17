@@ -261,6 +261,17 @@ public class DataRecordSummaryDto
     public string? Name { get; set; }
     public bool Catalogued { get; set; }
     public PersonalDataCategory? PersonalData { get; set; }
+
+    /// <summary>
+    /// The three marks of the catalogue (S52 §4.2), so a client can classify every record from this one list — the agent
+    /// co-work data-class exclusion (T362, S55) reads them. Null when not catalogued; <see cref="InvolvesMinors"/> is also
+    /// null when undeclared. A client must read null as "unknown", never as "no".
+    /// </summary>
+    public bool? InvolvesMinors { get; set; }
+
+    public bool? LargeVolume { get; set; }
+    public bool? StrategicResearch { get; set; }
+
     public int PurposeCount { get; set; }
     public int ApprovedDpiaCount { get; set; }
     public List<DataCatalogueFindingCode> FindingCodes { get; set; } = [];

@@ -28,9 +28,42 @@ public class AgentRow
     public bool IsPaused { get; init; }
 }
 
+/// <summary>One data class in the Agents window's exclusion list (T362).</summary>
+public class AgentDataClassRow : ReactiveObject
+{
+    private readonly Action _changed;
+
+    public AgentDataClassRow(AgentDataClass dataClass, string label, bool isExcluded, bool isEditable, Action changed)
+    {
+        Class = dataClass;
+        Label = label;
+        _isExcluded = isExcluded;
+        IsEditable = isEditable;
+        _changed = changed;
+    }
+
+    public AgentDataClass Class { get; }
+    public string Label { get; }
+    public bool IsEditable { get; }
+
+    private bool _isExcluded;
+    public bool IsExcluded
+    {
+        get => _isExcluded;
+        set
+        {
+            if (_isExcluded == value) return;
+            this.RaiseAndSetIfChanged(ref _isExcluded, value);
+            _changed();
+        }
+    }
+}
+
 /// <summary>
-/// The Agents window (T347): the off-by-default switch for the loopback server, the user's registered agents with
-/// rename and revoke, and the active lease of the selected agent with pause, resume and end.
+/// The Agents window (T347, T361, T362): the agent co-work settings — the off-by-default switch for the loopback server
+/// with its LGPD disclosure (asked once before the first start), and the data classes withheld from agents (changed only
+/// by a user holding the data-catalogue permission) — then the user's registered agents with rename and revoke, and the
+/// active lease of the selected agent with pause, resume and end.
 /// </summary>
 public class AgentsViewModel : ViewModelBase
 {
@@ -51,6 +84,32 @@ public class AgentsViewModel : ViewModelBase
     public string StrResume { get; } = Localizer["AgentResume"];
     public string StrEndAccess { get; } = Localizer["AgentEndAccess"];
     public string StrNoneRegistered { get; } = Localizer["AgentNoneRegistered"];
+    public string StrDataDisclosure { get; } = Localizer["AgentDataDisclosureMSG"];
+    public string StrDataClassesSection { get; } = Localizer["AgentDataClassesSection"];
+    public string StrDataClassesHint { get; } = Localizer["AgentDataClassesHintMSG"];
+    public string StrDataClassesLocked { get; } = Localizer["AgentDataClassesLockedMSG"];
+    public string StrDataClassesFloor { get; } = Localizer["AgentDataClassesFloorMSG"];
+    public string StrDataClassesSave { get; } = Localizer["AgentDataClassesSave"];
+
+    /// <summary>T362: one row per data class, checked when withheld from agents.</summary>
+    public ObservableCollection<AgentDataClassRow> DataClasses { get; } = new();
+
+    private bool _isPolicyLocked = true;
+    /// <summary>True for a user without the data-catalogue permission: the list is shown, not editable.</summary>
+    public bool IsPolicyLocked
+    {
+        get => _isPolicyLocked;
+        set => this.RaiseAndSetIfChanged(ref _isPolicyLocked, value);
+    }
+
+    private bool _isSavePolicyEnabled;
+    public bool IsSavePolicyEnabled
+    {
+        get => _isSavePolicyEnabled;
+        set => this.RaiseAndSetIfChanged(ref _isSavePolicyEnabled, value);
+    }
+
+    public ReactiveCommand<RxVoid, RxVoid> BtSavePolicyClicked { get; }
 
     private readonly AgentCoworkService _service;
     private readonly DispatcherTimer _clock;
@@ -77,7 +136,7 @@ public class AgentsViewModel : ViewModelBase
         {
             if (_isServerEnabled == value) return;
             this.RaiseAndSetIfChanged(ref _isServerEnabled, value);
-            if (!_loading) _ = WithBusyAsync(() => _service.SetEnabledAsync(value));
+            if (!_loading) _ = WithBusyAsync(() => SwitchServerAsync(value));
         }
     }
 
@@ -146,6 +205,8 @@ public class AgentsViewModel : ViewModelBase
         BtResumeClicked = ReactiveCommand.Create(() => OnSelectedAgent(id => _service.Runtime.Leases.Resume(id)));
         BtEndAccessClicked = ReactiveCommand.Create(() =>
             OnSelectedAgent(id => _service.Runtime.Leases.End(id, LeaseEndReason.EndedByUser)));
+        BtSavePolicyClicked = ReactiveCommand.Create(ExecuteSavePolicy);
+        LoadPolicy();
 
         _service.StateChanged += OnModelChanged;
         _service.Runtime.Registry.Changed += OnModelChanged;
@@ -172,6 +233,54 @@ public class AgentsViewModel : ViewModelBase
     }
 
     private void OnModelChanged() => Dispatcher.UIThread.Post(Refresh);
+
+    /// <summary>
+    /// T361: switching the server on asks once (per disclosure version) for the LGPD disclosure; declining leaves it off.
+    /// Off stops the server at once, every lease ending. Either way the server starts or stops live, no restart needed.
+    /// </summary>
+    private async Task SwitchServerAsync(bool enable)
+    {
+        if (enable && !_service.DisclosureAccepted)
+        {
+            var accepted = await ConfirmationDialog.ConfirmAsync(Localizer["AgentServerDisclosureTitle"],
+                Localizer["AgentServerDisclosureMSG"]);
+            if (!accepted)
+            {
+                Toasts.Info(Localizer["AgentServerDisclosureDeclinedMSG"]);
+                Dispatcher.UIThread.Post(Refresh); // back to off, without calling the service
+                return;
+            }
+            _service.AcceptDisclosure();
+        }
+        await _service.SetEnabledAsync(enable);
+    }
+
+    /// <summary>T362: the current policy, editable only for a user who may change it.</summary>
+    private void LoadPolicy()
+    {
+        var policy = _service.ExclusionPolicy;
+        var editable = AgentExclusionPolicyAccess.CanChange(AuthenticationService.IsAuthenticated
+            ? AuthenticationService.AuthenticatedUserInfo
+            : null);
+        IsPolicyLocked = !editable;
+        DataClasses.Clear();
+        // The organisation minimum (AgentExclusionPolicy.Floor) is shown checked and cannot be unchecked.
+        foreach (var dataClass in Enum.GetValues<AgentDataClass>())
+            DataClasses.Add(new AgentDataClassRow(dataClass, Localizer[AgentDataClasses.LabelKey(dataClass)],
+                policy.Excluded.Contains(dataClass), editable && !AgentExclusionPolicy.Floor.Contains(dataClass),
+                OnPolicyEdited));
+        IsSavePolicyEnabled = false;
+    }
+
+    private void OnPolicyEdited() => IsSavePolicyEnabled = !IsPolicyLocked;
+
+    private void ExecuteSavePolicy()
+    {
+        var policy = AgentExclusionPolicy.Of(DataClasses.Where(r => r.IsExcluded).Select(r => r.Class));
+        if (_service.SetExclusionPolicy(policy)) Toasts.Success(Localizer["AgentDataClassesSavedMSG"]);
+        else Toasts.Warning(Localizer["AgentDataClassesNotSavedMSG"]);
+        LoadPolicy();
+    }
 
     private void Refresh()
     {

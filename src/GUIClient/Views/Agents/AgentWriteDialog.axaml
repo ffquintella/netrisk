@@ -34,6 +34,11 @@
                             <Border Classes="formCard caution">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Field}" Classes="fieldLabel"/>
+                                    <!-- T359 review #5: the changed span and both sizes first, then the whole values. -->
+                                    <TextBlock Text="{Binding $parent[Window].((agents:AgentWriteDialogViewModel)DataContext).StrChange}"
+                                               Classes="hint"/>
+                                    <TextBlock Text="{Binding Change}" Classes="formData" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Size}" Classes="notice"/>
                                     <TextBlock Text="{Binding $parent[Window].((agents:AgentWriteDialogViewModel)DataContext).StrBefore}"
                                                Classes="hint"/>
                                     <TextBlock Text="{Binding Before}" Classes="form_long_text"/>

@@ -57,5 +57,17 @@ public interface IAgentToolSource
 /// </summary>
 public sealed record AgentToolCall(AgentRegistration Agent, AgentLease Lease, AuthenticatedUserInfo? User = null)
 {
+    private AgentClassificationScope? _classification;
+
     public AgentWithholding Withheld { get; } = new();
+
+    /// <summary>
+    /// Where the data classification comes from and the policy (T362). The dispatcher sets the runtime's; a call built
+    /// without one gets <see cref="AgentClassificationOptions.Unconfigured"/>, which withholds every classified link.
+    /// </summary>
+    public AgentClassificationOptions ClassificationOptions { get; init; } = AgentClassificationOptions.Unconfigured;
+
+    /// <summary>This call's classification view: loaded lazily, once, and counting into <see cref="Withheld"/>.</summary>
+    public AgentClassificationScope Classification =>
+        LazyInitializer.EnsureInitialized(ref _classification, () => new AgentClassificationScope(ClassificationOptions, Withheld));
 }

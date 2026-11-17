@@ -1167,10 +1167,14 @@ grants, shortens or refuses it. Design, trust model and threat table:
 > spec: S55
 > depends-on: M63
 
-- [ ] T359 Run the security review against the S55 threat table, including a prompt-injection exercise through attacker-controlled item text (S55)
+- [x] T359 Run the security review against the S55 threat table, including a prompt-injection exercise through attacker-controlled item text (S55)
+  - note: independent review plus prompt-injection exercise found two blockers and six should-fix items, all fixed with regression tests; it also found that an agent with an unrestricted shell as the same OS user can read the client settings store (session token, agent policy) — a stated assumption of S55 mitigated by sandbox guidance and a floor of excluded classes, not closed (T370, T371)
 - [ ] T360 Observe a real MCP client register, be approved, work under a lease and be refused after expiry, and record the evidence (S55)
-- [ ] T361 Add the settings switch, the LGPD disclosure in the lease dialog and the user guide under `docs/product-guides/` (S55)
-- [ ] T362 Let item data-classification (S52) exclude classes from agent tools (S55)
+  - note: the automated half ran for real — the official MCP Python SDK through the real stdio bridge to the real server and lease runtime, with the dialogs, clock, signed-in user and API as stand-ins (`scripts/agents/observe-mcp.sh`); the run against the real GUI and `claude mcp add` is still to be done from the checklist in S55
+- [x] T361 Add the settings switch, the LGPD disclosure in the lease dialog and the user guide under `docs/product-guides/` (S55)
+  - note: the switch lives in the Agents window (Application → AI agents…) since there is no per-user settings window; the server runs only when the switch is on and the current disclosure version was accepted; the guide does not document one-click registration, which is M65
+- [x] T362 Let item data-classification (S52) exclude classes from agent tools (S55)
+  - note: withholds by default sensitive personal data, children's data and sensitive classification, with an unremovable floor of sensitive personal data and children's data; the policy is stored per desktop, not organisation-wide, and an uncatalogued or unreadable item fails closed; response plans have no classification source
   - note: depends on M49 being delivered; until then the lease dialog states that item content reaches the agent's model provider
 
 ### [M65] One-click registration on installed agents
@@ -1211,6 +1215,11 @@ grants, shortens or refuses it. Design, trust model and threat table:
   - note: found while building M62; the agent tools avoid it by reading from the server
 - [ ] T369 Add server-side `If-Match` concurrency tokens to the risk, finding, incident, assessment run, entity and host update endpoints so an agent write cannot overwrite a concurrent edit (S55)
   - note: until then the agent edit tools compute a client-side version and refuse a stale write after a fresh read
+- [ ] T370 Key the client settings store through `IMasterKeyProvider` instead of the plaintext `device_token.txt` and `device_id.txt` beside it, so a same-user process cannot read the session token and the agent policy from `configuration.db` (S55)
+- [ ] T371 Issue agent-scoped server tokens so an agent never needs the user's JWT, and add OS-level sandboxing guidance or enforcement for the agent process (S55)
+- [ ] T372 Add a bulk risk-chain read endpoint so classifying a risk search stops costing one chain read per risk (S55)
+- [ ] T373 Package `netrisk-mcp-bridge` self-contained in the installers so MCP clients that start it with a minimal environment need no `DOTNET_ROOT` (S55)
+- [ ] T374 Store the agent excluded-class policy organisation-wide on the server instead of per desktop (S55)
 
 ## Specs
 
