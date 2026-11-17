@@ -43,8 +43,9 @@ public sealed class AgentLeaseOptions
 public sealed class AgentLease
 {
     internal AgentLease(string leaseId, string agentId, string agentName, AgentAccessMode mode, int blocks,
-        DateTimeOffset grantedAt)
+        DateTimeOffset grantedAt, bool confirmEachWrite = true)
     {
+        ConfirmEachWrite = mode == AgentAccessMode.ReadWrite && confirmEachWrite;
         LeaseId = leaseId;
         AgentId = agentId;
         AgentName = agentName;
@@ -63,6 +64,12 @@ public sealed class AgentLease
     public DateTimeOffset GrantedAt { get; }
     public DateTimeOffset ExpiresAt { get; }
 
+    /// <summary>
+    /// T357: every edit waits for the user's one-click approval in a dialog showing the exact change. Chosen in the access
+    /// dialog (on by default, S55 "recommended for a first session"); meaningless under a read lease.
+    /// </summary>
+    public bool ConfirmEachWrite { get; }
+
     /// <summary>Paused from the GUI: calls are refused but the clock keeps running.</summary>
     public bool IsPaused { get; internal set; }
 
@@ -77,8 +84,9 @@ public sealed class PendingAccessRequest
     private readonly TaskCompletionSource _settled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     internal PendingAccessRequest(string requestId, AgentRegistration agent, int blocks, AgentAccessMode mode,
-        string reason, DateTimeOffset createdAt)
+        string reason, DateTimeOffset createdAt, bool userInitiated = false)
     {
+        UserInitiated = userInitiated;
         RequestId = requestId;
         AgentId = agent.Id;
         AgentName = agent.Name;
@@ -96,6 +104,10 @@ public sealed class PendingAccessRequest
     public int RequestedBlocks { get; }
     public AgentAccessMode RequestedMode { get; }
     public string Reason { get; }
+
+    /// <summary>T355: asked for by the user ("Grant another 10 min"), not by the agent; the dialog says so.</summary>
+    public bool UserInitiated { get; }
+
     public DateTimeOffset CreatedAt { get; }
     public AccessRequestStatus Status { get; private set; } = AccessRequestStatus.Pending;
     public DateTimeOffset? DecidedAt { get; private set; }
@@ -112,12 +124,16 @@ public sealed class PendingAccessRequest
     }
 }
 
-/// <summary>The user's answer in the access dialog: fewer blocks and a lower mode are allowed, more of either is not.</summary>
-public sealed record AccessDecision(bool Approved, int Blocks, AgentAccessMode Mode)
+/// <summary>
+/// The user's answer in the access dialog: fewer blocks and a lower mode are allowed, more of either is not. A read-write
+/// grant confirms each write unless the user turned that off (T357).
+/// </summary>
+public sealed record AccessDecision(bool Approved, int Blocks, AgentAccessMode Mode, bool ConfirmEachWrite = true)
 {
     public static readonly AccessDecision Deny = new(false, 0, AgentAccessMode.Read);
 
-    public static AccessDecision Grant(int blocks, AgentAccessMode mode) => new(true, blocks, mode);
+    public static AccessDecision Grant(int blocks, AgentAccessMode mode, bool confirmEachWrite = true) =>
+        new(true, blocks, mode, confirmEachWrite);
 }
 
 public enum AccessRequestOutcomeKind { Created, Collapsed, Invalid, Busy }
@@ -136,6 +152,9 @@ public static class AgentAccessChoices
     public const int DefaultBlocks = 1;
     public const AgentAccessMode DefaultMode = AgentAccessMode.Read;
 
+    /// <summary>T357: confirm-each-write starts checked, so the quickest read-write grant still asks before every edit.</summary>
+    public const bool DefaultConfirmEachWrite = true;
+
     public static IReadOnlyList<int> Blocks(int requestedBlocks) =>
         Enumerable.Range(1, Math.Clamp(requestedBlocks, 1, AgentLeaseOptions.AbsoluteMaxBlocks)).ToList();
 
@@ -153,7 +172,8 @@ public sealed record AccessPrompt(
     string Reason,
     int RequestedBlocks,
     AgentAccessMode RequestedMode,
-    int WaitingCount);
+    int WaitingCount,
+    bool UserInitiated = false);
 
 /// <summary>
 /// Access leases (T348): requested in blocks of 10 minutes, granted, shortened or downgraded by the user, held only
@@ -196,7 +216,23 @@ public sealed class AgentLeaseManager
         if (!AgentText.TryClean(reason, AgentText.MaxReasonLength, required: true, out var cleanReason))
             return new(AccessRequestOutcomeKind.Invalid,
                 Error: $"reason is required and must be at most {AgentText.MaxReasonLength} characters");
+        return Create(agent, blocks, mode, cleanReason, userInitiated: false);
+    }
 
+    /// <summary>
+    /// T355 "Grant another 10 min": a NEW request for one block in the current lease's mode, started by the user. It goes
+    /// through the same queue and dialog as any request (no silent renewal) and, once granted, replaces the lease.
+    /// </summary>
+    public AccessRequestOutcome RequestExtension(AgentRegistration agent)
+    {
+        var lease = GetLease(agent.Id);
+        if (lease is null) return new(AccessRequestOutcomeKind.Invalid, Error: "no active lease to extend");
+        return Create(agent, 1, lease.Mode, "", userInitiated: true);
+    }
+
+    private AccessRequestOutcome Create(AgentRegistration agent, int blocks, AgentAccessMode mode, string cleanReason,
+        bool userInitiated)
+    {
         PendingAccessRequest created;
         lock (_gate)
         {
@@ -213,10 +249,11 @@ public sealed class AgentLeaseManager
                 return new(AccessRequestOutcomeKind.Busy, Error: "too many access requests are waiting for the user");
             }
 
-            created = new PendingAccessRequest(RandomGenerator.RandomToken(24), agent, blocks, mode, cleanReason, now);
+            created = new PendingAccessRequest(RandomGenerator.RandomToken(24), agent, blocks, mode, cleanReason, now,
+                userInitiated);
             _requests[created.RequestId] = created;
             Record(AgentAuditKind.AccessRequested, agent.Id, agent.Name,
-                $"{blocks * AgentLeaseOptions.BlockMinutes} min, {mode}");
+                $"{blocks * AgentLeaseOptions.BlockMinutes} min, {mode}" + (userInitiated ? ", asked for by the user" : ""));
         }
 
         RequestAdded?.Invoke(created);
@@ -231,7 +268,7 @@ public sealed class AgentLeaseManager
             if (!_requests.TryGetValue(requestId, out var r) || r.Status != AccessRequestStatus.Pending) return null;
             var waiting = _requests.Values.Count(o => o.Status == AccessRequestStatus.Pending) - 1;
             return new AccessPrompt(r.RequestId, r.AgentName, r.AgentFingerprint, r.Reason, r.RequestedBlocks,
-                r.RequestedMode, waiting);
+                r.RequestedMode, waiting, r.UserInitiated);
         }
     }
 
@@ -277,11 +314,12 @@ public sealed class AgentLeaseManager
                 }
 
                 var lease = new AgentLease(RandomGenerator.RandomToken(16), r.AgentId, r.AgentName, decision.Mode,
-                    decision.Blocks, now);
+                    decision.Blocks, now, decision.ConfirmEachWrite);
                 _leases[r.AgentId] = lease;
                 r.Settle(AccessRequestStatus.Granted, now, lease);
                 Record(AgentAuditKind.AccessGranted, r.AgentId, r.AgentName,
-                    $"{lease.Minutes} min, {lease.Mode}, until {lease.ExpiresAt:O}");
+                    $"{lease.Minutes} min, {lease.Mode}, until {lease.ExpiresAt:O}" +
+                    (lease.ConfirmEachWrite ? ", confirm each write" : ""));
             }
         }
 

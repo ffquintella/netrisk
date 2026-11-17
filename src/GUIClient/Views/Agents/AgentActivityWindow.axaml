@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:agents="clr-namespace:GUIClient.ViewModels.Agents"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        Width="900" Height="600" MinWidth="680" MinHeight="420" CanResize="True"
+        x:DataType="agents:AgentActivityViewModel" x:Class="GUIClient.Views.Agents.AgentActivityWindow"
+        Title="{Binding StrTitle}">
+
+    <!-- T355/T356 (S55): every agent call (time, agent, tool, item, read/edit, result) and the items agents are on;
+         Pause, Resume and End access always visible. -->
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="Black" TintOpacity="1"
+                                             MaterialOpacity="0.65"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <Grid RowDefinitions="Auto, Auto, Auto, 2*, Auto, *" Margin="10">
+            <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="0 5">
+                <TextBlock Text="{Binding LeaseText}" Classes="statusBar" VerticalAlignment="Center" Margin="0 0 10 0"/>
+                <Button Classes="type2" Command="{Binding BtPauseClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Pause" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrPauseAll}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtResumeClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrResumeAll}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtEndClicked}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Stop" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrEndAll}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <TextBlock Grid.Row="2" Text="{Binding StrCalls}" Classes="sectionCaption"/>
+            <DataGrid Grid.Row="3" ItemsSource="{Binding Entries}" AutoGenerateColumns="False" IsReadOnly="True"
+                      CanUserResizeColumns="True" GridLinesVisibility="Horizontal"
+                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrTime}" Binding="{Binding Time}" Width="90"/>
+                    <DataGridTextColumn Header="{Binding StrAgent}" Binding="{Binding Agent}" Width="*" MinWidth="120"/>
+                    <DataGridTextColumn Header="{Binding StrTool}" Binding="{Binding Tool}" Width="*" MinWidth="150"/>
+                    <DataGridTextColumn Header="{Binding StrItem}" Binding="{Binding Item}" Width="*" MinWidth="120"/>
+                    <DataGridTextColumn Header="{Binding StrKind}" Binding="{Binding Kind}" Width="90"/>
+                    <DataGridTextColumn Header="{Binding StrResult}" Binding="{Binding Result}" Width="*" MinWidth="110"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="4" Text="{Binding StrPresence}" Classes="sectionCaption" Margin="0 10 0 0"/>
+            <DataGrid Grid.Row="5" ItemsSource="{Binding Present}" AutoGenerateColumns="False" IsReadOnly="True"
+                      GridLinesVisibility="Horizontal" VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrItem}" Binding="{Binding Item}" Width="*" MinWidth="120"/>
+                    <DataGridTextColumn Header="{Binding StrAgent}" Binding="{Binding Agent}" Width="*" MinWidth="120"/>
+                    <DataGridTextColumn Header="{Binding StrMode}" Binding="{Binding Mode}" Width="*" MinWidth="100"/>
+                    <DataGridTextColumn Header="{Binding StrLastSeen}" Binding="{Binding LastSeen}" Width="110"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+    </Panel>
+</Window>

@@ -96,7 +96,13 @@ public interface IHostsService
     /// </summary>
     /// <param name="host"></param>
     public void UpdateAsync(Host host);
-    
+
+    /// <summary>
+    /// Updates a host and completes when the server has answered: a refusal or a failure throws. <see cref="UpdateAsync"/>
+    /// is <c>async void</c>, so nobody can know whether it worked; the agent edit tool (M63, T354) must.
+    /// </summary>
+    public Task UpdateHostAsync(Host host);
+
     /// <summary>
     /// Check if the host exists
     /// </summary>

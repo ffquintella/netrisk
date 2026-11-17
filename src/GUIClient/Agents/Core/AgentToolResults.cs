@@ -41,6 +41,15 @@ public static class AgentToolErrors
     public const string ServerUnavailable = "server_unavailable";
     public const string ToolFailed = "tool_failed";
 
+    /// <summary>An edit against an item that changed since the agent read it (T354): nothing written, read again.</summary>
+    public const string Stale = "stale";
+
+    /// <summary>The user declined the change in the per-write dialog (T357).</summary>
+    public const string WriteDenied = "write_denied";
+
+    /// <summary>The per-write dialog was not answered in time, or closed because access ended (T357).</summary>
+    public const string NotConfirmed = "not_confirmed";
+
     /// <summary>
     /// A ClientServices call that answers a failure with null (several swallow the status): the refusal cannot be told
     /// apart from an outage, so the tool says neither and returns nothing.

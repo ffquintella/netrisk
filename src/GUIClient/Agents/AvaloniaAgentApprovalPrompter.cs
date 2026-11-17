@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace GUIClient.Agents;
 
 /// <summary>
-/// Shows the two approval dialogs (T346, T348). The coordinator calls one at a time; a cancelled token (the request
+/// Shows the approval dialogs (T346, T348, and the per-write one, T357). The coordinator calls one at a time; a cancelled token (the request
 /// expired, the server stopped) closes the dialog with no decision. Closing the dialog any other way is a refusal.
 /// </summary>
 public sealed class AvaloniaAgentApprovalPrompter : IAgentApprovalPrompter
@@ -37,8 +37,20 @@ public sealed class AvaloniaAgentApprovalPrompter : IAgentApprovalPrompter
             var result = await Dialogs.ShowDialogAsync<AgentAccessDialogResult, AgentAccessDialogParameter,
                 AgentAccessDialogViewModel>(viewModel, new AgentAccessDialogParameter { Prompt = prompt });
             return result is { Action: ResultActions.Ok } && !cancellationToken.IsCancellationRequested
-                ? AccessDecision.Grant(result.Blocks, result.Mode)
+                ? AccessDecision.Grant(result.Blocks, result.Mode, result.ConfirmEachWrite)
                 : AccessDecision.Deny;
+        });
+
+    /// <summary>T357: one edit, its exact change shown; only an explicit, armed Approve writes it.</summary>
+    public Task<bool> ConfirmWriteAsync(WritePrompt prompt, CancellationToken cancellationToken) =>
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            BringShellForward();
+            var viewModel = new AgentWriteDialogViewModel();
+            using var dismiss = cancellationToken.Register(() => Dispatcher.UIThread.Post(viewModel.Dismiss));
+            var result = await Dialogs.ShowDialogAsync<DialogResultBase, AgentWriteDialogParameter,
+                AgentWriteDialogViewModel>(viewModel, new AgentWriteDialogParameter { Prompt = prompt });
+            return result?.Action == ResultActions.Ok && !cancellationToken.IsCancellationRequested;
         });
 
     private static IDialogService Dialogs => Program.ServiceProvider.GetRequiredService<IDialogService>();

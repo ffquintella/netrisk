@@ -225,6 +225,13 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 Status = _assessmentRun.Status
             };
 
+            // T356: never send this form's comments over an agent's later approved write.
+            if (_agentGuard?.ConflictMessage() is { } conflict)
+            {
+                Toasts.Warning(conflict);
+                return;
+            }
+
             try
             {
                 AssessmentsService.UpdateAssessmentRun(assessRun);
@@ -253,6 +260,8 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
         Close(result);
     }
 
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
     public override async Task ActivateAsync(AssessmentRunDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         await Dispatcher.UIThread.Invoke( async () =>
@@ -262,6 +271,10 @@ public class AssessmentRunDialogViewModel : ParameterizedDialogViewModelBaseAsyn
                 StrTitle = StrEditAssessmentRun;
 
                 _assessmentRun = parameter.AssessmentRun;
+                // Review M63 #7: an agent's write to this run after the dialog opened blocks the save (comments are
+                // the field an agent can change, and this save sends them back).
+                _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.For(GUIClient.Agents.AgentItemKinds.AssessmentRun,
+                    _assessmentRun!.Id);
 
                 Comments = _assessmentRun!.Comments;
             }

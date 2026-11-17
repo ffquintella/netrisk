@@ -203,6 +203,10 @@
             <!-- Header card (S38 §3.2): Auto height, never scrolls. -->
             <Border Grid.Row="0" Classes="card">
                 <StackPanel Spacing="3">
+                    <!-- T356: an agent is on this host, or just changed it (the fields are named). -->
+                    <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
+                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                    </Border>
                     <WrapPanel Orientation="Horizontal">
                         <TextBlock Classes="title" Text="{Binding SelectedHost.HostName}" VerticalAlignment="Center"/>
 

@@ -1007,4 +1007,29 @@ public class HostsRestServiceStubTest : BaseServiceTest
         Assert.ThrowsAny<Exception>(() => _service.GetOne(1));
         Assert.True(_backend.Requests.Count > before, "GetOne answered from a cache the session change should have cleared");
     }
+
+    // M63 (T354): the agent's host edit must know whether the server took it; UpdateAsync is async void.
+
+    [Fact]
+    public async Task TestUpdateHostAsyncPutsTheHostAndCompletesWhenTheServerAnswers()
+    {
+        _backend.OnPut("/Hosts/4", "");
+
+        await _service.UpdateHostAsync(AHost(4, "four"));
+
+        var sent = Assert.Single(_backend.Requests);
+        Assert.Equal("PUT", sent.Method);
+        Assert.Equal("/Hosts/4", sent.Path);
+        Assert.Contains("\"four\"", sent.Body);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task TestUpdateHostAsyncThrowsWhenTheServerRefuses(HttpStatusCode status)
+    {
+        _backend.OnStatus(Method.Put, "/Hosts/4", status);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => _service.UpdateHostAsync(AHost(4)));
+    }
 }

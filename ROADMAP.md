@@ -1153,10 +1153,13 @@ grants, shortens or refuses it. Design, trust model and threat table:
 > depends-on: M62
 
 - [ ] T354 Add single-item edit tools (create/update risk, vulnerability status and assignment, incident and timeline entries, assessment answers and comments, descriptive entity and host fields) validated by the GUI's own rules and the item's concurrency token (S55)
-- [ ] T355 Build the activity panel and status-bar indicator with remaining lease time, Pause and End access, and a one-minute expiry warning with "Grant another 10 min" (S55)
+  - note: delivered: nine edit tools (risk, finding status and assignment, finding note, incident, assessment answer and run comment, entity and host fields); not delivered: `create_risk` and `create_incident` (their owner and assignee pickers would expose personal data before the DPO decision), incident timeline entries (no ClientServices call or endpoint), risk comments, mitigation drafts, attachments and analyst assignment; the version token is computed client-side because none of these records has a server-side token, so the remaining window is one round trip until the PUT endpoints take `If-Match`
+- [x] T355 Build the activity panel and status-bar indicator with remaining lease time, Pause and End access, and a one-minute expiry warning with "Grant another 10 min" (S55)
 - [ ] T356 Mark items the agent is reading or editing, refresh and highlight fields it changes, and surface stale-write conflicts to both sides (S55)
-- [ ] T357 Add the confirm-each-write option to a lease (S55)
-- [ ] T358 Send the agent-context header from the GUI and record "user via agent" in the audit trail, with a test that the header never changes authorization (S55)
+  - note: presence, in-place refresh and the refusal to save over an agent change work on risks, incidents, findings, hosts, entities and the assessment run dialog; changed fields are named in a notice rather than highlighted per control, and the finding status dialog and draft answers stay unguarded because the server applies them to its current state
+- [x] T357 Add the confirm-each-write option to a lease (S55)
+- [x] T358 Send the agent-context header from the GUI and record "user via agent" in the audit trail, with a test that the header never changes authorization (S55)
+  - note: `audit_logs.actor` carries "via agent" only for the audited record types (risks, hosts, entities); every other agent request gets one application-log line, and the legacy JSON audit table records only the user
 
 ### [M64] Hardening and release
 > outcome: The server is reviewed, observed working with a real MCP client, documented, and can be enabled
@@ -1206,6 +1209,8 @@ grants, shortens or refuses it. Design, trust model and threat table:
 - [ ] T367 Add single-item ClientServices reads for risks, incidents and entities so the agent read tools stop loading the whole register to answer `get_risk`, `get_incident` and `get_entity` (S55)
 - [ ] T368 Fix `EntitiesRestService.GetEntity`, which throws `NullObjectException` when its cache is empty
   - note: found while building M62; the agent tools avoid it by reading from the server
+- [ ] T369 Add server-side `If-Match` concurrency tokens to the risk, finding, incident, assessment run, entity and host update endpoints so an agent write cannot overwrite a concurrent edit (S55)
+  - note: until then the agent edit tools compute a client-side version and refuse a stale write after a fresh read
 
 ## Specs
 

@@ -108,9 +108,19 @@ public class EntityFormViewModel : ViewModelBase
     #region METHODS
 
     /// <summary>Builds the field list for <paramref name="entity"/> from its definition.</summary>
-    public void Load(Entity entity, EntitiesConfiguration configuration)
+    public void Load(Entity entity, EntitiesConfiguration configuration) =>
+        Load(entity, configuration, DateTimeOffset.UtcNow);
+
+    /// <param name="loadedAt">When the screen read <paramref name="entity"/> from the server (review M63 #7): an agent's
+    /// write to it after that moment blocks this form's save, which sends the whole property set.</param>
+    public void Load(Entity entity, EntitiesConfiguration configuration, DateTimeOffset loadedAt)
     {
+        _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.ForSince(GUIClient.Agents.AgentItemKinds.Entity,
+            entity.Id, loadedAt);
+        AgentWatch ??= new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Entity,
+            () => _entity?.Id, _ => System.Threading.Tasks.Task.CompletedTask);
         _entity = entity;
+        AgentWatch.Refresh();
         _definition = configuration.Definitions[entity.DefinitionName];
 
         var strAvailable = Localizer["Available"];
@@ -253,9 +263,21 @@ public class EntityFormViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(HasErrors));
     }
 
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
+    /// <summary>T356: agent presence on this entity — "an agent is editing / just changed: name" (review M63 #7).</summary>
+    public GUIClient.ViewModels.Agents.AgentItemWatcher? AgentWatch { get; private set; }
+
     private async Task ExecuteSaveAsync()
     {
         if (_entity == null || _definition == null) return;
+
+        // T356: the PUT carries the entity's whole property set; never send a copy older than an agent's approved write.
+        if (_agentGuard?.ConflictMessage() is { } conflict)
+        {
+            Toasts.Warning(conflict);
+            return;
+        }
 
         // IX-4: enforced, not merely displayed. The old form showed an inline error and saved anyway.
         foreach (var field in Fields) field.Revalidate();
@@ -344,6 +366,7 @@ public class EntityFormViewModel : ViewModelBase
         if (result == null) return;
 
         _entity = result;
+        _agentGuard?.Reset(); // the form holds the server's copy again
         IsDirty = false;
         Recompute();
 

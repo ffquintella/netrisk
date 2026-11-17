@@ -409,6 +409,26 @@ public class HostsRestService: RestServiceBase, IHostsService
         }
     }
 
+    public async Task UpdateHostAsync(Host host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        using var client = MutatingClient();
+        var request = new RestRequest($"/Hosts/{host.Id}");
+        request.AddJsonBody(host);
+
+        try
+        {
+            var response = await client.PutAsync(request);
+            if (response.StatusCode != HttpStatusCode.OK)
+                throw new InvalidHttpRequestException("Error updating host", $"/Hosts/{host.Id}", "PUT");
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error updating host message:{Message}", ex.Message);
+            throw new RestComunicationException("Error updating host", ex);
+        }
+    }
+
     public async void Delete(int hostId)
     {
         using var client = MutatingClient();

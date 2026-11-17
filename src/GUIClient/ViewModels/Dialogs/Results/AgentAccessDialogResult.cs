@@ -7,4 +7,7 @@ public class AgentAccessDialogResult : DialogResultBase
 {
     public int Blocks { get; init; }
     public AgentAccessMode Mode { get; init; }
+
+    /// <summary>T357: every edit waits for a one-click approval. Meaningful only for a read-write grant.</summary>
+    public bool ConfirmEachWrite { get; init; } = AgentAccessChoices.DefaultConfirmEachWrite;
 }

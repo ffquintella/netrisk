@@ -230,6 +230,8 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     {
         _assessment = parameter.Assessment;
         _run = parameter.AssessmentRun;
+        if (_run is not null)
+            _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.For(GUIClient.Agents.AgentItemKinds.AssessmentRun, _run.Id);
         IsPreview = parameter.IsPreview;
         this.RaisePropertyChanged(nameof(StrTitle));
 
@@ -490,6 +492,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
             _run.Status = (int)AssessmentStatus.Submitted;
             var runDto = new AssessmentRunDto();
+            await MergeAgentChangesAsync();
             _run.Adapt(runDto);
             await Task.Run(() => AssessmentsService.UpdateAssessmentRun(runDto));
 
@@ -675,12 +678,32 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         ReviewItems = new ObservableCollection<AssessmentRunReviewItem>(unanswered);
     }
 
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
+    /// <summary>
+    /// T356, review M63 #7: the viewer saves the whole run (status, page) but never edits its comments or analyst — the
+    /// fields an agent's <c>comment_assessment_run</c> changes. When an agent wrote to this run after the viewer read it,
+    /// those fields are taken from the server first, so the viewer's save keeps the agent's approved change.
+    /// </summary>
+    private async Task MergeAgentChangesAsync()
+    {
+        if (_run is null || _agentGuard?.Conflict() is null) return;
+        var assessmentId = _run.AssessmentId;
+        var runId = _run.Id;
+        var fresh = await Task.Run(() => AssessmentsService.GetAssessmentRuns(assessmentId)?.FirstOrDefault(r => r.Id == runId));
+        if (fresh is null) return;
+        _run.Comments = fresh.Comments;
+        _run.AnalystId = fresh.AnalystId;
+        _agentGuard.Reset();
+    }
+
     private async Task PersistRunStateAsync()
     {
         if (_run is null || IsReadOnly) return;
         try
         {
             var dto = new AssessmentRunDto();
+            await MergeAgentChangesAsync();
             _run.Adapt(dto);
             await Task.Run(() => AssessmentsService.UpdateAssessmentRun(dto));
         }

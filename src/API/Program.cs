@@ -183,6 +183,10 @@ app.UseAuthorization();
 
 // After authentication, so the log line can attribute the refusal, and around the controllers,
 // which is where the DbContext guard throws from (Track 2 milestone 2.3.1).
+// T358: after authorization has decided, outside it — records "user via agent" and changes nothing about the request.
+// Before the scope guard, so the line also records the 403 that guard writes.
+app.UseMiddleware<API.Middleware.AgentAttributionMiddleware>();
+
 app.UseMiddleware<API.Middleware.EntityScopeViolationMiddleware>();
 
 app.MapControllers();

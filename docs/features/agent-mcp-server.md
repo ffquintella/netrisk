@@ -1,8 +1,9 @@
 # Agent co-work MCP server (GUI)
 
-Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61))
-and **M62 implemented** (read tools — see [Implementation notes (M62)](#implementation-notes-m62)); no edit tool exists
-yet (M63). The rest of this page is the design.
+Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61)),
+**M62 implemented** (read tools — see [Implementation notes (M62)](#implementation-notes-m62)) and **M63 implemented**
+(edit tools, confirm-each-write, activity panel, presence, agent attribution — see
+[Implementation notes (M63)](#implementation-notes-m63)). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
 MCP client) can work *beside* the logged-in user: read and edit the same items, with the same
@@ -324,6 +325,131 @@ Deviations and known gaps:
   from a service collection; the bootstrapper's own `IAgentToolSource` registration and the `App` attach of
   `SessionCacheReset` are not covered by a test (GUIClient is not testable headless). `GUIClient.Tests` now references
   `ClientServices` (bringing `Tools`) and `NSubstitute`.
+
+## Implementation notes (M63)
+
+Code: `src/GUIClient/Agents/Core` — `AgentEditing.cs` (edit-tool contract, plans, argument screening, versions),
+`AgentActivity.cs` (activity log, presence, lease clock), the confirmation queue in `AgentApprovals.cs`, the gate in
+`McpDispatcher.cs` — the edit tools in `Core/Tools/AgentEditToolCatalog.cs` and `AgentVersions.cs`; the GUI parts under
+`Views/Agents` (`AgentWriteDialog`, `AgentStatusBar`, `AgentActivityWindow`) and `ViewModels/Agents`
+(`AgentItemWatcher`, `AgentEditGuard`). T358: `Model/Agents/AgentContextHeader.cs`, `ClientServices/Http/AgentCallContext.cs`
+(scope + `AgentContextHandler`, outermost in `RestService.ComposeHandlers`), `ServerServices/Security/AgentAttribution.cs`
+(used by `DALService`) and `API/Middleware/AgentAttributionMiddleware.cs`. ClientServices gained
+`IHostsService.UpdateHostAsync` (the existing `UpdateAsync` is `async void`, so nobody could know whether it worked).
+Evidence: `AgentEditToolTest`, `AgentWriteConfirmationTest`, `AgentCoworkExperienceTest`, the edit-tool cases of
+`AgentToolsNeverEscalateTest` and `AgentToolInventoryTest`, `AgentApprovalDialogSafetyTest` (write dialog) in
+`GUIClient.Tests/Agents`; `AgentContextHandlerTest` and the `UpdateHostAsync` cases of `HostsRestServiceStubTest` in
+`ClientServices.Tests`; `API.Tests/Security/AgentContextHeaderTest`; after the M63 security review also
+`AgentScreenGuardTest`. Each guard was removed once and its test failed.
+
+**Edit tools (T354).** Each rule mirrors every endpoint the tool calls, including the read it makes first, and adds
+"not the third line" (`ThirdLineReadOnlyRequirement` refuses that audience every write). All carry `kind=edit` in
+`AgentToolInventory`; `AgentEditFixtures` gives each one test arguments.
+
+| Tool | ClientServices calls | Rule | May set | Never sets |
+|---|---|---|---|---|
+| `update_risk` | `GetAllRisksAsync`, `RiskSubjectExists`, `SaveRisk` | role Administrator or `riskmanagement`, claim `submit_risks` | subject (required, unique — `EditRiskViewModel`'s rules), notes, the four scenario fields | status, owner, manager, category, source, catalogs, scoring, closure/reopen, reviews, acceptance, entity link, review-request flags, submission date |
+| `update_finding_status` | `GetOneAsync`, `UpdateLifecycleStatusAsync` | `vulnerabilities` + `vulnerabilities_update` | lifecycle `active` or `verified`, a justification | FalsePositive, OutOfScope, Duplicate (suppress/merge), RiskAccepted (needs an acceptance), Mitigated (closes); the register's workflow status; close/reopen |
+| `update_finding_assignment` | `GetOneAsync`, `ITeamsService.GetAllAsync`, `UpdateAsync` | `vulnerabilities` + `vulnerabilities_create` | fix team (an id on the team list) | analyst (a user picker = personal data, pending the DPO), risk links (sent back unchanged), every other field |
+| `add_finding_note` | `GetOneAsync`, `AddActionAsync` | `vulnerabilities` | one appended action note | existing notes |
+| `update_incident` | `GetAllAsync`, `UpdateAsync` | `incident_management` | description (required), report, impact, cause, solution, recommendations, notes | name, status, kind, category, assignee, reporter, entities, dates, response-plan links |
+| `answer_assessment_question` | `GetAssessmentRuns`, `GetAssessmentQuestions`, `GetAssessmentAnswers`, `GetAssessmentRunAnsers`, `CreateRunAnswer` | claim `assessments` | an answer option of that question, for an unanswered question only | an existing answer (changing one needs a delete), questions, options, run status |
+| `comment_assessment_run` | `GetAssessmentRuns`, `UpdateAssessmentRun` | claim `assessments` | the run's comments (the server also makes the caller the run's analyst: shown and approved as an `analyst` line of the diff) | status, progress, answers |
+| `update_entity_fields` | `GetAllFromServerAsync`, `SaveEntityAsync` | `entities_manage` | `name`, `description`, `objective`, `technology` where the type has them | risk context (criticality, internetFacing, securityClassification), parent (moves access), status, links (`Definition(…)` properties), flags/integers, a property whose current value is withheld, any `person` record |
+| `update_host_fields` | `GetFilteredAsync` (by id), `UpdateHostAsync` | `hosts` + `hosts_create` | comment, OS text | name, addresses, status, team, entity (scope), source, scanner `Properties` (may hold credentials) |
+
+- **Concurrency token — client-side, a deviation.** None of these records has a server-side token (only risk-index
+  profiles and committee decisions do). Each item's read tool now returns a `version` (`AgentVersions`: a truncated
+  SHA-256 over the fields an agent can read plus the record's own stamp — never a withheld property or host
+  `Properties`, so it reveals nothing). An edit tool requires it, reads the item fresh to prepare the diff, and refuses
+  a different version with `stale`. **The check is made twice** (security review M63 #2): the dialog may stay open for
+  the whole confirmation wait (45 s) plus the queue, so the write itself reads the item again, refuses with `stale` if
+  its version moved since the plan was made, and applies the agent's fields to *that* fresh copy — another user's change
+  of status, owner, assignee or run status meanwhile is never written back with old values. `answer_assessment_question`
+  re-checks "unanswered" at the write. **Residual window:** one round trip — between the write's own fresh read and its
+  PUT the server accepts anything, and those PUTs carry the whole record (the GUI's path). Closing it needs server-side
+  `If-Match` on these endpoints (follow-up). `add_finding_note` takes no version: it only appends.
+- **Input = the user's content.** Every argument must be declared by the tool; a credential-like name (`AgentSecretNames`)
+  or value (`AgentDataPolicy.LooksLikeSecretValue`), control/format characters, or text over its bound (titles 300,
+  text 4,000, notes 2,000, host OS 255) is refused, never cut, and the error never repeats what was sent. The value
+  heuristic has false positives: a 32+ character hash or token-like run in an incident description (an IOC) is refused.
+  Results name changed fields and the new version only — no value goes back to the agent. The stored text carries no
+  marker: each text argument says so (`AgentEditToolCatalog.StoredAsUserText`), and what records "through an agent" is
+  T358 — the server log line for every request, plus `audit_logs.actor` for the audited types (risks, hosts, entities),
+  not for finding notes, incidents or assessment answers.
+- **The GUI's own deviation kept out:** `EditRiskViewModel` blanks `Assessment` on every save; `update_risk` preserves it.
+  `comment_assessment_run` inherits the server rule that every run update sets the caller as the run's analyst
+  (`AssessmentsController`); when that changes the analyst, the diff carries an `analyst` line, so the user approves it.
+  `UpdateAssessmentRun` swallows refusals, so the tool reads the run back and answers `no_answer` when it did not land.
+- **Listing.** `tools/list` shows an edit tool only to a request that identifies an agent — by its key header, or by an
+  MCP session in which it made an authenticated call — holding a read-write lease. Clients that pass the key as an
+  argument cache `tools/list` (no `listChanged`: no server stream), so `get_status` and the `request_access` grant also
+  list `edit_tools` and `confirm_each_write`. The registry refuses a `RequiresEdit` tool that is not an `IAgentEditTool`
+  (one that could write without reaching the confirmation gate).
+- **Gate order for an edit:** key → lease (read-write) → registration's user signed in → permission → prepare (fresh
+  read, version, validation, exact diff) → confirmation when the lease asks → the gate again (a sign-out, another user, a
+  lost permission or an ended/paused lease while the dialog was open stops it here) → the write (fresh read, version
+  again, apply) → presence/audit. If access ended *after* the write landed, the agent gets `written_access_ended` with
+  only the changed field names and the new version (review M63 #5), and the activity panel lists it as such.
+- **Only the tool's own calls are attributed** (review M63 #4): the agent-context scope wraps exactly the tool's
+  prepare/read and write steps; presence and activity events are raised outside it with execution-context flow
+  suppressed, and `AgentItemWatcher` clears the context in its UI-thread handler, so a screen's reload is never sent
+  as "via agent".
+- **Not delivered:** `create_risk` and `create_incident` (the GUI requires owner, manager, assignee and reporter pickers —
+  user lists the agent has no reviewed read for, pending the DPO decision on personal data — plus category, source and
+  scoring reads), incident timeline entries (no ClientServices call or API endpoint adds an incident action), risk
+  comments, mitigation drafts and assessment evidence/attachments.
+
+**Confirm-each-write (T357).** Chosen in the access dialog for a read-write grant, on by default
+(`AgentAccessChoices.DefaultConfirmEachWrite`); the lease carries it and reports it. Each write is one item in the
+existing approval queue (one dialog at a time), shows agent, fingerprint, tool, item and every field old → new, focuses
+Deny and arms Approve after `ArmDelay`. An agent has at most one change waiting (review M63 #6): a parallel edit is
+answered `busy` before it reads anything. Deny answers `write_denied`; no answer within `WriteConfirmationWait` (45 s,
+under the clients' ~60 s) `not_confirmed`; the lease ending or being paused while it is open closes the dialog and
+answers the lease's own status; a stopped queue answers `not_confirmed` without asking. It cannot be changed during a
+lease (ask again).
+
+**Activity panel and status bar (T355).** In-memory `AgentActivityLog` (200 calls; tool, item kind and id, read/edit,
+status — never values), cleared when the server stops or the user changes. The status bar (main window, bottom) shows each
+active lease — agent, mode, `m:ss` left, last call — with Pause/Resume, End access and Activity; in the last minute a
+warning and "Grant another 10 min", which creates a *new* user-initiated request (one block, current mode) shown in the
+normal access dialog with its own reason text; nothing changes until it is granted, and a grant replaces the lease with
+ten minutes from approval. The activity window's Pause/Resume/End act on every active lease.
+
+**Presence and refresh (T356).** `AgentPresence` marks items an agent touched in the last two minutes (editing wins)
+and records each landed write (field names). Every screen that saves a whole record now consults `AgentSaveGuard`
+(through `AgentEditGuard`) before saving, opened when the screen read its copy (review M63 #7): `EditRiskViewModel`,
+`EditIncidentViewModel`, `EditVulnerabilitiesDialogViewModel`, `EditHostDialogViewModel` (from when the Hosts list
+read the host), `EntityFormViewModel` and the Entities rename path (from when the tree read the entity — a cached tree
+is safe, as `SaveEntityAsync` drops a saved entity from the cache), and `AssessmentRunDialogViewModel`. A conflict
+refuses the save and names the agent's fields; the user reopens the item. The run viewer never edits comments, so before
+each of its whole-run saves it takes comments and analyst from the server when an agent wrote to the run. Notices
+("agent X is reading/editing this", "agent X just changed: notes") and in-place refresh: Risks, Incidents, Findings
+(details reload), Hosts; the entity form shows the notice (it does not reload under unsaved edits — the guard refuses
+instead). Changed fields are named in the notice, not highlighted per control. Not guarded, by design: the finding
+status dialog and status buttons, and the run viewer's answers — they send a transition or a draft answer the server
+applies to its current state, not a stale copy of the record. Evidence: `AgentScreenGuardTest` (the guard's decision,
+and a source check that each listed save call is preceded by it — the view-models cannot be loaded headless).
+
+**Agent context header and audit (T358).** Every API call an agent tool makes — read or edit — carries
+`X-NetRisk-Agent: <registration id>` from an `AsyncLocal` scope the dispatcher opens around the tool's own steps; the
+handler strips any other value, and the user's own calls on the same services carry none. The API reads it only after authentication and
+only to annotate: `audit_logs.actor` becomes `"<login> via agent <id>"` (login shortened if needed, the marker never) —
+at most 64 characters with the login always whole (the annotation is what gets shortened — review M63 #1), which
+covers the audited types (risks, scoring, hosts, entities and their name/risk-context properties…), **not**
+findings, incidents or assessment answers; for every endpoint, one application-log line `Agent-assisted request: user
+<id> (<login>) via agent <id>: METHOD /path -> status` (route only, no query). The legacy JSON `audit` table records
+the user only. Anything but an issued id — exactly 22 base64url characters, `RandomToken(16)` — is ignored, on the
+client (`AgentCallContext.Begin` refuses it) and on the server alike. `AgentContextHeaderTest` evaluates every
+action policy of the API for principals of every shape, reads and writes, with and without the header and with hostile
+values, and requires identical decisions; it also fails if any authentication/authorization source reads the header.
+The id is meaningful only to the user's desktop (the API keeps no registry): resolve it in the Agents window.
+
+Other gaps: `update_risk` and `update_incident` read the whole list (no single-item read, as in M62); several
+ClientServices calls are synchronous and block a pool thread; the team list used to validate `fix_team_id` comes from
+`TeamsRestService`'s process-wide cache (validation and the dialog label only, nothing returned to the agent).
+GUIClient.UiTests not run (S54 §3); the views changed (`MainWindow`, `RiskView`, `IncidentsView`, `VulnerabilitiesView`,
+`HostsView`, `EntityForm`, `AgentAccessDialog`) still compile with them.
 
 ## Out of scope (first release)
 

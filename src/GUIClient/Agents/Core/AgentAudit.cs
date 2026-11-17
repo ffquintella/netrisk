@@ -31,7 +31,16 @@ public enum AgentAuditKind
     ToolRefused,
 
     /// <summary>A tool that ran and failed — the API refused it, or the server or the tool failed. No item data.</summary>
-    ToolFailed
+    ToolFailed,
+
+    /// <summary>An edit tool's change was written (T354): the item and the field names, never a value.</summary>
+    ToolEdited,
+
+    /// <summary>The user approved one write in the per-write dialog (T357).</summary>
+    WriteConfirmed,
+
+    /// <summary>The user declined one write, or it was not confirmed in time (T357).</summary>
+    WriteDeclined
 }
 
 /// <summary>

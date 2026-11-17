@@ -411,6 +411,8 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
 
     #region METHODS
 
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
     public override async Task ActivateAsync(VulnerabilityDialogParameter parameter, CancellationToken cancellationToken = default)
     {
            
@@ -452,8 +454,13 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             }
             else if (parameter.Operation == OperationType.Edit)
             {
-                if(parameter.Vulnerability != null)
+                if (parameter.Vulnerability != null)
+                {
+                    // Review M63 #7: opened before the read, so an agent's write after this copy was read blocks the save.
+                    _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.For(GUIClient.Agents.AgentItemKinds.Finding,
+                        parameter.Vulnerability.Id);
                     Vulnerability = VulnerabilitiesService.GetOne(parameter.Vulnerability.Id);
+                }
                 await LoadProperties();
             }
             
@@ -620,6 +627,13 @@ public class EditVulnerabilitiesDialogViewModel: ParameterizedDialogViewModelBas
             }
             else if (Operation == OperationType.Edit)
             {
+                // T356: the PUT carries the whole finding; never send a copy older than an agent's approved write.
+                if (_agentGuard?.ConflictMessage() is { } conflict)
+                {
+                    Toasts.Warning(conflict);
+                    return;
+                }
+
                 var nraction = new NrAction()
                 {
                     DateTime = DateTime.Now,

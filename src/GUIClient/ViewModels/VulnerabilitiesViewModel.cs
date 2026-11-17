@@ -196,6 +196,9 @@ public class VulnerabilitiesViewModel: ViewModelBase, ISelectableModule
 
     private Vulnerability? _selectedVulnerability;
     
+    /// <summary>T356: agent presence on the selected finding (review M63 #7).</summary>
+    public GUIClient.ViewModels.Agents.AgentItemWatcher? AgentWatch { get; }
+
     public Vulnerability? SelectedVulnerability
     {
         get => _selectedVulnerability;
@@ -211,6 +214,7 @@ public class VulnerabilitiesViewModel: ViewModelBase, ISelectableModule
             // thread cleared the selection.
             var findingId = value?.Id;
             Dispatcher.UIThread.Post(() => _ = SignalsPanel.LoadAsync(findingId));
+            AgentWatch?.Refresh();
             
             ProcessStatusButtons();
         }
@@ -532,6 +536,13 @@ public class VulnerabilitiesViewModel: ViewModelBase, ISelectableModule
     {
         RegisterSelectableModule(AvaliableViews.Vulnerabilities, this);
         _exportService = GetService<IExportClientService>();
+        // T356, review M63 #7: agent presence on the selected finding; its details reload after an agent's change.
+        AgentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Finding,
+            () => SelectedVulnerability?.Id, id =>
+            {
+                if (SelectedVulnerability?.Id == id) LoadVulnerabilityDetails(id);
+                return Task.CompletedTask;
+            });
         DetailRotation = new RotateTransform(90);
         
         BtReloadClicked = ReactiveCommand.CreateFromTask(ExecuteReloadAsync);

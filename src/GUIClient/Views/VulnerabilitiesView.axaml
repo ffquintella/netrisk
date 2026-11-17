@@ -278,6 +278,10 @@
                         <Grid  ColumnDefinitions="3,*,3" RowDefinitions="3,Auto,Auto,Auto,Auto,Auto">
                             <Border Grid.Column="1" Grid.Row="1" BorderThickness="2">
                                 <StackPanel Orientation="Vertical">
+                                    <!-- T356: an agent is on this finding, or just changed it (the fields are named). -->
+                                    <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
+                                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                                    </Border>
                                     <TextBlock Text="{Binding StrAnalyst}" Classes="header"/>
                                     <TextBlock Text="{Binding SelectedVulnerabilityAnalyst.Name, 
                                     FallbackValue=''}" Classes="formData" />

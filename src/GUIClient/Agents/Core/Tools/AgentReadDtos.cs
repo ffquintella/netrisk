@@ -12,7 +12,8 @@ namespace GUIClient.Agents.ReadTools;
 // may see, mapped by hand from the ClientServices answer. No member is an entity, an object, a dictionary or a byte
 // array, and none is named like a credential — AgentResultShape checks every tool's ResultType at registration and
 // every result before it is sent. Every string is clipped with a visible marker (AgentResultLimits); lists of long-text
-// items inside one item are paged (AgentResultLimits.NestedPageSize).
+// items inside one item are paged (AgentResultLimits.NestedPageSize). An item an edit tool can change also carries its
+// Version (AgentVersions, M63): the token the edit tool checks so a stale write is refused.
 
 public sealed record AgentWhoAmI(string UserName, IReadOnlyList<string> Roles);
 
@@ -27,7 +28,7 @@ public sealed record AgentRiskDetail(int Id, string Subject, string Status, stri
     DateTime SubmissionDate, DateTime LastUpdate, string? Assessment, string? Notes, string? ScenarioCause,
     string? ScenarioVulnerability, string? ScenarioCentralEvent, string? ScenarioConsequences, int? EntityId,
     int? MitigationId, int? IncidentResponsePlanId, bool ReviewRequested, string? ReviewRequestedReason,
-    AgentRiskScore? Score);
+    AgentRiskScore? Score, string Version);
 
 public sealed record AgentRiskMitigation(int Id, int RiskId, DateTime SubmissionDate, DateTime LastUpdate,
     string? PlanningStrategy, string? Effort, string? Cost, int OwnerId, string? OwnerName, string? CurrentSolution,
@@ -46,7 +47,8 @@ public sealed record AgentFindingDetail(int Id, string Title, string? Severity, 
     DateTime FirstDetection, DateTime LastDetection, int DetectionCount, int? HostId, int? HostServiceId, int? EntityId,
     int? FixTeamId, int? AnalystId, string? Technology, string? Cves, string? Description, string? Solution,
     string? Details, string? Comments, string? ImportSource, double? Cvss3BaseScore, string? Cvss3Vector,
-    double? CvssBaseScore, bool? ExploitAvailable, DateTime? PatchPublicationDate, DateTime? VulnerabilityPublicationDate);
+    double? CvssBaseScore, bool? ExploitAvailable, DateTime? PatchPublicationDate, DateTime? VulnerabilityPublicationDate,
+    string? LifecycleStatus, string Version);
 
 public sealed record AgentFindingLifecycleEntry(DateTime ChangedAt, string? FromStatus, string ToStatus, string Source,
     int? UserId, string? Justification, int? DuplicateOfId);
@@ -62,7 +64,7 @@ public sealed record AgentIncidentDetail(int Id, string Code, string Name, strin
     DateTime ReportDate, DateTime? StartDate, DateTime CreationDate, DateTime LastUpdate, TimeSpan? Duration,
     int? AssignedToId, int? EntityId, int? ImpactedEntityId, int? ReportEntityId, string? ReportedBy, string? Description,
     string? Report, string? Impact, string? Cause, string? Solution, string? Recommendations, string? Notes,
-    IReadOnlyList<int> ResponsePlanIds, AgentPage<AgentTimelineEntry> Timeline);
+    IReadOnlyList<int> ResponsePlanIds, AgentPage<AgentTimelineEntry> Timeline, string Version);
 
 public sealed record AgentResponsePlanSummary(int Id, string Name, int Status, DateTime CreationDate, DateTime LastUpdate,
     bool? HasBeenTested, bool? HasBeenApproved, DateTime? LastTestDate, DateTime? ApprovalDate);
@@ -82,7 +84,7 @@ public sealed record AgentResponsePlanDetail(int Id, string Name, int Status, st
 public sealed record AgentAssessmentSummary(int Id, string Name, DateTime Created, int? EntityId);
 
 public sealed record AgentAssessmentRun(int Id, int AssessmentId, int EntityId, int? HostId, DateTime? RunDate, int Status,
-    int ProgressPercentage, int? AnalystId, string? Comments);
+    int ProgressPercentage, int? AnalystId, string? Comments, string Version);
 
 public sealed record AgentAssessmentRuns(int AssessmentId, AgentPage<AgentAssessmentRun> Runs);
 
@@ -103,7 +105,7 @@ public sealed record AgentEntityProperty(string Name, string? Value);
 /// safe, named or valued like a credential, or personal contact data.
 /// </summary>
 public sealed record AgentEntityDetail(int Id, string Type, string? Name, string? Status, int? ParentId, DateTime Created,
-    DateTime Updated, AgentCappedList<AgentEntityProperty> Properties, int WithheldProperties);
+    DateTime Updated, AgentCappedList<AgentEntityProperty> Properties, int WithheldProperties, string Version);
 
 public sealed record AgentEntityRef(int Id, string Type, string? Name);
 
@@ -118,7 +120,8 @@ public sealed record AgentSeverityCounts(int Critical, int High, int Medium, int
 
 public sealed record AgentHostDetail(int Id, string? HostName, string? Ip, string? Fqdn, string? Os, string? MacAddress,
     int Status, string? Source, int? TeamId, int? EntityId, DateTime RegistrationDate, DateTime? LastVerificationDate,
-    string? Comment, AgentCappedList<AgentHostService> Services, AgentSeverityCounts? OpenFindings, int? TotalFindings);
+    string? Comment, AgentCappedList<AgentHostService> Services, AgentSeverityCounts? OpenFindings, int? TotalFindings,
+    string Version);
 
 public sealed record AgentOverviewNode(string NodeRef, string Label, string NodeType);
 

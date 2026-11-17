@@ -122,17 +122,8 @@ public class DalService : IDalService
     /// The name recorded in <c>audit_logs.actor</c>. The login when there is one, the process name
     /// otherwise — never empty, because "attributable end to end" is the requirement.
     /// </summary>
-    private string ResolveAuditActor()
-    {
-        var identity = _httpContextAccessor.HttpContext?.User.Identity;
-        if (identity is { IsAuthenticated: true })
-        {
-            var name = Tools.User.UserHelper.GetUserName(identity);
-            if (!string.IsNullOrWhiteSpace(name)) return name;
-        }
-
-        return AuditableContext.SystemActor;
-    }
+    // T358: the login, annotated "via agent <id>" when the request carries a valid X-NetRisk-Agent (AgentAttribution).
+    private string ResolveAuditActor() => AgentAttribution.AuditActor(_httpContextAccessor.HttpContext);
 
     public string GetConnectionString()
     {

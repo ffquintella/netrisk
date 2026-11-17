@@ -287,6 +287,13 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
         if( _operation == OperationType.Create) Host.Id = 0;
 
+        // T356: the PUT carries the whole host; never send a copy older than an agent's approved write.
+        if (_operation == OperationType.Edit && _agentGuard?.ConflictMessage() is { } conflict)
+        {
+            Toasts.Warning(conflict);
+            return;
+        }
+
         try
         {
             if(_operation == OperationType.Edit) HostsService.UpdateAsync(Host);
@@ -338,12 +345,18 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
 
     #endregion
 
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
     public override Task ActivateAsync(HostDialogParameter parameter, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
         {
             _operation = parameter.Operation;
             if(_operation == OperationType.Edit) Host = parameter.Host;
+            // Review M63 #7: from when the screen read this copy, an agent's write to the host blocks this dialog's save.
+            if (_operation == OperationType.Edit && parameter.Host is { } edited)
+                _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.ForSince(GUIClient.Agents.AgentItemKinds.Host,
+                    edited.Id, parameter.LoadedAt ?? DateTimeOffset.UtcNow);
             HostIp = parameter.Host?.Ip ?? string.Empty;
             HostName = parameter.Host?.HostName ?? string.Empty;
             Comments = parameter.Host?.Comment ?? string.Empty;

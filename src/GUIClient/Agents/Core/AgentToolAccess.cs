@@ -95,6 +95,13 @@ public sealed class AgentToolPermission
             user => copy.Any(key => Holds(user, key)));
     }
 
+    /// <summary>
+    /// The mirror of <c>ThirdLineReadOnlyRequirement</c>, which every policy the API builds carries: the third line
+    /// (internal audit) is refused every write, administrators included. Reads no key a user must hold, so it adds none.
+    /// </summary>
+    public static AgentToolPermission NotThirdLine { get; } = new("not the third line", Array.Empty<string>(),
+        user => !Holds(user, Model.DecisionCycle.ThirdLineAssurance.PermissionKey));
+
     /// <summary>Both rules.</summary>
     public AgentToolPermission And(AgentToolPermission other) =>
         new(Description + " and " + other.Description, Keys.Concat(other.Keys).Distinct(StringComparer.Ordinal).ToArray(),
@@ -128,6 +135,7 @@ public static class AgentToolInventory
 {
     private const string RiskRule = "role Administrator or permission riskmanagement"; // RequireRiskmanagement
     private const string AssessmentRule = "claim assessments";                           // RequireAssessmentAccess
+    private const string NotThirdLine = " and not the third line";                         // ThirdLineReadOnlyRequirement
 
     public static IReadOnlyDictionary<string, ReviewedAgentTool> Reviewed { get; } = new[]
     {
@@ -161,7 +169,29 @@ public static class AgentToolInventory
         new ReviewedAgentTool("get_host", "permission hosts", false),
         // [PermissionAuthorize(risk_index_view)] on RiskIndexController.
         new ReviewedAgentTool("get_risk_overview", "permission risk_index_view", false),
-        new ReviewedAgentTool("list_risk_overview_children", "permission risk_index_view", false)
+        new ReviewedAgentTool("list_risk_overview_children", "permission risk_index_view", false),
+
+        // ---- M63 edit tools (T354). Each rule covers the read the tool makes first and the write, and the third line's
+        // read-only rule that every API policy carries. Excluded fields and states: spec "Implementation notes (M63)".
+        // GET /Risks (RequireRiskmanagement), GET /Risks/Exists and PUT /Risks/{id} (RequireSubmitRisk).
+        new ReviewedAgentTool("update_risk", RiskRule + " and claim submit_risks" + NotThirdLine, true),
+        // PUT /Vulnerabilities/{id}/status: class vulnerabilities + vulnerabilities_update.
+        new ReviewedAgentTool("update_finding_status",
+            "permission vulnerabilities and permission vulnerabilities_update" + NotThirdLine, true),
+        // PUT /Vulnerabilities/{id} + POST {id}/RisksAssociate: vulnerabilities + vulnerabilities_create; GET /Teams any user.
+        new ReviewedAgentTool("update_finding_assignment",
+            "permission vulnerabilities and permission vulnerabilities_create" + NotThirdLine, true),
+        // POST /Vulnerabilities/{id}/Actions: the class rule only.
+        new ReviewedAgentTool("add_finding_note", "permission vulnerabilities" + NotThirdLine, true),
+        // PUT /Incidents/{id}: class incident_management (GET /Incidents also needs FaceID when on).
+        new ReviewedAgentTool("update_incident", "permission incident_management" + NotThirdLine, true),
+        // POST answers, PUT runs/{id}: RequireAssessmentAccess.
+        new ReviewedAgentTool("answer_assessment_question", AssessmentRule + NotThirdLine, true),
+        new ReviewedAgentTool("comment_assessment_run", AssessmentRule + NotThirdLine, true),
+        // PUT /Entities/{id}: [PermissionAuthorize(entities_manage)].
+        new ReviewedAgentTool("update_entity_fields", "permission entities_manage" + NotThirdLine, true),
+        // PUT /Hosts/{id}: class hosts + hosts_create.
+        new ReviewedAgentTool("update_host_fields", "permission hosts and permission hosts_create" + NotThirdLine, true)
     }.ToDictionary(t => t.Name, StringComparer.Ordinal);
 }
 
@@ -196,6 +226,9 @@ public sealed class AgentToolRegistry
             if (review.Permission != tool.Permission.Description || review.RequiresEdit != tool.RequiresEdit)
                 throw new ArgumentException($"Tool '{tool.Name}' differs from its review ('{tool.Permission.Description}', " +
                                             $"edit={tool.RequiresEdit}).", nameof(tools));
+            // T357: an edit is applied only by the dispatcher, after the confirmation gate, so it must arrive as a plan.
+            if (tool.RequiresEdit != tool is IAgentEditTool)
+                throw new ArgumentException($"Tool '{tool.Name}' must be an IAgentEditTool exactly when it edits.", nameof(tools));
             if (AgentResultShape.Problems(tool.ResultType) is { Count: > 0 } problems)
                 throw new ArgumentException($"Tool '{tool.Name}' declares a leaky result shape: {problems[0]}.", nameof(tools));
         }

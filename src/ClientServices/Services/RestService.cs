@@ -119,7 +119,14 @@ public class RestService : ServiceBase, IRestService
     /// their own — leaving the stale token in place meant the next sign-in reused it.
     /// </summary>
     private HttpMessageHandler WrapForAuthChallenges(HttpMessageHandler inner) =>
-        new AuthChallengeHandler(inner, () => _authenticationService?.DiscardAuthenticationToken());
+        ComposeHandlers(inner, () => _authenticationService?.DiscardAuthenticationToken());
+
+    /// <summary>
+    /// The transport chain every client of this assembly gets: the agent-context header (T358) outermost, then the
+    /// challenge translation. Static so <c>RestServiceHandlerChainTest</c> checks the production chain itself.
+    /// </summary>
+    internal static HttpMessageHandler ComposeHandlers(HttpMessageHandler inner, Action? onChallenge) =>
+        new AgentContextHandler(new AuthChallengeHandler(inner, onChallenge));
 
     /// <summary>
     /// The installation's opt-in to accepting an unvalidatable server certificate.

@@ -26,6 +26,8 @@ public class AgentAccessDialogViewModel : ParameterizedDialogViewModelBase<Agent
     public string StrNotice { get; } = Localizer["AgentAccessNoticeMSG"];
     public string StrGrant { get; } = Localizer["AgentGrant"];
     public string StrDeny { get; } = Localizer["AgentDeny"];
+    public string StrConfirmEachWrite { get; } = Localizer["AgentConfirmEachWrite"];
+    public string StrConfirmEachWriteHint { get; } = Localizer["AgentConfirmEachWriteHintMSG"];
 
     private IReadOnlyList<int> _blocks = AgentAccessChoices.Blocks(1);
     private IReadOnlyList<AgentAccessMode> _modes = AgentAccessChoices.Modes(AgentAccessMode.Read);
@@ -83,8 +85,29 @@ public class AgentAccessDialogViewModel : ParameterizedDialogViewModelBase<Agent
     public int SelectedModeIndex
     {
         get => _selectedModeIndex;
-        set => this.RaiseAndSetIfChanged(ref _selectedModeIndex, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedModeIndex, value);
+            IsReadWriteSelected = SelectedMode == AgentAccessMode.ReadWrite;
+        }
     }
+
+    private bool _isReadWriteSelected;
+    /// <summary>T357: the confirm-each-write choice only shows for a read-write grant.</summary>
+    public bool IsReadWriteSelected
+    {
+        get => _isReadWriteSelected;
+        set => this.RaiseAndSetIfChanged(ref _isReadWriteSelected, value);
+    }
+
+    private bool _confirmEachWrite = AgentAccessChoices.DefaultConfirmEachWrite;
+    public bool ConfirmEachWrite
+    {
+        get => _confirmEachWrite;
+        set => this.RaiseAndSetIfChanged(ref _confirmEachWrite, value);
+    }
+
+    private AgentAccessMode SelectedMode => _modes[System.Math.Clamp(SelectedModeIndex, 0, _modes.Count - 1)];
 
     private bool _isDecisionArmed;
     /// <summary>False until the dialog has been on screen for the arm delay; Grant is disabled until then.</summary>
@@ -116,7 +139,8 @@ public class AgentAccessDialogViewModel : ParameterizedDialogViewModelBase<Agent
 
         AgentName = prompt.AgentName;
         Fingerprint = prompt.AgentFingerprint;
-        Reason = prompt.Reason;
+        // T355: a request the user started ("Grant another 10 min") says so instead of an agent's reason.
+        Reason = prompt.UserInitiated ? Localizer["AgentExtensionReasonMSG"] : prompt.Reason;
         RequestedText = string.Format(Localizer["AgentRequestedValueMSG"],
             prompt.RequestedBlocks * AgentLeaseOptions.BlockMinutes, ModeLabel(prompt.RequestedMode));
 
@@ -133,8 +157,12 @@ public class AgentAccessDialogViewModel : ParameterizedDialogViewModelBase<Agent
     private void ExecuteGrant()
     {
         var blocks = _blocks[System.Math.Clamp(SelectedDurationIndex, 0, _blocks.Count - 1)];
-        var mode = _modes[System.Math.Clamp(SelectedModeIndex, 0, _modes.Count - 1)];
-        Close(new AgentAccessDialogResult { Action = ResultActions.Ok, Blocks = blocks, Mode = mode });
+        var mode = SelectedMode;
+        Close(new AgentAccessDialogResult
+        {
+            Action = ResultActions.Ok, Blocks = blocks, Mode = mode,
+            ConfirmEachWrite = mode != AgentAccessMode.ReadWrite || ConfirmEachWrite
+        });
     }
 
     private static string ModeLabel(AgentAccessMode mode) =>

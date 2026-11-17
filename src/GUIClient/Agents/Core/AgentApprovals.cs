@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -14,7 +15,23 @@ public interface IAgentApprovalPrompter
     Task<bool> ConfirmRegistrationAsync(RegistrationPrompt prompt, CancellationToken cancellationToken);
 
     Task<AccessDecision> ConfirmAccessAsync(AccessPrompt prompt, CancellationToken cancellationToken);
+
+    /// <summary>T357: one edit, shown with its exact change; true only for an explicit approval.</summary>
+    Task<bool> ConfirmWriteAsync(WritePrompt prompt, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// What the per-write dialog shows (T357): the agent, the tool, the item and every field's old and new value. The values
+/// are item text and agent text — shown to the user as plain text, never logged and never sent back to the agent.
+/// </summary>
+public sealed record WritePrompt(
+    string AgentName,
+    string AgentFingerprint,
+    string ToolName,
+    AgentItemRef Item,
+    string ItemLabel,
+    IReadOnlyList<AgentFieldChange> Changes,
+    int WaitingCount);
 
 /// <summary>
 /// The approval dialogs come forward on their own, possibly while the user is typing elsewhere: Deny has the focus,
@@ -37,9 +54,22 @@ public sealed class AgentApprovalCoordinator : IAsyncDisposable
     private readonly IAgentApprovalPrompter _prompter;
     private readonly IAgentAuditSink _audit;
     private readonly TimeProvider _time;
-    private Channel<(bool IsRegistration, string Id)> _queue = Channel.CreateUnbounded<(bool, string)>();
+    private Channel<Item> _queue = Channel.CreateUnbounded<Item>();
     private CancellationTokenSource? _stop;
     private Task? _worker;
+    private int _queued;
+
+    private enum ItemKind { Registration, Access, Write }
+
+    private sealed record Item(ItemKind Kind, string Id, PendingWrite? Write = null);
+
+    /// <summary>A write waiting for the user: settled true only by the dialog's approval.</summary>
+    private sealed class PendingWrite(WritePrompt prompt, CancellationToken cancellation)
+    {
+        public WritePrompt Prompt { get; } = prompt;
+        public CancellationToken Cancellation { get; } = cancellation;
+        public TaskCompletionSource<bool> Decision { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
 
     public AgentApprovalCoordinator(AgentRegistry registry, AgentLeaseManager leases, IAgentApprovalPrompter prompter,
         IAgentAuditSink audit, TimeProvider time)
@@ -56,14 +86,37 @@ public sealed class AgentApprovalCoordinator : IAsyncDisposable
     public void Start()
     {
         if (IsRunning) return;
-        _queue = Channel.CreateUnbounded<(bool, string)>(new UnboundedChannelOptions { SingleReader = true });
+        _queue = Channel.CreateUnbounded<Item>(new UnboundedChannelOptions { SingleReader = true });
+        Interlocked.Exchange(ref _queued, 0);
         _stop = new CancellationTokenSource();
         _worker = Task.Run(() => RunAsync(_stop.Token));
     }
 
-    public void EnqueueRegistration(string pendingId) => _queue.Writer.TryWrite((true, pendingId));
+    public void EnqueueRegistration(string pendingId) => Enqueue(new Item(ItemKind.Registration, pendingId));
 
-    public void EnqueueAccess(string requestId) => _queue.Writer.TryWrite((false, requestId));
+    public void EnqueueAccess(string requestId) => Enqueue(new Item(ItemKind.Access, requestId));
+
+    /// <summary>
+    /// T357: puts one edit in front of the user, in the same one-at-a-time queue as the other approvals. Completes true
+    /// only on an explicit approval; false on deny, when the queue is stopped, or when <paramref name="cancellationToken"/>
+    /// fires (access ended, paused or timed out) — which also closes the dialog if it is on screen.
+    /// </summary>
+    public Task<bool> ConfirmWriteAsync(WritePrompt prompt, CancellationToken cancellationToken)
+    {
+        if (!IsRunning || cancellationToken.IsCancellationRequested) return Task.FromResult(false);
+        var write = new PendingWrite(prompt, cancellationToken);
+        var registration = cancellationToken.Register(() => write.Decision.TrySetResult(false));
+        write.Decision.Task.ContinueWith(_ => registration.Dispose(), TaskScheduler.Default);
+        if (!Enqueue(new Item(ItemKind.Write, "", write))) write.Decision.TrySetResult(false);
+        return write.Decision.Task;
+    }
+
+    private bool Enqueue(Item item)
+    {
+        if (!_queue.Writer.TryWrite(item)) return false;
+        Interlocked.Increment(ref _queued);
+        return true;
+    }
 
     /// <summary>Stops taking and showing approvals at once, without waiting for the worker (process exit).</summary>
     public void Cancel()
@@ -103,26 +156,63 @@ public sealed class AgentApprovalCoordinator : IAsyncDisposable
 
     private async Task RunAsync(CancellationToken stop)
     {
-        await foreach (var (isRegistration, id) in _queue.Reader.ReadAllAsync(stop).ConfigureAwait(false))
+        try
         {
-            try
+            await foreach (var item in _queue.Reader.ReadAllAsync(stop).ConfigureAwait(false))
             {
-                if (isRegistration) await PromptRegistrationAsync(id, stop).ConfigureAwait(false);
-                else await PromptAccessAsync(id, stop).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (stop.IsCancellationRequested)
-            {
-                return;
-            }
-            catch (Exception ex)
-            {
-                // A dialog that failed to open is a refusal, never an approval.
-                _audit.Record(new AgentAuditEvent(AgentAuditKind.RequestRejected, _time.GetUtcNow(), null, null,
-                    "approval dialog failed: " + ex.GetType().Name));
-                if (isRegistration) _registry.Decide(id, false);
-                else _leases.Decide(id, AccessDecision.Deny);
+                Interlocked.Decrement(ref _queued);
+                try
+                {
+                    switch (item.Kind)
+                    {
+                        case ItemKind.Registration: await PromptRegistrationAsync(item.Id, stop).ConfigureAwait(false); break;
+                        case ItemKind.Access: await PromptAccessAsync(item.Id, stop).ConfigureAwait(false); break;
+                        default: await PromptWriteAsync(item.Write!, stop).ConfigureAwait(false); break;
+                    }
+                }
+                catch (OperationCanceledException) when (stop.IsCancellationRequested)
+                {
+                    item.Write?.Decision.TrySetResult(false);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    // A dialog that failed to open is a refusal, never an approval.
+                    _audit.Record(new AgentAuditEvent(AgentAuditKind.RequestRejected, _time.GetUtcNow(), null, null,
+                        "approval dialog failed: " + ex.GetType().Name));
+                    switch (item.Kind)
+                    {
+                        case ItemKind.Registration: _registry.Decide(item.Id, false); break;
+                        case ItemKind.Access: _leases.Decide(item.Id, AccessDecision.Deny); break;
+                        default: item.Write!.Decision.TrySetResult(false); break;
+                    }
+                }
             }
         }
+        finally
+        {
+            // Writes still queued when the queue stops are refusals.
+            while (_queue.Reader.TryRead(out var left)) left.Write?.Decision.TrySetResult(false);
+        }
+    }
+
+    private async Task PromptWriteAsync(PendingWrite write, CancellationToken stop)
+    {
+        if (write.Decision.Task.IsCompleted) return; // cancelled while it waited in the queue
+
+        using var item = CancellationTokenSource.CreateLinkedTokenSource(stop, write.Cancellation);
+        var prompt = write.Prompt with { WaitingCount = Math.Max(0, Volatile.Read(ref _queued)) };
+        var answer = _prompter.ConfirmWriteAsync(prompt, item.Token);
+        if (await Task.WhenAny(answer, write.Decision.Task).ConfigureAwait(false) != answer)
+        {
+            // Access ended, paused or timed out while on screen: close the dialog, nothing approved.
+            item.Cancel();
+            await Swallow(answer).ConfigureAwait(false);
+            return;
+        }
+
+        var approved = await answer.ConfigureAwait(false);
+        write.Decision.TrySetResult(approved && !item.IsCancellationRequested);
     }
 
     private async Task PromptRegistrationAsync(string pendingId, CancellationToken stop)

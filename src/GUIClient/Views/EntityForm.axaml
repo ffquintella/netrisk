@@ -79,9 +79,15 @@
                    Text="{Binding ErrorSummary}"/>
 
         <!-- T241: without entities_manage the form is read-only, and says so once rather than under every field. -->
-        <TextBlock Grid.Row="2" Classes="hint" HorizontalAlignment="Center"
-                   IsVisible="{Binding IsReadOnlyForm}"
-                   Text="{Binding StrEntitiesManageRequired}"/>
+        <StackPanel Grid.Row="2">
+            <TextBlock Classes="hint" HorizontalAlignment="Center"
+                       IsVisible="{Binding IsReadOnlyForm}"
+                       Text="{Binding StrEntitiesManageRequired}"/>
+            <!-- T356: an agent is on this entity, or just changed it; a save over its change is refused. -->
+            <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}">
+                <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+            </Border>
+        </StackPanel>
 
         <!-- IX-3: Save then Cancel, centred. The old form had a lone Save and no way to discard. -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">

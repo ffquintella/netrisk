@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:agents="clr-namespace:GUIClient.ViewModels.Agents"
+        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="520"
+        Width="640" SizeToContent="Height" MaxHeight="760" WindowStartupLocation="CenterOwner" CanResize="False"
+        x:DataType="agents:AgentWriteDialogViewModel" x:Class="GUIClient.Views.Agents.AgentWriteDialog"
+        Classes="dark"
+        Title="{Binding StrTitle}">
+
+    <!-- T357 (S55 confirm-each-write): the exact change, old and new; Esc, the close box and Deny all refuse. -->
+    <Grid ColumnDefinitions="20, *, 20" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding StrTitle}" Classes="header"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StrAgentName}" Classes="fieldLabel" Margin="0 10 0 0"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding AgentName}" Classes="formData"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Fingerprint}" Classes="agentFingerprint"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding StrTool}" Classes="fieldLabel"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ToolName}" Classes="formData"/>
+
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding StrItem}" Classes="fieldLabel"/>
+        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding ItemText}" Classes="form_long_text"/>
+
+        <ScrollViewer Grid.Row="8" Grid.Column="1" MaxHeight="380" Margin="0 10 0 0"
+                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="{Binding StrChanges}" Classes="sectionCaption"/>
+                <ItemsControl ItemsSource="{Binding Changes}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="agents:AgentWriteChangeRow">
+                            <Border Classes="formCard caution">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Field}" Classes="fieldLabel"/>
+                                    <TextBlock Text="{Binding $parent[Window].((agents:AgentWriteDialogViewModel)DataContext).StrBefore}"
+                                               Classes="hint"/>
+                                    <TextBlock Text="{Binding Before}" Classes="form_long_text"/>
+                                    <TextBlock Text="{Binding $parent[Window].((agents:AgentWriteDialogViewModel)DataContext).StrAfter}"
+                                               Classes="hint"/>
+                                    <TextBlock Text="{Binding After}" Classes="formData" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding StrNotice}" Classes="notice" Margin="0 12 0 0"/>
+        <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding QueueText}" Classes="hint" IsVisible="{Binding HasQueue}"/>
+
+        <StackPanel Grid.Row="11" Grid.Column="1" Margin="10 10 0 10" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Name="BtApprove" Classes="dialog1" Command="{Binding BtApproveClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Check" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrApprove}"/>
+                </StackPanel>
+            </Button>
+            <Button Name="BtDeny" Classes="dialog2" Margin="10 0 0 0" Command="{Binding BtDenyClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <avalonia:MaterialIcon Kind="Cancel" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrDeny}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -11,7 +11,7 @@
         Title="{Binding StrTitle}">
 
     <!-- T348 (S55): the user may grant fewer minutes or read-only; one block, read-only is preselected. -->
-    <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+    <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding StrTitle}" Classes="header"/>
 
         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StrAgentName}" Classes="fieldLabel" Margin="0 10 0 0"/>
@@ -32,7 +32,13 @@
         <ComboBox Grid.Row="11" Grid.Column="1" MinWidth="250" HorizontalAlignment="Left"
                   ItemsSource="{Binding ModeLabels}" SelectedIndex="{Binding SelectedModeIndex}"/>
 
-        <StackPanel Grid.Row="12" Grid.Column="1" MaxWidth="440">
+        <!-- T357: confirm-each-write, on by default, for a read-write grant only. -->
+        <StackPanel Grid.Row="12" Grid.Column="1" MaxWidth="440" IsVisible="{Binding IsReadWriteSelected}" Margin="0 8 0 0">
+            <CheckBox Content="{Binding StrConfirmEachWrite}" IsChecked="{Binding ConfirmEachWrite}"/>
+            <TextBlock Text="{Binding StrConfirmEachWriteHint}" Classes="hint"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="13" Grid.Column="1" MaxWidth="440">
             <TextBlock Text="{Binding StrNotice}" Classes="notice" Margin="0 12 0 0"/>
             <StackPanel Margin="10 10 0 10" Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Name="BtGrant" Classes="dialog1" Command="{Binding BtGrantClicked}">

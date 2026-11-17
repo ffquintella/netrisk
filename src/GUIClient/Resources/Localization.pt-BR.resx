@@ -6846,4 +6846,148 @@ Salvar mesmo assim?</value>
     <data name="AgentGrant" xml:space="preserve">
         <value>Conceder acesso</value>
     </data>
+    <data name="AgentWriteTitle" xml:space="preserve">
+        <value>Um agente de IA quer alterar um item</value>
+    </data>
+    <data name="AgentWriteTool" xml:space="preserve">
+        <value>Ferramenta</value>
+    </data>
+    <data name="AgentWriteItem" xml:space="preserve">
+        <value>Item</value>
+    </data>
+    <data name="AgentWriteChanges" xml:space="preserve">
+        <value>A alteração exata</value>
+    </data>
+    <data name="AgentWriteBefore" xml:space="preserve">
+        <value>Agora</value>
+    </data>
+    <data name="AgentWriteAfter" xml:space="preserve">
+        <value>Depois da alteração</value>
+    </data>
+    <data name="AgentWriteNoticeMSG" xml:space="preserve">
+        <value>Aprove apenas uma alteração que você deseja: ela é salva como sua, marcada como feita por este agente. Negar não grava nada.</value>
+    </data>
+    <data name="AgentWriteApprove" xml:space="preserve">
+        <value>Aprovar alteração</value>
+    </data>
+    <data name="AgentWriteItemValueMSG" xml:space="preserve">
+        <value>{0} {1}: {2}</value>
+    </data>
+    <data name="AgentWriteQueueMSG" xml:space="preserve">
+        <value>Mais {0} alteração(ões) aguardando depois desta.</value>
+    </data>
+    <data name="AgentWriteEmptyValue" xml:space="preserve">
+        <value>(vazio)</value>
+    </data>
+    <data name="AgentItemKindRisk" xml:space="preserve">
+        <value>Risco</value>
+    </data>
+    <data name="AgentItemKindFinding" xml:space="preserve">
+        <value>Achado</value>
+    </data>
+    <data name="AgentItemKindIncident" xml:space="preserve">
+        <value>Incidente</value>
+    </data>
+    <data name="AgentItemKindResponsePlan" xml:space="preserve">
+        <value>Plano de resposta</value>
+    </data>
+    <data name="AgentItemKindAssessment" xml:space="preserve">
+        <value>Avaliação</value>
+    </data>
+    <data name="AgentItemKindAssessmentRun" xml:space="preserve">
+        <value>Execução de avaliação</value>
+    </data>
+    <data name="AgentItemKindEntity" xml:space="preserve">
+        <value>Entidade</value>
+    </data>
+    <data name="AgentItemKindHost" xml:space="preserve">
+        <value>Host</value>
+    </data>
+    <data name="AgentConfirmEachWrite" xml:space="preserve">
+        <value>Confirmar cada alteração antes de salvar</value>
+    </data>
+    <data name="AgentConfirmEachWriteHintMSG" xml:space="preserve">
+        <value>Recomendado na primeira sessão com um agente novo: cada edição aguarda a sua aprovação, mostrando a alteração exata.</value>
+    </data>
+    <data name="AgentExtensionReasonMSG" xml:space="preserve">
+        <value>Você pediu mais 10 minutos pela barra de status.</value>
+    </data>
+    <data name="AgentActivity" xml:space="preserve">
+        <value>Atividade</value>
+    </data>
+    <data name="AgentExpiringMSG" xml:space="preserve">
+        <value>O acesso termina em menos de um minuto.</value>
+    </data>
+    <data name="AgentMoreTime" xml:space="preserve">
+        <value>Conceder mais 10 min</value>
+    </data>
+    <data name="AgentMoreTimePendingMSG" xml:space="preserve">
+        <value>Aguardando a sua decisão na janela de acesso.</value>
+    </data>
+    <data name="AgentMoreTimeFailedMSG" xml:space="preserve">
+        <value>Não foi possível pedir mais tempo: o servidor de agentes não está em execução ou o agente não tem acesso.</value>
+    </data>
+    <data name="AgentModeReadWriteConfirmed" xml:space="preserve">
+        <value>Leitura e edição, confirmando cada alteração</value>
+    </data>
+    <data name="AgentBarActiveMSG" xml:space="preserve">
+        <value>Agente {0} · {1} · restam {2}</value>
+    </data>
+    <data name="AgentBarPausedMSG" xml:space="preserve">
+        <value>Agente {0} · {1} · pausado · restam {2}</value>
+    </data>
+    <data name="AgentLastActivityMSG" xml:space="preserve">
+        <value>Último: {0} em {1} ({2})</value>
+    </data>
+    <data name="AgentNoItem" xml:space="preserve">
+        <value>nenhum item</value>
+    </data>
+    <data name="AgentActivityTitle" xml:space="preserve">
+        <value>Atividade dos agentes</value>
+    </data>
+    <data name="AgentActivityCalls" xml:space="preserve">
+        <value>Chamadas</value>
+    </data>
+    <data name="AgentActivityPresence" xml:space="preserve">
+        <value>Itens em uso pelos agentes</value>
+    </data>
+    <data name="AgentActivityTime" xml:space="preserve">
+        <value>Hora</value>
+    </data>
+    <data name="AgentActivityKind" xml:space="preserve">
+        <value>Leitura / edição</value>
+    </data>
+    <data name="AgentActivityResult" xml:space="preserve">
+        <value>Resultado</value>
+    </data>
+    <data name="AgentActivityMode" xml:space="preserve">
+        <value>Fazendo</value>
+    </data>
+    <data name="AgentActivityLastSeen" xml:space="preserve">
+        <value>Visto por último</value>
+    </data>
+    <data name="AgentActivityEdit" xml:space="preserve">
+        <value>Edição</value>
+    </data>
+    <data name="AgentActivityRead" xml:space="preserve">
+        <value>Leitura</value>
+    </data>
+    <data name="AgentPresenceEditing" xml:space="preserve">
+        <value>Editando</value>
+    </data>
+    <data name="AgentPresenceReading" xml:space="preserve">
+        <value>Lendo</value>
+    </data>
+    <data name="AgentChangedItemMSG" xml:space="preserve">
+        <value>O agente {0} acabou de alterar este item: {1}. Os valores exibidos são os novos.</value>
+    </data>
+    <data name="AgentEditingItemMSG" xml:space="preserve">
+        <value>O agente {0} está editando este item.</value>
+    </data>
+    <data name="AgentReadingItemMSG" xml:space="preserve">
+        <value>O agente {0} está lendo este item.</value>
+    </data>
+    <data name="AgentConflictMSG" xml:space="preserve">
+        <value>Não salvo: o agente {0} alterou este item enquanto você o editava ({1}). Feche esta janela e abra o item novamente para que nada seja sobrescrito.</value>
+    </data>
 </root>

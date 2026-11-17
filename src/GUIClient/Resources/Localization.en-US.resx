@@ -6783,4 +6783,148 @@ Save anyway?</value>
     <data name="AgentGrant" xml:space="preserve">
         <value>Grant access</value>
     </data>
+    <data name="AgentWriteTitle" xml:space="preserve">
+        <value>An AI agent wants to change an item</value>
+    </data>
+    <data name="AgentWriteTool" xml:space="preserve">
+        <value>Tool</value>
+    </data>
+    <data name="AgentWriteItem" xml:space="preserve">
+        <value>Item</value>
+    </data>
+    <data name="AgentWriteChanges" xml:space="preserve">
+        <value>The exact change</value>
+    </data>
+    <data name="AgentWriteBefore" xml:space="preserve">
+        <value>Now</value>
+    </data>
+    <data name="AgentWriteAfter" xml:space="preserve">
+        <value>After the change</value>
+    </data>
+    <data name="AgentWriteNoticeMSG" xml:space="preserve">
+        <value>Approve only a change you want: it is saved as yours, marked as made through this agent. Deny writes nothing.</value>
+    </data>
+    <data name="AgentWriteApprove" xml:space="preserve">
+        <value>Approve change</value>
+    </data>
+    <data name="AgentWriteItemValueMSG" xml:space="preserve">
+        <value>{0} {1}: {2}</value>
+    </data>
+    <data name="AgentWriteQueueMSG" xml:space="preserve">
+        <value>{0} more change(s) waiting after this one.</value>
+    </data>
+    <data name="AgentWriteEmptyValue" xml:space="preserve">
+        <value>(empty)</value>
+    </data>
+    <data name="AgentItemKindRisk" xml:space="preserve">
+        <value>Risk</value>
+    </data>
+    <data name="AgentItemKindFinding" xml:space="preserve">
+        <value>Finding</value>
+    </data>
+    <data name="AgentItemKindIncident" xml:space="preserve">
+        <value>Incident</value>
+    </data>
+    <data name="AgentItemKindResponsePlan" xml:space="preserve">
+        <value>Response plan</value>
+    </data>
+    <data name="AgentItemKindAssessment" xml:space="preserve">
+        <value>Assessment</value>
+    </data>
+    <data name="AgentItemKindAssessmentRun" xml:space="preserve">
+        <value>Assessment run</value>
+    </data>
+    <data name="AgentItemKindEntity" xml:space="preserve">
+        <value>Entity</value>
+    </data>
+    <data name="AgentItemKindHost" xml:space="preserve">
+        <value>Host</value>
+    </data>
+    <data name="AgentConfirmEachWrite" xml:space="preserve">
+        <value>Confirm each change before it is saved</value>
+    </data>
+    <data name="AgentConfirmEachWriteHintMSG" xml:space="preserve">
+        <value>Recommended for a first session with a new agent: every edit waits for your approval, showing the exact change.</value>
+    </data>
+    <data name="AgentExtensionReasonMSG" xml:space="preserve">
+        <value>You asked for another 10 minutes from the status bar.</value>
+    </data>
+    <data name="AgentActivity" xml:space="preserve">
+        <value>Activity</value>
+    </data>
+    <data name="AgentExpiringMSG" xml:space="preserve">
+        <value>Access ends in under a minute.</value>
+    </data>
+    <data name="AgentMoreTime" xml:space="preserve">
+        <value>Grant another 10 min</value>
+    </data>
+    <data name="AgentMoreTimePendingMSG" xml:space="preserve">
+        <value>Waiting for your decision in the access dialog.</value>
+    </data>
+    <data name="AgentMoreTimeFailedMSG" xml:space="preserve">
+        <value>Could not ask for more time: the agent server is not running or the agent has no access.</value>
+    </data>
+    <data name="AgentModeReadWriteConfirmed" xml:space="preserve">
+        <value>Read and edit, confirming each change</value>
+    </data>
+    <data name="AgentBarActiveMSG" xml:space="preserve">
+        <value>Agent {0} · {1} · {2} left</value>
+    </data>
+    <data name="AgentBarPausedMSG" xml:space="preserve">
+        <value>Agent {0} · {1} · paused · {2} left</value>
+    </data>
+    <data name="AgentLastActivityMSG" xml:space="preserve">
+        <value>Last: {0} on {1} ({2})</value>
+    </data>
+    <data name="AgentNoItem" xml:space="preserve">
+        <value>no item</value>
+    </data>
+    <data name="AgentActivityTitle" xml:space="preserve">
+        <value>Agent activity</value>
+    </data>
+    <data name="AgentActivityCalls" xml:space="preserve">
+        <value>Calls</value>
+    </data>
+    <data name="AgentActivityPresence" xml:space="preserve">
+        <value>Items agents are on</value>
+    </data>
+    <data name="AgentActivityTime" xml:space="preserve">
+        <value>Time</value>
+    </data>
+    <data name="AgentActivityKind" xml:space="preserve">
+        <value>Read / edit</value>
+    </data>
+    <data name="AgentActivityResult" xml:space="preserve">
+        <value>Result</value>
+    </data>
+    <data name="AgentActivityMode" xml:space="preserve">
+        <value>Doing</value>
+    </data>
+    <data name="AgentActivityLastSeen" xml:space="preserve">
+        <value>Last seen</value>
+    </data>
+    <data name="AgentActivityEdit" xml:space="preserve">
+        <value>Edit</value>
+    </data>
+    <data name="AgentActivityRead" xml:space="preserve">
+        <value>Read</value>
+    </data>
+    <data name="AgentPresenceEditing" xml:space="preserve">
+        <value>Editing</value>
+    </data>
+    <data name="AgentPresenceReading" xml:space="preserve">
+        <value>Reading</value>
+    </data>
+    <data name="AgentChangedItemMSG" xml:space="preserve">
+        <value>Agent {0} just changed this item: {1}. The values shown are the new ones.</value>
+    </data>
+    <data name="AgentEditingItemMSG" xml:space="preserve">
+        <value>Agent {0} is editing this item.</value>
+    </data>
+    <data name="AgentReadingItemMSG" xml:space="preserve">
+        <value>Agent {0} is reading this item.</value>
+    </data>
+    <data name="AgentConflictMSG" xml:space="preserve">
+        <value>Not saved: agent {0} changed this item while you were editing it ({1}). Close this window and open the item again so nothing is overwritten.</value>
+    </data>
 </root>

@@ -538,6 +538,8 @@ public class EditIncidentViewModel
         CancellationToken cancellationToken = default)
     {
         WindowOperationType = parameter.Operation;
+        if (WindowOperationType == OperationType.Edit && parameter.Incident is { } edited)
+            _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.For(GUIClient.Agents.AgentItemKinds.Incident, edited.Id);
 
         Incident = WindowOperationType switch
         {
@@ -822,8 +824,17 @@ public class EditIncidentViewModel
         
     }
     
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
     private async Task UpdateIncidentAsync()
     {
+        // T356: never save over an agent's change made while this form was open; the user reopens the incident instead.
+        if (_agentGuard?.ConflictMessage() is { } conflict)
+        {
+            Toasts.Warning(conflict);
+            return;
+        }
+
         try
         {
             var changedIrps = VerifyIncidentResponsePlans();

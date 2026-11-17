@@ -193,6 +193,8 @@ public class HostsViewModel : ViewModelBase, ISelectableModule
     {
         RegisterSelectableModule(AvaliableViews.Devices, this);
         _exportService = GetService<IExportClientService>();
+        AgentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Host,
+            () => SelectedHost?.Id, RefreshHostAfterAgentChangeAsync);
         ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
 
         StatusOptions =
@@ -268,7 +270,30 @@ public class HostsViewModel : ViewModelBase, ISelectableModule
             this.RaiseAndSetIfChanged(ref _selectedHost, value);
             RaiseHeaderChanged();
             _ = LoadSelectedHostAsync(value);
+            AgentWatch?.Refresh();
         }
+    }
+
+    /// <summary>T356, review M63 #7: agent presence on the selected host, and the refresh after an agent's change.</summary>
+    public GUIClient.ViewModels.Agents.AgentItemWatcher? AgentWatch { get; }
+
+    private DateTimeOffset _listLoadedAt = DateTimeOffset.UtcNow;
+    private readonly Dictionary<int, DateTimeOffset> _refreshedAt = new();
+
+    /// <summary>When this screen's copy of host <paramref name="id"/> was read: what the edit dialog's guard starts from.</summary>
+    private DateTimeOffset LoadedAt(int id) => _refreshedAt.TryGetValue(id, out var at) ? at : _listLoadedAt;
+
+    /// <summary>Replaces the host an agent changed with the server's copy, in place (T356).</summary>
+    private async Task RefreshHostAfterAgentChangeAsync(int id)
+    {
+        if (HostsList.All(h => h.Id != id)) return;
+        var (items, _) = await HostsService.GetFilteredAsync(1, 1, GUIClient.Tools.Navigation.RecordNavigation.HostFilter(id), null);
+        if (items?.FirstOrDefault(h => h.Id == id) is not { } fresh) return;
+        var wasSelected = SelectedHost?.Id == id;
+        for (var i = 0; i < HostsList.Count; i++)
+            if (HostsList[i].Id == id) HostsList[i] = fresh;
+        _refreshedAt[id] = DateTimeOffset.UtcNow;
+        if (wasSelected) SelectedHost = fresh;
     }
 
     public bool HasSelectedHost => SelectedHost != null;
@@ -721,6 +746,8 @@ public class HostsViewModel : ViewModelBase, ISelectableModule
 
                 _page = page;
                 var keepId = SelectedHost?.Id;
+                _listLoadedAt = DateTimeOffset.UtcNow;
+                _refreshedAt.Clear();
                 HostsList = new ObservableCollection<Host>(items);
                 _totalHosts = total;
                 UpdatePaging();
@@ -817,7 +844,10 @@ public class HostsViewModel : ViewModelBase, ISelectableModule
         {
             if (SelectedHost == null) return;
 
-            var parameter = new HostDialogParameter { Operation = OperationType.Edit, Host = SelectedHost };
+            var parameter = new HostDialogParameter
+            {
+                Operation = OperationType.Edit, Host = SelectedHost, LoadedAt = LoadedAt(SelectedHost!.Id)
+            };
             var result = await DialogService.ShowDialogAsync<HostDialogResult, HostDialogParameter>(
                 nameof(EditHostDialogViewModel), parameter);
 

@@ -354,7 +354,32 @@ public class RiskViewModel: ViewModelBase, ISelectableModule
             this.RaisePropertyChanged(nameof(ScenarioCentralEventSummary));
             this.RaisePropertyChanged(nameof(ScenarioConsequencesSummary));
             this.RaisePropertyChanged(nameof(EvidenceConfidenceSummary));
+            AgentWatch?.Refresh();
         }
+    }
+
+    /// <summary>T356: agent presence on the selected risk, and the refresh after an agent's change to any listed risk.</summary>
+    public GUIClient.ViewModels.Agents.AgentItemWatcher? AgentWatch { get; }
+
+    /// <summary>
+    /// Replaces the one risk an agent changed with the server's copy, in place, so the list keeps its filter and the
+    /// detail panel shows the new values (T356).
+    /// </summary>
+    private async Task RefreshRiskAfterAgentChangeAsync(int id)
+    {
+        if (AllRisks is null || AllRisks.All(r => r.Id != id)) return;
+        var fresh = (await RisksService.GetAllRisksAsync(includeClosed: true)).FirstOrDefault(r => r.Id == id);
+        if (fresh is null) return;
+        var wasSelected = SelectedRisk?.Id == id;
+        ReplaceRisk(AllRisks, id, fresh);
+        if (!ReferenceEquals(Risks, AllRisks)) ReplaceRisk(Risks, id, fresh);
+        if (wasSelected) SelectedRisk = fresh;
+    }
+
+    private static void ReplaceRisk(ObservableCollection<Risk> list, int id, Risk fresh)
+    {
+        for (var i = 0; i < list.Count; i++)
+            if (list[i].Id == id) list[i] = fresh;
     }
 
     private bool IsCurrentRiskSelection(int generation, int? riskId) =>
@@ -1063,6 +1088,8 @@ public class RiskViewModel: ViewModelBase, ISelectableModule
     public RiskViewModel()
     {
         RegisterSelectableModule(AvaliableViews.Risk, this);
+        AgentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Risk,
+            () => SelectedRisk?.Id, RefreshRiskAfterAgentChangeAsync);
         StrRisk = Localizer["Risk"];
         StrDetails= Localizer["Details"];
         StrSubject = Localizer["Subject"] + ": ";

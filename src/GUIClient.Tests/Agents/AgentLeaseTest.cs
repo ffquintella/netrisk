@@ -446,7 +446,7 @@ public class AgentLeaseTest
     public async Task TestTheLeaseGateRunsReadToolsAndRefusesEditToolsUnderAReadLease()
     {
         var read = new StubTool("read_item", requiresEdit: false);
-        var edit = new StubTool("edit_item", requiresEdit: true);
+        var edit = new StubEditTool();
         var rig = new AgentRig(tools: new IAgentTool[] { read, edit });
         var (agent, key) = rig.RegisterApproved();
         rig.Grant(agent, 1, AgentAccessMode.Read);
@@ -457,14 +457,14 @@ public class AgentLeaseTest
         Assert.Equal("ok", (string?)readResult["status"]);
         Assert.Single(read.Invocations);
         Assert.Equal("read_only", (string?)editResult["status"]);
-        Assert.Empty(edit.Invocations);
+        Assert.Equal(0, edit.Prepared);
     }
 
     [Fact]
     public async Task TestTheLeaseGateRunsEditToolsUnderAnEditLease()
     {
         var read = new StubTool("read_item", requiresEdit: false);
-        var edit = new StubTool("edit_item", requiresEdit: true);
+        var edit = new StubEditTool();
         var rig = new AgentRig(tools: new IAgentTool[] { read, edit });
         var (agent, key) = rig.RegisterApproved();
         rig.Grant(agent, 1, AgentAccessMode.ReadWrite);
@@ -472,7 +472,7 @@ public class AgentLeaseTest
         Assert.Equal("ok", (string?)(await CallAsync(rig, "read_item", $"{{\"agent_key\":\"{key}\"}}"))["status"]);
         Assert.Equal("ok", (string?)(await CallAsync(rig, "edit_item", $"{{\"agent_key\":\"{key}\"}}"))["status"]);
         Assert.Single(read.Invocations);
-        Assert.Single(edit.Invocations);
+        Assert.Equal(1, edit.Applied);
     }
 
     [Fact]

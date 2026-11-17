@@ -49,7 +49,7 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
         Leases = new AgentLeaseManager(time, audit, _options.Leases);
         Approvals = new AgentApprovalCoordinator(Registry, Leases, prompter, audit, time);
         Dispatcher = new McpDispatcher(Registry, Leases, Approvals, time, _options.Server, _options.Tools,
-            _options.CurrentUser, audit);
+            _options.CurrentUser, audit, Activity, Presence);
 
         // Revocation is immediate: the key stops authenticating in Revoke, and the lease and any request end here.
         // Requests first: a grant landing between the two would otherwise leave a lease on a revoked agent.
@@ -62,6 +62,12 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
 
     public AgentRegistry Registry { get; }
     public AgentLeaseManager Leases { get; }
+
+    /// <summary>The live call list behind the activity panel (T355). Emptied when the server stops.</summary>
+    public AgentActivityLog Activity { get; } = new();
+
+    /// <summary>Item presence and change notices for the views (T356). Emptied when the server stops.</summary>
+    public AgentPresence Presence { get; } = new();
     public AgentApprovalCoordinator Approvals { get; }
     public McpDispatcher Dispatcher { get; }
 
@@ -83,6 +89,8 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
                 // Another user signed in while the server ran: nothing granted to the previous one survives.
                 Leases.EndAll(LeaseEndReason.UserChanged);
                 Registry.CancelPending(nameof(LeaseEndReason.UserChanged));
+                Activity.Clear();
+                Presence.Clear();
                 Registry.SetUser(userId);
                 _runningUserId = userId;
                 return;
@@ -149,6 +157,8 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
             }
             Leases.EndAll(reason);
             Registry.CancelPending(reason.ToString());
+            Activity.Clear();
+            Presence.Clear();
 
             if (_discoveryPath is not null) AgentDiscoveryFile.DeleteIfOwned(_discoveryPath, Environment.ProcessId);
             _discoveryPath = null;
@@ -189,6 +199,18 @@ public sealed class AgentCoworkRuntime : IAsyncDisposable
         Registry.CancelPending(reason.ToString());
         if (_discoveryPath is not null) AgentDiscoveryFile.DeleteIfOwned(_discoveryPath, Environment.ProcessId);
         _discoveryPath = null;
+    }
+
+    /// <summary>
+    /// T355 "Grant another 10 min": a new access request for the agent, started by the user, shown in the same approval
+    /// dialog as any other. Nothing is extended until the user grants it there. False when it could not be asked.
+    /// </summary>
+    public bool RequestMoreTime(string agentId)
+    {
+        if (!Approvals.IsRunning || Registry.Get(agentId) is not { } agent) return false;
+        var outcome = Leases.RequestExtension(agent);
+        if (outcome.Kind == AccessRequestOutcomeKind.Created) Approvals.EnqueueAccess(outcome.Request!.RequestId);
+        return outcome.Kind is AccessRequestOutcomeKind.Created or AccessRequestOutcomeKind.Collapsed;
     }
 
     public void Sweep()

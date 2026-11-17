@@ -14,6 +14,11 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Let an agent with a read-and-edit lease change a risk, a finding's status, assignment and notes, an incident, an assessment answer and run comment, and entity and host descriptive fields through nine edit tools that read the item fresh, refuse a stale write, and never set owners, approvers, scores, closure or risk acceptance (T354, S55)
+- Show agent activity live in a status bar and an activity panel with remaining lease time, Pause and End access, an expiry warning and a one-click "Grant another 10 min" request (T355, S55)
+- Add a confirm-each-write option to a lease that shows the exact old and new value of every field and waits for the user before an edit runs, one pending write per agent (T357, S55)
+- Mark items an agent is working on, refresh them in place when it changes them, and refuse a user's save over an agent's change on risks, incidents, findings, hosts, entities and assessment runs (T356, S55)
+- Send an `X-NetRisk-Agent` header on the API calls an agent tool makes and record "via agent" next to the login in the audit trail of risks, hosts and entities, with the header never affecting authorization (T358, S55)
 - Give a leased agent 23 read-only tools over risks, findings, incidents, response plans, assessments, entities, hosts and the Cyber Risk Overview, listed and run only for what the signed-in user may read and refused after any change of user, permission or lease (T350, T351, S55)
 - Wrap every agent tool result as untrusted data and return only allowlisted fields, withholding credential-like values, vault references and personal contact data (T352, S55)
 - Cover the agent tools with `AgentToolsNeverEscalateTest` and `AgentToolInventoryTest`, which fail on an unreviewed tool or an edit tool before M63 (T353, S55)
@@ -24,6 +29,7 @@ follow [SemVer](http://semver.org/).
 
 ### Security
 
+- Accept the agent audit header only at the exact length of an issued registration id and always keep the login whole in the audit actor, so a client cannot erase its login from the audit trail with an oversized header (T358, S55)
 - Clear the client memory and host caches on every sign-in and expired session, so a second user in the same process never reads the previous user's cached hosts or entities (T351, S55)
 
 ## [2.44.1] - 2026-11-16

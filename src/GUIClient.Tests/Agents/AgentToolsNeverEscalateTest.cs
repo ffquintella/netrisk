@@ -124,13 +124,34 @@ public class AgentToolsNeverEscalateTest
         ["search_hosts"] = u => AdminClaim(u) || Holds(u, "hosts"),
         ["get_host"] = u => AdminClaim(u) || Holds(u, "hosts"),
         ["get_risk_overview"] = u => AdminClaim(u) || Holds(u, "risk_index_view"),
-        ["list_risk_overview_children"] = u => AdminClaim(u) || Holds(u, "risk_index_view")
+        ["list_risk_overview_children"] = u => AdminClaim(u) || Holds(u, "risk_index_view"),
+
+        // M63 edit tools: every endpoint each calls, and ThirdLineReadOnlyRequirement, which refuses the third line any write.
+        ["update_risk"] = u => (u.UserRole == "Administrator" || Holds(u, "riskmanagement")) && Holds(u, "submit_risks")
+                               && !ThirdLine(u),                                          // GET /Risks + RequireSubmitRisk
+        ["update_finding_status"] = u => (AdminClaim(u) || Holds(u, "vulnerabilities"))
+                                         && (AdminClaim(u) || Holds(u, "vulnerabilities_update")) && !ThirdLine(u),
+        ["update_finding_assignment"] = u => (AdminClaim(u) || Holds(u, "vulnerabilities"))
+                                             && (AdminClaim(u) || Holds(u, "vulnerabilities_create")) && !ThirdLine(u),
+        ["add_finding_note"] = u => (AdminClaim(u) || Holds(u, "vulnerabilities")) && !ThirdLine(u),
+        ["update_incident"] = u => (AdminClaim(u) || Holds(u, "incident_management")) && !ThirdLine(u),
+        ["answer_assessment_question"] = u => Holds(u, "assessments") && !ThirdLine(u),
+        ["comment_assessment_run"] = u => Holds(u, "assessments") && !ThirdLine(u),
+        ["update_entity_fields"] = u => (AdminClaim(u) || Holds(u, "entities_manage")) && !ThirdLine(u),
+        ["update_host_fields"] = u => (AdminClaim(u) || Holds(u, "hosts")) && (AdminClaim(u) || Holds(u, "hosts_create"))
+                                      && !ThirdLine(u)
     };
+
+    private static bool ThirdLine(AuthenticatedUserInfo u) => Holds(u, Model.DecisionCycle.ThirdLineAssurance.PermissionKey);
+
+    /// <summary>The entity read tools keep the GUI's stricter module rule; every other tool mirrors the server exactly.</summary>
+    private static readonly string[] StricterThanTheServer = { "search_entities", "get_entity", "get_entity_relationships" };
 
     /// <summary>Users that probe every policy shape: no permission, each role variant, each single permission, all.</summary>
     public static TheoryData<string> Users()
     {
-        var data = new TheoryData<string> { "none", "admin-flag", "role-Admin", "role-Administrator", "all", "all+admin" };
+        var data = new TheoryData<string>
+            { "none", "admin-flag", "role-Admin", "role-Administrator", "all", "all+admin", "all+third-line", "all+admin+third-line" };
         foreach (var key in AgentReadRig.AllCatalogKeys()) data.Add("only:" + key);
         return data;
     }
@@ -145,6 +166,13 @@ public class AgentToolsNeverEscalateTest
             case "role-Administrator": user.UserRole = "Administrator"; break;
             case "all": user.UserPermissions = AgentReadRig.AllCatalogKeys().ToList(); break;
             case "all+admin": user.UserPermissions = AgentReadRig.AllCatalogKeys().ToList(); user.IsAdmin = true; break;
+            case "all+third-line":
+                user.UserPermissions = AgentReadRig.AllCatalogKeys().Append(Model.DecisionCycle.ThirdLineAssurance.PermissionKey).ToList();
+                break;
+            case "all+admin+third-line":
+                user.UserPermissions = AgentReadRig.AllCatalogKeys().Append(Model.DecisionCycle.ThirdLineAssurance.PermissionKey).ToList();
+                user.IsAdmin = true;
+                break;
             default:
                 if (shape.StartsWith("only:", StringComparison.Ordinal)) user.UserPermissions = new List<string> { shape[5..] };
                 break;
@@ -157,9 +185,9 @@ public class AgentToolsNeverEscalateTest
     public async Task TestNoToolIsListedForAUserTheServerPolicyRefuses(string shape)
     {
         var user = UserFor(shape);
-        var listed = await AgentReadRig.OverFixtures(user: user).ListAsync();
+        var listed = await AgentReadRig.OverAllFixtures(user: user).ListAsync();
 
-        Assert.Equal(ServerAdmits.Keys.OrderBy(k => k), new AgentReadFixtures().Catalog().Select(t => t.Name).OrderBy(k => k));
+        Assert.Equal(ServerAdmits.Keys.OrderBy(k => k), AgentAllTools.Catalog().Select(t => t.Name).OrderBy(k => k));
         var overReach = listed.Where(ServerAdmits.ContainsKey).Where(tool => !ServerAdmits[tool](user)).ToList();
         Assert.True(overReach.Count == 0, $"Listed for '{shape}' though the API refuses it: {string.Join(", ", overReach)}");
     }
@@ -169,9 +197,9 @@ public class AgentToolsNeverEscalateTest
     public async Task TestEveryToolButTheEntityToolsMirrorsTheServerPolicyExactly(string shape)
     {
         var user = UserFor(shape);
-        var listed = (await AgentReadRig.OverFixtures(user: user).ListAsync()).ToHashSet();
+        var listed = (await AgentReadRig.OverAllFixtures(user: user).ListAsync()).ToHashSet();
 
-        foreach (var (tool, admits) in ServerAdmits.Where(p => !p.Key.Contains("entit", StringComparison.Ordinal)))
+        foreach (var (tool, admits) in ServerAdmits.Where(p => !StricterThanTheServer.Contains(p.Key)))
             Assert.True(admits(user) == listed.Contains(tool), $"{tool} for '{shape}': server {admits(user)}, listed {listed.Contains(tool)}");
     }
 
@@ -332,5 +360,114 @@ public class AgentToolsNeverEscalateTest
         Assert.Contains("search_risks", listed);
         Assert.DoesNotContain("search_findings", listed);
         Assert.DoesNotContain("search_hosts", listed);
+    }
+
+    // ---- M63 edit tools (T354): the same guarantees, plus the lease mode and nothing written on any refusal --------
+
+    public static TheoryData<string> EditTools() => AgentEditFixtures.AllTools();
+
+    private static IAgentTool EditToolNamed(string name) => new AgentEditFixtures().Catalog().Single(t => t.Name == name);
+
+    private static bool WroteAnything(RefusingRestService api) =>
+        api.Requests.Any(r => !r.StartsWith("GET ", StringComparison.Ordinal));
+
+    [Theory]
+    [MemberData(nameof(EditTools))]
+    public async Task TestAnEditToolIsListedOnlyForAUserHoldingItsPermissionUnderAReadWriteLease(string name)
+    {
+        var tool = EditToolNamed(name);
+        var holder = AgentRig.DefaultUser(tool.Permission.Keys.ToArray());
+
+        Assert.Contains(name, await AgentReadRig.OverAllFixtures(user: holder).ListAsync());
+        Assert.DoesNotContain(name, await AgentReadRig.OverAllFixtures(user: holder, mode: AgentAccessMode.Read).ListAsync());
+        Assert.DoesNotContain(name, await AgentReadRig.OverAllFixtures(user: holder).ListAsync(asAgent: false));
+        Assert.DoesNotContain(name, await AgentReadRig.OverAllFixtures(user: Lacking(tool)).ListAsync());
+    }
+
+    [Theory]
+    [MemberData(nameof(EditTools))]
+    public async Task TestAUserLackingAnEditToolsPermissionIsRefusedBeforeAnyRequestReachesTheApi(string name)
+    {
+        var tool = EditToolNamed(name);
+        var api = new RefusingRestService();
+        var services = new RealClientServices(api);
+        var rig = AgentReadRig.OverAllRealServices(services, Lacking(tool));
+
+        var answer = await rig.CallAsync(name, new AgentEditFixtures().ArgumentsFor(name));
+
+        Assert.True(answer.IsError);
+        Assert.Equal("forbidden", answer.Status);
+        Assert.Empty(api.Requests);
+        Assert.Contains(rig.Rig.Audit.Events, e => e.Kind == AgentAuditKind.ToolRefused && e.Detail.StartsWith(name + ":"));
+    }
+
+    [Theory]
+    [MemberData(nameof(EditTools))]
+    public async Task TestAnEditTheApiRefusesComesBackAsACleanErrorAndWritesNothing(string name)
+    {
+        var api = new RefusingRestService(HttpStatusCode.Forbidden);
+        var rig = AgentReadRig.OverAllRealServices(new RealClientServices(api)); // the mirror says yes to everything
+
+        var answer = await rig.CallAsync(name, new AgentEditFixtures().ArgumentsFor(name));
+
+        Assert.NotEmpty(api.Requests);                    // refused by the API path, not by the MCP layer
+        Assert.False(WroteAnything(api), string.Join(", ", api.Requests));
+        Assert.True(answer.IsError, name + " reported success although the server refused it");
+        // The assessment reads swallow the status into null (AssessmentsRestService), as in M62.
+        Assert.Equal(name.Contains("assessment", StringComparison.Ordinal) ? AgentToolErrors.NoAnswer : AgentToolErrors.Refused,
+            answer.Status);
+        Assert.Equal(2, answer.Structured.Count);         // status and message, nothing else
+        Assert.DoesNotContain("server text", answer.Body);
+        // T358: every request the tool made carried this agent's registration id, and nothing else.
+        Assert.All(api.AgentHeaders, h => Assert.Equal(rig.Agent.Id, h));
+    }
+
+    [Theory]
+    [MemberData(nameof(EditTools))]
+    public async Task TestAnEditToolUnderAReadLeaseIsRefusedAndWritesNothing(string name)
+    {
+        var api = new RefusingRestService(HttpStatusCode.OK);
+        var rig = AgentReadRig.OverTools(new RealClientServices(api).All, mode: AgentAccessMode.Read);
+
+        var answer = await rig.CallAsync(name, new AgentEditFixtures().ArgumentsFor(name));
+
+        Assert.Equal("read_only", answer.Status);
+        Assert.Empty(api.Requests);
+    }
+
+    [Fact]
+    public async Task TestTheThirdLineIsShownNoEditToolAndRefusedEveryOne()
+    {
+        var auditor = AgentReadRig.Everything();
+        auditor.IsAdmin = true;
+        auditor.UserPermissions = auditor.UserPermissions!.Append(Model.DecisionCycle.ThirdLineAssurance.PermissionKey).ToList();
+        var api = new RefusingRestService(HttpStatusCode.OK);
+        var rig = AgentReadRig.OverAllRealServices(new RealClientServices(api), auditor);
+
+        var listed = await rig.ListAsync();
+        foreach (var tool in new AgentEditFixtures().Catalog())
+        {
+            Assert.DoesNotContain(tool.Name, listed);
+            Assert.Equal("forbidden", (await rig.CallAsync(tool.Name, new AgentEditFixtures().ArgumentsFor(tool.Name))).Status);
+        }
+        Assert.Contains("search_findings", listed); // reads are not writes
+        Assert.Empty(api.Requests);
+    }
+
+    [Fact]
+    public async Task TestEveryReadToolCallCarriesTheAgentHeaderAndTheUsersOwnCallsDoNot()
+    {
+        var api = new RefusingRestService(HttpStatusCode.Forbidden);
+        var services = new RealClientServices(api);
+        var rig = AgentReadRig.OverRealServices(services);
+
+        await rig.CallAsync("search_risks");
+        var agentHeaders = api.AgentHeaders.ToList();
+        try { await services.Read.Risks.GetAllRisksAsync(); } catch (Exception) { /* refused, as configured */ }
+
+        Assert.NotEmpty(agentHeaders);
+        Assert.All(agentHeaders, h => Assert.Equal(rig.Agent.Id, h));
+        Assert.Null(api.AgentHeaders.Last());                      // the screens' own call, outside any agent scope
+        Assert.DoesNotContain(rig.Key, string.Join("|", api.AgentHeaders.Where(h => h is not null)));
     }
 }

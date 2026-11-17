@@ -530,6 +530,9 @@ public class EditRiskViewModel
 
         _operationType = parameter.Operation;
         StrOperationType = _operationType == OperationType.Create ? Localizer["Creation"] : Localizer["Edit"];
+        // T356: from now on, an agent's write to this risk makes this form's copy stale; ExecuteSave refuses it.
+        if (_operationType == OperationType.Edit)
+            _agentGuard = GUIClient.ViewModels.Agents.AgentEditGuard.For(GUIClient.Agents.AgentItemKinds.Risk, parameter.Risk!.Id);
 
         if (_operationType == OperationType.Create)
         {
@@ -651,8 +654,17 @@ public class EditRiskViewModel
         else Value = "0.00";
     }
     
+    private GUIClient.ViewModels.Agents.AgentEditGuard? _agentGuard;
+
     private async Task ExecuteSave()
     {
+        // T356: never save over an agent's change made while this form was open; the user reopens the risk instead.
+        if (_operationType == OperationType.Edit && _agentGuard?.ConflictMessage() is { } conflict)
+        {
+            Toasts.Warning(conflict);
+            return;
+        }
+
         // Stage 9.2 (T154, S42 §7): a duplicate scenario is a warning the user answers, never a block.
         if (!await ConfirmNoDuplicateScenarioAsync()) return;
 

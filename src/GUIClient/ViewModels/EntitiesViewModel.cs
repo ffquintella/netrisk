@@ -182,8 +182,28 @@ public class EntitiesViewModel: ViewModelBase, ISelectableModule
         _parentWindow = parentWindow;
     }
 
+    // T356, review M63 #7: when this screen's copy of each entity was read, and the refresh after an agent's change.
+    private DateTimeOffset _listLoadedAt = DateTimeOffset.UtcNow;
+    private readonly Dictionary<int, DateTimeOffset> _refreshedAt = new();
+    private GUIClient.ViewModels.Agents.AgentItemWatcher? _agentWatch;
+
+    private DateTimeOffset LoadedAt(int id) => _refreshedAt.TryGetValue(id, out var at) ? at : _listLoadedAt;
+
+    /// <summary>Replaces the entity an agent changed with the server's copy, so the next form opens on it (T356).</summary>
+    private async Task RefreshEntityAfterAgentChangeAsync(int id)
+    {
+        var index = Entities.ToList().FindIndex(e => e.Id == id);
+        if (index < 0) return;
+        var fresh = (await _entitiesService.GetAllFromServerAsync()).FirstOrDefault(e => e.Id == id);
+        if (fresh is null) return;
+        Entities[index] = fresh;
+        _refreshedAt[id] = DateTimeOffset.UtcNow;
+    }
+
     public EntitiesViewModel()
     {
+        _agentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Entity,
+            () => SelectedNode?.EntityId, RefreshEntityAfterAgentChangeAsync);
         StrEntities = Localizer["Entities"];
         StrEntity = Localizer["Entity"];
         
@@ -326,6 +346,13 @@ public class EntitiesViewModel: ViewModelBase, ISelectableModule
             EntitiesProperties = properties
         };
 
+        // T356: this DTO is built from the screen's copy; never send it over an agent's later approved write.
+        if (GUIClient.ViewModels.Agents.AgentEditGuard.ForSince(GUIClient.Agents.AgentItemKinds.Entity, entity.Id,
+                LoadedAt(entity.Id)).ConflictMessage() is { } conflict)
+        {
+            Toasts.Warning(conflict);
+            return;
+        }
         _ = _entitiesService.SaveEntityAsync(updated);
  
 
@@ -718,7 +745,7 @@ public class EntitiesViewModel: ViewModelBase, ISelectableModule
         var entity = Entities.FirstOrDefault(e => e.Id == entityId);
         if (entity == null) return;
         
-        var entityForm = new EntityForm(entity, _entitiesConfiguration);
+        var entityForm = new EntityForm(entity, _entitiesConfiguration, LoadedAt(entityId));
         entityForm.EntitySaved += c_EntitySaved;
         
         _entityPanel.Children.Clear();
@@ -760,6 +787,10 @@ public class EntitiesViewModel: ViewModelBase, ISelectableModule
         _entitiesConfiguration ??= await _entitiesService.GetEntitiesConfigurationAsync();
 
         var allEntities = await _entitiesService.GetAllAsync();
+        // The list may come from the service's cache. That is safe for the guard: SaveEntityAsync (the agent's write too)
+        // drops the saved entity from the cache, so a list read after an agent's write never holds its older copy.
+        _listLoadedAt = DateTimeOffset.UtcNow;
+        _refreshedAt.Clear();
         Entities = new ObservableCollection<Entity>(allEntities);
 
         var rootEntities = allEntities.Where(e => e.Parent == null).ToList();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DAL.Entities;
+using GUIClient.Agents.EditTools;
 using Model;
 using Model.Assessments;
 using Model.DTO;
@@ -31,7 +32,7 @@ public static class AgentReadMap
         Text(r.ScenarioCentralEvent), Text(r.ScenarioConsequences), r.EntityId, r.MitigationId, r.IncidentResponsePlanId,
         r.ReviewRequested, Text(r.ReviewRequestedReason),
         s is null ? null : new AgentRiskScore(s.ScoringMethod, s.CalculatedRisk, s.ClassicLikelihood, s.ClassicImpact,
-            s.ResidualRisk, s.ContributingScore));
+            s.ResidualRisk, s.ContributingScore), AgentVersions.Risk(r));
 
     public static AgentRiskMitigation Mitigation(Mitigation m) => new(m.Id, m.RiskId, m.SubmissionDate, m.LastUpdate,
         Title(m.PlanningStrategyNavigation?.Name), Title(m.MitigationEffortNavigation?.Name),
@@ -53,7 +54,8 @@ public static class AgentReadMap
         v.Score, v.Status, StatusName(v.Status), v.FirstDetection, v.LastDetection, v.DetectionCount, v.HostId,
         v.HostServiceId, v.EntityId, v.FixTeamId, v.AnalystId, Title(v.Technology), Title(v.Cves), Text(v.Description),
         Text(v.Solution), Text(v.Details), Text(v.Comments), Title(v.ImportSource), v.Cvss3BaseScore, Title(v.Cvss3Vector),
-        v.CvssBaseScore, v.ExploitAvaliable, v.PatchPublicationDate, v.VulnerabilityPublicationDate);
+        v.CvssBaseScore, v.ExploitAvaliable, v.PatchPublicationDate, v.VulnerabilityPublicationDate,
+        AgentEditNames.Lifecycle(v.LifecycleStatus), AgentVersions.Finding(v));
 
     public static AgentFindingLifecycleEntry LifecycleEntry(FindingStatusHistory h) => new(h.ChangedAt,
         h.FromStatus?.ToString(), h.ToStatus.ToString(), h.Source.ToString(), h.UserId, Text(h.Justification),
@@ -71,7 +73,7 @@ public static class AgentReadMap
             i.StartDate, i.CreationDate, i.LastUpdate, i.Duration, i.AssignedToId, i.EntityId, i.ImpactedEntityId,
             i.ReportEntityId, Title(i.ReportedBy), Text(i.Description), Text(i.Report), Text(i.Impact), Text(i.Cause),
             Text(i.Solution), Text(i.Recommendations), Text(i.Notes), planIds.Take(AgentResultLimits.MaxNestedItems).ToList(),
-            AgentPage<AgentTimelineEntry>.Of(IncidentTimeline(i), timelinePage, perPage, e => e));
+            AgentPage<AgentTimelineEntry>.Of(IncidentTimeline(i), timelinePage, perPage, e => e), AgentVersions.Incident(i));
 
     /// <summary>The incident's dated events and recorded actions, oldest first — what the incident record holds.</summary>
     private static IEnumerable<AgentTimelineEntry> IncidentTimeline(Incident i)
@@ -112,7 +114,7 @@ public static class AgentReadMap
     public static AgentAssessmentSummary Assessment(Assessment a) => new(a.Id, Required(a.Name), a.Created, a.EntityId);
 
     public static AgentAssessmentRun AssessmentRun(AssessmentRun r) => new(r.Id, r.AssessmentId, r.EntityId, r.HostId,
-        r.RunDate, r.Status, r.ProgressPercentage, r.AnalystId, Text(r.Comments));
+        r.RunDate, r.Status, r.ProgressPercentage, r.AnalystId, Text(r.Comments), AgentVersions.AssessmentRun(r));
 
     public static AgentAssessmentAnswer RunAnswer(AssessmentRunsAnswer a) => new(a.QuestionId,
         Text(a.Question?.Question), a.AnswerId, Text(a.Answer?.Answer));
@@ -143,7 +145,7 @@ public static class AgentReadMap
         }
         return new AgentEntityDetail(e.Id, Required(e.DefinitionName), EntityName(e), Title(e.Status), e.Parent, e.Created,
             e.Updated, AgentCappedList<AgentEntityProperty>.Of(kept, p => new AgentEntityProperty(Required(p.Type), Text(p.Value))),
-            properties.Count - kept.Count);
+            properties.Count - kept.Count, AgentVersions.Entity(e));
     }
 
     public static AgentHostSummary HostSummary(Host h) => new(h.Id, Title(h.HostName), Title(h.Ip), Title(h.Fqdn),
@@ -157,5 +159,5 @@ public static class AgentReadMap
             summary?.Open is { } open
                 ? new AgentSeverityCounts(open.Critical, open.High, open.Medium, open.Low, open.None)
                 : null,
-            summary?.Total);
+            summary?.Total, AgentVersions.Host(h));
 }

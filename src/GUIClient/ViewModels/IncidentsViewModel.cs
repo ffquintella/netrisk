@@ -101,7 +101,27 @@ public class IncidentsViewModel: ViewModelBase, ISelectableModule
             this.RaisePropertyChanged(nameof(SelectedIncidentKind));
             _ = LoadAttachmentsAsync();
             _ = LoadIncidentResponsePlansAsync();
+            AgentWatch?.Refresh();
         }
+    }
+
+    /// <summary>T356: agent presence on the selected incident, and the refresh after an agent's change.</summary>
+    public GUIClient.ViewModels.Agents.AgentItemWatcher? AgentWatch { get; }
+
+    /// <summary>Replaces the incident an agent changed with the server's copy, in place, keeping the search (T356).</summary>
+    private async Task RefreshIncidentAfterAgentChangeAsync(int id)
+    {
+        if (Incidents is null || Incidents.All(i => i.Id != id)) return;
+        var fresh = (await IncidentsService.GetAllAsync()).FirstOrDefault(i => i.Id == id);
+        if (fresh is null) return;
+        var wasSelected = SelectedIncident?.Id == id;
+        foreach (var list in new[] { Incidents, ListedIncidents }.Distinct())
+        {
+            if (list is null) continue;
+            for (var i = 0; i < list.Count; i++)
+                if (list[i].Id == id) list[i] = fresh;
+        }
+        if (wasSelected) SelectedIncident = fresh;
     }
 
     private ObservableCollection<FileListing> _attachments = new();
@@ -216,6 +236,8 @@ public class IncidentsViewModel: ViewModelBase, ISelectableModule
     {
         RegisterSelectableModule(AvaliableViews.Incidents, this);
         ParentWindow = parentWindow;
+        AgentWatch = new GUIClient.ViewModels.Agents.AgentItemWatcher(GUIClient.Agents.AgentItemKinds.Incident,
+            () => SelectedIncident?.Id, RefreshIncidentAfterAgentChangeAsync);
         _exportService = GetService<IExportClientService>();
         
         _firstLoad = LoadDataAsync();

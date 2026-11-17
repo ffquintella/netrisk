@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:GUIClient.Views"
         xmlns:riskOverview="clr-namespace:GUIClient.Views.RiskOverview"
+        xmlns:agentViews="clr-namespace:GUIClient.Views.Agents"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:MainWindowViewModel" x:Class="GUIClient.Views.MainWindow"
         Opened="LoadCheckAsync"
@@ -81,7 +82,7 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
 
-        <Grid RowDefinitions="Auto, *">
+        <Grid RowDefinitions="Auto, *, Auto">
             <!-- Custom Title Bar Container -->
             <Grid Grid.Row="0" RowDefinitions="Auto, Auto" Background="Transparent" WindowDecorationProperties.ElementRole="TitleBar">
                 <!-- In-window Menu: hidden on macOS where it is replaced by the global menu bar -->
@@ -144,6 +145,9 @@
                                                DataContext="{Binding RiskOverviewViewModel}"
                                                IsVisible="{Binding #MWindow.DataContext.RiskOverviewIsVisible}"/>
             </Grid>
+
+            <!-- Track 11, T355: the agent lease indicator — hidden unless an agent holds a lease. -->
+            <agentViews:AgentStatusBar Grid.Row="2"/>
         </Grid>
     </Panel>
 

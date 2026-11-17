@@ -40,11 +40,15 @@ internal sealed class RefusingRestService : IRestService
     public RefusingRestService(HttpStatusCode status = HttpStatusCode.Forbidden)
     {
         Status = status;
-        _http = new HttpClient(new Handler(this)) { BaseAddress = new Uri(BaseUrl) };
+        // Production's header handler outermost, as RestService.ComposeHandlers places it (T358).
+        _http = new HttpClient(new ClientServices.Http.AgentContextHandler(new Handler(this))) { BaseAddress = new Uri(BaseUrl) };
     }
 
     public HttpStatusCode Status { get; }
     public ConcurrentQueue<string> Requests { get; } = new();
+
+    /// <summary>The <c>X-NetRisk-Agent</c> value each request carried (null for none), in order (T358).</summary>
+    public ConcurrentQueue<string?> AgentHeaders { get; } = new();
 
     /// <summary>(method, path) to (status, JSON body); null answers <see cref="Status"/> with a problem document.</summary>
     public Func<string, string, (HttpStatusCode Status, string Body)?>? Responder { get; set; }
@@ -63,6 +67,8 @@ internal sealed class RefusingRestService : IRestService
         {
             var path = request.RequestUri!.AbsolutePath;
             owner.Requests.Enqueue(request.Method + " " + path);
+            owner.AgentHeaders.Enqueue(request.Headers.TryGetValues(Model.Agents.AgentContextHeader.Name, out var values)
+                ? string.Join("|", values) : null);
             var (status, body) = owner.Responder?.Invoke(request.Method.Method, path)
                                  ?? (owner.Status, "{\"title\":\"Forbidden\",\"detail\":\"vault:v1:9:c2VjcmV0 server text\"}");
             return Task.FromResult(new HttpResponseMessage(status)
@@ -94,7 +100,16 @@ internal sealed class RealClientServices
             Entities,
             Hosts);
         Catalog = AgentReadToolCatalog.Create(Read, new RiskOverviewAgentTools(new RiskIndexRestService(rest, authentication)).Tools);
+        Edit = new GUIClient.Agents.EditTools.AgentEditServices(Read.Risks, Read.Findings, new TeamsRestService(rest, Cache),
+            Read.Incidents, Read.Assessments, Read.Entities, Read.Hosts);
+        EditCatalog = GUIClient.Agents.EditTools.AgentEditToolCatalog.Create(Edit);
     }
+
+    public GUIClient.Agents.EditTools.AgentEditServices Edit { get; }
+    public IReadOnlyList<IAgentTool> EditCatalog { get; }
+
+    /// <summary>Read and edit tools over the same real services.</summary>
+    public IReadOnlyList<IAgentTool> All => Catalog.Concat(EditCatalog).ToList();
 
     public MemoryCacheService Cache { get; } = new();
     public HostsRestService Hosts { get; }
@@ -136,15 +151,22 @@ public sealed class ClientServicesAccessorCollection : ICollectionFixture<Servic
 /// <summary>An agent with a granted read lease, talking to a dispatcher that serves the real M62 tool catalog.</summary>
 internal sealed class AgentReadRig
 {
-    private AgentReadRig(IReadOnlyList<IAgentTool> tools, AuthenticatedUserInfo? user)
+    private AgentReadRig(IReadOnlyList<IAgentTool> tools, AuthenticatedUserInfo? user,
+        AgentAccessMode mode = AgentAccessMode.Read, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null)
     {
         Tools = tools;
-        Rig = new AgentRig(tools: Tools, user: user ?? Everything());
+        Edits = edits ?? new AgentEditFixtures();
+        Rig = new AgentRig(prompter: prompter, tools: Tools, user: user ?? Everything());
         var (agent, key) = Rig.RegisterApproved();
         Agent = agent;
-        Rig.Grant(agent, 1, AgentAccessMode.Read);
+        // With a prompter the lease confirms each write and the approval queue runs (T357).
+        Rig.Grant(agent, 1, mode, confirmEachWrite: prompter is not null);
+        if (prompter is not null) Rig.Approvals.Start();
         Key = key;
     }
+
+    /// <summary>The fixtures the edit tools of this rig read and write (when it was built over them).</summary>
+    public AgentEditFixtures Edits { get; }
 
     public AgentRig Rig { get; }
     public AgentRegistration Agent { get; }
@@ -168,12 +190,28 @@ internal sealed class AgentReadRig
     public static AgentReadRig OverFixtures(AgentReadFixtures? fixtures = null, AuthenticatedUserInfo? user = null) =>
         new((fixtures ?? new AgentReadFixtures()).Catalog(), user);
 
-    public static AgentReadRig OverTools(IReadOnlyList<IAgentTool> tools, AuthenticatedUserInfo? user = null) => new(tools, user);
+    public static AgentReadRig OverTools(IReadOnlyList<IAgentTool> tools, AuthenticatedUserInfo? user = null,
+        AgentAccessMode mode = AgentAccessMode.Read) => new(tools, user, mode);
+
+    /// <summary>
+    /// Every reviewed tool, read and edit, over fixtures, with a lease of <paramref name="mode"/> (read-write by default,
+    /// so the edit tools are listed and run; confirm-each-write off unless the test turns it on).
+    /// </summary>
+    public static AgentReadRig OverAllFixtures(AuthenticatedUserInfo? user = null,
+        AgentAccessMode mode = AgentAccessMode.ReadWrite, AgentEditFixtures? edits = null, ScriptedPrompter? prompter = null)
+    {
+        edits ??= new AgentEditFixtures();
+        return new AgentReadRig(AgentAllTools.Catalog(edits), user, mode, edits, prompter);
+    }
+
+    /// <summary>Read and edit tools over the real REST services, with a read-write lease.</summary>
+    public static AgentReadRig OverAllRealServices(RealClientServices services, AuthenticatedUserInfo? user = null) =>
+        new(services.All, user, AgentAccessMode.ReadWrite);
 
     /// <summary>Calls <paramref name="tool"/> with <paramref name="arguments"/> (and the key); returns the MCP result.</summary>
     public async Task<ToolAnswer> CallAsync(string tool, JsonObject? arguments = null)
     {
-        var args = (JsonObject)(arguments ?? AgentReadToolArguments.For(tool)).DeepClone();
+        var args = (JsonObject)(arguments ?? AgentAllTools.ArgumentsFor(tool, Edits)).DeepClone();
         args["agent_key"] = Key;
         var request = new JsonObject
         {
@@ -186,15 +224,18 @@ internal sealed class AgentReadRig
         return new ToolAnswer(response.Body, result);
     }
 
-    public async Task<IReadOnlyList<string>> ListAsync()
+    /// <param name="asAgent">Send the agent key as the Authorization header (T354: edit tools are listed only to an agent
+    /// holding a read-write lease).</param>
+    public async Task<IReadOnlyList<string>> ListAsync(bool asAgent = true)
     {
-        var response = await Rig.SendAsync(AgentRig.Post("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
+        var response = await Rig.SendAsync(AgentRig.Post("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}",
+            authorization: asAgent ? "Bearer " + Key : null));
         return JsonNode.Parse(response.Body)!["result"]!["tools"]!.AsArray().Select(t => (string)t!["name"]!).ToList();
     }
 
     /// <summary>Every permission any catalog tool reads, so the rig's default user passes every tool.</summary>
     public static IReadOnlyList<string> AllCatalogKeys() =>
-        new AgentReadFixtures().Catalog()
+        AgentAllTools.Catalog()
             .SelectMany(t => t.Permission.Keys).Distinct(StringComparer.Ordinal).OrderBy(k => k).ToList();
 
     public static AuthenticatedUserInfo Everything() => AgentRig.DefaultUser(AllCatalogKeys().ToArray());

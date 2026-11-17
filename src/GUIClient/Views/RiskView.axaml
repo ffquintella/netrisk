@@ -275,7 +275,13 @@
             <ScrollViewer Grid.Row="1" Name="DetailsScroll">
             <Grid  RowDefinitions="Auto, Auto, *" IsVisible="{Binding SelectedRisk, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="0 0 10 0"
                    MinHeight="{Binding #DetailsScroll.Viewport.Height}">
-                <TextBlock Grid.Row="0" Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Classes="header2" Text="{Binding StrDetails, Mode=OneTime}" HorizontalAlignment="Stretch"/>
+                    <!-- T356: an agent is on this risk, or just changed it (the fields it changed are named). -->
+                    <Border Classes="formCard caution" IsVisible="{Binding AgentWatch.HasNotice, FallbackValue=False}" Margin="5 0 0 6">
+                        <TextBlock Text="{Binding AgentWatch.Notice}" Classes="notice" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
                 <Grid Grid.Row="1" ColumnDefinitions="4*, *" Margin=" 5 0 0 0 ">
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal">

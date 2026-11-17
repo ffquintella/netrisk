@@ -20,6 +20,8 @@ public partial class EntityForm : UserControl
     {
         DataContext = _viewModel;
         _viewModel.EntitySaved += (sender, args) => EntitySaved?.Invoke(sender, args);
+        // The presence watcher listens to the agent runtime; let it go with the form (a new form per selection).
+        DetachedFromVisualTree += (_, _) => _viewModel.AgentWatch?.Dispose();
 
         InitializeComponent();
     }
@@ -27,6 +29,12 @@ public partial class EntityForm : UserControl
     public EntityForm(Entity entity, EntitiesConfiguration configuration) : this()
     {
         _viewModel.Load(entity, configuration);
+    }
+
+    /// <param name="loadedAt">When the screen read the entity from the server: the form's agent guard starts there (T356).</param>
+    public EntityForm(Entity entity, EntitiesConfiguration configuration, DateTimeOffset loadedAt) : this()
+    {
+        _viewModel.Load(entity, configuration, loadedAt);
     }
 
     /// <summary>Raised when the form persists the entity, so the entity tree can update.</summary>

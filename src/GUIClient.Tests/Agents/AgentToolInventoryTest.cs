@@ -17,12 +17,12 @@ namespace GUIClient.Tests.Agents;
 /// T353 (S55 "Never exposed"): the tool surface is the reviewed list in <see cref="AgentToolInventory"/>, which the registry
 /// enforces — a tool not on it, or differing from its review, is refused wherever it was composed (M62 review finding 4).
 /// Names saying delete, approve, sign, permission, secret, credential, key, token, setting or backup fail, and so does
-/// any edit tool in M62. The GUI's composition is the DI factory tested here.
+/// any edit tool that could skip the per-write confirmation gate (M63). The GUI's composition is the DI factory tested here.
 /// </summary>
 [TestSubject(typeof(AgentToolInventory))]
 public class AgentToolInventoryTest
 {
-    private static IReadOnlyList<IAgentTool> Catalog() => new AgentReadFixtures().Catalog();
+    private static IReadOnlyList<IAgentTool> Catalog() => AgentAllTools.Catalog();
 
     [Fact]
     public void TestTheCatalogIsExactlyTheReviewedSurfaceWithItsReviewedRules()
@@ -48,12 +48,12 @@ public class AgentToolInventoryTest
                  {
                      typeof(IRisksService), typeof(IMitigationService), typeof(IVulnerabilitiesService), typeof(IIncidentsService),
                      typeof(IIncidentResponsePlansService), typeof(IAssessmentsService), typeof(IAssessmentEvidenceService),
-                     typeof(IEntitiesService), typeof(IHostsService), typeof(IRiskIndexService)
+                     typeof(IEntitiesService), typeof(IHostsService), typeof(IRiskIndexService), typeof(ITeamsService)
                  })
             services.AddSingleton(contract, Substitute.For(new[] { contract }, Array.Empty<object>()));
         services.AddSingleton<IAgentToolSource>(sp => new RiskOverviewAgentTools(sp.GetRequiredService<IRiskIndexService>()));
 
-        var tools = AgentReadToolCatalog.Create(services.BuildServiceProvider());
+        var tools = GUIClient.Agents.EditTools.AgentToolCatalog.Create(services.BuildServiceProvider());
         var registry = new AgentToolRegistry(tools, McpDispatcher.BootstrapToolNames);
 
         Assert.Equal(AgentToolInventory.Reviewed.Keys.OrderBy(n => n), registry.Tools.Select(t => t.Name));
@@ -87,11 +87,59 @@ public class AgentToolInventoryTest
     }
 
     [Fact]
-    public void TestM62HasNoEditTool()
+    public void TestEveryEditToolIsReviewedAsAnEditAndPreparesAPlanForTheGate()
     {
-        Assert.Empty(Catalog().Where(t => t.RequiresEdit).Select(t => t.Name));
-        Assert.Empty(AgentToolInventory.Reviewed.Values.Where(t => t.RequiresEdit).Select(t => t.Name));
+        var edits = Catalog().Where(t => t.RequiresEdit).ToList();
+
+        Assert.Equal(AgentToolInventory.Reviewed.Values.Where(t => t.RequiresEdit).Select(t => t.Name).OrderBy(n => n),
+            edits.Select(t => t.Name).OrderBy(n => n));
+        Assert.Equal(9, edits.Count);
+        Assert.All(edits, t => Assert.IsAssignableFrom<IAgentEditTool>(t));
+        Assert.All(Catalog().Where(t => !t.RequiresEdit), t => Assert.False(t is IAgentEditTool, t.Name));
+        // Every edit rule refuses the third line, as ThirdLineReadOnlyRequirement does on every API policy.
+        Assert.All(edits, t => Assert.EndsWith(" and not the third line", t.Permission.Description));
     }
+
+    [Fact]
+    public void TestTheRegistryRefusesAnEditToolThatCouldSkipTheConfirmationGate()
+    {
+        // An edit tool that writes from InvokeAsync would never reach the per-write dialog (T357).
+        var direct = new StubTool("edit_direct", requiresEdit: true);
+        var reviewed = AgentRig.ReviewedWithStandIns(new IAgentTool[] { direct });
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            new AgentToolRegistry(new IAgentTool[] { direct }, McpDispatcher.BootstrapToolNames, reviewed));
+        Assert.Contains("IAgentEditTool", error.Message);
+    }
+
+    // Arguments that would let an agent take a decision that carries segregation of duties, or name a credential.
+    private static readonly string[] ForbiddenArgumentStems =
+    {
+        "status", "owner", "manager", "approv", "review", "accept", "close", "sign", "category", "score", "likelihood",
+        "impact_id", "parent", "criticality", "internet", "classification", "assign", "analyst", "kind", "permission",
+        "role", "delete", "password", "secret", "token", "key", "credential", "submitted", "date"
+    };
+
+    [Theory]
+    [MemberData(nameof(EditTools))]
+    public void TestNoEditToolTakesAnArgumentThatCarriesADecisionOrACredential(string name)
+    {
+        var tool = Catalog().Single(t => t.Name == name);
+        var arguments = tool.InputSchema()["properties"]!.AsObject().Select(p => p.Key).ToList();
+
+        // The one status argument is the finding lifecycle's, limited to the two open-work states.
+        if (name == "update_finding_status")
+        {
+            var allowed = tool.InputSchema()["properties"]!["status"]!["enum"]!.AsArray().Select(v => (string)v!).ToList();
+            Assert.Equal(new[] { "active", "verified" }, allowed);
+            arguments.Remove("status");
+        }
+        var forbidden = arguments.Where(a => ForbiddenArgumentStems.Any(stem => a.Contains(stem, StringComparison.Ordinal))
+                                             || AgentSecretNames.IsCredentialLike(a)).ToList();
+        Assert.True(forbidden.Count == 0, $"{name} takes {string.Join(", ", forbidden)}");
+    }
+
+    public static TheoryData<string> EditTools() => AgentEditFixtures.AllTools();
 
     [Fact]
     public async Task TestNoListedToolNamesAForbiddenAction()
@@ -99,7 +147,7 @@ public class AgentToolInventoryTest
         // Everything an administrator holding every permission is shown: the bootstrap tools and the whole catalog.
         var admin = AgentReadRig.Everything();
         admin.IsAdmin = true;
-        var listed = await AgentReadRig.OverFixtures(user: admin).ListAsync();
+        var listed = await AgentReadRig.OverAllFixtures(user: admin).ListAsync();
 
         Assert.Equal(McpDispatcher.BootstrapToolNames.Concat(AgentToolInventory.Reviewed.Keys).OrderBy(n => n, StringComparer.Ordinal),
             listed.OrderBy(n => n, StringComparer.Ordinal));
@@ -156,7 +204,10 @@ public class AgentToolInventoryTest
     [Fact]
     public void TestEveryToolHasTestArguments()
     {
-        Assert.Equal(AgentToolInventory.Reviewed.Keys.OrderBy(n => n), AgentReadToolArguments.Names.OrderBy(n => n));
+        var edits = new AgentEditFixtures();
+        foreach (var tool in edits.Catalog()) Assert.NotNull(edits.ArgumentsFor(tool.Name));
+        Assert.Equal(AgentToolInventory.Reviewed.Keys.OrderBy(n => n),
+            AgentReadToolArguments.Names.Concat(edits.Catalog().Select(t => t.Name)).OrderBy(n => n));
     }
 
     [Fact]

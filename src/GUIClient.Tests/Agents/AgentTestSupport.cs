@@ -52,6 +52,11 @@ internal sealed class ScriptedPrompter : IAgentApprovalPrompter
     public Func<RegistrationPrompt, Task<bool>> OnRegistration { get; set; } = _ => Task.FromResult(false);
     public Func<AccessPrompt, Task<AccessDecision>> OnAccess { get; set; } = _ => Task.FromResult(AccessDecision.Deny);
 
+    /// <summary>The per-write dialog (T357): denies unless a test says otherwise.</summary>
+    public Func<WritePrompt, CancellationToken, Task<bool>> OnWrite { get; set; } = (_, _) => Task.FromResult(false);
+
+    public readonly List<WritePrompt> WritePrompts = new();
+
     public int Shown;
     public int MaxOnScreen;
     public readonly List<RegistrationPrompt> RegistrationPrompts = new();
@@ -76,6 +81,20 @@ internal sealed class ScriptedPrompter : IAgentApprovalPrompter
         try
         {
             return await OnAccess(prompt).WaitAsync(cancellationToken);
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _open);
+        }
+    }
+
+    public async Task<bool> ConfirmWriteAsync(WritePrompt prompt, CancellationToken cancellationToken)
+    {
+        lock (WritePrompts) WritePrompts.Add(prompt);
+        Enter();
+        try
+        {
+            return await OnWrite(prompt, cancellationToken).WaitAsync(cancellationToken);
         }
         finally
         {
@@ -136,6 +155,57 @@ internal sealed class StubTool : IAgentTool
     }
 }
 
+/// <summary>
+/// An edit-tool stand-in (T354): prepares a one-field plan and records whether it was applied. The dispatcher alone
+/// applies it, so a test can tell "refused before the write" from "written".
+/// </summary>
+internal sealed class StubEditTool : IAgentEditTool
+{
+    public StubEditTool(string name = "edit_item", AgentToolPermission? permission = null)
+    {
+        Name = name;
+        Permission = permission ?? AgentToolPermission.AnyOf(StubTool.StubPermission);
+    }
+
+    public string Name { get; }
+    public string Description => "Stub edit " + Name;
+    public bool RequiresEdit => true;
+    public AgentToolPermission Permission { get; }
+    public Type ResultType => typeof(AgentEditResult);
+    public int Prepared;
+    public int Applied;
+    public List<string?> AgentHeaderSeen { get; } = new();
+
+    /// <summary>Runs inside the write, before it returns: a test ends the lease or signs out.</summary>
+    public Action? OnApply { get; set; }
+
+    public IReadOnlyList<AgentFieldChange> Changes { get; set; } = new[] { new AgentFieldChange("notes", "old text", "new text") };
+
+    public System.Text.Json.Nodes.JsonObject InputSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new System.Text.Json.Nodes.JsonObject { ["risk_id"] = new System.Text.Json.Nodes.JsonObject { ["type"] = "integer" } }
+    };
+
+    public Task<AgentEditPlan> PrepareAsync(AgentToolCall call, System.Text.Json.Nodes.JsonObject arguments,
+        CancellationToken cancellationToken)
+    {
+        Interlocked.Increment(ref Prepared);
+        AgentHeaderSeen.Add(ClientServices.Http.AgentCallContext.Current);
+        return Task.FromResult(new AgentEditPlan(new AgentItemRef(AgentItemKinds.Risk, 1), "Risk one", Changes, "updated",
+            _ =>
+            {
+                AgentHeaderSeen.Add(ClientServices.Http.AgentCallContext.Current);
+                OnApply?.Invoke();
+                Interlocked.Increment(ref Applied);
+                return Task.FromResult<string?>("rev-0000000000000002");
+            }, "rev-0000000000000001"));
+    }
+
+    public Task<System.Text.Json.Nodes.JsonObject> InvokeAsync(AgentToolCall call, System.Text.Json.Nodes.JsonObject arguments,
+        CancellationToken cancellationToken) => throw new InvalidOperationException("edit tools never run through InvokeAsync");
+}
+
 /// <summary>Registry, leases, approvals and dispatcher wired the way the runtime wires them, on a manual clock.</summary>
 internal sealed class AgentRig
 {
@@ -145,7 +215,7 @@ internal sealed class AgentRig
 
     public AgentRig(AgentRegistryOptions? registry = null, AgentLeaseOptions? leases = null,
         IAgentApprovalPrompter? prompter = null, TimeSpan? decisionWait = null, IReadOnlyList<IAgentTool>? tools = null,
-        Model.Authentication.AuthenticatedUserInfo? user = null)
+        Model.Authentication.AuthenticatedUserInfo? user = null, TimeSpan? writeConfirmationWait = null)
     {
         Prompter = prompter ?? new ScriptedPrompter();
         Registry = new AgentRegistry(Store, Time, Audit, registry);
@@ -157,8 +227,9 @@ internal sealed class AgentRig
             new McpServerOptions
             {
                 DecisionWait = decisionWait ?? TimeSpan.FromMilliseconds(50),
+                WriteConfirmationWait = writeConfirmationWait ?? TimeSpan.FromSeconds(30),
                 ReviewedTools = ReviewedWithStandIns(tools)
-            }, tools, () => User, Audit);
+            }, tools, () => User, Audit, Activity, Presence);
         Guard = new LoopbackRequestGuard(Port, LaunchToken);
         Endpoint = new McpEndpoint(Guard, Dispatcher, Audit, Time);
     }
@@ -191,6 +262,8 @@ internal sealed class AgentRig
     };
 
     public ManualTimeProvider Time { get; } = new();
+    public AgentActivityLog Activity { get; } = new();
+    public AgentPresence Presence { get; } = new();
     public RecordingAuditSink Audit { get; } = new();
     public InMemoryAgentRegistrationStore Store { get; } = new();
     public IAgentApprovalPrompter Prompter { get; }
@@ -213,13 +286,14 @@ internal sealed class AgentRig
         return (result.Registration!, result.Key!.Reveal());
     }
 
+    /// <param name="confirmEachWrite">Off unless a test asks: most tests are about the gate, not the dialog (T357).</param>
     public AgentLease Grant(AgentRegistration agent, int blocks, AgentAccessMode mode, int? grantBlocks = null,
-        AgentAccessMode? grantMode = null)
+        AgentAccessMode? grantMode = null, bool confirmEachWrite = false)
     {
         var outcome = Leases.Request(agent, blocks, mode, "Review the open findings");
         Assert.Equal(AccessRequestOutcomeKind.Created, outcome.Kind);
         Assert.True(Leases.Decide(outcome.Request!.RequestId,
-            AccessDecision.Grant(grantBlocks ?? blocks, grantMode ?? mode)));
+            AccessDecision.Grant(grantBlocks ?? blocks, grantMode ?? mode, confirmEachWrite)));
         return Leases.GetLease(agent.Id)!;
     }
 

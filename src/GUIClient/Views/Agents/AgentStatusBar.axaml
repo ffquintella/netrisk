@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:agents="clr-namespace:GUIClient.ViewModels.Agents"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="40"
+             x:DataType="agents:AgentStatusBarViewModel" x:Class="GUIClient.Views.Agents.AgentStatusBar">
+
+    <!-- T355 (S55): while an agent holds a lease — who, mode, time left, last call; Pause and End always visible;
+         the one-minute warning offers "Grant another 10 min", which asks through the normal access dialog. -->
+    <Border Classes="footer" IsVisible="{Binding HasLeases}" Padding="10 4">
+        <ItemsControl ItemsSource="{Binding Leases}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="agents:AgentLeaseBarRow">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0 2">
+                        <avalonia:MaterialIcon Kind="Robot" Width="18" Height="18" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusText}" Classes="statusBar" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding LastActivityText}" Classes="hint" VerticalAlignment="Center"
+                                   MaxWidth="360" TextTrimming="CharacterEllipsis"/>
+                        <avalonia:MaterialIcon Kind="TimerAlertOutline" Width="18" Height="18" VerticalAlignment="Center"
+                                               IsVisible="{Binding IsExpiring}"/>
+                        <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrExpiring}"
+                                   Classes="notice" VerticalAlignment="Center" IsVisible="{Binding IsExpiring}"/>
+                        <Button Classes="type2" Command="{Binding BtMoreTimeClicked}" IsVisible="{Binding IsExpiring}">
+                            <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrMoreTime}"/>
+                        </Button>
+                        <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrMoreTimePending}"
+                                   Classes="hint" VerticalAlignment="Center" IsVisible="{Binding IsExtensionPending}"/>
+                        <Button Classes="type2"
+                                Command="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).BtActivityClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <avalonia:MaterialIcon Kind="FormatListBulleted" Width="18" Height="18" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrActivity}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="type2" Command="{Binding BtPauseClicked}" IsVisible="{Binding IsRunning}">
+                            <StackPanel Orientation="Horizontal">
+                                <avalonia:MaterialIcon Kind="Pause" Width="18" Height="18" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrPause}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="type2" Command="{Binding BtResumeClicked}" IsVisible="{Binding IsPaused}">
+                            <StackPanel Orientation="Horizontal">
+                                <avalonia:MaterialIcon Kind="Play" Width="18" Height="18" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrResume}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Classes="type2" Command="{Binding BtEndClicked}">
+                            <StackPanel Orientation="Horizontal">
+                                <avalonia:MaterialIcon Kind="Stop" Width="18" Height="18" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding $parent[UserControl].((agents:AgentStatusBarViewModel)DataContext).StrEndAccess}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Border>
+</UserControl>

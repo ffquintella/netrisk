@@ -13,3 +13,9 @@ public class AgentAccessDialogParameter : NavigationParameterBase
 {
     public AccessPrompt? Prompt { get; init; }
 }
+
+/// <summary>One edit an agent prepared, as the per-write dialog shows it (T357).</summary>
+public class AgentWriteDialogParameter : NavigationParameterBase
+{
+    public WritePrompt? Prompt { get; init; }
+}

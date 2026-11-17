@@ -16,6 +16,7 @@ public class AgentApprovalDialogSafetyTest
     [Theory]
     [InlineData("AgentRegistrationDialog", "AgentRegistrationDialogViewModel", "BtApproveClicked")]
     [InlineData("AgentAccessDialog", "AgentAccessDialogViewModel", "BtGrantClicked")]
+    [InlineData("AgentWriteDialog", "AgentWriteDialogViewModel", "BtApproveClicked")] // T357
     public void TestDenyHasTheFocusAndApprovingWaitsUntilTheDialogIsArmed(string view, string viewModel, string command)
     {
         var markup = Read("Views", "Agents", view + ".axaml");
