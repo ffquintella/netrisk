@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonia="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        xmlns:agents="clr-namespace:GUIClient.ViewModels.Agents"
+        mc:Ignorable="d" d:DesignWidth="860" d:DesignHeight="560"
+        Width="860" Height="560" MinWidth="680" MinHeight="440" CanResize="True"
+        x:DataType="agents:AgentsViewModel" x:Class="GUIClient.Views.Agents.AgentsWindow"
+        Title="{Binding StrTitle}">
+
+    <!-- T347 (S55): the off-by-default switch, the registered agents (rename, revoke) and the selected agent's lease. -->
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="Black" TintOpacity="1"
+                                             MaterialOpacity="0.65"/>
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <Grid RowDefinitions="Auto, Auto, Auto, Auto, *">
+            <TextBlock Grid.Row="0" Text="{Binding StrTitle}" Classes="header"/>
+
+            <Border Grid.Row="1" Classes="formCard" Width="600" HorizontalAlignment="Left" Margin="10 10 10 0">
+                <StackPanel>
+                    <TextBlock Text="{Binding StrServerSection}" Classes="sectionCaption"/>
+                    <CheckBox Content="{Binding StrServerEnable}" IsChecked="{Binding IsServerEnabled}"/>
+                    <TextBlock Text="{Binding ServerStatus}" Classes="notice"/>
+                    <TextBlock Text="{Binding StrServerHint}" Classes="hint"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Grid.Row="2" Text="{Binding StrRegistrationsSection}" Classes="header2" Margin="10 12 10 0"/>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10 5" Spacing="5">
+                <Button Classes="operation" Command="{Binding BtRenameClicked}" IsEnabled="{Binding IsRenameEnabled}"
+                        ToolTip.Tip="{Binding StrRename}">
+                    <avalonia:MaterialIcon Kind="Edit"/>
+                </Button>
+                <Button Classes="operation" Command="{Binding BtRevokeClicked}" IsEnabled="{Binding IsRevokeEnabled}"
+                        ToolTip.Tip="{Binding StrRevoke}">
+                    <avalonia:MaterialIcon Kind="Delete"/>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtPauseClicked}" IsEnabled="{Binding IsPauseEnabled}"
+                        Margin="10 0 0 0">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Pause" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrPause}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtResumeClicked}" IsEnabled="{Binding IsResumeEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Play" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrResume}"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="type2" Command="{Binding BtEndAccessClicked}" IsEnabled="{Binding IsEndAccessEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <avalonia:MaterialIcon Kind="Stop" Width="20" Height="20" Margin="0 0 5 0"/>
+                        <TextBlock Text="{Binding StrEndAccess}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <Grid Grid.Row="4" Margin="10 0 10 10">
+                <DataGrid ItemsSource="{Binding Agents}"
+                          SelectedItem="{Binding SelectedAgent}"
+                          SelectionMode="Single"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserReorderColumns="True"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="True"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrName}" Binding="{Binding Name}" Width="2*" MinWidth="140"/>
+                        <DataGridTextColumn Header="{Binding StrClient}" Binding="{Binding Client}" Width="*" MinWidth="100"/>
+                        <DataGridTextColumn Header="{Binding StrFingerprint}" Binding="{Binding Fingerprint}" Width="110"
+                                            MinWidth="90" MaxWidth="140"/>
+                        <DataGridTextColumn Header="{Binding StrLease}" Binding="{Binding Lease}" Width="*" MinWidth="140"/>
+                        <DataGridTextColumn Header="{Binding StrLastUsed}" Binding="{Binding LastUsed}" Width="*" MinWidth="110"/>
+                        <DataGridTextColumn Header="{Binding StrCreatedAt}" Binding="{Binding CreatedAt}" Width="*" MinWidth="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock Text="{Binding StrNoneRegistered}" Classes="hint" IsVisible="{Binding HasNoAgents}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Panel>
+</Window>

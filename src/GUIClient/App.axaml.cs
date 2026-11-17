@@ -158,6 +158,11 @@ namespace GUIClient
                     _trayIconManager = new TrayIconManager(this, desktop.MainWindow);
                     _trayIconManager.Initialize();
                     desktop.Exit += (_, _) => _trayIconManager?.Dispose();
+
+                    // Agent co-work (Track 11): starts with the session when enabled; leases end on exit.
+                    var agents = GetService<GUIClient.Agents.AgentCoworkService>();
+                    agents.Attach();
+                    desktop.Exit += (_, _) => agents.Exit();
                 }
             }
             

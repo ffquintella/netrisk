@@ -1121,12 +1121,16 @@ grants, shortens or refuses it. Design, trust model and threat table:
 > spec: S55
 > depends-on: M60
 
-- [ ] T344 Host a loopback-only Streamable HTTP MCP server in the GUI process, off by default, with Host/Origin guards, a per-launch port and a permission-restricted discovery file (S55)
-- [ ] T345 Add a stdio bridge executable for MCP clients that cannot speak HTTP (S55)
-- [ ] T346 Implement `register_agent` with pending registrations, rate limiting, request collapsing and the approval dialog showing name, description and fingerprint (S55)
-- [ ] T347 Issue the agent key from a CSPRNG, return it once, store only its SHA-256 and compare in constant time; list, rename and revoke registrations in an Agents window (S55)
-- [ ] T348 Implement `request_access` in blocks of 10 minutes (1–6) with the approval dialog letting the user shorten the lease or downgrade it to read-only, and in-memory leases ending on expiry, logout, lock, exit, pause or revoke (S55)
-- [ ] T349 Add `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (S55)
+- [x] T344 Host a loopback-only Streamable HTTP MCP server in the GUI process, off by default, with Host/Origin guards, a per-launch port and a permission-restricted discovery file (S55)
+  - note: the protocol subset is hand-written rather than the ModelContextProtocol SDK, whose HTTP transport needs Kestrel inside the GUI and new packages; every request also needs a launch token that lives only in the owner-only discovery file, because loopback is shared by every OS user
+- [x] T345 Add a stdio bridge executable for MCP clients that cannot speak HTTP (S55)
+  - note: `netrisk-mcp-bridge` builds in the solution but no installer packages it yet
+- [x] T346 Implement `register_agent` with pending registrations, rate limiting, request collapsing and the approval dialog showing name, description and fingerprint (S55)
+  - note: the dialog does not name the connecting process, which the spec allowed only "where the OS can tell"; the fingerprint is returned to the agent at once so the user can match the two
+- [x] T347 Issue the agent key from a CSPRNG, return it once, store only its SHA-256 and compare in constant time; list, rename and revoke registrations in an Agents window (S55)
+- [x] T348 Implement `request_access` in blocks of 10 minutes (1–6) with the approval dialog letting the user shorten the lease or downgrade it to read-only, and in-memory leases ending on expiry, logout, lock, exit, pause or revoke (S55)
+  - note: lock ends leases only on Windows (`SystemEvents.SessionSwitch`); macOS and Linux have no lock signal wired, while logout, exit, expiry, pause and revoke work everywhere
+- [x] T349 Add `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (S55)
 
 ### [M62] Read tools
 > outcome: An agent holding a lease can read the items the user can read — risks, vulnerabilities, incidents,

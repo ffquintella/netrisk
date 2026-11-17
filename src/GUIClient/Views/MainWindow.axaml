@@ -35,6 +35,7 @@
                 <NativeMenuItem.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="{Binding StrAbout}" Command="{Binding OnMenuAboutCommand}"/>
+                        <NativeMenuItem Header="{Binding StrAgentsMn}" Command="{Binding OnMenuAgentsCommand}"/>
                         <NativeMenuItemSeparator/>
                         <NativeMenuItem Header="{Binding StrExitMn}" Command="{Binding OnMenuExitCommand}"/>
                     </NativeMenu>
@@ -89,6 +90,8 @@
                     <MenuItem Header="{Binding StrApplicationMn}">
                         <MenuItem Header="{Binding StrAbout}"
                                   Command="{Binding OnMenuAboutCommand}"/>
+                        <MenuItem Header="{Binding StrAgentsMn}"
+                                  Command="{Binding OnMenuAgentsCommand}"/>
                         <MenuItem Header="{Binding StrExitMn}"
                                   Command="{Binding OnMenuExitCommand}"/>
                     </MenuItem>

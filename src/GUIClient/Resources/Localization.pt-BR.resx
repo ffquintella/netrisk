@@ -6708,4 +6708,142 @@ Salvar mesmo assim?</value>
     <data name="RiskSource_ASM" xml:space="preserve">
         <value>Avaliações</value>
     </data>
+    <data name="AgentsMenu" xml:space="preserve">
+        <value>Agentes de IA…</value>
+    </data>
+    <data name="AgentsTitle" xml:space="preserve">
+        <value>Agentes de IA</value>
+    </data>
+    <data name="AgentServerSection" xml:space="preserve">
+        <value>Conexão de agentes</value>
+    </data>
+    <data name="AgentServerEnable" xml:space="preserve">
+        <value>Permitir que agentes de IA deste computador se conectem ao NetRisk</value>
+    </data>
+    <data name="AgentServerHintMSG" xml:space="preserve">
+        <value>Desligado por padrão. Agentes só se conectam a partir deste computador, precisam da sua aprovação e só podem agir durante os minutos que você conceder, com as suas permissões.</value>
+    </data>
+    <data name="AgentServerStatusOff" xml:space="preserve">
+        <value>Desligado</value>
+    </data>
+    <data name="AgentServerStatusOn" xml:space="preserve">
+        <value>Aguardando conexões em 127.0.0.1:{0}</value>
+    </data>
+    <data name="AgentServerStatusSignedOut" xml:space="preserve">
+        <value>Inicia quando você entrar</value>
+    </data>
+    <data name="AgentServerStatusError" xml:space="preserve">
+        <value>Não foi possível iniciar; veja o log do cliente</value>
+    </data>
+    <data name="AgentRegistrationsSection" xml:space="preserve">
+        <value>Agentes registrados</value>
+    </data>
+    <data name="AgentNoneRegistered" xml:space="preserve">
+        <value>Nenhum agente registrado ainda.</value>
+    </data>
+    <data name="AgentName" xml:space="preserve">
+        <value>Agente</value>
+    </data>
+    <data name="AgentDescription" xml:space="preserve">
+        <value>Descrição</value>
+    </data>
+    <data name="AgentClient" xml:space="preserve">
+        <value>Cliente MCP</value>
+    </data>
+    <data name="AgentFingerprint" xml:space="preserve">
+        <value>Impressão digital</value>
+    </data>
+    <data name="AgentCreatedAt" xml:space="preserve">
+        <value>Registrado em</value>
+    </data>
+    <data name="AgentLastUsed" xml:space="preserve">
+        <value>Último uso</value>
+    </data>
+    <data name="AgentNever" xml:space="preserve">
+        <value>Nunca</value>
+    </data>
+    <data name="AgentLease" xml:space="preserve">
+        <value>Acesso</value>
+    </data>
+    <data name="AgentLeaseNone" xml:space="preserve">
+        <value>Sem acesso</value>
+    </data>
+    <data name="AgentLeaseActive" xml:space="preserve">
+        <value>{0}, restam {1} min</value>
+    </data>
+    <data name="AgentLeasePaused" xml:space="preserve">
+        <value>Pausado, restam {0} min</value>
+    </data>
+    <data name="AgentRename" xml:space="preserve">
+        <value>Renomear</value>
+    </data>
+    <data name="AgentRenameInvalidMSG" xml:space="preserve">
+        <value>O nome deve ter entre 1 e {0} caracteres.</value>
+    </data>
+    <data name="AgentRevoke" xml:space="preserve">
+        <value>Revogar</value>
+    </data>
+    <data name="AgentRevokeConfirmMSG" xml:space="preserve">
+        <value>Revogar o agente "{0}"? A chave dele deixa de funcionar imediatamente e qualquer acesso em curso termina agora.</value>
+    </data>
+    <data name="AgentPause" xml:space="preserve">
+        <value>Pausar acesso</value>
+    </data>
+    <data name="AgentResume" xml:space="preserve">
+        <value>Retomar acesso</value>
+    </data>
+    <data name="AgentEndAccess" xml:space="preserve">
+        <value>Encerrar acesso</value>
+    </data>
+    <data name="AgentRegistrationTitle" xml:space="preserve">
+        <value>Um agente de IA quer se conectar</value>
+    </data>
+    <data name="AgentRegistrationNoticeMSG" xml:space="preserve">
+        <value>Aprove somente se esta impressão digital for igual à que o seu agente mostra. Ao aprovar, o agente recebe uma chave vinculada à sua conta neste computador; ele ainda precisa pedir acesso a você antes de ler ou alterar qualquer coisa.</value>
+    </data>
+    <data name="AgentUnknownClient" xml:space="preserve">
+        <value>Não informado</value>
+    </data>
+    <data name="AgentQueueStatusMSG" xml:space="preserve">
+        <value>{0} outra(s) solicitação(ões) aguardando; {1} recusada(s) enquanto esta estava aberta.</value>
+    </data>
+    <data name="AgentApprove" xml:space="preserve">
+        <value>Aprovar</value>
+    </data>
+    <data name="AgentDeny" xml:space="preserve">
+        <value>Recusar</value>
+    </data>
+    <data name="AgentAccessTitle" xml:space="preserve">
+        <value>Um agente de IA está pedindo acesso</value>
+    </data>
+    <data name="AgentReason" xml:space="preserve">
+        <value>Motivo informado pelo agente</value>
+    </data>
+    <data name="AgentRequested" xml:space="preserve">
+        <value>Solicitado</value>
+    </data>
+    <data name="AgentRequestedValueMSG" xml:space="preserve">
+        <value>{0} minutos, {1}</value>
+    </data>
+    <data name="AgentGrantDuration" xml:space="preserve">
+        <value>Conceder por</value>
+    </data>
+    <data name="AgentGrantMode" xml:space="preserve">
+        <value>Acesso</value>
+    </data>
+    <data name="AgentMinutesOption" xml:space="preserve">
+        <value>{0} minutos</value>
+    </data>
+    <data name="AgentModeRead" xml:space="preserve">
+        <value>Somente leitura</value>
+    </data>
+    <data name="AgentModeReadWrite" xml:space="preserve">
+        <value>Leitura e edição</value>
+    </data>
+    <data name="AgentAccessNoticeMSG" xml:space="preserve">
+        <value>Enquanto o acesso durar, o agente age como você, com as suas permissões. O que ele ler é enviado ao provedor de IA do agente, fora deste computador.</value>
+    </data>
+    <data name="AgentGrant" xml:space="preserve">
+        <value>Conceder acesso</value>
+    </data>
 </root>

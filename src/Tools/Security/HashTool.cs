@@ -1,4 +1,6 @@
-﻿namespace Tools.Security;
+﻿using System;
+
+namespace Tools.Security;
 
 public static class HashTool
 {

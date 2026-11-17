@@ -1,6 +1,7 @@
 # Agent co-work MCP server (GUI)
 
-Status: **design** (Track 11, S55). Nothing here is implemented yet.
+Status: **M61 implemented** (host, registration, keys, leases — see [Implementation notes (M61)](#implementation-notes-m61));
+no business tool exists yet (M62+). The rest of this page is the design.
 
 The desktop GUI hosts a **NetRisk MCP server** so an external AI agent (Claude Code, Claude Desktop, any
 MCP client) can work *beside* the logged-in user: read and edit the same items, with the same
@@ -181,6 +182,59 @@ untouched, `.bak` written, idempotent on re-run), `AgentClientRegistrarRemoveTes
   matches delete/approve/sign/permission/secret.
 - `AgentLoopbackGuardTest`: non-loopback Host and foreign Origin refused.
 - Observed at runtime: a real MCP client registering, being approved, being refused after expiry.
+
+## Implementation notes (M61)
+
+Code: `src/GUIClient/Agents/Core` (Avalonia-free, compiled into `GUIClient.Tests`), the GUI glue in
+`src/GUIClient/Agents`, the dialogs and the Agents window under `Views/Agents`, the bridge in `src/McpBridge`.
+Evidence: `AgentKeyHandlingTest`, `AgentLeaseTest`, `AgentLoopbackGuardTest`, `AgentStdioBridgeTest`.
+
+- **Transport is hand-rolled, not the ModelContextProtocol SDK.** The SDK's HTTP transport needs ASP.NET Core
+  (Kestrel) inside the self-contained desktop app plus new third-party packages; M61 needs only `initialize`,
+  `ping`, `tools/list`, `tools/call` and notifications. `LoopbackHttp` speaks one bounded HTTP/1.1 request per
+  connection (Content-Length only, 16 KiB of headers, 256 KiB of body, no chunked bodies, no repeated
+  `Host`/`Origin`/`Authorization`); responses are `application/json`, `GET` answers 405 (no server stream).
+  Optional `Mcp-Session-Id` sessions carry the client info shown in the dialog. Revisit when M62+ needs more.
+- **Listener:** `TcpListener` on `127.0.0.1` port 0 (the OS picks the per-launch port), exclusive on Windows, at
+  most 8 connections. Started only for a signed-in user with the setting on (`AgentMcpServerEnabled`, absent =
+  off, in the encrypted per-user configuration store); closed on sign-out and session expiry.
+- **Launch token.** Besides Host/Origin, every request must carry `X-NetRisk-Launch-Token`, a per-launch 256-bit
+  value stored only in the owner-only discovery file. Loopback is shared by every OS user on the machine; without
+  it the file's permissions would protect nothing. Direct HTTP clients must send it; the bridge does.
+- **Discovery file:** `<client data folder>/agents/mcp-discovery.json` — 0600 in a 0700 directory, or a protected
+  user-only ACL on Windows; written atomically, deleted on stop and exit, never holds a key. The bridge refuses any
+  URL that is not `http://127.0.0.1:<port>/mcp` and never uses a proxy. **On Unix only**, the reader also refuses a
+  file that group or others can access (`AgentLoopbackGuardTest.TestTheDiscoveryFileIsOwnerOnlyAndHoldsNoAgentKey`);
+  on Windows the ACL is set when the file is written and is not re-checked when it is read.
+- **Key transport.** The agent presents its key as `Authorization: Bearer <key>` *or* as the `agent_key` tool
+  argument (an MCP client cannot set headers from a tool result); two different keys in one call are refused.
+- **Fingerprint first.** A new `register_agent` answers `pending` with the pending id and fingerprint at once, so
+  the agent can show the code before the user decides
+  (`AgentKeyHandlingTest.TestTheFingerprintReachesTheAgentBeforeTheUserDecides`). Only a call carrying `pending_id`
+  (and `request_access` with `request_id`) waits, up to 45 s. The key is generated when an approved registration is
+  collected, returned once, and discarded if not collected within two minutes. A poll whose client hangs up is
+  cancelled and issues nothing (`TestAKeyIsNeverIssuedToAPollWhoseClientHasGone`).
+- **One lease gate.** Every tool other than the three bootstrap ones runs only after `McpDispatcher` checks a valid
+  key and `AgentLeaseManager.Authorize` for that tool's read/edit kind, and never receives the key
+  (`AgentLeaseTest.TestTheLeaseGate*`, `TestABusinessToolNeverReceivesTheAgentKey`).
+- **Lifecycle order.** Stopping closes the listener and the approval queue before ending leases and dropping
+  requests; starting clears whatever an earlier session left; revoking cancels requests before ending the lease
+  (`TestNoGrantCanLandWhileTheServerStops`, `TestStartingTheServerClearsWhatAnEarlierSessionLeft`,
+  `TestAGrantDuringRevocationLeavesNoLease`).
+- **Approval dialogs** focus Deny and keep Approve/Grant disabled for `AgentApprovalTiming.ArmDelay` (1 s) after
+  opening, so a keystroke meant for another window cannot approve (`AgentApprovalDialogSafetyTest`).
+- **Storage:** registrations (id, user id, name, description, client, fingerprint, `key_sha256`, dates) are a JSON
+  list under `AgentRegistrations` in the same per-user LiteDB store as the client's other settings.
+
+Known limitations and follow-ups:
+
+- **Slow-client exhaustion (accepted).** The listener serves at most 8 connections and gives each 15 s to send
+  its request, so another local process — including one run by another OS user, since loopback is shared — can keep
+  every slot busy and deny service to agents. It cannot get past the guard or the launch token; it can only make
+  agents wait. Accepted for M61; revisit with per-connection accounting if it matters.
+- **Lock** ends leases on Windows only (`SystemEvents.SessionSwitch`); macOS and Linux have no lock signal wired.
+- **Connecting process.** The registration dialog does not name the process behind the connection.
+- **Packaging.** The installers do not ship `netrisk-mcp-bridge` yet.
 
 ## Out of scope (first release)
 

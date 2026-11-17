@@ -46,6 +46,14 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IFaceIDService>(),
             sp.GetRequiredService<IMemoryCacheService>()));
 
+        // Track 11 (S55, M61): the loopback MCP server agents connect to. Off until the user switches it on.
+        services.AddSingleton<GUIClient.Agents.IAgentApprovalPrompter, GUIClient.Agents.AvaloniaAgentApprovalPrompter>();
+        services.AddSingleton<GUIClient.Agents.AgentCoworkService>(sp => new GUIClient.Agents.AgentCoworkService(
+            sp.GetRequiredService<IMutableConfigurationService>(),
+            sp.GetRequiredService<IEnvironmentService>(),
+            sp.GetRequiredService<IAuthenticationService>(),
+            sp.GetRequiredService<GUIClient.Agents.IAgentApprovalPrompter>()));
+
         services.AddSingleton<IMemoryCacheService, MemoryCacheService>();
         services.AddSingleton<ConstantManager>();
         services.AddSingleton<IMainWindowProvider, MainWindowProvider>();

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    netrisk-mcp-bridge (Track 11, T345, S55): a stdio MCP server that forwards every message to the NetRisk desktop
+    client's loopback Streamable HTTP endpoint, found through the per-user discovery file. Deliberately tiny: no
+    package references, and only the discovery-file reader shared with the GUI, compiled in from source so both read
+    the same format.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>13</LangVersion>
+    <AssemblyName>netrisk-mcp-bridge</AssemblyName>
+    <RootNamespace>NetRisk.McpBridge</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\GUIClient\Agents\Core\AgentDiscoveryFile.cs" LinkBase="Shared" />
+    <Compile Include="..\GUIClient\Agents\Core\LoopbackRequestGuard.cs" LinkBase="Shared" />
+  </ItemGroup>
+</Project>

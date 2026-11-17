@@ -70,8 +70,10 @@ public class UserInfoViewModel: ViewModelBase
 
     private void ExecuteLogout()
     {
+        // Sign-out ends every agent lease and closes the agent server before the process goes (S55).
+        GetService<GUIClient.Agents.AgentCoworkService>().SignOut();
         AuthenticationService.Logout();
-        
+
         Environment.Exit(0);
     }
     

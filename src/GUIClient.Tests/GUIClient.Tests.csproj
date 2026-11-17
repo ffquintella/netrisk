@@ -140,6 +140,15 @@
          the service icon map, history grouping and layout persistence. The converters and the view
          model are thin Avalonia wrappers over these. -->
     <Compile Include="..\GUIClient\Tools\Hosts\*.cs" LinkBase="Tools/Hosts" />
+    <!-- Agent co-work (Track 11, M61, S55): the loopback MCP host, registrations, keys and leases. All of it is
+         Avalonia-free by design so the security properties are tested here; the dialogs and the Agents window are
+         the only GUI parts. RandomGenerator and HashTool come straight from Tools, as the keys are issued with them
+         (this project does not reference Tools). -->
+    <Compile Include="..\GUIClient\Agents\Core\*.cs" LinkBase="Agents" />
+    <Compile Include="..\Tools\RandomGenerator.cs" LinkBase="Tools" />
+    <Compile Include="..\Tools\Security\HashTool.cs" LinkBase="Tools/Security" />
+    <!-- The stdio bridge's forwarding loop (T345), driven against a real in-process loopback server. -->
+    <Compile Include="..\McpBridge\StdioBridge.cs" LinkBase="McpBridge" />
     <!-- The configuration-source order the installers rely on: no Avalonia types either. -->
     <Compile Include="..\GUIClient\ClientConfigurationSources.cs" LinkBase="Configuration" />
     <!-- Which server URL an administrator deployed: reads only the INI overlays, no Avalonia. -->

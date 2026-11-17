@@ -1,0 +1,167 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.Versioning;
+using System.Threading.Tasks;
+using ClientServices.Interfaces;
+using Serilog;
+
+namespace GUIClient.Agents;
+
+/// <summary>
+/// The desktop side of agent co-work (Track 11, M61): the off-by-default setting, and the runtime's lifecycle tied to
+/// the session — started on sign-in when enabled, closed on sign-out or session expiry, every lease ended on lock and
+/// exit. Everything that decides anything lives in <see cref="AgentCoworkRuntime"/>, which is tested headless.
+/// </summary>
+public sealed class AgentCoworkService
+{
+    /// <summary>The per-user setting. Absent means off (S55: "off by default").</summary>
+    public const string EnabledSettingName = "AgentMcpServerEnabled";
+
+    private readonly IMutableConfigurationService _configuration;
+    private readonly IEnvironmentService _environment;
+    private readonly IAuthenticationService _authentication;
+    private readonly ILogger _log = Log.ForContext<AgentCoworkService>();
+    private bool _attached;
+
+    public AgentCoworkService(IMutableConfigurationService configuration, IEnvironmentService environment,
+        IAuthenticationService authentication, IAgentApprovalPrompter prompter)
+    {
+        _configuration = configuration;
+        _environment = environment;
+        _authentication = authentication;
+        var version = typeof(AgentCoworkService).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        Runtime = new AgentCoworkRuntime(new MutableConfigurationAgentRegistrationStore(configuration), prompter,
+            new SerilogAgentAuditSink(), TimeProvider.System,
+            new AgentCoworkOptions { Server = new McpServerOptions { ServerVersion = version } });
+        Runtime.StateChanged += () => StateChanged?.Invoke();
+    }
+
+    public AgentCoworkRuntime Runtime { get; }
+
+    public bool IsEnabled =>
+        string.Equals(_configuration.GetConfigurationValue(EnabledSettingName), "true", StringComparison.Ordinal);
+
+    /// <summary>Set when the server could not start; cleared on the next successful start.</summary>
+    public bool StartFailed { get; private set; }
+
+    /// <summary>Beside the client's other per-user data; the bridge derives the same path (AgentDiscoveryFile.DefaultPath).</summary>
+    public string DiscoveryPath =>
+        System.IO.Path.Combine(_environment.ApplicationDataFolder, "agents", AgentDiscoveryFile.FileName);
+
+    public event Action? StateChanged;
+
+    /// <summary>Hooks the session events. Called once, when the shell is created.</summary>
+    public void Attach()
+    {
+        if (_attached) return;
+        _attached = true;
+
+        _authentication.AuthenticationSucceeded += (_, _) => _ = OnSignedInAsync();
+        _authentication.SessionExpired += (_, _) => _ = RunLoggedAsync(() => Runtime.SignOutAsync(LeaseEndReason.Logout));
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => Runtime.StopNow(LeaseEndReason.Exit);
+        if (OperatingSystem.IsWindows()) SubscribeToSessionLock();
+
+        if (_authentication.IsAuthenticated) _ = OnSignedInAsync();
+    }
+
+    public async Task SetEnabledAsync(bool enabled)
+    {
+        _configuration.SetConfigurationValue(EnabledSettingName, enabled ? "true" : "false");
+        if (enabled) await OnSignedInAsync().ConfigureAwait(false);
+        else await RunLoggedAsync(() => Runtime.StopAsync(LeaseEndReason.ServerStopped)).ConfigureAwait(false);
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>Explicit sign-out, right before the application exits.</summary>
+    public void SignOut() => Runtime.StopNow(LeaseEndReason.Logout);
+
+    /// <summary>Application exit from the shell's own Exit (the ProcessExit hook covers the rest).</summary>
+    public void Exit() => Runtime.StopNow(LeaseEndReason.Exit);
+
+    private async Task OnSignedInAsync()
+    {
+        if (_authentication.AuthenticatedUserInfo?.UserId is not { } userId) return;
+
+        // Registrations are listed in the Agents window even while the server is off.
+        Runtime.Registry.SetUser(userId);
+        if (!IsEnabled) return;
+
+        try
+        {
+            await Runtime.StartAsync(userId, DiscoveryPath).ConfigureAwait(false);
+            StartFailed = false;
+        }
+        catch (Exception ex)
+        {
+            StartFailed = true;
+            _log.Error(ex, "Could not start the agent MCP server");
+        }
+        StateChanged?.Invoke();
+    }
+
+    private async Task RunLoggedAsync(Func<Task> action)
+    {
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Agent co-work lifecycle step failed");
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private void SubscribeToSessionLock()
+    {
+        try
+        {
+            Microsoft.Win32.SystemEvents.SessionSwitch += OnSessionSwitch;
+        }
+        catch (Exception ex)
+        {
+            _log.Warning(ex, "Session lock notifications are unavailable; agent leases will not end on lock");
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private void OnSessionSwitch(object? sender, Microsoft.Win32.SessionSwitchEventArgs e)
+    {
+        if (e.Reason is Microsoft.Win32.SessionSwitchReason.SessionLock
+            or Microsoft.Win32.SessionSwitchReason.ConsoleDisconnect
+            or Microsoft.Win32.SessionSwitchReason.RemoteDisconnect)
+            Runtime.EndAllLeases(LeaseEndReason.Lock);
+    }
+}
+
+/// <summary>Keeps registrations in the client's encrypted per-user configuration store. Only key hashes are written.</summary>
+public sealed class MutableConfigurationAgentRegistrationStore : IAgentRegistrationStore
+{
+    public const string SettingName = "AgentRegistrations";
+
+    private readonly IMutableConfigurationService _configuration;
+
+    public MutableConfigurationAgentRegistrationStore(IMutableConfigurationService configuration) =>
+        _configuration = configuration;
+
+    public IReadOnlyList<AgentRegistration> Load() =>
+        AgentRegistrationSerializer.Deserialize(_configuration.GetConfigurationValue(SettingName));
+
+    public void Save(IReadOnlyList<AgentRegistration> registrations) =>
+        _configuration.SetConfigurationValue(SettingName, AgentRegistrationSerializer.Serialize(registrations));
+}
+
+/// <summary>Writes the agent audit events to the client log (S55 "Local log"). Records never hold a key or token.</summary>
+public sealed class SerilogAgentAuditSink : IAgentAuditSink
+{
+    private readonly ILogger _log = Log.ForContext("SourceContext", "AgentCowork");
+
+    public void Record(AgentAuditEvent auditEvent)
+    {
+        var warning = auditEvent.Kind is AgentAuditKind.RequestRejected or AgentAuditKind.AuthenticationFailed
+            or AgentAuditKind.RegistrationRefused or AgentAuditKind.AccessRefused;
+        _log.Write(warning ? Serilog.Events.LogEventLevel.Warning : Serilog.Events.LogEventLevel.Information,
+            "Agent audit {Kind} agent={AgentId} name={AgentName}: {Detail}",
+            auditEvent.Kind, auditEvent.AgentId, auditEvent.AgentName, auditEvent.Detail);
+    }
+}

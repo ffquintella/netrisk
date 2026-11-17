@@ -12,6 +12,13 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Host a loopback-only MCP server in the desktop client, off by default, with Host/Origin and launch-token guards and an owner-only discovery file, plus a stdio bridge for clients that cannot speak HTTP (T344, T345, S55)
+- Let an AI agent register through `register_agent`, with the user approving it in the GUI against a fingerprint and receiving a once-shown agent key stored only as its SHA-256, and list, rename, pause and revoke agents in an Agents window (T346, T347, S55)
+- Grant agents access in 10-minute blocks through `request_access`, approved, shortened or downgraded to read-only by the user, with in-memory leases ending on expiry, logout, exit, pause or revoke (T348, S55)
+- Cover agent key handling, leases, the loopback guard and the lease gate with `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (T349, S55)
+
 ## [2.44.1] - 2026-11-16
 
 ### Security

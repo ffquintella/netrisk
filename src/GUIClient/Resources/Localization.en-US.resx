@@ -6645,4 +6645,142 @@ Save anyway?</value>
     <data name="RiskSource_ASM" xml:space="preserve">
         <value>Assessments</value>
     </data>
+    <data name="AgentsMenu" xml:space="preserve">
+        <value>AI agents…</value>
+    </data>
+    <data name="AgentsTitle" xml:space="preserve">
+        <value>AI agents</value>
+    </data>
+    <data name="AgentServerSection" xml:space="preserve">
+        <value>Agent connection</value>
+    </data>
+    <data name="AgentServerEnable" xml:space="preserve">
+        <value>Allow AI agents on this computer to connect to NetRisk</value>
+    </data>
+    <data name="AgentServerHintMSG" xml:space="preserve">
+        <value>Off by default. Agents connect only from this computer, must be approved by you, and can act only during the minutes you grant, with your permissions.</value>
+    </data>
+    <data name="AgentServerStatusOff" xml:space="preserve">
+        <value>Off</value>
+    </data>
+    <data name="AgentServerStatusOn" xml:space="preserve">
+        <value>Listening on 127.0.0.1:{0}</value>
+    </data>
+    <data name="AgentServerStatusSignedOut" xml:space="preserve">
+        <value>Starts when you sign in</value>
+    </data>
+    <data name="AgentServerStatusError" xml:space="preserve">
+        <value>Could not start; see the client log</value>
+    </data>
+    <data name="AgentRegistrationsSection" xml:space="preserve">
+        <value>Registered agents</value>
+    </data>
+    <data name="AgentNoneRegistered" xml:space="preserve">
+        <value>No agent is registered yet.</value>
+    </data>
+    <data name="AgentName" xml:space="preserve">
+        <value>Agent</value>
+    </data>
+    <data name="AgentDescription" xml:space="preserve">
+        <value>Description</value>
+    </data>
+    <data name="AgentClient" xml:space="preserve">
+        <value>MCP client</value>
+    </data>
+    <data name="AgentFingerprint" xml:space="preserve">
+        <value>Fingerprint</value>
+    </data>
+    <data name="AgentCreatedAt" xml:space="preserve">
+        <value>Registered</value>
+    </data>
+    <data name="AgentLastUsed" xml:space="preserve">
+        <value>Last used</value>
+    </data>
+    <data name="AgentNever" xml:space="preserve">
+        <value>Never</value>
+    </data>
+    <data name="AgentLease" xml:space="preserve">
+        <value>Access</value>
+    </data>
+    <data name="AgentLeaseNone" xml:space="preserve">
+        <value>No access</value>
+    </data>
+    <data name="AgentLeaseActive" xml:space="preserve">
+        <value>{0}, {1} min left</value>
+    </data>
+    <data name="AgentLeasePaused" xml:space="preserve">
+        <value>Paused, {0} min left</value>
+    </data>
+    <data name="AgentRename" xml:space="preserve">
+        <value>Rename</value>
+    </data>
+    <data name="AgentRenameInvalidMSG" xml:space="preserve">
+        <value>The name must have between 1 and {0} characters.</value>
+    </data>
+    <data name="AgentRevoke" xml:space="preserve">
+        <value>Revoke</value>
+    </data>
+    <data name="AgentRevokeConfirmMSG" xml:space="preserve">
+        <value>Revoke the agent "{0}"? Its key stops working at once and any access it holds ends now.</value>
+    </data>
+    <data name="AgentPause" xml:space="preserve">
+        <value>Pause access</value>
+    </data>
+    <data name="AgentResume" xml:space="preserve">
+        <value>Resume access</value>
+    </data>
+    <data name="AgentEndAccess" xml:space="preserve">
+        <value>End access</value>
+    </data>
+    <data name="AgentRegistrationTitle" xml:space="preserve">
+        <value>An AI agent wants to connect</value>
+    </data>
+    <data name="AgentRegistrationNoticeMSG" xml:space="preserve">
+        <value>Approve only if this fingerprint matches the one your agent shows you. Approving gives the agent a key tied to your account on this computer; it still has to ask you for access before it can read or change anything.</value>
+    </data>
+    <data name="AgentUnknownClient" xml:space="preserve">
+        <value>Not reported</value>
+    </data>
+    <data name="AgentQueueStatusMSG" xml:space="preserve">
+        <value>{0} more request(s) waiting; {1} refused while this one was open.</value>
+    </data>
+    <data name="AgentApprove" xml:space="preserve">
+        <value>Approve</value>
+    </data>
+    <data name="AgentDeny" xml:space="preserve">
+        <value>Deny</value>
+    </data>
+    <data name="AgentAccessTitle" xml:space="preserve">
+        <value>An AI agent is asking for access</value>
+    </data>
+    <data name="AgentReason" xml:space="preserve">
+        <value>Reason given by the agent</value>
+    </data>
+    <data name="AgentRequested" xml:space="preserve">
+        <value>Requested</value>
+    </data>
+    <data name="AgentRequestedValueMSG" xml:space="preserve">
+        <value>{0} minutes, {1}</value>
+    </data>
+    <data name="AgentGrantDuration" xml:space="preserve">
+        <value>Grant for</value>
+    </data>
+    <data name="AgentGrantMode" xml:space="preserve">
+        <value>Access</value>
+    </data>
+    <data name="AgentMinutesOption" xml:space="preserve">
+        <value>{0} minutes</value>
+    </data>
+    <data name="AgentModeRead" xml:space="preserve">
+        <value>Read only</value>
+    </data>
+    <data name="AgentModeReadWrite" xml:space="preserve">
+        <value>Read and edit</value>
+    </data>
+    <data name="AgentAccessNoticeMSG" xml:space="preserve">
+        <value>While access lasts the agent acts as you, with your permissions. What it reads is sent to the agent's AI provider, outside this computer.</value>
+    </data>
+    <data name="AgentGrant" xml:space="preserve">
+        <value>Grant access</value>
+    </data>
 </root>

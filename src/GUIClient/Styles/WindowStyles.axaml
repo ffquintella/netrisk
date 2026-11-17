@@ -230,6 +230,16 @@
         <Setter Property="Margin" Value="0 4 0 0"/>
     </Style>
 
+    <!-- The agent fingerprint in the approval dialogs (Track 11, S55): the code the user compares with what their
+         agent shows, so it is set apart in a fixed-width face where 0/O and 1/l cannot be mistaken. -->
+    <Style Selector="TextBlock.agentFingerprint">
+        <Setter Property="Foreground" Value="{DynamicResource NrTextPrimary}"/>
+        <Setter Property="FontFamily" Value="Menlo, Consolas, DejaVu Sans Mono, monospace"/>
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="0 2 0 8"/>
+    </Style>
+
     <!-- Groups a run of related fields so a long settings column reads as three blocks
          rather than eleven rows. Same surface as `card`; different margin, because a form
          card stacks vertically and a dashboard card sits in a grid. -->

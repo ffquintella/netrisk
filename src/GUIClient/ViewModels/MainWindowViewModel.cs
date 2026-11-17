@@ -41,6 +41,7 @@ namespace GUIClient.ViewModels
         public string StrApplicationMn { get; }
         public string StrExitMn { get; }
         public string StrAbout { get; } = Localizer["About"];
+        public string StrAgentsMn { get; } = Localizer["AgentsMenu"];
         public string StrDebug { get; } = Localizer["Debug"];
 
         #endregion
@@ -208,7 +209,15 @@ namespace GUIClient.ViewModels
         #region METHODS
         public void OnMenuExitCommand()
         {
+            GetService<GUIClient.Agents.AgentCoworkService>().Exit();
             Environment.Exit(0);
+        }
+
+        /// <summary>The Agents window (Track 11, T347): the agent server switch, registrations and leases.</summary>
+        public void OnMenuAgentsCommand()
+        {
+            GetService<GUIClient.Navigation.INavigationService>()
+                .ShowAuxiliaryWindow<GUIClient.Views.Agents.AgentsWindow>(() => new GUIClient.ViewModels.Agents.AgentsViewModel());
         }
         
         private void ExecuteOpenReports()
