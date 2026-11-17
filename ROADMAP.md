@@ -1099,6 +1099,82 @@ Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abando
 - [ ] T287 Show portfolio P95/CVaR (M45), KRI and Gate B seals (M46), evidence confidence (M40) and the target level (M44) (S39, S40)
 - [ ] T288 Enable the third-party category from the M48 register, and committee approval and third-line read access from M47 (S39)
 
+## Track 11 — Agent Co-work (NetRisk MCP Server)
+
+The desktop GUI hosts a NetRisk MCP server so an AI agent can read and edit items **as the logged user, with
+exactly that user's permissions**, while the user watches. The agent registers once (the user approves and an
+agent key is issued), then asks for access in blocks of 10 minutes; the GUI shows each request and the user
+grants, shortens or refuses it. Design, trust model and threat table:
+[docs/features/agent-mcp-server.md](docs/features/agent-mcp-server.md) (S55). **Status: planned.**
+
+> **The agent is the user, never more.** Every tool goes through `ClientServices` and the API under the
+> user's session; the MCP layer only restricts. Approvals, sign-offs, gates, deletes, role administration and
+> anything that returns a secret are never tools. The agent key never substitutes for a human-granted lease.
+
+> **Ordering.** M61 (host, registration, leases) lands before any tool; M62 (read tools) before M63 (edit
+> tools and the co-work panel); M64 closes with the security review and the runtime observation. The server is
+> off by default until M64 is delivered.
+
+### [M61] MCP host, agent registration and access leases
+> outcome: An MCP client can connect to the GUI over loopback, register as an agent, be approved by the
+> user, obtain an agent key, and request 10-minute access blocks that the user approves in the GUI.
+> spec: S55
+> depends-on: M60
+
+- [ ] T344 Host a loopback-only Streamable HTTP MCP server in the GUI process, off by default, with Host/Origin guards, a per-launch port and a permission-restricted discovery file (S55)
+- [ ] T345 Add a stdio bridge executable for MCP clients that cannot speak HTTP (S55)
+- [ ] T346 Implement `register_agent` with pending registrations, rate limiting, request collapsing and the approval dialog showing name, description and fingerprint (S55)
+- [ ] T347 Issue the agent key from a CSPRNG, return it once, store only its SHA-256 and compare in constant time; list, rename and revoke registrations in an Agents window (S55)
+- [ ] T348 Implement `request_access` in blocks of 10 minutes (1–6) with the approval dialog letting the user shorten the lease or downgrade it to read-only, and in-memory leases ending on expiry, logout, lock, exit, pause or revoke (S55)
+- [ ] T349 Add `AgentKeyHandlingTest`, `AgentLeaseTest` and `AgentLoopbackGuardTest` (S55)
+
+### [M62] Read tools
+> outcome: An agent holding a lease can read the items the user can read — risks, vulnerabilities, incidents,
+> assessments, entities, hosts and the overview — and nothing the user cannot.
+> spec: S55
+> depends-on: M61
+
+- [ ] T350 Build the tool registry with per-tool required permission and read/edit declaration, filtering `tools/list` by the user's permissions (S55)
+- [ ] T351 Add read tools for risks, vulnerabilities and findings, incidents and plans, assessments, entities, hosts and the Cyber Risk Overview, plus `get_status` and `whoami` (S55)
+- [ ] T352 Tag every tool result as untrusted data and strip credential, vault-reference and key fields from every result shape (S55)
+- [ ] T353 Add `AgentToolsNeverEscalateTest` and `AgentToolInventoryTest` (S55)
+
+### [M63] Edit tools and co-work experience
+> outcome: With a read-and-edit lease the agent can change items under the user's eyes — live activity panel,
+> pause and end controls, item presence, refresh on change and an optional confirm-each-write mode.
+> spec: S55
+> depends-on: M62
+
+- [ ] T354 Add single-item edit tools (create/update risk, vulnerability status and assignment, incident and timeline entries, assessment answers and comments, descriptive entity and host fields) validated by the GUI's own rules and the item's concurrency token (S55)
+- [ ] T355 Build the activity panel and status-bar indicator with remaining lease time, Pause and End access, and a one-minute expiry warning with "Grant another 10 min" (S55)
+- [ ] T356 Mark items the agent is reading or editing, refresh and highlight fields it changes, and surface stale-write conflicts to both sides (S55)
+- [ ] T357 Add the confirm-each-write option to a lease (S55)
+- [ ] T358 Send the agent-context header from the GUI and record "user via agent" in the audit trail, with a test that the header never changes authorization (S55)
+
+### [M64] Hardening and release
+> outcome: The server is reviewed, observed working with a real MCP client, documented, and can be enabled
+> from the GUI settings.
+> spec: S55
+> depends-on: M63
+
+- [ ] T359 Run the security review against the S55 threat table, including a prompt-injection exercise through attacker-controlled item text (S55)
+- [ ] T360 Observe a real MCP client register, be approved, work under a lease and be refused after expiry, and record the evidence (S55)
+- [ ] T361 Add the settings switch, the LGPD disclosure in the lease dialog and the user guide under `docs/product-guides/` (S55)
+- [ ] T362 Let item data-classification (S52) exclude classes from agent tools (S55)
+  - note: depends on M49 being delivered; until then the lease dialog states that item content reaches the agent's model provider
+
+### [M65] One-click registration on installed agents
+> outcome: From the Agents window the user can see which AI clients are installed on the machine and
+> register or unregister the NetRisk MCP server in each with one reviewed click.
+> spec: S55
+> depends-on: M61
+
+- [ ] T363 Detect installed Claude Code, Claude Desktop, GitHub Copilot (VS Code and CLI) and report each one's config path and registration state (S55)
+- [ ] T364 Write and remove the `netrisk` stdio entry in each client's config by merge only, with a diff preview, explicit per-client consent, atomic write and a `.bak` (S55)
+- [ ] T365 Show ChatGPT as unsupported with guided steps, keeping clients as a detector-and-writer table so a new one is a new row (S55)
+  - note: ChatGPT consumes remote HTTPS connectors and has no local config; revisit if a local mechanism ships
+- [ ] T366 Add `AgentClientRegistrarMergeTest`, `AgentClientRegistrarRemoveTest` and `AgentClientDetectionTest` (S55)
+
 ## Backlog
 
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
@@ -1179,3 +1255,4 @@ Cyber Risk Overview module, not yet published (T258, the shadow pilot, is abando
 | S52 | Stage 9.11 — LGPD data catalogue: legal basis, purpose, retention, location and DPIA specification | docs/roadmap/track9/9.11-lgpd-data-catalogue.md |
 | S53 | Stage 9.12 — AI governance: model inventory, flag 11 and model metrics specification | docs/roadmap/track9/9.12-ai-governance.md |
 | S54 | Headless desktop UI tests: tool choice and on-demand/release execution rule | docs/testing/desktop-ui-tests.md |
+| S55 | Agent co-work MCP server: registration, access leases and tool surface | docs/features/agent-mcp-server.md |
