@@ -355,7 +355,7 @@ public class TailRiskService(
             Basis = basis,
             Seed = seed,
             Iterations = iterations,
-            ConfidenceLevel = (decimal)TailStatisticsCalculator.ConfidenceLevel,
+            ConfidenceLevel = decimal.Round((decimal)TailStatisticsCalculator.ConfidenceLevel, 6),
             NotQuantified = excluded
         };
 

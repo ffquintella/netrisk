@@ -127,7 +127,7 @@ public class ContinuitySummaryTest
     [InlineData(1095, 1.0, null)]
     public void TestU5_TheParameterFormBounds(int? days, double weight, string? expected)
     {
-        Assert.Equal(expected, ContinuitySummary.SettingsErrorKey(days, (decimal)weight));
+        Assert.Equal(expected, ContinuitySummary.SettingsErrorKey(days, decimal.Parse(weight.ToString("R", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture)));
     }
 
     [Fact]

@@ -466,7 +466,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
 
         row.Iterations = result.Iterations;
         row.Seed = result.Seed;
-        row.ConfidenceLevel = (decimal)TailStatisticsCalculator.ConfidenceLevel;
+        row.ConfidenceLevel = decimal.Round((decimal)TailStatisticsCalculator.ConfidenceLevel, 6);
         row.LefMin = frequency.Min;
         row.LefMostLikely = frequency.MostLikely;
         row.LefMax = frequency.Max;
