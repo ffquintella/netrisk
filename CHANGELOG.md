@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.45.0] - 2026-11-18
+
 ### Added
 
 - Add a Risk index pane to the Administration window that holders of `risk_index_configure`, `risk_index_approve` or `entity_risk_context` open without the administrator flag, with six tabs each enabled, read-only or closed by permission and the administration panes not built for a non-administrator (T259, S40)
