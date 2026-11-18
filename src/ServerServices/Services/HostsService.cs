@@ -80,6 +80,7 @@ public class HostsService: ServiceBase, IHostsService
     public Host Create(Host host)
     {
         host.Id = 0;
+        StampCriticalitySource(null, host);
         using var dbContext = DalService.GetContext();
 
         var newHost = dbContext.Hosts.Add(host);
@@ -91,6 +92,7 @@ public class HostsService: ServiceBase, IHostsService
     public async Task<Host> CreateAsync(Host host)
     {
         host.Id = 0;
+        StampCriticalitySource(null, host);
         await using var dbContext = DalService.GetContext();
 
         var newHost = dbContext.Hosts.Add(host);
@@ -135,6 +137,7 @@ public class HostsService: ServiceBase, IHostsService
         
         if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
 
+        StampCriticalitySource(dbhost, host);
         host.Adapt(dbhost);
         
         dbContext.SaveChanges();
@@ -152,9 +155,25 @@ public class HostsService: ServiceBase, IHostsService
         
         if( dbhost == null) throw new DataNotFoundException("hosts",host!.Id.ToString(), new Exception("Host not found"));
 
+        StampCriticalitySource(dbhost, host);
         host.Adapt(dbhost);
         
         await dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// The source of an incoming host's criticality (M57, T275, S39 §5.1, D-10): a criticality a caller sets or changes
+    /// through this service is <c>manual</c>, the highest precedence; an unchanged one keeps the stored writer. The body's
+    /// own <c>CriticalitySource</c> is never trusted — <c>Adapt</c> copies every property, so a client could forge it.
+    /// </summary>
+    internal static void StampCriticalitySource(Host? stored, Host incoming)
+    {
+        if (incoming.Criticality is null)
+            incoming.CriticalitySource = null;
+        else if (stored is not null && stored.Criticality == incoming.Criticality)
+            incoming.CriticalitySource = stored.CriticalitySource;
+        else
+            incoming.CriticalitySource = CriticalitySources.Manual;
     }
 
     public List<DAL.Entities.HostsService> GetHostServices(int hostId)

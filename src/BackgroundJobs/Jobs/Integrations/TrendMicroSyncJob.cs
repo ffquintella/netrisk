@@ -9,9 +9,9 @@ namespace BackgroundJobs.Jobs.Integrations;
 /// <summary>
 /// Daily Trend Micro Vision One synchronization (Track 4 milestone 4.4).
 ///
-/// The job asks the service which connections are due rather than syncing all of them: a tenant with a
-/// six-hour interval and one with a weekly interval are both served by one recurring job, and a
-/// connection synced by hand from the admin UI resets its own clock.
+/// The job asks the service which connections are due rather than syncing all of them: a daily and a
+/// weekly interval are both served by one recurring job. Due dates sit on a fixed slot grid (T276, S39
+/// D-13), so a daily interval syncs every day and a manual sync from the admin UI does not move them.
 /// </summary>
 public class TrendMicroSyncJob(
     ILogger logger,
@@ -31,15 +31,16 @@ public class TrendMicroSyncJob(
             var result = await trendMicro.SyncDueConnectionsAsync(DateTime.UtcNow);
 
             if (result.HostsCreated + result.HostsUpdated + result.FindingsCreated
-                + result.FindingsUpdated + result.Errors == 0)
+                + result.FindingsUpdated + result.IndicatorsWritten + result.VendorAssetsSynced + result.Errors == 0)
                 return;
 
             Log.Information(
                 "Vision One sync: {HostsCreated} host(s) created, {HostsUpdated} updated, "
                 + "{FindingsCreated} finding(s) created, {FindingsUpdated} updated, "
-                + "{Patched} closed by virtual patch, {Errors} error(s)",
+                + "{Patched} closed by virtual patch, {Indicators} indicator reading(s), {Assets} attack-surface "
+                + "asset(s), {Errors} error(s)",
                 result.HostsCreated, result.HostsUpdated, result.FindingsCreated, result.FindingsUpdated,
-                result.VirtualPatchesApplied, result.Errors);
+                result.VirtualPatchesApplied, result.IndicatorsWritten, result.VendorAssetsSynced, result.Errors);
         }
         catch (Exception ex)
         {

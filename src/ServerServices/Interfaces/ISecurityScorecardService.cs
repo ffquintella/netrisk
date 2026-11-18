@@ -25,9 +25,9 @@ public interface ISecurityScorecardService
     Task<ConnectionTestResult> TestConnectionAsync(int id);
 
     /// <summary>
-    /// One full synchronization: overall score and grade onto the entity's Cyber Risk Index, the ten
-    /// factor scores appended to the trend history (4.5.2), domain CVEs and active issues ingested as
-    /// findings (4.5.3).
+    /// One full synchronization: the overall score and the ten factor scores appended to the trend history
+    /// (4.5.2) with their score impact per issue type, the pending score history recovered (T274), domain
+    /// CVEs and active issues ingested as findings (4.5.3). Writes no <c>entities.cyber_risk_index</c> (T270).
     /// </summary>
     Task<PostureSyncResult> SyncAsync(int connectionId, CancellationToken ct = default);
 

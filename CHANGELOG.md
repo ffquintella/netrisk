@@ -12,6 +12,35 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add Tenable Vulnerability Management connections under `/Tenable` with write-only, vault-capable access and secret keys read through the secret resolver, the fixed `https://cloud.tenable.com` URL, a probe of authentication and export privileges, and a manual sync that is queued (202) and run by the job host every 15 minutes on an anchored cadence, stored in `tenable_connections` (schema 112) (T265, S40)
+- Sync Tenable findings incrementally through the vulnerability export into the finding pipeline as `tenable-vm`, with VPR v2, CVSS, EPSS (a new Tenable EPSS source ranked after FIRST and Vision One) and exploit maturity, closing a finding Tenable reports FIXED through the lifecycle (T266, S40)
+- Sync Tenable assets through the asset export onto hosts by the identity chain (Tenable id, MAC, FQDN, hostname, IP), keeping ACR and AES as piecewise-constant readings in `vendor_scores` that the index reads only when TEN-ACR or TEN-AES is enabled in the snapshot's profile, and never writing a host's criticality (T267, S40)
+- Attribute Tenable assets to entities by tag rules in `/Integrations/EntityMappings`, applied during the asset sync under each rule's restamp policy, with candidates and preview from the tags the last sync saw (T268, S40)
+- Let a profile enable TEN-VM, TEN-AES and TEN-ACR in Sources and freshness, and report the Tenable connections' last sync for those sources (T266, T267, S40)
+- Keep each Vision One device's risk score per host with history in `vendor_scores` (V1Device), and purge vendor readings last captured more than 730 days ago in the index retention pass (T270, S39, S40)
+- Sync the Vision One `securityPosture` and `assetGroups` behind a new "posture" option as reference readings — the tenant's CRI, its agent-feature adoption and each asset group's risk, a group carrying the entity of the asset-group rule that names it — and offer the synced groups as mapping candidates (T271, S40)
+- Score the tenant's agent-feature adoption in CTL.C as V1-SCS (`1 − adoption`) when a profile enables it (T271, S39)
+- Sync the Vision One internet-facing FQDNs and IPs, domain and service accounts, cloud assets and local apps into `vendor_assets` with their risk scores, and score them in EXP.X, EXP.I and EXP.N when a profile enables V1-IFA, V1-ACC, V1-CLD or V1-APP (T272, S39, S40)
+- Count the last 30 days of Vision One Workbench alerts per day and severity as an attack-intensity reading, kept beside the index and never scored (T273, S40)
+- Recover SecurityScorecard score history (overall and per factor, up to 365 days, then only the days still pending) and keep each factor's score impact per issue type in `security_scorecard_issue_summaries` (T274, S40)
+- Name the missing permission or CREM credit for each enabled Vision One phase in the connection test (T271, T272, T273, S40)
+- Record who wrote a host's criticality (`hosts.criticality_source`: manual, CMDB or Vision One) and never let a lower-precedence writer overwrite it (T275, S39)
+- Keep Vision One's exploit attempts and global exploit activity on each finding as separate columns, and its last-detect and first-seen times on each device identity (T275, S39, S40)
+
+### Changed
+
+- Measure an abandoned integration run from its last progress heartbeat (`integration_sync_logs.heartbeat_at`) instead of its start, so a long export that still advances is never settled as dead (T265, S40)
+- Stop writing `entities.cyber_risk_index` and the entity posture columns from the Vision One and SecurityScorecard syncs; the column stays as unread legacy (T270, S39)
+- Rank a host's criticality in the index by its recorded writer instead of guessing from the host's provider (T275, S39)
+
+### Fixed
+
+- Store a SecurityScorecard factor sent without a score as null instead of 0, so a gap no longer reads as the worst grade (T274, S39)
+- Read a Vision One device's last sighting from `lastDetectDateTime` instead of fields the API does not send (T275, S39)
+- Compute Vision One and SecurityScorecard due dates on a fixed interval grid so a 24-hour interval syncs every day, and keep a manual sync from moving the schedule (T276, S39)
+
 ## [2.46.0] - 2026-11-18
 
 ### Added

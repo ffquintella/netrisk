@@ -55,10 +55,12 @@ public static class IntegrationSyncLedger
     {
         var horizon = nowUtc - StaleAfter;
 
+        // From the last heartbeat, not the start (T265, S40 §9.4): an hours-long export that still records progress is
+        // alive, and settling it would also release the connection's single-flight to a second export.
         var abandoned = await db.IntegrationSyncLogs
             .Where(l => l.Integration == kind
                         && l.Status == IntegrationSyncStatus.Running
-                        && l.StartedAt < horizon
+                        && (l.HeartbeatAt ?? l.StartedAt) < horizon
                         && (connectionId == null || l.ConnectionId == connectionId))
             .ToListAsync(ct);
 
@@ -97,7 +99,7 @@ public static class IntegrationSyncLedger
         var horizon = nowUtc - StaleAfter;
 
         var abandoned = await db.IntegrationSyncLogs
-            .Where(l => l.Status == IntegrationSyncStatus.Running && l.StartedAt < horizon)
+            .Where(l => l.Status == IntegrationSyncStatus.Running && (l.HeartbeatAt ?? l.StartedAt) < horizon)
             .ToListAsync(ct);
 
         if (abandoned.Count == 0) return [];
@@ -116,7 +118,7 @@ public static class IntegrationSyncLedger
             [
                 IntegrationSyncProgressLog.Line(nowUtc, "reaped",
                     "No progress was recorded for "
-                    + $"{FormatAge(nowUtc - row.StartedAt)}, so the run was settled as failed by the "
+                    + $"{FormatAge(nowUtc - (row.HeartbeatAt ?? row.StartedAt))}, so the run was settled as failed by the "
                     + "abandoned-run sweep. The process it was running in stopped before it could "
                     + "record an outcome.")
             ]);

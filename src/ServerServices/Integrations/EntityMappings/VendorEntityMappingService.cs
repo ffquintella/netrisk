@@ -65,7 +65,7 @@ public static class VendorEntityMappingErrors
 /// T263 (S40 §6.6, §8.6). Reading is open to the controller's <c>configuration</c> holders; every write and the preview need
 /// global scope as well, because a rule moves hosts — and with them who sees them — between entities: a scoped holder could
 /// otherwise map a tag to their own unit and pull other units' hosts into view (the same rule as risk-context writes,
-/// S40 §6.7). Only Vision One rules are accepted until the Tenable connection exists (T265, T268).
+/// S40 §6.7). Vision One rules match custom tags or asset groups; Tenable rules (T268) match asset tags.
 /// </summary>
 public sealed class VendorEntityMappingService(IDalService dalService, ILogger logger) : IVendorEntityMappingService
 {
@@ -90,12 +90,13 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
     public async Task<IReadOnlyList<VendorMappingCandidateDto>> GetCandidatesAsync(int provider, int connectionId,
         CancellationToken ct = default)
     {
-        if ((IntegrationKind)provider != IntegrationKind.TrendMicroVisionOne) return [];
+        if (HostProvider((IntegrationKind)provider) is not { } hostProvider) return [];
+        var kind = TagKind((IntegrationKind)provider);
 
         // Read through the host filter (S40 §7.4): a tag seen only on hosts outside the caller's scope is not offered.
         await using var db = dalService.GetContext();
         var tagLists = await db.HostExternalIds.AsNoTracking()
-            .Where(x => x.Provider == TrendMicroService.ProviderName && x.ConnectionId == connectionId && x.Tags != null)
+            .Where(x => x.Provider == hostProvider && x.ConnectionId == connectionId && x.Tags != null)
             .Select(x => x.Tags!)
             .ToListAsync(ct);
 
@@ -103,11 +104,54 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
         foreach (var tag in tagLists.SelectMany(ReadTags))
             seen[tag] = seen.TryGetValue(tag, out var known) ? (known.Spelling, known.Count + 1) : (tag, 1);
 
-        return seen.Values
+        var candidates = seen.Values
             .OrderByDescending(v => v.Count).ThenBy(v => v.Spelling, StringComparer.OrdinalIgnoreCase)
             .Take(MaxCandidates)
-            .Select(v => new VendorMappingCandidateDto(VendorMatchKind.V1CustomTag, v.Spelling, null, v.Count))
+            .Select(v => new VendorMappingCandidateDto(kind, v.Spelling, null, v.Count))
             .ToList();
+
+        // M57, T271: a Vision One connection that syncs its posture also offers its asset groups, from their latest
+        // V1AssetGroup reading (S40 §8.6); the value is the group id and the label its name.
+        if ((IntegrationKind)provider == IntegrationKind.TrendMicroVisionOne && candidates.Count < MaxCandidates)
+        {
+            var groups = await db.VendorScores.AsNoTracking()
+                .Where(v => v.Source == VendorScoreSource.V1AssetGroup && v.ConnectionId == connectionId && v.ExternalRef != null)
+                .Select(v => new { v.Id, v.ExternalRef, v.Details, v.LastCapturedAt })
+                .ToListAsync(ct);
+
+            candidates.AddRange(groups.GroupBy(g => g.ExternalRef!, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.OrderByDescending(r => r.LastCapturedAt).ThenByDescending(r => r.Id).First())
+                .Select(g => (g.ExternalRef, Group: AssetGroupDetails(g.Details)))
+                .OrderBy(g => g.Group.Name ?? g.ExternalRef, StringComparer.OrdinalIgnoreCase)
+                .Take(MaxCandidates - candidates.Count)
+                .Select(g => new VendorMappingCandidateDto(VendorMatchKind.V1AssetGroup, g.ExternalRef!, g.Group.Name,
+                    g.Group.AssetCount ?? 0)));
+        }
+
+        return candidates;
+    }
+
+    /// <summary>The name and asset count a V1AssetGroup reading keeps in <c>details</c>; empty when it cannot be read.</summary>
+    private static (string? Name, int? AssetCount) AssetGroupDetails(string? details)
+    {
+        if (string.IsNullOrWhiteSpace(details)) return (null, null);
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(details);
+            var root = document.RootElement;
+            var name = root.TryGetProperty("name", out var n) && n.ValueKind == System.Text.Json.JsonValueKind.String
+                ? n.GetString()
+                : null;
+            int? count = root.TryGetProperty("assetCount", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.Number &&
+                         c.TryGetInt32(out var value)
+                ? value
+                : null;
+            return (name, count);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return (null, null);
+        }
     }
 
     public async Task<VendorEntityMappingDto> CreateAsync(VendorEntityMappingUpsert request, int userId,
@@ -192,8 +236,9 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
             .Where(o => !(o.Kind == request.Kind && VendorTagText.Same(o.Value, value)))
             .Append(candidate));
 
+        var hostProvider = HostProvider(kind)!;
         var hosts = await (from x in db.HostExternalIds.AsNoTracking()
-                where x.Provider == TrendMicroService.ProviderName && x.ConnectionId == request.ConnectionId &&
+                where x.Provider == hostProvider && x.ConnectionId == request.ConnectionId &&
                       x.Tags != null
                 join h in db.Hosts.AsNoTracking() on x.HostId equals h.Id
                 select new { h.Id, h.HostName, h.EntityId, x.Tags })
@@ -275,12 +320,17 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
     private static async Task<string> ValidateAsync(NRDbContext db, VendorEntityMappingUpsert request, CancellationToken ct)
     {
         if (request is null) throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.ValueRequired, "A body is required.");
-        if ((IntegrationKind)request.Provider != IntegrationKind.TrendMicroVisionOne)
+        var provider = (IntegrationKind)request.Provider;
+        if (HostProvider(provider) is null)
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.InvalidProvider,
-                "Only Vision One mappings are accepted; Tenable tags arrive with the Tenable connection (T268).");
-        if (request.Kind is not (VendorMatchKind.V1CustomTag or VendorMatchKind.V1AssetGroup))
+                "Mappings are accepted for Vision One and Tenable connections.");
+        if (provider == IntegrationKind.TrendMicroVisionOne &&
+            request.Kind is not (VendorMatchKind.V1CustomTag or VendorMatchKind.V1AssetGroup))
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.InvalidKindForProvider,
                 "A Vision One mapping matches a custom tag or an asset group.");
+        if (provider == IntegrationKind.Tenable && request.Kind != VendorMatchKind.TenableTag)
+            throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.InvalidKindForProvider,
+                "A Tenable mapping matches an asset tag (category: value).");
         if (!Enum.IsDefined(request.Policy))
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.InvalidPolicy,
                 "The restamp policy is OnlyUnassigned (1) or FollowMapping (2).");
@@ -294,9 +344,12 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.ValueTooLong,
                 $"The value and the label hold at most {VendorTagText.MaxLength} characters.");
 
-        if (!await db.TrendMicroConnections.AsNoTracking().AnyAsync(c => c.Id == request.ConnectionId, ct))
+        var connectionExists = provider == IntegrationKind.Tenable
+            ? await db.TenableConnections.AsNoTracking().AnyAsync(c => c.Id == request.ConnectionId, ct)
+            : await db.TrendMicroConnections.AsNoTracking().AnyAsync(c => c.Id == request.ConnectionId, ct);
+        if (!connectionExists)
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.ConnectionNotFound,
-                "The Vision One connection does not exist.");
+                "The connection does not exist.");
         if (!await db.Entities.AsNoTracking().AnyAsync(e => e.Id == request.EntityId, ct))
             throw VendorEntityMappingException.BadRequest(VendorEntityMappingErrors.EntityNotFound, "The entity does not exist.");
         return value;
@@ -316,6 +369,17 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
             throw VendorEntityMappingException.Conflict(VendorEntityMappingErrors.Duplicate,
                 "There is already a rule for this value on this connection.");
     }
+
+    /// <summary>The <c>host_external_ids.provider</c> a provider's tag rules read, or null for a provider without rules.</summary>
+    internal static string? HostProvider(IntegrationKind provider) => provider switch
+    {
+        IntegrationKind.TrendMicroVisionOne => TrendMicroService.ProviderName,
+        IntegrationKind.Tenable => Tenable.TenableService.ProviderName,
+        _ => null
+    };
+
+    private static VendorMatchKind TagKind(IntegrationKind provider) =>
+        provider == IntegrationKind.Tenable ? VendorMatchKind.TenableTag : VendorMatchKind.V1CustomTag;
 
     private static string? Label(string? label) => string.IsNullOrWhiteSpace(label) ? null : label.Trim();
 

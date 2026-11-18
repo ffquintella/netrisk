@@ -138,7 +138,11 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
 
             // M55, T263 — a vendor -> entity rule is the organization's configuration, written with global scope only (it
             // moves hosts between entities), and so is its trail.
-            [nameof(VendorEntityMapping)] = UnrestrictedOnly
+            [nameof(VendorEntityMapping)] = UnrestrictedOnly,
+
+            // M56, T265 — a Tenable connection is integration configuration (its default entity attributes hosts), and its
+            // trail is read with global scope only, like the rules.
+            [nameof(TenableConnection)] = UnrestrictedOnly
         };
 
     /// <summary>

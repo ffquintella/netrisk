@@ -172,4 +172,30 @@ public class RiskIndexRetentionServiceTest : InMemoryServiceTestBase
         Assert.Null(db.RiskIndexPreviewRequests.AsNoTracking().Single(r => r.Id == 1).Report);
         Assert.NotNull(db.RiskIndexPreviewRequests.AsNoTracking().Single(r => r.Id == 2).Report);
     }
+
+    /// <summary>
+    /// M57, T270 (S40 §7.7, §9.6): a vendor reading last captured more than 730 days ago is closed and removed; a current
+    /// one, and one closed within the window, stay. Before T270 retention never purged <c>vendor_scores</c>.
+    /// </summary>
+    [Fact]
+    public async Task TestVendorReadingsClosedForMoreThan730DaysAreRemoved()
+    {
+        SeedUnscoped(ctx =>
+        {
+            foreach (var (id, last) in new[] { (1L, Now.AddDays(-731)), (2L, Now.AddDays(-729)), (3L, Now.AddDays(-1)) })
+                ctx.VendorScores.Add(new VendorScore
+                {
+                    Id = id, Source = VendorScoreSource.V1Cri, ConnectionId = 1, ObjectKind = VendorScoreObjectKind.Tenant,
+                    ExternalRef = "tenant", EntityId = 10, Value = 50, ScaleMax = 100, FirstCapturedAt = last.AddDays(-5),
+                    LastCapturedAt = last, CreatedAt = last.AddDays(-5)
+                });
+        });
+
+        var counts = await Service().ApplyAsync(Now);
+
+        Assert.Equal(1, counts.VendorScores);
+        Assert.Equal(1, counts.Deleted);
+        await using var db = OpenContext();
+        Assert.Equal([2L, 3L], db.VendorScores.AsNoTracking().OrderBy(v => v.Id).Select(v => v.Id).ToArray());
+    }
 }

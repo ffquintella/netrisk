@@ -145,6 +145,11 @@ public static class IntegrationServiceRegistration
         services.AddTransient<ISecurityScorecardClient, SecurityScorecardClient>();
         services.AddTransient<ISecurityScorecardService, SecurityScorecardService>();
 
+        // M56, T265–T268 (S40 §9.2): Tenable Vulnerability Management. The API queues manual runs and the job host runs
+        // them, so both must resolve the same graph.
+        services.AddTransient<Tenable.ITenableClient, Tenable.TenableClient>();
+        services.AddTransient<Tenable.ITenableService, Tenable.TenableService>();
+
         // Track 9 Stage 9.4 (S45) — exploitation signals. In the shared graph for the reason this file
         // exists: the job host runs the KEV and EPSS syncs, the Vision One sync above records its EPSS
         // through the same service whichever host runs it, and the API reads what they wrote.

@@ -63,6 +63,31 @@ public class TrendMicroConnection
     /// </summary>
     public bool SyncCustomTags { get; set; }
 
+    /// <summary>
+    /// Read <c>securityPosture</c> and <c>assetGroups</c> into <c>vendor_scores</c> as reference indicators (V1Cri,
+    /// V1SecurityConfig, V1AssetGroup; M57, T271, S40 §6.9). Off by default: the posture needs CREM credits and the
+    /// "Third-party auditing (API only)" permission.
+    /// </summary>
+    public bool SyncPosture { get; set; }
+
+    /// <summary>
+    /// Read the internet-facing FQDNs and IPs, domain and service accounts, cloud assets and local apps into
+    /// <c>vendor_assets</c> as scored objects (T272). Off by default: these endpoints spend CREM credits.
+    /// </summary>
+    public bool SyncAttackSurfaceObjects { get; set; }
+
+    /// <summary>
+    /// Count the last 30 days of Workbench alerts per day and severity as the attack-intensity indicator (V1AttackIntensity;
+    /// T273). Never a scored factor. Off by default: it needs the Workbench permission.
+    /// </summary>
+    public bool SyncWorkbenchAlerts { get; set; }
+
+    /// <summary>
+    /// When the scheduled sync is next due (M57, T276, S39 D-13): the start of the next interval slot, never the end of the
+    /// last run, so a 24-hour interval syncs every day. A manual sync does not move it.
+    /// </summary>
+    public DateTime? NextDueAt { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }

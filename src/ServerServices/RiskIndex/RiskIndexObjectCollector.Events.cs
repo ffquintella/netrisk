@@ -145,7 +145,8 @@ public static partial class RiskIndexObjectCollector
 
         var hostIds = runs.Where(r => r.HostId is not null).Select(r => r.HostId!.Value).Distinct().ToList();
         var hosts = await db.Hosts.AsNoTracking().Where(h => hostIds.Contains(h.Id) && h.Status != RetiredHost)
-            .Select(h => new { h.Id, h.Criticality, h.ExternalProvider, h.Environment, h.EntityId, h.Os }).ToListAsync(ct);
+            .Select(h => new { h.Id, h.Criticality, h.CriticalitySource, h.ExternalProvider, h.Environment, h.EntityId, h.Os })
+            .ToListAsync(ct);
 
         var targets = new List<(IcrObjectKey Key, int? Entity, int Crit, string CritSource, IEnumerable<int> Runs,
             RiskIndexAssetClass? AssetClass)>();
@@ -158,7 +159,7 @@ public static partial class RiskIndexObjectCollector
 
         foreach (var h in hosts.OrderBy(h => h.Id))
         {
-            var (crit, source) = HostCriticality(run, h.Criticality, h.ExternalProvider, h.Environment);
+            var (crit, source) = HostCriticality(run, h.Id, h.Criticality, h.CriticalitySource, h.ExternalProvider, h.Environment);
             targets.Add((new IcrObjectKey(RiskIndexObjectKind.Host, h.Id.ToString(CultureInfo.InvariantCulture)), h.EntityId,
                 crit, source, latest.Where(r => r.HostId == h.Id).Select(r => r.Id), AssetClassOf(h.Os, null)));
         }

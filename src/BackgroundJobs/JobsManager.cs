@@ -144,6 +144,12 @@ public static class JobsManager
             .AddOrUpdate<SecurityScorecardSyncJob>("SecurityScorecardSync",
                 x => x.Run(), Cron.Daily(4));
 
+        // M56, T265 (S40 §9.1, §9.4): every 15 minutes — queued manual requests first, then the connections due on
+        // their anchored cadence.
+        jobs
+            .AddOrUpdate<TenableSyncJob>(TenableSyncJob.JobId,
+                x => x.Run(), TenableSyncJob.Cron);
+
         // Hourly, at :10 so it never starts in the same minute as the syncs above. A run left
         // Running by a killed process both misreports as live work and refuses the next sync of that
         // connection, so the horizon that matters is "how long until an operator can retry", not

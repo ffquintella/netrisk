@@ -26,6 +26,14 @@ public interface ISecurityScorecardClient
     Task<List<SecurityScorecardFactorScore>> GetFactorsAsync(SecurityScorecardConnection connection,
         string? token, CancellationToken ct = default);
 
+    /// <summary>The daily overall score between two days, for the history backfill (M57, T274).</summary>
+    Task<List<SecurityScorecardHistoryPoint>> GetScoreHistoryAsync(SecurityScorecardConnection connection, string? token,
+        DateTime from, DateTime to, CancellationToken ct = default);
+
+    /// <summary>The daily score of each factor between two days, for the history backfill (M57, T274).</summary>
+    Task<List<SecurityScorecardHistoryPoint>> GetFactorHistoryAsync(SecurityScorecardConnection connection, string? token,
+        DateTime from, DateTime to, CancellationToken ct = default);
+
     /// <summary>CVEs detected on the domain's assets (4.5.3).</summary>
     Task<List<SecurityScorecardIssue>> GetVulnerabilitiesAsync(SecurityScorecardConnection connection,
         string? token, CancellationToken ct = default);

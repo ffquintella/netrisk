@@ -55,6 +55,12 @@ public class SecretReferenceNormalizer(
             (c, v) => c.EncryptedApiToken = v,
             c => $"securityscorecard_connections[{c.Id}].encrypted_api_token");
 
+        await WalkAsync(db.TenableConnections, c => c.EncryptedAccessKey, (c, v) => c.EncryptedAccessKey = v,
+            c => $"tenable_connections[{c.Id}].encrypted_access_key");
+
+        await WalkAsync(db.TenableConnections, c => c.EncryptedSecretKey, (c, v) => c.EncryptedSecretKey = v,
+            c => $"tenable_connections[{c.Id}].encrypted_secret_key");
+
         await WalkAsync(db.IssueTrackerConnections, c => c.EncryptedToken, (c, v) => c.EncryptedToken = v,
             c => $"issue_tracker_connections[{c.Id}].encrypted_token");
 

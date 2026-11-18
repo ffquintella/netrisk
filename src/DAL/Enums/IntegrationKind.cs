@@ -28,7 +28,8 @@ public enum IntegrationKind
     /// <summary>Jira Assets register import (4.6).</summary>
     JiraAssets = 6,
 
-    // 7 is Tenable (S40 §7.3, T265), reserved: the values are explicit and only ever appended.
+    /// <summary>Tenable Vulnerability Management (M56, T265–T268; S40 §6.8, §7.3, §9.4).</summary>
+    Tenable = 7,
 
     /// <summary>The Consolidated Risk Index's daily snapshot (M53, T247; S40 §9.3): one row per run, with its counts.</summary>
     RiskIndex = 8

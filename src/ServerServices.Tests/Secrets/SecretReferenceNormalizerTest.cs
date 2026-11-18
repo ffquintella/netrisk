@@ -121,6 +121,30 @@ public class SecretReferenceNormalizerTest : InMemoryServiceTestBase
         Assert.Equal(stored, StoredApiKey());
     }
 
+    /// <summary>M56, T265 (S40 §11.6): a Tenable key held as a vault reference is listed and rewritten like any other.</summary>
+    [Fact]
+    public async Task ListsAndRewritesBothTenableKeys()
+    {
+        var connectionId = ArrangeConnection();
+        var stored = SecretReference.Create(connectionId, "tenable/netrisk?env=hml", "access").ToString();
+        using (var context = GetService<IDalService>().GetContext())
+        {
+            context.TenableConnections.Add(new TenableConnection
+            {
+                Name = "Tenable", BaseUrl = "https://cloud.tenable.com", EncryptedAccessKey = stored, EncryptedSecretKey = stored
+            });
+            context.SaveChanges();
+        }
+
+        var rewrites = await _normalizer.NormalizeAsync(apply: true);
+
+        Assert.Equal(["tenable_connections[1].encrypted_access_key", "tenable_connections[1].encrypted_secret_key"],
+            rewrites.Select(r => r.Location).Order().ToList());
+        using var check = GetService<IDalService>().GetContext();
+        Assert.True(SecretReference.TryParse(check.TenableConnections.Single().EncryptedSecretKey, out var after));
+        Assert.Equal("tenable/netrisk", after.SecretId);
+    }
+
     [Fact]
     public async Task WritesTheRewriteWhenAsked()
     {

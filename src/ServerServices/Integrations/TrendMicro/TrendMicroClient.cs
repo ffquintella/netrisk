@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using DAL.Entities;
+using DAL.Enums;
 using Model.Exceptions;
 using Model.Integrations;
 using Serilog;
@@ -36,6 +38,27 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
     /// permission, and the tenant needs Flex credits allocated to Cyber Risk Exposure Management.
     /// </summary>
     private const string VulnerableDevicesPath = "/v3.0/asrm/vulnerableDevices";
+
+    /// <summary>The tenant's Cyber Risk Index and posture (M57, T271). Needs CREM credits and "Third-party auditing (API only)".</summary>
+    internal const string SecurityPosturePath = "/v3.0/asrm/securityPosture";
+
+    /// <summary>The asset groups and their risk (T271). No CREM credit.</summary>
+    internal const string AssetGroupsPath = "/v3.0/asrm/assetGroups";
+
+    /// <summary>The Workbench alerts (T273). Needs the Workbench permission.</summary>
+    internal const string WorkbenchAlertsPath = "/v3.0/workbench/alerts";
+
+    /// <summary>The attack-surface endpoint of each vendor-asset kind (T272). All spend CREM credits.</summary>
+    internal static readonly IReadOnlyDictionary<VendorAssetKind, string> AttackSurfacePaths =
+        new Dictionary<VendorAssetKind, string>
+        {
+            [VendorAssetKind.Fqdn] = "/v3.0/asrm/attackSurfaceGlobalFqdns",
+            [VendorAssetKind.PublicIp] = "/v3.0/asrm/attackSurfacePublicIpAddresses",
+            [VendorAssetKind.DomainAccount] = "/v3.0/asrm/attackSurfaceDomainAccounts",
+            [VendorAssetKind.ServiceAccount] = "/v3.0/asrm/attackSurfaceServiceAccounts",
+            [VendorAssetKind.CloudAsset] = "/v3.0/asrm/attackSurfaceCloudAssets",
+            [VendorAssetKind.LocalApp] = "/v3.0/asrm/attackSurfaceLocalApps"
+        };
 
     /// <summary>
     /// Page size for the paged reads. Vision One accepts <c>top</c> only from a fixed set —
@@ -173,6 +196,30 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 details["CVE access"] = "granted";
             }
 
+            // M57 (S40 §6.9, §8.8): each enabled phase is probed, and a refusal names the permission or credit it lacks
+            // rather than failing the whole test with a generic message.
+            var refused = new List<string>();
+
+            async Task Probe(bool enabled, string label, string path)
+            {
+                if (!enabled) return;
+                var answer = await GetAsync(connection, apiKey, path, ct);
+                if (answer.IsSuccess) details[label] = "granted";
+                else refused.Add($"{label}: " + FailureMessage(connection, answer, Path(path)));
+            }
+
+            await Probe(connection.SyncPosture, "Posture access", SecurityPosturePath);
+            await Probe(connection.SyncPosture, "Asset group access", AssetGroupsPath);
+            await Probe(connection.SyncAttackSurfaceObjects, "Attack surface access",
+                AttackSurfacePaths[VendorAssetKind.Fqdn] + $"?top={ProbePageSize}");
+            await Probe(connection.SyncWorkbenchAlerts, "Workbench access", WorkbenchAlertsQuery(DateTime.UtcNow.AddDays(-1),
+                DateTime.UtcNow));
+
+            if (refused.Count > 0)
+                return ConnectionTestResult.Fail(
+                    "Vision One accepted the key for the device inventory but refused an enabled phase. "
+                    + string.Join(" ", refused));
+
             return ConnectionTestResult.Ok(
                 $"Connected to Vision One in region '{connection.Region}'.", details);
         }
@@ -222,6 +269,177 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                 devices, connection.Name);
 
         return findings;
+    }
+
+    public async Task<TrendMicroSecurityPosture?> GetSecurityPostureAsync(TrendMicroConnection connection, string? apiKey,
+        CancellationToken ct = default)
+    {
+        var (response, attempts) = await SendWithRetryAsync(
+            _ => new OutboundHttpRequest
+            {
+                Method = "GET",
+                Url = connection.BaseUrl.TrimEnd('/') + SecurityPosturePath,
+                Headers = { ["Authorization"] = "Bearer " + apiKey },
+                Timeout = PageTimeout
+            },
+            connection, "the security posture", null, ct);
+
+        if (!response.IsSuccess)
+            throw new IntegrationRequestException("Trend Micro Vision One",
+                "Reading the security posture failed. " + FailureMessage(connection, response, SecurityPosturePath, attempts));
+
+        try
+        {
+            using var document = JsonDocument.Parse(response.Body!);
+            return ParseSecurityPosture(document.RootElement);
+        }
+        catch (JsonException ex)
+        {
+            throw new IntegrationRequestException("Trend Micro Vision One",
+                $"Vision One returned a security posture that is not JSON: {ex.Message}");
+        }
+    }
+
+    public async Task<List<TrendMicroAssetGroup>> GetAssetGroupsAsync(TrendMicroConnection connection, string? apiKey,
+        Func<string, Task>? progress = null, CancellationToken ct = default)
+    {
+        var groups = new List<TrendMicroAssetGroup>();
+        await foreach (var item in EnumerateAsync(connection, apiKey, AssetGroupsPath, progress, ct))
+            if (ParseAssetGroup(item) is { } group)
+                groups.Add(group);
+        return groups;
+    }
+
+    public async Task<List<TrendMicroAttackSurfaceAsset>> GetAttackSurfaceAssetsAsync(TrendMicroConnection connection,
+        string? apiKey, VendorAssetKind kind, Func<string, Task>? progress = null, CancellationToken ct = default)
+    {
+        var assets = new List<TrendMicroAttackSurfaceAsset>();
+        await foreach (var item in EnumerateAsync(connection, apiKey, AttackSurfacePaths[kind], progress, ct))
+            if (ParseAttackSurfaceAsset(kind, item) is { } asset)
+                assets.Add(asset);
+        return assets;
+    }
+
+    public async Task<List<TrendMicroWorkbenchAlert>> GetWorkbenchAlertsAsync(TrendMicroConnection connection,
+        string? apiKey, DateTime fromUtc, DateTime toUtc, Func<string, Task>? progress = null, CancellationToken ct = default)
+    {
+        var alerts = new List<TrendMicroWorkbenchAlert>();
+        await foreach (var item in EnumerateAsync(connection, apiKey, WorkbenchAlertsQuery(fromUtc, toUtc), progress, ct))
+            if (ParseWorkbenchAlert(item) is { } alert)
+                alerts.Add(alert);
+        return alerts;
+    }
+
+    private static string WorkbenchAlertsQuery(DateTime fromUtc, DateTime toUtc) =>
+        WorkbenchAlertsPath + "?startDateTime=" + Uri.EscapeDataString(fromUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ",
+            System.Globalization.CultureInfo.InvariantCulture))
+        + "&endDateTime=" + Uri.EscapeDataString(toUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ",
+            System.Globalization.CultureInfo.InvariantCulture));
+
+    /// <summary>
+    /// The posture payload (T271): <c>riskIndex</c>, its level, the category levels and status objects kept as JSON, and
+    /// each agent feature's <c>adoptionRate</c> — read at the root or under <c>securityConfigurationStatus</c>, as a 0–1
+    /// fraction or a 0–100 percentage.
+    /// </summary>
+    internal static TrendMicroSecurityPosture ParseSecurityPosture(JsonElement root)
+    {
+        var posture = new TrendMicroSecurityPosture
+        {
+            RiskIndex = FirstNumber(root, "riskIndex", "companyRiskIndex", "cyberRiskIndex") is { } index
+                ? Math.Clamp(index, 0, 100)
+                : null,
+            RiskLevel = FirstString(root, "riskLevel", "riskIndexLevel", "riskCategory")
+        };
+
+        var kept = new JsonObject();
+        foreach (var name in new[] { "riskCategoryLevel", "exposureStatus", "attackStatus", "securityConfigurationStatus",
+                     "createdDateTime" })
+            if (TryGet(root, name, out var value))
+                kept[name] = JsonNode.Parse(value.GetRawText());
+        posture.CategoriesJson = kept.Count == 0 ? null : kept.ToJsonString();
+
+        var features = FirstArray(root, "agentFeatureStatus")
+                       ?? (TryGet(root, "securityConfigurationStatus", out var status)
+                           ? FirstArray(status, "agentFeatureStatus")
+                           : null);
+        if (features is { } array)
+            foreach (var feature in array.EnumerateArray())
+            {
+                if (FirstNumber(feature, "adoptionRate") is not { } rate) continue;
+                var fraction = rate > 1 ? rate / 100.0 : rate;
+                posture.FeatureAdoption.Add((FirstString(feature, "featureName", "name", "feature") ?? "feature",
+                    Math.Clamp(fraction, 0, 1)));
+            }
+
+        return posture;
+    }
+
+    internal static TrendMicroAssetGroup? ParseAssetGroup(JsonElement item)
+    {
+        var id = FirstString(item, "id", "groupId", "assetGroupId");
+        if (string.IsNullOrWhiteSpace(id)) return null;
+
+        return new TrendMicroAssetGroup
+        {
+            Id = id,
+            Name = FirstString(item, "name", "groupName", "displayName"),
+            RiskScore = FirstNumber(item, "riskIndex", "riskScore", "latestRiskScore") is { } score
+                ? Math.Clamp(score, 0, 100)
+                : null,
+            RiskLevel = FirstString(item, "riskLevel"),
+            AssetCount = (int?)FirstNumber(item, "assetCount", "assetsCount", "memberCount")
+        };
+    }
+
+    /// <summary>One attack-surface asset (T272), named by the field its endpoint uses; an asset without an id is dropped.</summary>
+    internal static TrendMicroAttackSurfaceAsset? ParseAttackSurfaceAsset(VendorAssetKind kind, JsonElement item)
+    {
+        var id = FirstString(item, "id", "assetId", "uuid");
+        if (string.IsNullOrWhiteSpace(id)) return null;
+
+        var name = kind switch
+        {
+            VendorAssetKind.Fqdn => FirstString(item, "fqdn", "domainName", "name"),
+            VendorAssetKind.PublicIp => FirstString(item, "ipAddress", "ip", "name"),
+            VendorAssetKind.DomainAccount or VendorAssetKind.ServiceAccount =>
+                FirstString(item, "userAccountName", "accountName", "displayName", "name"),
+            VendorAssetKind.CloudAsset => FirstString(item, "assetName", "resourceName", "name"),
+            _ => FirstString(item, "appName", "applicationName", "name")
+        };
+
+        var asset = new TrendMicroAttackSurfaceAsset
+        {
+            Kind = kind,
+            Id = id,
+            Name = string.IsNullOrWhiteSpace(name) ? id : name,
+            RiskScore = FirstNumber(item, "latestRiskScore", "riskScore", "assetRiskScore") is { } score
+                ? Math.Clamp(score, 0, 100)
+                : null,
+            RiskLevel = FirstString(item, "riskLevel"),
+            Criticality = NormalizeCriticality(item),
+            CriticalityRaw = FirstString(item, "assetCriticality", "criticality")
+        };
+
+        if (DateTime.TryParse(FirstString(item, "firstSeenDateTime"), out var first)) asset.FirstSeen = first.ToUniversalTime();
+        if (DateTime.TryParse(FirstString(item, "lastDetectDateTime", "lastSeenDateTime"), out var last))
+            asset.LastDetected = last.ToUniversalTime();
+
+        asset.Tags.AddRange(ParseCustomTags(item));
+        return asset;
+    }
+
+    internal static TrendMicroWorkbenchAlert? ParseWorkbenchAlert(JsonElement item)
+    {
+        var id = FirstString(item, "id", "alertId");
+        if (string.IsNullOrWhiteSpace(id)) return null;
+        if (!DateTime.TryParse(FirstString(item, "createdDateTime", "createdAt"), out var created)) return null;
+
+        return new TrendMicroWorkbenchAlert
+        {
+            Id = id,
+            Severity = FirstString(item, "severity")?.Trim().ToLowerInvariant(),
+            CreatedAt = created.ToUniversalTime()
+        };
     }
 
     public async Task<bool> UpdateDeviceAsync(TrendMicroConnection connection, string? apiKey,
@@ -359,8 +577,13 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var risk = FirstNumber(item, "latestRiskScore", "riskScore", "assetRiskScore", "cyberRiskScore");
         if (risk != null) device.RiskScore = (int)Math.Clamp(Math.Round(risk.Value), 0, 100);
 
-        var lastSeen = FirstString(item, "lastSeenDateTime", "lastUsedIp", "lastActivity");
+        // M57, T275 (S39 D-11): lastDetectDateTime and firstSeenDateTime are the OAS names. lastUsedIp (an address) and
+        // lastActivity are not fields of attackSurfaceDevices; lastSeenDateTime is kept only as a tolerant fallback.
+        var lastSeen = FirstString(item, "lastDetectDateTime", "lastSeenDateTime");
         if (DateTime.TryParse(lastSeen, out var parsed)) device.LastSeen = parsed.ToUniversalTime();
+
+        if (DateTime.TryParse(FirstString(item, "firstSeenDateTime"), out var firstSeen))
+            device.FirstSeen = firstSeen.ToUniversalTime();
 
         device.Tags.AddRange(ParseCustomTags(item));
 
@@ -480,6 +703,11 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
                     "globalExploitActivityLevel"),
                 EpssScore = FirstNumber(entry, "epssScore", "epss", "exploitProbability"),
                 ExploitAvailable = ExploitObserved(entry),
+                // T275 (S39 D-11): the two signals ExploitObserved merges, kept apart.
+                ExploitAttemptCount = FirstNumber(entry, "exploitAttemptCount", "exploitAttemptsCount") is { } attempts
+                    ? (int)Math.Clamp(Math.Round(attempts), 0, int.MaxValue)
+                    : null,
+                GlobalExploitActivity = FirstString(entry, "globalExploitActivityLevel")?.Trim().ToLowerInvariant(),
                 MitigationStatus = status,
                 VirtualPatchApplied = patched,
                 VirtualPatchRuleId = patchRule
@@ -934,8 +1162,17 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
             ? "The role behind the key needs the \"Dashboards & Reports → Reports → View\" permission "
               + "(the Attack Surface Risk Management permission alone does not cover this endpoint), and "
               + "the tenant needs Flex credits allocated to Cyber Risk Exposure Management."
-            : "The role behind the key needs read access to Attack Surface Risk Management (Cyber Risk "
-              + "Exposure Management).";
+            : path.Contains("securityPosture", StringComparison.OrdinalIgnoreCase)
+                ? "The role behind the key needs the \"Third-party auditing (API only)\" permission, and the tenant "
+                  + "needs Flex credits allocated to Cyber Risk Exposure Management."
+                : path.Contains("attackSurface", StringComparison.OrdinalIgnoreCase)
+                  && !path.Contains("attackSurfaceDevices", StringComparison.OrdinalIgnoreCase)
+                    ? "The tenant needs Flex credits allocated to Cyber Risk Exposure Management for the attack-surface "
+                      + "objects, and the role read access to Attack Surface Risk Management."
+                    : path.Contains("workbench", StringComparison.OrdinalIgnoreCase)
+                        ? "The role behind the key needs the Workbench (view alerts) permission."
+                        : "The role behind the key needs read access to Attack Surface Risk Management (Cyber Risk "
+                          + "Exposure Management).";
 
     /// <summary>
     /// Reduces a Vision One error body to one line, or null when the body carries nothing worth saying.

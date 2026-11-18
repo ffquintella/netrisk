@@ -169,7 +169,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
         // M55, T263 (S40 §7.5): a vendor → entity rule moves attribution and, with it, who sees a host; every host it
         // restamps is recorded through Host above.
-        nameof(VendorEntityMapping)
+        nameof(VendorEntityMapping),
+
+        // M56, T265 (S40 §7.5): the default entity and the sync options of a Tenable connection move attribution and
+        // sources; the keys and the sync state are in IgnoredFields, so a credential never reaches the trail.
+        nameof(TenableConnection)
     };
 
     /// <summary>
@@ -236,7 +240,18 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // An index profile's attached preview (large, regenerable from its parameters' hash) and its draft concurrency
         // token (S40 §7.5). No other audited type has a property of either name.
         nameof(RiskIndexProfile.SensitivityReport),
-        nameof(RiskIndexProfile.Revision)
+        nameof(RiskIndexProfile.Revision),
+
+        // A Tenable connection's credentials (S40 §7.5, §11.6) and its per-run sync state; no other audited type has a
+        // property of these names.
+        nameof(TenableConnection.EncryptedAccessKey),
+        nameof(TenableConnection.EncryptedSecretKey),
+        nameof(TenableConnection.FindingsCursor),
+        nameof(TenableConnection.AssetsCursor),
+        nameof(TenableConnection.NextDueAt),
+        nameof(TenableConnection.LastSyncAt),
+        nameof(TenableConnection.LastSyncStatus),
+        nameof(TenableConnection.LastSyncError)
     };
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData,

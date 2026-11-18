@@ -131,7 +131,9 @@ public class VendorEntityMappingServiceTest : InMemoryServiceTestBase
     [InlineData("BU: Law", Law, 1, 9, VendorMatchKind.V1CustomTag, Connection, 2, VendorEntityMappingErrors.InvalidPolicy)]
     [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.TenableTag, Connection, 2, VendorEntityMappingErrors.InvalidKindForProvider)]
     [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.V1CustomTag, 99, 2, VendorEntityMappingErrors.ConnectionNotFound)]
-    [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.TenableTag, Connection, 7, VendorEntityMappingErrors.InvalidProvider)]
+    [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.TenableTag, Connection, 4, VendorEntityMappingErrors.InvalidProvider)]
+    [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.V1CustomTag, Connection, 7, VendorEntityMappingErrors.InvalidKindForProvider)]
+    [InlineData("BU: Law", Law, 1, 1, VendorMatchKind.TenableTag, Connection, 7, VendorEntityMappingErrors.ConnectionNotFound)]
     public async Task TestAnInvalidRuleIsRefusedWithItsCode(string value, int entity, int priority, int policy,
         VendorMatchKind kind, int connection, int provider, string code)
     {
@@ -195,6 +197,31 @@ public class VendorEntityMappingServiceTest : InMemoryServiceTestBase
         Assert.All(candidates, c => Assert.Equal(VendorMatchKind.V1CustomTag, c.Kind));
         Assert.Empty(await _svc.GetCandidatesAsync((int)IntegrationKind.SecurityScorecard, Connection));
     }
+
+    /// <summary>M57, T271: once the posture sync has read the asset groups, a Vision One connection offers them too.</summary>
+    [Fact]
+    public async Task TestTheSyncedAssetGroupsAreOfferedAsCandidates()
+    {
+        Seed(ctx =>
+        {
+            ctx.VendorScores.Add(Group(Connection, "g1", "{\"name\":\"Finance\",\"assetCount\":40}", Now.AddDays(-1)));
+            ctx.VendorScores.Add(Group(Connection, "g1", "{\"name\":\"Finance & Ops\",\"assetCount\":42}", Now));
+            ctx.VendorScores.Add(Group(OtherConnection, "g9", "{\"name\":\"Other\"}", Now));
+        });
+
+        var candidates = await _svc.GetCandidatesAsync((int)IntegrationKind.TrendMicroVisionOne, Connection);
+
+        var group = Assert.Single(candidates, c => c.Kind == VendorMatchKind.V1AssetGroup);
+        Assert.Equal(("g1", "Finance & Ops", 42), (group.Value, group.Label, group.ObjectsSeen));
+        Assert.Equal(2, candidates.Count(c => c.Kind == VendorMatchKind.V1CustomTag));
+    }
+
+    private static VendorScore Group(int connection, string id, string details, DateTime at) => new()
+    {
+        Source = VendorScoreSource.V1AssetGroup, ConnectionId = connection, ObjectKind = VendorScoreObjectKind.AssetGroup,
+        ExternalRef = id, EntityId = Acme, Value = 50, ScaleMax = 100, Details = details, FirstCapturedAt = at,
+        LastCapturedAt = at, CreatedAt = at
+    };
 
     [Fact]
     public async Task TestAScopedReaderIsNotOfferedTagsSeenOnlyOutsideTheirScope()

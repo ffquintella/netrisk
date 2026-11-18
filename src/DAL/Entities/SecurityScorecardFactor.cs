@@ -19,8 +19,11 @@ public class SecurityScorecardFactor
     /// <summary>The factor's machine name as SecurityScorecard reports it (<c>patching_cadence</c>).</summary>
     public string FactorName { get; set; } = null!;
 
-    /// <summary>0–100.</summary>
-    public int Score { get; set; }
+    /// <summary>
+    /// 0–100; null when SecurityScorecard sent the factor without a score (M57, T274, S39 D-12). Never 0 for "unknown": a
+    /// 0 is the worst grade there is, and reading a missing factor as one made a gap look like a collapse.
+    /// </summary>
+    public int? Score { get; set; }
 
     /// <summary>Letter grade A–F, when the API supplies one for the factor.</summary>
     public string? Grade { get; set; }
@@ -36,7 +39,17 @@ public class SecurityScorecardFactor
 
     public DateTime CapturedAt { get; set; }
 
+    /// <summary>
+    /// True for a row recovered from <c>/history/score</c> or <c>/history/factors/score</c> rather than read by a sync on the
+    /// day (M57, T274): its <see cref="CapturedAt"/> is the history's date at 00:00 UTC.
+    /// </summary>
+    public bool IsBackfill { get; set; }
+
     public virtual SecurityScorecardConnection? Connection { get; set; }
+
+    /// <summary>The issue types that cost the factor its points at this capture (T274).</summary>
+    public virtual ICollection<SecurityScorecardIssueSummary> IssueSummaries { get; set; }
+        = new List<SecurityScorecardIssueSummary>();
 
     public virtual Entity? Entity { get; set; }
 }

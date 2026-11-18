@@ -1,4 +1,5 @@
 using DAL.Entities;
+using DAL.Enums;
 using Model.Integrations;
 
 namespace ServerServices.Interfaces;
@@ -41,6 +42,22 @@ public interface ITrendMicroClient
     /// </summary>
     Task<List<TrendMicroDeviceVulnerability>> GetVulnerableDevicesAsync(TrendMicroConnection connection,
         string? apiKey, Func<string, Task>? progress = null, CancellationToken ct = default);
+
+    /// <summary>The tenant's <c>securityPosture</c> (M57, T271): CRI, category levels and agent-feature adoption.</summary>
+    Task<TrendMicroSecurityPosture?> GetSecurityPostureAsync(TrendMicroConnection connection, string? apiKey,
+        CancellationToken ct = default);
+
+    /// <summary>The asset groups and their risk (T271), all pages.</summary>
+    Task<List<TrendMicroAssetGroup>> GetAssetGroupsAsync(TrendMicroConnection connection, string? apiKey,
+        Func<string, Task>? progress = null, CancellationToken ct = default);
+
+    /// <summary>The attack-surface assets of one kind (T272), all pages.</summary>
+    Task<List<TrendMicroAttackSurfaceAsset>> GetAttackSurfaceAssetsAsync(TrendMicroConnection connection, string? apiKey,
+        VendorAssetKind kind, Func<string, Task>? progress = null, CancellationToken ct = default);
+
+    /// <summary>The Workbench alerts created in a window (T273), all pages.</summary>
+    Task<List<TrendMicroWorkbenchAlert>> GetWorkbenchAlertsAsync(TrendMicroConnection connection, string? apiKey,
+        DateTime fromUtc, DateTime toUtc, Func<string, Task>? progress = null, CancellationToken ct = default);
 
     /// <summary>
     /// Writes asset criticality or an exemption note back to Vision One (4.4.4). Returns false rather

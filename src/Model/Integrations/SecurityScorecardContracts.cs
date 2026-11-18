@@ -34,6 +34,18 @@ public class SecurityScorecardConnectionView
 
     public bool SyncIssues { get; set; }
 
+    /// <summary>Days of score history the sync recovers, 0–365 (M57, T274, S40 §6.9, §8.8).</summary>
+    public int HistoryBackfillDays { get; set; }
+
+    /// <summary>The earliest day the history backfill has covered; null until it first runs (T274).</summary>
+    public DateTime? HistoryBackfilledFrom { get; set; }
+
+    /// <summary>Keep each factor's score impact per issue type (T274).</summary>
+    public bool StoreIssueImpact { get; set; }
+
+    /// <summary>When the scheduled sync is next due (T276); null until the first scheduled run.</summary>
+    public DateTime? NextDueAt { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }
@@ -96,11 +108,41 @@ public class SecurityScorecardFactorScore
 {
     public string Name { get; set; } = string.Empty;
 
-    public int Score { get; set; }
+    /// <summary>0–100; null when SecurityScorecard sent the factor without a score (M57, T274, D-12) — never 0 for "unknown".</summary>
+    public int? Score { get; set; }
 
     public string? Grade { get; set; }
 
     public int? IssueCount { get; set; }
+
+    /// <summary>The factor's <c>issue_summary[]</c>: the score impact per issue type (T274).</summary>
+    public List<SecurityScorecardIssueImpact> IssueSummaries { get; set; } = new();
+}
+
+/// <summary>One issue type's contribution to a factor (<c>issue_summary[]</c> of <c>/factors</c>; M57, T274).</summary>
+public class SecurityScorecardIssueImpact
+{
+    public string IssueType { get; set; } = string.Empty;
+
+    public string? Severity { get; set; }
+
+    public int? Count { get; set; }
+
+    /// <summary>The points the issue type costs the factor; null when not reported.</summary>
+    public double? TotalScoreImpact { get; set; }
+}
+
+/// <summary>
+/// One day of SecurityScorecard history (<c>/history/score</c> or <c>/history/factors/score</c>; M57, T274): the overall
+/// score when <see cref="FactorName"/> is null, otherwise that factor's.
+/// </summary>
+public class SecurityScorecardHistoryPoint
+{
+    public DateTime Date { get; set; }
+
+    public string? FactorName { get; set; }
+
+    public int? Score { get; set; }
 }
 
 /// <summary>

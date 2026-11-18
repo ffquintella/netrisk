@@ -992,6 +992,26 @@ public class SecretVaultServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(3, await _svc.CountReferencesAsync(created.Id));
     }
 
+    /// <summary>
+    /// M56, T265 (S40 §11.6, §12.2): both Tenable keys are vault-capable, so a vault connection one of them points at is in
+    /// use. Fails on the registry before the Tenable columns were added to it.
+    /// </summary>
+    [Fact]
+    public async Task CountsBothTenableKeys()
+    {
+        var created = await CreateAsync();
+
+        Seed(ctx => ctx.TenableConnections.Add(new TenableConnection
+        {
+            Id = 1, Name = "tenable", BaseUrl = "https://cloud.tenable.com", CreatedAt = DateTime.UtcNow,
+            EncryptedAccessKey = SecretReference.Create(created.Id, "tenable", "access").ToString(),
+            EncryptedSecretKey = SecretReference.Create(created.Id, "tenable", "secret").ToString()
+        }));
+
+        Assert.Equal(2, await _svc.CountReferencesAsync(created.Id));
+        await Assert.ThrowsAsync<InvalidParameterException>(() => _svc.DeleteConnectionAsync(created.Id));
+    }
+
     [Fact]
     public async Task RefusesToDeleteAConnectionThatFieldsStillResolveThrough()
     {

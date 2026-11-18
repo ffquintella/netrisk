@@ -42,13 +42,41 @@ public class RiskSourcesAndContextTest
     [Fact]
     public void TestANotBuiltSourceCannotBeSwitchedOnButCanBeSwitchedOff()
     {
-        var tenable = RiskSourceCatalogue.Find(RiskIndexSources.TenableVm)!;
+        var notBuilt = RiskSourceCatalogue.Find(RiskIndexSources.CmdbInternetFacing)!;
         var vision = RiskSourceCatalogue.Find(RiskIndexSources.V1Device)!;
 
-        Assert.Equal("RiskSourceRequiresTask", RiskSourceCatalogue.Toggle(tenable, false, true).ReasonKey);
-        Assert.True(RiskSourceCatalogue.Toggle(tenable, true, true).Enabled);
+        Assert.Equal("RiskSourceRequiresTask", RiskSourceCatalogue.Toggle(notBuilt, false, true).ReasonKey);
+        Assert.True(RiskSourceCatalogue.Toggle(notBuilt, true, true).Enabled);
         Assert.True(RiskSourceCatalogue.Toggle(vision, true, true).Enabled);
         Assert.Equal(RiskIndexAdminAccess.RequiresConfigure, RiskSourceCatalogue.Toggle(vision, true, false).ReasonKey);
+    }
+
+    /// <summary>M56, T266–T267: the Tenable connector exists, so TEN-VM, TEN-AES and TEN-ACR may be enabled in a draft.</summary>
+    [Theory]
+    [InlineData(RiskIndexSources.TenableVm)]
+    [InlineData(RiskIndexSources.TenableAes)]
+    [InlineData(RiskIndexSources.TenableAcr)]
+    public void TestTheTenableSourcesCanBeSwitchedOn(string source)
+    {
+        var info = RiskSourceCatalogue.Find(source)!;
+
+        Assert.Equal(RiskSourceAvailability.Available, info.Availability);
+        Assert.True(RiskSourceCatalogue.Toggle(info, false, true).Enabled);
+    }
+
+    /// <summary>M57, T271–T272: the Vision One posture and attack-surface sources are collected and scored, so may be enabled.</summary>
+    [Theory]
+    [InlineData(RiskIndexSources.V1InternetFacing)]
+    [InlineData(RiskIndexSources.V1Accounts)]
+    [InlineData(RiskIndexSources.V1Cloud)]
+    [InlineData(RiskIndexSources.V1LocalApps)]
+    [InlineData(RiskIndexSources.V1SecurityConfiguration)]
+    public void TestTheVisionOnePostureSourcesCanBeSwitchedOn(string source)
+    {
+        var info = RiskSourceCatalogue.Find(source)!;
+
+        Assert.Equal(RiskSourceAvailability.Available, info.Availability);
+        Assert.True(RiskSourceCatalogue.Toggle(info, false, true).Enabled);
     }
 
     [Fact]

@@ -155,7 +155,8 @@ public class TrendMicroTagRulesSyncTest : InMemoryServiceTestBase
         Assert.Equal((0, 0), (result.HostsAssignedByRule, result.TagsRecorded));
         await using var db = OpenContext();
         Assert.Equal(Acme, db.Hosts.Single().EntityId);
-        Assert.Empty(db.HostExternalIds.ToList());
+        // M57, T275: the device's identity and detection times are recorded whatever the option; its tags are not.
+        Assert.Null(Assert.Single(db.HostExternalIds.ToList()).Tags);
         Assert.Contains("Skipped: 1 tag rule(s) are not applied", db.IntegrationSyncLogs.Single().ProgressLog);
     }
 

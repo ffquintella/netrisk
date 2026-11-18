@@ -21,7 +21,7 @@ namespace ServerServices.Integrations.TrendMicro;
 /// deduplication, sticky triage and SLA due dates as a Nessus import — an integration that inserted
 /// its own rows would reactivate every false positive on every sync.
 /// </summary>
-public class TrendMicroService(
+public partial class TrendMicroService(
     ILogger logger,
     IDalService dalService,
     ISecretProtector protector,
@@ -198,30 +198,26 @@ public class TrendMicroService(
             await run.StepAsync("inventory",
                 $"{result.HostsCreated} host(s) created, {result.HostsUpdated} updated.", ct: ct);
 
-            if (connection.SyncCustomTags)
-            {
-                await RecordTagsAsync(connection, devices, hostsByExternalId, result, ct);
+            // T263 + T275 (S40 §9.5): every device's identity and Vision One detection times go to host_external_ids;
+            // its custom tags only when the connection syncs them.
+            await RecordIdentitiesAsync(connection, devices, hostsByExternalId, result, ct);
 
+            if (connection.SyncCustomTags)
                 await run.StepAsync("entity-mapping",
                     $"Tags recorded for {result.TagsRecorded} device(s); {result.HostsAssignedByRule} host(s) attributed "
                     + $"and {result.HostsReassignedByRule} reattributed by rule.", ct: ct);
-            }
 
             // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore, so the second
             // crawl this used to make (/v3.0/asrm/highRiskDevices) is gone. That endpoint does exist,
             // but it returns only the devices Vision One already considers at risk — reading the
-            // inventory scores every device the tenant has, which is what the Cyber Risk Index needs.
+            // inventory scores every device the tenant has, which is what the index needs.
             if (connection.SyncRiskScores)
             {
-                await run.StepAsync("risk-scores", "Rolling device risk scores into the Cyber Risk Index.",
-                    ct: ct);
+                await run.StepAsync("risk-scores", "Recording device risk scores per host.", ct: ct);
 
                 await SyncRiskScoresAsync(connection, devices, result, ct);
 
-                await run.StepAsync("risk-scores",
-                    $"{result.PostureRowsWritten} posture row(s) written"
-                    + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".",
-                    ct: ct);
+                await run.StepAsync("risk-scores", $"{result.PostureRowsWritten} device score(s) recorded.", ct: ct);
             }
             else
             {
@@ -250,6 +246,9 @@ public class TrendMicroService(
                 await run.StepAsync("cves", "Skipped: the connection does not sync vulnerabilities.",
                     ct: ct);
             }
+
+            // M57, T271–T273 (S40 §9.5): the posture phases, each opted into and each failing on its own.
+            await SyncPostureExpansionAsync(connection, apiKey, rules, run, result, ct);
 
             await CompleteLogAsync(run, connection, result, null);
         }
@@ -294,16 +293,18 @@ public class TrendMicroService(
             await IntegrationSyncLedger.ReapAbandonedAsync(db, IntegrationKind.TrendMicroVisionOne,
                 nowUtc, ct: ct);
 
-            var connections = await db.TrendMicroConnections
-                .Where(c => c.Enabled)
-                .Select(c => new { c.Id, c.LastSyncAt, c.SyncIntervalHours })
-                .ToListAsync(ct);
+            // M57, T276 (S39 D-13): due by the slot grid, advanced before the run, never by the end of the last run —
+            // which made a 24-hour interval sync every other day. A manual sync leaves next_due_at alone.
+            due = [];
+            foreach (var connection in await db.TrendMicroConnections.Where(c => c.Enabled).OrderBy(c => c.Id)
+                         .ToListAsync(ct))
+            {
+                if (!PostureSyncCadence.IsDue(connection.NextDueAt, nowUtc)) continue;
+                connection.NextDueAt = PostureSyncCadence.NextDue(nowUtc, connection.SyncIntervalHours);
+                due.Add(connection.Id);
+            }
 
-            due = connections
-                .Where(c => c.LastSyncAt == null
-                            || c.LastSyncAt.Value.AddHours(Math.Max(1, c.SyncIntervalHours)) <= nowUtc)
-                .Select(c => c.Id)
-                .ToList();
+            if (due.Count > 0) await db.SaveChangesAsync(ct);
         }
 
         foreach (var connectionId in due)
@@ -334,9 +335,12 @@ public class TrendMicroService(
             combined.HostsAssignedByRule += result.HostsAssignedByRule;
             combined.HostsReassignedByRule += result.HostsReassignedByRule;
             combined.TagsRecorded += result.TagsRecorded;
+            combined.IndicatorsWritten += result.IndicatorsWritten;
+            combined.VendorAssetsSynced += result.VendorAssetsSynced;
+            combined.VendorAssetsGone += result.VendorAssetsGone;
+            combined.WorkbenchAlerts += result.WorkbenchAlerts;
             combined.Errors += result.Errors;
             combined.Messages.AddRange(result.Messages);
-            combined.CyberRiskIndex ??= result.CyberRiskIndex;
         }
 
         return combined;
@@ -580,7 +584,8 @@ public class TrendMicroService(
         EntityId = connection.EntityId,
         ExternalId = device.Id,
         ExternalProvider = ProviderName,
-        Criticality = device.Criticality
+        Criticality = device.Criticality,
+        CriticalitySource = device.Criticality == null ? null : CriticalitySources.VisionOne
     };
 
     /// <summary>
@@ -623,11 +628,23 @@ public class TrendMicroService(
         host.Os ??= device.OperatingSystem;
         host.OsVersion = device.OsVersion ?? host.OsVersion;
 
-        // Criticality is the provider's to own: it is the asset classification the customer configured
-        // in Vision One, which is more current than a NetRisk value nobody maintains.
-        if (device.Criticality != null) host.Criticality = device.Criticality;
+        ApplyCriticality(host, device);
 
         host.LastVerificationDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Writes the device's criticality unless a writer of higher precedence owns the host's (M57, T275, S39 §5.1, D-10):
+    /// a manual or CMDB value stays, and the column says who wrote it. A value of unknown origin (written before the
+    /// column existed) is replaced, as every sync did until now.
+    /// </summary>
+    internal static void ApplyCriticality(Host host, TrendMicroDevice device)
+    {
+        if (device.Criticality == null) return;
+        if (!CriticalitySources.MayOverwrite(host.CriticalitySource, CriticalitySources.VisionOne)) return;
+
+        host.Criticality = device.Criticality;
+        host.CriticalitySource = CriticalitySources.VisionOne;
     }
 
     private void RecordDeviceError(PostureSyncResult result, TrendMicroDevice device, Exception ex)
@@ -700,11 +717,9 @@ public class TrendMicroService(
     }
 
     /// <summary>
-    /// Writes device risk scores and rolls them into the entity's Cyber Risk Index (4.4.4).
-    ///
-    /// The index is a criticality-weighted mean rather than a plain average: a critical server at 90 and
-    /// twenty test machines at 10 should not average out to "fine", which is exactly what an unweighted
-    /// mean would say.
+    /// Writes each device's risk score onto its host and keeps it per source with history in <c>vendor_scores</c>
+    /// (4.4.4; M57, T270, S39 D-09). The old weighted mean into <c>entities.cyber_risk_index</c> is gone: the column was
+    /// last-writer-wins between two vendors, had no history and is read by nothing (S39 §1.7).
     /// </summary>
     private async Task SyncRiskScoresAsync(TrendMicroConnection connection, List<TrendMicroDevice> inventory,
         PostureSyncResult result, CancellationToken ct)
@@ -733,51 +748,31 @@ public class TrendMicroService(
                      .ToListAsync(ct))
             byExternalId.TryAdd(known.ExternalId!, known);
 
+        var now = DateTime.UtcNow;
+        var readings = new List<VendorScoreReading>();
+
         foreach (var (externalId, device) in scores)
         {
             if (!byExternalId.TryGetValue(externalId, out var host)) continue;
 
             host.RiskScore = device.RiskScore;
             host.RiskScoreSource = ProviderName;
-            host.RiskScoreUpdatedAt = DateTime.UtcNow;
+            host.RiskScoreUpdatedAt = now;
 
-            if (device.Criticality != null) host.Criticality = device.Criticality;
+            ApplyCriticality(host, device);
+
+            readings.Add(new VendorScoreReading(VendorScoreSource.V1Device, connection.Id, host.Id,
+                Truncate(device.Id, 128), host.EntityId, device.RiskScore!.Value, 100,
+                System.Text.Json.JsonSerializer.Serialize(new { riskLevel = device.RiskLevel, lastDetectedAt = device.LastSeen })));
 
             result.PostureRowsWritten++;
         }
 
+        await VendorScoreStore.ApplyAsync(db, readings, now, ct);
         await db.SaveChangesAsync(ct);
 
-        if (connection.EntityId == null) return;
-
-        var hosts = await db.Hosts
-            .Where(h => h.EntityId == connection.EntityId && h.RiskScore != null)
-            .Select(h => new { h.RiskScore, h.Criticality })
-            .ToListAsync(ct);
-
-        if (hosts.Count == 0) return;
-
-        var weighted = hosts.Sum(h => (double)h.RiskScore! * (h.Criticality ?? 3));
-        var weights = hosts.Sum(h => (double)(h.Criticality ?? 3));
-
-        var index = Math.Round(weighted / weights, 2);
-
-        var entity = await db.Entities.FirstOrDefaultAsync(e => e.Id == connection.EntityId, ct);
-
-        if (entity != null)
-        {
-            entity.CyberRiskIndex = index;
-            entity.PostureSource = ProviderName;
-            entity.PostureUpdatedAt = DateTime.UtcNow;
-
-            await db.SaveChangesAsync(ct);
-        }
-
-        result.CyberRiskIndex = index;
-
-        Logger.Information(
-            "Vision One risk sync set the Cyber Risk Index for entity {Entity} to {Index} over {Hosts} host(s)",
-            connection.EntityId, index, hosts.Count);
+        Logger.Information("Vision One risk sync recorded {Scores} device score(s) for connection {Connection}",
+            readings.Count, connection.Name);
     }
 
     /// <summary>
@@ -884,6 +879,7 @@ public class TrendMicroService(
         result.FindingsUpdated += import.UpdatedCount;
 
         await RecordEpssAsync(epssByCve, run, ct);
+        await RecordExploitSignalsAsync(vulnerabilities, result, run, ct);
 
         if (connection.VirtualPatchClosesFinding)
             await ApplyVirtualPatchPolicyAsync(vulnerabilities, result, run, ct);
@@ -1079,15 +1075,16 @@ public class TrendMicroService(
         return ordered;
     }
 
-    /// <summary>How many tag rows are written before the context is flushed; the inventory's batch size, for its reason.</summary>
+    /// <summary>How many identity rows are written before the context is flushed; the inventory's batch size, for its reason.</summary>
     private const int TagChunkSize = 500;
 
     /// <summary>
-    /// Records each synced device's identity and custom tags in <c>host_external_ids</c> (S40 §7.2), which the candidates and
-    /// the preview of the rules read. A failure is counted and reported but does not fail the sync: the hosts are already
-    /// written, and the rules were applied from the tags in memory.
+    /// Records each synced device's identity in <c>host_external_ids</c> (S40 §7.2) with Vision One's own detection times
+    /// — <c>lastDetectDateTime</c> as <c>last_seen_at</c>, <c>firstSeenDateTime</c> as <c>first_seen_at</c> (M57, T275,
+    /// D-11) — and its custom tags only when the connection syncs them (T263), which the rules' candidates and preview
+    /// read. A failure is counted and reported but does not fail the sync: the hosts are already written.
     /// </summary>
-    private async Task RecordTagsAsync(TrendMicroConnection connection, List<TrendMicroDevice> devices,
+    private async Task RecordIdentitiesAsync(TrendMicroConnection connection, List<TrendMicroDevice> devices,
         Dictionary<string, int> hostsByExternalId, PostureSyncResult result, CancellationToken ct)
     {
         try
@@ -1099,6 +1096,7 @@ public class TrendMicroService(
                 known.TryAdd(row.ExternalId, row);
 
             var now = DateTime.UtcNow;
+            var withTags = connection.SyncCustomTags;
 
             foreach (var chunk in devices.Where(d => hostsByExternalId.ContainsKey(d.Id)).Chunk(TagChunkSize))
             {
@@ -1113,8 +1111,9 @@ public class TrendMicroService(
                     {
                         row.HostId = hostsByExternalId[device.Id];
                         row.ConnectionId = connection.Id;
-                        row.Tags = tags;
-                        row.LastSeenAt = now;
+                        if (withTags) row.Tags = tags;
+                        if (device.FirstSeen is { } first) row.FirstSeenAt = first;
+                        row.LastSeenAt = device.LastSeen ?? now;
                         row.UpdatedAt = now;
                     }
                     else
@@ -1122,7 +1121,8 @@ public class TrendMicroService(
                         row = new HostExternalId
                         {
                             HostId = hostsByExternalId[device.Id], Provider = ProviderName, ConnectionId = connection.Id,
-                            ExternalId = device.Id, Tags = tags, FirstSeenAt = now, LastSeenAt = now, CreatedAt = now
+                            ExternalId = device.Id, Tags = withTags ? tags : null, FirstSeenAt = device.FirstSeen ?? now,
+                            LastSeenAt = device.LastSeen ?? now, CreatedAt = now
                         };
                         db.HostExternalIds.Add(row);
                         known[device.Id] = row;
@@ -1130,14 +1130,65 @@ public class TrendMicroService(
                 }
 
                 await db.SaveChangesAsync(ct);
-                result.TagsRecorded += chunk.Length;
+                if (withTags) result.TagsRecorded += chunk.Length;
             }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             result.Errors++;
-            result.Messages.Add($"Recording the device tags failed: {ex.Message}");
-            Logger.Error(ex, "Recording the Vision One device tags for connection {Connection} failed", connection.Name);
+            result.Messages.Add($"Recording the device identities failed: {ex.Message}");
+            Logger.Error(ex, "Recording the Vision One device identities for connection {Connection} failed", connection.Name);
+        }
+    }
+
+    /// <summary>
+    /// Persists each CVE record's exploit attempts and global exploit activity on its finding (M57, T275, S39 D-11), apart
+    /// from <c>ExploitAvaliable</c>, which merges the two. Batched by the finding's tool id like the virtual-patch lookup;
+    /// only rows whose values change are written. A failure is reported and does not fail the sync.
+    /// </summary>
+    private async Task RecordExploitSignalsAsync(List<TrendMicroDeviceVulnerability> vulnerabilities,
+        PostureSyncResult result, IntegrationSyncRun run, CancellationToken ct)
+    {
+        try
+        {
+            var signals = new Dictionary<string, (int? Attempts, string? Activity)>(StringComparer.Ordinal);
+            foreach (var v in vulnerabilities)
+                signals[$"{v.DeviceId}:{v.CveId}"] = (v.ExploitAttemptCount, Truncate(v.GlobalExploitActivity, 16));
+
+            var ids = signals.Keys.ToList();
+            var changed = 0;
+
+            await using var db = DalService.GetContext();
+
+            for (var offset = 0; offset < ids.Count; offset += PatchLookupBatchSize)
+            {
+                var slice = ids.GetRange(offset, Math.Min(PatchLookupBatchSize, ids.Count - offset));
+                var rows = await db.Vulnerabilities
+                    .Where(v => v.ImportSource == ImporterName && v.ToolUniqueId != null && slice.Contains(v.ToolUniqueId))
+                    .ToListAsync(ct);
+
+                foreach (var row in rows)
+                {
+                    var (attempts, activity) = signals[row.ToolUniqueId!];
+                    if (row.ExploitAttemptCount == attempts && row.GlobalExploitActivity == activity) continue;
+
+                    row.ExploitAttemptCount = attempts;
+                    row.GlobalExploitActivity = activity;
+                    changed++;
+                }
+
+                await db.SaveChangesAsync(ct);
+                db.ChangeTracker.Clear();
+            }
+
+            if (changed > 0)
+                await run.StepAsync("cves", $"Exploit attempts and global activity recorded on {changed} finding(s).", ct: ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            result.Errors++;
+            result.Messages.Add($"Recording the exploit signals failed: {ex.Message}");
+            Logger.Error(ex, "Recording the Vision One exploit signals failed; the findings were ingested");
         }
     }
 
@@ -1260,6 +1311,9 @@ public class TrendMicroService(
         target.VirtualPatchClosesFinding = source.VirtualPatchClosesFinding;
         target.PushExemptions = source.PushExemptions;
         target.SyncCustomTags = source.SyncCustomTags;
+        target.SyncPosture = source.SyncPosture;
+        target.SyncAttackSurfaceObjects = source.SyncAttackSurfaceObjects;
+        target.SyncWorkbenchAlerts = source.SyncWorkbenchAlerts;
         return target;
     }
 
@@ -1300,7 +1354,9 @@ public class TrendMicroService(
                 + (result.HostsAssignedByRule + result.HostsReassignedByRule == 0
                     ? ""
                     : $", {result.HostsAssignedByRule} host(s) attributed and {result.HostsReassignedByRule} reattributed by rule")
-                + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", 2000);
+                + (result.IndicatorsWritten == 0 ? "" : $", {result.IndicatorsWritten} indicator reading(s)")
+                + (result.VendorAssetsSynced == 0 ? "" : $", {result.VendorAssetsSynced} attack-surface asset(s)")
+                + ".", 2000);
             stored.ErrorMessage = Truncate(error, 2000);
 
             // Noted rather than stepped, then drained into the row this method is about to save: the
@@ -1363,11 +1419,15 @@ public class TrendMicroService(
         VirtualPatchClosesFinding = connection.VirtualPatchClosesFinding,
         PushExemptions = connection.PushExemptions,
         SyncCustomTags = connection.SyncCustomTags,
+        SyncPosture = connection.SyncPosture,
+        SyncAttackSurfaceObjects = connection.SyncAttackSurfaceObjects,
+        SyncWorkbenchAlerts = connection.SyncWorkbenchAlerts,
+        NextDueAt = connection.NextDueAt,
         LastSyncAt = connection.LastSyncAt,
         LastSyncStatus = connection.LastSyncStatus,
         LastSyncError = connection.LastSyncError
     };
 
-    private static string? Truncate(string? text, int max) =>
+    internal static string? Truncate(string? text, int max) =>
         text == null || text.Length <= max ? text : text[..(max - 1)] + "…";
 }

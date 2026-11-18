@@ -784,6 +784,13 @@ public class SecretVaultService(
             count += await db.SecurityScorecardConnections
                 .CountAsync(c => c.EncryptedApiToken != null && c.EncryptedApiToken.StartsWith(prefix));
 
+            // M56, T265 (S40 §11.6): both Tenable keys are vault-capable.
+            count += await db.TenableConnections
+                .CountAsync(c => c.EncryptedAccessKey != null && c.EncryptedAccessKey.StartsWith(prefix));
+
+            count += await db.TenableConnections
+                .CountAsync(c => c.EncryptedSecretKey != null && c.EncryptedSecretKey.StartsWith(prefix));
+
             count += await db.IssueTrackerConnections
                 .CountAsync(c => c.EncryptedToken != null && c.EncryptedToken.StartsWith(prefix));
 

@@ -157,6 +157,20 @@ public partial class NRDbContext
         // scope); a host's vendor identities follow their host, filtered below.
         ConfigureVendorMappings(modelBuilder);
 
+        // M56, T265–T267 (S40 §7.2, §7.4) — Tenable connections are global configuration; a vendor reading carries the
+        // entity of its host when captured, filtered below like every record with its own entity.
+        ConfigureTenable(modelBuilder);
+
+        modelBuilder.Entity<VendorScore>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
+        // M57, T270–T276 (S40 §7.2, §7.4) — a vendor asset carries its connection's entity and is filtered on it; the issue
+        // summaries follow their factor, which (like the connections) is posture configuration without a filter.
+        ConfigureVendorPosture(modelBuilder);
+
+        modelBuilder.Entity<VendorAsset>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>

@@ -3979,6 +3979,9 @@ Salvar mesmo assim?</value>
     <data name="EpssSourceVisionOne" xml:space="preserve">
         <value>Trend Vision One</value>
     </data>
+    <data name="EpssSourceTenable" xml:space="preserve">
+        <value>Tenable Vulnerability Management</value>
+    </data>
     <data name="KevCatalogue" xml:space="preserve">
         <value>Catálogo CISA KEV</value>
     </data>

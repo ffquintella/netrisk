@@ -54,4 +54,11 @@ public class IntegrationSyncLog
     /// the end says where it stopped, which is what a diagnosis needs.
     /// </summary>
     public string? ProgressLog { get; set; }
+
+    /// <summary>
+    /// When the run last persisted progress (S40 §7.3, §9.4; T265). The abandoned-run sweep measures staleness from
+    /// <c>coalesce(heartbeat_at, started_at)</c>, so an hours-long export that still advances is never settled as dead and
+    /// the connection's single-flight never lets a second export start beside it.
+    /// </summary>
+    public DateTime? HeartbeatAt { get; set; }
 }

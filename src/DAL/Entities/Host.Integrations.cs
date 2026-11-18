@@ -29,6 +29,13 @@ public partial class Host
     /// </summary>
     public int? Criticality { get; set; }
 
+    /// <summary>
+    /// Who wrote <see cref="Criticality"/> (M57, T275, S39 §5.1 D-10): <see cref="CriticalitySources.Manual"/>,
+    /// <see cref="CriticalitySources.Cmdb"/> or <see cref="CriticalitySources.VisionOne"/>; null = unknown (written before
+    /// the column existed). A writer never overwrites a value of higher precedence.
+    /// </summary>
+    public string? CriticalitySource { get; set; }
+
     /// <summary>Vendor cyber-risk score, 0–100. Higher is worse, matching Vision One's convention.</summary>
     public int? RiskScore { get; set; }
 

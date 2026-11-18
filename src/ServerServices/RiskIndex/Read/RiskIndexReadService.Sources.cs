@@ -20,7 +20,7 @@ public sealed partial class RiskIndexReadService
     private static readonly TimeSpan SourceCountsTimeToLive = TimeSpan.FromMinutes(15);
 
     /// <summary>The importers that are a source of their own, not of "other importers" (S39 §3.2; the collector's own split).</summary>
-    private static readonly string[] OwnImporters = ["trendmicro-visionone", "securityscorecard", "assessment", "nessus"];
+    private static readonly string[] OwnImporters = ["trendmicro-visionone", "securityscorecard", "assessment", "nessus", "tenable-vm"];
 
     private const string NessusImporter = "nessus";
 
@@ -125,6 +125,18 @@ public sealed partial class RiskIndexReadService
             .ToListAsync(ct);
         lines[RiskIndexSources.SscTotal] = FromConnections(ssc);
 
+        // M56, T266–T267: Tenable VM feeds TEN-VM (connections syncing findings), TEN-AES and TEN-ACR (syncing assets and
+        // collecting the rating).
+        var tenable = await db.TenableConnections.AsNoTracking().Where(c => c.Enabled)
+            .Select(c => new { c.SyncFindings, c.SyncAssets, c.CollectAes, c.CollectAcr, c.LastSyncAt, c.LastSyncStatus })
+            .ToListAsync(ct);
+        lines[RiskIndexSources.TenableVm] = FromConnections(tenable.Where(c => c.SyncFindings)
+            .Select(c => new SyncedConnection(false, true, c.LastSyncAt, c.LastSyncStatus)).ToList());
+        lines[RiskIndexSources.TenableAes] = FromConnections(tenable.Where(c => c.SyncAssets && c.CollectAes)
+            .Select(c => new SyncedConnection(true, false, c.LastSyncAt, c.LastSyncStatus)).ToList());
+        lines[RiskIndexSources.TenableAcr] = FromConnections(tenable.Where(c => c.SyncAssets && c.CollectAcr)
+            .Select(c => new SyncedConnection(true, false, c.LastSyncAt, c.LastSyncStatus)).ToList());
+
         var nessus = await db.ScanImports.AsNoTracking()
             .Where(i => i.Importer.ToLower() == NessusImporter)
             .OrderByDescending(i => i.StartedAt).ThenByDescending(i => i.Id)
@@ -160,6 +172,7 @@ public sealed partial class RiskIndexReadService
         IntegrationSyncStatus.Succeeded => RiskIndexSourceStatusKeys.Ok,
         IntegrationSyncStatus.PartiallySucceeded => RiskIndexSourceStatusKeys.Partial,
         IntegrationSyncStatus.Failed => RiskIndexSourceStatusKeys.Failed,
+        IntegrationSyncStatus.Queued => RiskIndexSourceStatusKeys.Queued,
         _ => RiskIndexSourceStatusKeys.Running
     };
 

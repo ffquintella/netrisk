@@ -15,11 +15,10 @@ namespace ServerServices.Integrations.SecurityScorecard;
 /// <summary>
 /// SecurityScorecard synchronization (Track 4 milestone 4.5).
 ///
-/// Two mappings deserve to be stated because they are easy to get backwards. SecurityScorecard's score
-/// is 0–100 where *higher is better*, and NetRisk's Cyber Risk Index is 0–100 where higher is worse —
-/// so the index is <c>100 - score</c>, and a company with an A rating gets a low index rather than a
-/// high one. And the domain has no host of its own in NetRisk, so findings are attached to a synthetic
-/// "domain asset" host, which is what gives them somewhere to live in a register organized by asset.
+/// SecurityScorecard's score is 0–100 where *higher is better*; the index anchors it itself (SSC-TOT), and since T270 the
+/// sync no longer writes an inverted copy into <c>entities.cyber_risk_index</c>. The domain has no host of its own in
+/// NetRisk, so findings are attached to a synthetic "domain asset" host, which gives them somewhere to live in a register
+/// organized by asset.
 /// </summary>
 public class SecurityScorecardService(
     ILogger logger,
@@ -180,7 +179,11 @@ public class SecurityScorecardService(
 
             await run.StepAsync("posture",
                 $"{result.PostureRowsWritten} posture row(s) written"
-                + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", ct: ct);
+                + (result.IssueSummariesWritten == 0 ? "" : $", {result.IssueSummariesWritten} issue-type impact row(s)")
+                + ".", ct: ct);
+
+            // M57, T274 (S40 §9.5): the pending part of the score history, after the day's own reading.
+            await BackfillHistoryAsync(connection, token, run, result, ct);
 
             // 4.5.3 — CVEs and active issues, both ingested as findings against the domain asset.
             var issues = new List<SecurityScorecardIssue>();
@@ -264,16 +267,18 @@ public class SecurityScorecardService(
             await IntegrationSyncLedger.ReapAbandonedAsync(db, IntegrationKind.SecurityScorecard,
                 nowUtc, ct: ct);
 
-            var connections = await db.SecurityScorecardConnections
-                .Where(c => c.Enabled)
-                .Select(c => new { c.Id, c.LastSyncAt, c.SyncIntervalHours })
-                .ToListAsync(ct);
+            // M57, T276 (S39 D-13): due by the slot grid, advanced before the run, never by the end of the last run —
+            // which made a 24-hour interval sync every other day. A manual sync leaves next_due_at alone.
+            due = [];
+            foreach (var connection in await db.SecurityScorecardConnections.Where(c => c.Enabled).OrderBy(c => c.Id)
+                         .ToListAsync(ct))
+            {
+                if (!PostureSyncCadence.IsDue(connection.NextDueAt, nowUtc)) continue;
+                connection.NextDueAt = PostureSyncCadence.NextDue(nowUtc, connection.SyncIntervalHours);
+                due.Add(connection.Id);
+            }
 
-            due = connections
-                .Where(c => c.LastSyncAt == null
-                            || c.LastSyncAt.Value.AddHours(Math.Max(1, c.SyncIntervalHours)) <= nowUtc)
-                .Select(c => c.Id)
-                .ToList();
+            if (due.Count > 0) await db.SaveChangesAsync(ct);
         }
 
         foreach (var connectionId in due)
@@ -300,21 +305,22 @@ public class SecurityScorecardService(
             combined.FindingsCreated += result.FindingsCreated;
             combined.FindingsUpdated += result.FindingsUpdated;
             combined.PostureRowsWritten += result.PostureRowsWritten;
+            combined.HistoryRowsBackfilled += result.HistoryRowsBackfilled;
+            combined.IssueSummariesWritten += result.IssueSummariesWritten;
             combined.Errors += result.Errors;
             combined.Messages.AddRange(result.Messages);
-            combined.CyberRiskIndex ??= result.CyberRiskIndex;
         }
 
         return combined;
     }
 
     /// <summary>
-    /// Appends this run's factor scores to the history and writes the entity's Cyber Risk Index
-    /// (4.5.2).
+    /// Appends this run's factor scores to the history (4.5.2), with each factor's score impact per issue type when the
+    /// connection keeps it (M57, T274).
     ///
-    /// Append-only, one row per factor per run. Overwriting yesterday's score would leave the product
-    /// knowing the current Patching Cadence and nothing about whether it is getting worse, which is the
-    /// only question a factor score can usefully answer.
+    /// Append-only, one row per factor per run. Overwriting yesterday's score would leave the product knowing the current
+    /// Patching Cadence and nothing about whether it is getting worse. Since T270 (S39 D-09) the sync no longer writes
+    /// <c>entities.cyber_risk_index</c>: the per-source history here is the record, and the index reads it (SSC-TOT).
     /// </summary>
     private async Task SyncPostureAsync(SecurityScorecardConnection connection,
         SecurityScorecardCompany? company, List<SecurityScorecardFactorScore> factors,
@@ -326,18 +332,34 @@ public class SecurityScorecardService(
 
         foreach (var factor in factors)
         {
-            db.SecurityScorecardFactors.Add(new SecurityScorecardFactor
+            var row = new SecurityScorecardFactor
             {
                 ConnectionId = connection.Id,
                 EntityId = connection.EntityId,
                 FactorName = factor.Name,
+                // Null when SecurityScorecard sent no score (T274, D-12) — the client no longer turns it into 0.
                 Score = factor.Score,
                 Grade = factor.Grade,
                 IssueCount = factor.IssueCount,
                 IsOverall = false,
                 CapturedAt = capturedAt
-            });
+            };
 
+            if (connection.StoreIssueImpact)
+                foreach (var impact in factor.IssueSummaries)
+                {
+                    row.IssueSummaries.Add(new SecurityScorecardIssueSummary
+                    {
+                        IssueType = Truncate(impact.IssueType, 128)!,
+                        Severity = Truncate(impact.Severity, 16),
+                        IssueCount = impact.Count,
+                        TotalScoreImpact = impact.TotalScoreImpact,
+                        CreatedAt = capturedAt
+                    });
+                    result.IssueSummariesWritten++;
+                }
+
+            db.SecurityScorecardFactors.Add(row);
             result.PostureRowsWritten++;
         }
 
@@ -349,7 +371,7 @@ public class SecurityScorecardService(
             {
                 ConnectionId = connection.Id,
                 EntityId = connection.EntityId,
-                FactorName = "overall",
+                FactorName = OverallFactor,
                 Score = company.Score.Value,
                 Grade = company.Grade,
                 IsOverall = true,
@@ -358,32 +380,101 @@ public class SecurityScorecardService(
 
             result.PostureRowsWritten++;
 
-            // SecurityScorecard: higher is better. Cyber Risk Index: higher is worse. Inverting here is
-            // the whole reason this line has a comment.
-            var index = (double)(100 - company.Score.Value);
-
-            result.CyberRiskIndex = index;
-
-            if (connection.EntityId != null)
-            {
-                var entity = await db.Entities.FirstOrDefaultAsync(e => e.Id == connection.EntityId, ct);
-
-                if (entity != null)
-                {
-                    entity.CyberRiskIndex = index;
-                    entity.PostureGrade = company.Grade;
-                    entity.PostureSource = ProviderName;
-                    entity.PostureUpdatedAt = capturedAt;
-                }
-            }
-
-            Logger.Information(
-                "SecurityScorecard {Domain} scored {Score} ({Grade}); Cyber Risk Index set to {Index}",
-                connection.Domain, company.Score, company.Grade, index);
+            Logger.Information("SecurityScorecard {Domain} scored {Score} ({Grade})",
+                connection.Domain, company.Score, company.Grade);
         }
 
         await db.SaveChangesAsync(ct);
     }
+
+    /// <summary>The factor name of the overall row.</summary>
+    public const string OverallFactor = "overall";
+
+    /// <summary>
+    /// Recovers the score history the connection has not covered yet (M57, T274, S40 §9.5): from <c>today −
+    /// history_backfill_days</c> up to the day before <c>history_backfilled_from</c> (or today), the overall score and each
+    /// factor's, as rows with <c>is_backfill</c>. A day that already has a row for the factor is skipped, so a sync that ran
+    /// that day keeps its own reading. A failure is reported and leaves the window pending for the next sync.
+    /// </summary>
+    private async Task BackfillHistoryAsync(SecurityScorecardConnection connection, string? token, IntegrationSyncRun run,
+        PostureSyncResult result, CancellationToken ct)
+    {
+        var days = Math.Clamp(connection.HistoryBackfillDays, 0, MaxHistoryBackfillDays);
+        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+        var from = today.AddDays(-days);
+        var until = connection.HistoryBackfilledFrom is { } covered
+            ? DateTime.SpecifyKind(covered.Date, DateTimeKind.Utc)
+            : today;
+
+        if (days == 0 || from >= until)
+        {
+            await run.StepAsync("history", days == 0
+                ? "Skipped: the connection does not recover score history."
+                : "Score history already recovered.", ct: ct);
+            return;
+        }
+
+        try
+        {
+            await run.StepAsync("history", $"Recovering the score history from {from:yyyy-MM-dd} to {until.AddDays(-1):yyyy-MM-dd}.",
+                ct: ct);
+
+            var points = await client.GetScoreHistoryAsync(connection, token, from, until.AddDays(-1), ct);
+            points.AddRange(await client.GetFactorHistoryAsync(connection, token, from, until.AddDays(-1), ct));
+
+            await using var db = DalService.GetContext();
+
+            var known = (await db.SecurityScorecardFactors.AsNoTracking()
+                    .Where(f => f.ConnectionId == connection.Id && f.CapturedAt >= from && f.CapturedAt < until)
+                    .Select(f => new { f.FactorName, f.CapturedAt })
+                    .ToListAsync(ct))
+                .Select(f => (f.FactorName.ToLowerInvariant(), f.CapturedAt.Date))
+                .ToHashSet();
+
+            var now = DateTime.UtcNow;
+            foreach (var point in points.Where(p => p.Date >= from && p.Date < until).OrderBy(p => p.Date))
+            {
+                var overall = point.FactorName is null;
+                if (overall && point.Score is null) continue;
+
+                var name = point.FactorName ?? OverallFactor;
+                if (!known.Add((name, point.Date.Date))) continue;
+
+                db.SecurityScorecardFactors.Add(new SecurityScorecardFactor
+                {
+                    ConnectionId = connection.Id,
+                    EntityId = connection.EntityId,
+                    FactorName = name,
+                    Score = point.Score,
+                    IsOverall = overall,
+                    IsBackfill = true,
+                    CapturedAt = point.Date
+                });
+                result.HistoryRowsBackfilled++;
+            }
+
+            var stored = await db.SecurityScorecardConnections.FirstAsync(c => c.Id == connection.Id, ct);
+            stored.HistoryBackfilledFrom = from;
+
+            await db.SaveChangesAsync(ct);
+
+            Logger.Information("SecurityScorecard {Domain}: {Rows} history row(s) recovered back to {From:yyyy-MM-dd}",
+                connection.Domain, result.HistoryRowsBackfilled, from);
+
+            await run.StepAsync("history", $"{result.HistoryRowsBackfilled} history row(s) recovered.", ct: ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            result.Errors++;
+            result.Messages.Add($"Recovering the score history failed: {ex.Message}");
+            Logger.Warning("Recovering the SecurityScorecard history for {Connection} failed: {Message}", connection.Name,
+                ex.Message);
+            await run.StepAsync("history", "Recovering the score history failed; it stays pending for the next sync.", ct: ct);
+        }
+    }
+
+    /// <summary>The longest history the backfill recovers (S40 §6.9: 0–365).</summary>
+    public const int MaxHistoryBackfillDays = 365;
 
     /// <summary>
     /// Ingests CVEs and active issues as findings against the domain asset (4.5.3), through the shared
@@ -630,6 +721,10 @@ public class SecurityScorecardService(
         if (connection.SyncIntervalHours is < 1 or > 168)
             throw new InvalidParameterException(nameof(connection.SyncIntervalHours),
                 "The sync interval must be between 1 and 168 hours.");
+
+        if (connection.HistoryBackfillDays is < 0 or > MaxHistoryBackfillDays)
+            throw new InvalidParameterException(nameof(connection.HistoryBackfillDays),
+                $"The score history to recover must be between 0 and {MaxHistoryBackfillDays} days.");
     }
 
     private static SecurityScorecardConnection Copy(SecurityScorecardConnection source,
@@ -643,6 +738,8 @@ public class SecurityScorecardService(
         target.SyncIntervalHours = source.SyncIntervalHours;
         target.SyncVulnerabilities = source.SyncVulnerabilities;
         target.SyncIssues = source.SyncIssues;
+        target.HistoryBackfillDays = source.HistoryBackfillDays;
+        target.StoreIssueImpact = source.StoreIssueImpact;
         return target;
     }
 
@@ -679,7 +776,8 @@ public class SecurityScorecardService(
             stored.Summary = Truncate(
                 $"{result.PostureRowsWritten} posture row(s), {result.FindingsCreated} finding(s) created, "
                 + $"{result.FindingsUpdated} updated"
-                + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", 2000);
+                + (result.HistoryRowsBackfilled == 0 ? "" : $", {result.HistoryRowsBackfilled} history row(s) recovered")
+                + ".", 2000);
             stored.ErrorMessage = Truncate(error, 2000);
 
             // Noted rather than stepped, then drained into the row this method is about to save: the
@@ -740,6 +838,10 @@ public class SecurityScorecardService(
         SyncIntervalHours = connection.SyncIntervalHours,
         SyncVulnerabilities = connection.SyncVulnerabilities,
         SyncIssues = connection.SyncIssues,
+        HistoryBackfillDays = connection.HistoryBackfillDays,
+        HistoryBackfilledFrom = connection.HistoryBackfilledFrom,
+        StoreIssueImpact = connection.StoreIssueImpact,
+        NextDueAt = connection.NextDueAt,
         LastSyncAt = connection.LastSyncAt,
         LastSyncStatus = connection.LastSyncStatus,
         LastSyncError = connection.LastSyncError

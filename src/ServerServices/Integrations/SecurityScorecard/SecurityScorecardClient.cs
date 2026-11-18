@@ -108,9 +108,12 @@ public class SecurityScorecardClient(ILogger logger, IOutboundHttpClient http) :
                 factors.Add(new SecurityScorecardFactorScore
                 {
                     Name = name.Trim().ToLowerInvariant(),
-                    Score = (int)Math.Clamp(Number(entry, "score") ?? 0, 0, 100),
+                    // M57, T274 (S39 D-12): a factor without a score is no reading. Reading it as 0 — the worst grade there
+                    // is — made a gap in SecurityScorecard's answer look like the factor had collapsed.
+                    Score = Score(entry, "score"),
                     Grade = String(entry, "grade"),
-                    IssueCount = (int?)Number(entry, "issue_count", "issueCount")
+                    IssueCount = (int?)Number(entry, "issue_count", "issueCount"),
+                    IssueSummaries = ParseIssueSummaries(entry)
                 });
             }
         }
@@ -122,6 +125,132 @@ public class SecurityScorecardClient(ILogger logger, IOutboundHttpClient http) :
 
         return factors;
     }
+
+    /// <summary>The <c>issue_summary[]</c> of one factor entry: the score impact per issue type (M57, T274).</summary>
+    internal static List<SecurityScorecardIssueImpact> ParseIssueSummaries(JsonElement entry)
+    {
+        var impacts = new List<SecurityScorecardIssueImpact>();
+        if (entry.ValueKind != JsonValueKind.Object) return impacts;
+
+        foreach (var name in new[] { "issue_summary", "issueSummary", "issue_summaries" })
+        {
+            if (!entry.TryGetProperty(name, out var array) || array.ValueKind != JsonValueKind.Array) continue;
+
+            foreach (var item in array.EnumerateArray())
+            {
+                var type = String(item, "type", "issue_type", "issueType");
+                if (string.IsNullOrWhiteSpace(type)) continue;
+
+                impacts.Add(new SecurityScorecardIssueImpact
+                {
+                    IssueType = type.Trim(),
+                    Severity = String(item, "severity", "issue_type_severity"),
+                    Count = (int?)Number(item, "count", "issue_count", "issueCount"),
+                    TotalScoreImpact = Number(item, "total_score_impact", "score_impact", "totalScoreImpact")
+                });
+            }
+
+            break;
+        }
+
+        return impacts;
+    }
+
+    /// <summary>
+    /// The daily overall score between two days (<c>/history/score</c>; M57, T274). An unreachable history is an error the
+    /// caller reports; a 404 is a company without history, which is an empty list.
+    /// </summary>
+    public async Task<List<SecurityScorecardHistoryPoint>> GetScoreHistoryAsync(SecurityScorecardConnection connection,
+        string? token, DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var body = await HistoryAsync(connection, token, "history/score", from, to, ct);
+        var points = new List<SecurityScorecardHistoryPoint>();
+        if (body is null) return points;
+
+        using var document = Parse(body, "score history");
+        if (!document.RootElement.TryGetProperty("entries", out var entries) || entries.ValueKind != JsonValueKind.Array)
+            return points;
+
+        foreach (var entry in entries.EnumerateArray())
+            if (Day(entry) is { } date)
+                points.Add(new SecurityScorecardHistoryPoint { Date = date, Score = Score(entry, "score") });
+
+        return points;
+    }
+
+    /// <summary>The daily score of each factor between two days (<c>/history/factors/score</c>; M57, T274).</summary>
+    public async Task<List<SecurityScorecardHistoryPoint>> GetFactorHistoryAsync(SecurityScorecardConnection connection,
+        string? token, DateTime from, DateTime to, CancellationToken ct = default)
+    {
+        var body = await HistoryAsync(connection, token, "history/factors/score", from, to, ct);
+        var points = new List<SecurityScorecardHistoryPoint>();
+        if (body is null) return points;
+
+        using var document = Parse(body, "factor history");
+        if (!document.RootElement.TryGetProperty("entries", out var entries) || entries.ValueKind != JsonValueKind.Array)
+            return points;
+
+        foreach (var entry in entries.EnumerateArray())
+        {
+            if (Day(entry) is not { } date) continue;
+            if (!entry.TryGetProperty("factors", out var factors) || factors.ValueKind != JsonValueKind.Array) continue;
+
+            foreach (var factor in factors.EnumerateArray())
+            {
+                var name = String(factor, "name", "factor");
+                if (string.IsNullOrWhiteSpace(name)) continue;
+                points.Add(new SecurityScorecardHistoryPoint
+                {
+                    Date = date, FactorName = name.Trim().ToLowerInvariant(), Score = Score(factor, "score")
+                });
+            }
+        }
+
+        return points;
+    }
+
+    private async Task<string?> HistoryAsync(SecurityScorecardConnection connection, string? token, string path,
+        DateTime from, DateTime to, CancellationToken ct)
+    {
+        var query = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+            $"?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}&timing=daily");
+        var response = await GetAsync(connection, token,
+            $"/companies/{Uri.EscapeDataString(connection.Domain)}/{path}{query}", ct);
+
+        if (response.StatusCode == 404) return null;
+
+        if (!response.IsSuccess)
+            throw new IntegrationRequestException("SecurityScorecard",
+                response.StatusCode == 0
+                    ? $"SecurityScorecard could not be reached: {response.TransportError}"
+                    : $"SecurityScorecard answered HTTP {response.StatusCode} for /{path}.");
+
+        return response.Body;
+    }
+
+    private static JsonDocument Parse(string body, string what)
+    {
+        try
+        {
+            return JsonDocument.Parse(body);
+        }
+        catch (JsonException ex)
+        {
+            throw new IntegrationRequestException("SecurityScorecard", $"The {what} response was not valid JSON: {ex.Message}");
+        }
+    }
+
+    /// <summary>The entry's day at 00:00 UTC, or null when it carries no parseable date.</summary>
+    private static DateTime? Day(JsonElement entry) =>
+        DateTime.TryParse(String(entry, "date", "day"), System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+            out var parsed)
+            ? DateTime.SpecifyKind(parsed.Date, DateTimeKind.Utc)
+            : null;
+
+    /// <summary>A 0–100 score, or null when the entry has none — never 0 for "absent" (T274, D-12).</summary>
+    private static int? Score(JsonElement element, params string[] names) =>
+        Number(element, names) is { } value ? (int)Math.Clamp(Math.Round(value), 0, 100) : null;
 
     public Task<List<SecurityScorecardIssue>> GetVulnerabilitiesAsync(SecurityScorecardConnection connection,
         string? token, CancellationToken ct = default) =>

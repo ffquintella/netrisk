@@ -26,7 +26,8 @@ internal sealed class ScopedRecordCatalogue(DbContext context)
         typeof(Kri), typeof(RiskCommittee), typeof(ThirdParty), typeof(AiModel), typeof(RiskAcceptance),
         typeof(ScanImport), typeof(SlaConfiguration), typeof(RiskAppetite), typeof(EntityRiskReviewer),
         typeof(RiskReviewCampaign), typeof(NrFile), typeof(RiskIndexSnapshot), typeof(RiskIndexObjectDay),
-        typeof(RiskIndexObjectAttribution), typeof(RiskIndexClassDay), typeof(RiskIndexBridge)
+        typeof(RiskIndexObjectAttribution), typeof(RiskIndexClassDay), typeof(RiskIndexBridge), typeof(VendorScore),
+        typeof(VendorAsset)
     ];
 
     /// <summary>

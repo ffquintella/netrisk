@@ -46,6 +46,15 @@ public static class RiskIndexLabels
                          .Select(c => new { c.Id, c.Name }).ToListAsync(ct))
                 names[Key(RiskIndexObjectKind.Tenant, c.Id)] = c.Name;
 
+        // M57, T272: a vendor asset is named by its row, read through the caller's scoped context.
+        if (May(RiskIndexObjectKind.VendorAsset) && Ids(RiskIndexObjectKind.VendorAsset) is { Count: > 0 } assets)
+        {
+            var assetIds = assets.Select(id => (long)id).ToList();
+            foreach (var a in await db.VendorAssets.AsNoTracking().Where(a => assetIds.Contains(a.Id))
+                         .Select(a => new { a.Id, a.Name }).ToListAsync(ct))
+                names[new IcrObjectKey(RiskIndexObjectKind.VendorAsset, a.Id.ToString(CultureInfo.InvariantCulture))] = a.Name;
+        }
+
         var entities = Ids(RiskIndexObjectKind.Application).Concat(Ids(RiskIndexObjectKind.TargetEntity)).Distinct().ToList();
         if (entities.Count > 0)
         {

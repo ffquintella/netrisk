@@ -247,8 +247,13 @@ public class SecurityScorecardTest : InMemoryServiceTestBase
 
     // --- posture ----------------------------------------------------------------------------
 
+    /// <summary>
+    /// M57, T270 (S39 D-09): the overall score is kept per source with history — the overall row of
+    /// <c>security_scorecard_factors</c> — and the sync no longer writes <c>entities.cyber_risk_index</c>, which was
+    /// last-writer-wins against Vision One. Fails on the pre-T270 code, which set the entity's index to 12.
+    /// </summary>
     [Fact]
-    public async Task TheOverallScoreIsInvertedIntoTheCyberRiskIndex()
+    public async Task TestTheOverallScoreIsKeptPerSourceAndTheEntityIndexIsNotWritten()
     {
         var view = await ConnectionAsync(syncVulnerabilities: false, syncIssues: false);
 
@@ -256,16 +261,16 @@ public class SecurityScorecardTest : InMemoryServiceTestBase
 
         var result = await _svc.SyncAsync(view.Id);
 
-        // 88 out of 100 where higher is better becomes an index of 12 where higher is worse. Getting
-        // this backwards would report a well-rated company as the riskiest entity in the register.
-        Assert.Equal(12, result.CyberRiskIndex);
+        Assert.Null(result.CyberRiskIndex);
 
         await using var db = OpenContext();
         var entity = db.Entities.Single(e => e.Id == 7);
+        Assert.Null(entity.CyberRiskIndex);
+        Assert.Null(entity.PostureGrade);
+        Assert.Null(entity.PostureSource);
 
-        Assert.Equal(12, entity.CyberRiskIndex);
-        Assert.Equal("B", entity.PostureGrade);
-        Assert.Equal(SecurityScorecardService.ProviderName, entity.PostureSource);
+        var overall = db.SecurityScorecardFactors.Single(f => f.IsOverall);
+        Assert.Equal((88, "B", false), (overall.Score, overall.Grade, overall.IsBackfill));
     }
 
     [Fact]
@@ -465,18 +470,22 @@ public class SecurityScorecardTest : InMemoryServiceTestBase
     }
 
     [Fact]
-    public async Task OnlyConnectionsWhoseIntervalHasElapsedAreSynced()
+    public async Task TestOnlyConnectionsWhoseDueDateHasComeAreSynced()
     {
         var view = await ConnectionAsync(syncVulnerabilities: false, syncIssues: false);
 
         StubApi();
 
+        // A manual sync does not move the scheduled cadence (T276): the first scheduled tick still runs and anchors it.
         await _svc.SyncAsync(view.Id);
 
-        var immediately = await _svc.SyncDueConnectionsAsync(Now);
+        var first = await _svc.SyncDueConnectionsAsync(Now);
+        Assert.True(first.PostureRowsWritten > 0);
+
+        var immediately = await _svc.SyncDueConnectionsAsync(Now.AddMinutes(5));
         Assert.Equal(0, immediately.PostureRowsWritten);
 
-        var later = await _svc.SyncDueConnectionsAsync(DateTime.UtcNow.AddDays(2));
+        var later = await _svc.SyncDueConnectionsAsync(Now.AddDays(1));
         Assert.True(later.PostureRowsWritten > 0);
     }
 

@@ -27,13 +27,14 @@ public interface ITrendMicroService
     IReadOnlyDictionary<string, string> GetRegions();
 
     /// <summary>
-    /// Runs one full synchronization for a connection: inventory (4.4.2), CVEs with virtual-patch
-    /// state (4.4.3), and risk scores rolled into the entity's Cyber Risk Index (4.4.4). Which parts
-    /// run is decided by the connection's flags.
+    /// Runs one full synchronization for a connection: inventory (4.4.2), device risk scores kept per
+    /// host with history (4.4.4, T270), CVEs with virtual-patch state (4.4.3), and — when enabled — the
+    /// posture and asset groups (T271), attack-surface objects (T272) and Workbench alerts (T273).
+    /// Which parts run is decided by the connection's flags.
     /// </summary>
     Task<PostureSyncResult> SyncAsync(int connectionId, CancellationToken ct = default);
 
-    /// <summary>Syncs every enabled connection whose interval has elapsed. The job's entry point.</summary>
+    /// <summary>Syncs every enabled connection whose due date has come (T276). The job's entry point.</summary>
     Task<PostureSyncResult> SyncDueConnectionsAsync(DateTime nowUtc, CancellationToken ct = default);
 
     /// <summary>

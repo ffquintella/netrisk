@@ -42,6 +42,18 @@ public class TrendMicroConnectionView
     /// <summary>Collect the devices' custom tags and apply the tag → entity rules (T263, S40 §6.9, §8.8).</summary>
     public bool SyncCustomTags { get; set; }
 
+    /// <summary>Read <c>securityPosture</c> and <c>assetGroups</c> as reference indicators (M57, T271, S40 §6.9, §8.8).</summary>
+    public bool SyncPosture { get; set; }
+
+    /// <summary>Read the internet-facing, account, cloud and local-app assets as scored objects (T272).</summary>
+    public bool SyncAttackSurfaceObjects { get; set; }
+
+    /// <summary>Count Workbench alerts as the attack-intensity indicator (T273).</summary>
+    public bool SyncWorkbenchAlerts { get; set; }
+
+    /// <summary>When the scheduled sync is next due (T276); null until the first scheduled run.</summary>
+    public DateTime? NextDueAt { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }
@@ -104,7 +116,14 @@ public class TrendMicroDevice
     /// <summary>Risk level label as Vision One words it, kept for the host comment.</summary>
     public string? RiskLevel { get; set; }
 
+    /// <summary>
+    /// The device's last detection (<c>lastDetectDateTime</c>, the OAS name; M57, T275, S39 D-11). The candidates read before
+    /// (<c>lastUsedIp</c>, <c>lastActivity</c>) are not in the OAS of <c>attackSurfaceDevices</c>.
+    /// </summary>
     public DateTime? LastSeen { get; set; }
+
+    /// <summary>The device's first sighting (<c>firstSeenDateTime</c>; T275).</summary>
+    public DateTime? FirstSeen { get; set; }
 
     /// <summary>
     /// The device's custom asset tags (<c>assetCustomTags</c>) in canonical <c>key: value</c> form (T263, S40 §6.6): what
@@ -144,6 +163,12 @@ public class TrendMicroDeviceVulnerability
     public double? EpssScore { get; set; }
 
     public bool ExploitAvailable { get; set; }
+
+    /// <summary>Exploit attempts seen in the tenant (<c>exploitAttemptCount</c>), kept apart from the global activity (T275, D-11).</summary>
+    public int? ExploitAttemptCount { get; set; }
+
+    /// <summary><c>globalExploitActivityLevel</c> as Vision One sent it (<c>high</c> = actively exploited in the wild; T275).</summary>
+    public string? GlobalExploitActivity { get; set; }
 
     /// <summary>
     /// Vision One's mitigation status for this CVE on this device: <c>new</c>, <c>inProgress</c>,
@@ -187,7 +212,10 @@ public class PostureSyncResult
     /// <summary>Factor/score rows written for the trend history.</summary>
     public int PostureRowsWritten { get; set; }
 
-    /// <summary>The entity-wide index this run computed, when it computed one.</summary>
+    /// <summary>
+    /// Legacy: no sync computes an entity-wide index since M57, T270 (S39 D-09), so this is always null; kept so older
+    /// clients that read it show "—" instead of failing.
+    /// </summary>
     public double? CyberRiskIndex { get; set; }
 
     public int Errors { get; set; }
@@ -205,4 +233,91 @@ public class PostureSyncResult
 
     /// <summary>Devices whose tags were recorded in <c>host_external_ids</c> (T263).</summary>
     public int TagsRecorded { get; set; }
+
+    /// <summary>Reference-indicator readings written: tenant CRI, configuration adoption, asset groups, attack intensity (T271, T273).</summary>
+    public int IndicatorsWritten { get; set; }
+
+    /// <summary>Vendor assets read from the attack-surface endpoints (T272).</summary>
+    public int VendorAssetsSynced { get; set; }
+
+    /// <summary>Vendor assets a complete read no longer listed, now <c>Gone</c> (T272).</summary>
+    public int VendorAssetsGone { get; set; }
+
+    /// <summary>Workbench alerts counted in the last 30 days (T273).</summary>
+    public int WorkbenchAlerts { get; set; }
+
+    /// <summary>SecurityScorecard score rows recovered from the history endpoints (T274).</summary>
+    public int HistoryRowsBackfilled { get; set; }
+
+    /// <summary>SecurityScorecard per-issue-type impact rows written (T274).</summary>
+    public int IssueSummariesWritten { get; set; }
+}
+
+/// <summary>Vision One's <c>securityPosture</c> reduced to what NetRisk keeps (M57, T271, S40 §9.5).</summary>
+public class TrendMicroSecurityPosture
+{
+    /// <summary>The tenant's Cyber Risk Index, 0–100; null when the payload carried none.</summary>
+    public double? RiskIndex { get; set; }
+
+    public string? RiskLevel { get; set; }
+
+    /// <summary>The per-category levels and the other indicators of the payload, as JSON, kept in <c>details</c>.</summary>
+    public string? CategoriesJson { get; set; }
+
+    /// <summary>Each agent feature's adoption, 0–1 (<c>agentFeatureStatus[].adoptionRate</c>).</summary>
+    public List<(string Feature, double AdoptionRate)> FeatureAdoption { get; set; } = new();
+
+    /// <summary>The mean adoption, 0–1, or null when no feature reported one (V1-SCS reads <c>1 − adoption</c>).</summary>
+    public double? MeanAdoption => FeatureAdoption.Count == 0 ? null : FeatureAdoption.Average(f => f.AdoptionRate);
+}
+
+/// <summary>One Vision One asset group (<c>/v3.0/asrm/assetGroups</c>; T271).</summary>
+public class TrendMicroAssetGroup
+{
+    public string Id { get; set; } = string.Empty;
+
+    public string? Name { get; set; }
+
+    /// <summary>The group's risk index, 0–100; null when the payload carried none.</summary>
+    public double? RiskScore { get; set; }
+
+    public string? RiskLevel { get; set; }
+
+    public int? AssetCount { get; set; }
+}
+
+/// <summary>One internet-facing FQDN or IP, account, cloud asset or local app (T272).</summary>
+public class TrendMicroAttackSurfaceAsset
+{
+    public VendorAssetKind Kind { get; set; }
+
+    public string Id { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Vision One risk score, 0–100; null when the asset carried none.</summary>
+    public double? RiskScore { get; set; }
+
+    public string? RiskLevel { get; set; }
+
+    /// <summary>Asset criticality normalized to 1–5, as for a device.</summary>
+    public int? Criticality { get; set; }
+
+    public string? CriticalityRaw { get; set; }
+
+    public DateTime? FirstSeen { get; set; }
+
+    public DateTime? LastDetected { get; set; }
+
+    public List<string> Tags { get; set; } = new();
+}
+
+/// <summary>One Workbench alert, reduced to what the attack-intensity count needs (T273).</summary>
+public class TrendMicroWorkbenchAlert
+{
+    public string Id { get; set; } = string.Empty;
+
+    public string? Severity { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 }

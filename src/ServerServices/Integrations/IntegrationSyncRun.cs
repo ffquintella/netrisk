@@ -38,6 +38,12 @@ public interface IIntegrationSyncTracker
     /// </exception>
     Task<IntegrationSyncRun> BeginAsync(IntegrationKind kind, int connectionId, string connectionName,
         string providerLabel, bool singleFlight = true, CancellationToken ct = default);
+
+    /// <summary>
+    /// Opens the run of a manual request the caller has already claimed (M56, T265; S40 §8.7): the row is the Queued row
+    /// it moved to Running, so no second row is written and the operator's "Queued" line becomes the run itself.
+    /// </summary>
+    Task<IntegrationSyncRun> ResumeAsync(IntegrationSyncLog claimed, string providerLabel, CancellationToken ct = default);
 }
 
 /// <inheritdoc />
@@ -92,6 +98,19 @@ public class IntegrationSyncTracker(
         // After the Running row exists and after the first progress line, so that a GUI woken by the
         // notification finds a run to look at rather than nothing.
         await notifier.StartedAsync(kind, connectionName, ct);
+
+        return run;
+    }
+
+    public async Task<IntegrationSyncRun> ResumeAsync(IntegrationSyncLog claimed, string providerLabel,
+        CancellationToken ct = default)
+    {
+        var connectionName = claimed.ConnectionName ?? providerLabel;
+        var run = new IntegrationSyncRun(logger, dalService, notifier, claimed.Id, claimed.Integration,
+            claimed.ConnectionId ?? 0, connectionName, claimed.StartedAt);
+
+        await run.StepAsync("started", $"{providerLabel} synchronization requested by hand started in the job host.", ct: ct);
+        await notifier.StartedAsync(claimed.Integration, connectionName, ct);
 
         return run;
     }
@@ -240,6 +259,9 @@ public sealed class IntegrationSyncRun : IAsyncDisposable
             }
 
             row.ProgressLog = IntegrationSyncProgressLog.Append(row.ProgressLog, batch);
+
+            // T265 (S40 §9.4): every persisted step is a heartbeat, so a run that still advances is never reaped.
+            row.HeartbeatAt = DateTime.UtcNow;
 
             await db.SaveChangesAsync(ct);
         }

@@ -705,6 +705,8 @@ public partial class NRDbContext
             // longtext, not text: `text` caps at 64KB and a progress trail is the one column here that
             // grows with the size of the tenant rather than with the shape of the schema.
             entity.Property(e => e.ProgressLog).HasColumnName("progress_log").HasColumnType("longtext");
+            // T265 (S40 §7.3, §9.4): stamped by every progress flush; the sweep measures abandonment from it.
+            entity.Property(e => e.HeartbeatAt).HasColumnName("heartbeat_at").HasColumnType("datetime");
 
             entity.HasIndex(e => new { e.Integration, e.StartedAt }, "idx_integration_sync_logs_integration_started");
         });

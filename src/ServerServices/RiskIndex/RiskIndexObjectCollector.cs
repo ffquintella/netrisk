@@ -57,6 +57,12 @@ public static partial class RiskIndexObjectCollector
         public required RiskIndexCollectionOptions Options;
         public readonly List<RiskIndexObjectRow> Rows = [];
 
+        /// <summary>
+        /// Each host's current Tenable ACR (1–10) and AES (0–1000) with their read time (M56, T267), loaded only when the
+        /// snapshot's profile enables TEN-ACR or TEN-AES: collecting a reading never moves the index by itself (S40 §6.8).
+        /// </summary>
+        public Dictionary<int, (double Value, DateTime ReadAt)> TenableAcr = new(), TenableAes = new();
+
         public bool On(string source) => Enabled.Contains(source);
         public double W(string source) => P.FreshnessDays.TryGetValue(source, out var w) ? w : 30;
         public double M(int crit) => IcrMath.Modulator(crit, P.MA);
@@ -76,10 +82,12 @@ public static partial class RiskIndexObjectCollector
         var facts = await RegisterFactsReader.ReadAsync(db, p, now, ct);
         var attribution = await ScenarioAttribution.EntitiesByRiskAsync(db, facts.Keys.ToList(), ct);
 
+        await LoadTenableReadingsAsync(db, run, ct);
         var exposure = await CollectExposureAsync(db, run, ct);
         CollectScenarios(run, facts, attribution, exposure.FreshHostExposure);
         var events = await CollectEventsAsync(db, run, ct);
         await CollectAssessmentsAsync(db, run, ct);
+        await CollectSecurityConfigurationAsync(db, run, ct);
 
         var enabled = new Dictionary<RiskIndexCategory, bool>
         {
@@ -88,10 +96,11 @@ public static partial class RiskIndexObjectCollector
             {
                 RiskIndexSources.V1Device, RiskIndexSources.V1Cve, RiskIndexSources.SscTotal, RiskIndexSources.TenableNessus,
                 RiskIndexSources.TenableVm, RiskIndexSources.TenableAes, RiskIndexSources.Importers
-            }.Any(run.On),
+            }.Concat(VendorAssetSources).Any(run.On),
             [RiskIndexCategory.Ame] = (run.On(RiskIndexSources.Incidents) || run.On(RiskIndexSources.NearMisses)) &&
                                       events.IntakeActive,
-            [RiskIndexCategory.Ctl] = run.On(RiskIndexSources.Assessments) || run.On(RiskIndexSources.IncidentResponsePlans),
+            [RiskIndexCategory.Ctl] = run.On(RiskIndexSources.Assessments) || run.On(RiskIndexSources.IncidentResponsePlans) ||
+                                      run.On(RiskIndexSources.V1SecurityConfiguration),
             [RiskIndexCategory.Gov] = run.On(RiskIndexSources.RegResidual) || exposure.AnySlaSource,
             [RiskIndexCategory.Ter] = false
         };

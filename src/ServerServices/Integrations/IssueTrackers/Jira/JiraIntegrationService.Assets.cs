@@ -349,9 +349,14 @@ public partial class JiraIntegrationService
         host.Owner = projected.Owner ?? host.Owner;
 
         // Clamped rather than refused: every CMDB has a different number of criticality bands, and
-        // rejecting a 7 would mean the field imports for nobody whose scale is not 1-5.
-        if (projected.GetInt("Criticality") is { } criticality)
+        // rejecting a 7 would mean the field imports for nobody whose scale is not 1-5. A manual value
+        // outranks the CMDB's (M57, T275, S39 §5.1), and the column records who wrote it.
+        if (projected.GetInt("Criticality") is { } criticality &&
+            CriticalitySources.MayOverwrite(host.CriticalitySource, CriticalitySources.Cmdb))
+        {
             host.Criticality = Math.Clamp(criticality, 1, 5);
+            host.CriticalitySource = CriticalitySources.Cmdb;
+        }
 
         // Only touched when the mapping has an active-state row at all. A mapping without one must
         // leave a host that somebody retired by hand retired.

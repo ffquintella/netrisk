@@ -36,6 +36,24 @@ public class SecurityScorecardConnection
     /// <summary>Ingest active issues (missing SPF, expiring SSL, open ports) as findings.</summary>
     public bool SyncIssues { get; set; } = true;
 
+    /// <summary>
+    /// How many days of score history the sync recovers, 0–365 (M57, T274, S40 §6.9); 0 turns the backfill off. Raising it
+    /// later recovers only the days before <see cref="HistoryBackfilledFrom"/>.
+    /// </summary>
+    public int HistoryBackfillDays { get; set; } = 365;
+
+    /// <summary>The earliest day (UTC, at 00:00) the history backfill has covered; null until it first runs.</summary>
+    public DateTime? HistoryBackfilledFrom { get; set; }
+
+    /// <summary>Keep each factor's <c>issue_summary[]</c> — the score impact per issue type (T274). On by default.</summary>
+    public bool StoreIssueImpact { get; set; } = true;
+
+    /// <summary>
+    /// When the scheduled sync is next due (M57, T276, S39 D-13): the start of the next interval slot, never the end of the
+    /// last run, so a 24-hour interval syncs every day. A manual sync does not move it.
+    /// </summary>
+    public DateTime? NextDueAt { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }

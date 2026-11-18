@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using DAL.Context;
+using DAL.Entities;
 using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.RiskIndex;
@@ -20,6 +21,7 @@ public static partial class RiskIndexObjectCollector
     private const string ScorecardImporter = "securityscorecard";
     private const string AssessmentImporter = "assessment";
     private const string NessusImporter = "nessus";
+    private const string TenableVmImporter = Integrations.Tenable.TenableNormalizer.ImporterName;
     private const string JiraAssetsProvider = "JiraAssets";
     private const short RetiredHost = 27;
 
@@ -39,8 +41,57 @@ public static partial class RiskIndexObjectCollector
         ScorecardImporter or AssessmentImporter => null,
         VisionOneImporter => RiskIndexSources.V1Cve,
         NessusImporter => RiskIndexSources.TenableNessus,
+        TenableVmImporter => RiskIndexSources.TenableVm,
         _ => RiskIndexSources.Importers
     };
+
+    /// <summary>The finding sources whose open findings carry an SLA (S39 §6.3).</summary>
+    private static readonly string[] SlaSources =
+        [RiskIndexSources.V1Cve, RiskIndexSources.TenableNessus, RiskIndexSources.TenableVm, RiskIndexSources.Importers];
+
+    /// <summary>
+    /// The current Tenable ACR and AES per host (S40 §7.2: the row with the latest capture), read at the asset's last
+    /// assessment when the export gave one (S39 §8.2), only for the sources the profile enables (M56, T267).
+    /// </summary>
+    private static async Task LoadTenableReadingsAsync(NRDbContext db, Run run, CancellationToken ct)
+    {
+        var wanted = new List<VendorScoreSource>();
+        if (run.On(RiskIndexSources.TenableAcr)) wanted.Add(VendorScoreSource.TenableAcr);
+        if (run.On(RiskIndexSources.TenableAes)) wanted.Add(VendorScoreSource.TenableAes);
+        if (wanted.Count == 0) return;
+
+        var rows = await db.VendorScores.AsNoTracking()
+            .Where(v => v.HostId != null && wanted.Contains(v.Source) && v.FirstCapturedAt <= run.Now)
+            .Select(v => new { v.Id, v.Source, HostId = v.HostId!.Value, v.Value, v.Details, v.LastCapturedAt })
+            .ToListAsync(ct);
+
+        foreach (var g in rows.GroupBy(r => (r.Source, r.HostId)))
+        {
+            var latest = g.OrderByDescending(r => r.LastCapturedAt).ThenByDescending(r => r.Id).First();
+            var readAt = AssessedAt(latest.Details) ?? latest.LastCapturedAt;
+            if (readAt > run.Now) readAt = run.Now;
+            (g.Key.Source == VendorScoreSource.TenableAcr ? run.TenableAcr : run.TenableAes)[g.Key.HostId] = (latest.Value, readAt);
+        }
+    }
+
+    private static DateTime? AssessedAt(string? details)
+    {
+        if (string.IsNullOrWhiteSpace(details)) return null;
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(details);
+            return document.RootElement.TryGetProperty("lastAssessedAt", out var at) &&
+                   at.ValueKind == System.Text.Json.JsonValueKind.String &&
+                   DateTime.TryParse(at.GetString(), CultureInfo.InvariantCulture,
+                       DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed)
+                ? parsed
+                : null;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
 
     private static async Task<ExposureResult> CollectExposureAsync(NRDbContext db, Run run, CancellationToken ct)
     {
@@ -75,9 +126,10 @@ public static partial class RiskIndexObjectCollector
         var fresh = new Dictionary<int, double>();
         await CollectHostsAsync(db, run, findings, Exposed, OpenForSla, kev, fresh, ct);
         await CollectDomainsAsync(db, run, ct);
+        await CollectVendorAssetsAsync(db, run, ct);
         await CollectApplicationsAsync(db, run, findings, Exposed, OpenForSla, kev, ct);
 
-        var anySla = new[] { RiskIndexSources.V1Cve, RiskIndexSources.TenableNessus, RiskIndexSources.Importers }.Any(run.On);
+        var anySla = SlaSources.Any(run.On);
         return new ExposureResult(fresh, suspects.Count, anySla);
     }
 
@@ -90,8 +142,8 @@ public static partial class RiskIndexObjectCollector
             .Where(h => h.Status != RetiredHost && (h.ExternalProvider == null || h.ExternalProvider != SecurityScorecardService.ProviderName))
             .Select(h => new
             {
-                h.Id, h.Os, h.Source, h.Criticality, h.ExternalProvider, h.RiskScore, h.RiskScoreUpdatedAt, h.Environment,
-                h.EntityId, h.LastVerificationDate, h.Ip, h.RegistrationDate
+                h.Id, h.Os, h.Source, h.Criticality, h.CriticalitySource, h.ExternalProvider, h.RiskScore,
+                h.RiskScoreUpdatedAt, h.Environment, h.EntityId, h.LastVerificationDate, h.Ip, h.RegistrationDate
             })
             .ToListAsync(ct);
 
@@ -101,14 +153,17 @@ public static partial class RiskIndexObjectCollector
 
         var byHost = findings.Where(f => f.HostId is not null).GroupBy(f => f.HostId!.Value).ToDictionary(g => g.Key, g => g.ToList());
         var deviceOn = run.On(RiskIndexSources.V1Device);
-        var scanSources = new[] { RiskIndexSources.TenableNessus, RiskIndexSources.Importers }.Where(run.On).ToList();
-        var anySource = deviceOn || scanSources.Count > 0 || run.On(RiskIndexSources.V1Cve) || run.On(RiskIndexSources.TenableAes);
+        var aesOn = run.On(RiskIndexSources.TenableAes);
+        var scanSources = new[] { RiskIndexSources.TenableVm, RiskIndexSources.TenableNessus, RiskIndexSources.Importers }
+            .Where(run.On).ToList();
+        var anySource = deviceOn || scanSources.Count > 0 || run.On(RiskIndexSources.V1Cve) || aesOn;
 
         foreach (var h in hosts.OrderBy(h => h.Id))
         {
             var own = byHost.GetValueOrDefault(h.Id) ?? [];
             var cmdbLinked = cmdb.ContainsKey(h.Id);
-            var (crit, critSource) = HostCriticality(run, h.Criticality, h.ExternalProvider, h.Environment);
+            var (crit, critSource) = HostCriticality(run, h.Id, h.Criticality, h.CriticalitySource, h.ExternalProvider,
+                h.Environment);
             var m = run.M(crit);
             var environment = NormalizeEnvironment(p, h.Environment);
             var internet = p.PublicIpHeuristic && IsPublic(h.Ip, p.InternalPublicRanges);
@@ -123,11 +178,21 @@ public static partial class RiskIndexObjectCollector
                     h.RiskScoreUpdatedAt, RiskIndexSources.V1Device, []));
             }
 
+            // EXP.D from Tenable AES/1000, MAX with V1-DEV through the row's max over readings (S39 §3.2, §3.4 rule 4).
+            (double Value, DateTime ReadAt) aes = default;
+            var hasAes = aesOn && run.TenableAes.TryGetValue(h.Id, out aes);
+            if (hasAes)
+                readings.Add(new Reading(RiskIndexFactors.ExpDevice, RiskIndexFactorType.C, IcrMath.Clamp01(aes.Value / 1000.0),
+                    IcrMath.Validity(IcrMath.Days(aes.ReadAt, run.Now), run.W(RiskIndexSources.TenableAes)),
+                    run.U(RiskIndexFactors.ExpDevice), aes.ReadAt, RiskIndexSources.TenableAes, []));
+
             // EXP.V from scanners and importers: read at the latest detection of their findings (any status), or the
-            // verification date of a host no provider or CMDB stamps (S39 §8.2, D-18 interim rule).
+            // verification date of a host no provider or CMDB stamps (S39 §8.2, D-18 interim rule). While the host has an
+            // AES reading, the Tenable VM findings of the same asset stay out (S39 §3.4 rule 1).
             if (scanSources.Count > 0)
             {
-                var scanFindings = own.Where(f => FindingSource(f.ImportSource) is { } s && scanSources.Contains(s)).ToList();
+                var scanFindings = own.Where(f => FindingSource(f.ImportSource) is { } s && scanSources.Contains(s) &&
+                                                  !(hasAes && s == RiskIndexSources.TenableVm)).ToList();
                 DateTime? readAt = scanFindings.Count > 0 ? scanFindings.Max(f => f.LastDetection) : null;
                 if (h.ExternalProvider is null && !cmdbLinked && h.LastVerificationDate is { } verified &&
                     (readAt is null || verified > readAt))
@@ -137,9 +202,7 @@ public static partial class RiskIndexObjectCollector
                 {
                     var window = scanSources.Min(run.W);
                     readings.Add(FindingReadingOf(run, scanFindings.Where(exposed), m, internet, kev, date, window,
-                        scanFindings.Any(f => FindingSource(f.ImportSource) == RiskIndexSources.TenableNessus)
-                            ? RiskIndexSources.TenableNessus
-                            : RiskIndexSources.Importers, visionOne: false));
+                        ScanSourceOf(scanFindings), visionOne: false));
                 }
             }
 
@@ -162,9 +225,10 @@ public static partial class RiskIndexObjectCollector
             var attribution = h.EntityId is { } e ? new[] { e } : [];
             var assetClass = AssetClassOf(h.Os, cmdb.GetValueOrDefault(h.Id));
             var findingSources = scanSources.Count > 0 || run.On(RiskIndexSources.V1Cve);
-            var rMax = Math.Max(deviceOn ? run.U(RiskIndexFactors.ExpDevice) : 0,
+            var compositeOn = deviceOn || aesOn;
+            var rMax = Math.Max(compositeOn ? run.U(RiskIndexFactors.ExpDevice) : 0,
                 findingSources ? run.U(RiskIndexFactors.ExpVulnerabilities) * m : 0);
-            var uBar = Math.Max(deviceOn ? run.U(RiskIndexFactors.ExpDevice) : 0,
+            var uBar = Math.Max(compositeOn ? run.U(RiskIndexFactors.ExpDevice) : 0,
                 findingSources ? run.U(RiskIndexFactors.ExpVulnerabilities) : 0);
 
             if (anySource)
@@ -184,22 +248,37 @@ public static partial class RiskIndexObjectCollector
         }
     }
 
+    /// <summary>The source of a scan reading: Tenable VM, then the <c>.nessus</c> importer, then the other importers.</summary>
+    private static string ScanSourceOf(IReadOnlyCollection<FindingRow> findings) =>
+        findings.Any(f => FindingSource(f.ImportSource) == RiskIndexSources.TenableVm) ? RiskIndexSources.TenableVm
+        : findings.Any(f => FindingSource(f.ImportSource) == RiskIndexSources.TenableNessus) ? RiskIndexSources.TenableNessus
+        : RiskIndexSources.Importers;
+
     /// <summary>
-    /// A host's own criticality (S39 §5.1, D-10 interim): the stored value, labelled by the provider that owns the host
-    /// (Vision One capped at <c>crit_max_vision_one</c>), else the default — lower in a non-production environment.
+    /// A host's own criticality (S39 §5.1): manual and CMDB first, then Tenable ACR as <c>⌈ACR/2⌉</c> while TEN-ACR is
+    /// enabled and the reading is within its window (M56, T267), then Vision One capped at <c>crit_max_vision_one</c>, else
+    /// the default — lower in a non-production environment. The writer is <c>hosts.criticality_source</c> (T275, D-10);
+    /// a value written before that column existed falls back to the host's provider (the D-10 interim rule).
     /// </summary>
-    private static (int Criticality, string Source) HostCriticality(Run run, int? stored, string? provider, string? environment)
+    internal static (int Criticality, string Source) HostCriticality(Run run, int hostId, int? stored, string? storedSource,
+        string? provider, string? environment)
     {
-        if (stored is { } value)
+        var origin = stored is null ? null : storedSource ?? provider switch
         {
-            var c = Math.Clamp(value, 1, 5);
-            return provider switch
-            {
-                TrendMicroService.ProviderName => (Math.Min(c, run.P.VisionOneCriticalityCeiling), "visionone"),
-                JiraAssetsProvider => (c, "cmdb"),
-                _ => (c, "unknown")
-            };
-        }
+            TrendMicroService.ProviderName => CriticalitySources.VisionOne,
+            JiraAssetsProvider => CriticalitySources.Cmdb,
+            _ => "unknown"
+        };
+
+        if (stored is { } own && origin != CriticalitySources.VisionOne)
+            return (Math.Clamp(own, 1, 5), origin!);
+
+        if (run.On(RiskIndexSources.TenableAcr) && run.TenableAcr.TryGetValue(hostId, out var acr) &&
+            IcrMath.Days(acr.ReadAt, run.Now) <= run.W(RiskIndexSources.TenableAcr))
+            return (Math.Clamp((int)Math.Ceiling(acr.Value / 2.0), 1, 5), "tenable_acr");
+
+        if (stored is { } value)
+            return (Math.Min(Math.Clamp(value, 1, 5), run.P.VisionOneCriticalityCeiling), CriticalitySources.VisionOne);
 
         var nonProduction = run.On(RiskIndexSources.CmdbEnvironment) && NormalizeEnvironment(run.P, environment) is { } env &&
                             env is not ("prod" or "none");
@@ -343,7 +422,7 @@ public static partial class RiskIndexObjectCollector
     private static void AddSla(Run run, IcrObjectKey key, List<FindingRow> open, int crit, string critSource, double m,
         int? scope, IReadOnlyList<int> attribution, RiskIndexAssetClass assetClass, string? environment)
     {
-        if (!new[] { RiskIndexSources.V1Cve, RiskIndexSources.TenableNessus, RiskIndexSources.Importers }.Any(run.On)) return;
+        if (!SlaSources.Any(run.On)) return;
 
         var u = run.U(RiskIndexFactors.GovTreatment);
         var unassessed = open.Any(f => f.SlaDueDate is null);
@@ -375,8 +454,10 @@ public static partial class RiskIndexObjectCollector
         var connections = await db.SecurityScorecardConnections.AsNoTracking().Where(c => c.Enabled)
             .Select(c => new { c.Id, c.EntityId }).ToListAsync(ct);
         var ids = connections.Select(c => c.Id).ToList();
-        var latest = (await db.SecurityScorecardFactors.AsNoTracking().Where(f => f.IsOverall && ids.Contains(f.ConnectionId))
-                .Select(f => new { f.ConnectionId, f.Score, f.CapturedAt, f.Id }).ToListAsync(ct))
+        // A row without a score is no reading (T274, D-12): it neither scores 0 nor hides the last real one.
+        var latest = (await db.SecurityScorecardFactors.AsNoTracking()
+                .Where(f => f.IsOverall && f.Score != null && ids.Contains(f.ConnectionId))
+                .Select(f => new { f.ConnectionId, Score = f.Score!.Value, f.CapturedAt, f.Id }).ToListAsync(ct))
             .GroupBy(f => f.ConnectionId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(f => f.CapturedAt).ThenByDescending(f => f.Id).First());
 

@@ -8,9 +8,9 @@ namespace ServerServices.RiskIndex;
 
 /// <summary>What one retention pass removed or cleared, per table.</summary>
 public sealed record RiskIndexRetentionCounts(int ObjectDays, int Attributions, int ClassDays, int Snapshots, int NodeMembers,
-    int DetailCleared, int IncidentClosures, int PreviewReportsCleared = 0)
+    int DetailCleared, int IncidentClosures, int PreviewReportsCleared = 0, int VendorScores = 0)
 {
-    public int Deleted => ObjectDays + Attributions + ClassDays + Snapshots + NodeMembers + IncidentClosures;
+    public int Deleted => ObjectDays + Attributions + ClassDays + Snapshots + NodeMembers + IncidentClosures + VendorScores;
 }
 
 /// <summary>The only purge path of the index's history (S39 §9.1; S40 §9.6) — what the 02:40 job runs.</summary>
@@ -32,6 +32,12 @@ public sealed class RiskIndexRetentionService(IDalService dalService, ILogger lo
 
     /// <summary>A finished preview keeps its report this long; the one a submission attached lives on the profile (S40 §9.6).</summary>
     public const int PreviewReportRetentionDays = 90;
+
+    /// <summary>
+    /// A vendor reading last captured this long ago is closed (S40 §7.7, §9.6; M57, T270): superseded by a newer value, or
+    /// about an object no sync has read for two years — older than any freshness window the index could apply.
+    /// </summary>
+    public const int VendorScoreRetentionDays = 730;
 
     /// <summary>The batch size; tests lower it to exercise several batches.</summary>
     internal int BatchSize { get; set; } = DefaultBatchSize;
@@ -59,19 +65,23 @@ public sealed class RiskIndexRetentionService(IDalService dalService, ILogger lo
             .OrderBy(c => c.IncidentId).Select(c => c.IncidentId), id => new RiskIndexIncidentClosure { IncidentId = id },
             cancellationToken);
 
+        var vendorCutoff = nowUtc.AddDays(-VendorScoreRetentionDays);
+        var vendorScores = await DeleteAsync(db => db.VendorScores.Where(v => v.LastCapturedAt < vendorCutoff)
+            .OrderBy(v => v.Id).Select(v => v.Id), id => new VendorScore { Id = id }, cancellationToken);
+
         var cleared = await ClearDetailAsync(objectCutoff, cancellationToken);
         var previews = await ClearPreviewReportsAsync(nowUtc.AddDays(-PreviewReportRetentionDays), cancellationToken);
 
         var counts = new RiskIndexRetentionCounts(objectDays, attributions, classDays, snapshots, members, cleared, closures,
-            previews);
+            previews, vendorScores);
         if (counts.Deleted == 0 && cleared == 0 && previews == 0)
             logger.Debug("Risk index retention found nothing to remove");
         else
             logger.Information(
                 "Risk index retention removed {ObjectDays} object row(s), {Attributions} attribution(s), {ClassDays} class " +
-                "day(s), {Snapshots} snapshot row(s), {Members} node member(s), {Closures} frozen closure(s), and cleared the " +
-                "detail of {Cleared} snapshot row(s) and {Previews} preview report(s)", objectDays, attributions, classDays, snapshots,
-                members, closures, cleared, previews);
+                "day(s), {Snapshots} snapshot row(s), {Members} node member(s), {Closures} frozen closure(s), {VendorScores} " +
+                "vendor reading(s), and cleared the detail of {Cleared} snapshot row(s) and {Previews} preview report(s)",
+                objectDays, attributions, classDays, snapshots, members, closures, vendorScores, cleared, previews);
         return counts;
     }
 

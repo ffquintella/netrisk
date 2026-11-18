@@ -2062,7 +2062,11 @@ public class IntegrationsViewModel : ViewModelBase
             SyncRiskScores = connection.SyncRiskScores,
             VirtualPatchClosesFinding = connection.VirtualPatchClosesFinding,
             PushExemptions = connection.PushExemptions,
-            SyncCustomTags = connection.SyncCustomTags
+            SyncCustomTags = connection.SyncCustomTags,
+            // M57 (T271–T273): no form fields yet; carried so a save from this tab does not switch them off.
+            SyncPosture = connection.SyncPosture,
+            SyncAttackSurfaceObjects = connection.SyncAttackSurfaceObjects,
+            SyncWorkbenchAlerts = connection.SyncWorkbenchAlerts
         };
 
         TrendMicroApiKey = "";
@@ -2098,7 +2102,10 @@ public class IntegrationsViewModel : ViewModelBase
             Enabled = connection.Enabled,
             SyncIntervalHours = connection.SyncIntervalHours,
             SyncVulnerabilities = connection.SyncVulnerabilities,
-            SyncIssues = connection.SyncIssues
+            SyncIssues = connection.SyncIssues,
+            // M57 (T274): no form fields yet; carried so a save from this tab keeps them.
+            HistoryBackfillDays = connection.HistoryBackfillDays,
+            StoreIssueImpact = connection.StoreIssueImpact
         };
 
         ScorecardApiToken = "";

@@ -203,6 +203,8 @@ public class VulnerabilitiesService(
         vulnerability.EpssCve = null;
         vulnerability.EpssAsOf = null;
         vulnerability.EpssUpdatedAt = null;
+        vulnerability.ExploitAttemptCount = null;
+        vulnerability.GlobalExploitActivity = null;
     }
 
     /// <summary>
@@ -217,6 +219,9 @@ public class VulnerabilitiesService(
         incoming.EpssCve = stored.EpssCve;
         incoming.EpssAsOf = stored.EpssAsOf;
         incoming.EpssUpdatedAt = stored.EpssUpdatedAt;
+        // M57, T275: the Vision One exploit columns are the sync's too.
+        incoming.ExploitAttemptCount = stored.ExploitAttemptCount;
+        incoming.GlobalExploitActivity = stored.GlobalExploitActivity;
     }
 
     /// <summary>

@@ -13,5 +13,11 @@ public enum IntegrationSyncStatus
     Running = 1,
     Succeeded = 2,
     PartiallySucceeded = 3,
-    Failed = 4
+    Failed = 4,
+
+    /// <summary>
+    /// A manual sync request waiting for the job host (S40 §7.3, §8.7; T265): the API writes the row and returns, and the
+    /// Tenable job claims it atomically on its next tick. Never written for an integration that syncs inside the request.
+    /// </summary>
+    Queued = 5
 }

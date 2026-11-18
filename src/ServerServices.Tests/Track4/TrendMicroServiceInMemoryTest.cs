@@ -543,8 +543,13 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
 
     // --- risk scores and the entity index ---------------------------------------------------
 
+    /// <summary>
+    /// M57, T270 (S39 D-09): each device's score is written to its host and kept per source with history in
+    /// <c>vendor_scores</c> (V1Device); the entity's <c>cyber_risk_index</c> is no longer written — it was a weighted mean
+    /// that the last sync of either vendor overwrote and nothing reads. Fails on the pre-T270 code (entity index 67.14).
+    /// </summary>
     [Fact]
-    public async Task RiskScoresAreWrittenToTheHostAndRolledIntoAWeightedEntityIndex()
+    public async Task TestRiskScoresAreWrittenToTheHostAndKeptPerSourceWithHistory()
     {
         var view = await ConnectionAsync(syncVulnerabilities: false);
 
@@ -562,19 +567,43 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
         var result = await _svc.SyncAsync(view.Id);
 
         Assert.Equal(3, result.PostureRowsWritten);
-
-        // (90*5 + 10*1 + 10*1) / (5+1+1) = 67.14, not the unweighted 36.7 — a critical server at 90
-        // should not be averaged away by two test machines.
-        Assert.Equal(67.14, result.CyberRiskIndex!.Value, 2);
+        Assert.Null(result.CyberRiskIndex);
 
         await using var db = OpenContext();
 
-        Assert.Equal(90, db.Hosts.Single(h => h.ExternalId == "a1").RiskScore);
-        Assert.Equal(TrendMicroService.ProviderName, db.Hosts.Single(h => h.ExternalId == "a1").RiskScoreSource);
+        var a1 = db.Hosts.Single(h => h.ExternalId == "a1");
+        Assert.Equal(90, a1.RiskScore);
+        Assert.Equal(TrendMicroService.ProviderName, a1.RiskScoreSource);
 
         var entity = db.Entities.Single(e => e.Id == 7);
-        Assert.Equal(67.14, entity.CyberRiskIndex!.Value, 2);
-        Assert.Equal(TrendMicroService.ProviderName, entity.PostureSource);
+        Assert.Null(entity.CyberRiskIndex);
+        Assert.Null(entity.PostureSource);
+
+        var rows = db.VendorScores.Where(v => v.Source == VendorScoreSource.V1Device).ToList();
+        Assert.Equal(3, rows.Count);
+        var reading = rows.Single(r => r.HostId == a1.Id);
+        Assert.Equal((90d, 100d, view.Id, "a1", 7), (reading.Value, reading.ScaleMax, reading.ConnectionId, reading.ExternalRef,
+            reading.EntityId!.Value));
+    }
+
+    /// <summary>T270: a resync with an unchanged score extends the reading; a changed one opens a new row (history).</summary>
+    [Fact]
+    public async Task TestADeviceScoreKeepsItsHistoryAcrossSyncs()
+    {
+        var view = await ConnectionAsync(syncVulnerabilities: false);
+
+        StubApi("""{"items":[{"id":"a1","name":"srv","latestRiskScore":40}]}""");
+        await _svc.SyncAsync(view.Id);
+        await _svc.SyncAsync(view.Id);
+
+        FakeOutboundHttpClient.Reset();
+        StubApi("""{"items":[{"id":"a1","name":"srv","latestRiskScore":75}]}""");
+        await _svc.SyncAsync(view.Id);
+
+        await using var db = OpenContext();
+        var rows = db.VendorScores.Where(v => v.Source == VendorScoreSource.V1Device).OrderBy(v => v.Id).ToList();
+        Assert.Equal([40d, 75d], rows.Select(r => r.Value).ToArray());
+        Assert.True(rows[0].LastCapturedAt >= rows[0].FirstCapturedAt);
     }
 
     [Fact]
@@ -862,18 +891,22 @@ public class TrendMicroServiceInMemoryTest : InMemoryServiceTestBase
     }
 
     [Fact]
-    public async Task OnlyConnectionsWhoseIntervalHasElapsedAreSynced()
+    public async Task TestOnlyConnectionsWhoseDueDateHasComeAreSynced()
     {
         var view = await ConnectionAsync(syncVulnerabilities: false, syncRiskScores: false);
 
         StubApi("""{"items":[{"id":"agent-1","name":"x"}]}""");
 
+        // A manual sync does not move the scheduled cadence (T276): the first scheduled tick still runs and anchors it.
         await _svc.SyncAsync(view.Id);
 
-        var immediately = await _svc.SyncDueConnectionsAsync(Now);
+        var first = await _svc.SyncDueConnectionsAsync(Now);
+        Assert.Equal(1, first.HostsUpdated);
+
+        var immediately = await _svc.SyncDueConnectionsAsync(Now.AddMinutes(5));
         Assert.Equal(0, immediately.HostsCreated + immediately.HostsUpdated);
 
-        var tomorrow = await _svc.SyncDueConnectionsAsync(DateTime.UtcNow.AddDays(2));
+        var tomorrow = await _svc.SyncDueConnectionsAsync(Now.AddDays(1));
         Assert.Equal(1, tomorrow.HostsUpdated);
     }
 
