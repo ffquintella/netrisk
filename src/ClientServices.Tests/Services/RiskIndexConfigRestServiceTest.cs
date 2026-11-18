@@ -69,7 +69,8 @@ public class RiskIndexConfigRestServiceTest : BaseServiceTest
         var presets = await _service.GetPresetsAsync();
 
         Assert.Contains(schema.Items, i => i.Key == "omega.REG" && i.Group == "weights");
-        Assert.Contains(schema.Items, i => i.Key == "omega.TER" && i.Locked);
+        // M59, T288: TER is weighted from M48 on (0 or [0.05; 0.60], full mode only) — no longer locked at 0.
+        Assert.Contains(schema.Items, i => i.Key == "omega.TER" && !i.Locked);
         Assert.Equal(RiskIndexPresets.All.Count, presets.Count);
         Assert.False(presets.Single(p => p.Key == RiskIndexPresets.PureMean).Activatable);
         Assert.Equal(0.45, presets.Single(p => p.Key == RiskIndexPresets.RegisterCentred).Parameters.Omega.Reg);

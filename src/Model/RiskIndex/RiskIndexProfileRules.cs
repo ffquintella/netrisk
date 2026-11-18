@@ -73,8 +73,9 @@ public static class RiskIndexProfileRules
         new("omega.AME", "weights", "double", p => p.Omega.Ame, 0.05, 0.60, ZeroAllowed: true),
         new("omega.CTL", "weights", "double", p => p.Omega.Ctl, 0.05, 0.60, ZeroAllowed: true),
         new("omega.GOV", "weights", "double", p => p.Omega.Gov, 0.05, 0.60, ZeroAllowed: true),
-        // TER stays at 0 until M48 (S39 §2.3, §12.2).
-        new("omega.TER", "weights", "double", p => p.Omega.Ter, 0, 0, Locked: true, LockedReasonKey: "RiskParamLocked_TerUntilM48"),
+        // TER: 0 or [0.05; 0.60] since M48 (S39 §2.3, §12.2); a weight above 0 needs the full mode (M59, T288), which
+        // Structural checks — the interim mode has no supplier object to score.
+        new("omega.TER", "weights", "double", p => p.Omega.Ter, 0.05, 0.60, ZeroAllowed: true),
 
         new("p", "aggregation", "int", p => p.P, 2, 16),
         new("tau", "aggregation", "double", p => p.Tau, 0.60, 0.95),
@@ -335,10 +336,15 @@ public static class RiskIndexProfileRules
 
     private static void Structural(RiskIndexMode mode, RiskIndexParameters p, List<RiskIndexValidationIssueDto> errors)
     {
-        // The full mode reads the Track 9 sources (Gate A floor, Top Risks, P95/CVaR…, S39 §15.1); this version computes
-        // only the interim mode, so a full-mode profile has no engine to run it.
-        if (mode != RiskIndexMode.Interim)
-            errors.Add(Issue("full_mode_prerequisites_missing", null, ("mode", ((int)mode).ToString(CultureInfo.InvariantCulture))));
+        // The full mode consumes Track 9 (M59, S39 §15.1): every stage it reads (M39–M49) is delivered, so a full-mode profile
+        // validates like an interim one. A mode the engine does not know is still refused.
+        if (mode is not (RiskIndexMode.Interim or RiskIndexMode.Full))
+            errors.Add(Issue("unknown_mode", null, ("mode", ((int)mode).ToString(CultureInfo.InvariantCulture))));
+
+        // TER scores suppliers of the M48 register, which only the full mode collects (S39 §15.1; T288): an interim profile
+        // that weights it would renormalize a category that can never be available.
+        if (mode == RiskIndexMode.Interim && p.Omega.Ter > 0)
+            errors.Add(Issue("ter_requires_full_mode", "omega.TER", ("value", Format(p.Omega.Ter))));
 
         foreach (var rule in Scalars)
         {

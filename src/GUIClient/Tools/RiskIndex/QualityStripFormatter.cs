@@ -78,8 +78,11 @@ public static class QualityStripFormatter
         items.Add(RootOnly(FindingStatusDisagreements, "RiskQualityPanel_", quality.FindingStatusDisagreements, text, culture));
         items.Add(Counted(ResidualAboveInherent, "RiskQualityPanel_", quality.ResidualAboveInherent,
             mayReadRegister ? RiskIndexQualityFilters.Filter(RiskIndexQualityFilters.ResidualAboveInherent) : null, text, culture));
+        // M40's confidence, beside the quality and never in it: the distribution in full mode (M59, T287), the state otherwise.
         items.Add(new QualityItem(EvidenceConfidence, RiskText.Get(text, "RiskQualityPanel_" + EvidenceConfidence),
-            RiskText.Get(text, "RiskQuality_Evidence_" + quality.EvidenceConfidenceStateKey), false, true, null));
+            quality.EvidenceConfidence is { } confidence
+                ? FullModeFormatter.EvidenceConfidence(confidence, text, culture)
+                : RiskText.Get(text, "RiskQuality_Evidence_" + quality.EvidenceConfidenceStateKey), false, true, null));
         return items;
     }
 

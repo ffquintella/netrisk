@@ -39,7 +39,11 @@ public static class HeadlineFormatter
 
     /// <summary>The seal keys the server sends today (<c>RiskIndexReadService.SealsAsync</c>), each with a <c>RiskSeal_‹key›MSG</c>.</summary>
     public static readonly IReadOnlyList<string> KnownSealKeys =
-        ["scenarios_above_appetite", "scenarios_accepted_above_appetite", "acceptances_expiring", "appetite_not_configured"];
+    [
+        "scenarios_above_appetite", "scenarios_accepted_above_appetite", "acceptances_expiring", "appetite_not_configured",
+        // M59 (T286, T287): the full-mode seals of Gate A and Gate B.
+        "gate_a_scenarios", "gate_b_tail_exceeds", "gate_b_kri_exceeds", "gate_b_not_assessable"
+    ];
 
     /// <summary>The chip keys the card shows, each with a <c>RiskChip_‹key›MSG</c>.</summary>
     public static readonly IReadOnlyList<string> KnownChipKeys =

@@ -114,6 +114,7 @@ public class RiskOverviewViewModel : ViewModelBase
         Trend = new RiskTrendViewModel(day => _ = SelectDayAsync(day));
         Changes = new RiskChangesViewModel(OpenObjectDetailAsync);
         Contributions = new RiskContributionsViewModel(OpenObjectDetailAsync);
+        TopRisks = new RiskTopRisksPlaceholderViewModel(OpenObjectDetailAsync);
         Categories = new RiskCategoriesViewModel(ShowCategoryDetail);
         AssetTabs = new RiskAssetClassTabsViewModel(tab => _drill = _drill.SelectTab(tab),
             (tab, filter, label) => _ = ObjectList.ShowPresetAsync(filter, label, tab));
@@ -178,11 +179,11 @@ public class RiskOverviewViewModel : ViewModelBase
     /// <summary>The always-visible governance and review indicators (§5.2.5; T256).</summary>
     public RiskGovernanceIndicatorsViewModel Governance { get; }
 
-    /// <summary>The monetary panel in its interim, unavailable state (§5.10; T256).</summary>
+    /// <summary>The monetary panel (§5.10; T256), read from the server since M59 (T287).</summary>
     public RiskMonetaryPanelViewModel Monetary { get; } = new();
 
-    /// <summary>The Top Risks placeholder (§5.11; T256).</summary>
-    public RiskTopRisksPlaceholderViewModel TopRisks { get; } = new();
+    /// <summary>The Top Risks space (§5.11): the placeholder in interim mode, M43's list in full mode (M59, T286).</summary>
+    public RiskTopRisksPlaceholderViewModel TopRisks { get; }
 
     /// <summary>The page's drill-down state, read-only to the outside (§5.6.2).</summary>
     public DrillState Drill => _drill;
@@ -510,6 +511,8 @@ public class RiskOverviewViewModel : ViewModelBase
             // The strips sit right under the card (§5.0): their reads queue first.
             _ = Quality.LoadAsync(overview, profile?.Parameters.UnassignedThreshold, _pageGate, token);
             _ = Governance.LoadAsync(overview, _pageGate, token);
+            _ = Monetary.LoadAsync(overview, _pageGate, token);
+            _ = TopRisks.LoadAsync(overview, _pageGate, token);
         }
 
         _ = Explore.LoadAsync(_drill, overview.SnapshotDate, overview, Labels, _pageGate, token);
@@ -559,6 +562,8 @@ public class RiskOverviewViewModel : ViewModelBase
         Contributions.Clear();
         Quality.Clear();
         Governance.Clear();
+        Monetary.Clear();
+        TopRisks.Clear();
         Monetary.IsActive = TopRisks.IsActive = false;
     }
 

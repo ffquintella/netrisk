@@ -116,6 +116,15 @@ public static class RiskIndexErrors
     public const string BridgeNotFound = "bridge_not_found";
     public const string InvalidLimit = "invalid_limit";
 
+    /// <summary>M59 (T286, T287): Top Risks, the portfolio tail and the Gate B seals exist in full mode only.</summary>
+    public const string RequiresFullMode = "requires_full_mode";
+
+    /// <summary>M45's portfolio aggregation takes at most 500 risks; a node with more quantified scenarios has none.</summary>
+    public const string PortfolioTooLarge = "portfolio_too_large";
+
+    /// <summary>The host did not wire the Track 9 service a full-mode read consumes.</summary>
+    public const string Track9ServiceUnavailable = "track9_service_unavailable";
+
     // The Sources tab (S40 §6.5, §8.2; T263).
     public const string RunsRequireGlobalScope = "runs_require_global_scope";
     public const string RunKindNotRecorded = "run_kind_not_recorded";

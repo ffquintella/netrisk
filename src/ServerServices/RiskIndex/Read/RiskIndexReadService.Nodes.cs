@@ -25,7 +25,8 @@ public sealed partial class RiskIndexReadService
         await EnsureNotInShadowAsync(caller, ct);
         if (!Enum.IsDefined(dimension))
             throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidDimension,
-                "The dimension is Unit, Process, Activity, Application, AssetClass, Source, Criticality or Environment.");
+                "The dimension is Unit, Process, Activity, Application, AssetClass, Source, Criticality, Environment, ItService " +
+                "or Data.");
 
         var childFilters = RiskIndexNodeKey.Org;
         if (!string.IsNullOrWhiteSpace(filters) &&
@@ -87,6 +88,26 @@ public sealed partial class RiskIndexReadService
                     .SelectMany(day.Map.ApplicationsOfProcess);
                 keys = day.Map.Ids.Where(id => day.Map.DefinitionOf(id) == RiskIndexEntityTypes.Application &&
                                                (parent.IsRoot || closure.Contains(id) || listed.Contains(id)) &&
+                                               id != parent.EntityId)
+                    .Order().Select(RiskIndexNodeKey.ForEntity).ToList();
+                break;
+            case RiskIndexDimension.ItService:
+                // M39 (T284): the services that serve a process of the parent's closure or implement one of its applications.
+                keys = day.Map.Ids.Where(id => day.Map.DefinitionOf(id) == RiskIndexEntityTypes.ItService &&
+                                               (parent.IsRoot || closure.Contains(id) ||
+                                                day.Map.ProcessesOfService(id).Any(closure.Contains) ||
+                                                day.Map.ApplicationsOfService(id).Any(closure.Contains)) &&
+                                               id != parent.EntityId)
+                    .Order().Select(RiskIndexNodeKey.ForEntity).ToList();
+                break;
+            case RiskIndexDimension.Data:
+                // M39/M49 (T284): the data records in the closure, or handled by a service of the parent's closure.
+                var services = day.Map.Ids.Where(id => day.Map.DefinitionOf(id) == RiskIndexEntityTypes.ItService &&
+                                                       (closure.Contains(id) || day.Map.ProcessesOfService(id).Any(closure.Contains)))
+                    .ToHashSet();
+                keys = day.Map.Ids.Where(id => day.Map.DefinitionOf(id) == RiskIndexEntityTypes.Data &&
+                                               (parent.IsRoot || closure.Contains(id) ||
+                                                services.Any(s => day.Map.DataOfService(s).Contains(id))) &&
                                                id != parent.EntityId)
                     .Order().Select(RiskIndexNodeKey.ForEntity).ToList();
                 break;

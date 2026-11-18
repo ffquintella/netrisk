@@ -75,15 +75,32 @@ public class RiskProfileDraftSession : RiskAdminViewModelBase
         }
     }
 
+    private RiskIndexMode _editedMode = RiskIndexMode.Interim;
+
+    /// <summary>
+    /// The draft's mode (S39 §15.1; M59): interim or full. Full consumes Track 9 and is the only mode that may weight TER;
+    /// changing it is always a rebaseline, which the live validation reports (S39 §12.4).
+    /// </summary>
+    public RiskIndexMode EditedMode
+    {
+        get => _editedMode;
+        set
+        {
+            if (_editedMode == value || !IsEditable) return;
+            this.RaiseAndSetIfChanged(ref _editedMode, value);
+            Recompute();
+        }
+    }
+
     /// <summary>Keys whose text does not parse (a list item that is not a level id or a CIDR): Save stays closed.</summary>
     public HashSet<string> InvalidFields { get; } = new(StringComparer.Ordinal);
 
     public bool StructurallyValid => InvalidFields.Count == 0 && (Draft is null || !string.IsNullOrWhiteSpace(EditedName));
 
     public bool IsDirty => Draft is not null
-        ? !string.Equals(EditedName, Draft.Name, StringComparison.Ordinal) ||
+        ? !string.Equals(EditedName, Draft.Name, StringComparison.Ordinal) || _editedMode != Draft.Mode ||
           RiskIndexProfileRules.ChangedKeys(Draft.Parameters, _edited).Count > 0
-        : Active is not null && RiskIndexProfileRules.ChangedKeys(Active.Parameters, _edited).Count > 0;
+        : Active is not null && (_editedMode != Active.Mode || RiskIndexProfileRules.ChangedKeys(Active.Parameters, _edited).Count > 0);
 
     public string UnsavedChangesSummary => string.Join(", ", ProfileParameterRows.ChangedGroups(
             Draft?.Parameters ?? Active?.Parameters ?? _edited, _edited)
@@ -167,6 +184,8 @@ public class RiskProfileDraftSession : RiskAdminViewModelBase
         _edited = Draft?.Parameters ?? Active?.Parameters ?? new RiskIndexParameters();
         _editedName = Draft?.Name ?? "";
         this.RaisePropertyChanged(nameof(EditedName));
+        _editedMode = Draft?.Mode ?? Active?.Mode ?? RiskIndexMode.Interim;
+        this.RaisePropertyChanged(nameof(EditedMode));
         InvalidFields.Clear();
         ServerValidation = null;
         LiveValidation = Draft is null && Active is null ? null : Validate(_edited);
@@ -181,7 +200,7 @@ public class RiskProfileDraftSession : RiskAdminViewModelBase
     }
 
     private RiskIndexValidationResultDto Validate(RiskIndexParameters parameters) =>
-        RiskIndexProfileRules.Validate(RiskIndexMode.Interim, parameters, Active?.Mode, Active?.Parameters, null, Draft?.Preset,
+        RiskIndexProfileRules.Validate(_editedMode, parameters, Active?.Mode, Active?.Parameters, null, Draft?.Preset,
             Active?.Preset);
 
     /// <summary>
@@ -204,7 +223,7 @@ public class RiskProfileDraftSession : RiskAdminViewModelBase
 
             var name = string.IsNullOrWhiteSpace(EditedName) ? draft.Name : EditedName.Trim();
             Draft = await _configService.UpdateDraftAsync(draft.Id, draft.Revision,
-                new RiskIndexProfileUpdateRequest(name, RiskIndexMode.Interim, _edited));
+                new RiskIndexProfileUpdateRequest(name, _editedMode, _edited));
             Profiles = await _readService.GetProfilesAsync();
             ResetEdit();
             saved = true;

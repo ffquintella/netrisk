@@ -17,6 +17,8 @@ public static class ProfileIssueText
     public static readonly IReadOnlyDictionary<string, string[]> ArgumentOrder = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
         ["full_mode_prerequisites_missing"] = [],
+        ["unknown_mode"] = ["mode"],
+        ["ter_requires_full_mode"] = ["value"],
         ["parameter_out_of_range"] = ["value", "min", "max"],
         ["locked_parameter"] = ["value", "locked"],
         ["omega_sum"] = ["sum"],

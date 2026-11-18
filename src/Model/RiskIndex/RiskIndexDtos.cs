@@ -13,9 +13,14 @@ namespace Model.RiskIndex;
 
 public enum RiskIndexProvenance { Official = 1, OfficialDerived = 2, PartialRestricted = 3, UnofficialPreview = 4 }
 
+/// <summary>
+/// A drill-down dimension (S40 §5.6.1). <see cref="ItService"/> and <see cref="Data"/> are the M39 chain nodes the full mode
+/// adds (M59, T284): in interim mode they list their nodes too, holding only what is attributed to them directly.
+/// </summary>
 public enum RiskIndexDimension
 {
-    Unit = 1, Process = 2, Activity = 3, Application = 4, AssetClass = 5, Source = 6, Criticality = 7, Environment = 8
+    Unit = 1, Process = 2, Activity = 3, Application = 4, AssetClass = 5, Source = 6, Criticality = 7, Environment = 8,
+    ItService = 9, Data = 10
 }
 
 public enum RiskIndexPublicationState { Shadow = 1, Published = 2 }
@@ -248,7 +253,54 @@ public record RiskIndexQualityDto(double Coverage, double Freshness, double Qual
     double UnassignedWeightFraction, bool UnassignedWarning, double DefaultCriticalityWeightFraction,
     IReadOnlyList<RiskIndexStaleSourceDto> StaleSources, int PresumedCritical, int? DivergentLinks, int? OrphanApplications,
     int? SscPseudoHosts, int? ExitedWithBadReading, int? FindingStatusDisagreements, int ResidualAboveInherent,
-    string EvidenceConfidenceStateKey);
+    string EvidenceConfidenceStateKey, RiskIndexEvidenceConfidenceDto? EvidenceConfidence = null);
+
+/// <summary>
+/// The evidence confidence of M40 over the node's visible open scenarios (S39 §15.1, §17 "ao lado"; S40 §5.11; M59, T287):
+/// how many are confirmed, indicative, hypotheses or not declared. Beside the quality, never inside it — "independente da
+/// pontuação quantitativa". Null in interim mode.
+/// </summary>
+public record RiskIndexEvidenceConfidenceDto(int Confirmed, int Indicative, int Hypothesis, int NotDeclared);
+
+// ---------- full mode (M59): Top Risks and the monetary panel ----------
+
+/// <summary>
+/// The Top Risks list of M43 (T172) hosted by the dashboard for one node (S40 §5.11; M59, T286): M43's own ranking, restricted
+/// to the open scenarios of the node's set the caller can see. <see cref="Available"/> is false in interim mode, with
+/// <see cref="UnavailableReasonKey"/> — never an approximation (S39 §1.2 item 5).
+/// </summary>
+public record RiskIndexTopRisksDto(RiskIndexNodeRef Node, DateOnly SnapshotDate, bool Available, string? UnavailableReasonKey,
+    int OpenScenarios, IReadOnlyList<RiskIndexTopRiskDto> Items);
+
+/// <summary>
+/// One Top Risks row: M43's rank inside the node, the scenario (label redacted without <c>riskmanagement</c>, S40 §11.3), its
+/// Gate A conditions (flag codes), last decision, scores, E[L], business rank, evidence confidence, trend and next decision.
+/// </summary>
+public record RiskIndexTopRiskDto(int Rank, RiskIndexObjectLabelDto Scenario, bool GateA, IReadOnlyList<int> GateAConditions,
+    int? Decision, double? Inherent, double? Residual, double? ExpectedAnnualLoss, int? BusinessRank, int? EvidenceConfidence,
+    string? TrendKey, string? NextDecisionKey, RiskIndexNavigationTargetDto? Link);
+
+/// <summary>
+/// The monetary panel (S40 §5.10, §8.2 <c>GET /RiskIndex/Monetary</c>; M59, T287), outside the index: Σ E[L] residual and
+/// inherent with "n of N" and the quantified share of REG's weight — never a bare total — and, in full mode, the portfolio
+/// P95/CVaR that M45's own aggregation computes over the node's quantified scenarios. Percentiles are never summed here.
+/// </summary>
+public record RiskIndexMonetaryDto(RiskIndexNodeRef Node, DateOnly SnapshotDate, RiskIndexProvenance Provenance, int Scenarios,
+    RiskIndexLossSumDto Residual, RiskIndexLossSumDto Inherent, RiskIndexPortfolioTailDto? Portfolio,
+    string? PortfolioUnavailableKey);
+
+/// <summary>Σ E[L] over the quantified scenarios: <see cref="Sum"/> null when none is; <see cref="Partial"/> below
+/// <c>cobertura_quantificacao_min</c> of REG's weight.</summary>
+public record RiskIndexLossSumDto(double? Sum, int Quantified, int Total, double RegisterWeightFraction, bool Partial);
+
+/// <summary>
+/// M45's portfolio aggregation (T185) of the node's quantified scenarios: E[L], P95 and CVaR95 with their Monte Carlo
+/// intervals, the sums that bound them, members and the scenarios it left out, the dependence it assumed, and Gate B on
+/// the portfolio against the governing appetite's tolerance (<see cref="GateBStateKey"/>, T186).
+/// </summary>
+public record RiskIndexPortfolioTailDto(double ExpectedLoss, double P95, double P95CiLow, double P95CiHigh, double Cvar95,
+    double Cvar95CiLow, double Cvar95CiHigh, double SumOfP95, double SumOfCvar95, int Members, int NotQuantified,
+    string DependenceKey, string GateBStateKey, int Iterations, int Seed);
 
 /// <summary>An enabled source none of whose readings in the node is current (<c>v &lt; 1</c>), with its freshest reading.</summary>
 public record RiskIndexStaleSourceDto(string SourceKey, DateTime? LastReadingUtc);

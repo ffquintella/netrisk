@@ -324,6 +324,52 @@ public class RiskIndexRestServiceTest : BaseServiceTest
         Assert.Equal(5, quality.ResidualAboveInherent);
     }
 
+    /// <summary>M59, T287: the full-mode evidence confidence distribution travels beside the quality, and is absent in interim.</summary>
+    [Fact]
+    public async Task TestTheEvidenceConfidenceDistributionIsReadWhenPresent()
+    {
+        Answer("/RiskIndex/Quality", new RiskIndexQualityDto(0.92, 0.99, 0.91, "high", 0, false, 0, [], 0, null, null, null, null,
+            null, 0, "available", new RiskIndexEvidenceConfidenceDto(3, 2, 1, 4)));
+
+        var quality = await _service.GetQualityAsync("e:7");
+
+        Assert.Equal((3, 2, 1, 4), (quality.EvidenceConfidence!.Confirmed, quality.EvidenceConfidence.Indicative,
+            quality.EvidenceConfidence.Hypothesis, quality.EvidenceConfidence.NotDeclared));
+    }
+
+    /// <summary>M59, T286: Top Risks sends its node, date and limit, and keeps the interim's unavailable state.</summary>
+    [Fact]
+    public async Task TestTopRisksSendsNodeDateAndLimit()
+    {
+        Answer("/RiskIndex/TopRisks", new RiskIndexTopRisksDto(new RiskIndexNodeRef("e:7", "Unit X", "organizationUnit"),
+            new DateOnly(2026, 10, 5), false, "requires_full_mode", 0, []));
+
+        var top = await _service.GetTopRisksAsync("e:7", new DateOnly(2026, 10, 5), 20);
+
+        Assert.Equal("GET /RiskIndex/TopRisks", _backend.LastRequest.ToString().Split('?')[0]);
+        Assert.Contains("node=e:7", Uri.UnescapeDataString(_backend.LastRequest.Query));
+        Assert.Contains("limit=20", _backend.LastRequest.Query);
+        Assert.Contains("date=2026-10-05", _backend.LastRequest.Query);
+        Assert.Equal((false, "requires_full_mode"), (top.Available, top.UnavailableReasonKey));
+    }
+
+    /// <summary>M59, T287: the monetary panel is read with its node and keeps a sum without quantified scenarios as null.</summary>
+    [Fact]
+    public async Task TestTheMonetaryPanelIsReadAndKeepsAnUnquantifiedSumAsNull()
+    {
+        Answer("/RiskIndex/Monetary", new RiskIndexMonetaryDto(new RiskIndexNodeRef("org", "Organization", "organization"),
+            new DateOnly(2026, 10, 5), RiskIndexProvenance.Official, 6, new RiskIndexLossSumDto(null, 0, 6, 0, false),
+            new RiskIndexLossSumDto(1240000, 3, 6, 0.4, true),
+            new RiskIndexPortfolioTailDto(1, 2, 1.5, 2.5, 3, 2.5, 3.5, 4, 5, 3, 0, "Declared", "exceeds", 100000, 7), null));
+
+        var monetary = await _service.GetMonetaryAsync("org");
+
+        Assert.Equal("GET /RiskIndex/Monetary", _backend.LastRequest.ToString().Split('?')[0]);
+        Assert.Null(monetary.Residual.Sum);
+        Assert.Equal((1240000d, true), (monetary.Inherent.Sum!.Value, monetary.Inherent.Partial));
+        Assert.Equal(("exceeds", 3), (monetary.Portfolio!.GateBStateKey, monetary.Portfolio.Members));
+    }
+
     [Fact]
     public async Task TestAQualityRefusalKeepsItsCode()
     {

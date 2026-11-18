@@ -48,11 +48,39 @@ public class RiskIndexProfileRulesTest
     {
         var sum = Validate(Default with { Omega = Default.Omega with { Reg = 0.40 } });
         var two = Validate(Default with { Omega = new RiskIndexCategoryWeights { Reg = 0.5, Exp = 0.5, Ame = 0, Ctl = 0, Gov = 0 } });
-        var ter = Validate(Default with { Omega = Default.Omega with { Ter = 0.05, Gov = 0.10 } });
 
         Assert.Contains("omega_sum", Codes(sum));
         Assert.Contains("omega_min_categories", Codes(two));
-        Assert.Contains(ter.Errors, e => e is { Code: "locked_parameter", ParameterKey: "omega.TER" });
+    }
+
+    /// <summary>
+    /// M59, T288 (S39 §2.3, §12.2): TER is 0 or [0.05; 0.60] since M48 — and only the full mode scores suppliers, so an
+    /// interim profile that weights it is refused with its own code, never with the lock that held it at 0 before M48.
+    /// </summary>
+    [Fact]
+    public void TestT288TerIsWeightedInFullModeOnlyAndWithinItsRange()
+    {
+        var weights = Default.Omega with { Ter = 0.05, Gov = 0.10 };
+        var interim = Validate(Default with { Omega = weights });
+        var full = Validate(Default with { Omega = weights }, mode: RiskIndexMode.Full);
+        var tooSmall = Validate(Default with { Omega = Default.Omega with { Ter = 0.02, Gov = 0.13 } }, mode: RiskIndexMode.Full);
+
+        Assert.Contains(interim.Errors, e => e is { Code: "ter_requires_full_mode", ParameterKey: "omega.TER" });
+        Assert.DoesNotContain(interim.Errors, e => e.Code == "locked_parameter");
+        Assert.True(full.IsValid, string.Join(", ", Codes(full)));
+        Assert.Contains(tooSmall.Errors, e => e is { Code: "parameter_out_of_range", ParameterKey: "omega.TER" });
+        Assert.False(RiskIndexProfileRules.Schema().Items.Single(i => i.Key == "omega.TER").Locked);
+    }
+
+    /// <summary>M59: every Track 9 stage the full mode reads is delivered, so a full-mode profile validates (regression of T250's refusal).</summary>
+    [Fact]
+    public void TestAFullModeProfileValidatesNow()
+    {
+        var full = Validate(Default, mode: RiskIndexMode.Full);
+
+        Assert.True(full.IsValid, string.Join(", ", Codes(full)));
+        Assert.DoesNotContain("full_mode_prerequisites_missing", Codes(full));
+        Assert.Contains("unknown_mode", Codes(Validate(Default, mode: (RiskIndexMode)9)));
     }
 
     /// <summary>S39 §12.4: τ 0.60 with τ_G 0.50 leaves a lone R = 1 object at 21 &lt; 31; τ 0.60 needs τ_G ≥ 0.74.</summary>
@@ -115,7 +143,6 @@ public class RiskIndexProfileRulesTest
         {
             Bands = [new RiskIndexBandDefinition { LabelPtBr = "A", LabelEnUs = "A", LowerInclusive = 5 }]
         })));
-        Assert.Contains("full_mode_prerequisites_missing", Codes(Validate(Default, mode: RiskIndexMode.Full)));
     }
 
     [Fact]

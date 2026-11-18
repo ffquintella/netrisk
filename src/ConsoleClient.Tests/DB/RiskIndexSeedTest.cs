@@ -38,6 +38,29 @@ public class RiskIndexSeedTest
     private static IEnumerable<string> Quoted(string list) =>
         Regex.Matches(list, @"'([^']*)'").Select(m => m.Groups[1].Value);
 
+    /// <summary>
+    /// M59, T288 (S39 §10.4, §13.1): the Data script that gives M47's third-line role (T198) <c>risk_index_view</c> — by role name
+    /// and permission key, INSERT IGNORE, nothing else granted and no write permission of the index.
+    /// </summary>
+    [Fact]
+    public void TestT288TheThirdLineRoleIsGrantedTheIndexReadOnly()
+    {
+        var matches = new DirectoryInfo(Path.Combine(RepoLayout.DbDirectory.FullName, "Data"))
+            .GetFiles("*.sql")
+            .Where(f => Regex.IsMatch(File.ReadAllText(f.FullName), @"r\.`name`\s*=\s*'ThirdLineAuditor'") &&
+                        File.ReadAllText(f.FullName).Contains($"'{RiskIndexPermissions.View}'"))
+            .ToList();
+
+        var file = Assert.Single(matches);
+        Assert.Equal("117.sql", file.Name);
+        var sql = Regex.Replace(File.ReadAllText(file.FullName), @"--[^\n]*", " ");
+        Assert.Matches(new Regex(@"INSERT\s+IGNORE\s+INTO\s+`role_responsibilities`", Opts), sql);
+        Assert.DoesNotMatch(new Regex(@"`role_responsibilities`[^;]*VALUES", Opts), sql);
+        Assert.DoesNotContain($"'{RiskIndexPermissions.Configure}'", sql);
+        Assert.DoesNotContain($"'{RiskIndexPermissions.Approve}'", sql);
+        Assert.Contains("value = '117'", sql);
+    }
+
     [Fact]
     public void TestThePermissionsAreInsertedByKeyWithoutAnId()
     {

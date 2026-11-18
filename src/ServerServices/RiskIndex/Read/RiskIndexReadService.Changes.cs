@@ -214,7 +214,10 @@ public sealed partial class RiskIndexReadService
                 double? sla = open.Count > 0 ? (double)open.Count(f => f.SlaDueDate >= now) / open.Count : null;
 
                 return new RiskIndexGovernanceIndicatorsDto(expiring, day.P.ExpiryWarningDays, overrides, completion, meanDays,
-                    campaigns.Count(c => c.Status == RiskReviewCampaignStatus.Overdue), sla, "requires_m43", "requires_m45_m46");
+                    campaigns.Count(c => c.Status == RiskReviewCampaignStatus.Overdue), sla,
+                    // Full mode (T286, T287): flags and Gate B are shown — the Top Risks list and the seals carry them.
+                    day.Profile.Mode == RiskIndexMode.Full ? "see_top_risks" : "requires_m43",
+                    day.Profile.Mode == RiskIndexMode.Full ? "see_seals" : "requires_m45_m46");
             });
 
         static List<int> Ids(IEnumerable<RiskIndexObjectRow> rows, RiskIndexObjectKind kind) =>

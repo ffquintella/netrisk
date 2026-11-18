@@ -60,6 +60,39 @@ public sealed record RiskIndexScenarioInputs
 
     /// <summary>The first day of GOV.G's current run of lit days (S39 §6.3), carried to tomorrow for the latch.</summary>
     public DateTime? DivergenceSince { get; init; }
+
+    // ---- full mode only (M59): what Track 9 says of the scenario, read beside the value and never into it ----
+
+    /// <summary>
+    /// The Gate A conditions M43's predicate holds on the scenario (<c>RiskFlagCode</c> values, T169/T170): the PA-1 display
+    /// floor reads them (S39 §7, T286). Null in interim mode; empty when the predicate is false.
+    /// </summary>
+    public IReadOnlyList<int>? GateAConditions { get; init; }
+
+    /// <summary>The evidence confidence of M40 (<c>EvidenceConfidence</c>; null = not declared), shown beside (T287).</summary>
+    public int? EvidenceConfidence { get; init; }
+
+    /// <summary>The target level of M44 (T180): score on the 0–10 register scale and annual E[L], when set.</summary>
+    public double? TargetScore { get; init; }
+
+    public double? TargetExpectedLoss { get; init; }
+
+    /// <summary>
+    /// Gate B on the tail (M45, T186) and by indicator (M46, T191), as the decision path evaluates them: <c>exceeds</c>,
+    /// <c>within</c>, <c>not_assessable</c> or <c>not_configured</c>. Seals only (S39 §6.6) — never a floor.
+    /// </summary>
+    public string? GateBTail { get; init; }
+
+    public string? GateBIndicators { get; init; }
+}
+
+/// <summary>The stable values of <see cref="RiskIndexScenarioInputs.GateBTail"/> and <see cref="RiskIndexScenarioInputs.GateBIndicators"/>.</summary>
+public static class RiskIndexGateBStates
+{
+    public const string Exceeds = "exceeds";
+    public const string Within = "within";
+    public const string NotAssessable = "not_assessable";
+    public const string NotConfigured = "not_configured";
 }
 
 /// <summary>
@@ -133,7 +166,7 @@ public static class RiskIndexSourceBits
         RiskIndexSources.NearMisses, RiskIndexSources.IncidentResponsePlans, RiskIndexSources.Assessments,
         RiskIndexSources.TenableVm, RiskIndexSources.TenableAes, RiskIndexSources.V1InternetFacing,
         RiskIndexSources.V1Accounts, RiskIndexSources.V1Cloud, RiskIndexSources.V1LocalApps,
-        RiskIndexSources.V1SecurityConfiguration
+        RiskIndexSources.V1SecurityConfiguration, RiskIndexSources.ThirdPartyRegister
     ];
 
     public static IReadOnlyList<string> Sources => Order;

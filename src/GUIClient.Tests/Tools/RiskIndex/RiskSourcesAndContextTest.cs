@@ -42,7 +42,8 @@ public class RiskSourcesAndContextTest
     [Fact]
     public void TestANotBuiltSourceCannotBeSwitchedOnButCanBeSwitchedOff()
     {
-        var notBuilt = RiskSourceCatalogue.Find(RiskIndexSources.CmdbRelations)!;
+        // Every source of the catalogue is built since M59; the rule still holds for one that is not.
+        var notBuilt = new RiskSourceInfo("FUTURE", "EXP", RiskSourceAvailability.NotAvailable, "T999", false);
         var vision = RiskSourceCatalogue.Find(RiskIndexSources.V1Device)!;
 
         Assert.Equal("RiskSourceRequiresTask", RiskSourceCatalogue.Toggle(notBuilt, false, true).ReasonKey);
@@ -52,18 +53,21 @@ public class RiskSourcesAndContextTest
     }
 
     /// <summary>
-    /// M58, T291: the Jira Assets import writes the host's internet exposure, so CMDB-INET may be enabled; the relations it
-    /// imports wait for the full-mode drill-down that reads them (T284), so CMDB-REL still cannot be switched on.
+    /// M58, T291: the Jira Assets import writes the host's internet exposure, so CMDB-INET may be enabled; M59 (T284) reads the
+    /// relations it imports in the full mode's chain, so CMDB-REL may be enabled too — and so may the near misses M40
+    /// records (AME.Q) and the third-party register (TER-REG, T288).
     /// </summary>
-    [Fact]
-    public void TestCmdbInternetFacingCanBeSwitchedOnAndCmdbRelationsAwaitsT284()
+    [Theory]
+    [InlineData(RiskIndexSources.CmdbInternetFacing)]
+    [InlineData(RiskIndexSources.CmdbRelations)]
+    [InlineData(RiskIndexSources.NearMisses)]
+    [InlineData(RiskIndexSources.ThirdPartyRegister)]
+    public void TestTheSourcesTheFullModeReadsCanBeSwitchedOn(string source)
     {
-        var inet = RiskSourceCatalogue.Find(RiskIndexSources.CmdbInternetFacing)!;
-        var relations = RiskSourceCatalogue.Find(RiskIndexSources.CmdbRelations)!;
+        var info = RiskSourceCatalogue.Find(source)!;
 
-        Assert.Equal(RiskSourceAvailability.Available, inet.Availability);
-        Assert.True(RiskSourceCatalogue.Toggle(inet, false, true).Enabled);
-        Assert.Equal((RiskSourceAvailability.NotAvailable, "T284"), (relations.Availability, relations.Qualifier));
+        Assert.Equal(RiskSourceAvailability.Available, info.Availability);
+        Assert.True(RiskSourceCatalogue.Toggle(info, false, true).Enabled);
     }
 
     /// <summary>M56, T266–T267: the Tenable connector exists, so TEN-VM, TEN-AES and TEN-ACR may be enabled in a draft.</summary>

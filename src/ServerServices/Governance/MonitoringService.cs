@@ -848,7 +848,7 @@ public class MonitoringService(
     }
 
     /// <summary>The valid (not voided) readings of each KRI, as the evaluation reads them.</summary>
-    internal static async Task<Dictionary<int, List<KriObservation>>> ValidReadingsAsync(AuditableContext db,
+    internal static async Task<Dictionary<int, List<KriObservation>>> ValidReadingsAsync(DAL.Context.NRDbContext db,
         IReadOnlyCollection<int> kriIds)
     {
         var rows = await db.KriReadings.AsNoTracking()

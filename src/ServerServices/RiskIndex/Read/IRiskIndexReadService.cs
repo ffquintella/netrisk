@@ -81,6 +81,19 @@ public interface IRiskIndexReadService
     Task<RiskIndexQualityDto> GetQualityAsync(string? node, DateOnly? date, RiskIndexCaller caller, CancellationToken ct = default);
 
     /// <summary>
+    /// M43's Top Risks list hosted for the node (S40 §5.11; M59, T286): M43's own ranking over the node's open scenarios the
+    /// caller can see, in full mode; unavailable in interim mode, never approximated.
+    /// </summary>
+    Task<RiskIndexTopRisksDto> GetTopRisksAsync(string? node, DateOnly? date, int limit, RiskIndexCaller caller,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// The monetary panel (S40 §5.10; M59, T287): Σ E[L] residual and inherent with "n of N", and in full mode M45's portfolio
+    /// P95/CVaR over the node's quantified scenarios the caller can see, with Gate B on the portfolio.
+    /// </summary>
+    Task<RiskIndexMonetaryDto> GetMonetaryAsync(string? node, DateOnly? date, RiskIndexCaller caller, CancellationToken ct = default);
+
+    /// <summary>
     /// The Sources tab's operational columns (S40 §6.5, §8.2; T263): every catalogue source with its connections and last sync
     /// or import, for every reader; the organization's object count and stale share on the latest snapshot for global scope
     /// only. Not an index value, so the shadow rule does not apply.

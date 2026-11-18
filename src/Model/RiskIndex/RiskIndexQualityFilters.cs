@@ -28,6 +28,9 @@ public static class RiskIndexQualityFilters
     /// <summary>The evidence confidence of M40 is shown apart from quality and is not built yet (S39 §8.5).</summary>
     public const string EvidenceConfidenceRequiresM40 = "requires_m40";
 
+    /// <summary>Full mode (M59, T287): the distribution is in <c>RiskIndexQualityDto.EvidenceConfidence</c>.</summary>
+    public const string EvidenceConfidenceAvailable = "available";
+
     public static IReadOnlyList<string> Values { get; } = [DefaultCriticality, PresumedCritical, ResidualAboveInherent];
 
     /// <summary>The <c>filters</c> term: <c>chip=default_criticality</c>.</summary>

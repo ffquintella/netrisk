@@ -129,6 +129,34 @@ public static class MockedRiskIndexReadService
                     [new RiskIndexStaleSourceDto("V1-DEV", new DateTime(2026, 9, 27, 3, 0, 0, DateTimeKind.Utc))], 7, 3, 18, null, null,
                     141, 5, "requires_m40");
             });
+        // M59 (T286, T287): Top Risks — "full" answers a list, any other node the interim's unavailable state — and the
+        // monetary panel, whose portfolio exists only in full mode.
+        service.GetTopRisksAsync(Arg.Any<string?>(), Arg.Any<DateOnly?>(), Arg.Any<int>(), Arg.Any<RiskIndexCaller>(),
+                Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                if (call.ArgAt<int>(2) is < 1 or > 50) throw RiskIndexException.BadRequest(RiskIndexErrors.InvalidLimit, "limit");
+                return call.ArgAt<string?>(0) == "full"
+                    ? new RiskIndexTopRisksDto(Org, Date, true, null, 4,
+                    [
+                        new RiskIndexTopRiskDto(1, new RiskIndexObjectLabelDto(new RiskIndexObjectRef(RiskIndexObjectKind.Scenario, "1"),
+                            "Data leak", null), true, [2], 1, 8.0, 6.4, 120000, 1, 1, "Rising", "GateAEscalation",
+                            new RiskIndexNavigationTargetDto(RiskIndexNavigationModule.Risk, 1, "RiskNav_Risk"))
+                    ])
+                    : new RiskIndexTopRisksDto(Org, Date, false, RiskIndexErrors.RequiresFullMode, 0, []);
+            });
+        service.GetMonetaryAsync(Arg.Any<string?>(), Arg.Any<DateOnly?>(), Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                Gate(call.ArgAt<string?>(0));
+                var full = call.ArgAt<string?>(0) == "full";
+                return new RiskIndexMonetaryDto(Org, Date, RiskIndexProvenance.Official, 41,
+                    new RiskIndexLossSumDto(900000, 3, 41, 0.09, true), new RiskIndexLossSumDto(1240000, 3, 41, 0.09, true),
+                    full ? new RiskIndexPortfolioTailDto(870000, 2100000, 2000000, 2200000, 3100000, 2900000, 3300000, 2600000,
+                        3500000, 3, 0, "AssumedIndependent", "within", 100000, 20260826) : null,
+                    full ? null : RiskIndexErrors.RequiresFullMode);
+            });
         service.GetMonthlySummaryAsync(Arg.Any<string?>(), Arg.Any<RiskIndexTabGroup?>(), Arg.Any<int>(), Arg.Any<DateOnly?>(),
                 Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
             .Returns(call =>

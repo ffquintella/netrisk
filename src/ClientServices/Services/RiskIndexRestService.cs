@@ -117,6 +117,15 @@ public class RiskIndexRestService(IRestService restService, IAuthenticationServi
         CancellationToken ct = default) =>
         Read<RiskIndexQualityDto>(await GetAsync($"{Base}/Quality", ct, ("node", node), ("date", Day(date))));
 
+    public async Task<RiskIndexTopRisksDto> GetTopRisksAsync(string? node = null, DateOnly? date = null, int limit = 10,
+        CancellationToken ct = default) =>
+        Read<RiskIndexTopRisksDto>(await GetAsync($"{Base}/TopRisks", ct, ("node", node), ("date", Day(date)),
+            ("limit", Number(limit))));
+
+    public async Task<RiskIndexMonetaryDto> GetMonetaryAsync(string? node = null, DateOnly? date = null,
+        CancellationToken ct = default) =>
+        Read<RiskIndexMonetaryDto>(await GetAsync($"{Base}/Monetary", ct, ("node", node), ("date", Day(date))));
+
     public async Task<RiskIndexPublicationDto> GetPublicationAsync(CancellationToken ct = default) =>
         Read<RiskIndexPublicationDto>(await GetAsync($"{Base}/Publication", ct));
 

@@ -65,8 +65,9 @@ public class ProfileParameterRowsTest
         Assert.Equal(["tau_g"], ProfileParameterRows.PathOf("tau_g"));
         Assert.Equal(0.20, Row("omega.REG").Minimum);
         Assert.Equal(0, Row("omega.EXP").Minimum);
-        Assert.True(Row("omega.TER").Locked);
-        Assert.Equal("RiskParamLocked_TerUntilM48", Row("omega.TER").LockedReasonKey);
+        // M59, T288: TER is weighted from M48 on, 0 or [0.05; 0.60] — no longer locked at 0.
+        Assert.False(Row("omega.TER").Locked);
+        Assert.Equal(0, Row("omega.TER").Minimum);
     }
 
     [Fact]

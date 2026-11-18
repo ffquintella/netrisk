@@ -451,7 +451,10 @@ public sealed partial class RiskIndexSnapshotService(IDalService dalService, IRi
             ScopeRef = node.Node.ScopeRef, EntityId = node.Node.EntityId, Category = RiskIndexCategory.Icr,
             ValueUnfloored = Finite(r.Unfloored), ValueFloored = Finite(r.Floored),
             ValueDisplayed = Math.Clamp(r.Displayed ?? 0, 0, 100),
-            FloorReasons = null, // the Gate A display floor belongs to the full mode (S39 §7, T286); the interim has none
+            // The Gate A display floor (S39 §7; M59, T286): full mode only — the interim mode has none and stores null.
+            FloorReasons = r.FloorReasons.Count == 0 ? null : RiskIndexStoredJson.Serialize(r.FloorReasons
+                .Select(f => new StoredFloorReason(RiskIndexChipKeys.GateAFloorCode, StoredObjectRef.Of(f.Scenario), f.Conditions))
+                .ToList()),
             Coverage = Fraction(r.Coverage), Freshness = Fraction(r.Freshness), Quality = Fraction(r.Quality),
             IntervalLow = low, IntervalHigh = high, ObjectCount = r.ObjectCount, PresumptionPoints = Finite(r.PresumptionPoints),
             ExternalInputsHash = hash, TopContributions = RiskIndexStoredJson.TopContributions(r),
@@ -493,6 +496,8 @@ public sealed partial class RiskIndexSnapshotService(IDalService dalService, IRi
 
         if (c.Partial) chips.Add(new StoredChip(RiskIndexChipKeys.Partial, Args(("note", c.Note))));
         else if (c.Note == "requires M39") chips.Add(new StoredChip(RiskIndexChipKeys.RequiresM39));
+        else if (c.Note == RiskIndexDayCalculator.NoActivityAssetLinkNote)
+            chips.Add(new StoredChip(RiskIndexChipKeys.RequiresActivityAssetLinks));
 
         if (c.FloorActive && c.HeldBy.Count > 0)
             chips.Add(new StoredChip(RiskIndexChipKeys.TailFloor,

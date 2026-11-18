@@ -47,18 +47,21 @@ public static class RiskSourceCatalogue
         new(RiskIndexSources.TenableAcr, "crit", RiskSourceAvailability.Available, null, true),
         new(RiskIndexSources.Importers, "EXP.V", RiskSourceAvailability.Available, null, true),
         new(RiskIndexSources.Incidents, "AME.I", RiskSourceAvailability.Available, null, false),
-        new(RiskIndexSources.NearMisses, "AME.Q", RiskSourceAvailability.NotAvailable, "M40", false),
+        // M40 (T153) records near misses, and the collector reads them into AME.Q (M59).
+        new(RiskIndexSources.NearMisses, "AME.Q", RiskSourceAvailability.Available, null, false),
         new(RiskIndexSources.IncidentResponsePlans, "CTL.P", RiskSourceAvailability.Available, null, false),
         new(RiskIndexSources.Assessments, "CTL.A", RiskSourceAvailability.Caveat, "D-16", true),
         new(RiskIndexSources.CmdbCriticality, "crit", RiskSourceAvailability.Caveat, "D-10", true),
         new(RiskIndexSources.CmdbEnvironment, "crit · env", RiskSourceAvailability.Available, null, true),
-        // M58, T291: the Jira Assets import writes hosts.internet_facing, which m_net reads under CMDB-INET. It also writes
-        // host_application_links, but the full-mode drill-down that consumes them is T284, so CMDB-REL waits for it.
+        // M58, T291: the Jira Assets import writes hosts.internet_facing, which m_net reads under CMDB-INET, and
+        // host_application_links, which the full mode's drill-down and criticality inheritance read under CMDB-REL (T284).
         new(RiskIndexSources.CmdbInternetFacing, "m_net", RiskSourceAvailability.Available, null, true),
-        new(RiskIndexSources.CmdbRelations, "closure", RiskSourceAvailability.NotAvailable, "T284", true),
+        new(RiskIndexSources.CmdbRelations, "closure", RiskSourceAvailability.Available, null, true),
         new(RiskIndexSources.EntityCriticality, "crit", RiskSourceAvailability.Available, null, false),
         new(RiskIndexSources.EntityClassification, "crit · Δ", RiskSourceAvailability.Available, null, false),
-        new(RiskIndexSources.EntityInternetFacing, "m_net", RiskSourceAvailability.Available, null, false)
+        new(RiskIndexSources.EntityInternetFacing, "m_net", RiskSourceAvailability.Available, null, false),
+        // M48 through M59 (T288): the third-party register feeds TER, in full mode only.
+        new(RiskIndexSources.ThirdPartyRegister, "TER", RiskSourceAvailability.Available, null, false)
     ];
 
     public static RiskSourceInfo? Find(string id) => All.FirstOrDefault(s => s.Id == id);

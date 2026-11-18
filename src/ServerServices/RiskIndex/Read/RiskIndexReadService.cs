@@ -22,7 +22,9 @@ public sealed partial class RiskIndexReadService(
     IRiskIndexReadCache cache,
     IRiskIndexDerivedBudget budget,
     ILogger logger,
-    ServerServices.Interfaces.IPermissionsService permissionsService) : IRiskIndexReadService
+    ServerServices.Interfaces.IPermissionsService permissionsService,
+    ServerServices.Interfaces.IRiskFlagsService? riskFlags = null,
+    ServerServices.Interfaces.ITailRiskService? tailRisk = null) : IRiskIndexReadService
 {
     // ------------------------------------------------------------------------------------------------------------------
     // The day, the profile and the publication
@@ -181,7 +183,7 @@ public sealed partial class RiskIndexReadService(
         var profile = await ProfileOfAsync(db, resolved, ct)
                       ?? throw RiskIndexException.NotFound(RiskIndexErrors.NoSnapshot,
                           string.Create(CultureInfo.InvariantCulture, $"There is no snapshot on {resolved:yyyy-MM-dd}."));
-        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct);
+        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct, profile.Mode);
         return new Day(resolved, profile, RiskIndexParametersJson.Deserialize(profile.Parameters), scope, map, scopeKey);
     }
 

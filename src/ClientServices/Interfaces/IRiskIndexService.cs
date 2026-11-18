@@ -85,6 +85,19 @@ public interface IRiskIndexService
     /// </summary>
     Task<RiskIndexQualityDto> GetQualityAsync(string? node = null, DateOnly? date = null, CancellationToken ct = default);
 
+    /// <summary>
+    /// <c>GET /RiskIndex/TopRisks</c>: M43's Top Risks list hosted for the node (M59, T286); <c>Available</c> is false in
+    /// interim mode, with the reason key.
+    /// </summary>
+    Task<RiskIndexTopRisksDto> GetTopRisksAsync(string? node = null, DateOnly? date = null, int limit = 10,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// <c>GET /RiskIndex/Monetary</c>: Σ E[L] residual and inherent with "n of N", and in full mode M45's portfolio P95/CVaR
+    /// (M59, T287).
+    /// </summary>
+    Task<RiskIndexMonetaryDto> GetMonetaryAsync(string? node = null, DateOnly? date = null, CancellationToken ct = default);
+
     /// <summary><c>GET /RiskIndex/Publication</c>: shadow pilot or published. Exempt from the shadow rule.</summary>
     Task<RiskIndexPublicationDto> GetPublicationAsync(CancellationToken ct = default);
 

@@ -46,6 +46,12 @@ public sealed record RiskPresetItem(string Key, string Label)
     public override string ToString() => Label;
 }
 
+/// <summary>A profile mode in the draft editor's chooser (S39 §15.1; M59): the mode, its label and its hint.</summary>
+public sealed record RiskModeItem(DAL.Enums.RiskIndexMode Mode, string Label, string Hint)
+{
+    public override string ToString() => Label;
+}
+
 /// <summary>Where a new draft starts from (S40 §6.1 "Novo rascunho").</summary>
 public enum RiskDraftOrigin
 {

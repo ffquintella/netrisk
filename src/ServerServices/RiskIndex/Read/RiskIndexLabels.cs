@@ -55,6 +55,12 @@ public static class RiskIndexLabels
                 names[new IcrObjectKey(RiskIndexObjectKind.VendorAsset, a.Id.ToString(CultureInfo.InvariantCulture))] = a.Name;
         }
 
+        // M59, T288: a supplier is named by its M48 register row, read through the caller's scoped context.
+        if (May(RiskIndexObjectKind.Supplier) && Ids(RiskIndexObjectKind.Supplier) is { Count: > 0 } suppliers)
+            foreach (var t in await db.ThirdParties.AsNoTracking().Where(t => suppliers.Contains(t.Id))
+                         .Select(t => new { t.Id, t.Name }).ToListAsync(ct))
+                names[Key(RiskIndexObjectKind.Supplier, t.Id)] = t.Name;
+
         var entities = Ids(RiskIndexObjectKind.Application).Concat(Ids(RiskIndexObjectKind.TargetEntity)).Distinct().ToList();
         if (entities.Count > 0)
         {

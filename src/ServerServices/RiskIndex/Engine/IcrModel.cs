@@ -121,7 +121,13 @@ public sealed record IcrNodeInput
 
     /// <summary>A Gate A display floor applies (S39 §7). Never in interim mode; the predicate is M43's.</summary>
     public bool GateAFloorTriggered { get; init; }
+
+    /// <summary>The open scenarios of the node whose M43 Gate A predicate holds, and its conditions (PA-1; M59, T286).</summary>
+    public IReadOnlyList<IcrFloorReason> FloorReasons { get; init; } = [];
 }
+
+/// <summary>One PA-1 trigger (S39 §7): a scenario and the Gate A conditions M43 holds on it (<c>RiskFlagCode</c> values).</summary>
+public sealed record IcrFloorReason(IcrObjectKey Scenario, IReadOnlyList<int> Conditions);
 
 /// <summary>One object's share of a category value (S39 §4.8), in points of <c>C_k</c>.</summary>
 public sealed record IcrObjectPart(IcrObjectKey Key, double Part, bool Presumed, bool HoldsFloor);
@@ -196,6 +202,9 @@ public sealed record IcrNodeResult
 
     /// <summary>The displayed integer, from <see cref="Floored"/> in full precision.</summary>
     public int? Displayed { get; init; }
+
+    /// <summary>The PA-1 triggers when the Gate A floor applies to the node (S39 §7; T286); empty otherwise.</summary>
+    public IReadOnlyList<IcrFloorReason> FloorReasons { get; init; } = [];
 
     /// <summary>The band of <see cref="Displayed"/> (index into the profile's <c>faixas</c>), or -1.</summary>
     public int BandIndex { get; init; } = -1;

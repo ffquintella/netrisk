@@ -86,7 +86,8 @@ public class RiskIndexControllerTest : BaseControllerTest
             (await _controller.GetGovernanceIndicators(node)).Result, (await _controller.GetQuality(node)).Result,
             (await _controller.GetMonthlySummary(node, RiskIndexTabGroup.Devices)).Result,
             (await _controller.GetRiskFactors(node, RiskIndexTabGroup.Devices)).Result,
-            (await _controller.GetDimensions(node)).Result
+            (await _controller.GetDimensions(node)).Result,
+            (await _controller.GetTopRisks(node)).Result, (await _controller.GetMonetary(node)).Result
         };
 
         Assert.All(results, r =>
@@ -95,6 +96,37 @@ public class RiskIndexControllerTest : BaseControllerTest
             Assert.Equal(code, Error(r));
         });
         if (status == 503) Assert.Equal("5", _controller.Response.Headers["Retry-After"].ToString());
+    }
+
+    /// <summary>
+    /// M59, T286 (S40 §5.11): Top Risks answers M43's list in full mode and, in interim mode, 200 with the unavailable state
+    /// and its reason — never an error, never an approximation; a limit outside 1–50 is a 400.
+    /// </summary>
+    [Fact]
+    public async Task TestTopRisksAnswersTheListInFullModeAndTheUnavailableStateOtherwise()
+    {
+        var full = Assert.IsType<RiskIndexTopRisksDto>(Assert.IsType<OkObjectResult>((await _controller.GetTopRisks("full")).Result).Value);
+        var interim = Assert.IsType<RiskIndexTopRisksDto>(Assert.IsType<OkObjectResult>((await _controller.GetTopRisks("org")).Result).Value);
+        var refused = (await _controller.GetTopRisks("org", limit: 0)).Result;
+
+        Assert.True(full.Available);
+        Assert.Equal((1, true), (full.Items[0].Rank, full.Items[0].GateA));
+        Assert.Equal([2], full.Items[0].GateAConditions);
+        Assert.Equal((false, "requires_full_mode", 0), (interim.Available, interim.UnavailableReasonKey, interim.Items.Count));
+        Assert.Equal((400, "invalid_limit"), (((ObjectResult)refused!).StatusCode, Error(refused)));
+    }
+
+    /// <summary>M59, T287 (S40 §5.10): the monetary panel answers Σ E[L] with "n of N" and, in full mode, the portfolio tail.</summary>
+    [Fact]
+    public async Task TestTheMonetaryPanelAnswersTheSumsAndThePortfolioInFullMode()
+    {
+        var full = Assert.IsType<RiskIndexMonetaryDto>(Assert.IsType<OkObjectResult>((await _controller.GetMonetary("full")).Result).Value);
+        var interim = Assert.IsType<RiskIndexMonetaryDto>(Assert.IsType<OkObjectResult>((await _controller.GetMonetary("org")).Result).Value);
+
+        Assert.Equal((3, 41, true), (full.Residual.Quantified, full.Residual.Total, full.Residual.Partial));
+        Assert.Equal((2100000d, "within"), (full.Portfolio!.P95, full.Portfolio.GateBStateKey));
+        Assert.Null(interim.Portfolio);
+        Assert.Equal("requires_full_mode", interim.PortfolioUnavailableKey);
     }
 
     /// <summary>T253 (S40 §8.2): the two tab reads answer their DTOs, the summary keyed by category and null kept as no value.</summary>

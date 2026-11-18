@@ -21,6 +21,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                     <TextBlock Classes="fieldLabel" Text="{Binding StrName}" VerticalAlignment="Center"/>
                     <TextBox Text="{Binding DraftName}" MinWidth="260" MaxLength="200" IsEnabled="{Binding IsEditable}"/>
+                    <!-- M59: the draft's mode; the full mode consumes Track 9 and is the only one that may weight TER. -->
+                    <TextBlock Classes="fieldLabel" Text="{Binding StrMode}" VerticalAlignment="Center"/>
+                    <ComboBox ItemsSource="{Binding ModeOptions}" SelectedItem="{Binding SelectedMode}" MinWidth="140"
+                              IsEnabled="{Binding IsEditable}" ToolTip.Tip="{Binding ModeHint}"/>
                 </StackPanel>
             </Grid>
 

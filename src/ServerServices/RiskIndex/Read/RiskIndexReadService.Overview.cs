@@ -16,7 +16,7 @@ public sealed partial class RiskIndexReadService
         double Quality, double? IntervalLow, double? IntervalHigh, int ObjectCount, double PresumptionPoints,
         bool HeadlineFloorActive, DateTime ComputedAt, IReadOnlyList<CategoryValues> Categories,
         IReadOnlyList<StoredChip> Chips, IReadOnlyList<StoredMarker> Markers, IReadOnlyList<StoredContribution> Contributions,
-        StoredChangeAttribution? Change);
+        StoredChangeAttribution? Change, IReadOnlyList<StoredFloorReason>? FloorReasons = null);
 
     internal sealed record CategoryValues(RiskIndexCategory Category, RiskIndexCategoryState State, double Value,
         double Coverage, double Freshness, double PresumptionPoints, double? IntervalLow, double? IntervalHigh, int ObjectCount,
@@ -38,12 +38,14 @@ public sealed partial class RiskIndexReadService
             {
                 var values = await ValuesAsync(resolved, day, caller, ct);
                 await using var db = dalService.GetContext();
-                var labels = await RiskIndexLabels.ResolveAsync(db, values.Categories.SelectMany(c => c.HeldBy), caller, ct);
+                var floorKeys = (values.FloorReasons ?? []).Select(f => new IcrObjectKey(f.Object.Kind, f.Object.Ref)).ToList();
+                var labels = await RiskIndexLabels.ResolveAsync(db, values.Categories.SelectMany(c => c.HeldBy).Concat(floorKeys),
+                    caller, ct);
                 var seals = await SealsAsync(db, resolved, day, RiskIndexRedactionPolicy.Holds(RiskIndexModulePermissions.RiskManagement,
                     caller.IsAdmin, caller.Permissions), ct);
                 var delta = resolved.Official ? await Delta7dAsync(db, resolved, day, values, ct) : null;
 
-                var headline = Headline(values, day.P, delta);
+                var headline = Headline(values, day.P, delta, labels);
                 var categories = values.Categories.Select(c => CategoryDto(c, values, day.P, labels,
                     c.Category == RiskIndexCategory.Reg ? seals : [])).ToList();
                 var chips = values.Chips.Select(c => new RiskIndexChipDto(c.Key, c.Args ?? new Dictionary<string, string>(), null, null))
@@ -125,7 +127,8 @@ public sealed partial class RiskIndexReadService
             chipsHead.Any(c => c.Key == RiskIndexChipKeys.HeadlineFloor), head.CreatedAt, categories, chipsHead,
             RiskIndexStoredJson.ParseMarkers(head.Markers),
             RiskIndexStoredJson.Deserialize<List<StoredContribution>>(head.TopContributions) ?? [],
-            RiskIndexStoredJson.Deserialize<StoredChangeAttribution>(head.ChangeAttribution));
+            RiskIndexStoredJson.Deserialize<StoredChangeAttribution>(head.ChangeAttribution),
+            RiskIndexStoredJson.Deserialize<List<StoredFloorReason>>(head.FloorReasons) ?? []);
     }
 
     internal static NodeValues DerivedValues(Composition composition, RiskIndexParameters p, DateTime computedAt)
@@ -136,6 +139,8 @@ public sealed partial class RiskIndexReadService
             var chips = new List<StoredChip>();
             if (c.Partial) chips.Add(new StoredChip(RiskIndexChipKeys.Partial));
             else if (c.Note == "requires M39") chips.Add(new StoredChip(RiskIndexChipKeys.RequiresM39));
+            else if (c.Note == RiskIndexDayCalculator.NoActivityAssetLinkNote)
+                chips.Add(new StoredChip(RiskIndexChipKeys.RequiresActivityAssetLinks));
             if (c.Note == "no incident intake") chips.Add(new StoredChip(RiskIndexChipKeys.NoIncidentIntake));
             if (c.FloorActive && c.HeldBy.Count > 0)
                 chips.Add(new StoredChip(RiskIndexChipKeys.TailFloor,
@@ -169,12 +174,15 @@ public sealed partial class RiskIndexReadService
 
         return new NodeValues(r.Unfloored, r.Floored, r.Displayed, (RiskIndexDisplayState)(int)r.DisplayState, r.Coverage,
             r.Freshness, r.Quality, r.IntervalLow, r.IntervalHigh, r.ObjectCount, r.PresumptionPoints, r.HeadlineFloorActive,
-            computedAt, categories, head, [], contributions, null);
+            computedAt, categories, head, [], contributions, null,
+            r.FloorReasons.Select(f => new StoredFloorReason(RiskIndexChipKeys.GateAFloorCode, StoredObjectRef.Of(f.Scenario),
+                f.Conditions)).ToList());
     }
 
     // ------------------------------------------------------------------------------------------------------------------
 
-    private static RiskIndexHeadlineDto Headline(NodeValues v, RiskIndexParameters p, RiskIndexDeltaDto? delta)
+    private static RiskIndexHeadlineDto Headline(NodeValues v, RiskIndexParameters p, RiskIndexDeltaDto? delta,
+        IReadOnlyDictionary<IcrObjectKey, RiskIndexObjectLabelDto>? labels = null)
     {
         var band = BandIndex(v.Displayed, v.State, p);
         var heldBy = v.Chips.FirstOrDefault(c => c.Key == RiskIndexChipKeys.HeadlineFloor)?.Args is { } args &&
@@ -184,8 +192,23 @@ public sealed partial class RiskIndexReadService
             : null;
         return new RiskIndexHeadlineDto(v.Displayed, v.Unfloored, v.Floored, band is { } b ? BandKey(b) : null, band, v.State,
             v.IntervalLow, v.IntervalHigh, v.State is RiskIndexDisplayState.PointWithInterval or RiskIndexDisplayState.Indicative,
-            delta, [], !v.HeadlineFloorActive, heldBy);
+            delta, FloorReasons(v, labels), !v.HeadlineFloorActive, heldBy);
     }
+
+    /// <summary>
+    /// The PA-1 triggers of the headline (S39 §7; S40 §5.2.2; T286): "Portão A — R1 (flag 2)". The gate letter, the scenario
+    /// label (redacted without <c>riskmanagement</c>, S40 §11.3) and the numbered flags among its Gate A conditions; the
+    /// declared "no legitimate acceptance" condition has no flag number and shows none.
+    /// </summary>
+    internal static IReadOnlyList<RiskIndexFloorReasonDto> FloorReasons(NodeValues v,
+        IReadOnlyDictionary<IcrObjectKey, RiskIndexObjectLabelDto>? labels) =>
+        (v.FloorReasons ?? []).Select(f =>
+        {
+            var key = new IcrObjectKey(f.Object.Kind, f.Object.Ref);
+            var numbered = f.Conditions.Where(c => c is >= 1 and <= 11).Order().ToList();
+            return new RiskIndexFloorReasonDto("A", labels?.GetValueOrDefault(key) ?? Redacted(key),
+                numbered.Count == 0 ? null : string.Join(", ", numbered.Select(c => c.ToString(CultureInfo.InvariantCulture))));
+        }).ToList();
 
     private static RiskIndexCategoryDto CategoryDto(CategoryValues c, NodeValues node, RiskIndexParameters p,
         IReadOnlyDictionary<IcrObjectKey, RiskIndexObjectLabelDto> labels, IReadOnlyList<RiskIndexSealDto> seals)
@@ -215,6 +238,8 @@ public sealed partial class RiskIndexReadService
             reason = RiskIndexChipKeys.RequiresM39;
             requires = "M39";
         }
+        else if (chipKeys.Contains(RiskIndexChipKeys.RequiresActivityAssetLinks))
+            reason = RiskIndexChipKeys.RequiresActivityAssetLinks;
         else if (chipKeys.Contains(RiskIndexChipKeys.Partial)) requires = "M39";
 
         return new RiskIndexCategoryDto(c.Category, c.State, available ? c.Value : null, displayed, band is { } b ? BandKey(b) : null,
@@ -315,10 +340,34 @@ public sealed partial class RiskIndexReadService
         var expiring = inNode.Count(i => i.AcceptanceExpiringSoon);
         if (expiring > 0) seals.Add(Seal("acceptances_expiring", expiring, "seal=acceptance_expiring"));
         if (inNode.All(i => !i.AppetiteConfigured)) seals.Add(Seal("appetite_not_configured", null, null));
+        seals.AddRange(FullModeSeals(day.Profile.Mode, inNode).Select(s => s with { ObjectFilter = mayOpenLists ? s.ObjectFilter : null }));
         return seals;
 
         RiskIndexSealDto Seal(string key, int? count, string? filter) =>
             new(key, count, new Dictionary<string, string>(), mayOpenLists ? filter : null);
+    }
+
+    /// <summary>
+    /// The full-mode seals (S39 §6.6, §7; S40 §5.11; T286, T287) over the node's scenarios: Gate A (the PA-1 triggers), and
+    /// Gate B — "P95 acima da tolerância" (M45) and "KRI acima da tolerância" (M46) — as the decision path evaluates them.
+    /// Seals, never floors: only Gate A floors the headline. Interim mode has none (its Gate B reads "not available").
+    /// </summary>
+    internal static IEnumerable<RiskIndexSealDto> FullModeSeals(RiskIndexMode mode, IReadOnlyList<RiskIndexScenarioInputs> scenarios)
+    {
+        if (mode != RiskIndexMode.Full) yield break;
+
+        var gateA = scenarios.Count(i => i.GateAConditions is { Count: > 0 });
+        if (gateA > 0) yield return Seal("gate_a_scenarios", gateA, "seal=gate_a");
+        var tail = scenarios.Count(i => i.GateBTail == RiskIndexGateBStates.Exceeds);
+        if (tail > 0) yield return Seal("gate_b_tail_exceeds", tail, "seal=gate_b_tail");
+        var kri = scenarios.Count(i => i.GateBIndicators == RiskIndexGateBStates.Exceeds);
+        if (kri > 0) yield return Seal("gate_b_kri_exceeds", kri, "seal=gate_b_kri");
+        var dark = scenarios.Count(i => i.GateBTail == RiskIndexGateBStates.NotAssessable ||
+                                        i.GateBIndicators == RiskIndexGateBStates.NotAssessable);
+        if (dark > 0) yield return Seal("gate_b_not_assessable", dark, null);
+
+        static RiskIndexSealDto Seal(string key, int count, string? filter) =>
+            new(key, count, new Dictionary<string, string>(), filter);
     }
 
     // ------------------------------------------------------------------------------------------------------------------

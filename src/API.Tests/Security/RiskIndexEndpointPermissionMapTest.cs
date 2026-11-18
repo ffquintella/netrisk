@@ -46,6 +46,9 @@ public class RiskIndexEndpointPermissionMapTest
         ["RiskIndexController.GetContributions"] = [View],
         ["RiskIndexController.GetGovernanceIndicators"] = [View],
         ["RiskIndexController.GetQuality"] = [View],
+        // M59 (T286, T287): Top Risks and the monetary panel are values of the dashboard, under risk_index_view.
+        ["RiskIndexController.GetTopRisks"] = [View],
+        ["RiskIndexController.GetMonetary"] = [View],
         ["RiskIndexController.GetPublication"] = [View],
         ["RiskIndexController.GetSources"] = [View],
         ["RiskIndexController.GetRuns"] = [View],

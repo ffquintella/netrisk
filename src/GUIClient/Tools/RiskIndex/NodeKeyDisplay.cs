@@ -64,7 +64,7 @@ public static class NodeKeyDisplay
         RiskIndexSources.V1Device, RiskIndexSources.V1Cve, RiskIndexSources.V1InternetFacing, RiskIndexSources.V1Accounts,
         RiskIndexSources.V1Cloud, RiskIndexSources.V1LocalApps, RiskIndexSources.V1SecurityConfiguration, RiskIndexSources.SscTotal,
         RiskIndexSources.TenableNessus, RiskIndexSources.TenableVm, RiskIndexSources.TenableAes, RiskIndexSources.TenableAcr,
-        RiskIndexSources.Importers, RiskIndexSources.Assessments
+        RiskIndexSources.Importers, RiskIndexSources.Assessments, RiskIndexSources.ThirdPartyRegister
     ];
 
     /// <summary>A source's name ("Vision One — dispositivos"), or its S39 id when the interface does not name it.</summary>
@@ -178,7 +178,8 @@ public static class NodeKeyDisplay
             .Concat(new[]
             {
                 "RiskNodeType_organization", "RiskNodeType_organizationUnit", "RiskNodeType_subOrganizationUnit",
-                "RiskNodeType_businessProcess", "RiskNodeType_activity", "RiskNodeType_application", "RiskNodeType_unassigned",
+                "RiskNodeType_businessProcess", "RiskNodeType_activity", "RiskNodeType_application", "RiskNodeType_itService",
+                "RiskNodeType_organizationData", "RiskNodeType_unassigned",
                 "RiskNodeType_entity", "RiskEnvironment_prod", "RiskEnvironment_none", "RiskEnvironmentFMT",
                 "RiskExploreCriticalityFMT", "RiskExploreSealTermFMT"
             });

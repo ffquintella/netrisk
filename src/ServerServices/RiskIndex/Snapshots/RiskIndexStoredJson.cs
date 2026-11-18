@@ -93,6 +93,15 @@ public sealed record StoredOverlayPoint(
     [property: JsonPropertyName("date")] DateOnly Date,
     [property: JsonPropertyName("value")] double Value);
 
+/// <summary>
+/// One PA-1 trigger of a headline row (<c>risk_index_snapshots.floor_reasons</c>; S39 §7, M59 T286): the gate code, the
+/// scenario and the Gate A conditions M43 held on it (<c>RiskFlagCode</c> values).
+/// </summary>
+public sealed record StoredFloorReason(
+    [property: JsonPropertyName("gate")] string Gate,
+    [property: JsonPropertyName("object")] StoredObjectRef Object,
+    [property: JsonPropertyName("conditions")] IReadOnlyList<int> Conditions);
+
 /// <summary>A chip of a snapshot row (<c>risk_index_snapshots.chips</c>), as the S40 §8.3 <c>RiskIndexChipDto</c> key and args.</summary>
 public sealed record StoredChip(
     [property: JsonPropertyName("key")] string Key,
@@ -112,6 +121,12 @@ public static class RiskIndexChipKeys
 
     /// <summary>Category row: unavailable at this node by construction (interim EXP of an activity: "requires M39").</summary>
     public const string RequiresM39 = "requires_m39";
+
+    /// <summary>Category row: full-mode EXP of an activity — M39 has no typed activity–asset link (M59, T284).</summary>
+    public const string RequiresActivityAssetLinks = "requires_activity_asset_links";
+
+    /// <summary>The gate code of the Gate A display floor (S39 §7).</summary>
+    public const string GateAFloorCode = "PA-1";
 
     /// <summary>Category row: the tail floor <c>100·τ·max R</c> sets the value; args <c>held_by</c>.</summary>
     public const string TailFloor = "tail_floor";

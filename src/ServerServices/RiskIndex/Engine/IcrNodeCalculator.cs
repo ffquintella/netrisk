@@ -78,6 +78,7 @@ public static class IcrNodeCalculator
             Unfloored = headline.Value,
             Floored = floored,
             Displayed = displayed,
+            FloorReasons = input.GateAFloorTriggered && headline.Value is not null ? input.FloorReasons : [],
             BandIndex = band,
             WeightedMean = headline.Mean,
             HeadlineFloor = headline.Floor,

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using DAL.Enums;
 using GUIClient.Tools;
 using GUIClient.Tools.RiskIndex;
 using Model.RiskIndex;
@@ -257,6 +258,7 @@ public class RiskProfileEditorViewModel : RiskAdminViewModelBase
     #region LANGUAGE
 
     public string StrName { get; } = Localizer["RiskProfileName"];
+    public string StrMode { get; } = Localizer["RiskProfileMode"];
     public string StrGroups { get; } = Localizer["RiskAdminGroups"];
     public string StrParameter { get; } = Localizer["RiskProfileParameterKey"];
     public string StrActive { get; } = Localizer["RiskAdminActiveValue"];
@@ -336,6 +338,29 @@ public class RiskProfileEditorViewModel : RiskAdminViewModelBase
             this.RaisePropertyChanged();
         }
     }
+
+    /// <summary>The two modes of S39 §15.1 (M59): the draft chooses one; a change is a rebaseline the validation reports.</summary>
+    public IReadOnlyList<RiskModeItem> ModeOptions { get; } =
+    [
+        new(RiskIndexMode.Interim, Localizer[RiskOverviewTopBar.ModeKey(RiskIndexMode.Interim)].Value,
+            Localizer[RiskOverviewTopBar.ModeHintKey(RiskIndexMode.Interim)].Value),
+        new(RiskIndexMode.Full, Localizer[RiskOverviewTopBar.ModeKey(RiskIndexMode.Full)].Value,
+            Localizer[RiskOverviewTopBar.ModeHintKey(RiskIndexMode.Full)].Value)
+    ];
+
+    public RiskModeItem? SelectedMode
+    {
+        get => ModeOptions.FirstOrDefault(m => m.Mode == _session.EditedMode);
+        set
+        {
+            if (value is null) return;
+            _session.EditedMode = value.Mode;
+            this.RaisePropertyChanged();
+            this.RaisePropertyChanged(nameof(ModeHint));
+        }
+    }
+
+    public string ModeHint => SelectedMode?.Hint ?? "";
 
     public string Header => _session.Draft is { } d
         ? RiskAdminText.Format("RiskAdminDraftHeaderFMT", d.Version, RiskAdminText.Text(RiskOverviewTopBar.ProfileStatusKey(d.Status)),
@@ -518,6 +543,8 @@ public class RiskProfileEditorViewModel : RiskAdminViewModelBase
         LoadBands();
         RefreshDerived();
         this.RaisePropertyChanged(nameof(DraftName));
+        this.RaisePropertyChanged(nameof(SelectedMode));
+        this.RaisePropertyChanged(nameof(ModeHint));
     }
 
     private void BuildRows()

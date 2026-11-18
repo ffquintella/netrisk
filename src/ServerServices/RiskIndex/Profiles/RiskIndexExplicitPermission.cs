@@ -32,8 +32,9 @@ internal static class RiskIndexExplicitPermission
 
 /// <summary>
 /// Who reads what a profile produced beyond the global-scope rule (S39 §13.3; S40 §8.4, §11.3): during the shadow pilot,
-/// administrators, the committee (explicit <c>risk_index_approve</c>) and, with <c>risk_index_configure</c>, the profile's
-/// own authors, editors and submitter. Shared by the preview, bridge and history reads and by the committee's minutes.
+/// administrators, the committee (explicit <c>risk_index_approve</c>), the third line (explicit <c>third_line_assurance</c>,
+/// M47; S39 §10.4, §13.1 — M59, T288) and, with <c>risk_index_configure</c>, the profile's own authors, editors and
+/// submitter. Shared by the preview, bridge and history reads and by the committee's minutes.
 /// </summary>
 internal static class RiskIndexShadowRule
 {
@@ -41,6 +42,10 @@ internal static class RiskIndexShadowRule
         int userId, bool isAdmin, Func<string, bool> holds, CancellationToken ct)
     {
         if (isAdmin || holds(RiskIndexPermissions.Approve)) return null;
+
+        // The third line's assurance reads the profiles, previews, bridges and their audit trail (S39 §10.4) — the endpoint
+        // still needs risk_index_view and the values global scope, and every write refuses it (T198).
+        if (holds(Model.DecisionCycle.ThirdLineAssurance.PermissionKey)) return null;
 
         var published = string.Equals((await db.Settings.AsNoTracking()
                 .Where(s => s.Name == DAL.Enums.RiskIndexSettingKeys.Publication).Select(s => s.Value).FirstOrDefaultAsync(ct))?.Trim(),

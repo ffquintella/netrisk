@@ -51,7 +51,7 @@ public sealed partial class RiskIndexSnapshotService
             .Where(s => s.ProfileId == old.Id && s.ScopeKind == RiskIndexScopeKind.Organization &&
                         s.Category == RiskIndexCategory.Icr && s.SnapshotDate >= from && s.SnapshotDate < date)
             .Select(s => s.SnapshotDate).OrderBy(d => d).ToListAsync(ct);
-        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct);
+        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct, old.Mode);
         var overlay = new Dictionary<(RiskIndexScopeKind, string, RiskIndexCategory), List<StoredOverlayPoint>>();
         foreach (var d in days)
         {

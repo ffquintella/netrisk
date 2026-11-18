@@ -35,7 +35,8 @@ public sealed partial class RiskIndexReadService
                     ? await ValuesAsync(resolved, day, caller, ct)
                     : DerivedValues(composition, day.P, DateTime.UtcNow);
                 var organization = resolved is { Official: true, IsRoot: true, Key.HasFilters: false };
-                return QualityOf(values, composition.Rows, day.Map, day.P, StaleSources(readings, day.P), organization);
+                return QualityOf(values, composition.Rows, day.Map, day.P, StaleSources(readings, day.P), organization,
+                    day.Profile.Mode);
             });
     }
 
@@ -45,7 +46,8 @@ public sealed partial class RiskIndexReadService
     /// object's weight. The tree counts come from the organization's stored data-quality chip, at the root only.
     /// </summary>
     internal static RiskIndexQualityDto QualityOf(NodeValues values, IReadOnlyList<RiskIndexObjectRow> rows, EntityMap map,
-        RiskIndexParameters p, IReadOnlyList<RiskIndexStaleSourceDto> staleSources, bool organization)
+        RiskIndexParameters p, IReadOnlyList<RiskIndexStaleSourceDto> staleSources, bool organization,
+        RiskIndexMode mode = RiskIndexMode.Interim)
     {
         var summary = Quality(values, p);
 
@@ -69,10 +71,25 @@ public sealed partial class RiskIndexReadService
             ? values.Chips.FirstOrDefault(c => c.Key == RiskIndexChipKeys.DataQuality)?.Args
             : null;
 
+        // M40's evidence confidence (S39 §15.1, §17; S40 §5.11; T287): beside the quality, never in it — full mode only.
+        RiskIndexEvidenceConfidenceDto? confidence = null;
+        if (mode == RiskIndexMode.Full)
+        {
+            var scenarios = rows.Where(r => r.Key.Kind == RiskIndexObjectKind.Scenario && r.ScenarioInputs is not null)
+                .DistinctBy(r => r.Key).Select(r => r.ScenarioInputs!.EvidenceConfidence).ToList();
+            confidence = new RiskIndexEvidenceConfidenceDto(
+                scenarios.Count(c => c == (int)EvidenceConfidence.Confirmed),
+                scenarios.Count(c => c == (int)EvidenceConfidence.Indicative),
+                scenarios.Count(c => c == (int)EvidenceConfidence.Hypothesis),
+                scenarios.Count(c => c is null or < 1 or > 3));
+        }
+
         return new RiskIndexQualityDto(summary.Coverage, summary.Freshness, summary.Quality, summary.QualityBandKey, unassigned,
             unassigned > p.UnassignedThreshold, defaults, staleSources, presumedCritical, Count(stored, "divergent_links"),
             Count(stored, "orphan_applications"), null, null, Count(stored, "legacy_lifecycle_disagreements"),
-            residualAboveInherent, RiskIndexQualityFilters.EvidenceConfidenceRequiresM40);
+            residualAboveInherent,
+            confidence is null ? RiskIndexQualityFilters.EvidenceConfidenceRequiresM40 : RiskIndexQualityFilters.EvidenceConfidenceAvailable,
+            confidence);
 
         static double Share(IReadOnlyList<RiskIndexObjectRow> population, Func<RiskIndexObjectRow, bool> predicate)
         {

@@ -5065,7 +5065,7 @@ Save anyway?</value>
         <value>Interim mode: the index uses the data available today; the full-mode inputs (Gate A floor, tail statistics, KRIs) show as not available.</value>
     </data>
     <data name="RiskMode_FullHint" xml:space="preserve">
-        <value>Full mode: the index also applies the Gate A floor and the methodology's full-mode inputs.</value>
+        <value>Full mode: the index consumes Track 9 — the M39 chain drill-down and criticality inheritance, BIA criticality, the KEV/EPSS prioritization, the Gate A floor, Top Risks, Gate B seals, the portfolio tail and the third-party category.</value>
     </data>
     <data name="RiskState_Shadow" xml:space="preserve">
         <value>The index is in its shadow pilot and has not been published yet.</value>
@@ -6571,19 +6571,19 @@ Save anyway?</value>
         <value>Σ E[L] residual</value>
     </data>
     <data name="RiskMonetary_ResidualUnavailable" xml:space="preserve">
-        <value>not available: the server does not offer the monetary read yet</value>
+        <value>not read yet</value>
     </data>
     <data name="RiskMonetary_InherentLabel" xml:space="preserve">
         <value>Σ E[L] inherent</value>
     </data>
     <data name="RiskMonetary_InherentUnavailable" xml:space="preserve">
-        <value>not available: the server does not offer the monetary read yet</value>
+        <value>not read yet</value>
     </data>
     <data name="RiskMonetary_P95Label" xml:space="preserve">
         <value>Portfolio P95 / CVaR</value>
     </data>
     <data name="RiskMonetary_P95Unavailable" xml:space="preserve">
-        <value>not available (requires M45)</value>
+        <value>not read yet</value>
     </data>
     <data name="RiskMonetaryNote" xml:space="preserve">
         <value>A total always says how many scenarios are quantified, and percentiles are never added up.</value>
@@ -6592,7 +6592,7 @@ Save anyway?</value>
         <value>Top Risks</value>
     </data>
     <data name="RiskTopRisksPlaceholder" xml:space="preserve">
-        <value>Top Risks — not available until M43 (T172). The panel hosts the list once it exists; there is no approximation in interim mode.</value>
+        <value>Top Risks — M43's list (T172) is hosted in full mode; the interim mode shows no approximation.</value>
     </data>
     <data name="RiskVisibilitySourcesTitle" xml:space="preserve">
         <value>By source</value>
@@ -8960,5 +8960,185 @@ Switch agent co-work on?</value>
     </data>
     <data name="HostEntityAssignmentTip" xml:space="preserve">
         <value>The business entity this host belongs to. A choice made here is kept: Vision One and Jira Assets syncs never move a host a person assigned.</value>
+    </data>
+    <data name="RiskExploreDimension_ItService" xml:space="preserve">
+        <value>IT service</value>
+    </data>
+    <data name="RiskExploreDimension_Data" xml:space="preserve">
+        <value>Data</value>
+    </data>
+    <data name="RiskNodeType_itService" xml:space="preserve">
+        <value>IT service</value>
+    </data>
+    <data name="RiskNodeType_organizationData" xml:space="preserve">
+        <value>Data</value>
+    </data>
+    <data name="RiskSource_TER-REG" xml:space="preserve">
+        <value>Third-party register (M48)</value>
+    </data>
+    <data name="RiskIssue_unknown_mode" xml:space="preserve">
+        <value>The mode {0} is not one the index computes.</value>
+    </data>
+    <data name="RiskIssue_ter_requires_full_mode" xml:space="preserve">
+        <value>TER is weighted ({0}) but only the full mode scores suppliers: set it to 0 or choose the full mode.</value>
+    </data>
+    <data name="RiskSeal_gate_a_scenariosMSG" xml:space="preserve">
+        <value>{0} scenario(s) under Gate A — the PA-1 floor applies to the headline</value>
+    </data>
+    <data name="RiskSeal_gate_b_tail_exceedsMSG" xml:space="preserve">
+        <value>Gate B: {0} scenario(s) with P95/CVaR above tolerance (M45)</value>
+    </data>
+    <data name="RiskSeal_gate_b_kri_exceedsMSG" xml:space="preserve">
+        <value>Gate B: {0} scenario(s) with a KRI above tolerance (M46)</value>
+    </data>
+    <data name="RiskSeal_gate_b_not_assessableMSG" xml:space="preserve">
+        <value>Gate B: {0} scenario(s) not assessable — never read as within tolerance</value>
+    </data>
+    <data name="RiskCategoryReason_requires_activity_asset_links" xml:space="preserve">
+        <value>unavailable — M39 has no activity–asset link</value>
+    </data>
+    <data name="RiskGovernance_State_see_top_risks" xml:space="preserve">
+        <value>shown in the Top Risks list</value>
+    </data>
+    <data name="RiskGovernance_State_see_seals" xml:space="preserve">
+        <value>shown in the seals beside the index</value>
+    </data>
+    <data name="RiskQuality_Evidence_available" xml:space="preserve">
+        <value>see the distribution</value>
+    </data>
+    <data name="RiskQuality_EvidenceDistributionFMT" xml:space="preserve">
+        <value>confirmed {0} · indicative {1} · hypothesis {2} · not declared {3}</value>
+    </data>
+    <data name="RiskTrendAppetiteLineFMT" xml:space="preserve">
+        <value>appetite ceiling {0}</value>
+    </data>
+    <data name="RiskTrendTargetLineFMT" xml:space="preserve">
+        <value>target level {0}</value>
+    </data>
+    <data name="RiskTopRisks_Unavailable_requires_full_mode" xml:space="preserve">
+        <value>Top Risks — M43's list (T172) is hosted in full mode; the interim mode shows no approximation.</value>
+    </data>
+    <data name="RiskTopRisks_Unavailable_track9_service_unavailable" xml:space="preserve">
+        <value>Top Risks — the server did not wire M43's service.</value>
+    </data>
+    <data name="RiskTopRisks_Empty" xml:space="preserve">
+        <value>No open scenario of this node is in the Top Risks list.</value>
+    </data>
+    <data name="RiskTopRisks_GateA" xml:space="preserve">
+        <value>Gate A</value>
+    </data>
+    <data name="RiskTopRisks_GateAFlagsFMT" xml:space="preserve">
+        <value>Gate A (flags {0})</value>
+    </data>
+    <data name="RiskTopRisks_ScoresFMT" xml:space="preserve">
+        <value>residual {0} · inherent {1}</value>
+    </data>
+    <data name="RiskTopRisks_LossFMT" xml:space="preserve">
+        <value>E[L] {0}</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_1" xml:space="preserve">
+        <value>confirmed</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_2" xml:space="preserve">
+        <value>indicative</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_3" xml:space="preserve">
+        <value>hypothesis</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_none" xml:space="preserve">
+        <value>not declared</value>
+    </data>
+    <data name="RiskTopRisks_Next_None" xml:space="preserve">
+        <value>none</value>
+    </data>
+    <data name="RiskTopRisks_Next_GateAEscalation" xml:space="preserve">
+        <value>Gate A escalation</value>
+    </data>
+    <data name="RiskTopRisks_Next_AcceptanceExpiry" xml:space="preserve">
+        <value>acceptance expiry</value>
+    </data>
+    <data name="RiskTopRisks_Next_ManagementReview" xml:space="preserve">
+        <value>management review</value>
+    </data>
+    <data name="RiskTopRisks_Next_MitigationTaskDue" xml:space="preserve">
+        <value>treatment task due</value>
+    </data>
+    <data name="RiskTopRisks_Next_DecisionPending" xml:space="preserve">
+        <value>decision pending</value>
+    </data>
+    <data name="RiskTopRisks_ColRank" xml:space="preserve">
+        <value>#</value>
+    </data>
+    <data name="RiskTopRisks_ColScenario" xml:space="preserve">
+        <value>Scenario</value>
+    </data>
+    <data name="RiskTopRisks_ColGateA" xml:space="preserve">
+        <value>Gate A</value>
+    </data>
+    <data name="RiskTopRisks_ColScores" xml:space="preserve">
+        <value>Scores</value>
+    </data>
+    <data name="RiskTopRisks_ColLoss" xml:space="preserve">
+        <value>E[L]</value>
+    </data>
+    <data name="RiskTopRisks_ColConfidence" xml:space="preserve">
+        <value>Confidence</value>
+    </data>
+    <data name="RiskTopRisks_ColNext" xml:space="preserve">
+        <value>Next decision</value>
+    </data>
+    <data name="RiskMonetary_NoneQuantifiedFMT" xml:space="preserve">
+        <value>no scenario quantified (0 of {0})</value>
+    </data>
+    <data name="RiskMonetary_SumFMT" xml:space="preserve">
+        <value>{0} · {1} of {2} scenarios quantified · {3}% of REG's weight</value>
+    </data>
+    <data name="RiskMonetary_Partial" xml:space="preserve">
+        <value>partial</value>
+    </data>
+    <data name="RiskMonetary_PortfolioFMT" xml:space="preserve">
+        <value>{0} · {1} · {2} scenarios · {3}</value>
+    </data>
+    <data name="RiskMonetary_Dependence_AssumedIndependent" xml:space="preserve">
+        <value>independence assumed (no correlation declared)</value>
+    </data>
+    <data name="RiskMonetary_Dependence_Declared" xml:space="preserve">
+        <value>declared correlations</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_requires_full_mode" xml:space="preserve">
+        <value>not available in interim mode (M45 in full mode)</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_portfolio_too_large" xml:space="preserve">
+        <value>not available: more than 500 quantified scenarios, M45's limit</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_no_quantified_scenarios" xml:space="preserve">
+        <value>not available: no scenario of this node has tail statistics</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_portfolio_not_computable" xml:space="preserve">
+        <value>not available: M45 refused the aggregation</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_track9_service_unavailable" xml:space="preserve">
+        <value>not available: the server did not wire M45's service</value>
+    </data>
+    <data name="RiskMonetary_GateBFMT" xml:space="preserve">
+        <value>Gate B on the portfolio: {0}</value>
+    </data>
+    <data name="RiskGateB_exceeds" xml:space="preserve">
+        <value>above tolerance</value>
+    </data>
+    <data name="RiskGateB_within" xml:space="preserve">
+        <value>within tolerance</value>
+    </data>
+    <data name="RiskGateB_not_assessable" xml:space="preserve">
+        <value>not assessable</value>
+    </data>
+    <data name="RiskGateB_not_configured" xml:space="preserve">
+        <value>no portfolio tolerance configured</value>
+    </data>
+    <data name="RiskMonetary_P95FMT" xml:space="preserve">
+        <value>P95 {0} [{1}–{2}]</value>
+    </data>
+    <data name="RiskMonetary_Cvar95FMT" xml:space="preserve">
+        <value>CVaR95 {0} [{1}–{2}]</value>
     </data>
 </root>

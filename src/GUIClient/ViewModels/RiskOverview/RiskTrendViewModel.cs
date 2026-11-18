@@ -426,6 +426,14 @@ public class RiskTrendViewModel : ViewModelBase
                 Stroke = new SolidColorPaint(palette.Marker, 2) { PathEffect = new DashEffect([4, 4]) }
             });
 
+        // The REG series' reference lines (S40 §5.3): the appetite ceiling × 10 and, in full mode, the target level (T287).
+        foreach (var line in FullModeFormatter.ReferenceLines(trend, Text, culture))
+            sections.Add(new RectangularSection
+            {
+                Yi = line.Value, Yj = line.Value, Label = line.Label, LabelSize = 10, LabelPaint = new SolidColorPaint(palette.Axis),
+                Stroke = new SolidColorPaint(palette.Axis, 1) { PathEffect = new DashEffect(line.IsTarget ? [2, 4] : [6, 3]) }
+            });
+
         return sections.ToArray();
     }
 

@@ -870,6 +870,28 @@ public class RiskFlagsServiceInMemoryTest : RiskChainTestBase
         Assert.Equal(1, top.OpenRisks);
     }
 
+    /// <summary>
+    /// TOP5 (M59, T286) — the risk index hosts the list for one node of its drill-down: the same ranking over the given risks
+    /// only, with "open risks" counted among them; null keeps every visible open risk.
+    /// </summary>
+    [Fact]
+    public async Task TestTOP5_TheListCanBeRestrictedToTheRisksOfANode()
+    {
+        AddRisk(1, UnitA, score: 9f);
+        AddRisk(2, UnitA, score: 2f);
+        AddRisk(3, UnitA, score: 5f);
+        AddRisk(4, UnitA, status: "Closed", score: 9f);
+        await Svc.DeclareAsync(2, RiskFlagCode.HumanSafety, Because(), Author);
+
+        var node = await Svc.GetTopRisksAsync(10, [2, 3, 4]);
+        var all = await Svc.GetTopRisksAsync(10, null);
+
+        Assert.Equal([2, 3], node.Items.Select(i => i.RiskId));
+        Assert.Equal([1, 2], node.Items.Select(i => i.Rank));
+        Assert.Equal(2, node.OpenRisks);
+        Assert.Equal([2, 1, 3], all.Items.Select(i => i.RiskId));
+    }
+
     /// <summary>TOP3 — the list holds 1 to 50 rows.</summary>
     [Theory]
     [InlineData(0)]

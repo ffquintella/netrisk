@@ -24,6 +24,14 @@ public static class RiskIndexFactors
     public const string GovDivergence = "GOV.G";
     public const string Ter = "TER";
 
+    /// <summary>
+    /// The two TER factors a supplier reads in full mode (M59, T288), both under the one ceiling <c>u.TER</c>: diligence
+    /// (the M48 HECVAT score) and concentration (the active critical processes depending on it, counted once each).
+    /// </summary>
+    public const string TerDiligence = "TER.D";
+
+    public const string TerConcentration = "TER.C";
+
     /// <summary>The default ceilings (S39 §2.3).</summary>
     public static Dictionary<string, double> DefaultCeilings() => new()
     {
@@ -70,13 +78,20 @@ public static class RiskIndexSources
     public const string EntityClassification = "ENT-CLASS";
     public const string EntityInternetFacing = "ENT-INET";
 
+    /// <summary>
+    /// The third-party register of M48 (S39 §2.1 "Fornecedor", §2.3 TER, §15.1): one supplier object per active or exiting
+    /// third party, read in full mode only (M59, T288). S39 §3.2 names no id for the register itself (SSC-PORT, the vendor
+    /// portfolios, is not synced by M48), so it is <c>TER-REG</c> here.
+    /// </summary>
+    public const string ThirdPartyRegister = "TER-REG";
+
     /// <summary>Every source of the S39 §3.2 catalogue, in catalogue order (what <c>GET /RiskIndex/Sources</c> lists, T263).</summary>
     public static readonly IReadOnlyList<string> All =
     [
         RegResidual, RegImpact, RegRank, V1Device, V1Cve, V1InternetFacing, V1Accounts, V1Cloud, V1LocalApps,
         V1SecurityConfiguration, SscTotal, TenableNessus, TenableVm, TenableAes, TenableAcr, Importers, Incidents, NearMisses,
         IncidentResponsePlans, Assessments, CmdbCriticality, CmdbEnvironment, CmdbInternetFacing, CmdbRelations,
-        EntityCriticality, EntityClassification, EntityInternetFacing
+        EntityCriticality, EntityClassification, EntityInternetFacing, ThirdPartyRegister
     ];
 
     /// <summary>

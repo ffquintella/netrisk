@@ -218,6 +218,10 @@ public sealed partial class RiskIndexReadService
                     "above_appetite" => r => r.Scenario is { AboveCeiling: true, AcceptedAboveCeiling: false },
                     "accepted_above_appetite" => r => r.Scenario is { AcceptedAboveCeiling: true },
                     "acceptance_expiring" => r => r.Scenario is { AcceptanceExpiringSoon: true },
+                    // The full-mode seals (T286, T287): the PA-1 triggers and Gate B on the tail and by indicator.
+                    "gate_a" => r => r.Scenario?.GateAConditions is { Count: > 0 },
+                    "gate_b_tail" => r => r.Scenario?.GateBTail == RiskIndexGateBStates.Exceeds,
+                    "gate_b_kri" => r => r.Scenario?.GateBIndicators == RiskIndexGateBStates.Exceeds,
                     _ => Invalid(name)
                 }
             });

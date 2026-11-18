@@ -246,6 +246,36 @@ public class RiskIndexController(
         Run("reading the data quality", caller => readService.GetQualityAsync(node, date, caller, ct));
 
     /// <summary>
+    /// M43's Top Risks list hosted for the node (S40 §5.11; M59, T286): M43's ranking over the node's open scenarios the caller
+    /// can see, labels redacted without <c>riskmanagement</c>. Unavailable in interim mode, never approximated.
+    /// </summary>
+    [HttpGet]
+    [Route("TopRisks")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexTopRisksDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<RiskIndexTopRisksDto>> GetTopRisks([FromQuery] string? node = null,
+        [FromQuery] DateOnly? date = null, [FromQuery] int limit = 10, CancellationToken ct = default) =>
+        Run("reading the Top Risks list", caller => readService.GetTopRisksAsync(node, date, limit, caller, ct));
+
+    /// <summary>
+    /// The monetary panel (S40 §5.10, §8.2; M59, T287): Σ E[L] residual and inherent with "n of N", and in full mode M45's
+    /// portfolio P95/CVaR with Gate B on the portfolio. Outside the index; a value of the dashboard, so the shadow rule applies.
+    /// </summary>
+    [HttpGet]
+    [Route("Monetary")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexMonetaryDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public Task<ActionResult<RiskIndexMonetaryDto>> GetMonetary([FromQuery] string? node = null, [FromQuery] DateOnly? date = null,
+        CancellationToken ct = default) =>
+        Run("reading the monetary panel", caller => readService.GetMonetaryAsync(node, date, caller, ct));
+
+    /// <summary>
     /// The Sources tab's operational columns (S40 §6.5, §8.2; M55, T263): connections and last sync for every reader, the
     /// organization's object count and stale share for global scope only. Not an index value, so open during the shadow pilot.
     /// </summary>

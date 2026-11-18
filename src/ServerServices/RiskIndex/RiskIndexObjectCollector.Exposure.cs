@@ -28,7 +28,8 @@ public static partial class RiskIndexObjectCollector
     private sealed record FindingRow(int Id, int? HostId, int? EntityId, int Status, FindingStatus Lifecycle,
         string? ImportSource, string? Severity, float? Cvss3, float? Cvss2, float? Vpr, bool? ExploitAvailable,
         bool? ExploitedByScanner, double? Epss, string? Cves, string? RuleId, string? Cwes, string? Location,
-        string Title, DateTime FirstDetection, DateTime LastDetection, DateTime? SlaDueDate, int? LastImportId);
+        string Title, DateTime FirstDetection, DateTime LastDetection, DateTime? SlaDueDate, int? LastImportId,
+        int? ExploitAttemptCount = null);
 
     /// <summary>One factor reading of an exposure object before aggregation.</summary>
     private sealed record Reading(string Factor, RiskIndexFactorType Type, double X, double Validity, double Ceiling,
@@ -98,7 +99,8 @@ public static partial class RiskIndexObjectCollector
         var findings = await db.Vulnerabilities.AsNoTracking()
             .Select(v => new FindingRow(v.Id, v.HostId, v.EntityId, v.Status, v.LifecycleStatus, v.ImportSource, v.Severity,
                 v.Cvss3BaseScore, v.CvssBaseScore, v.VprScore, v.ExploitAvaliable, v.ExploitedByScanner, v.EpssScore, v.Cves,
-                v.RuleId, v.Cwes, v.Location, v.Title, v.FirstDetection, v.LastDetection, v.SlaDueDate, v.LastImportId))
+                v.RuleId, v.Cwes, v.Location, v.Title, v.FirstDetection, v.LastDetection, v.SlaDueDate, v.LastImportId,
+                v.ExploitAttemptCount))
             .ToListAsync(ct);
 
         // D-04 interim clause (S39 §3.3): a legacy-closed finding the lifecycle holds open stays closed unless it was
@@ -165,6 +167,9 @@ public static partial class RiskIndexObjectCollector
             var cmdbLinked = cmdb.ContainsKey(h.Id);
             var (crit, critSource) = HostCriticality(run, h.Id, h.Criticality, h.CriticalitySource, h.ExternalProvider,
                 h.Environment);
+            // Full mode: the host inherits from the applications it runs and the chain above them, plus Δ_dados (T284, T285).
+            var applications = run.HostApplications.GetValueOrDefault(h.Id) ?? [];
+            (crit, critSource) = WithChain(run, crit, critSource, applications);
             var m = run.M(crit);
             var environment = NormalizeEnvironment(p, h.Environment);
             var internet = HostInternetFacing(run, h.InternetFacing, h.InternetFacingSource, h.InternetFacingSeenAt, h.Ip);
@@ -223,7 +228,7 @@ public static partial class RiskIndexObjectCollector
                 continue;
 
             var key = new IcrObjectKey(RiskIndexObjectKind.Host, h.Id.ToString(CultureInfo.InvariantCulture));
-            var attribution = h.EntityId is { } e ? new[] { e } : [];
+            var attribution = ChainAttribution(run, h.EntityId, applications);
             var assetClass = AssetClassOf(h.Os, cmdb.GetValueOrDefault(h.Id));
             var findingSources = scanSources.Count > 0 || run.On(RiskIndexSources.V1Cve);
             var compositeOn = deviceOn || aesOn;
@@ -351,15 +356,17 @@ public static partial class RiskIndexObjectCollector
         {
             var cves = (f.Cves ?? "").Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries)
                 .Select(c => c.Trim().ToUpperInvariant()).OrderBy(c => c).ToList();
+            var severity = (int)SlaService.ParseSeverity(f.Severity, f.Cvss3 ?? f.Cvss2);
             var reading = new FindingReading
             {
                 Vpr = f.Vpr, Cvss3 = f.Cvss3, Cvss2 = f.Cvss2,
-                Severity = (int)SlaService.ParseSeverity(f.Severity, f.Cvss3 ?? f.Cvss2),
+                Severity = severity,
                 ExploitAvailable = f.ExploitAvailable == true,
                 Epss = f.Epss,
                 ExploitationKnown = !visionOne && (f.ExploitedByScanner == true || cves.Any(kev.Contains)),
                 InternetFacing = internet
             };
+            if (run.Full) reading = Prioritized(run, reading, f, cves, kev, severity);
             if (IcrAnchors.Finding(p, reading) is not { } signal || signal.Value <= 0) continue;
 
             var key = cves.Count > 0 ? string.Join(",", cves) : $"{f.ImportSource}|{f.RuleId ?? f.Cwes ?? f.Title}|{f.Location}";
@@ -376,9 +383,37 @@ public static partial class RiskIndexObjectCollector
             IcrMath.Validity(IcrMath.Days(readAt, run.Now), window), run.U(RiskIndexFactors.ExpVulnerabilities), readAt, source, stored);
     }
 
+    /// <summary>
+    /// Full mode (S39 §3.1; M59, T285): <c>b·m_x</c> gives way to M42's combined prioritization (T165). Its exploitation axis
+    /// decides — known (a listed KEV CVE, or observed: the scanner, or Vision One's exploit attempts once persisted apart,
+    /// T275) takes the exploitation floor; likely (EPSS at T165's threshold, or a public exploit) takes <c>m_x</c>.
+    /// </summary>
+    private static FindingReading Prioritized(Run run, FindingReading reading, FindingRow f, IReadOnlyList<string> cves,
+        HashSet<string> kev, int severity)
+    {
+        var assessment = Tools.ExploitationSignals.ExploitationPriority.Assess(new Tools.ExploitationSignals.ExploitationSignalInput
+        {
+            VulnerabilityId = f.Id, Cvss3BaseScore = f.Cvss3, CvssBaseScore = f.Cvss2,
+            SeverityLevel = severity > 0 ? severity : null, EpssScore = f.Epss,
+            Kev = cves.Where(kev.Contains).Select(c => new Tools.ExploitationSignals.KevSignal(c, null, false)).ToList(),
+            ExploitAvailable = f.ExploitAvailable,
+            ExploitedByScanner = f.ExploitedByScanner == true || f.ExploitAttemptCount is > 0
+        }, run.Now);
+
+        var reasons = assessment.Reasons;
+        return reading with
+        {
+            ExploitationKnown = assessment.Tier == Model.ExploitationSignals.ExploitationPriorityTier.P1,
+            ExploitLikely = reasons.Contains(Model.ExploitationSignals.ExploitationPriorityReason.EpssAtOrAboveThreshold) ||
+                            reasons.Contains(Model.ExploitationSignals.ExploitationPriorityReason.ExploitAvailable),
+            PriorityTier = assessment.Tier.ToString().ToLowerInvariant()
+        };
+    }
+
     private static IReadOnlyList<string> Flags(FindingSignal s)
     {
         var flags = new List<string> { s.BaseSource.ToString().ToLowerInvariant() };
+        if (s.PriorityTier is { } tier) flags.Add(tier);
         if (s.ExploitMultiplier) flags.Add("m_x");
         if (s.ExploitationFloor) flags.Add("exploited");
         if (s.InternetMultiplier) flags.Add("m_net");
@@ -540,7 +575,7 @@ public static partial class RiskIndexObjectCollector
             var key = entity is { } e2
                 ? new IcrObjectKey(RiskIndexObjectKind.Application, e2.ToString(CultureInfo.InvariantCulture))
                 : new IcrObjectKey(RiskIndexObjectKind.UnassignedGroup, $"findings:{first.ImportSource}:{first.LastImportId}");
-            var attribution = entity is { } e3 ? new[] { e3 } : [];
+            var attribution = entity is { } e3 ? ChainAttribution(run, e3, [e3]) : [];
 
             run.Rows.Add(ExposureRow(run, key, [reading], m, run.U(RiskIndexFactors.ExpVulnerabilities) * m,
                 run.U(RiskIndexFactors.ExpVulnerabilities)) with

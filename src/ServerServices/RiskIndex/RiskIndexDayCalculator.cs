@@ -88,7 +88,9 @@ public interface IRiskIndexDayCalculator
     Task<RiskIndexDay> ComputeAsync(RiskIndexDayRequest request, CancellationToken cancellationToken = default);
 }
 
-public sealed class RiskIndexDayCalculator(IDalService dalService) : IRiskIndexDayCalculator
+/// <param name="thirdParties">M48's concentration, read for TER in full mode (T288); absent, every supplier counts none.</param>
+public sealed class RiskIndexDayCalculator(IDalService dalService,
+    ServerServices.Interfaces.IThirdPartiesService? thirdParties = null) : IRiskIndexDayCalculator
 {
     private static readonly string[] ExposureSources =
     [
@@ -99,9 +101,29 @@ public sealed class RiskIndexDayCalculator(IDalService dalService) : IRiskIndexD
     public async Task<RiskIndexDay> ComputeAsync(RiskIndexDayRequest request, CancellationToken cancellationToken = default)
     {
         await using var db = dalService.GetContext(withIdentity: false);
+        var options = await WithConcentrationAsync(request);
         var objects = await RiskIndexObjectCollector.CollectAsync(db, request.Parameters, request.Mode, request.SnapshotInstant,
-            request.Options, cancellationToken);
+            options, cancellationToken);
         return Compose(objects, request);
+    }
+
+    /// <summary>
+    /// Full mode with TER-REG (T288): M48's own concentration per supplier — its dependent active critical processes counted
+    /// once each (T203) — read through <c>IThirdPartiesService</c> under the job's unrestricted scope.
+    /// </summary>
+    private async Task<RiskIndexCollectionOptions> WithConcentrationAsync(RiskIndexDayRequest request)
+    {
+        if (request.Mode != RiskIndexMode.Full || thirdParties is null ||
+            !request.Parameters.EnabledSources.Contains(RiskIndexSources.ThirdPartyRegister))
+            return request.Options;
+
+        var report = await thirdParties.GetConcentrationAsync();
+        return request.Options with
+        {
+            SupplierConcentration = report.Suppliers.Entries.ToDictionary(e => e.ThirdPartyId,
+                e => new RiskIndexSupplierConcentration(e.DependentCriticalProcessCount,
+                    e.CriticalProcesses.Select(c => c.EntityId).ToList()))
+        };
     }
 
     /// <summary>The pure half: nodes, membership, results and attribution from a day's object set.</summary>
@@ -297,6 +319,9 @@ public sealed class RiskIndexDayCalculator(IDalService dalService) : IRiskIndexD
         var type = definition.EntityType;
         var interimProcess = mode == RiskIndexMode.Interim && type == RiskIndexEntityTypes.BusinessProcess;
         var interimActivity = mode == RiskIndexMode.Interim && type == RiskIndexEntityTypes.Activity;
+        // Full mode (T284): a process holds its services' and applications' assets through the chain; M39 has no typed
+        // activity–asset link, so an activity's EXP stays unavailable, now for that reason rather than "requires M39".
+        var fullActivity = mode == RiskIndexMode.Full && type == RiskIndexEntityTypes.Activity;
         var dimension = assetsOnly || definition.AssetClass is not null || definition.Source is not null;
 
         bool Keep(RiskIndexObjectRow r)
@@ -316,12 +341,21 @@ public sealed class RiskIndexDayCalculator(IDalService dalService) : IRiskIndexD
             Category = category,
             Objects = kept.Where(r => r.Category == category).Select(r => r.ToEngine()).ToList(),
             SourceEnabled = set.SourceEnabled.GetValueOrDefault(category),
-            ForcedUnavailable = category == RiskIndexCategory.Exp && interimActivity,
+            ForcedUnavailable = category == RiskIndexCategory.Exp && (interimActivity || fullActivity),
             Partial = category == RiskIndexCategory.Exp && interimProcess,
             Note = category == RiskIndexCategory.Exp && (interimProcess || interimActivity) ? "requires M39"
+                : category == RiskIndexCategory.Exp && fullActivity ? NoActivityAssetLinkNote
                 : category == RiskIndexCategory.Ame && !set.IncidentIntakeActive ? "no incident intake"
                 : null
         }).ToList();
+
+        // PA-1 (S39 §7; T286): in full mode the headline of every node holding an open scenario on which M43's Gate A
+        // predicate holds is floored at φ_A. Asset intersections hold no scenario, so they never are.
+        var floorReasons = mode == RiskIndexMode.Full
+            ? kept.Where(r => r.Key.Kind == RiskIndexObjectKind.Scenario && r.ScenarioInputs?.GateAConditions is { Count: > 0 })
+                .DistinctBy(r => r.Key).OrderBy(r => r.Key.Ref, StringComparer.Ordinal)
+                .Select(r => new IcrFloorReason(r.Key, r.ScenarioInputs!.GateAConditions!)).ToList()
+            : [];
 
         // cov_processos (S39 §8.4): the critical processes (declared ≥ 4) in the closure, and those with an open scenario.
         double critical = 0, covered = 0;
@@ -343,9 +377,14 @@ public sealed class RiskIndexDayCalculator(IDalService dalService) : IRiskIndexD
         {
             Categories = categories,
             CriticalProcessWeight = critical,
-            CriticalProcessWeightCovered = covered
+            CriticalProcessWeightCovered = covered,
+            GateAFloorTriggered = floorReasons.Count > 0,
+            FloorReasons = floorReasons
         };
     }
+
+    /// <summary>The note of a full-mode activity's EXP: unavailable because M39 has no typed activity–asset link.</summary>
+    public const string NoActivityAssetLinkNote = "requires activity-asset links";
 }
 
 /// <summary>What <see cref="RiskIndexDayCalculator.Compose"/> computes beside the node values.</summary>

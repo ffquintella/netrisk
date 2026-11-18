@@ -379,7 +379,13 @@ public class RiskFlagsService(
 
     // --- Top Risks --------------------------------------------------------------------------------
 
-    public async Task<TopRisksDto> GetTopRisksAsync(int limit)
+    public Task<TopRisksDto> GetTopRisksAsync(int limit) => GetTopRisksAsync(limit, null);
+
+    /// <summary>
+    /// The same ranking over a subset of the open risks the caller can see — the risk index hosts the list for one node of
+    /// its drill-down (S39 §16 M43; M59, T286). <paramref name="restrictTo"/> null is every visible open risk.
+    /// </summary>
+    public async Task<TopRisksDto> GetTopRisksAsync(int limit, IReadOnlyCollection<int>? restrictTo)
     {
         if (limit is < 1 or > MaxTopRisks)
             throw new InvalidParameterException(nameof(limit), $"The Top Risks list holds 1 to {MaxTopRisks} risks.");
@@ -388,13 +394,16 @@ public class RiskFlagsService(
 
         await using var db = DalService.GetContext();
 
-        var open = await db.Risks.AsNoTracking()
-            .Where(r => r.Status != StatusClosed)
-            .Select(r => new
-            {
-                r.Id, r.ReferenceId, r.Subject, r.Status, r.EntityId, r.Owner, r.BusinessRank, r.EvidenceConfidence
-            })
-            .ToListAsync();
+        var restriction = restrictTo?.ToHashSet();
+        var open = (await db.Risks.AsNoTracking()
+                .Where(r => r.Status != StatusClosed)
+                .Select(r => new
+                {
+                    r.Id, r.ReferenceId, r.Subject, r.Status, r.EntityId, r.Owner, r.BusinessRank, r.EvidenceConfidence
+                })
+                .ToListAsync())
+            .Where(r => restriction is null || restriction.Contains(r.Id))
+            .ToList();
 
         var result = new TopRisksDto { GeneratedAt = now, Limit = limit, OpenRisks = open.Count };
         if (open.Count == 0) return result;

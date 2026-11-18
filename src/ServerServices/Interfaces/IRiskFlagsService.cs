@@ -49,6 +49,9 @@ public interface IRiskFlagsService
     /// <summary>The executive Top Risks list, 1–50 rows.</summary>
     Task<TopRisksDto> GetTopRisksAsync(int limit);
 
+    /// <summary>The Top Risks ranking restricted to <paramref name="restrictTo"/> among the visible open risks (M59, T286).</summary>
+    Task<TopRisksDto> GetTopRisksAsync(int limit, IReadOnlyCollection<int>? restrictTo);
+
     /// <summary>
     /// Re-derives the risk's flags and refuses <paramref name="action"/> when Gate A holds — the first merit
     /// check of every acceptance, renewal, closure, deletion and non-immediate decision (S46 §4.7).

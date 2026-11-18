@@ -5128,7 +5128,7 @@ Salvar mesmo assim?</value>
         <value>Modo interino: o índice usa os dados disponíveis hoje; as entradas do modo pleno (piso do Portão A, estatística de cauda, KRIs) aparecem como não disponíveis.</value>
     </data>
     <data name="RiskMode_FullHint" xml:space="preserve">
-        <value>Modo pleno: o índice aplica também o piso do Portão A e as entradas do modo pleno da metodologia.</value>
+        <value>Modo pleno: o índice consome o Track 9 — drill-down e herança de criticidade pela cadeia do M39, criticidade do BIA, priorização KEV/EPSS, piso do Portão A, Top Risks, selos do Portão B, cauda do portfólio e a categoria de terceiros.</value>
     </data>
     <data name="RiskState_Shadow" xml:space="preserve">
         <value>O índice está em piloto em sombra e ainda não foi publicado.</value>
@@ -6634,19 +6634,19 @@ Salvar mesmo assim?</value>
         <value>Σ E[L] residual</value>
     </data>
     <data name="RiskMonetary_ResidualUnavailable" xml:space="preserve">
-        <value>não disponível: o servidor ainda não oferece a leitura monetária</value>
+        <value>ainda não lido</value>
     </data>
     <data name="RiskMonetary_InherentLabel" xml:space="preserve">
         <value>Σ E[L] inerente</value>
     </data>
     <data name="RiskMonetary_InherentUnavailable" xml:space="preserve">
-        <value>não disponível: o servidor ainda não oferece a leitura monetária</value>
+        <value>ainda não lido</value>
     </data>
     <data name="RiskMonetary_P95Label" xml:space="preserve">
         <value>P95 / CVaR do portfólio</value>
     </data>
     <data name="RiskMonetary_P95Unavailable" xml:space="preserve">
-        <value>não disponível (requer M45)</value>
+        <value>ainda não lido</value>
     </data>
     <data name="RiskMonetaryNote" xml:space="preserve">
         <value>Um total sempre diz quantos cenários estão quantificados, e percentis nunca são somados.</value>
@@ -6655,7 +6655,7 @@ Salvar mesmo assim?</value>
         <value>Top Risks</value>
     </data>
     <data name="RiskTopRisksPlaceholder" xml:space="preserve">
-        <value>Top Risks — não disponível até o M43 (T172). O painel hospeda a lista quando ela existir; não há aproximação no modo interino.</value>
+        <value>Top Risks — a lista do M43 (T172) é hospedada no modo pleno; o modo interino não mostra aproximação.</value>
     </data>
     <data name="RiskVisibilitySourcesTitle" xml:space="preserve">
         <value>Por fonte</value>
@@ -9023,5 +9023,185 @@ Ligar o co-trabalho com agentes?</value>
     </data>
     <data name="HostEntityAssignmentTip" xml:space="preserve">
         <value>A entidade de negócio a que este host pertence. Uma escolha feita aqui é mantida: as sincronizações do Vision One e do Jira Assets nunca movem um host atribuído por uma pessoa.</value>
+    </data>
+    <data name="RiskExploreDimension_ItService" xml:space="preserve">
+        <value>Serviço de TI</value>
+    </data>
+    <data name="RiskExploreDimension_Data" xml:space="preserve">
+        <value>Dado</value>
+    </data>
+    <data name="RiskNodeType_itService" xml:space="preserve">
+        <value>Serviço de TI</value>
+    </data>
+    <data name="RiskNodeType_organizationData" xml:space="preserve">
+        <value>Dado</value>
+    </data>
+    <data name="RiskSource_TER-REG" xml:space="preserve">
+        <value>Registro de terceiros (M48)</value>
+    </data>
+    <data name="RiskIssue_unknown_mode" xml:space="preserve">
+        <value>O modo {0} não é um dos que o índice calcula.</value>
+    </data>
+    <data name="RiskIssue_ter_requires_full_mode" xml:space="preserve">
+        <value>TER tem peso ({0}), mas só o modo pleno pontua fornecedores: use 0 ou escolha o modo pleno.</value>
+    </data>
+    <data name="RiskSeal_gate_a_scenariosMSG" xml:space="preserve">
+        <value>{0} cenário(s) sob o Portão A — o piso PA-1 vale para a manchete</value>
+    </data>
+    <data name="RiskSeal_gate_b_tail_exceedsMSG" xml:space="preserve">
+        <value>Portão B: {0} cenário(s) com P95/CVaR acima da tolerância (M45)</value>
+    </data>
+    <data name="RiskSeal_gate_b_kri_exceedsMSG" xml:space="preserve">
+        <value>Portão B: {0} cenário(s) com KRI acima da tolerância (M46)</value>
+    </data>
+    <data name="RiskSeal_gate_b_not_assessableMSG" xml:space="preserve">
+        <value>Portão B: {0} cenário(s) não avaliáveis — nunca lidos como dentro da tolerância</value>
+    </data>
+    <data name="RiskCategoryReason_requires_activity_asset_links" xml:space="preserve">
+        <value>indisponível — o M39 não tem vínculo atividade–ativo</value>
+    </data>
+    <data name="RiskGovernance_State_see_top_risks" xml:space="preserve">
+        <value>na lista Top Risks</value>
+    </data>
+    <data name="RiskGovernance_State_see_seals" xml:space="preserve">
+        <value>nos selos ao lado do índice</value>
+    </data>
+    <data name="RiskQuality_Evidence_available" xml:space="preserve">
+        <value>ver a distribuição</value>
+    </data>
+    <data name="RiskQuality_EvidenceDistributionFMT" xml:space="preserve">
+        <value>confirmada {0} · indicativa {1} · hipótese {2} · não declarada {3}</value>
+    </data>
+    <data name="RiskTrendAppetiteLineFMT" xml:space="preserve">
+        <value>teto de apetite {0}</value>
+    </data>
+    <data name="RiskTrendTargetLineFMT" xml:space="preserve">
+        <value>nível-alvo {0}</value>
+    </data>
+    <data name="RiskTopRisks_Unavailable_requires_full_mode" xml:space="preserve">
+        <value>Top Risks — a lista do M43 (T172) é hospedada no modo pleno; o modo interino não mostra aproximação.</value>
+    </data>
+    <data name="RiskTopRisks_Unavailable_track9_service_unavailable" xml:space="preserve">
+        <value>Top Risks — o servidor não registrou o serviço do M43.</value>
+    </data>
+    <data name="RiskTopRisks_Empty" xml:space="preserve">
+        <value>Nenhum cenário aberto deste nó está na lista Top Risks.</value>
+    </data>
+    <data name="RiskTopRisks_GateA" xml:space="preserve">
+        <value>Portão A</value>
+    </data>
+    <data name="RiskTopRisks_GateAFlagsFMT" xml:space="preserve">
+        <value>Portão A (flags {0})</value>
+    </data>
+    <data name="RiskTopRisks_ScoresFMT" xml:space="preserve">
+        <value>residual {0} · inerente {1}</value>
+    </data>
+    <data name="RiskTopRisks_LossFMT" xml:space="preserve">
+        <value>E[L] {0}</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_1" xml:space="preserve">
+        <value>confirmada</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_2" xml:space="preserve">
+        <value>indicativa</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_3" xml:space="preserve">
+        <value>hipótese</value>
+    </data>
+    <data name="RiskTopRisks_Confidence_none" xml:space="preserve">
+        <value>não declarada</value>
+    </data>
+    <data name="RiskTopRisks_Next_None" xml:space="preserve">
+        <value>nenhuma</value>
+    </data>
+    <data name="RiskTopRisks_Next_GateAEscalation" xml:space="preserve">
+        <value>escalonamento do Portão A</value>
+    </data>
+    <data name="RiskTopRisks_Next_AcceptanceExpiry" xml:space="preserve">
+        <value>vencimento da aceitação</value>
+    </data>
+    <data name="RiskTopRisks_Next_ManagementReview" xml:space="preserve">
+        <value>revisão de gestão</value>
+    </data>
+    <data name="RiskTopRisks_Next_MitigationTaskDue" xml:space="preserve">
+        <value>tarefa de tratamento a vencer</value>
+    </data>
+    <data name="RiskTopRisks_Next_DecisionPending" xml:space="preserve">
+        <value>decisão pendente</value>
+    </data>
+    <data name="RiskTopRisks_ColRank" xml:space="preserve">
+        <value>#</value>
+    </data>
+    <data name="RiskTopRisks_ColScenario" xml:space="preserve">
+        <value>Cenário</value>
+    </data>
+    <data name="RiskTopRisks_ColGateA" xml:space="preserve">
+        <value>Portão A</value>
+    </data>
+    <data name="RiskTopRisks_ColScores" xml:space="preserve">
+        <value>Pontuações</value>
+    </data>
+    <data name="RiskTopRisks_ColLoss" xml:space="preserve">
+        <value>E[L]</value>
+    </data>
+    <data name="RiskTopRisks_ColConfidence" xml:space="preserve">
+        <value>Confiança</value>
+    </data>
+    <data name="RiskTopRisks_ColNext" xml:space="preserve">
+        <value>Próxima decisão</value>
+    </data>
+    <data name="RiskMonetary_NoneQuantifiedFMT" xml:space="preserve">
+        <value>nenhum cenário quantificado (0 de {0})</value>
+    </data>
+    <data name="RiskMonetary_SumFMT" xml:space="preserve">
+        <value>{0} · {1} de {2} cenários quantificados · {3}% do peso de REG</value>
+    </data>
+    <data name="RiskMonetary_Partial" xml:space="preserve">
+        <value>parcial</value>
+    </data>
+    <data name="RiskMonetary_PortfolioFMT" xml:space="preserve">
+        <value>{0} · {1} · {2} cenários · {3}</value>
+    </data>
+    <data name="RiskMonetary_Dependence_AssumedIndependent" xml:space="preserve">
+        <value>independência assumida (nenhuma correlação declarada)</value>
+    </data>
+    <data name="RiskMonetary_Dependence_Declared" xml:space="preserve">
+        <value>correlações declaradas</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_requires_full_mode" xml:space="preserve">
+        <value>não disponível no modo interino (M45 no modo pleno)</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_portfolio_too_large" xml:space="preserve">
+        <value>não disponível: mais de 500 cenários quantificados, o limite do M45</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_no_quantified_scenarios" xml:space="preserve">
+        <value>não disponível: nenhum cenário deste nó tem estatísticas de cauda</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_portfolio_not_computable" xml:space="preserve">
+        <value>não disponível: o M45 recusou a agregação</value>
+    </data>
+    <data name="RiskMonetary_PortfolioUnavailable_track9_service_unavailable" xml:space="preserve">
+        <value>não disponível: o servidor não registrou o serviço do M45</value>
+    </data>
+    <data name="RiskMonetary_GateBFMT" xml:space="preserve">
+        <value>Portão B do portfólio: {0}</value>
+    </data>
+    <data name="RiskGateB_exceeds" xml:space="preserve">
+        <value>acima da tolerância</value>
+    </data>
+    <data name="RiskGateB_within" xml:space="preserve">
+        <value>dentro da tolerância</value>
+    </data>
+    <data name="RiskGateB_not_assessable" xml:space="preserve">
+        <value>não avaliável</value>
+    </data>
+    <data name="RiskGateB_not_configured" xml:space="preserve">
+        <value>nenhuma tolerância de portfólio configurada</value>
+    </data>
+    <data name="RiskMonetary_P95FMT" xml:space="preserve">
+        <value>P95 {0} [{1}–{2}]</value>
+    </data>
+    <data name="RiskMonetary_Cvar95FMT" xml:space="preserve">
+        <value>CVaR95 {0} [{1}–{2}]</value>
     </data>
 </root>

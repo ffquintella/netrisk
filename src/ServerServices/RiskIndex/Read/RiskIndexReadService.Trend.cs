@@ -1,4 +1,5 @@
 using System.Globalization;
+using DAL.Context;
 using DAL.Entities;
 using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -40,9 +41,11 @@ public sealed partial class RiskIndexReadService
             () => TrendAsync(resolved, day, window, series, caller, ct));
     }
 
+    /// <summary>One day of a series. <see cref="Displayed"/> is ICR* (unfloored) as an integer; <see cref="DisplayedFloored"/>
+    /// the displayed value with the Gate A floor, and <see cref="IsFloored"/> whether the floor lifted it (S39 §7; T286).</summary>
     private sealed record TrendDay(DateOnly Date, int ProfileId, double? Value, int? Displayed, RiskIndexDisplayState State,
         double? Low, double? High, IReadOnlyList<RiskIndexCategory> Unavailable, IReadOnlyList<StoredMarker> Markers,
-        StoredChangeAttribution? Change);
+        StoredChangeAttribution? Change, int? DisplayedFloored = null, bool IsFloored = false);
 
     private async Task<RiskIndexTrendDto> TrendAsync(Node node, Day day, int window, RiskIndexCategory series,
         RiskIndexCaller caller, CancellationToken ct)
@@ -89,8 +92,8 @@ public sealed partial class RiskIndexReadService
             var top = movers.TryGetValue(d, out var entries)
                 ? entries.Select(e => AttributionRow(e, labels, t.Change!.Change)).ToList()
                 : [];
-            points.Add(new RiskIndexTrendPointDto(d, t.Displayed, t.Value, t.Displayed, t.Value is null ? null : ewma, t.State,
-                t.Low, t.High, t.Unavailable, false, false, delta, top));
+            points.Add(new RiskIndexTrendPointDto(d, t.Displayed, t.Value, t.DisplayedFloored ?? t.Displayed,
+                t.Value is null ? null : ewma, t.State, t.Low, t.High, t.Unavailable, false, t.IsFloored, delta, top));
 
             if (t.Value is not null)
             {
@@ -121,7 +124,73 @@ public sealed partial class RiskIndexReadService
             (RiskIndexStoredJson.Deserialize<List<StoredOverlayPoint>>(b.Overlay) ?? [])
             .Where(o => o.Date >= from).Select(o => new RiskIndexOverlayPointDto(o.Date, o.Value)).ToList())).ToList();
 
-        return new RiskIndexTrendDto(node.Ref, window, series, points, segments, markers, [], [], overlays, null, null);
+        var appetite = series == RiskIndexCategory.Reg ? await AppetiteLineAsync(db, node, ct) : null;
+        var target = series == RiskIndexCategory.Reg && day.Profile.Mode == RiskIndexMode.Full
+            ? TargetLine(await ComposeAsync(node, day, caller, ct), day.P)
+            : null;
+        return new RiskIndexTrendDto(node.Ref, window, series, points, segments, markers, [], FlooredRanges(points), overlays,
+            appetite, target);
+    }
+
+    /// <summary>The stretches where the Gate A floor lifted the displayed value (S40 §5.3 "sombreamento de piso"; T286).</summary>
+    internal static IReadOnlyList<RiskIndexDateRange> FlooredRanges(IReadOnlyList<RiskIndexTrendPointDto> points)
+    {
+        var ranges = new List<RiskIndexDateRange>();
+        DateOnly? start = null, end = null;
+        foreach (var point in points.OrderBy(p => p.Date))
+        {
+            if (point.IsFloored && !point.IsGap)
+            {
+                start ??= point.Date;
+                end = point.Date;
+                continue;
+            }
+
+            if (start is { } s0 && end is { } e0) ranges.Add(new RiskIndexDateRange(s0, e0));
+            start = end = null;
+        }
+
+        if (start is { } s1 && end is { } e1) ranges.Add(new RiskIndexDateRange(s1, e1));
+        return ranges;
+    }
+
+    /// <summary>
+    /// The appetite line of the REG series (S39 §6.6 item 3; S40 §5.3): the ordinal ceiling × 10 of the node's entity, else
+    /// the organization-wide one; null when none is configured — never read as "within appetite". The current ceiling.
+    /// </summary>
+    private static async Task<double?> AppetiteLineAsync(NRDbContext db, Node node, CancellationToken ct) =>
+        AppetiteLine((await db.RiskAppetites.AsNoTracking().Select(a => new { a.EntityId, a.MaxAcceptableResidual }).ToListAsync(ct))
+            .Select(a => (a.EntityId, a.MaxAcceptableResidual)).ToList(), node.EntityId);
+
+    /// <summary>The pure half of the appetite line: the entity's own ceiling, else the organization-wide one, × 10.</summary>
+    internal static double? AppetiteLine(IReadOnlyList<(int? EntityId, double Ceiling)> appetites, int? entityId)
+    {
+        var own = entityId is { } id ? appetites.Where(a => a.EntityId == id).Select(a => (double?)a.Ceiling).FirstOrDefault() : null;
+        var ceiling = own ?? appetites.Where(a => a.EntityId == null).Select(a => (double?)a.Ceiling).FirstOrDefault();
+        return ceiling is { } c ? Math.Clamp(10 * c, 0, 100) : null;
+    }
+
+    /// <summary>
+    /// The target line of the REG series in full mode (S39 §9.3; S40 §5.3; T287): REG's formula over the node's scenarios
+    /// with each one M44 gives a target (T180) at that target score, the others as they are. Null when none has a target.
+    /// </summary>
+    internal static double? TargetLine(Composition composition, RiskIndexParameters p)
+    {
+        var reg = composition.Input.Categories.FirstOrDefault(c => c.Category == RiskIndexCategory.Reg);
+        if (reg is null || reg.Objects.Count == 0) return null;
+
+        var targets = composition.Rows.Where(r => r.Category == RiskIndexCategory.Reg && r.ScenarioInputs?.TargetScore is not null)
+            .ToDictionary(r => r.Key, r => IcrMath.Clamp01(r.ScenarioInputs!.TargetScore!.Value / 10));
+        if (targets.Count == 0) return null;
+
+        var atTarget = reg with
+        {
+            Objects = reg.Objects.Select(o => targets.TryGetValue(o.Key, out var t)
+                ? o with { R = t, Membership = IcrMembership.Assessed }
+                : o).ToList()
+        };
+        var result = IcrCategoryCalculator.Compute(atTarget, p);
+        return result.Status == IcrCategoryStatus.Available ? result.Value : null;
     }
 
     private static IEnumerable<(int ProfileId, DateOnly From, DateOnly To)> Runs(IReadOnlyList<TrendDay> days)
@@ -156,8 +225,8 @@ public sealed partial class RiskIndexReadService
                         s.SnapshotDate <= to)
             .Select(s => new
             {
-                s.SnapshotDate, s.ProfileId, s.Category, s.ValueUnfloored, s.ValueDisplayed, s.DisplayState, s.CategoryState,
-                s.IntervalLow, s.IntervalHigh, s.Markers, s.ChangeAttribution
+                s.SnapshotDate, s.ProfileId, s.Category, s.ValueUnfloored, s.ValueFloored, s.ValueDisplayed, s.DisplayState,
+                s.CategoryState, s.IntervalLow, s.IntervalHigh, s.Markers, s.ChangeAttribution
             })
             .ToListAsync(ct);
 
@@ -173,8 +242,11 @@ public sealed partial class RiskIndexReadService
             if (series == RiskIndexCategory.Icr)
             {
                 var noData = row.DisplayState == RiskIndexDisplayState.NoData;
-                return new TrendDay(g.Key, row.ProfileId, noData ? null : row.ValueUnfloored, noData ? null : row.ValueDisplayed,
-                    row.DisplayState ?? RiskIndexDisplayState.NoData, row.IntervalLow, row.IntervalHigh, unavailable, markers, change);
+                var floored = !noData && row.ValueFloored > row.ValueUnfloored + 1e-9;
+                return new TrendDay(g.Key, row.ProfileId, noData ? null : row.ValueUnfloored,
+                    noData ? null : floored ? IcrMath.Displayed(row.ValueUnfloored) : row.ValueDisplayed,
+                    row.DisplayState ?? RiskIndexDisplayState.NoData, row.IntervalLow, row.IntervalHigh, unavailable, markers, change,
+                    noData ? null : row.ValueDisplayed, floored);
             }
 
             // A category that was not available that day is a gap in its series (S40 §5.3).
@@ -212,8 +284,11 @@ public sealed partial class RiskIndexReadService
                 var unavailable = r.Categories.Where(c => c.Status == IcrCategoryStatus.Unavailable).Select(c => c.Category).ToList();
                 if (series == RiskIndexCategory.Icr)
                 {
-                    result.Add(new TrendDay(d.SnapshotDate, d.ProfileId, r.Unfloored, r.Displayed,
-                        (RiskIndexDisplayState)(int)r.DisplayState, r.IntervalLow, r.IntervalHigh, unavailable, [], null));
+                    var floored = r is { Unfloored: { } u, Floored: { } f } && f > u + 1e-9;
+                    result.Add(new TrendDay(d.SnapshotDate, d.ProfileId, r.Unfloored,
+                        floored ? IcrMath.Displayed(r.Unfloored!.Value) : r.Displayed,
+                        (RiskIndexDisplayState)(int)r.DisplayState, r.IntervalLow, r.IntervalHigh, unavailable, [], null,
+                        r.Displayed, floored));
                     continue;
                 }
 

@@ -18,6 +18,10 @@ public sealed record RiskIndexCollectionOptions
 
     /// <summary>Risk id → the first day of GOV.G's current run of lit days.</summary>
     public IReadOnlyDictionary<int, DateTime> DivergenceSince { get; init; } = new Dictionary<int, DateTime>();
+
+    /// <summary>Supplier id → M48's concentration (full mode with TER-REG; T288); a supplier missing here has none.</summary>
+    public IReadOnlyDictionary<int, RiskIndexSupplierConcentration> SupplierConcentration { get; init; } =
+        new Dictionary<int, RiskIndexSupplierConcentration>();
 }
 
 /// <summary>Every object row of one day, and the facts the job carries forward or publishes beside them.</summary>
@@ -63,6 +67,11 @@ public static partial class RiskIndexObjectCollector
         /// </summary>
         public Dictionary<int, (double Value, DateTime ReadAt)> TenableAcr = new(), TenableAes = new();
 
+        /// <summary>Host id → the applications it runs (<c>host_application_links</c>), full mode under CMDB-REL (T284).</summary>
+        public Dictionary<int, IReadOnlyList<int>> HostApplications = new();
+
+        public bool Full => Mode == RiskIndexMode.Full;
+
         public bool On(string source) => Enabled.Contains(source);
         public double W(string source) => P.FreshnessDays.TryGetValue(source, out var w) ? w : 30;
         public double M(int crit) => IcrMath.Modulator(crit, P.MA);
@@ -72,7 +81,7 @@ public static partial class RiskIndexObjectCollector
     public static async Task<RiskIndexObjectSet> CollectAsync(NRDbContext db, RiskIndexParameters p, RiskIndexMode mode,
         DateTime now, RiskIndexCollectionOptions? options = null, CancellationToken ct = default)
     {
-        var map = await ReadEntityMapAsync(db, ct);
+        var map = await ReadEntityMapAsync(db, ct, mode);
         var run = new Run
         {
             P = p, Mode = mode, Now = now, Map = map, Enabled = p.EnabledSources.ToHashSet(StringComparer.Ordinal),
@@ -82,12 +91,22 @@ public static partial class RiskIndexObjectCollector
         var facts = await RegisterFactsReader.ReadAsync(db, p, now, ct);
         var attribution = await ScenarioAttribution.EntitiesByRiskAsync(db, facts.Keys.ToList(), ct);
 
+        // Full mode (M59): the M39 chain links of each scenario join its attribution (T284), and Track 9's verdicts on it
+        // are carried beside its value (T286, T287).
+        var chain = await ChainLinksAsync(db, run, facts.Keys.ToList(), ct);
+        if (chain.Count > 0)
+            attribution = facts.Keys.ToDictionary(id => id, id => (IReadOnlyList<int>)(attribution.GetValueOrDefault(id) ?? [])
+                .Concat(chain.GetValueOrDefault(id) ?? []).Distinct().Order().ToList());
+        var track9 = await ReadScenarioTrack9Async(db, run, facts, ct);
+
         await LoadTenableReadingsAsync(db, run, ct);
+        await LoadHostApplicationsAsync(db, run, ct);
         var exposure = await CollectExposureAsync(db, run, ct);
-        CollectScenarios(run, facts, attribution, exposure.FreshHostExposure);
+        CollectScenarios(run, facts, attribution, exposure.FreshHostExposure, track9);
         var events = await CollectEventsAsync(db, run, ct);
         await CollectAssessmentsAsync(db, run, ct);
         await CollectSecurityConfigurationAsync(db, run, ct);
+        await CollectSuppliersAsync(db, run, ct);
 
         var enabled = new Dictionary<RiskIndexCategory, bool>
         {
@@ -102,7 +121,8 @@ public static partial class RiskIndexObjectCollector
             [RiskIndexCategory.Ctl] = run.On(RiskIndexSources.Assessments) || run.On(RiskIndexSources.IncidentResponsePlans) ||
                                       run.On(RiskIndexSources.V1SecurityConfiguration),
             [RiskIndexCategory.Gov] = run.On(RiskIndexSources.RegResidual) || exposure.AnySlaSource,
-            [RiskIndexCategory.Ter] = false
+            // TER reads the M48 register in full mode only (T288).
+            [RiskIndexCategory.Ter] = run.Full && run.On(RiskIndexSources.ThirdPartyRegister)
         };
 
         return new RiskIndexObjectSet
@@ -116,22 +136,43 @@ public static partial class RiskIndexObjectCollector
         };
     }
 
-    /// <summary>The entity map and the EAV properties the index reads (links and risk context).</summary>
-    public static async Task<EntityMap> ReadEntityMapAsync(NRDbContext db, CancellationToken ct = default)
+    /// <summary>
+    /// The entity map and the EAV properties the index reads (links and risk context). In full mode (M59) also the M39 links
+    /// of IT services, the MTPD of M41's BIAs and the data records the M49 catalogue marks sensitive.
+    /// </summary>
+    public static async Task<EntityMap> ReadEntityMapAsync(NRDbContext db, CancellationToken ct = default,
+        RiskIndexMode mode = RiskIndexMode.Interim)
     {
         var entities = await db.Entities.AsNoTracking()
             .Select(e => new EntityMapRow(e.Id, e.DefinitionName, e.Parent)).ToListAsync(ct);
 
-        string[] keys =
+        var full = mode == RiskIndexMode.Full;
+        List<string> keys =
         [
             RiskIndexEntityTypes.ProcessUnitsProperty, RiskIndexEntityTypes.ProcessApplicationsProperty,
             Model.Entities.RiskContextProperties.Criticality, Model.Entities.RiskContextProperties.InternetFacing,
             Model.Entities.RiskContextProperties.SecurityClassification, "environment"
         ];
+        if (full) keys.AddRange([RiskIndexEntityTypes.ServiceProcessesProperty, RiskIndexEntityTypes.ServiceDataProperty]);
         var properties = await db.EntitiesProperties.AsNoTracking().Where(p => keys.Contains(p.Type))
             .Select(p => new EntityPropertyRow(p.Entity, p.Type, p.Value)).ToListAsync(ct);
 
-        return EntityMap.Build(entities, properties);
+        if (!full) return EntityMap.Build(entities, properties);
+
+        // M41 (T285): the MTPD of each BIA; ProcessCriticality derives the criticality from it, as the BIA screens do.
+        var mtpd = await db.BusinessImpactAnalyses.AsNoTracking().Where(b => b.MtpdMinutes != null)
+            .Select(b => new { b.EntityId, Mtpd = b.MtpdMinutes!.Value }).ToDictionaryAsync(b => b.EntityId, b => b.Mtpd, ct);
+
+        // M49 (T285): sensitive by the catalogue — sensitive personal data, a large volume of personal data, or strategic
+        // research, the flag 5 basis of S52 §4.8 read the way RiskFlagsService reads it.
+        var sensitive = (await db.DataCatalogueEntries.AsNoTracking()
+                .Select(e => new { e.EntityId, e.PersonalData, e.LargeVolume, e.StrategicResearch }).ToListAsync(ct))
+            .Where(e => e.PersonalData == DAL.Enums.PersonalDataCategory.SensitivePersonal || e.StrategicResearch ||
+                        (e.LargeVolume && e.PersonalData is DAL.Enums.PersonalDataCategory.Personal
+                            or DAL.Enums.PersonalDataCategory.SensitivePersonal))
+            .Select(e => e.EntityId).ToHashSet();
+
+        return EntityMap.Build(entities, properties, new EntityChainFacts(mtpd, sensitive), fullMode: true);
     }
 
     // ------------------------------------------------------------------------------------------------------------
@@ -142,9 +183,15 @@ public static partial class RiskIndexObjectCollector
     {
         if (entityId is not { } id) return (run.P.DefaultCriticality, "default");
 
-        var declared = run.On(RiskIndexSources.EntityCriticality) ? run.Map.Criticality(id) : null;
+        // A process's M41 BIA criticality is consumed as delivered in full mode (T285); the declared one under ENT-CRIT.
+        var (value, origin) = run.Map.CriticalityWithSource(id);
+        var declared = origin == EntityMap.CriticalitySourceBia || run.On(RiskIndexSources.EntityCriticality) ? value : null;
         var crit = declared ?? run.P.DefaultCriticality;
-        var source = declared is null ? "default" : "entity";
+        var source = declared is null ? "default" : origin!;
+
+        // Full mode: an application inherits from the chain nodes it serves and takes Δ_dados from them (T284, T285).
+        if (run.Full && run.Map.DefinitionOf(id) == RiskIndexEntityTypes.Application)
+            return WithChain(run, Math.Clamp(crit, 1, 5), source, [id]);
 
         if (run.On(RiskIndexSources.EntityClassification) &&
             run.Map.DefinitionOf(id) == RiskIndexEntityTypes.Application &&
@@ -159,7 +206,8 @@ public static partial class RiskIndexObjectCollector
     // readiness on every open scenario). Weight w_r = m(impact)·m_rank; the rank moves only the weight (S39 §6.5).
     // ------------------------------------------------------------------------------------------------------------
     private static void CollectScenarios(Run run, IReadOnlyDictionary<int, ScenarioFacts> facts,
-        IReadOnlyDictionary<int, IReadOnlyList<int>> attribution, IReadOnlyDictionary<int, double> freshHostExposure)
+        IReadOnlyDictionary<int, IReadOnlyList<int>> attribution, IReadOnlyDictionary<int, double> freshHostExposure,
+        IReadOnlyDictionary<int, ScenarioTrack9> track9)
     {
         var p = run.P;
         foreach (var (id, f) in facts.OrderBy(kv => kv.Key))
@@ -181,8 +229,12 @@ public static partial class RiskIndexObjectCollector
 
             var governance = GovernanceSignals.Compute(f, credit, p, run.Now, lit);
             var attributed = attribution.GetValueOrDefault(id) ?? [];
+            var t9 = track9.GetValueOrDefault(id);
             var inputs = new RiskIndexScenarioInputs
             {
+                GateAConditions = run.Full ? t9?.GateAConditions ?? [] : null,
+                EvidenceConfidence = t9?.EvidenceConfidence, TargetScore = t9?.TargetScore,
+                TargetExpectedLoss = t9?.TargetExpectedLoss, GateBTail = t9?.GateBTail, GateBIndicators = t9?.GateBIndicators,
                 ImpactLevel = f.ImpactLevel, Rank = rank?.Rank, RankedItems = rank?.RankedItems, Residual = f.Residual,
                 Inherent = f.Inherent, CadenceDays = credit.CadenceDays, DelayDays = credit.DelayDays,
                 Credit = credit.Credit, EffectiveResidual = credit.EffectiveResidual, SigmaRef = credit.SigmaRef,

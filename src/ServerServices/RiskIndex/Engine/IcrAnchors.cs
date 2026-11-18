@@ -22,6 +22,15 @@ public readonly record struct FindingReading
 
     /// <summary>The object is internet-facing (S39 §5.3); applies <c>m_net</c>.</summary>
     public bool InternetFacing { get; init; }
+
+    /// <summary>
+    /// Full mode (T285): M42's T165 "likely exploitation" axis decides <c>m_x</c> in place of the interim rule (exploit
+    /// available or EPSS ≥ <c>epss_limiar</c>); null keeps the interim rule.
+    /// </summary>
+    public bool? ExploitLikely { get; init; }
+
+    /// <summary>The T165 tier the finding was given (<c>p1</c>…<c>p4</c>, <c>undetermined</c>), kept as a signal flag.</summary>
+    public string? PriorityTier { get; init; }
 }
 
 /// <summary>Where a finding signal's base came from — the multiplier <c>m_x</c> applies only to CVSS and severity.</summary>
@@ -35,7 +44,7 @@ public enum FindingBaseSource
 
 /// <summary>One normalized finding signal and how it was obtained, for the object row's signal list.</summary>
 public readonly record struct FindingSignal(double Value, FindingBaseSource BaseSource, double Base, bool ExploitMultiplier,
-    bool ExploitationFloor, bool InternetMultiplier);
+    bool ExploitationFloor, bool InternetMultiplier, string? PriorityTier = null);
 
 /// <summary>
 /// The fixed normalization anchors of S39 §3.1: every signal becomes <c>s ∈ [0, 1]</c> (1 = worst) by an anchor of its
@@ -71,14 +80,17 @@ public static class IcrAnchors
         if (reading.ExploitationKnown)
         {
             var floored = Math.Max(p.ExploitationFloor, Math.Min(1, b * mNet));
-            return new FindingSignal(IcrMath.Clamp01(floored), source, b, false, true, reading.InternetFacing);
+            return new FindingSignal(IcrMath.Clamp01(floored), source, b, false, true, reading.InternetFacing,
+                reading.PriorityTier);
         }
 
-        var exploitMultiplier = source != FindingBaseSource.Vpr &&
-                                (reading.ExploitAvailable || reading.Epss is { } epss && epss >= p.EpssThreshold);
+        var likely = reading.ExploitLikely ??
+                     (reading.ExploitAvailable || reading.Epss is { } epss && epss >= p.EpssThreshold);
+        var exploitMultiplier = source != FindingBaseSource.Vpr && likely;
         var mx = exploitMultiplier ? p.ExploitAvailableMultiplier : 1.0;
         var value = Math.Min(p.NoExploitationCeiling, b * mx * mNet);
-        return new FindingSignal(IcrMath.Clamp01(value), source, b, exploitMultiplier, false, reading.InternetFacing);
+        return new FindingSignal(IcrMath.Clamp01(value), source, b, exploitMultiplier, false, reading.InternetFacing,
+            reading.PriorityTier);
     }
 
     /// <summary>

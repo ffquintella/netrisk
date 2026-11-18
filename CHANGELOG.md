@@ -21,6 +21,12 @@ follow [SemVer](http://semver.org/).
 - Give each Vision One and Jira Assets connection an explicit entity re-stamp policy that never moves a manual assignment, and accept a target entity and repository on code-scanner imports (T282, S39)
 - Expose overdue management reviews under `GET /MgmtReviews/Overdue`, with the due date and what set it (T278, S39)
 - Import the Jira Assets internet-facing attribute onto hosts and the application-to-server relationship into `host_application_links`, never overwriting a manual value, and let a profile enable CMDB-INET in the index (T291, S39)
+- Let a risk index profile run in full mode, which follows the M39 chain to drill down by process, IT service, data and application and gives each asset the criticality of the applications, services and processes it serves (T284, S39)
+- Read a process's criticality from its BIA, the KEV/EPSS prioritization of exploitation signals and the sensitivity the LGPD catalogue records into full-mode scores (T285, S39)
+- Floor a full-mode headline at Gate A with the triggering scenario beside the unfloored value, shade the floored days on the trend, and host the Top Risks list of each node under `GET /RiskIndex/TopRisks` (T286, S39, S40)
+- Show the portfolio P95/CVaR with its Gate B, the Gate A and Gate B seals, the evidence confidence distribution and the appetite and target lines, with Σ E[L] under `GET /RiskIndex/Monetary` (T287, S39, S40)
+- Score active suppliers of the third-party register in the TER category of a full-mode profile, and let the third-line role read the index's profiles, previews, bridges and history (T288, S39)
+- Choose the interim or full mode in the risk index profile editor, drill down by IT service and data in the Explore panel, and enable CMDB-REL, near misses and the third-party register as sources (T284, T288, S40)
 
 ### Changed
 
@@ -29,6 +35,8 @@ follow [SemVer](http://semver.org/).
 - Keep a repository in the dedup key of findings that have no host, so two repositories no longer collapse into one finding (T282, S39)
 - Let tag rules follow the entity precedence, so a rule no longer moves a manual or CMDB assignment (T282, S39)
 - Audit edits to `sla_configurations` and to the settings that set review cadence, quantitative bands and the residual strategy (T283, S39)
+- Accept full-mode risk index profiles and a TER weight between 0.05 and 0.60 in full mode, refusing it in interim mode (T288, S39)
+- Count Vision One exploit attempts as observed exploitation in full-mode finding scores (T285, S39)
 
 ### Fixed
 

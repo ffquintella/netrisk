@@ -170,7 +170,7 @@ public sealed class RiskIndexPreviewService(IDalService dalService, ILogger logg
         var request = await db.RiskIndexPreviewRequests.AsNoTracking().Include(r => r.Profile).FirstAsync(r => r.Id == requestId, ct);
         var draft = RiskIndexParametersJson.Deserialize(request.Profile.Parameters);
         var mode = request.Profile.Mode;
-        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct);
+        var map = await RiskIndexObjectCollector.ReadEntityMapAsync(db, ct, mode);
 
         var instant = RiskIndexSnapshotService.SnapshotInstant(now);
         var active = await RiskIndexSnapshotService.ProfileInForceAsync(db, instant, ct);

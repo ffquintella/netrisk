@@ -96,13 +96,15 @@ public sealed record DrillState
     /// <summary>The entity dimensions: their children are entities, not intersections with a filter term.</summary>
     public static readonly IReadOnlyList<RiskIndexDimension> EntityDimensions =
     [
-        RiskIndexDimension.Unit, RiskIndexDimension.Process, RiskIndexDimension.Activity, RiskIndexDimension.Application
+        RiskIndexDimension.Unit, RiskIndexDimension.Process, RiskIndexDimension.Activity, RiskIndexDimension.Application,
+        RiskIndexDimension.ItService, RiskIndexDimension.Data
     ];
 
-    /// <summary>Every dimension in the selector's order (§5.6.1).</summary>
+    /// <summary>Every dimension in the selector's order (§5.6.1); IT service and data are the M39 chain nodes (M59, T284).</summary>
     public static readonly IReadOnlyList<RiskIndexDimension> AllDimensions =
     [
         RiskIndexDimension.Unit, RiskIndexDimension.Process, RiskIndexDimension.Activity, RiskIndexDimension.Application,
+        RiskIndexDimension.ItService, RiskIndexDimension.Data,
         RiskIndexDimension.AssetClass, RiskIndexDimension.Source, RiskIndexDimension.Criticality, RiskIndexDimension.Environment
     ];
 

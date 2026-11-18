@@ -3,35 +3,43 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
-             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="140"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="160"
              x:DataType="vm:RiskMonetaryPanelViewModel"
              x:Class="GUIClient.Views.RiskOverview.RiskMonetaryPanel">
 
-    <!-- S40 §5.10 (T256), interim mode: outside the index. The server has no monetary read yet,
-         so each line is the spec's unavailable state — no figure is ever made up here. -->
+    <!-- S40 §5.10, outside the index: Σ E[L] residual and inherent with "n of N" — never a bare total —
+         and, in full mode, M45's portfolio P95/CVaR with Gate B on the portfolio (M59, T287). Every
+         figure is the server's; before it answers each line is the spec's unavailable state. -->
     <StackPanel Spacing="4" IsVisible="{Binding IsActive}">
+        <progRing:ProgressRing Classes="busy" Width="20" Height="20" HorizontalAlignment="Left"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
         <Grid ColumnDefinitions="240,*" MinHeight="24">
             <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrResidualLabel}"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
-                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrResidualState}"/>
-            </StackPanel>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrResidualState}"/>
         </Grid>
         <Grid ColumnDefinitions="240,*" MinHeight="24">
             <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrInherentLabel}"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
-                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrInherentState}"/>
-            </StackPanel>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrInherentState}"/>
         </Grid>
         <Grid ColumnDefinitions="240,*" MinHeight="24">
             <TextBlock Grid.Column="0" Classes="label-nm" VerticalAlignment="Center" Text="{Binding StrP95Label}"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+            <StackPanel Grid.Column="1" Spacing="2">
                 <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding StrP95State}"/>
+                <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrGateB}" IsVisible="{Binding HasGateB}"/>
             </StackPanel>
         </Grid>
         <TextBlock Classes="hint" Margin="0" TextWrapping="Wrap" Text="{Binding StrNote}"/>
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasError}">
+            <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                       Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+            <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrRetry}"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
     </StackPanel>
 </UserControl>

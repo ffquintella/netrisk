@@ -3,17 +3,64 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
              xmlns:vm="clr-namespace:GUIClient.ViewModels.RiskOverview"
-             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="80"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="200"
              x:DataType="vm:RiskTopRisksPlaceholderViewModel"
              x:Class="GUIClient.Views.RiskOverview.RiskTopRisksPlaceholder">
 
-    <!-- S40 §5.11 (T256): the Top Risks space exists from the interim mode on and holds only this
-         placeholder until M43 (T172); there is no approximation in the interim. -->
-    <Border Classes="riskEmptyState" IsVisible="{Binding IsActive}">
-        <StackPanel Orientation="Horizontal">
-            <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
-            <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding StrPlaceholder}"/>
+    <!-- S40 §5.11: in interim mode only the placeholder (no approximation, S39 §1.2 item 5); in full
+         mode M43's Top Risks list for the node (M59, T286), read-only, each row opening the scenario. -->
+    <StackPanel Spacing="4" IsVisible="{Binding IsActive}">
+        <progRing:ProgressRing Classes="busy" Width="20" Height="20" HorizontalAlignment="Left"
+                               IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+        <Border Classes="riskEmptyState" IsVisible="{Binding HasState}">
+            <StackPanel Orientation="Horizontal">
+                <material:MaterialIcon Classes="riskGlyph" Kind="CloudOffOutline"/>
+                <TextBlock Classes="notice" Margin="0" TextWrapping="Wrap" Text="{Binding StateText}"/>
+            </StackPanel>
+        </Border>
+        <Grid ColumnDefinitions="40,*,140,170,150,120,170,40" IsVisible="{Binding HasRows}">
+            <TextBlock Grid.Column="0" Classes="label-nm" Text="{Binding StrColRank}"/>
+            <TextBlock Grid.Column="1" Classes="label-nm" Text="{Binding StrColScenario}"/>
+            <TextBlock Grid.Column="2" Classes="label-nm" Text="{Binding StrColGateA}"/>
+            <TextBlock Grid.Column="3" Classes="label-nm" Text="{Binding StrColScores}"/>
+            <TextBlock Grid.Column="4" Classes="label-nm" Text="{Binding StrColLoss}"/>
+            <TextBlock Grid.Column="5" Classes="label-nm" Text="{Binding StrColConfidence}"/>
+            <TextBlock Grid.Column="6" Classes="label-nm" Text="{Binding StrColNext}"/>
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding HasRows}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RiskTopRiskRowViewModel">
+                    <Grid ColumnDefinitions="40,*,140,170,150,120,170,40" MinHeight="26">
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Rank}"/>
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   Text="{Binding Scenario}"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <material:MaterialIcon Classes="riskGlyph" Kind="AlertOctagonOutline" IsVisible="{Binding HasGateA}"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding GateA}"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding Scores}"/>
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{Binding Loss}"/>
+                        <TextBlock Grid.Column="5" VerticalAlignment="Center" Text="{Binding Confidence}"/>
+                        <TextBlock Grid.Column="6" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding NextDecision}"/>
+                        <Button Grid.Column="7" Classes="detailButton" VerticalAlignment="Center"
+                                Command="{Binding Open}" CommandParameter="{Binding Row}">
+                            <material:MaterialIcon Kind="ChevronRight"/>
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding HasError}">
+            <TextBlock Classes="warning" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="700"
+                       Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"/>
+            <Button Classes="type2" Command="{Binding BtRetryClicked}">
+                <StackPanel Orientation="Horizontal">
+                    <material:MaterialIcon Kind="Reload" Width="20" Height="20" Margin="0 0 5 0"/>
+                    <TextBlock Text="{Binding StrRetry}"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
-    </Border>
+    </StackPanel>
 </UserControl>
