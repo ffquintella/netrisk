@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:views="clr-namespace:GUIClient.Views.Admin.RiskIndex"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:RiskIndexAdminViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.RiskIndexAdminView">
+
+    <!-- S40 §6.0: six tabs; a tab the user may not open stays visible and disabled, its tooltip naming the permission
+         (shown on the disabled item, IX-4/IX-7). A disabled tab's view-model is never built. -->
+    <TabControl SelectedIndex="{Binding SelectedTabIndex}">
+        <TabItem Header="{Binding StrProfilesTab}" IsEnabled="{Binding ProfilesAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrProfilesDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:RiskProfilesView DataContext="{Binding ProfilesVM}"/>
+        </TabItem>
+        <TabItem Header="{Binding StrDraftTab}" IsEnabled="{Binding DraftAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrDraftDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:RiskProfileEditorView DataContext="{Binding EditorVM}"/>
+        </TabItem>
+        <TabItem Header="{Binding StrPreviewTab}" IsEnabled="{Binding PreviewAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrPreviewDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:RiskProfilePreviewView DataContext="{Binding PreviewVM}"/>
+        </TabItem>
+        <TabItem Header="{Binding StrApprovalTab}" IsEnabled="{Binding ApprovalAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrApprovalDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:RiskProfileApprovalView DataContext="{Binding ApprovalVM}"/>
+        </TabItem>
+        <TabItem Header="{Binding StrSourcesTab}" IsEnabled="{Binding SourcesAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrSourcesDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:RiskSourcesView DataContext="{Binding SourcesVM}"/>
+        </TabItem>
+        <TabItem Header="{Binding StrRiskContextTab}" IsEnabled="{Binding RiskContextAccess.Enabled}"
+                 ToolTip.Tip="{Binding StrRiskContextDisabledReason}" ToolTip.ShowOnDisabled="True">
+            <views:EntityRiskContextView DataContext="{Binding RiskContextVM}"/>
+        </TabItem>
+    </TabControl>
+</UserControl>

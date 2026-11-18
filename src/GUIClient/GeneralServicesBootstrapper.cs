@@ -206,6 +206,11 @@ public class GeneralServicesBootstrapper
             sp.GetRequiredService<IRestService>(),
             sp.GetRequiredService<IAuthenticationService>()));
 
+        // Track 10 M55 (S40 §8.4, §8.9): the profile lifecycle and the publication switch behind the Risk index admin pane.
+        services.AddTransient<IRiskIndexConfigService>(sp => new RiskIndexConfigRestService(
+            sp.GetRequiredService<IRestService>(),
+            sp.GetRequiredService<IAuthenticationService>()));
+
         // Track 4 (Integrations) administration: notification channels and subscriptions, issue
         // trackers, identity providers, SCIM tokens, and the two posture providers.
         services.AddTransient<IIntegrationsService>(sp => new IntegrationsRestService(

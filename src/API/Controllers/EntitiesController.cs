@@ -93,11 +93,118 @@ public class EntitiesController: ApiBaseController
                 principal.HasClaim(c => c.Type == "Permission" && c.Value == EntityPermissions.RiskContext));
     }
 
-    /// <summary>The refusal as the API answers it: the status the guard chose and <c>{ error, message }</c>.</summary>
-    private ObjectResult Refused(EntityWriteRefusedException ex, int userId, string operation)
+    /// <summary>
+    /// The refusal as the API answers it: the status the guard chose and <c>{ error, message }</c>, plus
+    /// <c>details.entityId</c> when the refusal names the row refused (S40 §8.5).
+    /// </summary>
+    private ObjectResult Refused(EntityRequestRefusedException ex, int userId, string operation)
     {
         Logger.Warning("User:{User} was refused {Operation}: {Error} {Message}", userId, operation, ex.Error, ex.Message);
-        return StatusCode(ex.StatusCode, new { error = ex.Error, message = ex.Message });
+        return ex.EntityId is { } entityId
+            ? StatusCode(ex.StatusCode, new { error = ex.Error, message = ex.Message, details = new { entityId } })
+            : StatusCode(ex.StatusCode, new { error = ex.Error, message = ex.Message });
+    }
+
+    /// <summary>
+    /// The Risk context tab's rows (S40 §6.7, §8.5): the entities of <paramref name="types"/> (comma-separated; default
+    /// <c>EntityRiskContextRules.DefaultTypes</c>) with their criticality, internet exposure and classification. Every
+    /// authenticated user reads the entity map, so this has no permission beyond the class's <c>RequireValidUser</c>.
+    /// </summary>
+    [HttpGet]
+    [Route("RiskContext")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<EntityRiskContextRowDto>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<EntityRiskContextRowDto>>> GetRiskContext([FromQuery] string? types = null,
+        CancellationToken ct = default)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var requested = types?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var rows = await _entitiesService.GetRiskContextAsync(requested, ct);
+            Logger.Information("User:{User} read the risk context of {Count} entities", user.Value, rows.Count);
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error while reading the risk context: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Applies a risk-context batch all or nothing (S40 §6.7, §8.5): one justification, one save, one correlation id.
+    /// The attribute requires <c>entity_risk_context</c>; the service also requires global scope
+    /// (<c>RiskContextWritePolicy</c>) and validates every line before writing any.
+    /// </summary>
+    [HttpPut]
+    [PermissionAuthorize(EntityPermissions.RiskContext)]
+    [Route("RiskContext")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EntityRiskContextBatchResultDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<EntityRiskContextBatchResultDto>> SaveRiskContext(
+        [FromBody] EntityRiskContextBatchRequest request, CancellationToken ct = default)
+    {
+        var user = GetUser();
+
+        try
+        {
+            var result = await _entitiesService.SaveRiskContextAsync(request, user.Value, HoldsRiskContextPermission(), ct);
+            Logger.Information("User:{User} applied risk-context batch {Batch} ({Count} entities changed)", user.Value,
+                result.BatchId, result.UpdatedEntities);
+            return Ok(result);
+        }
+        catch (EntityRequestRefusedException ex)
+        {
+            return Refused(ex, user.Value, "a risk-context batch");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error while applying a risk-context batch: {Message}", ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// One entity's change history with each batch's justification (S40 §8.5); never <c>AuditLog</c> nor its user.
+    /// "entity_risk_context or entities_manage" is not expressible as one <c>[PermissionAuthorize]</c>, so the service
+    /// enforces it — before reading the trail, with the entity's scope (403, or 404 when missing or out of scope).
+    /// </summary>
+    [HttpGet]
+    [Route("{id}/History")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<EntityHistoryEntryDto>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<EntityHistoryEntryDto>>> GetHistory(int id, [FromQuery] int limit = 200,
+        CancellationToken ct = default)
+    {
+        var user = GetUser();
+        var principal = _httpContextAccessor.HttpContext?.User;
+        var isAdmin = principal?.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin") == true;
+        var permissions = principal?.Claims.Where(c => c.Type == "Permission").Select(c => c.Value)
+            .ToHashSet(StringComparer.Ordinal) ?? [];
+
+        try
+        {
+            var history = await _entitiesService.GetHistoryAsync(id, limit, isAdmin, permissions, ct);
+            Logger.Information("User:{User} read the change history of entity {Id}", user.Value, id);
+            return Ok(history);
+        }
+        catch (EntityRequestRefusedException ex)
+        {
+            return Refused(ex, user.Value, $"the history of entity {id}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error while reading the history of entity {Id}: {Message}", id, ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
     [HttpDelete]

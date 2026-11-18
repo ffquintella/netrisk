@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DAL.Entities;
 using Model.Entities;
+using Model.Exceptions;
 
 namespace ClientServices.Interfaces;
 
@@ -86,4 +88,28 @@ public interface IEntitiesService
     /// <param name="definitionName"></param>
     /// <returns></returns>
     public Task<List<EntitiesPropertyDto>> GetMandatoryPropertiesAsync(string definitionName);
+
+    /// <summary>
+    /// The Risk context tab's rows (<c>GET /Entities/RiskContext</c>, S40 §8.5): the entities of <paramref name="types"/>
+    /// (null or empty: the server's default types) with their criticality, internet exposure and classification.
+    /// </summary>
+    /// <exception cref="InvalidHttpRequestException">Refused: <c>StatusCode</c>, <c>ErrorCode</c> and the server's message.</exception>
+    /// <exception cref="RestComunicationException">The server did not answer.</exception>
+    public Task<IReadOnlyList<EntityRiskContextRowDto>> GetRiskContextAsync(IEnumerable<string>? types = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Applies a risk-context batch (<c>PUT /Entities/RiskContext</c>), all or nothing. Clears the entity cache on success,
+    /// since the cached entities carry the old values.
+    /// </summary>
+    /// <exception cref="InvalidHttpRequestException">Refused (400/403/404): <c>StatusCode</c>, <c>ErrorCode</c>, message.</exception>
+    /// <exception cref="RestComunicationException">The server did not answer.</exception>
+    public Task<EntityRiskContextBatchResultDto> SaveRiskContextAsync(EntityRiskContextBatchRequest request,
+        CancellationToken ct = default);
+
+    /// <summary>One entity's change history, newest first, with each batch's justification (<c>GET /Entities/{id}/History</c>).</summary>
+    /// <exception cref="InvalidHttpRequestException">Refused (400/403/404): <c>StatusCode</c>, <c>ErrorCode</c>, message.</exception>
+    /// <exception cref="RestComunicationException">The server did not answer.</exception>
+    public Task<IReadOnlyList<EntityHistoryEntryDto>> GetHistoryAsync(int entityId, int limit = 200,
+        CancellationToken ct = default);
 }

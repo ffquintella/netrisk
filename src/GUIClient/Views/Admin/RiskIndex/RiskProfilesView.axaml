@@ -1,0 +1,180 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:DataType="vm:RiskProfilesViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.RiskProfilesView">
+
+    <!-- S40 §6.1 (T259): every version, its detail, and a parameter diff between any two. -->
+    <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+        <progRing:ProgressRing Grid.RowSpan="3" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" ZIndex="10"/>
+
+        <!-- Toolbar (ui-standard §4.5): create first, the destructive action last. -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrNewDraftReason}">
+                <Button Classes="operation" Command="{Binding BtNewDraftClicked}" IsEnabled="{Binding IsNewDraftEnabled}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <material:MaterialIcon Kind="Plus"/>
+                        <TextBlock Text="{Binding StrNewDraft}"/>
+                    </StackPanel>
+                </Button>
+            </Border>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrOpenDraftReason}">
+                <Button Classes="type2" Command="{Binding BtOpenDraftClicked}" IsEnabled="{Binding IsOpenDraftEnabled}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <material:MaterialIcon Kind="PencilOutline"/>
+                        <TextBlock Text="{Binding StrOpenDraft}"/>
+                    </StackPanel>
+                </Button>
+            </Border>
+            <Button Classes="type2" Command="{Binding BtRefreshClicked}" IsEnabled="{Binding !IsBusy}">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <material:MaterialIcon Kind="Reload"/>
+                    <TextBlock Text="{Binding StrRefresh}"/>
+                </StackPanel>
+            </Button>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrDeleteDraftReason}">
+                <Button Classes="operation" Command="{Binding BtDeleteDraftClicked}" IsEnabled="{Binding IsDeleteDraftEnabled}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <material:MaterialIcon Kind="Delete"/>
+                        <TextBlock Text="{Binding StrDeleteDraft}"/>
+                    </StackPanel>
+                </Button>
+            </Border>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}"
+                   TextWrapping="Wrap" Margin="0 6 0 0"/>
+
+        <Grid Grid.Row="2" ColumnDefinitions="3*,2*" Margin="0 10 0 0">
+            <Grid Grid.Column="0" RowDefinitions="*,Auto">
+                <DataGrid Grid.Row="0" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
+                          IsReadOnly="True" CanUserSortColumns="True" MinHeight="180">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrVersion, Mode=OneTime}" Binding="{Binding Version}"/>
+                        <DataGridTextColumn Header="{Binding StrName, Mode=OneTime}" Binding="{Binding Name}" Width="2*"/>
+                        <DataGridTextColumn Header="{Binding StrPreset, Mode=OneTime}" Binding="{Binding Preset}"/>
+                        <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}" Binding="{Binding Status}"/>
+                        <DataGridTextColumn Header="{Binding StrEffective, Mode=OneTime}" Binding="{Binding Effective}"/>
+                        <DataGridTextColumn Header="{Binding StrAuthor, Mode=OneTime}" Binding="{Binding Author}"/>
+                        <DataGridTextColumn Header="{Binding StrApprover, Mode=OneTime}" Binding="{Binding Approver}"/>
+                        <DataGridTextColumn Header="{Binding StrRebaseline, Mode=OneTime}" Binding="{Binding Rebaseline}"/>
+                        <DataGridTextColumn Header="{Binding StrCommittee, Mode=OneTime}" Binding="{Binding Committee}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Compare any two versions (S40 §6.1): parameter by parameter, "only changed" by default. -->
+                <Border Grid.Row="1" Classes="formCard" Margin="0 10 0 0">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrCompare}"/>
+                        <WrapPanel>
+                            <StackPanel Margin="0 0 12 0">
+                                <TextBlock Classes="fieldLabel" Text="{Binding StrCompareA}"/>
+                                <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding CompareA}" MinWidth="220"/>
+                            </StackPanel>
+                            <StackPanel Margin="0 0 12 0">
+                                <TextBlock Classes="fieldLabel" Text="{Binding StrCompareB}"/>
+                                <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding CompareB}" MinWidth="220"/>
+                            </StackPanel>
+                            <CheckBox IsChecked="{Binding OnlyChanged}" VerticalAlignment="Bottom" Content="{Binding StrOnlyChanged}"/>
+                        </WrapPanel>
+                        <TextBlock Classes="hint" Text="{Binding StrNoDifferences}" IsVisible="{Binding HasNoDifferences}"/>
+                        <DataGrid ItemsSource="{Binding DiffRows}" IsReadOnly="True" MaxHeight="260" CanUserSortColumns="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrGroup, Mode=OneTime}" Binding="{Binding Group}"/>
+                                <DataGridTextColumn Header="{Binding StrParameter, Mode=OneTime}" Binding="{Binding Parameter}" Width="2*"/>
+                                <DataGridTextColumn Header="{Binding StrCompareA, Mode=OneTime}" Binding="{Binding A}" Width="*"/>
+                                <DataGridTextColumn Header="{Binding StrCompareB, Mode=OneTime}" Binding="{Binding B}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <ScrollViewer Grid.Column="1" Margin="10 0 0 0">
+                <StackPanel Spacing="10">
+                    <!-- "Novo rascunho" (S40 §6.1): from the active profile, a preset or a copy of a version. -->
+                    <Border Classes="formCard" IsVisible="{Binding IsNewDraftFormOpen}">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrNewDraft}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrName}"/>
+                            <TextBox Text="{Binding NewDraftName}" MaxLength="200"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrOrigin}"/>
+                            <ComboBox ItemsSource="{Binding OriginOptions}" SelectedIndex="{Binding NewDraftOrigin}" MinWidth="220"/>
+                            <ComboBox ItemsSource="{Binding PresetOptions}" SelectedItem="{Binding NewDraftPreset}"
+                                      IsVisible="{Binding IsPresetOrigin}" MinWidth="220"/>
+                            <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding NewDraftSource}"
+                                      IsVisible="{Binding IsCopyOrigin}" MinWidth="220"/>
+                            <Border Classes="tooltip" ToolTip.Tip="{Binding StrCreateReason}" HorizontalAlignment="Right">
+                                <Button Classes="dialog1" Command="{Binding BtCreateDraftClicked}" IsEnabled="{Binding IsCreateEnabled}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <material:MaterialIcon Kind="ContentSave"/>
+                                        <TextBlock Text="{Binding StrCreate}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Classes="formCard" IsVisible="{Binding HasDetail}">
+                        <StackPanel Spacing="4">
+                            <TextBlock Classes="sectionCaption" Text="{Binding DetailTitle}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrJustification}"/>
+                            <TextBlock Text="{Binding DetailJustification}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrCommittee}"/>
+                            <TextBlock Text="{Binding DetailCommittee}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrBoardRef}"/>
+                            <TextBlock Text="{Binding DetailBoard}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrGrantSource}"/>
+                            <TextBlock Text="{Binding DetailGrantSource}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrRejectedReason}"/>
+                            <TextBlock Text="{Binding DetailRejected}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrRetireJustification}"/>
+                            <TextBlock Text="{Binding DetailRetire}" TextWrapping="Wrap"/>
+
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrEvidence}" Margin="0 6 0 0"/>
+                            <ItemsControl ItemsSource="{Binding DetailEvidence}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:FileListing">
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Expander Header="{Binding StrParameters}" Margin="0 6 0 0">
+                                <DataGrid ItemsSource="{Binding DetailParameters}" IsReadOnly="True" MaxHeight="320">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{Binding StrGroup, Mode=OneTime}" Binding="{Binding Group}"/>
+                                        <DataGridTextColumn Header="{Binding StrParameter, Mode=OneTime}" Binding="{Binding Parameter}" Width="2*"/>
+                                        <DataGridTextColumn Header="{Binding StrVersion, Mode=OneTime}" Binding="{Binding A}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Expander>
+
+                            <Expander Header="{Binding StrHistory}">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="hint" Text="{Binding HistoryMessage}" TextWrapping="Wrap"
+                                               IsVisible="{Binding HistoryMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    <DataGrid ItemsSource="{Binding DetailHistory}" IsReadOnly="True" MaxHeight="300">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="{Binding StrWhen, Mode=OneTime}" Binding="{Binding When}"/>
+                                            <DataGridTextColumn Header="{Binding StrActor, Mode=OneTime}" Binding="{Binding Actor}"/>
+                                            <DataGridTextColumn Header="{Binding StrField, Mode=OneTime}" Binding="{Binding Field}"/>
+                                            <DataGridTextColumn Header="{Binding StrChange, Mode=OneTime}" Binding="{Binding Change}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>

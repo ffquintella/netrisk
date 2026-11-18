@@ -7257,4 +7257,1540 @@ Ligar o co-trabalho com agentes?</value>
     <data name="AgentConnectChatGptGuideMSG" xml:space="preserve">
         <value>O NetRisk não configura o ChatGPT. O ChatGPT na web só alcança servidores MCP como conectores remotos em um endereço HTTPS público, o que o servidor do NetRisk — local a este computador por projeto — não é. O aplicativo ChatGPT para desktop pode executar servidores locais: em Configurações, em servidores MCP, adicione um servidor, escolha STDIO e informe o comando, os argumentos e o ambiente abaixo. Depois peça ao agente que se conecte ao NetRisk e aprove-o como qualquer outro agente.</value>
     </data>
+    <data name="AdminRiskIndexHintMSG" xml:space="preserve">
+        <value>Índice de risco: perfis de pesos, prévia, aprovação, fontes e contexto de risco das entidades</value>
+    </data>
+    <data name="RiskAdminTabProfiles" xml:space="preserve">
+        <value>Perfis</value>
+    </data>
+    <data name="RiskAdminTabDraft" xml:space="preserve">
+        <value>Rascunho</value>
+    </data>
+    <data name="RiskAdminTabPreview" xml:space="preserve">
+        <value>Prévia e submissão</value>
+    </data>
+    <data name="RiskAdminTabApproval" xml:space="preserve">
+        <value>Aprovação</value>
+    </data>
+    <data name="RiskAdminTabSources" xml:space="preserve">
+        <value>Fontes e frescor</value>
+    </data>
+    <data name="RiskAdminTabRiskContext" xml:space="preserve">
+        <value>Contexto de risco</value>
+    </data>
+    <data name="RiskAdminRequiresView" xml:space="preserve">
+        <value>Requer risk_index_view</value>
+    </data>
+    <data name="RiskAdminRequiresConfigure" xml:space="preserve">
+        <value>Requer risk_index_configure</value>
+    </data>
+    <data name="RiskAdminRequiresApprove" xml:space="preserve">
+        <value>Requer risk_index_approve</value>
+    </data>
+    <data name="RiskAdminRequiresRiskContext" xml:space="preserve">
+        <value>Requer entity_risk_context</value>
+    </data>
+    <data name="RiskAdminEffective" xml:space="preserve">
+        <value>Vigência</value>
+    </data>
+    <data name="RiskAdminRebaseline" xml:space="preserve">
+        <value>Rebaseline</value>
+    </data>
+    <data name="RiskAdminDetail" xml:space="preserve">
+        <value>Detalhe</value>
+    </data>
+    <data name="RiskAdminDetailFMT" xml:space="preserve">
+        <value>v{0} — {1} (somente leitura)</value>
+    </data>
+    <data name="RiskAdminJustification" xml:space="preserve">
+        <value>Justificativa</value>
+    </data>
+    <data name="RiskAdminBoardRef" xml:space="preserve">
+        <value>Aprovação do Conselho/Reitoria</value>
+    </data>
+    <data name="RiskAdminRejectedReason" xml:space="preserve">
+        <value>Motivo da rejeição</value>
+    </data>
+    <data name="RiskAdminRetireJustification" xml:space="preserve">
+        <value>Suspensão</value>
+    </data>
+    <data name="RiskAdminGrantSource" xml:space="preserve">
+        <value>Concessão da aprovação</value>
+    </data>
+    <data name="RiskAdminEvidence" xml:space="preserve">
+        <value>Ata do comitê</value>
+    </data>
+    <data name="RiskAdminHistory" xml:space="preserve">
+        <value>Histórico de alterações</value>
+    </data>
+    <data name="RiskAdminCompare" xml:space="preserve">
+        <value>Comparar duas versões</value>
+    </data>
+    <data name="RiskAdminCompareA" xml:space="preserve">
+        <value>Versão A</value>
+    </data>
+    <data name="RiskAdminCompareB" xml:space="preserve">
+        <value>Versão B</value>
+    </data>
+    <data name="RiskAdminOnlyChanged" xml:space="preserve">
+        <value>Só alterados</value>
+    </data>
+    <data name="RiskAdminNewDraft" xml:space="preserve">
+        <value>Novo rascunho</value>
+    </data>
+    <data name="RiskAdminDraftOrigin" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="RiskAdminOriginActive" xml:space="preserve">
+        <value>O perfil vigente</value>
+    </data>
+    <data name="RiskAdminOriginPreset" xml:space="preserve">
+        <value>Um preset</value>
+    </data>
+    <data name="RiskAdminOriginCopy" xml:space="preserve">
+        <value>Cópia de uma versão</value>
+    </data>
+    <data name="RiskAdminCreateDraft" xml:space="preserve">
+        <value>Criar rascunho</value>
+    </data>
+    <data name="RiskAdminOpenDraft" xml:space="preserve">
+        <value>Abrir rascunho</value>
+    </data>
+    <data name="RiskAdminDeleteDraft" xml:space="preserve">
+        <value>Excluir rascunho</value>
+    </data>
+    <data name="RiskAdminWhen" xml:space="preserve">
+        <value>Quando</value>
+    </data>
+    <data name="RiskAdminActor" xml:space="preserve">
+        <value>Quem</value>
+    </data>
+    <data name="RiskAdminField" xml:space="preserve">
+        <value>Campo</value>
+    </data>
+    <data name="RiskAdminChange" xml:space="preserve">
+        <value>Mudança</value>
+    </data>
+    <data name="RiskAdminFileName" xml:space="preserve">
+        <value>Arquivo</value>
+    </data>
+    <data name="RiskAdminOpenDraftExists" xml:space="preserve">
+        <value>Já existe um rascunho ou perfil em aprovação</value>
+    </data>
+    <data name="RiskAdminOnlyDraftsDeleted" xml:space="preserve">
+        <value>Só rascunhos podem ser excluídos</value>
+    </data>
+    <data name="RiskAdminSelectTwoVersions" xml:space="preserve">
+        <value>Selecione duas versões</value>
+    </data>
+    <data name="RiskAdminSelectDraft" xml:space="preserve">
+        <value>Selecione um rascunho</value>
+    </data>
+    <data name="RiskAdminNameRequired" xml:space="preserve">
+        <value>Informe um nome</value>
+    </data>
+    <data name="RiskAdminPresetRequiredFirst" xml:space="preserve">
+        <value>Sem perfil vigente, o primeiro rascunho parte de um preset</value>
+    </data>
+    <data name="RiskAdminChoosePreset" xml:space="preserve">
+        <value>Escolha um preset</value>
+    </data>
+    <data name="RiskAdminChooseVersion" xml:space="preserve">
+        <value>Escolha uma versão</value>
+    </data>
+    <data name="RiskAdminDraftCreatedMSG" xml:space="preserve">
+        <value>Rascunho criado</value>
+    </data>
+    <data name="RiskAdminDraftDeletedMSG" xml:space="preserve">
+        <value>Rascunho {0} excluído</value>
+    </data>
+    <data name="RiskAdminGroups" xml:space="preserve">
+        <value>Grupos</value>
+    </data>
+    <data name="RiskAdminActiveValue" xml:space="preserve">
+        <value>Vigente</value>
+    </data>
+    <data name="RiskAdminDraftValue" xml:space="preserve">
+        <value>Rascunho</value>
+    </data>
+    <data name="RiskAdminDelta" xml:space="preserve">
+        <value>Δ</value>
+    </data>
+    <data name="RiskAdminRange" xml:space="preserve">
+        <value>Faixa permitida</value>
+    </data>
+    <data name="RiskAdminStartingPreset" xml:space="preserve">
+        <value>Preset de partida</value>
+    </data>
+    <data name="RiskAdminApplyPreset" xml:space="preserve">
+        <value>Aplicar preset</value>
+    </data>
+    <data name="RiskAdminSaveDraft" xml:space="preserve">
+        <value>Salvar rascunho</value>
+    </data>
+    <data name="RiskAdminDiscardChanges" xml:space="preserve">
+        <value>Descartar alterações</value>
+    </data>
+    <data name="RiskAdminValidate" xml:space="preserve">
+        <value>Validar</value>
+    </data>
+    <data name="RiskAdminGoToPreview" xml:space="preserve">
+        <value>Ir para a prévia</value>
+    </data>
+    <data name="RiskAdminBandLabelPt" xml:space="preserve">
+        <value>Rótulo (português)</value>
+    </data>
+    <data name="RiskAdminBandLabelEn" xml:space="preserve">
+        <value>Rótulo (inglês)</value>
+    </data>
+    <data name="RiskAdminBandLower" xml:space="preserve">
+        <value>Limite inferior</value>
+    </data>
+    <data name="RiskAdminAddBand" xml:space="preserve">
+        <value>Adicionar faixa</value>
+    </data>
+    <data name="RiskAdminRemoveBand" xml:space="preserve">
+        <value>Remover faixa</value>
+    </data>
+    <data name="RiskAdminRegisterBands" xml:space="preserve">
+        <value>Usar preset Registro</value>
+    </data>
+    <data name="RiskAdminNoDraftMSG" xml:space="preserve">
+        <value>Não há rascunho aberto. Crie um na aba Perfis, ou altere uma fonte na aba Fontes e frescor e salve.</value>
+    </data>
+    <data name="RiskAdminServerValidation" xml:space="preserve">
+        <value>Validação do servidor</value>
+    </data>
+    <data name="RiskAdminLiveValidation" xml:space="preserve">
+        <value>Validação local</value>
+    </data>
+    <data name="RiskAdminValidSummaryFMT" xml:space="preserve">
+        <value>{0}: sem erros · {1} parâmetro(s) alterado(s) em relação ao vigente</value>
+    </data>
+    <data name="RiskAdminInvalidSummaryFMT" xml:space="preserve">
+        <value>{0}: {1} erro(s) bloqueiam a submissão; o rascunho ainda pode ser salvo</value>
+    </data>
+    <data name="RiskAdminDraftHeaderFMT" xml:space="preserve">
+        <value>Rascunho v{0} · {1} · criado por {2} em {3}</value>
+    </data>
+    <data name="RiskAdminTailLockOkFMT" xml:space="preserve">
+        <value>Trava conjunta: τ·τ_G·L_topo = {0} ≥ L_2 = {1}. Um objeto sozinho na faixa mais alta nunca deixa a manchete na mais baixa.</value>
+    </data>
+    <data name="RiskAdminTailLockFailFMT" xml:space="preserve">
+        <value>Trava conjunta violada: τ·τ_G·L_topo = {0} está abaixo de L_2 = {1}. Aumente τ ou τ_G, ou mova as faixas.</value>
+    </data>
+    <data name="RiskAdminListItemInvalid" xml:space="preserve">
+        <value>Um item não é válido (o nível precisa ser um número; a faixa precisa ser um CIDR como 200.20.0.0/16)</value>
+    </data>
+    <data name="RiskAdminDiscardConfirmMSG" xml:space="preserve">
+        <value>Descartar as alterações não salvas ({0})?</value>
+    </data>
+    <data name="RiskAdminDraftSavedMSG" xml:space="preserve">
+        <value>Rascunho salvo</value>
+    </data>
+    <data name="RiskAdminNoChanges" xml:space="preserve">
+        <value>Sem alterações</value>
+    </data>
+    <data name="RiskAdminLoading" xml:space="preserve">
+        <value>Carregando…</value>
+    </data>
+    <data name="RiskAdminFixFieldValues" xml:space="preserve">
+        <value>Corrija os valores fora do formato do campo</value>
+    </data>
+    <data name="RiskAdminDraftPendingApproval" xml:space="preserve">
+        <value>Esta versão está em aprovação; rejeite-a ou aguarde</value>
+    </data>
+    <data name="RiskAdminNoDraft" xml:space="preserve">
+        <value>Não há rascunho</value>
+    </data>
+    <data name="RiskAdminSaveBeforeValidating" xml:space="preserve">
+        <value>Salve antes de validar no servidor</value>
+    </data>
+    <data name="RiskAdminSaveDraftFirst" xml:space="preserve">
+        <value>Salve o rascunho primeiro</value>
+    </data>
+    <data name="RiskAdminRunPreview" xml:space="preserve">
+        <value>Executar prévia</value>
+    </data>
+    <data name="RiskAdminPreviewNodes" xml:space="preserve">
+        <value>Nós</value>
+    </data>
+    <data name="RiskAdminNode" xml:space="preserve">
+        <value>Nó</value>
+    </data>
+    <data name="RiskAdminNodeType" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="RiskAdminBandMove" xml:space="preserve">
+        <value>Faixa</value>
+    </data>
+    <data name="RiskAdminBandChanged" xml:space="preserve">
+        <value>Mudou de faixa</value>
+    </data>
+    <data name="RiskAdminRanking" xml:space="preserve">
+        <value>Ranking</value>
+    </data>
+    <data name="RiskAdminRegisterWeight" xml:space="preserve">
+        <value>Peso efetivo do registro</value>
+    </data>
+    <data name="RiskAdminTornado" xml:space="preserve">
+        <value>Tornado (±20 %, um por vez)</value>
+    </data>
+    <data name="RiskAdminMinus20" xml:space="preserve">
+        <value>−20 %</value>
+    </data>
+    <data name="RiskAdminPlus20" xml:space="preserve">
+        <value>+20 %</value>
+    </data>
+    <data name="RiskAdminPresetValues" xml:space="preserve">
+        <value>Presets</value>
+    </data>
+    <data name="RiskAdminPureMean" xml:space="preserve">
+        <value>Média pura</value>
+    </data>
+    <data name="RiskAdminTopMovers" xml:space="preserve">
+        <value>Objetos que mais se movem</value>
+    </data>
+    <data name="RiskAdminObject" xml:space="preserve">
+        <value>Objeto</value>
+    </data>
+    <data name="RiskAdminCategory" xml:space="preserve">
+        <value>Categoria</value>
+    </data>
+    <data name="RiskAdminSubmission" xml:space="preserve">
+        <value>Submissão</value>
+    </data>
+    <data name="RiskAdminSubmit" xml:space="preserve">
+        <value>Submeter para aprovação</value>
+    </data>
+    <data name="RiskAdminPreviewPartial" xml:space="preserve">
+        <value>Sobreposição parcial: o rascunho muda âncora ou multiplicador, que o replay de 90 dias não reproduz</value>
+    </data>
+    <data name="RiskAdminPreviewHeaderFMT" xml:space="preserve">
+        <value>Prévia de sensibilidade — rascunho v{0} "{1}"</value>
+    </data>
+    <data name="RiskAdminKendallFMT" xml:space="preserve">
+        <value>τ de Kendall entre unidades: {0} ({1} unidades comparadas)</value>
+    </data>
+    <data name="RiskAdminKendallNone" xml:space="preserve">
+        <value>Sem perfil vigente para comparar o ranking</value>
+    </data>
+    <data name="RiskAdminRegisterWeightFMT" xml:space="preserve">
+        <value>Vigente {0} → rascunho {1}</value>
+    </data>
+    <data name="RiskAdminRebaselineProposalFMT" xml:space="preserve">
+        <value>Esta submissão é uma proposta de rebaseline: {0}. Explique o motivo na justificativa (pelo menos 40 caracteres).</value>
+    </data>
+    <data name="RiskAdminCheckNotValidated" xml:space="preserve">
+        <value>O rascunho ainda não foi validado no servidor</value>
+    </data>
+    <data name="RiskAdminCheckValid" xml:space="preserve">
+        <value>Rascunho válido no servidor</value>
+    </data>
+    <data name="RiskAdminCheckInvalid" xml:space="preserve">
+        <value>O rascunho tem erros no servidor</value>
+    </data>
+    <data name="RiskAdminCheckPreviewCurrent" xml:space="preserve">
+        <value>Prévia concluída para estes parâmetros</value>
+    </data>
+    <data name="RiskAdminCheckPreviewStale" xml:space="preserve">
+        <value>A prévia está desatualizada: os parâmetros mudaram desde a execução</value>
+    </data>
+    <data name="RiskAdminCheckPreviewMissing" xml:space="preserve">
+        <value>Sem prévia concluída</value>
+    </data>
+    <data name="RiskAdminCheckBoardRequired" xml:space="preserve">
+        <value>A aprovação vai exigir a referência do Conselho (as faixas mudam ou não há perfil vigente)</value>
+    </data>
+    <data name="RiskAdminPreviewQueuedMSG" xml:space="preserve">
+        <value>Prévia enfileirada</value>
+    </data>
+    <data name="RiskAdminSubmittedMSG" xml:space="preserve">
+        <value>v{0} enviado para aprovação</value>
+    </data>
+    <data name="RiskAdminPreviewRunning" xml:space="preserve">
+        <value>Prévia em andamento</value>
+    </data>
+    <data name="RiskAdminValidateFirst" xml:space="preserve">
+        <value>Valide o rascunho no servidor</value>
+    </data>
+    <data name="RiskAdminFixDraftErrors" xml:space="preserve">
+        <value>Corrija os erros do rascunho</value>
+    </data>
+    <data name="RiskAdminRunPreviewFirst" xml:space="preserve">
+        <value>Execute a prévia para estes parâmetros</value>
+    </data>
+    <data name="RiskAdminWriteJustification" xml:space="preserve">
+        <value>Escreva a justificativa</value>
+    </data>
+    <data name="RiskAdminRebaselineJustification" xml:space="preserve">
+        <value>Proposta de rebaseline: explique o motivo em pelo menos 40 caracteres</value>
+    </data>
+    <data name="RiskPreviewState_NotRun" xml:space="preserve">
+        <value>Não executada</value>
+    </data>
+    <data name="RiskPreviewState_Queued" xml:space="preserve">
+        <value>Na fila</value>
+    </data>
+    <data name="RiskPreviewState_Stale" xml:space="preserve">
+        <value>Desatualizada: os parâmetros mudaram desde a prévia</value>
+    </data>
+    <data name="RiskPreviewState_RunningFMT" xml:space="preserve">
+        <value>Em execução ({0} %)</value>
+    </data>
+    <data name="RiskPreviewState_CompletedFMT" xml:space="preserve">
+        <value>Concluída em {0}</value>
+    </data>
+    <data name="RiskPreviewState_FailedFMT" xml:space="preserve">
+        <value>Falhou: {0}</value>
+    </data>
+    <data name="RiskAdminSummary" xml:space="preserve">
+        <value>Resumo</value>
+    </data>
+    <data name="RiskAdminDifferencesFromActive" xml:space="preserve">
+        <value>Diferenças em relação ao vigente</value>
+    </data>
+    <data name="RiskAdminSegregation" xml:space="preserve">
+        <value>Segregação de funções (calculada pelo servidor)</value>
+    </data>
+    <data name="RiskAdminSegregationForApprover" xml:space="preserve">
+        <value>As checagens de segregação aparecem para o aprovador</value>
+    </data>
+    <data name="RiskAdminReferences" xml:space="preserve">
+        <value>Referências</value>
+    </data>
+    <data name="RiskAdminCommitteeDecision" xml:space="preserve">
+        <value>Decisão do Comitê de Risco de TI</value>
+    </data>
+    <data name="RiskAdminAttachMinutes" xml:space="preserve">
+        <value>Anexar ata</value>
+    </data>
+    <data name="RiskAdminConfirmRebaselineLabel" xml:space="preserve">
+        <value>Confirmo a aprovação explícita de rebaseline</value>
+    </data>
+    <data name="RiskAdminApprove" xml:space="preserve">
+        <value>Aprovar</value>
+    </data>
+    <data name="RiskAdminReject" xml:space="preserve">
+        <value>Rejeitar</value>
+    </data>
+    <data name="RiskAdminRejectReason" xml:space="preserve">
+        <value>Motivo da rejeição</value>
+    </data>
+    <data name="RiskAdminLastActivation" xml:space="preserve">
+        <value>Última ativação</value>
+    </data>
+    <data name="RiskAdminPublication" xml:space="preserve">
+        <value>Publicação</value>
+    </data>
+    <data name="RiskAdminPublish" xml:space="preserve">
+        <value>Publicar para usuários com escopo</value>
+    </data>
+    <data name="RiskAdminSuspend" xml:space="preserve">
+        <value>Suspender publicação</value>
+    </data>
+    <data name="RiskAdminSuspendJustification" xml:space="preserve">
+        <value>Justificativa da suspensão</value>
+    </data>
+    <data name="RiskAdminSuspendCommitteeRef" xml:space="preserve">
+        <value>Decisão do comitê para a suspensão</value>
+    </data>
+    <data name="RiskAdminNoPendingMSG" xml:space="preserve">
+        <value>Nenhum perfil em aprovação.</value>
+    </data>
+    <data name="RiskAdminOldValue" xml:space="preserve">
+        <value>Antes</value>
+    </data>
+    <data name="RiskAdminNewValue" xml:space="preserve">
+        <value>Depois</value>
+    </data>
+    <data name="RiskAdminPendingHeaderFMT" xml:space="preserve">
+        <value>Em aprovação: v{0} "{1}" · autor {2} · submetido em {3}</value>
+    </data>
+    <data name="RiskAdminGrantSourceFMT" xml:space="preserve">
+        <value>Sua permissão de aprovar vem de: {0}</value>
+    </data>
+    <data name="RiskAdminBoardRequiredHint" xml:space="preserve">
+        <value>Exigida: as faixas mudam ou não há perfil vigente</value>
+    </data>
+    <data name="RiskAdminBoardOptionalHint" xml:space="preserve">
+        <value>Não exigida para esta versão</value>
+    </data>
+    <data name="RiskAdminNoRebaselineTrigger" xml:space="preserve">
+        <value>Sem gatilho de rebaseline</value>
+    </data>
+    <data name="RiskAdminEffectiveNoteFMT" xml:space="preserve">
+        <value>Vigente a partir do snapshot de {0} às 05:00 UTC; a troca de versão gera descontinuidade e ponte de 90 dias</value>
+    </data>
+    <data name="RiskAdminPublicationStateFMT" xml:space="preserve">
+        <value>Estado: {0} (alterado em {1} por {2})</value>
+    </data>
+    <data name="RiskAdminActiveProfileFMT" xml:space="preserve">
+        <value>Perfil vigente: v{0} "{1}", vigente desde {2}</value>
+    </data>
+    <data name="RiskAdminNoActiveProfile" xml:space="preserve">
+        <value>Nenhum perfil vigente</value>
+    </data>
+    <data name="RiskAdminNoBridge" xml:space="preserve">
+        <value>Ainda não há ponte de ativação</value>
+    </data>
+    <data name="RiskAdminBridgeFMT" xml:space="preserve">
+        <value>Ponte v{0} → v{1} em {2}; sobreposição completa</value>
+    </data>
+    <data name="RiskAdminBridgePartialFMT" xml:space="preserve">
+        <value>Ponte v{0} → v{1} em {2}; sobreposição parcial</value>
+    </data>
+    <data name="RiskAdminApprovedMSG" xml:space="preserve">
+        <value>v{0} aprovado; vigente a partir do próximo snapshot das 05:00 UTC</value>
+    </data>
+    <data name="RiskAdminRejectConfirmMSG" xml:space="preserve">
+        <value>Rejeitar v{0}? O autor terá de criar outro rascunho.</value>
+    </data>
+    <data name="RiskAdminRejectedMSG" xml:space="preserve">
+        <value>v{0} rejeitado</value>
+    </data>
+    <data name="RiskAdminMinutesAttachedMSG" xml:space="preserve">
+        <value>Ata anexada</value>
+    </data>
+    <data name="RiskAdminPublishConfirmMSG" xml:space="preserve">
+        <value>Publicar o índice para usuários com escopo? Eles passarão a ver a manchete das suas unidades.</value>
+    </data>
+    <data name="RiskAdminPublishedMSG" xml:space="preserve">
+        <value>Índice publicado</value>
+    </data>
+    <data name="RiskAdminSuspendConfirmMSG" xml:space="preserve">
+        <value>Suspender a publicação aposentando v{0}? Os snapshots param até uma nova aprovação.</value>
+    </data>
+    <data name="RiskAdminSuspendedMSG" xml:space="preserve">
+        <value>Publicação suspensa</value>
+    </data>
+    <data name="RiskAdminNotPendingApproval" xml:space="preserve">
+        <value>O perfil não está em aprovação</value>
+    </data>
+    <data name="RiskAdminCommitteeRequired" xml:space="preserve">
+        <value>Informe a decisão do Comitê de Risco de TI e anexe a ata</value>
+    </data>
+    <data name="RiskAdminBoardRequired" xml:space="preserve">
+        <value>Informe a aprovação do Conselho/Reitoria</value>
+    </data>
+    <data name="RiskAdminConfirmRebaseline" xml:space="preserve">
+        <value>Confirme o rebaseline</value>
+    </data>
+    <data name="RiskAdminWriteReason" xml:space="preserve">
+        <value>Escreva o motivo</value>
+    </data>
+    <data name="RiskAdminAlreadyPublished" xml:space="preserve">
+        <value>O índice já está publicado</value>
+    </data>
+    <data name="RiskAdminNeedsApprovedActive" xml:space="preserve">
+        <value>Requer perfil vigente aprovado pelo comitê</value>
+    </data>
+    <data name="RiskAdminSuspendNeedsReasons" xml:space="preserve">
+        <value>Escreva a justificativa e a decisão do comitê</value>
+    </data>
+    <data name="RiskPublication_Shadow" xml:space="preserve">
+        <value>Piloto em sombra</value>
+    </data>
+    <data name="RiskPublication_Published" xml:space="preserve">
+        <value>Publicado</value>
+    </data>
+    <data name="RiskRebaseline_PresetChange" xml:space="preserve">
+        <value>troca de preset</value>
+    </data>
+    <data name="RiskRebaseline_OmegaPace" xml:space="preserve">
+        <value>ω além de ±0,05 no trimestre</value>
+    </data>
+    <data name="RiskRebaseline_ParameterCount" xml:space="preserve">
+        <value>mais de dois parâmetros alterados</value>
+    </data>
+    <data name="RiskRebaseline_ModeChange" xml:space="preserve">
+        <value>troca de modo</value>
+    </data>
+    <data name="RiskApprovalCheck_SodAuthorCannotApprove" xml:space="preserve">
+        <value>Quem criou ou editou o rascunho não pode aprová-lo.</value>
+    </data>
+    <data name="RiskApprovalCheck_SodBusinessReviewer" xml:space="preserve">
+        <value>Quem detém business_risk_review não aprova os pesos que medem a própria unidade.</value>
+    </data>
+    <data name="RiskApprovalCheck_ApproverPermissionNotExplicit" xml:space="preserve">
+        <value>A permissão risk_index_approve precisa estar concedida a você, não só pela flag de administrador.</value>
+    </data>
+    <data name="RiskApprovalCheck_SodSelfGrantedApprover" xml:space="preserve">
+        <value>Sua permissão de aprovar foi concedida por você mesmo; peça a outro administrador.</value>
+    </data>
+    <data name="RiskApprovalCheck_InvalidTransition" xml:space="preserve">
+        <value>O perfil não está em aprovação.</value>
+    </data>
+    <data name="RiskApprovalCheck_ApproverRoleRequired" xml:space="preserve">
+        <value>Só o Gerente de Riscos ou o Administrador de Riscos aprova perfis.</value>
+    </data>
+    <data name="RiskSourcesCautionMSG" xml:space="preserve">
+        <value>Fontes habilitadas e janelas de frescor são parâmetros do perfil. Esta aba é outra vista do rascunho da aba Rascunho (mesmo Salvar e Descartar); sem rascunho, Salvar cria um a partir do vigente. Só vale depois de aprovado, com marcador.</value>
+    </data>
+    <data name="RiskSourcesSource" xml:space="preserve">
+        <value>Fonte</value>
+    </data>
+    <data name="RiskSourcesFeeds" xml:space="preserve">
+        <value>Cat. · fator</value>
+    </data>
+    <data name="RiskSourcesAvailability" xml:space="preserve">
+        <value>Disponibilidade</value>
+    </data>
+    <data name="RiskSourcesEnabledActive" xml:space="preserve">
+        <value>Vigente</value>
+    </data>
+    <data name="RiskSourcesEnabledDraft" xml:space="preserve">
+        <value>Rascunho</value>
+    </data>
+    <data name="RiskSourcesWindowActive" xml:space="preserve">
+        <value>W vigente</value>
+    </data>
+    <data name="RiskSourcesWindowDraft" xml:space="preserve">
+        <value>W rascunho (dias)</value>
+    </data>
+    <data name="RiskSourcesRunsNoteMSG" xml:space="preserve">
+        <value>Conexões, última sincronização, contagens de objetos e execuções do índice ainda não aparecem: as leituras GET /RiskIndex/Sources e /Runs não foram construídas.</value>
+    </data>
+    <data name="RiskSourcesDraftFMT" xml:space="preserve">
+        <value>Rascunho v{0} · {1}</value>
+    </data>
+    <data name="RiskSourcesNoDraftMSG" xml:space="preserve">
+        <value>Sem rascunho: salvar uma alteração cria um a partir do vigente</value>
+    </data>
+    <data name="RiskSourcesCreateDraftConfirmMSG" xml:space="preserve">
+        <value>Criar o rascunho v{0} a partir do vigente?</value>
+    </data>
+    <data name="RiskSourceRequiresTask" xml:space="preserve">
+        <value>Indisponível nesta versão</value>
+    </data>
+    <data name="RiskSourceRequiresTaskFMT" xml:space="preserve">
+        <value>Requer {0}</value>
+    </data>
+    <data name="RiskSourceAvailability_Available" xml:space="preserve">
+        <value>[H] disponível</value>
+    </data>
+    <data name="RiskSourceAvailability_Caveat" xml:space="preserve">
+        <value>[C] com ressalva</value>
+    </data>
+    <data name="RiskSourceAvailability_NotAvailable" xml:space="preserve">
+        <value>[N] indisponível</value>
+    </data>
+    <data name="RiskAdminDaysFMT" xml:space="preserve">
+        <value>{0} d</value>
+    </data>
+    <data name="RiskContextSearch" xml:space="preserve">
+        <value>Buscar entidade…</value>
+    </data>
+    <data name="RiskContextType" xml:space="preserve">
+        <value>Tipo</value>
+    </data>
+    <data name="RiskContextAllTypes" xml:space="preserve">
+        <value>Todos</value>
+    </data>
+    <data name="RiskContextOnlyUndeclared" xml:space="preserve">
+        <value>Só sem criticidade declarada</value>
+    </data>
+    <data name="RiskContextParent" xml:space="preserve">
+        <value>Pai</value>
+    </data>
+    <data name="RiskContextCriticality" xml:space="preserve">
+        <value>Criticidade</value>
+    </data>
+    <data name="RiskContextOrigin" xml:space="preserve">
+        <value>Origem</value>
+    </data>
+    <data name="RiskContextInternetFacing" xml:space="preserve">
+        <value>Internet</value>
+    </data>
+    <data name="RiskContextClassification" xml:space="preserve">
+        <value>Classificação</value>
+    </data>
+    <data name="RiskContextLastChange" xml:space="preserve">
+        <value>Última alteração</value>
+    </data>
+    <data name="RiskContextSaveChanges" xml:space="preserve">
+        <value>Salvar alterações</value>
+    </data>
+    <data name="RiskContextNewActivity" xml:space="preserve">
+        <value>Nova atividade</value>
+    </data>
+    <data name="RiskContextActivityName" xml:space="preserve">
+        <value>Nome da atividade (sob o processo selecionado)</value>
+    </data>
+    <data name="RiskContextNotApplicable" xml:space="preserve">
+        <value>n/a</value>
+    </data>
+    <data name="RiskContextReadOnlyMSG" xml:space="preserve">
+        <value>Somente leitura: editar o contexto de risco requer entity_risk_context e escopo global.</value>
+    </data>
+    <data name="RiskContextNotDeclared" xml:space="preserve">
+        <value>Não declarada</value>
+    </data>
+    <data name="RiskContextDeclared" xml:space="preserve">
+        <value>declarada, não BIA</value>
+    </data>
+    <data name="RiskContextCriticality_1" xml:space="preserve">
+        <value>1 · Muito baixa</value>
+    </data>
+    <data name="RiskContextCriticality_2" xml:space="preserve">
+        <value>2 · Baixa</value>
+    </data>
+    <data name="RiskContextCriticality_3" xml:space="preserve">
+        <value>3 · Média</value>
+    </data>
+    <data name="RiskContextCriticality_4" xml:space="preserve">
+        <value>4 · Alta</value>
+    </data>
+    <data name="RiskContextCriticality_5" xml:space="preserve">
+        <value>5 · Crítica</value>
+    </data>
+    <data name="RiskContextChangedFMT" xml:space="preserve">
+        <value>{0} entidade(s) alterada(s) nesta sessão</value>
+    </data>
+    <data name="RiskContextNoHistory" xml:space="preserve">
+        <value>Nenhuma alteração registrada</value>
+    </data>
+    <data name="RiskContextSaveConfirmMSG" xml:space="preserve">
+        <value>Salvar o contexto de risco de {0} entidade(s) num único lote? Todas as mudanças são aplicadas, ou nenhuma.</value>
+    </data>
+    <data name="RiskContextSavedMSG" xml:space="preserve">
+        <value>{0} entidades atualizadas; o efeito aparece no próximo snapshot como efeito de contexto</value>
+    </data>
+    <data name="RiskContextDiscardConfirmMSG" xml:space="preserve">
+        <value>Descartar as alterações de {0} entidade(s)?</value>
+    </data>
+    <data name="RiskContextActivityCreatedMSG" xml:space="preserve">
+        <value>Atividade "{0}" criada</value>
+    </data>
+    <data name="RiskContextJustificationTooShort" xml:space="preserve">
+        <value>Escreva uma justificativa de pelo menos 20 caracteres</value>
+    </data>
+    <data name="RiskContextJustificationTooLong" xml:space="preserve">
+        <value>A justificativa passa de 2000 caracteres</value>
+    </data>
+    <data name="RiskContextBatchTooLarge" xml:space="preserve">
+        <value>Um lote tem no máximo 500 entidades</value>
+    </data>
+    <data name="RiskContextSaveOrDiscardFirst" xml:space="preserve">
+        <value>Salve ou descarte as alterações antes de recarregar</value>
+    </data>
+    <data name="RiskContextRequiresEntitiesManage" xml:space="preserve">
+        <value>Requer entities_manage</value>
+    </data>
+    <data name="RiskContextSelectProcess" xml:space="preserve">
+        <value>Selecione um processo</value>
+    </data>
+    <data name="RiskPreset_balanced" xml:space="preserve">
+        <value>Equilibrado</value>
+    </data>
+    <data name="RiskPreset_register_centred" xml:space="preserve">
+        <value>Centrado no registro</value>
+    </data>
+    <data name="RiskPreset_ctem" xml:space="preserve">
+        <value>CTEM</value>
+    </data>
+    <data name="RiskPreset_conservative" xml:space="preserve">
+        <value>Conservador</value>
+    </data>
+    <data name="RiskPreset_pure_mean" xml:space="preserve">
+        <value>Média pura (só prévia)</value>
+    </data>
+    <data name="RiskIssue_full_mode_prerequisites_missing" xml:space="preserve">
+        <value>O modo pleno exige fontes do Track 9 que esta versão não tem; use o modo interino</value>
+    </data>
+    <data name="RiskIssue_parameter_out_of_range" xml:space="preserve">
+        <value>O valor {0} está fora da faixa permitida [{1}; {2}]</value>
+    </data>
+    <data name="RiskIssue_locked_parameter" xml:space="preserve">
+        <value>Travado em {1}; {0} não é permitido</value>
+    </data>
+    <data name="RiskIssue_omega_sum" xml:space="preserve">
+        <value>Os pesos somam {0}; precisam somar 1</value>
+    </data>
+    <data name="RiskIssue_omega_min_categories" xml:space="preserve">
+        <value>Só {0} categorias têm peso; pelo menos 3 precisam ter</value>
+    </data>
+    <data name="RiskIssue_bands_invalid_count" xml:space="preserve">
+        <value>É preciso ter de 2 a 5 faixas</value>
+    </data>
+    <data name="RiskIssue_bands_invalid_first_not_zero" xml:space="preserve">
+        <value>A primeira faixa precisa começar em 0</value>
+    </data>
+    <data name="RiskIssue_bands_invalid_not_increasing" xml:space="preserve">
+        <value>A faixa {0} precisa começar acima da anterior, entre 10 e 95</value>
+    </data>
+    <data name="RiskIssue_bands_invalid_label_missing" xml:space="preserve">
+        <value>Toda faixa precisa dos rótulos em português e em inglês</value>
+    </data>
+    <data name="RiskIssue_bands_invalid_label_not_unique" xml:space="preserve">
+        <value>Os rótulos das faixas precisam ser únicos em cada idioma</value>
+    </data>
+    <data name="RiskIssue_exploitation_order" xml:space="preserve">
+        <value>O teto sem exploração ({0}) precisa ficar abaixo do piso de exploração ({1})</value>
+    </data>
+    <data name="RiskIssue_quality_order" xml:space="preserve">
+        <value>O limiar de qualidade média precisa ficar abaixo do de qualidade alta</value>
+    </data>
+    <data name="RiskIssue_coverage_order" xml:space="preserve">
+        <value>A cobertura indicativa precisa ficar abaixo da cobertura pontual</value>
+    </data>
+    <data name="RiskIssue_anchors_not_monotonic" xml:space="preserve">
+        <value>As âncoras precisam ser monótonas e ficar em (0, 1]</value>
+    </data>
+    <data name="RiskIssue_ssc_anchor_endpoints" xml:space="preserve">
+        <value>As âncoras SecurityScorecard exigem s(100) = 0 e s(0) = 1</value>
+    </data>
+    <data name="RiskIssue_unknown_factor" xml:space="preserve">
+        <value>Fator desconhecido</value>
+    </data>
+    <data name="RiskIssue_quota_sum" xml:space="preserve">
+        <value>As cotas por população somam {0}; precisam somar 1</value>
+    </data>
+    <data name="RiskIssue_unknown_source" xml:space="preserve">
+        <value>Fonte desconhecida {0}</value>
+    </data>
+    <data name="RiskIssue_incident_window_too_short" xml:space="preserve">
+        <value>A janela de incidentes precisa ter pelo menos {0} dias (3 × a meia-vida)</value>
+    </data>
+    <data name="RiskIssue_inventory_window_too_short" xml:space="preserve">
+        <value>A janela de sinal de inventário precisa ter pelo menos {0} dias (2 × o W da fonte mais lenta)</value>
+    </data>
+    <data name="RiskIssue_register_copies_incoherent" xml:space="preserve">
+        <value>As cópias dos níveis e da cadência do registro precisam ser crescentes</value>
+    </data>
+    <data name="RiskIssue_tail_lock" xml:space="preserve">
+        <value>Trava conjunta violada: τ·τ_G·L_topo = {0} está abaixo de L_2 = {1}</value>
+    </data>
+    <data name="RiskIssue_rebaseline_preset_change" xml:space="preserve">
+        <value>Troca de preset ({0} → {1}): exige aprovação de rebaseline</value>
+    </data>
+    <data name="RiskIssue_mode_change" xml:space="preserve">
+        <value>Troca de modo ({0} → {1}): exige aprovação de rebaseline</value>
+    </data>
+    <data name="RiskIssue_rebaseline_omega_pace" xml:space="preserve">
+        <value>{0} → {1} move mais de ±{2} no trimestre: exige aprovação de rebaseline</value>
+    </data>
+    <data name="RiskIssue_rebaseline_parameter_count" xml:space="preserve">
+        <value>{0} parâmetros alterados (limite de {1} por ciclo): exige aprovação de rebaseline</value>
+    </data>
+    <data name="RiskIssue_board_ref_required" xml:space="preserve">
+        <value>As faixas diferem do vigente (ou não há vigente): a aprovação exige referência do Conselho</value>
+    </data>
+    <data name="RiskApi_open_draft_existsMSG" xml:space="preserve">
+        <value>Já existe um rascunho ou perfil em aprovação.</value>
+    </data>
+    <data name="RiskApi_preset_required_for_first_profileMSG" xml:space="preserve">
+        <value>O primeiro perfil parte de um preset.</value>
+    </data>
+    <data name="RiskApi_preset_not_activatableMSG" xml:space="preserve">
+        <value>Este preset existe só para a prévia.</value>
+    </data>
+    <data name="RiskApi_unknown_presetMSG" xml:space="preserve">
+        <value>Preset desconhecido.</value>
+    </data>
+    <data name="RiskApi_stale_draftMSG" xml:space="preserve">
+        <value>O rascunho foi alterado por outra pessoa desde que você o abriu. Recarregue para continuar.</value>
+    </data>
+    <data name="RiskApi_invalid_transitionMSG" xml:space="preserve">
+        <value>O perfil não está num estado que permita esta ação.</value>
+    </data>
+    <data name="RiskApi_if_match_requiredMSG" xml:space="preserve">
+        <value>A revisão do rascunho não foi enviada.</value>
+    </data>
+    <data name="RiskApi_parameter_out_of_rangeMSG" xml:space="preserve">
+        <value>Um parâmetro está fora da faixa permitida.</value>
+    </data>
+    <data name="RiskApi_name_requiredMSG" xml:space="preserve">
+        <value>Informe um nome.</value>
+    </data>
+    <data name="RiskApi_preview_in_progressMSG" xml:space="preserve">
+        <value>Já há uma prévia em andamento.</value>
+    </data>
+    <data name="RiskApi_preview_missingMSG" xml:space="preserve">
+        <value>Este rascunho não tem prévia.</value>
+    </data>
+    <data name="RiskApi_preview_staleMSG" xml:space="preserve">
+        <value>A prévia não confere com os parâmetros atuais; execute-a de novo.</value>
+    </data>
+    <data name="RiskApi_justification_requiredMSG" xml:space="preserve">
+        <value>Escreva a justificativa.</value>
+    </data>
+    <data name="RiskApi_rebaseline_reason_requiredMSG" xml:space="preserve">
+        <value>Proposta de rebaseline: explique o motivo em pelo menos 40 caracteres.</value>
+    </data>
+    <data name="RiskApi_profile_invalidMSG" xml:space="preserve">
+        <value>O rascunho tem erros de validação.</value>
+    </data>
+    <data name="RiskApi_sod_author_cannot_approveMSG" xml:space="preserve">
+        <value>Quem criou ou editou o rascunho não pode aprová-lo.</value>
+    </data>
+    <data name="RiskApi_sod_business_reviewerMSG" xml:space="preserve">
+        <value>Quem detém business_risk_review não aprova os pesos que medem a própria unidade.</value>
+    </data>
+    <data name="RiskApi_approver_permission_not_explicitMSG" xml:space="preserve">
+        <value>A permissão risk_index_approve precisa estar concedida a você, não só pela flag de administrador.</value>
+    </data>
+    <data name="RiskApi_approver_role_requiredMSG" xml:space="preserve">
+        <value>Só o Gerente de Riscos ou o Administrador de Riscos aprova perfis.</value>
+    </data>
+    <data name="RiskApi_sod_self_granted_approverMSG" xml:space="preserve">
+        <value>Sua permissão de aprovar foi concedida por você mesmo; peça a outro administrador.</value>
+    </data>
+    <data name="RiskApi_committee_ref_requiredMSG" xml:space="preserve">
+        <value>Informe a decisão do Comitê de Risco de TI e anexe a ata.</value>
+    </data>
+    <data name="RiskApi_committee_attachment_requiredMSG" xml:space="preserve">
+        <value>Informe a decisão do Comitê de Risco de TI e anexe a ata.</value>
+    </data>
+    <data name="RiskApi_board_ref_requiredMSG" xml:space="preserve">
+        <value>As faixas mudaram (ou este é o primeiro perfil): informe a aprovação do Conselho/Reitoria.</value>
+    </data>
+    <data name="RiskApi_rebaseline_confirmation_requiredMSG" xml:space="preserve">
+        <value>Este perfil é rebaseline: confirme o rebaseline.</value>
+    </data>
+    <data name="RiskApi_reason_requiredMSG" xml:space="preserve">
+        <value>Escreva o motivo.</value>
+    </data>
+    <data name="RiskApi_file_not_foundMSG" xml:space="preserve">
+        <value>O arquivo não existe.</value>
+    </data>
+    <data name="RiskApi_file_not_ownedMSG" xml:space="preserve">
+        <value>Só um arquivo enviado por você pode ser anexado.</value>
+    </data>
+    <data name="RiskApi_file_already_attachedMSG" xml:space="preserve">
+        <value>O arquivo já está anexado a outro registro.</value>
+    </data>
+    <data name="RiskApi_bridge_not_foundMSG" xml:space="preserve">
+        <value>Este perfil não tem ponte.</value>
+    </data>
+    <data name="RiskApi_profile_values_require_global_scopeMSG" xml:space="preserve">
+        <value>Requer escopo global: estes valores incluem outras unidades.</value>
+    </data>
+    <data name="RiskApi_no_approved_profileMSG" xml:space="preserve">
+        <value>Nenhum perfil foi aprovado ainda.</value>
+    </data>
+    <data name="RiskApi_not_permittedMSG" xml:space="preserve">
+        <value>Você não tem a permissão que esta ação exige.</value>
+    </data>
+    <data name="RiskApi_invalid_limitMSG" xml:space="preserve">
+        <value>Limite inválido.</value>
+    </data>
+    <data name="RiskApi_field_not_supported_for_typeMSG" xml:space="preserve">
+        <value>Um campo não existe no tipo dessa entidade.</value>
+    </data>
+    <data name="RiskApi_criticality_out_of_rangeMSG" xml:space="preserve">
+        <value>A criticidade precisa ser de 1 a 5.</value>
+    </data>
+    <data name="RiskApi_classification_not_foundMSG" xml:space="preserve">
+        <value>O nível de classificação não existe.</value>
+    </data>
+    <data name="RiskApi_justification_too_shortMSG" xml:space="preserve">
+        <value>Escreva uma justificativa de pelo menos 20 caracteres.</value>
+    </data>
+    <data name="RiskApi_justification_too_longMSG" xml:space="preserve">
+        <value>A justificativa passa de 2000 caracteres.</value>
+    </data>
+    <data name="RiskApi_empty_batchMSG" xml:space="preserve">
+        <value>Não há nada a salvar.</value>
+    </data>
+    <data name="RiskApi_batch_too_largeMSG" xml:space="preserve">
+        <value>Um lote tem no máximo 500 entidades.</value>
+    </data>
+    <data name="RiskApi_duplicate_entity_in_batchMSG" xml:space="preserve">
+        <value>Uma entidade aparece duas vezes no lote.</value>
+    </data>
+    <data name="RiskApi_entity_not_foundMSG" xml:space="preserve">
+        <value>Uma entidade do lote não existe mais.</value>
+    </data>
+    <data name="RiskApi_risk_context_requires_global_scopeMSG" xml:space="preserve">
+        <value>Editar o contexto de risco requer escopo global.</value>
+    </data>
+    <data name="RiskApi_risk_context_requires_permissionMSG" xml:space="preserve">
+        <value>Editar o contexto de risco requer entity_risk_context.</value>
+    </data>
+    <data name="RiskApi_entity_history_requires_permissionMSG" xml:space="preserve">
+        <value>O histórico requer entity_risk_context ou entities_manage.</value>
+    </data>
+    <data name="RiskParamGroup_weights" xml:space="preserve">
+        <value>Categorias e pesos</value>
+    </data>
+    <data name="RiskParamGroup_aggregation" xml:space="preserve">
+        <value>Agregação</value>
+    </data>
+    <data name="RiskParamGroup_criticality" xml:space="preserve">
+        <value>Criticidade</value>
+    </data>
+    <data name="RiskParamGroup_normalization" xml:space="preserve">
+        <value>Normalização e âncoras</value>
+    </data>
+    <data name="RiskParamGroup_time" xml:space="preserve">
+        <value>Tempo e frescor</value>
+    </data>
+    <data name="RiskParamGroup_governance" xml:space="preserve">
+        <value>Revisões e governança</value>
+    </data>
+    <data name="RiskParamGroup_bands" xml:space="preserve">
+        <value>Pisos e faixas</value>
+    </data>
+    <data name="RiskParamGroup_display" xml:space="preserve">
+        <value>Exibição e cobertura</value>
+    </data>
+    <data name="RiskParamGroup_sources" xml:space="preserve">
+        <value>Fontes e frescor</value>
+    </data>
+    <data name="RiskParamGroup_other" xml:space="preserve">
+        <value>Outros</value>
+    </data>
+    <data name="RiskParamLocked_TerUntilM48" xml:space="preserve">
+        <value>Travado em 0 até o M48 (terceiros)</value>
+    </data>
+    <data name="RiskParamLocked_AcceptanceIsNotMitigation" xml:space="preserve">
+        <value>Travado em 0: aceite não é mitigação nem revisão (S39 I10)</value>
+    </data>
+    <data name="RiskParam_omega_Label" xml:space="preserve">
+        <value>Pesos das categorias ω</value>
+    </data>
+    <data name="RiskParam_omega_Help" xml:space="preserve">
+        <value>Os seis pesos; somam 1</value>
+    </data>
+    <data name="RiskParam_omega_REG_Label" xml:space="preserve">
+        <value>ω REG (registro)</value>
+    </data>
+    <data name="RiskParam_omega_REG_Help" xml:space="preserve">
+        <value>Peso dos cenários do registro; nunca marginal</value>
+    </data>
+    <data name="RiskParam_omega_EXP_Label" xml:space="preserve">
+        <value>ω EXP (exposição)</value>
+    </data>
+    <data name="RiskParam_omega_EXP_Help" xml:space="preserve">
+        <value>0 desliga a categoria; Σω = 1; ≥ 3 categorias com peso</value>
+    </data>
+    <data name="RiskParam_omega_AME_Label" xml:space="preserve">
+        <value>ω AME (ameaças)</value>
+    </data>
+    <data name="RiskParam_omega_AME_Help" xml:space="preserve">
+        <value>0 desliga a categoria; Σω = 1; ≥ 3 categorias com peso</value>
+    </data>
+    <data name="RiskParam_omega_CTL_Label" xml:space="preserve">
+        <value>ω CTL (controles)</value>
+    </data>
+    <data name="RiskParam_omega_CTL_Help" xml:space="preserve">
+        <value>0 desliga a categoria; Σω = 1; ≥ 3 categorias com peso</value>
+    </data>
+    <data name="RiskParam_omega_GOV_Label" xml:space="preserve">
+        <value>ω GOV (governança)</value>
+    </data>
+    <data name="RiskParam_omega_GOV_Help" xml:space="preserve">
+        <value>0 desliga a categoria; Σω = 1; ≥ 3 categorias com peso</value>
+    </data>
+    <data name="RiskParam_omega_TER_Label" xml:space="preserve">
+        <value>ω TER (terceiros)</value>
+    </data>
+    <data name="RiskParam_omega_TER_Help" xml:space="preserve">
+        <value>Entra como nova versão com 0,05 e as demais × 0,95 (S39 §2.3)</value>
+    </data>
+    <data name="RiskParam_u_Label" xml:space="preserve">
+        <value>Teto do fator u</value>
+    </data>
+    <data name="RiskParam_u_Help" xml:space="preserve">
+        <value>Valor máximo que o fator atinge sozinho no objeto</value>
+    </data>
+    <data name="RiskParam_cotas_populacao_Label" xml:space="preserve">
+        <value>Cota por população</value>
+    </data>
+    <data name="RiskParam_cotas_populacao_Help" xml:space="preserve">
+        <value>Impede que hosts afoguem a governança dos cenários (S39 §4.3); cada uma em [0,2; 0,8], somando 1</value>
+    </data>
+    <data name="RiskParam_p_Label" xml:space="preserve">
+        <value>Expoente p da média de potência</value>
+    </data>
+    <data name="RiskParam_p_Help" xml:space="preserve">
+        <value>Expoente da média de potência entre objetos</value>
+    </data>
+    <data name="RiskParam_tau_Label" xml:space="preserve">
+        <value>Piso de cauda da categoria τ</value>
+    </data>
+    <data name="RiskParam_tau_Help" xml:space="preserve">
+        <value>C_k ≥ 100·τ·max R; entra na trava conjunta</value>
+    </data>
+    <data name="RiskParam_tau_g_Label" xml:space="preserve">
+        <value>Piso de cauda da manchete τ_G</value>
+    </data>
+    <data name="RiskParam_tau_g_Help" xml:space="preserve">
+        <value>Entra na trava conjunta τ·τ_G·L_topo ≥ L_2</value>
+    </data>
+    <data name="RiskParam_rho_Label" xml:space="preserve">
+        <value>Restante amortecido ρ</value>
+    </data>
+    <data name="RiskParam_rho_Help" xml:space="preserve">
+        <value>Restante amortecido do MRA</value>
+    </data>
+    <data name="RiskParam_k_sinais_Label" xml:space="preserve">
+        <value>Sinais considerados k</value>
+    </data>
+    <data name="RiskParam_k_sinais_Help" xml:space="preserve">
+        <value>Sinais considerados no MRA (50 são guardados)</value>
+    </data>
+    <data name="RiskParam_m_a_Label" xml:space="preserve">
+        <value>Piso do modulador m_a</value>
+    </data>
+    <data name="RiskParam_m_a_Help" xml:space="preserve">
+        <value>Piso do modulador m(crit) = a + (1 − a)(crit − 1)/4</value>
+    </data>
+    <data name="RiskParam_crit_padrao_Label" xml:space="preserve">
+        <value>Criticidade padrão</value>
+    </data>
+    <data name="RiskParam_crit_padrao_Help" xml:space="preserve">
+        <value>Criticidade desconhecida</value>
+    </data>
+    <data name="RiskParam_crit_padrao_nao_producao_Label" xml:space="preserve">
+        <value>Criticidade padrão não produtiva</value>
+    </data>
+    <data name="RiskParam_crit_padrao_nao_producao_Help" xml:space="preserve">
+        <value>Criticidade desconhecida fora de produção</value>
+    </data>
+    <data name="RiskParam_crit_max_vision_one_Label" xml:space="preserve">
+        <value>Teto da criticidade Vision One</value>
+    </data>
+    <data name="RiskParam_crit_max_vision_one_Help" xml:space="preserve">
+        <value>Teto da criticidade de origem Vision One</value>
+    </data>
+    <data name="RiskParam_crit_ext_Label" xml:space="preserve">
+        <value>Criticidade externa</value>
+    </data>
+    <data name="RiskParam_crit_ext_Help" xml:space="preserve">
+        <value>Criticidade de domínio externo e tenant</value>
+    </data>
+    <data name="RiskParam_passo_classificacao_Label" xml:space="preserve">
+        <value>Passo de classificação</value>
+    </data>
+    <data name="RiskParam_passo_classificacao_Help" xml:space="preserve">
+        <value>Δ_dados para aplicações com classificação sensível</value>
+    </data>
+    <data name="RiskParam_beta_rank_Label" xml:space="preserve">
+        <value>Peso do rank β</value>
+    </data>
+    <data name="RiskParam_beta_rank_Help" xml:space="preserve">
+        <value>Peso do rank de campanha; nunca move o valor do cenário</value>
+    </data>
+    <data name="RiskParam_validade_rank_ciclos_Label" xml:space="preserve">
+        <value>Validade do rank (ciclos)</value>
+    </data>
+    <data name="RiskParam_validade_rank_ciclos_Help" xml:space="preserve">
+        <value>Ciclos de campanha em que o rank vale</value>
+    </data>
+    <data name="RiskParam_ambientes_nao_producao_Label" xml:space="preserve">
+        <value>Ambientes não produtivos</value>
+    </data>
+    <data name="RiskParam_ambientes_nao_producao_Help" xml:space="preserve">
+        <value>Vocabulário controlado de hosts.environment, separado por vírgulas</value>
+    </data>
+    <data name="RiskParam_niveis_sensiveis_Label" xml:space="preserve">
+        <value>Níveis sensíveis</value>
+    </data>
+    <data name="RiskParam_niveis_sensiveis_Help" xml:space="preserve">
+        <value>Ids de securityClassificationLevel que somam o passo, separados por vírgulas</value>
+    </data>
+    <data name="RiskParam_ancoras_severidade_Label" xml:space="preserve">
+        <value>Âncoras de severidade</value>
+    </data>
+    <data name="RiskParam_ancoras_severidade_Help" xml:space="preserve">
+        <value>Base de achado sem VPR/CVSS, por severidade 1–4; monótonas em (0, 1]</value>
+    </data>
+    <data name="RiskParam_m_x_disponivel_Label" xml:space="preserve">
+        <value>Multiplicador de exploit disponível</value>
+    </data>
+    <data name="RiskParam_m_x_disponivel_Help" xml:space="preserve">
+        <value>Exploit disponível ou EPSS; só sobre CVSS/severidade</value>
+    </data>
+    <data name="RiskParam_teto_sem_exploracao_Label" xml:space="preserve">
+        <value>Teto sem exploração</value>
+    </data>
+    <data name="RiskParam_teto_sem_exploracao_Help" xml:space="preserve">
+        <value>Todo achado com exploração fica acima de todo achado sem</value>
+    </data>
+    <data name="RiskParam_piso_exploracao_Label" xml:space="preserve">
+        <value>Piso de exploração</value>
+    </data>
+    <data name="RiskParam_piso_exploracao_Help" xml:space="preserve">
+        <value>Piso do achado com exploração; acima do teto sem exploração</value>
+    </data>
+    <data name="RiskParam_epss_limiar_Label" xml:space="preserve">
+        <value>Limiar EPSS</value>
+    </data>
+    <data name="RiskParam_epss_limiar_Help" xml:space="preserve">
+        <value>Interino; T165 substitui</value>
+    </data>
+    <data name="RiskParam_m_net_Label" xml:space="preserve">
+        <value>Multiplicador de internet</value>
+    </data>
+    <data name="RiskParam_m_net_Help" xml:space="preserve">
+        <value>Só em EXP.V de objeto internet-facing</value>
+    </data>
+    <data name="RiskParam_heuristica_ip_publico_Label" xml:space="preserve">
+        <value>Heurística de IP público</value>
+    </data>
+    <data name="RiskParam_heuristica_ip_publico_Help" xml:space="preserve">
+        <value>Contexto de baixa confiança: IP público conta como internet-facing</value>
+    </data>
+    <data name="RiskParam_faixas_publicas_internas_Label" xml:space="preserve">
+        <value>Faixas públicas internas</value>
+    </data>
+    <data name="RiskParam_faixas_publicas_internas_Help" xml:space="preserve">
+        <value>Faixas CIDR excluídas da heurística, separadas por vírgulas</value>
+    </data>
+    <data name="RiskParam_ancoras_ssc_Label" xml:space="preserve">
+        <value>Âncoras SecurityScorecard</value>
+    </data>
+    <data name="RiskParam_ancoras_ssc_Help" xml:space="preserve">
+        <value>Rating → s, monótonas; s(100) = 0 e s(0) = 1</value>
+    </data>
+    <data name="RiskParam_ancoras_incidente_categoria_Label" xml:space="preserve">
+        <value>Âncoras de categoria de incidente</value>
+    </data>
+    <data name="RiskParam_ancoras_incidente_categoria_Help" xml:space="preserve">
+        <value>Incidente → s por categoria</value>
+    </data>
+    <data name="RiskParam_ancoras_incidente_severidade_Label" xml:space="preserve">
+        <value>Âncoras de severidade de incidente</value>
+    </data>
+    <data name="RiskParam_ancoras_incidente_severidade_Help" xml:space="preserve">
+        <value>Substituem a da categoria quando houver severidade</value>
+    </data>
+    <data name="RiskParam_fator_quase_incidente_Label" xml:space="preserve">
+        <value>Fator de quase-incidente</value>
+    </data>
+    <data name="RiskParam_fator_quase_incidente_Help" xml:space="preserve">
+        <value>Teto de AME.Q (M40)</value>
+    </data>
+    <data name="RiskParam_irp_limiar_sigma_Label" xml:space="preserve">
+        <value>Limiar σ do plano de resposta</value>
+    </data>
+    <data name="RiskParam_irp_limiar_sigma_Help" xml:space="preserve">
+        <value>Início da rampa contínua de CTL.P</value>
+    </data>
+    <data name="RiskParam_irp_rampa_Label" xml:space="preserve">
+        <value>Rampa do plano de resposta</value>
+    </data>
+    <data name="RiskParam_irp_rampa_Help" xml:space="preserve">
+        <value>Largura da rampa de CTL.P</value>
+    </data>
+    <data name="RiskParam_irp_teste_validade_Label" xml:space="preserve">
+        <value>Validade do teste do plano (dias)</value>
+    </data>
+    <data name="RiskParam_irp_teste_validade_Help" xml:space="preserve">
+        <value>Dias em que o teste do plano vale</value>
+    </data>
+    <data name="RiskParam_fontes_habilitadas_Label" xml:space="preserve">
+        <value>Fontes habilitadas</value>
+    </data>
+    <data name="RiskParam_fontes_habilitadas_Help" xml:space="preserve">
+        <value>Editadas na aba Fontes e frescor</value>
+    </data>
+    <data name="RiskParam_frescor_W_Label" xml:space="preserve">
+        <value>Janela de frescor W</value>
+    </data>
+    <data name="RiskParam_frescor_W_Help" xml:space="preserve">
+        <value>Validade por fonte; depois de W a leitura desliza para o prior</value>
+    </data>
+    <data name="RiskParam_pi_prior_Label" xml:space="preserve">
+        <value>Prior conservador π</value>
+    </data>
+    <data name="RiskParam_pi_prior_Help" xml:space="preserve">
+        <value>Prior de obsolescência e presunção</value>
+    </data>
+    <data name="RiskParam_meia_vida_incidente_Label" xml:space="preserve">
+        <value>Meia-vida de incidente (dias)</value>
+    </data>
+    <data name="RiskParam_meia_vida_incidente_Help" xml:space="preserve">
+        <value>Decaimento de incidentes encerrados</value>
+    </data>
+    <data name="RiskParam_janela_incidente_Label" xml:space="preserve">
+        <value>Janela de incidente (dias)</value>
+    </data>
+    <data name="RiskParam_janela_incidente_Help" xml:space="preserve">
+        <value>Pelo menos 3 × a meia-vida</value>
+    </data>
+    <data name="RiskParam_janela_intake_incidentes_Label" xml:space="preserve">
+        <value>Janela de intake de incidentes (dias)</value>
+    </data>
+    <data name="RiskParam_janela_intake_incidentes_Help" xml:space="preserve">
+        <value>Sem intake, AME fica indisponível, não zero</value>
+    </data>
+    <data name="RiskParam_janela_inventario_sinal_Label" xml:space="preserve">
+        <value>Janela de sinal de inventário (dias)</value>
+    </data>
+    <data name="RiskParam_janela_inventario_sinal_Help" xml:space="preserve">
+        <value>Saída de host sem fonte de ciclo de vida; pelo menos 2 × o W mais lento</value>
+    </data>
+    <data name="RiskParam_tipos_avaliaveis_Label" xml:space="preserve">
+        <value>Tipos de entidade avaliáveis</value>
+    </data>
+    <data name="RiskParam_tipos_avaliaveis_Help" xml:space="preserve">
+        <value>Inventário de CTL.A, separado por vírgulas</value>
+    </data>
+    <data name="RiskParam_lambda_credito_Label" xml:space="preserve">
+        <value>Perda de crédito λ</value>
+    </data>
+    <data name="RiskParam_lambda_credito_Help" xml:space="preserve">
+        <value>Perda de crédito por cadência de atraso</value>
+    </data>
+    <data name="RiskParam_credito_minimo_Label" xml:space="preserve">
+        <value>Crédito mínimo</value>
+    </data>
+    <data name="RiskParam_credito_minimo_Help" xml:space="preserve">
+        <value>Menor crédito de revisão</value>
+    </data>
+    <data name="RiskParam_cadencia_revisao_Label" xml:space="preserve">
+        <value>Cadência de revisão (dias)</value>
+    </data>
+    <data name="RiskParam_cadencia_revisao_Help" xml:space="preserve">
+        <value>Cópia aprovada de review_levels; crescente de Very High para Low</value>
+    </data>
+    <data name="RiskParam_limites_registro_Label" xml:space="preserve">
+        <value>Limites do registro</value>
+    </data>
+    <data name="RiskParam_limites_registro_Help" xml:space="preserve">
+        <value>Cópia aprovada de risk_levels; crescentes em [0; 10]</value>
+    </data>
+    <data name="RiskParam_base_cadencia_Label" xml:space="preserve">
+        <value>Base da cadência</value>
+    </data>
+    <data name="RiskParam_base_cadencia_Help" xml:space="preserve">
+        <value>Cópia de next_review_date_uses</value>
+    </data>
+    <data name="RiskParam_janela_revisao_derivada_Label" xml:space="preserve">
+        <value>Janela de revisão derivada (s)</value>
+    </data>
+    <data name="RiskParam_janela_revisao_derivada_Help" xml:space="preserve">
+        <value>Reconhece revisões gravadas por aceitação ou campanha</value>
+    </data>
+    <data name="RiskParam_carencia_aceite_Label" xml:space="preserve">
+        <value>Carência do aceite (dias)</value>
+    </data>
+    <data name="RiskParam_carencia_aceite_Help" xml:space="preserve">
+        <value>Carência depois de aceite expirado ou revogado</value>
+    </data>
+    <data name="RiskParam_acc_drift_inicio_Label" xml:space="preserve">
+        <value>Início do ACC-DRIFT</value>
+    </data>
+    <data name="RiskParam_acc_drift_inicio_Help" xml:space="preserve">
+        <value>Desvio a partir do qual o sinal de aceite começa</value>
+    </data>
+    <data name="RiskParam_acc_drift_amplitude_Label" xml:space="preserve">
+        <value>Amplitude do ACC-DRIFT</value>
+    </data>
+    <data name="RiskParam_acc_drift_amplitude_Help" xml:space="preserve">
+        <value>Amplitude do desvio do sinal de aceite</value>
+    </data>
+    <data name="RiskParam_prazo_contra_assinatura_Label" xml:space="preserve">
+        <value>Prazo de contra-assinatura (dias)</value>
+    </data>
+    <data name="RiskParam_prazo_contra_assinatura_Help" xml:space="preserve">
+        <value>Contra-assinatura pendente</value>
+    </data>
+    <data name="RiskParam_prazo_seguimento_decisao_Label" xml:space="preserve">
+        <value>Prazo de seguimento da decisão (dias)</value>
+    </data>
+    <data name="RiskParam_prazo_seguimento_decisao_Help" xml:space="preserve">
+        <value>CMP-ESC</value>
+    </data>
+    <data name="RiskParam_prazo_ref_tarefa_Label" xml:space="preserve">
+        <value>Prazo de referência da tarefa (dias)</value>
+    </data>
+    <data name="RiskParam_prazo_ref_tarefa_Help" xml:space="preserve">
+        <value>TSK-OVD</value>
+    </data>
+    <data name="RiskParam_prazo_revisao_solicitada_Label" xml:space="preserve">
+        <value>Prazo da revisão solicitada (dias)</value>
+    </data>
+    <data name="RiskParam_prazo_revisao_solicitada_Help" xml:space="preserve">
+        <value>GOV.R</value>
+    </data>
+    <data name="RiskParam_delta_div_Label" xml:space="preserve">
+        <value>Δ de divergência</value>
+    </data>
+    <data name="RiskParam_delta_div_Help" xml:space="preserve">
+        <value>Evidência técnica vs residual (heurística)</value>
+    </data>
+    <data name="RiskParam_janela_aviso_expiracao_Label" xml:space="preserve">
+        <value>Janela de aviso de expiração (dias)</value>
+    </data>
+    <data name="RiskParam_janela_aviso_expiracao_Help" xml:space="preserve">
+        <value>Só exibição</value>
+    </data>
+    <data name="RiskParam_desconto_aceite_Label" xml:space="preserve">
+        <value>Desconto de aceite</value>
+    </data>
+    <data name="RiskParam_desconto_aceite_Help" xml:space="preserve">
+        <value>Aceite não é mitigação nem revisão</value>
+    </data>
+    <data name="RiskParam_s_Label" xml:space="preserve">
+        <value>Sinais de governança</value>
+    </data>
+    <data name="RiskParam_s_Help" xml:space="preserve">
+        <value>Valores dos sinais de GOV.A, GOV.C, GOV.R e GOV.G</value>
+    </data>
+    <data name="RiskParam_s_APT_BRK_Label" xml:space="preserve">
+        <value>s APT-BRK (sem tratamento)</value>
+    </data>
+    <data name="RiskParam_s_APT_BRK_Help" xml:space="preserve">
+        <value>Acima do teto sem aceite válido</value>
+    </data>
+    <data name="RiskParam_s_APT_BRK_TREATED_Label" xml:space="preserve">
+        <value>s APT-BRK (com tratamento)</value>
+    </data>
+    <data name="RiskParam_s_APT_BRK_TREATED_Help" xml:space="preserve">
+        <value>Acima do teto sem aceite válido, em tratamento</value>
+    </data>
+    <data name="RiskParam_s_ACC_APT_Label" xml:space="preserve">
+        <value>s ACC-APT</value>
+    </data>
+    <data name="RiskParam_s_ACC_APT_Help" xml:space="preserve">
+        <value>Aceite anterior ao apetite vigente</value>
+    </data>
+    <data name="RiskParam_s_ACC_EXP_Label" xml:space="preserve">
+        <value>s ACC-EXP</value>
+    </data>
+    <data name="RiskParam_s_ACC_EXP_Help" xml:space="preserve">
+        <value>Aceite expirado</value>
+    </data>
+    <data name="RiskParam_s_ACC_REV_Label" xml:space="preserve">
+        <value>s ACC-REV</value>
+    </data>
+    <data name="RiskParam_s_ACC_REV_Help" xml:space="preserve">
+        <value>Aceite revogado sem nova decisão</value>
+    </data>
+    <data name="RiskParam_s_APT_DUAL_Label" xml:space="preserve">
+        <value>s APT-DUAL</value>
+    </data>
+    <data name="RiskParam_s_APT_DUAL_Help" xml:space="preserve">
+        <value>Contra-assinatura pendente</value>
+    </data>
+    <data name="RiskParam_s_CMP_PEND_Label" xml:space="preserve">
+        <value>s CMP-PEND</value>
+    </data>
+    <data name="RiskParam_s_CMP_PEND_Help" xml:space="preserve">
+        <value>GOV.C: decisão de campanha pendente</value>
+    </data>
+    <data name="RiskParam_s_CMP_ESC_Label" xml:space="preserve">
+        <value>s CMP-ESC</value>
+    </data>
+    <data name="RiskParam_s_CMP_ESC_Help" xml:space="preserve">
+        <value>GOV.C: escalada</value>
+    </data>
+    <data name="RiskParam_s_CMP_MIT_Label" xml:space="preserve">
+        <value>s CMP-MIT</value>
+    </data>
+    <data name="RiskParam_s_CMP_MIT_Help" xml:space="preserve">
+        <value>GOV.C: mitigar</value>
+    </data>
+    <data name="RiskParam_s_REV_REQ_Label" xml:space="preserve">
+        <value>s REV-REQ</value>
+    </data>
+    <data name="RiskParam_s_REV_REQ_Help" xml:space="preserve">
+        <value>GOV.R: revisão solicitada</value>
+    </data>
+    <data name="RiskParam_s_DIV_Label" xml:space="preserve">
+        <value>s DIV</value>
+    </data>
+    <data name="RiskParam_s_DIV_Help" xml:space="preserve">
+        <value>Divergência entre evidência técnica e residual</value>
+    </data>
+    <data name="RiskParam_faixas_Label" xml:space="preserve">
+        <value>Faixas de comunicação</value>
+    </data>
+    <data name="RiskParam_faixas_Help" xml:space="preserve">
+        <value>Categorias de comunicação, não tolerância; mudança exige aprovação do Conselho</value>
+    </data>
+    <data name="RiskParam_piso_portao_a_Label" xml:space="preserve">
+        <value>Piso do Portão A φ_A</value>
+    </data>
+    <data name="RiskParam_piso_portao_a_Help" xml:space="preserve">
+        <value>Só o Portão A gera piso; não é desligável</value>
+    </data>
+    <data name="RiskParam_cov_ponto_Label" xml:space="preserve">
+        <value>Cobertura pontual</value>
+    </data>
+    <data name="RiskParam_cov_ponto_Help" xml:space="preserve">
+        <value>Quando mostrar intervalo</value>
+    </data>
+    <data name="RiskParam_cov_indicativo_Label" xml:space="preserve">
+        <value>Cobertura indicativa</value>
+    </data>
+    <data name="RiskParam_cov_indicativo_Help" xml:space="preserve">
+        <value>Abaixo dela o valor é indicativo</value>
+    </data>
+    <data name="RiskParam_qualidade_alta_Label" xml:space="preserve">
+        <value>Limiar de qualidade alta</value>
+    </data>
+    <data name="RiskParam_qualidade_alta_Help" xml:space="preserve">
+        <value>Selo de qualidade</value>
+    </data>
+    <data name="RiskParam_qualidade_media_Label" xml:space="preserve">
+        <value>Limiar de qualidade média</value>
+    </data>
+    <data name="RiskParam_qualidade_media_Help" xml:space="preserve">
+        <value>Selo de qualidade; abaixo do limiar alto</value>
+    </data>
+    <data name="RiskParam_limiar_nao_atribuido_Label" xml:space="preserve">
+        <value>Limiar de não atribuído</value>
+    </data>
+    <data name="RiskParam_limiar_nao_atribuido_Help" xml:space="preserve">
+        <value>Aviso de "Não atribuído" no drill-down</value>
+    </data>
+    <data name="RiskParam_cobertura_quantificacao_min_Label" xml:space="preserve">
+        <value>Cobertura mínima de quantificação</value>
+    </data>
+    <data name="RiskParam_cobertura_quantificacao_min_Help" xml:space="preserve">
+        <value>Σ E[L] fica parcial abaixo dela</value>
+    </data>
+    <data name="RiskParam_ewma_n_Label" xml:space="preserve">
+        <value>Janela da EWMA</value>
+    </data>
+    <data name="RiskParam_ewma_n_Help" xml:space="preserve">
+        <value>Suavização da tendência</value>
+    </data>
+    <data name="RiskParam_delta_seta_Label" xml:space="preserve">
+        <value>Δ da seta</value>
+    </data>
+    <data name="RiskParam_delta_seta_Help" xml:space="preserve">
+        <value>Limiar da seta de 7 dias</value>
+    </data>
+    <data name="RiskParam_delta_detalhe_Label" xml:space="preserve">
+        <value>Δ de detalhe</value>
+    </data>
+    <data name="RiskParam_delta_detalhe_Help" xml:space="preserve">
+        <value>Menor mudança mostrada no detalhe</value>
+    </data>
+    <data name="RiskParam_top_contribuicoes_Label" xml:space="preserve">
+        <value>Principais contribuições</value>
+    </data>
+    <data name="RiskParam_top_contribuicoes_Help" xml:space="preserve">
+        <value>"O que mudou" e contribuições</value>
+    </data>
+    <data name="RiskParam_passos_atribuicao_Label" xml:space="preserve">
+        <value>Passos de atribuição</value>
+    </data>
+    <data name="RiskParam_passos_atribuicao_Help" xml:space="preserve">
+        <value>Passos de integração da atribuição</value>
+    </data>
+    <data name="RiskParam_residuo_max_Label" xml:space="preserve">
+        <value>Resíduo máximo</value>
+    </data>
+    <data name="RiskParam_residuo_max_Help" xml:space="preserve">
+        <value>Maior resíduo de atribuição aceito</value>
+    </data>
+    <data name="ConnectionDefaultEntity" xml:space="preserve">
+        <value>Entidade padrão</value>
+    </data>
+    <data name="ConnectionDefaultEntityHintMSG" xml:space="preserve">
+        <value>Hosts e objetos desta conexão são atribuídos a esta entidade quando nenhuma regra de mapeamento se aplica; ela decide quem os enxerga. A mudança vale na próxima sincronização.</value>
+    </data>
+    <data name="ConnectionNoDefaultEntity" xml:space="preserve">
+        <value>Nenhuma (não atribuído)</value>
+    </data>
+    <data name="ConnectionClearDefaultEntity" xml:space="preserve">
+        <value>Limpar a entidade padrão</value>
+    </data>
 </root>

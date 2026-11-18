@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using GUIClient.Tools;
+using GUIClient.Tools.RiskIndex;
 using DAL.Entities;
 using DAL.Enums;
 using Model.Authentication.Federation;
@@ -48,6 +49,12 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrName { get; } = Localizer["Name"];
     public string StrChannelKind { get; } = Localizer["ChannelKind"];
     public string StrEnabled { get; } = Localizer["Enabled"];
+
+    // T263 (S40 §6.6, §6.9): the default entity of a Vision One or SecurityScorecard connection.
+    public string StrConnectionEntity { get; } = Localizer["ConnectionDefaultEntity"];
+    public string StrConnectionEntityHint { get; } = Localizer["ConnectionDefaultEntityHintMSG"];
+    public string StrNoConnectionEntity { get; } = Localizer["ConnectionNoDefaultEntity"];
+    public string StrClearConnectionEntity { get; } = Localizer["ConnectionClearDefaultEntity"];
     public string StrFallbackChannel { get; } = Localizer["FallbackChannel"];
     public string StrWebhookUrl { get; } = Localizer["WebhookUrl"];
     public string StrRecipients { get; } = Localizer["Recipients"];
@@ -162,6 +169,15 @@ public class IntegrationsViewModel : ViewModelBase
     #region SERVICES
 
     private IIntegrationsService Integrations { get; } = GetService<IIntegrationsService>();
+
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
+
+    /// <summary>
+    /// The entities a connection can default to (S40 §6.6 "Entidade padrão da conexão"): hosts and objects the sync finds
+    /// with no mapping rule are filed under it, so it decides who sees them. Already stored and used by both syncs; the
+    /// forms had no way to set it until T263.
+    /// </summary>
+    public ObservableCollection<Entity> ConnectionEntities { get; } = new();
 
     /// <summary>Opens the secret picker. Resolved once rather than per click.</summary>
     private IDialogService Dialogs { get; } = GetService<IDialogService>();
@@ -960,7 +976,64 @@ public class IntegrationsViewModel : ViewModelBase
             await LoadScimAsync();
             await LoadPostureProvidersAsync();
             await LoadSecretVaultsAsync();
+            await LoadConnectionEntitiesAsync();
         });
+    }
+
+    private async Task LoadConnectionEntitiesAsync()
+    {
+        try
+        {
+            var entities = await EntitiesService.GetAllAsync();
+            ConnectionEntities.Clear();
+            foreach (var entity in ConnectionEntityChoices.Filter(entities)) ConnectionEntities.Add(entity);
+            this.RaisePropertyChanged(nameof(TrendMicroEntityId));
+            this.RaisePropertyChanged(nameof(ScorecardEntityId));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Could not load the entities for the connections' default entity: {Message}", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// The Vision One connection's default entity as the ComboBox selects it, guarded like
+    /// <see cref="SelectedTrendMicroRegion"/>: the control writes null whenever it cannot resolve the value (first render,
+    /// the entity list still loading), so a null write is ignored and clearing is an explicit button.
+    /// </summary>
+    public int? TrendMicroEntityId
+    {
+        get => TrendMicroDraft.EntityId;
+        set
+        {
+            if (value is null) return;
+            TrendMicroDraft.EntityId = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    /// <summary>The SecurityScorecard connection's default entity, guarded the same way.</summary>
+    public int? ScorecardEntityId
+    {
+        get => ScorecardDraft.EntityId;
+        set
+        {
+            if (value is null) return;
+            ScorecardDraft.EntityId = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    public void BtClearTrendMicroEntityClicked()
+    {
+        TrendMicroDraft.EntityId = null;
+        this.RaisePropertyChanged(nameof(TrendMicroEntityId));
+    }
+
+    public void BtClearScorecardEntityClicked()
+    {
+        ScorecardDraft.EntityId = null;
+        this.RaisePropertyChanged(nameof(ScorecardEntityId));
     }
 
     #region 4.1 CHANNEL METHODS
@@ -1967,6 +2040,7 @@ public class IntegrationsViewModel : ViewModelBase
         TrendMicroApiKey = "";
         TrendMicroApiKeyVault.Reset();
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
+        this.RaisePropertyChanged(nameof(TrendMicroEntityId));
         this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
     }
 
@@ -1993,6 +2067,7 @@ public class IntegrationsViewModel : ViewModelBase
         TrendMicroApiKeyVault.LoadFrom(connection.ApiKeyVaultReference);
 
         this.RaisePropertyChanged(nameof(TrendMicroDraft));
+        this.RaisePropertyChanged(nameof(TrendMicroEntityId));
         this.RaisePropertyChanged(nameof(SelectedTrendMicroRegion));
     }
 
@@ -2003,6 +2078,7 @@ public class IntegrationsViewModel : ViewModelBase
         ScorecardApiToken = "";
         ScorecardApiTokenVault.Reset();
         this.RaisePropertyChanged(nameof(ScorecardDraft));
+        this.RaisePropertyChanged(nameof(ScorecardEntityId));
         ScorecardHistory.Clear();
     }
 
@@ -2027,6 +2103,7 @@ public class IntegrationsViewModel : ViewModelBase
         ScorecardApiTokenVault.LoadFrom(connection.ApiTokenVaultReference);
 
         this.RaisePropertyChanged(nameof(ScorecardDraft));
+        this.RaisePropertyChanged(nameof(ScorecardEntityId));
     }
 
     private async Task SaveTrendMicroAsync()

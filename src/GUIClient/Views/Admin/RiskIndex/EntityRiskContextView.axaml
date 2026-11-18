@@ -1,0 +1,143 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:EntityRiskContextViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.EntityRiskContextView">
+
+    <!-- S40 §6.7 (T264): criticality, internet exposure and classification edited side by side, saved as one
+         all-or-nothing batch with a justification; the selected entity's history below. -->
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10">
+        <progRing:ProgressRing Grid.RowSpan="6" Width="80" Height="80" IsActive="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}" ZIndex="10"/>
+
+        <WrapPanel Grid.Row="0">
+            <TextBox Text="{Binding SearchText}" PlaceholderText="{Binding StrSearch}" MinWidth="220" Margin="0 0 8 4" MaxLength="200"/>
+            <TextBlock Classes="fieldLabel" Text="{Binding StrType}" VerticalAlignment="Center" Margin="0 0 4 0"/>
+            <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" MinWidth="180" Margin="0 0 8 4"/>
+            <CheckBox IsChecked="{Binding OnlyUndeclared}" Content="{Binding StrOnlyUndeclared}" Margin="0 0 8 4"/>
+            <Border Classes="tooltip" ToolTip.Tip="{Binding StrRefreshReason}">
+                <Button Classes="operation" Command="{Binding BtRefreshContextClicked}" IsEnabled="{Binding IsRefreshEnabled}">
+                    <material:MaterialIcon Kind="Reload"/>
+                </Button>
+            </Border>
+        </WrapPanel>
+
+        <TextBlock Grid.Row="1" Classes="notice" Text="{Binding StrReadOnly}" IsVisible="{Binding IsReadOnly}" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="2" Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
+
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" CanUserSortColumns="True"
+                  Margin="0 6 0 0">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Width="24">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:EntityRiskContextRowViewModel">
+                            <material:MaterialIcon Kind="CircleMedium" IsVisible="{Binding IsChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}" Binding="{Binding Name}" IsReadOnly="True" Width="2*"/>
+                <DataGridTextColumn Header="{Binding StrType, Mode=OneTime}" Binding="{Binding Type}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="{Binding StrParent, Mode=OneTime}" Binding="{Binding ParentName}" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="{Binding StrCriticality, Mode=OneTime}" Width="170">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:EntityRiskContextRowViewModel">
+                            <Panel>
+                                <ComboBox ItemsSource="{Binding CriticalityOptions}" SelectedItem="{Binding Criticality}"
+                                          IsVisible="{Binding ShowCriticality}" IsEnabled="{Binding SupportsCriticality}"
+                                          HorizontalAlignment="Stretch"/>
+                                <TextBlock Classes="hint" IsVisible="{Binding !ShowCriticality}" VerticalAlignment="Center"
+                                           Text="{Binding $parent[UserControl].((vm:EntityRiskContextViewModel)DataContext).StrNotApplicable}"/>
+                            </Panel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrOrigin, Mode=OneTime}" Binding="{Binding Origin}" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="{Binding StrInternet, Mode=OneTime}" Width="140">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:EntityRiskContextRowViewModel">
+                            <ComboBox ItemsSource="{Binding InternetOptions}" SelectedItem="{Binding InternetFacing}"
+                                      IsVisible="{Binding ShowInternetFacing}" IsEnabled="{Binding SupportsInternetFacing}"
+                                      HorizontalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{Binding StrClassification, Mode=OneTime}" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="vm:EntityRiskContextRowViewModel">
+                            <ComboBox ItemsSource="{Binding ClassificationOptions}" SelectedItem="{Binding Classification}"
+                                      IsVisible="{Binding ShowClassification}" IsEnabled="{Binding SupportsClassification}"
+                                      HorizontalAlignment="Stretch"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="{Binding StrLastChange, Mode=OneTime}" Binding="{Binding LastChange}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- The batch: changed rows, one justification, Save (all or nothing) and Discard; a new activity under a process. -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0 8 0 0">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Classes="hint" Text="{Binding ChangedSummary}"/>
+                <TextBlock Classes="fieldLabel" Text="{Binding StrJustification}"/>
+                <TextBox Text="{Binding Justification}" AcceptsReturn="True" MinHeight="50" TextWrapping="Wrap" MaxLength="2000"
+                         IsEnabled="{Binding CanEdit}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6" Margin="10 0 0 0" VerticalAlignment="Bottom">
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrSaveReason}">
+                    <Button Classes="dialog1" Command="{Binding BtSaveContextClicked}" IsEnabled="{Binding IsSaveEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSaveContext}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrDiscardReason}">
+                    <Button Classes="dialog2" Command="{Binding BtDiscardContextClicked}" IsEnabled="{Binding IsDiscardEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="Restore"/>
+                            <TextBlock Text="{Binding StrDiscard}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="5" ColumnDefinitions="2*,*" Margin="0 10 0 0">
+            <Expander Grid.Column="0" Header="{Binding StrHistory}">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="hint" Text="{Binding HistoryMessage}" TextWrapping="Wrap"/>
+                    <DataGrid ItemsSource="{Binding History}" IsReadOnly="True" MaxHeight="220">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding StrWhen, Mode=OneTime}" Binding="{Binding When}"/>
+                            <DataGridTextColumn Header="{Binding StrActor, Mode=OneTime}" Binding="{Binding Actor}"/>
+                            <DataGridTextColumn Header="{Binding StrProperty, Mode=OneTime}" Binding="{Binding Property}"/>
+                            <DataGridTextColumn Header="{Binding StrChange, Mode=OneTime}" Binding="{Binding Change}"/>
+                            <DataGridTextColumn Header="{Binding StrJustification, Mode=OneTime}" Binding="{Binding Justification}"
+                                                Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Expander>
+            <Border Grid.Column="1" Classes="formCard" Margin="10 0 0 0">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="sectionCaption" Text="{Binding StrNewActivity}"/>
+                    <TextBlock Classes="fieldLabel" Text="{Binding StrActivityName}"/>
+                    <TextBox Text="{Binding NewActivityName}" MaxLength="250"/>
+                    <Border Classes="tooltip" ToolTip.Tip="{Binding StrNewActivityReason}" HorizontalAlignment="Right">
+                        <Button Classes="operation" Command="{Binding BtNewActivityClicked}" IsEnabled="{Binding IsNewActivityEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <material:MaterialIcon Kind="Plus"/>
+                                <TextBlock Text="{Binding StrNewActivity}"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

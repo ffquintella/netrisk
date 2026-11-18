@@ -340,7 +340,10 @@ public class HeadlineFormatterTest
     private static readonly string[] ModulePrefixes =
     [
         "RiskOverview", "RiskState_", "RiskSeal_", "RiskChip_", "RiskProfile", "RiskApi_", "RiskProvenance_", "RiskMode_",
-        "RiskQuality", "NavRiskOverview", "RiskGovernance", "RiskVisibility", "RiskMonetary", "RiskTopRisks", "RiskSource_"
+        "RiskQuality", "NavRiskOverview", "RiskGovernance", "RiskVisibility", "RiskMonetary", "RiskTopRisks", "RiskSource_",
+        // The configuration screens (M55).
+        "RiskAdmin", "RiskIssue_", "RiskParam", "RiskPreset_", "RiskPreviewState_", "RiskRebaseline_", "RiskApprovalCheck_",
+        "RiskPublication_", "RiskSources", "RiskSourceAvailability_", "RiskContext", "AdminRiskIndex"
     ];
 
     [Fact]

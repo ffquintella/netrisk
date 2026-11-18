@@ -14,6 +14,16 @@ follow [SemVer](http://semver.org/).
 
 ### Added
 
+- Add a Risk index pane to the Administration window that holders of `risk_index_configure`, `risk_index_approve` or `entity_risk_context` open without the administrator flag, with six tabs each enabled, read-only or closed by permission and the administration panes not built for a non-administrator (T259, S40)
+- List every profile version with its status, effective dates, author, approver and committee reference, its detail and audit trail, and a parameter diff between any two versions (T259, S40)
+- Edit a draft profile group by group — category weights, quotas, factor ceilings, every S39 §12.2 parameter, presets and the bands with Portuguese and English labels — saved under `If-Match` with live validation by the server's own rules, the joint tail lock included, and every parameter labelled and explained in the three resource files (T260, S40)
+- Run the 90-day sensitivity preview and read its node deltas, band changes, Kendall τ, tornado, effective register weight, preset values and top movers, then submit with a justification once the server validates the draft and the preview matches it (T261, S40)
+- Approve or reject a submitted profile against the server's segregation-of-duties checks with the committee decision and its uploaded minutes, the Board reference when required and the explicit rebaseline confirmation, and show the last activation bridge, publish the index and suspend publication (T262, S40)
+- Edit enabled sources and freshness windows in the same draft as the parameters, with sources this version cannot read locked, and choose the default entity of each Vision One and SecurityScorecard connection (T263, S40)
+- Add `GET`/`PUT /Entities/RiskContext` and `GET /Entities/{id}/History`, editing criticality, internet exposure and classification under `entity_risk_context` with unrestricted scope in one all-or-nothing justified batch recorded in `entity_risk_context_notes` (schema 110) and joined to the audit trail (T264, S40)
+- Edit the entity risk context side by side in the Risk index pane, save it as one justified batch, read each entity's change history and add activities under a process (T264, S40)
+- Return the stored file id from an upload, so the committee's minutes can be linked to a profile (T262, S40)
+
 - Add a "Connect an agent" window to the Agents window that lists Claude Code, Claude Desktop, GitHub Copilot in VS Code and VS Code Insiders, and GitHub Copilot CLI with each one's configuration file and whether NetRisk is not registered, registered or registered but stale, and lets the user point at a configuration file of a client it did not find (T363, S55)
 - Register and unregister the NetRisk stdio bridge in each of those clients with one reviewed click, showing the exact diff first, changing only the `netrisk` entry, keeping a timestamped `.bak` beside the file, writing atomically and leaving a file that does not parse untouched (T364, S55)
 - Show ChatGPT in the same list as not configured automatically, with the steps and the bridge command to enter in the ChatGPT desktop app, from a client table where a new client is a new row (T365, S55)

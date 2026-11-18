@@ -22,6 +22,13 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
     public string AuditActor { get; set; } = SystemActor;
 
     /// <summary>
+    /// The <c>audit_logs.correlation_id</c> the governance trail stamps on the rows of this context's saves, instead of
+    /// a fresh one per save. Set by a caller that must name the save in a record of its own — the risk-context batch's
+    /// <c>batch_id</c> (S40 §8.5, T264). Null (the default): each save gets its own id. At most 64 characters are kept.
+    /// </summary>
+    public string? AuditCorrelationId { get; set; }
+
+    /// <summary>
     /// Raised after a save that created, deleted or re-parented an <see cref="Entity"/> (T292). The DAL service
     /// points it at the host's entity-tree cache, because what an entity claim grants is that entity's subtree:
     /// a change of parent must move access on the next request, not after a new login.

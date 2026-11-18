@@ -9,7 +9,7 @@ using Xunit;
 namespace GUIClient.Tests.Views;
 
 /// <summary>
-/// The administration window navigates by icon alone — ten Material icons in the top-right corner and
+/// The administration window navigates by icon alone — eleven Material icons in the top-right corner and
 /// no labels — so the hover hint is the only thing that says what an icon opens. Two ways that breaks:
 /// a tenth icon lands without a <c>ToolTip.Tip</c> at all, or a hint is bound to the section's own
 /// one-word label ("Deduplication") which names the tab rather than telling the operator that the SLA
@@ -47,8 +47,8 @@ public class AdminNavigationHintsTests
         var icons = NavigationIcons();
 
         // A sanity floor: if the regex stops matching the markup the rest of the test would pass
-        // vacuously.
-        Assert.Equal(10, icons.Count);
+        // vacuously. Eleven since M55 added the Risk index entry (S40 §6.0).
+        Assert.Equal(11, icons.Count);
 
         var unhinted = icons.Where(icon => icon.Tip is null).Select(icon => icon.Button).ToList();
 

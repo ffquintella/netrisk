@@ -971,6 +971,28 @@
                                 <CheckBox IsChecked="{Binding TrendMicroDraft.Enabled}">
                                     <TextBlock Text="{Binding StrEnabled}"/>
                                 </CheckBox>
+                                <!-- T263 (S40 §6.6, §6.9): hosts and objects no mapping rule claims are filed under this
+                                     entity, which decides who sees them. -->
+                                <TextBlock Text="{Binding StrConnectionEntity}" Classes="fieldLabel" Margin="0 12 0 0"/>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding ConnectionEntities}" MinWidth="260"
+                                              SelectedValue="{Binding TrendMicroEntityId}"
+                                              SelectedValueBinding="{Binding Id}"
+                                              PlaceholderText="{Binding StrNoConnectionEntity}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="entities:Entity">
+                                                <TextBlock Text="{Binding DisplayName}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Border Grid.Column="1" Classes="tooltip" ToolTip.Tip="{Binding StrClearConnectionEntity}"
+                                            Margin="6 0 0 0">
+                                        <Button Classes="subButton" Command="{Binding BtClearTrendMicroEntityClicked}">
+                                            <material:MaterialIcon Kind="Close"/>
+                                        </Button>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="{Binding StrConnectionEntityHint}" Classes="hint" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
@@ -1083,6 +1105,28 @@
                                 <CheckBox IsChecked="{Binding ScorecardDraft.Enabled}">
                                     <TextBlock Text="{Binding StrEnabled}"/>
                                 </CheckBox>
+                                <!-- T263 (S40 §6.6, §6.9): hosts and objects no mapping rule claims are filed under this
+                                     entity, which decides who sees them. -->
+                                <TextBlock Text="{Binding StrConnectionEntity}" Classes="fieldLabel" Margin="0 12 0 0"/>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding ConnectionEntities}" MinWidth="260"
+                                              SelectedValue="{Binding ScorecardEntityId}"
+                                              SelectedValueBinding="{Binding Id}"
+                                              PlaceholderText="{Binding StrNoConnectionEntity}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="entities:Entity">
+                                                <TextBlock Text="{Binding DisplayName}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Border Grid.Column="1" Classes="tooltip" ToolTip.Tip="{Binding StrClearConnectionEntity}"
+                                            Margin="6 0 0 0">
+                                        <Button Classes="subButton" Command="{Binding BtClearScorecardEntityClicked}">
+                                            <material:MaterialIcon Kind="Close"/>
+                                        </Button>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="{Binding StrConnectionEntityHint}" Classes="hint" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 

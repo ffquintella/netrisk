@@ -2033,6 +2033,54 @@ namespace DAL.Migrations
                     b.ToTable("entities", (string)null);
                 });
 
+            modelBuilder.Entity("DAL.Entities.EntityRiskContextNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)")
+                        .HasColumnName("batch_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Justification")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("justification");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "BatchId" }, "idx_entity_risk_context_notes_batch_id");
+
+                    b.HasIndex(new[] { "CreatedById" }, "idx_entity_risk_context_notes_created_by_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_entity_risk_context_notes_entity_id");
+
+                    b.ToTable("entity_risk_context_notes", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
             modelBuilder.Entity("DAL.Entities.EntityRiskReviewer", b =>
                 {
                     b.Property<int>("Id")
@@ -13453,6 +13501,26 @@ namespace DAL.Migrations
                         .HasConstraintName("fk_parent");
 
                     b.Navigation("ParentNavigation");
+                });
+
+            modelBuilder.Entity("DAL.Entities.EntityRiskContextNote", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_entity_risk_context_notes_created_by_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_entity_risk_context_notes_entity_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("DAL.Entities.EntityRiskReviewer", b =>

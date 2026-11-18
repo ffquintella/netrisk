@@ -24,6 +24,9 @@ public sealed class RecordedRequest
     public string Query { get; init; } = "";
     public string Body { get; init; } = "";
 
+    /// <summary>The request's headers (content headers included), for a test that pins one such as <c>If-Match</c>.</summary>
+    public IReadOnlyDictionary<string, string> Headers { get; init; } = new Dictionary<string, string>();
+
     public override string ToString() => $"{Method} {Path}{Query}";
 }
 
@@ -226,7 +229,10 @@ public sealed class StubRestBackend : IRestService, IDisposable
                 Method = request.Method.Method,
                 Path = uri.AbsolutePath,
                 Query = uri.Query,
-                Body = body
+                Body = body,
+                Headers = request.Headers.Concat(request.Content?.Headers ?? Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
+                    .GroupBy(h => h.Key, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => string.Join(",", g.SelectMany(h => h.Value)), StringComparer.OrdinalIgnoreCase)
             });
 
             var route = backend.Resolve(uri.AbsolutePath, request.Method.Method);

@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using DAL.Entities;
@@ -370,6 +374,135 @@ public class EntitiesRestService(
             }
             Logger.Error("Error creating updating message: {Message}", ex.Message);
             throw new RestComunicationException("Error updating entities", ex);
+        }
+    }
+
+    // --- risk context (S40 §6.7, §8.5; T264) ------------------------------------------------------------------------
+    // Through the error-reporting client, never the reliable one: a refusal carries the stable code the screen translates,
+    // and the batch is a write that must not be retried.
+
+    /// <summary>The API's MVC defaults: camelCase names, case-insensitive reads.</summary>
+    private static readonly JsonSerializerOptions RiskContextJson = new(JsonSerializerDefaults.Web);
+
+    public async Task<IReadOnlyList<EntityRiskContextRowDto>> GetRiskContextAsync(IEnumerable<string>? types = null,
+        CancellationToken ct = default)
+    {
+        var request = new RestRequest("/Entities/RiskContext") { Method = Method.Get };
+        var list = types?.Where(t => !string.IsNullOrWhiteSpace(t)).Select(t => t.Trim()).ToList();
+        if (list is { Count: > 0 }) request.AddQueryParameter("types", string.Join(",", list));
+
+        return ReadRiskContext<List<EntityRiskContextRowDto>>(await ExecuteRiskContextAsync(request, ct));
+    }
+
+    public async Task<EntityRiskContextBatchResultDto> SaveRiskContextAsync(EntityRiskContextBatchRequest request,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var put = new RestRequest("/Entities/RiskContext") { Method = Method.Put };
+        put.AddStringBody(JsonSerializer.Serialize(request, RiskContextJson), ContentType.Json);
+
+        var result = ReadRiskContext<EntityRiskContextBatchResultDto>(await ExecuteRiskContextAsync(put, ct));
+
+        // The cached entities still hold the values the batch just replaced.
+        if (result.UpdatedEntities > 0) ClearCache();
+        return result;
+    }
+
+    public async Task<IReadOnlyList<EntityHistoryEntryDto>> GetHistoryAsync(int entityId, int limit = 200,
+        CancellationToken ct = default)
+    {
+        var request = new RestRequest($"/Entities/{entityId.ToString(CultureInfo.InvariantCulture)}/History")
+            { Method = Method.Get };
+        request.AddQueryParameter("limit", limit.ToString(CultureInfo.InvariantCulture));
+
+        return ReadRiskContext<List<EntityHistoryEntryDto>>(await ExecuteRiskContextAsync(request, ct));
+    }
+
+    /// <summary>One exchange; a transport failure is a communication error, a non-2xx a <see cref="InvalidHttpRequestException"/>.</summary>
+    private async Task<RestResponse> ExecuteRiskContextAsync(RestRequest request, CancellationToken ct)
+    {
+        var route = request.Resource;
+        var method = request.Method.ToString().ToUpperInvariant();
+        using var client = RestService.GetClient(reportErrorResponses: true);
+
+        RestResponse response;
+        try
+        {
+            response = await client.ExecuteAsync(request, ct);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error calling {Method} {Route}: {Message}", method, route, ex.Message);
+            throw new RestComunicationException($"Error calling {route}", ex);
+        }
+
+        if (response.StatusCode == 0)
+        {
+            Logger.Error("{Method} {Route} did not reach the server: {Message}", method, route, response.ErrorMessage);
+            throw new RestComunicationException($"Error calling {route}",
+                response.ErrorException ?? new HttpRequestException(response.ErrorMessage));
+        }
+
+        if (response.IsSuccessStatusCode) return response;
+
+        // 401: the session is gone; the next call must sign in again rather than resend a dead token.
+        if (response.StatusCode == HttpStatusCode.Unauthorized) authenticationService.DiscardAuthenticationToken();
+
+        var (code, message) = ReadRefusal(response.Content);
+        Logger.Warning("{Method} {Route} refused with {Status} {Code}", method, route, (int)response.StatusCode, code ?? "-");
+        throw new InvalidHttpRequestException(string.IsNullOrWhiteSpace(message) ? $"Error calling {route}" : message,
+            route, method) { StatusCode = response.StatusCode, ErrorCode = code };
+    }
+
+    private static T ReadRiskContext<T>(RestResponse response) where T : class
+    {
+        var route = response.Request?.Resource ?? "";
+        var method = response.Request?.Method.ToString().ToUpperInvariant() ?? "GET";
+        if (string.IsNullOrWhiteSpace(response.Content))
+            throw new InvalidHttpRequestException("The server answered with an empty body.", route, method)
+                { StatusCode = response.StatusCode };
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(response.Content, RiskContextJson)
+                   ?? throw new InvalidHttpRequestException("The server answered with an unreadable body.", route, method)
+                       { StatusCode = response.StatusCode };
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidHttpRequestException($"The server answered {route} with an unreadable body: {ex.Message}",
+                route, method) { StatusCode = response.StatusCode };
+        }
+    }
+
+    /// <summary>The <c>{ error, message }</c> of a refusal; both null when the body is empty or not that shape.</summary>
+    private static (string? Code, string? Message) ReadRefusal(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return (null, null);
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            if (document.RootElement.ValueKind != JsonValueKind.Object) return (null, null);
+            return (Text(document.RootElement, "error"), Text(document.RootElement, "message"));
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
+
+        static string? Text(JsonElement root, string name)
+        {
+            foreach (var property in root.EnumerateObject())
+            {
+                if (!string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase)) continue;
+                return property.Value.ValueKind == JsonValueKind.String &&
+                       !string.IsNullOrWhiteSpace(property.Value.GetString())
+                    ? property.Value.GetString()
+                    : null;
+            }
+
+            return null;
         }
     }
 }

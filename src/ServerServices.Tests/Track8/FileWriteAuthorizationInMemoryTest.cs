@@ -354,6 +354,23 @@ public class FileWriteAuthorizationInMemoryTest : InMemoryServiceTestBase
         Assert.Empty(db.NrFiles);
     }
 
+    /// <summary>
+    /// T262 (S40 §8.4): the committee's minutes are linked to a profile by file id, so the upload answers with the stored
+    /// row's id. A parentless upload is accepted and attached later by the profile route.
+    /// </summary>
+    [Fact]
+    public void TestCreateReturnsTheStoredRowsIdForAParentlessUpload()
+    {
+        SeedWorld();
+
+        var listing = Files().Create(Upload(), Alice);
+
+        using var db = OpenContext();
+        var stored = db.NrFiles.Single(f => f.UniqueName == listing.UniqueName);
+        Assert.Equal(stored.Id, listing.Id);
+        Assert.Null(stored.RiskIndexProfileId);
+    }
+
     [Fact]
     public void TestCreateReturnsTheNameOfAKnownFileType()
     {

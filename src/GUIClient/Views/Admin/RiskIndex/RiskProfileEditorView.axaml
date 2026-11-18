@@ -1,0 +1,234 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:RiskProfileEditorViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.RiskProfileEditorView">
+
+    <!-- S40 §6.2 (T260), IX-5 D form pane: inline editing, Save + Discard, live validation by the server's own rules. -->
+    <Grid Margin="10">
+        <TextBlock Classes="notice" Text="{Binding StrNoDraft}" IsVisible="{Binding !HasDraft}" TextWrapping="Wrap"/>
+
+        <Grid RowDefinitions="Auto,Auto,*,Auto" IsVisible="{Binding HasDraft}">
+            <!-- Header: version, status, author; the draft's name. -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Classes="header3" Text="{Binding Header}" VerticalAlignment="Center"
+                           TextWrapping="Wrap"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="fieldLabel" Text="{Binding StrName}" VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding DraftName}" MinWidth="260" MaxLength="200" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Summary of the validation (live, or the server's after Validate). -->
+            <Border Grid.Row="1" Classes="formCard" Margin="0 8 0 0">
+                <StackPanel Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <material:MaterialIcon Kind="CheckCircleOutline" IsVisible="{Binding IsSummaryValid}"/>
+                        <material:MaterialIcon Kind="AlertCircleOutline" IsVisible="{Binding !IsSummaryValid}"/>
+                        <TextBlock Text="{Binding SummaryHeadline}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding SummaryErrors}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <TextBlock Classes="warning" Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding SummaryWarnings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <TextBlock Classes="hint" Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="2" ColumnDefinitions="220,*" Margin="0 8 0 0">
+                <!-- Groups, each with its change mark. -->
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Classes="sectionCaption" Text="{Binding StrGroups}"/>
+                    <ListBox ItemsSource="{Binding Groups}" SelectedItem="{Binding SelectedGroup}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RiskParameterGroupItem">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding Label}"/>
+                                    <material:MaterialIcon Kind="CircleMedium" IsVisible="{Binding IsChanged}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+
+                <ScrollViewer Grid.Column="1" Margin="10 0 0 0">
+                    <StackPanel Spacing="8">
+                        <!-- Starting preset (S39 §12.3): replaces the parameters; marks a rebaseline when one is active. -->
+                        <Border Classes="formCard">
+                            <WrapPanel>
+                                <TextBlock Classes="fieldLabel" Text="{Binding StrPreset}" VerticalAlignment="Center" Margin="0 0 8 0"/>
+                                <ComboBox ItemsSource="{Binding PresetOptions}" SelectedItem="{Binding SelectedPreset}"
+                                          MinWidth="220" Margin="0 0 8 0"/>
+                                <Border Classes="tooltip" ToolTip.Tip="{Binding StrApplyPresetReason}">
+                                    <Button Classes="type2" Command="{Binding BtApplyPresetClicked}"
+                                            IsEnabled="{Binding IsApplyPresetEnabled}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <material:MaterialIcon Kind="AutoFix"/>
+                                            <TextBlock Text="{Binding StrApplyPreset}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </WrapPanel>
+                        </Border>
+
+                        <!-- The group's cross-field issues: Σω, quota sums, whole anchor tables, the bands. -->
+                        <ItemsControl ItemsSource="{Binding GroupIssues}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <TextBlock Classes="warning" Text="{Binding}" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- The joint tail lock τ·τ_G·L_top ≥ L_2, live, in groups 2 and 7 (S39 §12.4). -->
+                        <TextBlock Classes="notice" Text="{Binding TailLock}" IsVisible="{Binding ShowTailLock}"
+                                   TextWrapping="Wrap"/>
+
+                        <!-- Parameter rows. -->
+                        <Grid ColumnDefinitions="3*,*,2*,*,*" IsVisible="{Binding !IsBandsGroup}">
+                            <TextBlock Grid.Column="0" Classes="fieldLabel" Text="{Binding StrParameter}"/>
+                            <TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrActive}"/>
+                            <TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrDraft}"/>
+                            <TextBlock Grid.Column="3" Classes="fieldLabel" Text="{Binding StrDelta}"/>
+                            <TextBlock Grid.Column="4" Classes="fieldLabel" Text="{Binding StrRange}"/>
+                        </Grid>
+                        <ItemsControl ItemsSource="{Binding Rows}" IsVisible="{Binding !IsBandsGroup}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RiskParameterRowViewModel">
+                                    <Grid ColumnDefinitions="3*,*,2*,*,*" RowDefinitions="Auto,Auto" Margin="0 3">
+                                        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Spacing="4"
+                                                    ToolTip.Tip="{Binding Help}">
+                                            <material:MaterialIcon Kind="LockOutline" IsVisible="{Binding IsLocked}"
+                                                                   ToolTip.Tip="{Binding LockedReason}"/>
+                                            <TextBlock Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding ActiveValue}"
+                                                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <Panel Grid.Column="2" Grid.Row="0">
+                                            <NumericUpDown Value="{Binding Number}" Minimum="{Binding Minimum}"
+                                                           Maximum="{Binding Maximum}" Increment="{Binding Increment}"
+                                                           FormatString="{Binding FormatString}" IsVisible="{Binding IsNumber}"
+                                                           IsEnabled="{Binding IsEditable}" MinWidth="140"/>
+                                            <CheckBox IsChecked="{Binding Flag}" IsVisible="{Binding IsBoolean}"
+                                                      IsEnabled="{Binding IsEditable}"/>
+                                            <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding Choice}"
+                                                      IsVisible="{Binding IsChoice}" IsEnabled="{Binding IsEditable}" MinWidth="160"/>
+                                            <TextBox Text="{Binding Text}" IsVisible="{Binding IsList}"
+                                                     IsEnabled="{Binding IsEditable}" MaxLength="2000"/>
+                                        </Panel>
+                                        <TextBlock Grid.Column="3" Grid.Row="0" Text="{Binding Delta}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Grid.Row="0" Classes="hint" Text="{Binding Range}"
+                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1">
+                                            <TextBlock Classes="warning" Text="{Binding Issues}" IsVisible="{Binding HasIssues}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Classes="warning" Text="{Binding ParseError}"
+                                                       IsVisible="{Binding HasParseError}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Bands (group 7): 2 to 5, both labels, contiguous lower bounds; the Board approves a change. -->
+                        <Border Classes="formCard" IsVisible="{Binding IsBandsGroup}">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="sectionCaption" Text="{Binding StrBands}"/>
+                                <Grid ColumnDefinitions="*,*,120">
+                                    <TextBlock Grid.Column="0" Classes="fieldLabel" Text="{Binding StrBandLabelPt}"/>
+                                    <TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrBandLabelEn}"/>
+                                    <TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrBandLower}"/>
+                                </Grid>
+                                <ListBox ItemsSource="{Binding Bands}" SelectedItem="{Binding SelectedBand}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:RiskBandRowViewModel">
+                                            <Grid ColumnDefinitions="*,*,120">
+                                                <TextBox Grid.Column="0" Text="{Binding LabelPtBr}" MaxLength="60" Margin="0 0 6 0"
+                                                         IsEnabled="{Binding $parent[UserControl].((vm:RiskProfileEditorViewModel)DataContext).IsBandEditable}"/>
+                                                <TextBox Grid.Column="1" Text="{Binding LabelEnUs}" MaxLength="60" Margin="0 0 6 0"
+                                                         IsEnabled="{Binding $parent[UserControl].((vm:RiskProfileEditorViewModel)DataContext).IsBandEditable}"/>
+                                                <NumericUpDown Grid.Column="2" Value="{Binding Lower}" Minimum="0" Maximum="95"
+                                                               Increment="1" FormatString="0"
+                                                               IsEnabled="{Binding $parent[UserControl].((vm:RiskProfileEditorViewModel)DataContext).IsBandEditable}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Classes="subButton" Command="{Binding BtAddBandClicked}" IsEnabled="{Binding IsBandEditable}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <material:MaterialIcon Kind="Plus"/>
+                                            <TextBlock Text="{Binding StrAddBand}"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="subButton" Command="{Binding BtRemoveBandClicked}" IsEnabled="{Binding IsBandEditable}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <material:MaterialIcon Kind="Minus"/>
+                                            <TextBlock Text="{Binding StrRemoveBand}"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Classes="type2" Command="{Binding BtRegisterBandsClicked}" IsEnabled="{Binding IsBandEditable}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <material:MaterialIcon Kind="FormatListNumbered"/>
+                                            <TextBlock Text="{Binding StrRegisterBands}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Commands (S40 §6.2.1). -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0 10 0 0">
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrSaveReason}">
+                    <Button Classes="dialog1" Command="{Binding BtSaveDraftClicked}" IsEnabled="{Binding IsSaveEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSaveDraft}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrResetReason}">
+                    <Button Classes="dialog2" Command="{Binding BtResetClicked}" IsEnabled="{Binding IsResetEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="Restore"/>
+                            <TextBlock Text="{Binding StrReset}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrValidateReason}">
+                    <Button Classes="type3" Command="{Binding BtValidateClicked}" IsEnabled="{Binding IsValidateEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="CheckAll"/>
+                            <TextBlock Text="{Binding StrValidate}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrGoToPreviewReason}">
+                    <Button Classes="type2" Command="{Binding BtGoToPreviewClicked}" IsEnabled="{Binding IsGoToPreviewEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="ArrowRight"/>
+                            <TextBlock Text="{Binding StrGoToPreview}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

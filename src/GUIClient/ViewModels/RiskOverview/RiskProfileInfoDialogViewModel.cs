@@ -168,7 +168,7 @@ public class RiskProfileInfoDialogViewModel
 
                 // Diffing a profile with itself lists every parameter with its value, flattened the server's way.
                 var all = await RiskIndexService.GetProfileDiffAsync(profile.Id, profile.Id, cancellationToken);
-                Replace(Parameters, all.Changes.Select(c => new RiskProfileParameterRow(c.Group, c.Key, c.ValueA ?? "—", null)));
+                Replace(Parameters, all.Changes.Select(c => Row(c, c.ValueA ?? "—", null)));
 
                 var versions = await RiskIndexService.GetProfilesAsync(cancellationToken);
                 Replace(OtherVersions, versions.Where(v => v.Id != profile.Id).OrderByDescending(v => v.Version)
@@ -199,8 +199,7 @@ public class RiskProfileInfoDialogViewModel
 
             DiffTitle = string.Format(CultureInfo.CurrentCulture, Localizer["RiskProfileDiffFMT"], item.Summary.Version,
                 _profile.Version);
-            Replace(Differences, diff.Changes.Where(c => c.Changed)
-                .Select(c => new RiskProfileParameterRow(c.Group, c.Key, c.ValueA ?? "—", c.ValueB ?? "—")));
+            Replace(Differences, diff.Changes.Where(c => c.Changed).Select(c => Row(c, c.ValueA ?? "—", c.ValueB ?? "—")));
             HasNoDifferences = Differences.Count == 0;
         }
         catch (Exception ex)
@@ -217,6 +216,11 @@ public class RiskProfileInfoDialogViewModel
         DataNotFoundException => ExplainError(ex),
         _ => StrLoadError
     };
+
+    /// <summary>A parameter row with its group and parameter labelled (M55's <c>RiskParam_*</c> resources), the key as fallback.</summary>
+    private static RiskProfileParameterRow Row(RiskIndexParameterChangeDto change, string value, string? other) =>
+        new(RiskHeadlineViewModel.Text(ProfileParameterRows.GroupLabelKey(change.Group)) ?? change.Group,
+            ProfileIssueText.Label(change.Key, RiskHeadlineViewModel.Text) ?? change.Key, value, other);
 
     private static string Dash(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
 

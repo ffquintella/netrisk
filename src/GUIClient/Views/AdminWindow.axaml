@@ -6,6 +6,7 @@
         xmlns:views="clr-namespace:GUIClient.Views"
         xmlns:viewModels="clr-namespace:GUIClient.ViewModels"
         xmlns:admin="clr-namespace:GUIClient.Views.Admin"
+        xmlns:riskIndex="clr-namespace:GUIClient.Views.Admin.RiskIndex"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         xmlns:dvm="clr-namespace:GUIClient.ViewModels" x:DataType="dvm:AdminViewModel" x:Class="GUIClient.Views.AdminWindow"
         Title="{Binding StrTitle}"
@@ -21,6 +22,9 @@
         <!-- NAVIGATION BAR -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <!-- S40 §6.0: the window also opens for the risk index's second line and approvers, who are not
+                     administrators; the administration panes stay administrator-only and are not even built for them. -->
+                <StackPanel Orientation="Horizontal" IsEnabled="{Binding IsAdmin}">
                 <Border ToolTip.Tip="{Binding StrUsersHint}" Classes="tooltip">
                     <Button Classes="navigation" Margin=" 0 5 5 0"
                             IsEnabled="{Binding !UsersIsVisible}"
@@ -91,6 +95,15 @@
                         <avalonia:MaterialIcon Kind="ToyBrick"  />
                     </Button>
                 </Border>
+                </StackPanel>
+                <Border ToolTip.Tip="{Binding StrRiskIndexHint}" Classes="tooltip">
+                    <Button Classes="navigation" Margin=" 0 5 10 0"
+                            IsVisible="{Binding IsRiskIndexPermitted}"
+                            IsEnabled="{Binding !RiskIndexIsVisible}"
+                            Command="{Binding BtRiskIndexClicked}">
+                        <avalonia:MaterialIcon Kind="TuneVariant"  />
+                    </Button>
+                </Border>
             </StackPanel>
         </Grid>
         <!-- CONTENT -->
@@ -123,6 +136,9 @@
         <admin:PluginsView Grid.Row="2" Margin="10"
                                  DataContext="{Binding PluginsVM}"
                                  IsVisible="{Binding #AdmWin.DataContext.PluginsIsVisible}" />
+        <riskIndex:RiskIndexAdminView Grid.Row="2" Margin="10"
+                                      DataContext="{Binding RiskIndexVM}"
+                                      IsVisible="{Binding #AdmWin.DataContext.RiskIndexIsVisible}" />
         <!-- FOOTER -->
         <Separator Grid.Row="3" Margin="10,4"/>
     </Grid>

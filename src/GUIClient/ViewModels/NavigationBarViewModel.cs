@@ -178,6 +178,18 @@ public class NavigationBarViewModel: ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _hasRiskIndexViewPermission, value);
     }
 
+    private bool _canOpenAdministration;
+
+    /// <summary>
+    /// The Administration button (S40 §6.0): an administrator, or a holder of <c>risk_index_configure</c>,
+    /// <c>risk_index_approve</c> or <c>entity_risk_context</c>, who reaches only the Risk index pane.
+    /// </summary>
+    public bool CanOpenAdministration
+    {
+        get => _isEnabled && _canOpenAdministration;
+        set => this.RaiseAndSetIfChanged(ref _canOpenAdministration, value);
+    }
+
     /// <summary>The Vulnerabilities button: <see cref="ModuleAccess"/>, as the record navigation reads it (S40 §10.3).</summary>
     public Boolean HasVulnerabilitiesPermission
     {
@@ -326,6 +338,9 @@ public class NavigationBarViewModel: ViewModelBase
             HasVulnerabilitiesPermission = ModuleAccess.CanOpen(AvaliableViews.Vulnerabilities, user);
             HasIncidentsPermission = ModuleAccess.CanOpen(AvaliableViews.Incidents, user);
             HasRiskIndexViewPermission = ModuleAccess.CanOpen(AvaliableViews.RiskOverview, user);
+            CanOpenAdministration = user.IsAdmin ||
+                GUIClient.Tools.RiskIndex.RiskIndexAdminAccess.CanOpenAdministration(
+                    GUIClient.Tools.RiskIndex.RiskIndexAdminRights.From(user));
             if (user.UserPermissions!.Contains("reports") || IsAdmin) HasReportsPermission = true;
         }
         catch (Exception ex)

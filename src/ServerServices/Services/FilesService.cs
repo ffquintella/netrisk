@@ -347,6 +347,7 @@ public class FilesService: ServiceBase, IFilesService
 
             var fileListing = new FileListing()
             {
+                Id = newFileObj.Id,
                 Name = newFileObj.Name,
                 UniqueName = newFileObj.UniqueName,
                 OwnerId = newFileObj.User,

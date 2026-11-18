@@ -41,6 +41,12 @@ public class FileListing
 
     }*/
     
+    /// <summary>
+    /// The stored row's id, filled by the upload (null on the listing routes). The committee minutes are linked to a profile
+    /// by id (<c>POST /RiskIndex/Profiles/{id}/Attachments</c>, S40 §8.4), so the uploader needs it back (T262).
+    /// </summary>
+    public int? Id { get; set; }
+
     public string Name { get; set; } = "";
     public string UniqueName { get; set; } = "";
     public string? Type { get; set; } = "";

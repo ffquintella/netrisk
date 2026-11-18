@@ -1,5 +1,7 @@
 using ClientServices.Interfaces;
+using GUIClient.Tools.RiskIndex;
 using GUIClient.ViewModels.Admin;
+using GUIClient.ViewModels.Admin.RiskIndex;
 using ReactiveUI;
 
 namespace GUIClient.ViewModels;
@@ -38,38 +40,59 @@ public class AdminViewModel: ViewModelBase
     public string StrIntegrationsHint { get; } = Localizer["AdminIntegrationsHintMSG"];
     public string StrGovernanceHint { get; } = Localizer["AdminGovernanceHintMSG"];
     public string StrPluginsHint { get; } = Localizer["AdminPluginsHintMSG"];
+    public string StrRiskIndexHint { get; } = Localizer["AdminRiskIndexHintMSG"];
 
     #endregion
 
     #region PROPERTIES
 
-    public UsersViewModel UsersVM { get; set; }
-    public DeviceViewModel DeviceVM { get; set; }
+    /// <summary>
+    /// Whether the signed-in user is an administrator. The window also opens for the risk index's second line and approvers
+    /// (S40 §6.0): the administration panes are then neither built nor initialized, so none of them fires a 403.
+    /// </summary>
+    public bool IsAdmin { get; }
+
+    /// <summary>The Risk index entry: an administrator or a holder of any of the index's configuration permissions.</summary>
+    public bool IsRiskIndexPermitted { get; }
+
+    public UsersViewModel? UsersVM { get; set; }
+    public DeviceViewModel? DeviceVM { get; set; }
     
-    public ConfigurationViewModel ConfigurationVM { get; set; }= new ConfigurationViewModel();
+    public ConfigurationViewModel? ConfigurationVM { get; set; }
     
     public PluginsViewModel? PluginsVM { get; set; }
 
-    public IrpTemplatesViewModel IrpTemplatesVM { get; set; }
+    public IrpTemplatesViewModel? IrpTemplatesVM { get; set; }
 
-    public EntityAccessViewModel EntityAccessVM { get; set; }
+    public EntityAccessViewModel? EntityAccessVM { get; set; }
 
     /// <summary>
     /// Track 3 (ASPM) administration: deduplication heuristics, SLA policy, risk acceptances and CI
     /// API tokens.
     /// </summary>
-    public FindingsAdminViewModel FindingsAdminVM { get; set; }
+    public FindingsAdminViewModel? FindingsAdminVM { get; set; }
 
-    public ApiTokensViewModel ApiTokensVM { get; set; }
+    public ApiTokensViewModel? ApiTokensVM { get; set; }
 
     /// <summary>Track 8 governance administration: appetite, intake triage, reviewers, violations.</summary>
-    public GovernanceAdminViewModel GovernanceVM { get; set; }
+    public GovernanceAdminViewModel? GovernanceVM { get; set; }
 
     /// <summary>
     /// Track 4 administration: notification channels and subscriptions, issue trackers, identity
     /// providers and SCIM, and the Vision One and SecurityScorecard connections.
     /// </summary>
-    public IntegrationsViewModel IntegrationsVM { get; set; }
+    public IntegrationsViewModel? IntegrationsVM { get; set; }
+
+    /// <summary>Track 10 M55 (S40 §6.0): profiles, draft, preview, approval, sources and entity risk context.</summary>
+    public RiskIndexAdminViewModel? RiskIndexVM { get; }
+
+    private bool _riskIndexIsVisible;
+
+    public bool RiskIndexIsVisible
+    {
+        get => _riskIndexIsVisible;
+        set => this.RaiseAndSetIfChanged(ref _riskIndexIsVisible, value);
+    }
     
     private bool _usersIsVisible = true;
     public bool UsersIsVisible
@@ -152,6 +175,23 @@ public class AdminViewModel: ViewModelBase
     
     public AdminViewModel()
     {
+        var user = AuthenticationService.AuthenticatedUserInfo;
+        var rights = RiskIndexAdminRights.From(user);
+        IsAdmin = user?.IsAdmin == true || rights.IsAdmin;
+        IsRiskIndexPermitted = rights.CanOpenRiskIndex;
+        if (IsRiskIndexPermitted) RiskIndexVM = new RiskIndexAdminViewModel(rights);
+
+        if (!IsAdmin)
+        {
+            // The first pane a non-administrator may open (S40 §6.0 "Painel inicial").
+            UsersIsVisible = false;
+            RiskIndexIsVisible = IsRiskIndexPermitted;
+            if (RiskIndexVM is not null) _ = RiskIndexVM.InitializeAsync();
+            return;
+        }
+
+        ConfigurationVM = new ConfigurationViewModel();
+
         UsersVM = new UsersViewModel();
         _ = UsersVM.Initialize();
         
@@ -194,6 +234,7 @@ public class AdminViewModel: ViewModelBase
         ApiTokensIsVisible = false;
         IntegrationsIsVisible = false;
         GovernanceIsVisible = false;
+        RiskIndexIsVisible = false;
     }
     
     public void BtUsersClicked()
@@ -253,6 +294,14 @@ public class AdminViewModel: ViewModelBase
     {
         DisableButtons();
         GovernanceIsVisible = true;
+    }
+
+    public void BtRiskIndexClicked()
+    {
+        if (RiskIndexVM is null) return;
+        DisableButtons();
+        RiskIndexIsVisible = true;
+        _ = RiskIndexVM.InitializeAsync();
     }
     #endregion
 

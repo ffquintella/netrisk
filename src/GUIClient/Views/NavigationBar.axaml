@@ -160,7 +160,7 @@
                     </MultiBinding>
                 </ToolTip.Tip>
                 <Button Name="BtnAdministration" Classes="nav-base nav-icon"
-                        IsEnabled="{Binding IsAdmin}"
+                        IsEnabled="{Binding CanOpenAdministration}"
                         Command="{Binding BtAdministrationClicked}">
                     <material:MaterialIcon Kind="Cog" Width="20" Height="20"/>
                 </Button>

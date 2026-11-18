@@ -128,4 +128,30 @@ public interface IEntitiesService
     /// <param name="id"></param>
     /// <returns></returns>
     public Entity DeleteEntity(int id);
+
+    /// <summary>
+    /// The Risk context tab's rows (S40 §6.7, §8.5): every entity of <paramref name="types"/> (default
+    /// <see cref="EntityRiskContextRules.DefaultTypes"/>; names the configuration does not define are ignored), what its
+    /// definition supports, its three values and the newest audit row of them. Unscoped, like <c>GET /Entities</c>.
+    /// </summary>
+    public Task<List<EntityRiskContextRowDto>> GetRiskContextAsync(IReadOnlyCollection<string>? types = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Applies a risk-context batch (S40 §6.7, §8.5) all or nothing: the policy first (<c>RiskContextWritePolicy</c>),
+    /// then every line validated, then one save that writes the changed properties, one note per changed entity and
+    /// audit rows whose correlation id is the returned batch id. Entities whose context does not change are not written.
+    /// </summary>
+    /// <exception cref="Model.Exceptions.EntityWriteRefusedException">Refused; carries the code, status and the row's entity.</exception>
+    public Task<EntityRiskContextBatchResultDto> SaveRiskContextAsync(EntityRiskContextBatchRequest request, int userId,
+        bool holdsRiskContextPermission, CancellationToken ct = default);
+
+    /// <summary>
+    /// The change history of one entity and its audited properties, newest first, with each risk-context batch's
+    /// justification (S40 §8.5). Access is checked before the trail is read: <c>entity_risk_context</c> or
+    /// <c>entities_manage</c> (or Admin), and the entity inside the caller's scope (T292) — else 403, or 404.
+    /// </summary>
+    /// <exception cref="Model.Exceptions.EntityRequestRefusedException">400 <c>limit</c>, 403, or 404 <c>entity_not_found</c>.</exception>
+    public Task<List<EntityHistoryEntryDto>> GetHistoryAsync(int entityId, int limit, bool isAdmin,
+        IReadOnlyCollection<string> permissions, CancellationToken ct = default);
 }

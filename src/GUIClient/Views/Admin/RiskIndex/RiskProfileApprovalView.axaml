@@ -1,0 +1,177 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:dto="clr-namespace:Model.DTO;assembly=Model"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:RiskProfileApprovalViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.RiskProfileApprovalView">
+
+    <!-- S40 §6.4 (T262): the segregated approval, the last activation's bridge and the publication switch. -->
+    <Grid Margin="10">
+        <progRing:ProgressRing Width="80" Height="80" IsActive="{Binding IsBusy}" IsVisible="{Binding IsBusy}" ZIndex="10"/>
+        <ScrollViewer>
+            <StackPanel Spacing="10">
+                <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
+                <TextBlock Classes="notice" Text="{Binding StrNoPending}" IsVisible="{Binding !HasPending}" TextWrapping="Wrap"/>
+
+                <StackPanel Spacing="10" IsVisible="{Binding HasPending}">
+                    <TextBlock Classes="header3" Text="{Binding PendingHeader}" TextWrapping="Wrap"/>
+
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrSummary}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrJustification}"/>
+                            <TextBlock Text="{Binding PendingJustification}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrDifferences}"/>
+                            <DataGrid ItemsSource="{Binding Differences}" IsReadOnly="True" MaxHeight="240">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="{Binding StrGroup, Mode=OneTime}" Binding="{Binding Group}"/>
+                                    <DataGridTextColumn Header="{Binding StrParameter, Mode=OneTime}" Binding="{Binding Parameter}" Width="2*"/>
+                                    <DataGridTextColumn Header="{Binding StrOld, Mode=OneTime}" Binding="{Binding A}" Width="*"/>
+                                    <DataGridTextColumn Header="{Binding StrNew, Mode=OneTime}" Binding="{Binding B}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Segregation of duties, computed by the server — the same method Approve refuses with. -->
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="4">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrSegregation}"/>
+                            <TextBlock Classes="hint" Text="{Binding StrSegregationForApprover}" IsVisible="{Binding ShowChecksNote}"
+                                       TextWrapping="Wrap"/>
+                            <ItemsControl ItemsSource="{Binding Checks}" IsVisible="{Binding ShowChecks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RiskApprovalCheckRow">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0 2">
+                                            <material:MaterialIcon Kind="CheckCircleOutline" IsVisible="{Binding Passed}"/>
+                                            <material:MaterialIcon Kind="CloseCircleOutline" IsVisible="{Binding !Passed}"/>
+                                            <TextBlock Text="{Binding Message}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Classes="hint" Text="{Binding GrantSourceText}" IsVisible="{Binding ShowChecks}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- References: the committee's decision with its minutes, the Board's when required, the rebaseline. -->
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrReferences}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrCommitteeRef}"/>
+                            <TextBox Text="{Binding CommitteeRef}" MaxLength="200" IsEnabled="{Binding CanApprove}"/>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrEvidence}"/>
+                            <ItemsControl ItemsSource="{Binding Evidence}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="dto:FileListing">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <material:MaterialIcon Kind="FileDocumentOutline"/>
+                                            <TextBlock Text="{Binding Name}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border Classes="tooltip" ToolTip.Tip="{Binding StrAttachReason}" HorizontalAlignment="Left">
+                                <Button Classes="subButton" Command="{Binding BtAttachEvidenceClicked}" IsEnabled="{Binding IsAttachEnabled}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <material:MaterialIcon Kind="Paperclip"/>
+                                        <TextBlock Text="{Binding StrAttach}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrBoardRef}"/>
+                            <TextBox Text="{Binding BoardRef}" MaxLength="200" IsEnabled="{Binding CanApprove}"/>
+                            <TextBlock Classes="hint" Text="{Binding BoardHint}" TextWrapping="Wrap"/>
+                            <CheckBox IsChecked="{Binding ConfirmRebaseline}" IsEnabled="{Binding HasRebaselineTriggers}"
+                                      Content="{Binding StrConfirmRebaseline}"/>
+                            <TextBlock Classes="hint" Text="{Binding RebaselineTriggersText}" TextWrapping="Wrap"/>
+                            <TextBlock Classes="notice" Text="{Binding EffectiveNote}" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Border Classes="tooltip" ToolTip.Tip="{Binding StrApproveReason}">
+                                    <Button Classes="dialog1" Command="{Binding BtApproveClicked}" IsEnabled="{Binding IsApproveEnabled}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <material:MaterialIcon Kind="CheckDecagram"/>
+                                            <TextBlock Text="{Binding StrApprove}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </StackPanel>
+
+                            <TextBlock Classes="fieldLabel" Text="{Binding StrRejectReason}"/>
+                            <TextBox Text="{Binding RejectReason}" AcceptsReturn="True" MinHeight="50" TextWrapping="Wrap"
+                                     MaxLength="2000" IsEnabled="{Binding CanApprove}"/>
+                            <Border Classes="tooltip" ToolTip.Tip="{Binding StrRejectReasonTip}" HorizontalAlignment="Right">
+                                <Button Classes="dialog2" Command="{Binding BtRejectClicked}" IsEnabled="{Binding IsRejectEnabled}">
+                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                        <material:MaterialIcon Kind="Close"/>
+                                        <TextBlock Text="{Binding StrReject}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Last activation: the bridge of the active version (unrestricted scope only). -->
+                <Border Classes="formCard">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrLastActivation}"/>
+                        <TextBlock Classes="hint" Text="{Binding BridgeMessage}" TextWrapping="Wrap"/>
+                        <DataGrid ItemsSource="{Binding Bridge}" IsReadOnly="True" MaxHeight="240">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding StrNode, Mode=OneTime}" Binding="{Binding Node}" Width="2*"/>
+                                <DataGridTextColumn Header="{Binding StrCategory, Mode=OneTime}" Binding="{Binding Category}"/>
+                                <DataGridTextColumn Header="{Binding StrOld, Mode=OneTime}" Binding="{Binding Old}"/>
+                                <DataGridTextColumn Header="{Binding StrNew, Mode=OneTime}" Binding="{Binding New}"/>
+                                <DataGridTextColumn Header="{Binding StrDelta, Mode=OneTime}" Binding="{Binding Delta}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Publication: shadow pilot or published; suspend retires the active version (S40 §6.4). -->
+                <Border Classes="formCard caution">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrPublication}"/>
+                        <TextBlock Text="{Binding PublicationText}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding ActiveText}" TextWrapping="Wrap"/>
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrPublishReason}" HorizontalAlignment="Left">
+                            <Button Classes="type2" Command="{Binding BtPublishClicked}" IsEnabled="{Binding IsPublishEnabled}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <material:MaterialIcon Kind="Earth"/>
+                                    <TextBlock Text="{Binding StrPublish}"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrSuspendJustification}"/>
+                        <TextBox Text="{Binding SuspendJustification}" AcceptsReturn="True" MinHeight="50" TextWrapping="Wrap"
+                                 MaxLength="2000" IsEnabled="{Binding CanApprove}"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrSuspendCommitteeRef}"/>
+                        <TextBox Text="{Binding SuspendCommitteeRef}" MaxLength="200" IsEnabled="{Binding CanApprove}"/>
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrSuspendReason}" HorizontalAlignment="Right">
+                            <Button Classes="dialog2" Command="{Binding BtSuspendClicked}" IsEnabled="{Binding IsSuspendEnabled}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <material:MaterialIcon Kind="PauseCircleOutline"/>
+                                    <TextBlock Text="{Binding StrSuspend}"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Button Classes="type2" Command="{Binding BtRefreshClicked}" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <material:MaterialIcon Kind="Reload"/>
+                        <TextBlock Text="{Binding StrRefresh}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -205,7 +205,7 @@ public class RiskIndexRestService(IRestService restService, IAuthenticationServi
     }
 
     /// <summary>The <c>{ error, message }</c> body of a refusal; both null when the body is empty or not that shape.</summary>
-    private static (string? Code, string? Message) ReadError(string? content)
+    internal static (string? Code, string? Message) ReadError(string? content)
     {
         if (string.IsNullOrWhiteSpace(content)) return (null, null);
         try

@@ -149,6 +149,10 @@ public partial class NRDbContext
         // M53 review (S40 §6.4, §11.4) — who granted the watched permissions; organization-wide, no scope.
         ConfigurePermissionGrants(modelBuilder);
 
+        // M55, T264 (S40 §6.7, §8.5) — the justification of each risk-context batch. The entity map has no scope filter,
+        // and the batch is written with global scope only; the notes follow the map.
+        ConfigureEntityRiskContext(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>

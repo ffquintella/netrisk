@@ -1,0 +1,161 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             xmlns:progRing="clr-namespace:AvaloniaProgressRing;assembly=AvaloniaProgressRing"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:RiskProfilePreviewViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.RiskProfilePreviewView">
+
+    <!-- S40 §6.3 (T261): the 90-day sensitivity preview of the saved draft, then the submission with a justification. -->
+    <Grid Margin="10">
+        <TextBlock Classes="notice" Text="{Binding StrNoDraft}" IsVisible="{Binding !HasDraft}" TextWrapping="Wrap"/>
+
+        <ScrollViewer IsVisible="{Binding HasDraft}">
+            <StackPanel Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Classes="header3" Text="{Binding Header}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <progRing:ProgressRing Width="20" Height="20" IsActive="{Binding IsRunning}"
+                                                   IsVisible="{Binding IsRunning}"/>
+                            <TextBlock Text="{Binding StateText}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding Progress}" Maximum="100" IsVisible="{Binding IsRunning}" MaxWidth="400"
+                                     HorizontalAlignment="Left"/>
+                        <TextBlock Classes="warning" Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextWrapping="Wrap"/>
+                        <TextBlock Classes="hint" Text="{Binding StrPartial}" IsVisible="{Binding IsPartial}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Column="1" Classes="tooltip" ToolTip.Tip="{Binding StrRunReason}" VerticalAlignment="Top">
+                        <Button Classes="type2" Command="{Binding BtRunPreviewClicked}" IsEnabled="{Binding IsRunEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <material:MaterialIcon Kind="Play"/>
+                                <TextBlock Text="{Binding StrRunPreview}"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </Grid>
+
+                <StackPanel Spacing="10" IsVisible="{Binding HasReport}">
+                    <!-- Node deltas: a parameter effect, sortable; never a work list (S39 §13.2). -->
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrNodes}"/>
+                            <DataGrid ItemsSource="{Binding Nodes}" IsReadOnly="True" CanUserSortColumns="True" MaxHeight="320">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="{Binding StrNode, Mode=OneTime}" Binding="{Binding Node}" Width="2*"/>
+                                    <DataGridTextColumn Header="{Binding StrType, Mode=OneTime}" Binding="{Binding Type}"/>
+                                    <DataGridTextColumn Header="{Binding StrActive, Mode=OneTime}" Binding="{Binding Active}"/>
+                                    <DataGridTextColumn Header="{Binding StrDraft, Mode=OneTime}" Binding="{Binding Draft}"/>
+                                    <DataGridTextColumn Header="{Binding StrDelta, Mode=OneTime}" Binding="{Binding Delta}"/>
+                                    <DataGridTextColumn Header="{Binding StrBand, Mode=OneTime}" Binding="{Binding Bands}" Width="*"/>
+                                    <DataGridCheckBoxColumn Header="{Binding StrBandChanged, Mode=OneTime}" Binding="{Binding BandChanged}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*">
+                        <Border Grid.Column="0" Classes="formCard" Margin="0 0 5 0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="sectionCaption" Text="{Binding StrRanking}"/>
+                                <TextBlock Text="{Binding RankingText}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Classes="formCard" Margin="5 0 0 0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Classes="sectionCaption" Text="{Binding StrRegisterWeight}"/>
+                                <TextBlock Text="{Binding RegisterWeightText}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Tornado: ±20 % on each parameter, one at a time; the bars are the swing's share of the widest. -->
+                    <Border Classes="formCard">
+                        <StackPanel Spacing="6">
+                            <TextBlock Classes="sectionCaption" Text="{Binding StrTornado}"/>
+                            <Grid ColumnDefinitions="2*,*,3*,*">
+                                <TextBlock Grid.Column="0" Classes="fieldLabel" Text="{Binding StrParameter}"/>
+                                <TextBlock Grid.Column="1" Classes="fieldLabel" Text="{Binding StrMinus}" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Classes="fieldLabel" Text="{Binding StrPlus}"/>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Tornado}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RiskTornadoRow">
+                                        <Grid ColumnDefinitions="2*,*,3*,*" Margin="0 2">
+                                            <TextBlock Grid.Column="0" Text="{Binding Parameter}" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Minus}" HorizontalAlignment="Right" Margin="0 0 6 0"/>
+                                            <Grid Grid.Column="2" ColumnDefinitions="*,*">
+                                                <ProgressBar Grid.Column="0" Value="{Binding MinusShare}" Maximum="1"
+                                                             FlowDirection="RightToLeft" MinWidth="0"/>
+                                                <ProgressBar Grid.Column="1" Value="{Binding PlusShare}" Maximum="1" MinWidth="0"/>
+                                            </Grid>
+                                            <TextBlock Grid.Column="3" Text="{Binding Plus}" Margin="6 0 0 0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*">
+                        <Border Grid.Column="0" Classes="formCard" Margin="0 0 5 0">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="sectionCaption" Text="{Binding StrPresets}"/>
+                                <DataGrid ItemsSource="{Binding PresetValues}" IsReadOnly="True" MaxHeight="240">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{Binding StrPresets, Mode=OneTime}" Binding="{Binding Preset}"/>
+                                        <DataGridTextColumn Header="{Binding StrNode, Mode=OneTime}" Binding="{Binding Node}" Width="*"/>
+                                        <DataGridTextColumn Header="{Binding StrValue, Mode=OneTime}" Binding="{Binding Value}"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Classes="formCard" Margin="5 0 0 0">
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="sectionCaption" Text="{Binding StrTopMovers}"/>
+                                <DataGrid ItemsSource="{Binding TopMovers}" IsReadOnly="True" MaxHeight="240">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="{Binding StrObject, Mode=OneTime}" Binding="{Binding Object}" Width="*"/>
+                                        <DataGridTextColumn Header="{Binding StrCategory, Mode=OneTime}" Binding="{Binding Category}"/>
+                                        <DataGridTextColumn Header="{Binding StrDelta, Mode=OneTime}" Binding="{Binding Delta}"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Submission (S40 §6.3): valid on the server, preview current, justification (40 chars for a rebaseline). -->
+                <Border Classes="formCard">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrSubmission}"/>
+                        <TextBlock Classes="notice" Text="{Binding RebaselineNotice}" IsVisible="{Binding HasRebaselineNotice}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrJustification}"/>
+                        <TextBox Text="{Binding Justification}" AcceptsReturn="True" MinHeight="80" TextWrapping="Wrap"
+                                 MaxLength="4000"/>
+                        <ItemsControl ItemsSource="{Binding SubmitChecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <TextBlock Classes="hint" Text="{Binding}" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Classes="tooltip" ToolTip.Tip="{Binding StrSubmitReason}" HorizontalAlignment="Right">
+                            <Button Classes="dialog1" Command="{Binding BtSubmitClicked}" IsEnabled="{Binding IsSubmitEnabled}">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <material:MaterialIcon Kind="Send"/>
+                                    <TextBlock Text="{Binding StrSubmit}"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

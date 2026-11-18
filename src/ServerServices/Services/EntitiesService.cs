@@ -11,11 +11,12 @@ using ServerServices.Interfaces;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.EntityFrameworkCore;
+using ServerServices.Security;
 
 
 namespace ServerServices.Services;
 
-public class EntitiesService: ServiceBase, IEntitiesService
+public partial class EntitiesService: ServiceBase, IEntitiesService
 {
     
     public EntitiesService(ILogger logger, IDalService dalService
@@ -557,13 +558,9 @@ public class EntitiesService: ServiceBase, IEntitiesService
 
         if (changed.Count == 0) return;
 
-        if (!holdsRiskContextPermission)
-            throw new EntityWriteRefusedException(EntityWriteErrors.RiskContextRequiresPermission,
-                $"Changing {string.Join(", ", changed)} requires the {EntityPermissions.RiskContext} permission.");
-
-        if (!scope.IsUnrestricted)
-            throw new EntityWriteRefusedException(EntityWriteErrors.RiskContextRequiresGlobalScope,
-                $"Changing {string.Join(", ", changed)} requires global scope: a process's criticality moves every unit it serves.");
+        // The same policy as PUT /Entities/RiskContext (S40 §6.7 item 5): one rule, one place.
+        int[] affected = stored is not null ? [stored.Id] : body.Parent is { } newParent ? [newParent] : [];
+        RiskContextWritePolicy.Enforce(holdsRiskContextPermission, scope, affected, string.Join(", ", changed));
     }
 
     /// <summary>

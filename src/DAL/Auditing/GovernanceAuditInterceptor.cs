@@ -260,7 +260,10 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
                 : (int?)null;
             var actor = context is AuditableContext ac ? ac.AuditActor : AuditableContext.SystemActor;
 
-            var correlationId = Guid.NewGuid().ToString("N")[..32];
+            // A caller that records the save elsewhere supplies the id (T264: the risk-context batch's batch_id).
+            var correlationId = context is AuditableContext { AuditCorrelationId: { Length: > 0 } supplied }
+                ? Truncate(supplied, 64)!
+                : Guid.NewGuid().ToString("N")[..32];
             var occurredAt = DateTime.UtcNow;
 
             var rows = new List<AuditLog>();
