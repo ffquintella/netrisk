@@ -6,6 +6,7 @@ using DAL.Entities;
 using DAL.Enums;
 using JetBrains.Annotations;
 using Model.Exceptions;
+using Model.Risks;
 using ServerServices.Governance;
 using ServerServices.Interfaces;
 using ServerServices.Tests.ServiceTests;
@@ -77,9 +78,10 @@ public class RiskWorkflowServiceInMemoryTest : InMemoryServiceTestBase
         PlanningDate = new DateOnly(2026, 6, 1)
     };
 
-    private static MgmtReview NewReview(int id, int riskId, int nextStep, int reviewer = 1) => new()
+    private static MgmtReview NewReview(int id, int riskId, int review = ReviewCodes.ApproveRisk,
+        int nextStep = NextStepCodes.AcceptUntilNextReview, int reviewer = 1) => new()
     {
-        Id = id, RiskId = riskId, Reviewer = reviewer, Review = 2, NextStep = nextStep,
+        Id = id, RiskId = riskId, Reviewer = reviewer, Review = review, NextStep = nextStep,
         Comments = string.Empty, SubmissionDate = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc),
         NextReview = new DateOnly(2026, 8, 1)
     };
@@ -151,9 +153,11 @@ public class RiskWorkflowServiceInMemoryTest : InMemoryServiceTestBase
     }
 
     /// <summary>
-    /// The subtle one. A review whose next step is "Request Risk review" means the reviewer asked for
+    /// The subtle one. A review whose decision is "Request Risk review" means the reviewer asked for
     /// another look — the risk is not settled, and closing it anyway is exactly the shape of evidence
-    /// an auditor rejects.
+    /// an auditor rejects. T277 (S39 D-06): the outcome is the seeded <c>review</c> row 3, in the
+    /// decision column; the check used to read <c>next_step</c> 1, which the seed names "Accept until
+    /// Next Review", so this review — next step "Consider for Project" — let the risk close.
     /// </summary>
     [Fact]
     public async Task TestClosedIsRefusedWhenTheLatestReviewAskedForAnotherOne()
@@ -162,14 +166,33 @@ public class RiskWorkflowServiceInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             ctx.Risks.Add(NewRisk(1));
-            ctx.MgmtReviews.Add(NewReview(1, 1, nextStep: 3));
-            ctx.MgmtReviews.Add(NewReview(2, 1, nextStep: 1));
+            ctx.MgmtReviews.Add(NewReview(1, 1));
+            ctx.MgmtReviews.Add(NewReview(2, 1, review: ReviewCodes.RequestRiskReview,
+                nextStep: NextStepCodes.ConsiderForProject));
         });
 
         var ex = await Assert.ThrowsAsync<InvalidStateTransitionException>(() =>
             _workflow.EnsureTransitionAllowedAsync(1, "New", RiskWorkflowService.StatusClosed));
 
         Assert.Contains("asked for another review", ex.Message);
+    }
+
+    /// <summary>
+    /// T277 (S39 D-06) regression: "Accept until Next Review" is the seeded <c>next_step</c> 1 and settles the risk. The
+    /// workflow read that very value as "Request Risk review" and refused the closure.
+    /// </summary>
+    [Fact]
+    public async Task TestClosedIsAllowedWhenTheLatestReviewAcceptsUntilTheNextReview()
+    {
+        SeedWorkflowSettings();
+        Seed(ctx =>
+        {
+            ctx.Risks.Add(NewRisk(1));
+            ctx.MgmtReviews.Add(NewReview(1, 1, review: ReviewCodes.ApproveRisk,
+                nextStep: NextStepCodes.AcceptUntilNextReview));
+        });
+
+        await _workflow.EnsureTransitionAllowedAsync(1, "New", RiskWorkflowService.StatusClosed);
     }
 
     [Fact]
@@ -179,7 +202,7 @@ public class RiskWorkflowServiceInMemoryTest : InMemoryServiceTestBase
         Seed(ctx =>
         {
             ctx.Risks.Add(NewRisk(1));
-            ctx.MgmtReviews.Add(NewReview(1, 1, nextStep: 3));
+            ctx.MgmtReviews.Add(NewReview(1, 1, nextStep: NextStepCodes.SubmitAsProductionIssue));
         });
 
         await _workflow.EnsureTransitionAllowedAsync(1, "New", RiskWorkflowService.StatusClosed);
@@ -193,7 +216,7 @@ public class RiskWorkflowServiceInMemoryTest : InMemoryServiceTestBase
         {
             ctx.Risks.Add(NewRisk(1));
 
-            var review = NewReview(1, 1, nextStep: 3);
+            var review = NewReview(1, 1, nextStep: NextStepCodes.SubmitAsProductionIssue);
             review.RequiresCountersignature = true;
             ctx.MgmtReviews.Add(review);
         });

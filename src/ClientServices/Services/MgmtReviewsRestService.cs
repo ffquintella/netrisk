@@ -1,9 +1,11 @@
 ﻿using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Governance;
 using RestSharp;
 
 namespace ClientServices.Services;
@@ -67,33 +69,39 @@ public class MgmtReviewsRestService: RestServiceBase, IMgmtReviewsService
         }
     }
 
+    /// <summary>
+    /// Records a review in the caller's name (<c>POST /MgmtReviews</c>, which dates it and applies segregation of duties
+    /// on the server). A refusal that names a rule — the caller submitted, owns or manages the risk — arrives as a
+    /// <see cref="RuleBrokenException"/> carrying it, so the dialog can say why (T278); any other failure stays a
+    /// <see cref="RestComunicationException"/>.
+    /// </summary>
     public MgmtReview Create(MgmtReviewDto mgmtReviewDto)
     {
-        var client = RestService.GetClient();
-        var request = new RestRequest($"/MgmtReviews");
+        using var client = MutatingClient(reportErrorResponses: true);
+        var request = new RestRequest(CreateRoute, Method.Post);
 
         request.AddJsonBody(mgmtReviewDto);
-        
+
         try
         {
-            var response = client.Post(request);
+            var response = client.Execute(request);
+
+            if (response.StatusCode == HttpStatusCode.UnprocessableEntity)
+                ThrowIfRefused(response, CreateRoute, "POST", "Error creating review");
 
             if (response.StatusCode != HttpStatusCode.Created)
             {
-                Logger.Error("Error creating review");
-                throw new RestComunicationException($"Error creating review" );
+                Logger.Error("Error creating review: {Status}", response.StatusCode);
+                throw new RestComunicationException("Error creating review",
+                    response.ErrorException ?? new HttpRequestException($"Status {(int)response.StatusCode}"));
             }
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            var review = JsonSerializer.Deserialize<MgmtReview>(response.Content!, options);
+
+            var review = JsonSerializer.Deserialize<MgmtReview>(response.Content!, JsonOptions);
 
             if (review == null)
-                throw new InvalidHttpRequestException("Error deserializing review", "/MgmtReviews", "POST");
-            
+                throw new InvalidHttpRequestException("Error deserializing review", CreateRoute, "POST");
+
             return review;
-            
         }
         catch (HttpRequestException ex)
         {
@@ -101,5 +109,37 @@ public class MgmtReviewsRestService: RestServiceBase, IMgmtReviewsService
             throw new RestComunicationException("Error creating review", ex);
         }
     }
-    
+
+    public async Task<List<OverdueReview>> GetOverdueReviewsAsync()
+    {
+        using var client = RestService.GetReliableClient();
+        var request = new RestRequest(OverdueRoute);
+
+        try
+        {
+            var response = await client.GetAsync(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                Logger.Error("Error listing overdue reviews: {Status}", response.StatusCode);
+                throw new InvalidHttpRequestException("Error listing overdue reviews", OverdueRoute, "GET");
+            }
+
+            return JsonSerializer.Deserialize<List<OverdueReview>>(response.Content!, JsonOptions) ?? [];
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error listing overdue reviews: {Message}", ex.Message);
+            throw new RestComunicationException("Error listing overdue reviews", ex);
+        }
+    }
+
+    private const string CreateRoute = "/MgmtReviews";
+    private const string OverdueRoute = "/MgmtReviews/Overdue";
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(allowIntegerValues: true) }
+    };
 }

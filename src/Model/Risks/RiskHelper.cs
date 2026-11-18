@@ -29,8 +29,8 @@ public class RiskHelper
     {
         return nextStep switch
         {
-            2 => RiskNextStepAction.PlanMitigation,
-            4 => RiskNextStepAction.CloseRisk,
+            NextStepCodes.ConsiderForProject => RiskNextStepAction.PlanMitigation,
+            NextStepCodes.Reject => RiskNextStepAction.CloseRisk,
             _ => RiskNextStepAction.None
         };
     }

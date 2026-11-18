@@ -206,8 +206,10 @@ public interface IAssessmentsService
     /// <param name="runId">The assessment run id</param>
     /// <param name="questionId">The question id being answered</param>
     /// <param name="answerContentJson">The answer content, JSON-encoded</param>
+    /// <param name="assessmentAnswerId">The option chosen (M58, T280); the server links the answer to it</param>
     /// <returns>The saved draft answer or null on error</returns>
-    Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson);
+    Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson,
+        int? assessmentAnswerId = null);
 
     /// <summary>
     /// Dry-run validation of an assessment template file (JSON or Excel). Returns the

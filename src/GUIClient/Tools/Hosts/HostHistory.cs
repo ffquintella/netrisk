@@ -64,6 +64,7 @@ public static class HostHistory
         [nameof(Host.ExternalId)] = "ExternalId",
         [nameof(Host.ExternalProvider)] = "ExternalProvider",
         [nameof(Host.EntityId)] = "Entity",
+        [nameof(Host.InternetFacing)] = "RiskContextInternetFacing",
     };
 
     /// <summary>Every resource key <see cref="FieldLabelKey"/> can return.</summary>

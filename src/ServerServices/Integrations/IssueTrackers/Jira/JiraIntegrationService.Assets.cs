@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Entities;
 using Model.Integrations;
+using ServerServices.Integrations.EntityMappings;
 using ServerServices.Interfaces;
 
 namespace ServerServices.Integrations.IssueTrackers.Jira;
@@ -74,6 +75,9 @@ public partial class JiraIntegrationService
 
         await Step("mappings", "Importing the mapped object types.", mappings.Count);
 
+        // Resolved after every mapping ran (T291), so a server may name an application whose type is imported later.
+        var relations = new AssetRelationBatch();
+
         foreach (var mapping in mappings)
         {
             try
@@ -81,7 +85,7 @@ public partial class JiraIntegrationService
                 await Step("mappings", $"{mapping.ObjectTypeName}: reading objects.");
 
                 await ImportMappingAsync(db, connection, token, workspace, mapping, dryRun, userId,
-                    result);
+                    result, relations);
 
                 await Step("mappings",
                     $"{mapping.ObjectTypeName}: {result.Created} created, {result.Updated} updated so far.");
@@ -97,6 +101,18 @@ public partial class JiraIntegrationService
 
                 await Step("mappings", $"{mapping.ObjectTypeName}: {ex.Message}");
             }
+        }
+
+        try
+        {
+            await ApplyRelationsAsync(db, connectionId, relations, dryRun, result);
+        }
+        catch (Exception ex)
+        {
+            // The hosts and applications are already written; a failed relation pass costs only the relations.
+            result.Errors++;
+            result.Messages.Add($"Relations: {ex.Message}");
+            Logger.Warning(ex, "Applying the Assets relations of connection {Connection} failed", connectionId);
         }
 
         if (!dryRun)
@@ -125,7 +141,7 @@ public partial class JiraIntegrationService
 
     private async Task ImportMappingAsync(AuditableContext db, IssueTrackerConnection connection,
         string? token, string? workspace, JiraObjectMapping mapping, bool dryRun, int? userId,
-        AssetImportResult result)
+        AssetImportResult result, AssetRelationBatch relations)
     {
         // The attribute names come from the object type, not from the search payload: the AQL response
         // carries attribute *ids* reliably and their names only sometimes, so a projector fed from the
@@ -156,11 +172,17 @@ public partial class JiraIntegrationService
                     if (namesById.TryGetValue(id, out var name))
                         payload.AttributesByName.TryAdd(name, values);
 
+                foreach (var (id, references) in payload.References)
+                    if (namesById.TryGetValue(id, out var name))
+                        payload.ReferencesByName.TryAdd(name, references);
+
                 var projected = AssetAttributeProjector.Project(payload,
                     mapping.AttributeMappings.ToList());
 
                 var audit = await ApplyObjectAsync(db, connection, mapping, payload, projected,
                     dryRun, result);
+
+                relations.Add(mapping.TargetKind, audit, projected);
 
                 // A bounded sample, not every row: this is what the operator reads to decide whether
                 // the mapping is right, and twenty rows answers that as well as ten thousand would.
@@ -250,7 +272,7 @@ public partial class JiraIntegrationService
         try
         {
             if (mapping.TargetKind == JiraAssetTargetKind.Host)
-                await ApplyHostAsync(db, connectionId, mapping, payload, projected, view, dryRun, result);
+                await ApplyHostAsync(db, connection, mapping, payload, projected, view, dryRun, result);
             else
                 await ApplyApplicationAsync(db, mapping, projected, view, dryRun, result);
         }
@@ -268,13 +290,21 @@ public partial class JiraIntegrationService
 
     // --- hosts (servers and machines) -------------------------------------------------------
 
-    private async Task ApplyHostAsync(AuditableContext db, int connectionId, JiraObjectMapping mapping,
+    private async Task ApplyHostAsync(AuditableContext db, IssueTrackerConnection connection, JiraObjectMapping mapping,
         AssetObjectPayload payload, AssetAttributeProjector.ProjectedObject projected,
         JiraAssetObjectView view, bool dryRun, AssetImportResult result)
     {
+        var connectionId = connection.Id;
         var (host, reason) = await MatchHostAsync(db, mapping, payload, projected);
+        var created = host == null;
 
         view.MatchReason = reason;
+
+        // Reported on the dry run as well: an unrecognised value is what an operator previews a mapping to find (T291).
+        if (projected.Get(MappableFields.InternetFacing) is { } exposure
+            && AssetAttributeProjector.ParseInternetFacing(exposure) is null)
+            result.Messages.Add($"{projected.Name}: internet-facing value '{Clip(exposure, 64)}' is neither yes nor no, "
+                                + "so the host's exposure was left as it was.");
 
         if (host == null)
         {
@@ -290,12 +320,15 @@ public partial class JiraIntegrationService
 
             if (dryRun) return;
 
+            // The connection this import resolved, not mapping.Connection: the mappings are loaded without it, so that
+            // navigation was always null and every host the import created landed unassigned (M58, T282, S39 D-20).
             host = new Host
             {
                 Source = ExternalProvider,
                 RegistrationDate = DateTime.UtcNow,
                 Status = (short)IntStatus.Active,
-                EntityId = mapping.Connection?.EntityId
+                EntityId = connection.EntityId,
+                EntitySource = connection.EntityId == null ? null : EntitySources.Cmdb
             };
 
             db.Hosts.Add(host);
@@ -318,6 +351,11 @@ public partial class JiraIntegrationService
         }
 
         WriteHostFields(host, connectionId, payload, projected);
+
+        // A matched host takes the connection's target entity under the connection's re-stamp policy, never over a
+        // manual assignment (M58, T282, S39 D-20; docs/features/host-entity-assignment.md).
+        if (!created)
+            HostEntityRestamp.ApplyTo(host, connection.EntityId, connection.EntityRestampPolicy, EntitySources.Cmdb);
 
         await db.SaveChangesAsync();
 
@@ -356,6 +394,16 @@ public partial class JiraIntegrationService
         {
             host.Criticality = Math.Clamp(criticality, 1, 5);
             host.CriticalitySource = CriticalitySources.Cmdb;
+        }
+
+        // Internet exposure (M58, T291, CMDB-INET): the risk index's m_net for the host's findings. Only a recognised yes
+        // or no is written, never over a manual value; the seen-at stamp is what the CMDB-INET window measures.
+        if (AssetAttributeProjector.ParseInternetFacing(projected.Get(MappableFields.InternetFacing)) is { } internetFacing
+            && AssetContextSources.MayOverwrite(host.InternetFacingSource, AssetContextSources.Cmdb))
+        {
+            host.InternetFacing = internetFacing;
+            host.InternetFacingSource = AssetContextSources.Cmdb;
+            host.InternetFacingSeenAt = DateTime.UtcNow;
         }
 
         // Only touched when the mapping has an active-state row at all. A mapping without one must

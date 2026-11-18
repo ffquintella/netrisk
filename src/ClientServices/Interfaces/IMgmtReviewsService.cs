@@ -18,9 +18,11 @@ public interface IMgmtReviewsService
     public List<NextStep> GetNextSteps();
     
     /// <summary>
-    /// Creates a new MgmtReview
+    /// Records a review in the caller's name; the server dates it. A refusal naming a rule (segregation of duties) is a
+    /// <see cref="Model.Exceptions.RuleBrokenException"/>.
     /// </summary>
-    /// <param name="mgmtReviewDto"></param>
-    /// <returns></returns>
     public MgmtReview Create(MgmtReviewDto mgmtReviewDto);
+
+    /// <summary>The open risks in the caller's scope whose management review is due (<c>GET /MgmtReviews/Overdue</c>, T278).</summary>
+    Task<List<Model.Governance.OverdueReview>> GetOverdueReviewsAsync();
 }

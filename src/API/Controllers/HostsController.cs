@@ -277,6 +277,35 @@ public class HostsController: ApiBaseController
         return true;
     }
 
+    /// <summary>
+    /// The host-to-entity backfill report (M58, T282, S39 D-20): hosts with no entity, with the entity their Vision One
+    /// or Jira Assets connection would give them. Assign them through <c>PUT /Hosts/{id}</c> (<c>entityId</c>), which
+    /// records the assignment as manual so no sync moves it. A scoped caller gets an empty list.
+    /// </summary>
+    [HttpGet]
+    [Route("Unassigned")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<UnassignedHostDto>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<UnassignedHostDto>>> GetUnassigned([FromQuery] int limit = 1000)
+    {
+        var user = GetUser();
+
+        if (limit < 1 || limit > IHostsService.MaxUnassignedLimit)
+            return BadRequest($"limit must be between 1 and {IHostsService.MaxUnassignedLimit}.");
+
+        try
+        {
+            var rows = await HostsService.GetUnassignedAsync(limit);
+            Logger.Information("User:{User} read the unassigned-host report ({Count} rows)", user.Value, rows.Count);
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Unknown error reading the unassigned-host report");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpGet]
     [Route("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Host))]
@@ -385,7 +414,15 @@ public class HostsController: ApiBaseController
             
             return Created($"/Hosts/{host.Id}",host);
         }
-        
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid host: {Message}", user.Value, ex.Message);
+            return BadRequest(ex.Message);
+        }
+        catch (DAL.Exceptions.EntityScopeViolationException)
+        {
+            throw; // M58, T282: an entity outside the caller's scope — EntityScopeViolationMiddleware answers 403
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while creating a new host message:{Message}", ex.Message);
@@ -414,7 +451,19 @@ public class HostsController: ApiBaseController
             
             return Ok();
         }
-        
+        catch (DataNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidParameterException ex)
+        {
+            Logger.Warning("User:{User} sent an invalid host {Id}: {Message}", user.Value, id, ex.Message);
+            return BadRequest(ex.Message);
+        }
+        catch (DAL.Exceptions.EntityScopeViolationException)
+        {
+            throw; // M58, T282: an entity outside the caller's scope — EntityScopeViolationMiddleware answers 403
+        }
         catch (Exception ex)
         {
             Logger.Warning("Unknown error while updating a host message:{Message}", ex.Message);

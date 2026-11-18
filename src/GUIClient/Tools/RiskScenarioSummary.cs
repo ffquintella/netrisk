@@ -50,6 +50,20 @@ public static class RiskScenarioSummary
     /// <summary>The editor's kind choices, incident first because it is the default.</summary>
     public static IReadOnlyList<IncidentKind> KindChoices { get; } = [IncidentKind.Incident, IncidentKind.NearMiss];
 
+    /// <summary>The localization key of an incident's severity (M58, T279); null is "not assessed", a key of its own.</summary>
+    public static string SeverityKey(IncidentSeverity? severity) => severity switch
+    {
+        IncidentSeverity.Critical => "IncidentSeverityCritical",
+        IncidentSeverity.High => "IncidentSeverityHigh",
+        IncidentSeverity.Medium => "IncidentSeverityMedium",
+        IncidentSeverity.Low => "IncidentSeverityLow",
+        _ => "IncidentSeverityNotSet"
+    };
+
+    /// <summary>The editor's severity choices: not assessed first (the default), then from most to least severe.</summary>
+    public static IReadOnlyList<IncidentSeverity?> SeverityChoices { get; } =
+        [null, IncidentSeverity.Critical, IncidentSeverity.High, IncidentSeverity.Medium, IncidentSeverity.Low];
+
     /// <summary>
     /// Whether saving should first ask the server for duplicates (T154). Never without both halves —
     /// half a pair matches nothing and the server refuses it. Always on create. On edit only when the

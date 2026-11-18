@@ -59,6 +59,7 @@ public class EditIncidentViewModel
     public string StrStatus => Localizer["Status"] + ":";
     public string StrCategory => Localizer["Category"] + ":";
     public string StrIncidentKind => Localizer["IncidentKind"] + ":";
+    public string StrSeverity => Localizer["IncidentSeverity"] + ":";
     public string StrReportedBy => Localizer["ReportedBy"] + ":";
     public string StrImpactedEntity => Localizer["Impacted Entity"] + ":";
     public string StrAssignedTo => Localizer["Assigned to"] + ":";
@@ -316,6 +317,29 @@ public class EditIncidentViewModel
         }
     }
     
+    /// <summary>
+    /// M58, T279 (S39 D-15): not assessed, then from most to least severe. When set, the risk index reads the severity in
+    /// place of the category anchor.
+    /// </summary>
+    public List<ChoiceOption<DAL.Enums.IncidentSeverity?>> SeverityOptions { get; } = RiskScenarioSummary.SeverityChoices
+        .Select(s => new ChoiceOption<DAL.Enums.IncidentSeverity?>(s, Localizer[RiskScenarioSummary.SeverityKey(s)]))
+        .ToList();
+
+    /// <summary>
+    /// Read from and written to the incident itself, like <see cref="SelectedKind"/>. "Not assessed" is an option of its
+    /// own; the null a ComboBox writes back when it cannot resolve its value is ignored, so it cannot clear a severity.
+    /// </summary>
+    public ChoiceOption<DAL.Enums.IncidentSeverity?>? SelectedSeverity
+    {
+        get => SeverityOptions.Find(x => x.Value == Incident.Severity) ?? SeverityOptions[0];
+        set
+        {
+            if (value == null) return;
+            Incident.Severity = value.Value;
+            this.RaisePropertyChanged();
+        }
+    }
+
     public IncidentCategory SelectedCategory
     {
         get => Categories.Find(x => x.DbName == Incident.Category) ?? Categories.FirstOrDefault(x => x.DbName == "not_specified")!;
@@ -972,6 +996,7 @@ public class EditIncidentViewModel
             SelectedStatus = StatusItems.Find(x => x.IntStatus == Incident.Status) ?? StatusItems.FirstOrDefault(x => x.IntStatus == (int)IntStatus.Active)!;
             SelectedCategory = Categories.Find(x => x.DbName == Incident.Category) ?? Categories.FirstOrDefault(x => x.DbName == "not_specified")!;
             this.RaisePropertyChanged(nameof(SelectedKind));
+            this.RaisePropertyChanged(nameof(SelectedSeverity));
             
             ReportDate = new DateTimeOffset(Incident.ReportDate);
             Duration = Convert.ToDecimal(Incident.Duration!.Value.TotalHours);

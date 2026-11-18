@@ -171,6 +171,18 @@ public partial class NRDbContext
         modelBuilder.Entity<VendorAsset>().HasQueryFilter(e =>
             ScopeIsUnrestricted || (e.EntityId != null && ScopeEntityIds.Contains(e.EntityId.Value)));
 
+        // M58, T279–T280 (S39 D-15, D-16) — incident severity and resolution date, an assessment run's submission time and
+        // score, and the option an answer chose. Columns on tables already filtered (or inheriting their run's), so no filter.
+        ConfigureIndexDataQuality(modelBuilder);
+
+        // M58, T281–T282 (S39 D-14, D-18, D-20, D-21) — hosts.last_assessed_at and entity_source, the connections'
+        // entity re-stamp policy, and the repository of a code-scanner import. Columns on tables already filtered.
+        ConfigureAssetAttribution(modelBuilder);
+
+        // M58, T291 (S39 CMDB-INET / CMDB-REL) — a host's internet exposure (columns on a filtered table) and the
+        // applications it runs, read through the host like its vendor identities below.
+        ConfigureCmdbContext(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -223,6 +235,11 @@ public partial class NRDbContext
         // T263 (S40 §7.4): a host's vendor identities and tags are read through the host, so the candidates of a tag rule
         // never name a tag seen only on hosts outside the caller's scope.
         modelBuilder.Entity<HostExternalId>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Hosts.Any(h => h.Id == e.HostId));
+
+        // T291: which applications a host runs is read through the host, so the relation never names a host the caller
+        // cannot see.
+        modelBuilder.Entity<HostApplicationLink>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Hosts.Any(h => h.Id == e.HostId));
 
         modelBuilder.Entity<AssessmentRun>().HasQueryFilter(e =>

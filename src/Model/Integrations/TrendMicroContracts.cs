@@ -51,6 +51,9 @@ public class TrendMicroConnectionView
     /// <summary>Count Workbench alerts as the attack-intensity indicator (T273).</summary>
     public bool SyncWorkbenchAlerts { get; set; }
 
+    /// <summary>Whether the inventory sync moves a host already in another entity onto <see cref="EntityId"/> (M58, T282).</summary>
+    public RestampPolicy EntityRestampPolicy { get; set; } = RestampPolicy.OnlyUnassigned;
+
     /// <summary>When the scheduled sync is next due (T276); null until the first scheduled run.</summary>
     public DateTime? NextDueAt { get; set; }
 
@@ -230,6 +233,12 @@ public class PostureSyncResult
 
     /// <summary>Hosts a <c>FollowMapping</c> rule moved from another entity (T263, S40 §6.6).</summary>
     public int HostsReassignedByRule { get; set; }
+
+    /// <summary>Matched hosts with no entity that took the connection's target entity (M58, T282, S39 D-20).</summary>
+    public int HostsAssignedByConnection { get; set; }
+
+    /// <summary>Matched hosts a <c>FollowMapping</c> connection moved onto its target entity (M58, T282, S39 D-20).</summary>
+    public int HostsReassignedByConnection { get; set; }
 
     /// <summary>Devices whose tags were recorded in <c>host_external_ids</c> (T263).</summary>
     public int TagsRecorded { get; set; }

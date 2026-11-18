@@ -90,12 +90,12 @@ public interface IMgmtReviewsService
     Task<ReviewLevel> GetRiskReviewLevelAsync(int riskId);
 
     /// <summary>
-    /// Every open risk whose management review is past its severity band's cadence, including the
-    /// ones never reviewed at all (Track 8 milestone 8.5.1).
-    ///
-    /// Resolved here rather than in the notification job: the cadence comes from two lookup tables
-    /// plus a setting, and a job that worked it out itself would be a second implementation of the
-    /// rule <see cref="GetRiskReviewLevelAsync"/> already owns.
+    /// Every open risk in the caller's scope whose management review is due (Track 8 milestone 8.5.1), including the
+    /// ones never reviewed at all. Since T278 (S39 D-08, §6.1) the due date is the index's: only a qualified review —
+    /// not one an acceptance or a campaign decision wrote, not a self-review — restarts the cadence, an acceptance's
+    /// end brings it forward (renewing does not push it back), and so does an earlier next-review date set by the
+    /// qualified reviewer. The cadence comes from the two lookup tables plus a setting, as in
+    /// <see cref="GetRiskReviewLevelAsync"/>; served by <c>GET /MgmtReviews/Overdue</c>.
     /// </summary>
     Task<List<Model.Governance.OverdueReview>> GetOverdueReviewsAsync(DateTime asOfUtc);
 }

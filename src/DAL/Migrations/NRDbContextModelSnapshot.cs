@@ -786,8 +786,16 @@ namespace DAL.Migrations
                     b.Property<DateTime?>("RunDate")
                         .HasColumnType("datetime");
 
+                    b.Property<double?>("Score")
+                        .HasColumnType("double")
+                        .HasColumnName("score");
+
                     b.Property<int>("Status")
                         .HasColumnType("int(11)");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("submitted_at");
 
                     b.HasKey("Id")
                         .HasName("PRIMARY");
@@ -818,6 +826,10 @@ namespace DAL.Migrations
                         .HasColumnType("text")
                         .HasColumnName("answer_content_json");
 
+                    b.Property<int?>("AssessmentAnswerId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("assessment_answer_id");
+
                     b.Property<int>("AssessmentQuestionId")
                         .HasColumnType("int(11)")
                         .HasColumnName("assessment_question_id");
@@ -842,6 +854,8 @@ namespace DAL.Migrations
                     b.HasIndex(new[] { "AssessmentQuestionId" }, "fk_assessment_run_answers_question");
 
                     b.HasIndex(new[] { "AssessmentRunId" }, "fk_assessment_run_answers_run");
+
+                    b.HasIndex(new[] { "AssessmentAnswerId" }, "idx_assessment_run_answers_assessment_answer_id");
 
                     b.ToTable("assessment_run_answers", (string)null);
                 });
@@ -2978,6 +2992,11 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("entity_id");
 
+                    b.Property<string>("EntitySource")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("entity_source");
+
                     b.Property<string>("Environment")
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)")
@@ -3002,9 +3021,26 @@ namespace DAL.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool?>("InternetFacing")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("internet_facing");
+
+                    b.Property<DateTime?>("InternetFacingSeenAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("internet_facing_seen_at");
+
+                    b.Property<string>("InternetFacingSource")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("internet_facing_source");
+
                     b.Property<string>("Ip")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime?>("LastAssessedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_assessed_at");
 
                     b.Property<DateTime?>("LastVerificationDate")
                         .HasColumnType("datetime");
@@ -3081,6 +3117,61 @@ namespace DAL.Migrations
 
                     b.ToTable("hosts", (string)null);
 
+                    MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
+                });
+
+            modelBuilder.Entity("DAL.Entities.HostApplicationLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ConnectionId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("connection_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<int>("HostId")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("host_id");
+
+                    b.Property<DateTime?>("LastSeenAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("source");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "ConnectionId" }, "idx_host_application_links_connection_id");
+
+                    b.HasIndex(new[] { "EntityId" }, "idx_host_application_links_entity_id");
+
+                    b.HasIndex(new[] { "HostId", "EntityId" }, "uq_host_application_links_host_id_entity_id")
+                        .IsUnique();
+
+                    b.ToTable("host_application_links", (string)null);
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                     MySqlEntityTypeBuilderExtensions.UseCollation(b, "utf8mb4_unicode_ci");
                 });
 
@@ -3423,8 +3514,16 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("reported_by_id");
 
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("resolved_at");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("int");
+
+                    b.Property<int?>("Severity")
+                        .HasColumnType("int(11)")
+                        .HasColumnName("severity");
 
                     b.Property<string>("Solution")
                         .HasColumnType("text");
@@ -4304,6 +4403,12 @@ namespace DAL.Migrations
                     b.Property<int?>("EntityId")
                         .HasColumnType("int(11)")
                         .HasColumnName("entity_id");
+
+                    b.Property<int>("EntityRestampPolicy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("entity_restamp_policy");
 
                     b.Property<string>("IssueType")
                         .HasMaxLength(128)
@@ -10514,6 +10619,11 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("new_count");
 
+                    b.Property<string>("Repository")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("repository");
+
                     b.Property<int>("SkippedCount")
                         .HasColumnType("int(11)")
                         .HasColumnName("skipped_count");
@@ -12302,6 +12412,12 @@ namespace DAL.Migrations
                         .HasColumnType("int(11)")
                         .HasColumnName("entity_id");
 
+                    b.Property<int>("EntityRestampPolicy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int(11)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("entity_restamp_policy");
+
                     b.Property<DateTime?>("LastSyncAt")
                         .HasColumnType("datetime")
                         .HasColumnName("last_sync_at");
@@ -13037,6 +13153,11 @@ namespace DAL.Migrations
                         .HasColumnType("varchar(64)")
                         .HasColumnName("raw_severity");
 
+                    b.Property<string>("Repository")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("repository");
+
                     b.Property<string>("RuleId")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
@@ -13698,6 +13819,12 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.AssessmentRunAnswer", b =>
                 {
+                    b.HasOne("DAL.Entities.AssessmentAnswer", "AssessmentAnswer")
+                        .WithMany()
+                        .HasForeignKey("AssessmentAnswerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_assessment_run_answers_assessment_answer_id");
+
                     b.HasOne("DAL.Entities.AssessmentQuestion", "AssessmentQuestion")
                         .WithMany()
                         .HasForeignKey("AssessmentQuestionId")
@@ -13711,6 +13838,8 @@ namespace DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_assessment_run_answers_run");
+
+                    b.Navigation("AssessmentAnswer");
 
                     b.Navigation("AssessmentQuestion");
 
@@ -14262,6 +14391,35 @@ namespace DAL.Migrations
                     b.Navigation("Entity");
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("DAL.Entities.HostApplicationLink", b =>
+                {
+                    b.HasOne("DAL.Entities.IssueTrackerConnection", "Connection")
+                        .WithMany()
+                        .HasForeignKey("ConnectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_host_application_links_connection_id");
+
+                    b.HasOne("DAL.Entities.Entity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_host_application_links_entity_id");
+
+                    b.HasOne("DAL.Entities.Host", "Host")
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_host_application_links_host_id");
+
+                    b.Navigation("Connection");
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("Host");
                 });
 
             modelBuilder.Entity("DAL.Entities.HostExternalId", b =>

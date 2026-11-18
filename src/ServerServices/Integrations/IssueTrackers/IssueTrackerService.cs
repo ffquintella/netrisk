@@ -103,6 +103,7 @@ public class IssueTrackerService(
             AutoCreateMinSeverity = connection.AutoCreateMinSeverity,
             PushFindingUpdates = connection.PushFindingUpdates,
             PollIntervalMinutes = connection.PollIntervalMinutes <= 0 ? 15 : connection.PollIntervalMinutes,
+            EntityRestampPolicy = ValidRestampPolicy(connection.EntityRestampPolicy),
             CreatedAt = DateTime.UtcNow,
             CreatedById = userId
         };
@@ -144,6 +145,7 @@ public class IssueTrackerService(
         stored.AutoCreateMinSeverity = connection.AutoCreateMinSeverity;
         stored.PushFindingUpdates = connection.PushFindingUpdates;
         stored.PollIntervalMinutes = connection.PollIntervalMinutes <= 0 ? 15 : connection.PollIntervalMinutes;
+        stored.EntityRestampPolicy = ValidRestampPolicy(connection.EntityRestampPolicy);
         stored.UpdatedAt = DateTime.UtcNow;
 
         // Null means "unchanged", which is what a form that never received the secret sends back.
@@ -1085,6 +1087,10 @@ public class IssueTrackerService(
         });
     }
 
+    /// <summary>An undefined value from a client falls back to the safe default (M58, T282).</summary>
+    private static RestampPolicy ValidRestampPolicy(RestampPolicy policy) =>
+        Enum.IsDefined(policy) ? policy : RestampPolicy.OnlyUnassigned;
+
     private IssueTrackerConnectionView ToView(IssueTrackerConnection connection) => new()
     {
         Id = connection.Id,
@@ -1107,6 +1113,7 @@ public class IssueTrackerService(
         AutoCreateMinSeverity = connection.AutoCreateMinSeverity,
         PushFindingUpdates = connection.PushFindingUpdates,
         PollIntervalMinutes = connection.PollIntervalMinutes,
+        EntityRestampPolicy = connection.EntityRestampPolicy,
         StatusMappings = (connection.StatusMappings ?? new List<IssueStatusMapping>())
             .OrderBy(m => m.ExternalStatus)
             .Select(m => new IssueStatusMappingView

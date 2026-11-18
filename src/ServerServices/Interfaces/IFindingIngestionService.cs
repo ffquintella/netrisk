@@ -72,8 +72,18 @@ public class ImportIngestionRequest
 
     public int? UserId { get; init; }
 
-    /// <summary>The tenant new findings are attributed to (Track 2.3).</summary>
+    /// <summary>
+    /// The tenant new findings are attributed to (Track 2.3) — for a code-scanner import, the target application the
+    /// caller named, validated against the caller's scope (M58, T282, S39 D-21).
+    /// </summary>
     public int? EntityId { get; init; }
+
+    /// <summary>
+    /// The repository or project a code-scanner import is for (M58, T282, S39 §3.4, D-21). Persisted on the import and
+    /// on its host-less findings, and folded into their dedup key, so the same rule on the same path in two
+    /// repositories stays two findings; a full scan of one repository auto-closes only that repository's findings.
+    /// </summary>
+    public string? Repository { get; init; }
 
     /// <summary>The <c>jobs</c> row driving this, when the import runs as a background job.</summary>
     public int? JobId { get; init; }

@@ -12,6 +12,33 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Record an incident's severity and its UTC resolution time (`incidents.severity`, `incidents.resolved_at`), set by the server when the status enters or leaves a closed status, and keep incident edits in the per-field audit trail under `GET /Incidents/{id}/History` (T279, S39)
+- Link assessment answers to their option by id, record each run's submission time and server-computed score (`assessment_runs.submitted_at`, `score`), and list the answers that could not be linked under `GET /Assessments/runs/answers/unlinked` (T280, S39)
+- Record a scan-only `hosts.last_assessed_at`, written only by scan ingestion and never moved backwards by the hosts API (T281, S39)
+- Assign a host to an entity from the hosts API and the host dialog, filter hosts by entity, entity source and last assessment, and list unassigned hosts under `GET /Hosts/Unassigned` (T282, S39)
+- Give each Vision One and Jira Assets connection an explicit entity re-stamp policy that never moves a manual assignment, and accept a target entity and repository on code-scanner imports (T282, S39)
+- Expose overdue management reviews under `GET /MgmtReviews/Overdue`, with the due date and what set it (T278, S39)
+- Import the Jira Assets internet-facing attribute onto hosts and the application-to-server relationship into `host_application_links`, never overwriting a manual value, and let a profile enable CMDB-INET in the index (T291, S39)
+
+### Changed
+
+- Match a finding's host by the connector's external id before its IP or name (T281, S39)
+- Count overdue management reviews by the review rule of the risk index: acceptance expiry and revocation bring the due date forward and only a qualified review restarts the cadence (T278, S39)
+- Keep a repository in the dedup key of findings that have no host, so two repositories no longer collapse into one finding (T282, S39)
+- Let tag rules follow the entity precedence, so a rule no longer moves a manual or CMDB assignment (T282, S39)
+- Audit edits to `sla_configurations` and to the settings that set review cadence, quantitative bands and the residual strategy (T283, S39)
+
+### Fixed
+
+- Align the management review and next-step codes written by risk acceptances, review campaigns and the risk workflow with the seeded lookups (T277, S39)
+- Stamp a management review's submission date in UTC on the server and ignore the date a client sends (T278, S39)
+- Stop a desktop risk save from turning the review-requested flag back on after a review (T278, S39)
+- Stop overwriting an assessment run's date on every update and refuse to reopen a run when no status is sent (T280, S39)
+- Stop `PUT /Risks/{id}/Scoring` from wiping or forging the simulator's `Quant*` columns, including the residual ALE mean (T290, S39)
+- Give hosts created by the Jira Assets import the connection's entity (T282, S39)
+
 ## [2.47.0] - 2026-11-18
 
 ### Added

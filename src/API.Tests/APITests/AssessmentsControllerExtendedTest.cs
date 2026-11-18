@@ -127,7 +127,7 @@ public class AssessmentsControllerExtendedTest : BaseControllerTest
         _assessmentsService.Delete(Arg.Is<Assessment>(a => a.Id == DeleteFailsId)).Returns(-1);
 
         // Draft answers and paged questions
-        _assessmentsService.SaveDraftAnswerAsync(OkId, Arg.Any<int>(), Arg.Any<string>())
+        _assessmentsService.SaveDraftAnswerAsync(OkId, Arg.Any<int>(), Arg.Any<string>(), Arg.Any<int?>())
             .Returns(new AssessmentRunAnswer
             {
                 Id = 1,
@@ -135,7 +135,7 @@ public class AssessmentsControllerExtendedTest : BaseControllerTest
                 AssessmentQuestionId = 1,
                 AnswerContentJson = "{\"value\":true}"
             });
-        _assessmentsService.SaveDraftAnswerAsync(ErrorId, Arg.Any<int>(), Arg.Any<string>())
+        _assessmentsService.SaveDraftAnswerAsync(ErrorId, Arg.Any<int>(), Arg.Any<string>(), Arg.Any<int?>())
             .Returns<Task<AssessmentRunAnswer>>(_ => throw new Exception("boom"));
 
         _assessmentsService.GetDraftAnswersAsync(OkId).Returns(new List<AssessmentRunAnswer>
@@ -217,6 +217,19 @@ public class AssessmentsControllerExtendedTest : BaseControllerTest
         Assert.IsType<OkObjectResult>(_controller.UpdateAssessmentRun(OkId, 1, dto).Result);
         Assert.Equal(1, dto.AnalystId.GetValueOrDefault());
         _assessmentsService.Received(1).UpdateRun(dto);
+    }
+
+    /// <summary>
+    /// M58, T280: the run saved — and, when the save submits it, scored and stamped — is the one the route names and the
+    /// assessment holds, never another id carried in the body.
+    /// </summary>
+    [Fact]
+    public void TestUpdateAssessmentRunSavesTheRunTheRouteNames()
+    {
+        var dto = new AssessmentRunDto { Id = 77, AssessmentId = NoQuestionsId, EntityId = 1 };
+
+        Assert.IsType<OkObjectResult>(_controller.UpdateAssessmentRun(OkId, 1, dto).Result);
+        _assessmentsService.Received(1).UpdateRun(Arg.Is<AssessmentRunDto>(r => r.Id == 1 && r.AssessmentId == OkId));
     }
 
     [Fact]
@@ -638,6 +651,57 @@ public class AssessmentsControllerExtendedTest : BaseControllerTest
         var ok = Assert.IsType<OkObjectResult>(result.Result);
         var answer = Assert.IsType<AssessmentRunAnswer>(ok.Value);
         Assert.Equal("{\"value\":true}", answer.AnswerContentJson);
+    }
+
+    /// <summary>M58, T280: the option the client names reaches the service, which links the answer to it.</summary>
+    [Fact]
+    public async Task TestSaveDraftAnswerPassesTheOptionId()
+    {
+        await _controller.SaveDraftAnswer(OkId, new SaveDraftAnswerRequest
+        {
+            QuestionId = 3, AnswerContentJson = "\"A2\"", AssessmentAnswerId = 2
+        });
+
+        await _assessmentsService.Received(1).SaveDraftAnswerAsync(OkId, 3, "\"A2\"", 2);
+    }
+
+    /// <summary>M58, T280: an option that is not the question's is the caller's error, and an unknown run is a 404.</summary>
+    [Fact]
+    public async Task TestSaveDraftAnswerRefusesAForeignOptionAndAnUnknownRun()
+    {
+        var service = Substitute.For<IAssessmentsService>();
+        service.SaveDraftAnswerAsync(OkId, Arg.Any<int>(), Arg.Any<string>(), Arg.Any<int?>())
+            .Returns<Task<AssessmentRunAnswer>>(_ => throw new Model.Exceptions.InvalidParameterException("assessmentAnswerId", "no"));
+        service.SaveDraftAnswerAsync(NotFoundId, Arg.Any<int>(), Arg.Any<string>(), Arg.Any<int?>())
+            .Returns<Task<AssessmentRunAnswer>>(_ => throw new Model.Exceptions.DataNotFoundException("AssessmentRuns", "999"));
+        var controller = Build(service);
+
+        var request = new SaveDraftAnswerRequest { QuestionId = 1, AnswerContentJson = "\"A1\"", AssessmentAnswerId = 7 };
+        Assert.IsType<BadRequestObjectResult>((await controller.SaveDraftAnswer(OkId, request)).Result);
+        Assert.IsType<NotFoundResult>((await controller.SaveDraftAnswer(NotFoundId, request)).Result);
+    }
+
+    /// <summary>M58, T280: the unlinked-answer report the version 114 backfill leaves.</summary>
+    [Fact]
+    public async Task TestGetUnlinkedAnswers()
+    {
+        _assessmentsService.GetUnlinkedAnswersAsync().Returns(new List<Model.Assessments.AssessmentAnswerLinkGap>
+        {
+            new() { RunAnswerId = 4, RunId = OkId, AssessmentId = OkId, QuestionId = 1, AnswerText = "Maybe" }
+        });
+
+        var ok = Assert.IsType<OkObjectResult>((await _controller.GetUnlinkedAnswers()).Result);
+
+        Assert.Equal(4, Assert.Single(Assert.IsType<List<Model.Assessments.AssessmentAnswerLinkGap>>(ok.Value)).RunAnswerId);
+    }
+
+    [Fact]
+    public async Task TestGetUnlinkedAnswersReturnsServerErrorOnException()
+    {
+        var service = Substitute.For<IAssessmentsService>();
+        service.GetUnlinkedAnswersAsync().Returns<Task<List<Model.Assessments.AssessmentAnswerLinkGap>>>(_ => throw new Exception("boom"));
+
+        AssertServerError((await Build(service).GetUnlinkedAnswers()).Result);
     }
 
     [Fact]

@@ -85,14 +85,28 @@
                      Text="{Binding Environment}" />
 
             <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding StrOwner}"  Margin="10 10 5 0 "/>
-            <TextBox TabIndex="9" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Margin="0 5 10 0" MaxLength="255"
+            <TextBox TabIndex="9" Grid.Row="4" Grid.Column="1" Margin="0 5 10 0" MaxLength="255"
                      Text="{Binding Owner}" />
+            <!-- M58, T282 (S39 D-20): the host's business entity; the server records a choice made here as manual. -->
+            <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding StrEntity}"  Margin="10 10 5 0 "/>
+            <ComboBox TabIndex="10" Grid.Row="4" Grid.Column="3" Margin=" 0 5 5 2"
+                      ItemsSource="{Binding EntityOptions}"
+                      SelectedItem="{Binding SelectedEntity}"
+                      ToolTip.Tip="{Binding StrEntityTip}"
+                      MinWidth="150"
+                      IsTextSearchEnabled="True">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="hosts:EntityOption">
+                        <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
             <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding StrComments}"  Margin="10 10 5 0 "/>
-            <TextBox TabIndex="10" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
+            <TextBox TabIndex="11" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" TextWrapping="Wrap" AcceptsReturn="True" 
                      Margin="0 5 10 0" Text="{Binding Comments}" />
             <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10 10 0 0">
-                <Button TabIndex="11" Classes="dialog1" Margin=" 0 10 5 10" 
+                <Button TabIndex="12" Classes="dialog1" Margin=" 0 10 5 10" 
                         IsEnabled="{Binding SaveEnabled}"
                         ToolTip.Tip="{Binding ValidationContext.Text}"
                         Command="{Binding BtSaveClicked}">
@@ -101,7 +115,7 @@
                         <TextBlock Text="{Binding StrSave}" />  
                     </StackPanel>
                 </Button>
-                <Button TabIndex="12" Classes="dialog2" Margin=" 0 10 5 10" 
+                <Button TabIndex="13" Classes="dialog2" Margin=" 0 10 5 10" 
                         Command="{Binding BtCancelClicked}">
                     <StackPanel Orientation="Horizontal">
                         <avalonia:MaterialIcon Kind="Cancel" Margin=" 5 0" />

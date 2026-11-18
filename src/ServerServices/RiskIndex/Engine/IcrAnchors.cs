@@ -104,6 +104,19 @@ public static class IcrAnchors
     }
 
     /// <summary>
+    /// The <c>ancoras_incidente_severidade</c> key of an incident's severity (T279): the member name, lower-cased —
+    /// <c>critical</c>, <c>high</c>, <c>medium</c>, <c>low</c> —, or null when the incident has none.
+    /// </summary>
+    public static string? SeverityKey(DAL.Enums.IncidentSeverity? severity) => severity switch
+    {
+        DAL.Enums.IncidentSeverity.Critical => "critical",
+        DAL.Enums.IncidentSeverity.High => "high",
+        DAL.Enums.IncidentSeverity.Medium => "medium",
+        DAL.Enums.IncidentSeverity.Low => "low",
+        _ => null
+    };
+
+    /// <summary>
     /// The incident anchor (S39 §3.1): the severity anchor when the incident has a severity the profile knows, otherwise
     /// the category anchor; an unknown category reads as <c>not_specified</c> — unknown is not light.
     /// </summary>

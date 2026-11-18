@@ -320,9 +320,12 @@ public class RisksControllerExtendedTest : BaseControllerTest
             .Returns(_ => throw new DataNotFoundException("review", "999"));
         _mgmtReviewsService.GetRiskLastReview(998).Returns(_ => throw new Exception("boom"));
 
-        _mgmtReviewsService.GetRiskReviewLevel(1)
+        _mgmtReviewsService.GetRiskReviewLevelAsync(1)
             .Returns(new ReviewLevel { Id = 1, Value = 1, Name = "Level 1" });
-        _mgmtReviewsService.GetRiskReviewLevel(998).Returns(_ => throw new Exception("boom"));
+        _mgmtReviewsService.GetRiskReviewLevelAsync(998).Returns<Task<ReviewLevel>>(_ => throw new Exception("boom"));
+        // The legacy inherent-only resolution answers differently, so a controller still calling it fails the test.
+        _mgmtReviewsService.GetRiskReviewLevel(1)
+            .Returns(new ReviewLevel { Id = 9, Value = 9, Name = "Legacy" });
     }
 
     private static void AssertStatusCode(int expected, IActionResult result)
@@ -605,18 +608,19 @@ public class RisksControllerExtendedTest : BaseControllerTest
         AssertStatusCode(500, _controller.GetRiskLastMgmtReview(998).Result);
     }
 
+    /// <summary>T278: the proposal is the cadence-aware level the overdue list applies, not the legacy inherent-only one.</summary>
     [Fact]
-    public void TestGetRiskReviewLevel()
+    public async Task TestGetRiskReviewLevel()
     {
-        var ok = Assert.IsType<OkObjectResult>(_controller.GetRiskReviewLevel(1).Result);
+        var ok = Assert.IsType<OkObjectResult>((await _controller.GetRiskReviewLevel(1)).Result);
         var level = Assert.IsType<ReviewLevel>(ok.Value);
         Assert.Equal("Level 1", level.Name);
     }
 
     [Fact]
-    public void TestGetRiskReviewLevelInternalError()
+    public async Task TestGetRiskReviewLevelInternalError()
     {
-        AssertStatusCode(500, _controller.GetRiskReviewLevel(998).Result);
+        AssertStatusCode(500, (await _controller.GetRiskReviewLevel(998)).Result);
     }
 
     [Fact]

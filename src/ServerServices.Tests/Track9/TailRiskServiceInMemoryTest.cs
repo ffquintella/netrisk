@@ -434,9 +434,9 @@ public class TailRiskServiceInMemoryTest : RiskChainTestBase
     }
 
     /// <summary>
-    /// Q4 (S48 D1) — <c>PUT /Risks/{id}/Scoring</c> copies the whole scoring payload and blanks every quant_* column a
-    /// client does not send (the S47 R3 defect, unchanged here). The tail statistics live elsewhere, so they survive,
-    /// and Gate B keeps reading them.
+    /// Q4 (S48 D1) — <c>PUT /Risks/{id}/Scoring</c> copies the whole scoring payload. It blanked every quant_* column a
+    /// client did not send (the S47 R3 defect, fixed by M58 T290: <c>RiskScoringSimulatorColumnsInMemoryTest</c>); the
+    /// tail statistics live elsewhere, so they survived it either way, and Gate B keeps reading them.
     /// </summary>
     [Fact]
     public async Task TestQ4_APayloadCopyOfTheScoringDoesNotEraseTheTail()

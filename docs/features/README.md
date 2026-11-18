@@ -24,6 +24,7 @@ These are placeholder stubs — contributions welcome.
 - [Vulnerability Management](vulnerability-management.md)
   - [Exploitation signals: CISA KEV, EPSS, MITRE ATT&CK and the prioritization](exploitation-signals.md)
 - [Scanner importers and finding ingestion](scanner-importers.md)
+  - [Host attribution: assessment date, entity assignment and code-scanner targets](host-entity-assignment.md)
 - [Incident Management](incident-management.md)
 - [Incident Response Plans](incident-response-plans.md)
 - [Entity Management](entity-management.md)

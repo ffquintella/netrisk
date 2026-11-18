@@ -136,6 +136,31 @@ or email already exists. **An unmatched owner is reported, not invented** — cr
 CMDB string is how a directory fills up with near-duplicates of real people. The value is still
 recorded on the import row, so nothing the register carried is lost.
 
+### Internet exposure and application ↔ server relations (M58, T291)
+
+Two more targets feed the risk index (S39 §3.2 CMDB-INET / CMDB-REL):
+
+| Target | Kind | Lands in | Rule |
+|---|---|---|---|
+| `InternetFacing` | Host | `hosts.internet_facing` + `internet_facing_source` + `internet_facing_seen_at` | Only a recognised yes (`yes`, `true`, `public`, `external`, `DMZ`, …) or no (`no`, `false`, `internal`, `private`, …) is written; anything else is reported and leaves the host alone. Never overwrites a value a person set through the hosts API (`manual`). |
+| `Applications` | Host | `host_application_links` | The applications the server runs: a reference attribute, or application names. |
+| `Hosts` | Application | `host_application_links` | The servers the application runs on: a reference attribute, or host names / FQDNs. |
+
+**Relations are resolved after every mapping ran**, so a server may name an application whose type is imported
+later in the same run. A reference resolves by the object this connection imported (id, then key), else by
+name. Each reported pair is created or refreshed (`last_seen_at`); a `cmdb` link of this connection that an
+object examined this run no longer names is removed. A `manual` link is never refreshed, re-sourced or removed,
+and neither is another connection's `cmdb` link — the connection that first reported a pair keeps it until it
+stops naming it, so two connections reporting one relation do not take the row from each other on every run.
+An object whose relation attribute is empty leaves its links alone ("the register says nothing"). The
+result reports `RelationsLinked`, `RelationsRemoved` and `RelationsUnresolved`, and the dry run counts them the
+same way without writing.
+
+The index reads `hosts.internet_facing` for `m_net` only when the snapshot's profile enables **CMDB-INET**: a
+manual value always, a CMDB value while `internet_facing_seen_at` is inside the source's window (30 days by
+default), and a stated "no" over the public-IP heuristic. The links wait for the full-mode drill-down (T284),
+so **CMDB-REL** stays unavailable in the source catalogue until then.
+
 ### The audit row
 
 Every object read produces a `jira_asset_objects` row, **including the ones that resolved to nothing**,

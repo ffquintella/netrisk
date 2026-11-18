@@ -143,7 +143,8 @@ public static partial class RiskIndexObjectCollector
             .Select(h => new
             {
                 h.Id, h.Os, h.Source, h.Criticality, h.CriticalitySource, h.ExternalProvider, h.RiskScore,
-                h.RiskScoreUpdatedAt, h.Environment, h.EntityId, h.LastVerificationDate, h.Ip, h.RegistrationDate
+                h.RiskScoreUpdatedAt, h.Environment, h.EntityId, h.LastVerificationDate, h.Ip, h.RegistrationDate,
+                h.InternetFacing, h.InternetFacingSource, h.InternetFacingSeenAt
             })
             .ToListAsync(ct);
 
@@ -166,7 +167,7 @@ public static partial class RiskIndexObjectCollector
                 h.Environment);
             var m = run.M(crit);
             var environment = NormalizeEnvironment(p, h.Environment);
-            var internet = p.PublicIpHeuristic && IsPublic(h.Ip, p.InternalPublicRanges);
+            var internet = HostInternetFacing(run, h.InternetFacing, h.InternetFacingSource, h.InternetFacingSeenAt, h.Ip);
 
             var readings = new List<Reading>();
             var hasDevice = deviceOn && h.RiskScore is not null;
@@ -283,6 +284,25 @@ public static partial class RiskIndexObjectCollector
         var nonProduction = run.On(RiskIndexSources.CmdbEnvironment) && NormalizeEnvironment(run.P, environment) is { } env &&
                             env is not ("prod" or "none");
         return (nonProduction ? run.P.DefaultNonProductionCriticality : run.P.DefaultCriticality, "default");
+    }
+
+    /// <summary>
+    /// Whether a host earns <c>m_net</c> on its findings (S39 §5.3; M58, T291). With CMDB-INET enabled, a stated value
+    /// decides, yes or no: a manual one always, a CMDB one while its last confirmation is inside the source's window W.
+    /// Otherwise — source off, nobody said, or a stale CMDB value — the optional public-IP heuristic. The host attribute is
+    /// read only under CMDB-INET, whoever wrote it, so collecting it never moves the index until a profile enables it.
+    /// </summary>
+    internal static bool HostInternetFacing(Run run, bool? stored, string? source, DateTime? seenAt, string? ip)
+    {
+        if (run.On(RiskIndexSources.CmdbInternetFacing) && stored is { } stated)
+        {
+            if (source == AssetContextSources.Manual) return stated;
+            if (source == AssetContextSources.Cmdb && seenAt is { } at &&
+                IcrMath.Days(at, run.Now) <= run.W(RiskIndexSources.CmdbInternetFacing))
+                return stated;
+        }
+
+        return run.P.PublicIpHeuristic && IsPublic(ip, run.P.InternalPublicRanges);
     }
 
     /// <summary>The environment by the profile vocabulary (S40 §7.1): the matching term, <c>prod</c>, or <c>none</c>.</summary>

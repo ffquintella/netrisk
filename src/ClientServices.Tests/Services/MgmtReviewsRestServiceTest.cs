@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using ClientServices.Interfaces;
 using ClientServices.Services;
 using ClientServices.Tests.Mock;
@@ -8,6 +9,7 @@ using DAL.Entities;
 using JetBrains.Annotations;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Governance;
 using RestSharp;
 using Xunit;
 
@@ -195,5 +197,60 @@ public class MgmtReviewsRestServiceTest : BaseServiceTest
         _backend.OnTransportFailure(Method.Post, CreatePath);
 
         Assert.Throws<RestComunicationException>(() => _service.Create(ADto()));
+    }
+
+    /// <summary>
+    /// T278: the server refuses a review by someone who submitted, owns or manages the risk with a 422 naming the rule.
+    /// That reaches the dialog as the rule, so it can say why; it used to be the same opaque failure as an outage.
+    /// </summary>
+    [Fact]
+    public void TestCreatePassesASegregationRefusalThroughAsTheRule()
+    {
+        _backend.OnPost(CreatePath,
+            new { error = "segregation_of_duties", message = "You cannot review this risk because you own it." },
+            HttpStatusCode.UnprocessableEntity);
+
+        var ex = Assert.Throws<RuleBrokenException>(() => _service.Create(ADto()));
+
+        Assert.Equal("segregation_of_duties", ex.RuleName);
+    }
+
+    // ---------------- GetOverdueReviewsAsync ----------------
+
+    private const string OverduePath = "/MgmtReviews/Overdue";
+
+    [Fact]
+    public async Task TestGetOverdueReviewsReadsTheListWithItsDueDate()
+    {
+        _backend.OnGet(OverduePath,
+            "[{\"riskId\":4,\"subject\":\"Payment gateway\",\"referenceId\":\"R-4\",\"status\":\"New\",\"ownerId\":2," +
+            "\"cadenceDays\":90,\"dueAt\":\"2026-10-01T00:00:00Z\",\"dueBasis\":2,\"daysOverdue\":48," +
+            "\"lastReviewedAt\":\"2026-09-01T00:00:00Z\"}]");
+
+        var overdue = await _service.GetOverdueReviewsAsync();
+
+        var item = Assert.Single(overdue);
+        Assert.Equal((4, ReviewDueBasis.AcceptanceEnd, 48), (item.RiskId, item.DueBasis, item.DaysOverdue));
+        Assert.Equal(new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc), item.DueAt.ToUniversalTime());
+        Assert.Equal("GET " + OverduePath, _backend.LastRequest.ToString());
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task TestGetOverdueReviewsFailsOnARefusal(HttpStatusCode status)
+    {
+        _backend.OnStatus(Method.Get, OverduePath, status);
+
+        var ex = await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetOverdueReviewsAsync());
+        Assert.Equal("Error listing overdue reviews", ex.RestExceptionMessage);
+    }
+
+    [Fact]
+    public async Task TestGetOverdueReviewsWrapsATransportFailure()
+    {
+        _backend.OnTransportFailure(Method.Get, OverduePath);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() => _service.GetOverdueReviewsAsync());
     }
 }

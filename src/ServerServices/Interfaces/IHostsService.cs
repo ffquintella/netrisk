@@ -155,4 +155,14 @@ public interface IHostsService
     /// <summary>The most hosts one <see cref="GetVulnerabilitySummariesAsync"/> call accepts.</summary>
     public const int MaxSummaryBatchSize = 500;
 
+    /// <summary>
+    /// The host-to-entity backfill report (M58, T282, S39 D-20): the hosts with no entity the caller can see, ordered by
+    /// id, at most <paramref name="limit"/>, each with the target entity of the Vision One or Jira Assets connection that
+    /// reports it. A scoped caller sees none: a host with no entity is outside every scope.
+    /// </summary>
+    public Task<List<Model.DTO.UnassignedHostDto>> GetUnassignedAsync(int limit = 1000);
+
+    /// <summary>The most rows one <see cref="GetUnassignedAsync"/> call returns.</summary>
+    public const int MaxUnassignedLimit = 5000;
+
 }

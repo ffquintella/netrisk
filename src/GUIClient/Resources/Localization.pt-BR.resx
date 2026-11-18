@@ -3576,6 +3576,24 @@ Salvar mesmo assim?</value>
     <data name="IncidentKindNearMiss" xml:space="preserve">
         <value>Quase incidente (near miss)</value>
     </data>
+    <data name="IncidentSeverity" xml:space="preserve">
+        <value>Severidade</value>
+    </data>
+    <data name="IncidentSeverityNotSet" xml:space="preserve">
+        <value>Não avaliada</value>
+    </data>
+    <data name="IncidentSeverityLow" xml:space="preserve">
+        <value>Baixa</value>
+    </data>
+    <data name="IncidentSeverityMedium" xml:space="preserve">
+        <value>Média</value>
+    </data>
+    <data name="IncidentSeverityHigh" xml:space="preserve">
+        <value>Alta</value>
+    </data>
+    <data name="IncidentSeverityCritical" xml:space="preserve">
+        <value>Crítica</value>
+    </data>
     <data name="AchievedRpo" xml:space="preserve">
         <value>RPO alcançado</value>
     </data>
@@ -6616,7 +6634,7 @@ Salvar mesmo assim?</value>
         <value>Σ E[L] residual</value>
     </data>
     <data name="RiskMonetary_ResidualUnavailable" xml:space="preserve">
-        <value>não disponível: requer a média residual persistida (quant_residual_ale_mean, T290)</value>
+        <value>não disponível: o servidor ainda não oferece a leitura monetária</value>
     </data>
     <data name="RiskMonetary_InherentLabel" xml:space="preserve">
         <value>Σ E[L] inerente</value>
@@ -8993,5 +9011,17 @@ Ligar o co-trabalho com agentes?</value>
     </data>
     <data name="RiskApi_invalid_run_kindMSG" xml:space="preserve">
         <value>Tipo de execução desconhecido.</value>
+    </data>
+    <data name="ReviewRefusedSegregationMSG" xml:space="preserve">
+        <value>Você não pode revisar este risco porque o registrou, é dono dele ou o gerencia. Peça a alguém sem envolvimento com ele que registre a revisão.</value>
+    </data>
+    <data name="ReviewRefusedMSG" xml:space="preserve">
+        <value>O servidor recusou esta revisão. Nada foi registrado.</value>
+    </data>
+    <data name="HostEntityUnassigned" xml:space="preserve">
+        <value>Não atribuído</value>
+    </data>
+    <data name="HostEntityAssignmentTip" xml:space="preserve">
+        <value>A entidade de negócio a que este host pertence. Uma escolha feita aqui é mantida: as sincronizações do Vision One e do Jira Assets nunca movem um host atribuído por uma pessoa.</value>
     </data>
 </root>

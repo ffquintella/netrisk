@@ -88,9 +88,12 @@ public class RiskReviewCadenceJob(
                 ThreatCatalogMapping = string.Empty
             }, item.Score, item.DaysOverdue, item.LastReviewedAt, item.CadenceDays);
 
+            // T278 (S39 §6.1): "last reviewed" is the last qualified review — an acceptance, a campaign decision or a
+            // self-review does not count — and the review can fall due before the cadence (an acceptance's end, the
+            // reviewer's next-review date), so the message states the due date rather than deriving one.
             var message = item.LastReviewedAt == null
-                ? $"Risk '{item.Subject}' has never had a management review and was submitted " +
-                  $"{item.DaysOverdue + item.CadenceDays} day(s) ago."
+                ? $"Risk '{item.Subject}' has never had a qualifying management review; its review has been due " +
+                  $"since {item.DueAt:yyyy-MM-dd} and is {item.DaysOverdue} day(s) overdue."
                 : $"Risk '{item.Subject}' was last reviewed on " +
                   $"{item.LastReviewedAt:yyyy-MM-dd}; its review is {item.DaysOverdue} day(s) overdue.";
 

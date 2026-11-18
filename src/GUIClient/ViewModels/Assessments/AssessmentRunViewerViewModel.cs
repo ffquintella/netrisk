@@ -184,6 +184,8 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     private List<AssessmentQuestion> _requiredQuestions = new();
     private readonly Dictionary<int, ObservableCollection<AssessmentAnswer>> _answersByQuestion = new();
     private readonly Dictionary<int, string> _selectedAnswerText = new();   // questionId -> answer text
+    // M58, T280 (S39 D-16): the option each answer names, by id — the link the server stores and scores by.
+    private readonly Dictionary<int, int> _selectedAnswerId = new();        // questionId -> option id
     private readonly HashSet<int> _answeredQuestions = new();
 
     // GitHub #80 (S44): the comment and evidence of each answer, kept here because the question rows
@@ -192,7 +194,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     private readonly Dictionary<int, List<AssessmentAnswerEvidence>> _evidenceByQuestion = new();
 
     private readonly object _pendingLock = new();
-    private readonly Dictionary<int, string> _pendingSaves = new();         // questionId -> answer content json
+    private readonly Dictionary<int, (string Content, int? OptionId)> _pendingSaves = new(); // questionId -> content json, option
     private readonly Dictionary<int, string?> _pendingComments = new();     // questionId -> comment
     private readonly Subject<Unit> _saveSignal = new();
     private IDisposable? _saveSubscription;
@@ -269,6 +271,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
                 var text = DecodeAnswerText(draft.AnswerContentJson);
                 if (string.IsNullOrEmpty(text)) continue;
                 _selectedAnswerText[draft.AssessmentQuestionId] = text;
+                if (draft.AssessmentAnswerId is { } optionId) _selectedAnswerId[draft.AssessmentQuestionId] = optionId;
                 _answeredQuestions.Add(draft.AssessmentQuestionId);
             }
 
@@ -366,8 +369,12 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             // Restore the saved selection (silently, so it does not trigger a redundant save).
             if (_selectedAnswerText.TryGetValue(question.Id, out var savedText))
             {
-                var match = availableAnswers.FirstOrDefault(a =>
-                    string.Equals(a.Answer, savedText, StringComparison.OrdinalIgnoreCase));
+                // The linked option first (T280); the text only for an answer saved without one.
+                var match = (_selectedAnswerId.TryGetValue(question.Id, out var savedId)
+                                ? availableAnswers.FirstOrDefault(a => a.Id == savedId)
+                                : null)
+                            ?? availableAnswers.FirstOrDefault(a =>
+                                string.Equals(a.Answer, savedText, StringComparison.OrdinalIgnoreCase));
                 if (match != null) item.SetSelectedAnswerSilently(match);
             }
 
@@ -443,8 +450,9 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             {
                 if (!_answersByQuestion.TryGetValue(questionId, out var answers)) continue;
 
-                var answer = answers.FirstOrDefault(a =>
-                    string.Equals(a.Answer, answerText, StringComparison.OrdinalIgnoreCase));
+                // The option by its id (T280); by its unique text only for an answer saved without one.
+                var answer = AssessmentAnswerLink.Resolve(answers,
+                    _selectedAnswerId.TryGetValue(questionId, out var optionId) ? optionId : null, answerText);
                 if (answer is null || answer.RiskScore <= 0) continue;
 
                 var subject = answer.RiskSubject is { Length: > 0 }
@@ -521,6 +529,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
         if (IsReadOnly) return;
 
         var text = DecodeAnswerText(contentJson);
+        var optionId = string.IsNullOrEmpty(text) ? null : item.SelectedAnswer?.Id;
         if (string.IsNullOrEmpty(text))
         {
             _selectedAnswerText.Remove(item.QuestionId);
@@ -532,6 +541,9 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
             _answeredQuestions.Add(item.QuestionId);
         }
 
+        if (optionId is { } id) _selectedAnswerId[item.QuestionId] = id;
+        else _selectedAnswerId.Remove(item.QuestionId);
+
         RecalculateProgress();
 
         // Preview tracks answers locally so progress/review work, but never persists.
@@ -539,7 +551,7 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
         lock (_pendingLock)
         {
-            _pendingSaves[item.QuestionId] = contentJson;
+            _pendingSaves[item.QuestionId] = (contentJson, optionId);
         }
 
         _saveSignal.OnNext(Unit.Default);
@@ -590,12 +602,12 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
     {
         if (IsPreview || _run is null) return;
 
-        Dictionary<int, string> toSave;
+        Dictionary<int, (string Content, int? OptionId)> toSave;
         Dictionary<int, string?> comments;
         lock (_pendingLock)
         {
             if (_pendingSaves.Count == 0 && _pendingComments.Count == 0) return;
-            toSave = new Dictionary<int, string>(_pendingSaves);
+            toSave = new Dictionary<int, (string Content, int? OptionId)>(_pendingSaves);
             _pendingSaves.Clear();
             comments = new Dictionary<int, string?>(_pendingComments);
             _pendingComments.Clear();
@@ -603,9 +615,9 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
         // Both writes upsert the same (run, question) row, so neither order loses the other's value.
         var anySaved = false;
-        foreach (var (questionId, content) in toSave)
+        foreach (var (questionId, (content, optionId)) in toSave)
         {
-            var result = await AssessmentsService.SaveDraftAnswerAsync(_run!.Id, questionId, content);
+            var result = await AssessmentsService.SaveDraftAnswerAsync(_run!.Id, questionId, content, optionId);
             if (result != null) anySaved = true;
         }
 
@@ -861,19 +873,8 @@ public class AssessmentRunViewerViewModel : ParameterizedDialogViewModelBaseAsyn
 
     #region HELPERS
 
-    private static string DecodeAnswerText(string? contentJson)
-    {
-        if (string.IsNullOrWhiteSpace(contentJson)) return string.Empty;
-        try
-        {
-            // Drafts are stored as a JSON-encoded string (e.g. "Yes").
-            return JsonSerializer.Deserialize<string>(contentJson) ?? contentJson.Trim('"');
-        }
-        catch
-        {
-            return contentJson.Trim('"');
-        }
-    }
+    // Drafts are stored as a JSON-encoded string (e.g. "Yes"); one decoder for the viewer and the server (T280).
+    private static string DecodeAnswerText(string? contentJson) => AssessmentAnswerLink.DecodeText(contentJson);
 
     public override void Dispose()
     {

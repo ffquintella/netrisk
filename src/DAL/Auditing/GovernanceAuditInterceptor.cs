@@ -173,7 +173,24 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
         // M56, T265 (S40 §7.5): the default entity and the sync options of a Tenable connection move attribution and
         // sources; the keys and the sync state are in IgnoredFields, so a credential never reaches the trail.
-        nameof(TenableConnection)
+        nameof(TenableConnection),
+
+        // M58, T283 (S39 D-22, §9.5): the product inputs that move the index. The SLA policy sets every finding's due date
+        // (GOV.T). The two cadence tables are keyless in the schema and the model, so EF never tracks a write to them and
+        // these two entries record nothing today; they are here so that a key and a write path, if ever added, are
+        // audited from the first save. IndexInputsAuditTest pins both halves.
+        nameof(SlaConfiguration),
+        nameof(ReviewLevel),
+        nameof(RiskLevel),
+
+        // M58, T279 (S39 D-15, §12): the incident — its status, category, kind, severity, targets and resolution date move
+        // the index's AME category. Its history is read through /Incidents/{id}/History, under the incident permission.
+        // The free-text reporter name is in IgnoredFields: a person's name in an append-only table (LGPD art. 6, III).
+        nameof(Incident),
+
+        // M58, T291 (S39 I8, CMDB-REL): which applications a host runs moves the full-mode attribution and criticality
+        // inheritance; who linked or unlinked one is recorded. Its last-seen stamp is churn, in IgnoredFields.
+        nameof(HostApplicationLink)
     };
 
     /// <summary>
@@ -216,7 +233,12 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
 
         // M53, T243 (S40 §11.4, §6.4): which roles approve an index profile, and whether the index is still in shadow.
         RiskIndexSettingKeys.ApproverRoles,
-        RiskIndexSettingKeys.Publication
+        RiskIndexSettingKeys.Publication,
+
+        // M58, T283 (S39 D-22, §9.5): the cadence basis, the quantitative bands and the residual strategy.
+        GovernanceSettingKeys.NextReviewDateUses,
+        GovernanceSettingKeys.QuantitativeBandThresholds,
+        GovernanceSettingKeys.RiskWorkflowResidualStrategy
     };
 
     /// <summary>
@@ -232,6 +254,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(RiskScoring.QuantComputedAt),
         nameof(Host.LastVerificationDate),
         nameof(Host.RiskScoreUpdatedAt),
+        // M58, T281 (S39 D-18): stamped by every scan import, like the verification date.
+        nameof(Host.LastAssessedAt),
+        // M58, T291: restamped by every import that confirms the value; the value and its writer are still recorded.
+        nameof(Host.InternetFacingSeenAt),
+        nameof(HostApplicationLink.LastSeenAt),
         "UpdatedAt",
 
         // The entity map's own churn stamp, written on every save of the form (T241); who saved is the row's actor.
@@ -251,7 +278,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         nameof(TenableConnection.NextDueAt),
         nameof(TenableConnection.LastSyncAt),
         nameof(TenableConnection.LastSyncStatus),
-        nameof(TenableConnection.LastSyncError)
+        nameof(TenableConnection.LastSyncError),
+
+        // An incident's external reporter, typed as a name (T279): personal data the trail has no purpose for. The system
+        // user who reported it (ReportedById) is still recorded. No other audited type has a property of this name.
+        nameof(Incident.ReportedBy)
     };
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData,

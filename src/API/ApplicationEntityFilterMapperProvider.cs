@@ -103,7 +103,12 @@ public class ApplicationEntityFilterMapperProvider(ILocalizationService localiza
             ("owner", h => h.Owner),
             ("source", h => h.Source),
             ("riskScore", h => h.RiskScore),
-            ("lastVerificationDate", h => h.LastVerificationDate));
+            ("lastVerificationDate", h => h.LastVerificationDate),
+            // M58, T281–T282 (S39 D-18, D-20): the entity a host is attributed to (entityId=null lists the unassigned),
+            // who wrote it, and when a scan last assessed it.
+            ("entityId", h => h.EntityId),
+            ("entitySource", h => h.EntitySource),
+            ("lastAssessedAt", h => h.LastAssessedAt));
 
     /// <summary>
     /// Builds a mapper where each column answers to both its invariant name and its translation.

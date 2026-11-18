@@ -146,24 +146,41 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             var analyst = dbContext.Users.Find(run.AnalystId);
             if( analyst == null) throw new DataNotFoundException("user", run.AnalystId!.ToString()!);
             
-            var host = dbContext.Hosts.Find(run.HostId);
-            if(host == null) throw new DataNotFoundException("host", run.HostId!.ToString()!);
+            // A run targets an entity, and optionally one of its hosts (M58, T280): a run without a host is saved, not
+            // refused as a host "not found".
+            Host? host = null;
+            if (run.HostId is { } hostId)
+            {
+                host = dbContext.Hosts.Find(hostId);
+                if (host == null) throw new DataNotFoundException("host", hostId.ToString());
+            }
             
             //check if run exists 
             var dbRun = dbContext.AssessmentRuns.Find(run.Id);
             if(dbRun == null) throw new DataNotFoundException("run", run.Id.ToString());
 
-            //Mapper.Map(run, dbRun);
-            
-            //dbRun.EntityId = run.EntityId;
             dbRun.Entity = entity;
             dbRun.Analyst = analyst;
             dbRun.Comments = run.Comments;
             dbRun.Host = host;
-            
-            dbRun.RunDate = DateTime.Now;
-            if(run.Status != null) dbRun.Status = (int) run.Status;
-            else dbRun.Status = (int) AssessmentStatus.Open;
+            dbRun.HostId = host?.Id;
+
+            // M58, T280 (S39 D-16): RunDate is the date the run was created with, no longer "the last save". A status the
+            // caller leaves out keeps the run's, so a save that only edits a comment cannot reopen a submitted run.
+            var wasSubmitted = dbRun.Status == (int)AssessmentStatus.Submitted;
+            if (run.Status != null) dbRun.Status = (int)run.Status;
+            var isSubmitted = dbRun.Status == (int)AssessmentStatus.Submitted;
+
+            if (isSubmitted && !wasSubmitted)
+            {
+                dbRun.SubmittedAt = DateTime.UtcNow;
+                dbRun.Score = ScoreRun(dbContext, dbRun);
+            }
+            else if (!isSubmitted)
+            {
+                dbRun.SubmittedAt = null;
+                dbRun.Score = null;
+            }
             
             dbContext.SaveChanges();
             
@@ -562,10 +579,20 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
 
     }
 
-    public async Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson)
+    public async Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson,
+        int? assessmentAnswerId = null)
     {
         Logger.Information("Saving draft answer for run {RunId}, question {QuestionId}", runId, questionId);
         using var dbContext = DalService.GetContext();
+
+        var run = await dbContext.AssessmentRuns.FirstOrDefaultAsync(r => r.Id == runId)
+                  ?? throw new DataNotFoundException("AssessmentRuns", runId.ToString());
+        var question = await dbContext.AssessmentQuestions.FirstOrDefaultAsync(q => q.Id == questionId)
+                       ?? throw new DataNotFoundException("AssessmentQuestions", questionId.ToString());
+        if (question.AssessmentId != run.AssessmentId)
+            throw new InvalidParameterException("questionId", $"Question {questionId} is not part of the run's assessment.");
+
+        var optionId = await LinkOptionAsync(dbContext, questionId, answerContentJson, assessmentAnswerId);
 
         var existingAnswer = await dbContext.AssessmentRunAnswers
             .FirstOrDefaultAsync(a => a.AssessmentRunId == runId && a.AssessmentQuestionId == questionId);
@@ -573,6 +600,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
         if (existingAnswer != null)
         {
             existingAnswer.AnswerContentJson = answerContentJson;
+            existingAnswer.AssessmentAnswerId = optionId;
             existingAnswer.LastUpdatedAt = DateTime.UtcNow;
             dbContext.AssessmentRunAnswers.Update(existingAnswer);
             await dbContext.SaveChangesAsync();
@@ -584,6 +612,7 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             AssessmentRunId = runId,
             AssessmentQuestionId = questionId,
             AnswerContentJson = answerContentJson,
+            AssessmentAnswerId = optionId,
             LastUpdatedAt = DateTime.UtcNow
         };
 
@@ -614,61 +643,126 @@ public class AssessmentsService: ServiceBase, IAssessmentsService
             .OrderBy(q => q.Order)
             .ToListAsync();
 
-        var visibleQuestions = new List<AssessmentQuestion>();
+        var answers = await dbContext.AssessmentRunAnswers.AsNoTracking()
+            .Where(a => a.AssessmentRunId == runId)
+            .Select(a => new { a.AssessmentQuestionId, a.AnswerContentJson })
+            .ToListAsync();
+        var contentByQuestion = answers.GroupBy(a => a.AssessmentQuestionId)
+            .ToDictionary(g => g.Key, g => g.First().AnswerContentJson);
 
-        foreach (var question in allPageQuestions)
+        return allPageQuestions.Where(q => IsVisible(q, contentByQuestion)).ToList();
+    }
+
+    /// <summary>
+    /// Whether a question is shown, given the run's stored answer contents by question id: always without a condition,
+    /// else by its condition on the referenced answer. A condition that cannot be read shows the question (safe fallback).
+    /// The wizard's pages and the submission score (T280) both use this, so the score counts what the assessor saw.
+    /// </summary>
+    private bool IsVisible(AssessmentQuestion question, IReadOnlyDictionary<int, string?> contentByQuestion)
+    {
+        if (string.IsNullOrEmpty(question.ConditionJson)) return true;
+
+        try
         {
-            if (string.IsNullOrEmpty(question.ConditionJson))
+            var condition = JsonSerializer.Deserialize<QuestionCondition>(question.ConditionJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (condition == null) return true;
+
+            var ansValue = contentByQuestion.GetValueOrDefault(condition.QuestionId)?.Trim('"');
+
+            switch (condition.Operator.ToLowerInvariant())
             {
-                visibleQuestions.Add(question);
-                continue;
-            }
-
-            try
-            {
-                var condition = JsonSerializer.Deserialize<QuestionCondition>(question.ConditionJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (condition == null)
-                {
-                    visibleQuestions.Add(question);
-                    continue;
-                }
-
-                var refAnswer = await dbContext.AssessmentRunAnswers
-                    .FirstOrDefaultAsync(a => a.AssessmentRunId == runId && a.AssessmentQuestionId == condition.QuestionId);
-
-                bool isVisible = false;
-                var ansValue = refAnswer?.AnswerContentJson?.Trim('"');
-
-                switch (condition.Operator.ToLowerInvariant())
-                {
-                    case "equals":
-                        isVisible = ansValue != null && ansValue.Equals(condition.Value, StringComparison.OrdinalIgnoreCase);
-                        break;
-                    case "notempty":
-                        isVisible = !string.IsNullOrEmpty(ansValue);
-                        break;
-                    case "in":
-                        if (ansValue != null && condition.Value != null)
-                        {
-                            var allowedValues = condition.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                            isVisible = allowedValues.Contains(ansValue, StringComparer.OrdinalIgnoreCase);
-                        }
-                        break;
-                }
-
-                if (isVisible)
-                {
-                    visibleQuestions.Add(question);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error evaluating conditional logic for question {QuestionId}", question.Id);
-                visibleQuestions.Add(question); // safe fallback
+                case "equals":
+                    return ansValue != null && ansValue.Equals(condition.Value, StringComparison.OrdinalIgnoreCase);
+                case "notempty":
+                    return !string.IsNullOrEmpty(ansValue);
+                case "in":
+                    if (ansValue == null || condition.Value == null) return false;
+                    var allowedValues = condition.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    return allowedValues.Contains(ansValue, StringComparer.OrdinalIgnoreCase);
+                default:
+                    return false;
             }
         }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error evaluating conditional logic for question {QuestionId}", question.Id);
+            return true; // safe fallback
+        }
+    }
 
-        return visibleQuestions;
+    /// <summary>
+    /// M58, T280 (S39 §3.1, D-16): the score of a run being submitted — <see cref="AssessmentRunScore"/> over the questions
+    /// visible with its answers, reading each answer's option by id.
+    /// </summary>
+    private double? ScoreRun(DAL.Context.NRDbContext dbContext, AssessmentRun run)
+    {
+        var questions = dbContext.AssessmentQuestions.AsNoTracking().Where(q => q.AssessmentId == run.AssessmentId).ToList();
+        var options = dbContext.AssessmentAnswers.AsNoTracking().Where(a => a.AssessmentId == run.AssessmentId).ToList();
+        var answers = dbContext.AssessmentRunAnswers.AsNoTracking().Where(a => a.AssessmentRunId == run.Id)
+            .Select(a => new { a.AssessmentQuestionId, a.AnswerContentJson, a.AssessmentAnswerId })
+            .ToList();
+
+        var contentByQuestion = answers.GroupBy(a => a.AssessmentQuestionId)
+            .ToDictionary(g => g.Key, g => g.First().AnswerContentJson);
+        var chosen = answers.Where(a => a.AssessmentAnswerId != null).GroupBy(a => a.AssessmentQuestionId)
+            .ToDictionary(g => g.Key, g => g.First().AssessmentAnswerId!.Value);
+        var visible = questions.Where(q => IsVisible(q, contentByQuestion)).Select(q => q.Id);
+
+        return AssessmentRunScore.Compute(visible, chosen, options);
+    }
+
+    /// <summary>
+    /// The option a draft names (T280): the one the client sent, which must be the question's, else the question's one
+    /// option with the content's text; null when the content is empty or the text matches none or several.
+    /// </summary>
+    private static async Task<int?> LinkOptionAsync(DAL.Context.NRDbContext dbContext, int questionId, string? answerContentJson,
+        int? assessmentAnswerId)
+    {
+        var options = await dbContext.AssessmentAnswers.AsNoTracking().Where(a => a.QuestionId == questionId).ToListAsync();
+
+        if (assessmentAnswerId is { } id)
+        {
+            if (options.All(o => o.Id != id))
+                throw new InvalidParameterException("assessmentAnswerId",
+                    $"Option {id} is not one of question {questionId}'s options.");
+            return id;
+        }
+
+        var text = AssessmentAnswerLink.DecodeText(answerContentJson);
+        return text.Length == 0 ? null : AssessmentAnswerLink.MatchByText(options, text).Option?.Id;
+    }
+
+    public async Task<List<AssessmentAnswerLinkGap>> GetUnlinkedAnswersAsync()
+    {
+        using var dbContext = DalService.GetContext();
+
+        var unlinked = await dbContext.AssessmentRunAnswers.AsNoTracking()
+            .Where(a => a.AssessmentAnswerId == null && a.AnswerContentJson != null && a.AnswerContentJson != "")
+            .Select(a => new { a.Id, a.AssessmentRunId, a.AssessmentQuestionId, a.AnswerContentJson, a.AssessmentRun.AssessmentId })
+            .ToListAsync();
+
+        var questionIds = unlinked.Select(a => a.AssessmentQuestionId).Distinct().ToList();
+        var options = (await dbContext.AssessmentAnswers.AsNoTracking().Where(o => questionIds.Contains(o.QuestionId)).ToListAsync())
+            .ToLookup(o => o.QuestionId);
+
+        var gaps = new List<AssessmentAnswerLinkGap>();
+        foreach (var answer in unlinked.OrderBy(a => a.AssessmentRunId).ThenBy(a => a.AssessmentQuestionId))
+        {
+            var text = AssessmentAnswerLink.DecodeText(answer.AnswerContentJson);
+            if (text.Length == 0) continue;
+
+            var (option, reason) = AssessmentAnswerLink.MatchByText(options[answer.AssessmentQuestionId], text);
+            gaps.Add(new AssessmentAnswerLinkGap
+            {
+                RunAnswerId = answer.Id, RunId = answer.AssessmentRunId, AssessmentId = answer.AssessmentId,
+                QuestionId = answer.AssessmentQuestionId, AnswerText = text,
+                Reason = option is not null ? AssessmentAnswerLinkGap.Matchable
+                    : reason == AssessmentAnswerLink.Unmatched.Ambiguous ? AssessmentAnswerLinkGap.Ambiguous
+                    : AssessmentAnswerLinkGap.NoMatch
+            });
+        }
+
+        return gaps;
     }
 }
 

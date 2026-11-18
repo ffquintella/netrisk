@@ -1046,6 +1046,23 @@ public class AssessmentsRestServiceTest : BaseServiceTest
         Assert.Contains("selected-5", _backend.LastRequest.Body);
     }
 
+    /// <summary>M58, T280 (S39 D-16): the option chosen travels by id, so the server links the answer without its text.</summary>
+    [Fact]
+    public async Task TestSaveDraftAnswerAsyncSendsTheOptionId()
+    {
+        _backend.On(Method.Patch, "/Assessments/runs/10/answers", new AssessmentRunAnswer
+        {
+            Id = 1, AssessmentRunId = 10, AssessmentQuestionId = 4, AnswerContentJson = "\"Yes\"", AssessmentAnswerId = 5,
+            LastUpdatedAt = FixedDate
+        });
+
+        var saved = await _service.SaveDraftAnswerAsync(10, 4, "\"Yes\"", 5);
+
+        Assert.Equal(5, saved!.AssessmentAnswerId);
+        Assert.Matches(new System.Text.RegularExpressions.Regex("\"assessmentAnswerId\"\\s*:\\s*5\\b",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase), _backend.LastRequest.Body);
+    }
+
     [Fact]
     public async Task TestSaveDraftAnswerAsyncReturnsNullOnAServerError()
     {

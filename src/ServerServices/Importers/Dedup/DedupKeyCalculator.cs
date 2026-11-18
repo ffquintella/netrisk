@@ -42,6 +42,25 @@ internal sealed class DedupKeyCalculator(
             candidates.Add(new DedupCandidate(strategy.Name, key, strategy.MatchesLegacyImportHash));
         }
 
-        return new DedupKeyResult(candidates);
+        return new DedupKeyResult(WithRepository(candidates, context));
+    }
+
+    /// <summary>
+    /// Folds the import's repository into every key of a host-less finding (M58, T282, S39 §3.4, D-21): a SARIF rule on
+    /// <c>src/app.js</c>, a Snyk issue id and a Dependabot alert number all recur across repositories, and a key without
+    /// the repository merges them into one finding. The repository-less keys follow as adoption-only candidates, so
+    /// the first repository to re-import a finding from before repositories were named takes it over instead of
+    /// duplicating it. A host finding is keyed by its host; an import that names no repository keeps every key as it was.
+    /// </summary>
+    internal static List<DedupCandidate> WithRepository(List<DedupCandidate> candidates, DedupContext context)
+    {
+        var repository = context.Repository?.Trim();
+        if (string.IsNullOrEmpty(repository) || context.HostId != null || candidates.Count == 0) return candidates;
+
+        var scoped = candidates.Select(c => new DedupCandidate(c.Strategy,
+            DedupHash.Sha256($"repository\u001f{repository}\u001f{c.Key}"), MatchesLegacyImportHash: false));
+        var adoptable = candidates.Select(c => c with { MatchesLegacyImportHash = false, OnlyUnattributed = true });
+
+        return scoped.Concat(adoptable).ToList();
     }
 }

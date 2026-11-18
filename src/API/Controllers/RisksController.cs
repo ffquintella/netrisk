@@ -583,16 +583,18 @@ public class RisksController : ApiBaseController
     }
     
     /// <summary>
-    /// Gets the review Level for a risk
+    /// The review level (cadence) of a risk — what the desktop proposes as the next-review date. Since T278 it is the
+    /// cadence the overdue list applies (<c>GetRiskReviewLevelAsync</c>: the <c>next_review_date_uses</c> basis and the
+    /// inclusive band function): the list now honours an earlier next-review date, so a proposal from the legacy
+    /// inherent-only resolution would have overridden a residual basis.
     /// </summary>
     /// <param name="id">Risk Id</param>
-    /// <returns></returns>
     [HttpGet]
     [Route("{id}/ReviewLevel")]
     [Authorize(Policy = "RequireMgmtReviewAccess")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Risk>))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ReviewLevel))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public ActionResult<ReviewLevel> GetRiskReviewLevel(int id)
+    public async Task<ActionResult<ReviewLevel>> GetRiskReviewLevel(int id)
     {
 
         var user = GetUser();
@@ -601,7 +603,7 @@ public class RisksController : ApiBaseController
 
         try
         {
-            var rl = _mgmtReviewsService.GetRiskReviewLevel(id);
+            var rl = await _mgmtReviewsService.GetRiskReviewLevelAsync(id);
             return Ok(rl);
         }
 

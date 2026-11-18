@@ -83,6 +83,13 @@ public class IssueTrackerConnection
     /// <summary>Polling interval for instances that cannot reach NetRisk with a webhook.</summary>
     public int PollIntervalMinutes { get; set; } = 15;
 
+    /// <summary>
+    /// Whether a Jira Assets import moves a matched host that already has an entity onto <see cref="EntityId"/> (M58,
+    /// T282, S39 D-20). <see cref="RestampPolicy.OnlyUnassigned"/> (default) stamps only hosts with none;
+    /// <see cref="RestampPolicy.FollowMapping"/> also re-stamps the rest, never over a manual assignment.
+    /// </summary>
+    public RestampPolicy EntityRestampPolicy { get; set; } = RestampPolicy.OnlyUnassigned;
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

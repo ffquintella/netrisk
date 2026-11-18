@@ -3513,6 +3513,24 @@ Save anyway?</value>
     <data name="IncidentKindNearMiss" xml:space="preserve">
         <value>Near miss</value>
     </data>
+    <data name="IncidentSeverity" xml:space="preserve">
+        <value>Severity</value>
+    </data>
+    <data name="IncidentSeverityNotSet" xml:space="preserve">
+        <value>Not assessed</value>
+    </data>
+    <data name="IncidentSeverityLow" xml:space="preserve">
+        <value>Low</value>
+    </data>
+    <data name="IncidentSeverityMedium" xml:space="preserve">
+        <value>Medium</value>
+    </data>
+    <data name="IncidentSeverityHigh" xml:space="preserve">
+        <value>High</value>
+    </data>
+    <data name="IncidentSeverityCritical" xml:space="preserve">
+        <value>Critical</value>
+    </data>
     <data name="AchievedRpo" xml:space="preserve">
         <value>RPO achieved</value>
     </data>
@@ -6553,7 +6571,7 @@ Save anyway?</value>
         <value>Σ E[L] residual</value>
     </data>
     <data name="RiskMonetary_ResidualUnavailable" xml:space="preserve">
-        <value>not available: requires the persisted residual mean (quant_residual_ale_mean, T290)</value>
+        <value>not available: the server does not offer the monetary read yet</value>
     </data>
     <data name="RiskMonetary_InherentLabel" xml:space="preserve">
         <value>Σ E[L] inherent</value>
@@ -8930,5 +8948,17 @@ Switch agent co-work on?</value>
     </data>
     <data name="RiskApi_invalid_run_kindMSG" xml:space="preserve">
         <value>Unknown run kind.</value>
+    </data>
+    <data name="ReviewRefusedSegregationMSG" xml:space="preserve">
+        <value>You cannot review this risk because you submitted, own or manage it. Ask someone not involved with it to record the review.</value>
+    </data>
+    <data name="ReviewRefusedMSG" xml:space="preserve">
+        <value>The server refused this review. Nothing was recorded.</value>
+    </data>
+    <data name="HostEntityUnassigned" xml:space="preserve">
+        <value>Unassigned</value>
+    </data>
+    <data name="HostEntityAssignmentTip" xml:space="preserve">
+        <value>The business entity this host belongs to. A choice made here is kept: Vision One and Jira Assets syncs never move a host a person assigned.</value>
     </data>
 </root>

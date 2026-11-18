@@ -107,10 +107,29 @@ public class RiskScenarioSummaryTest
         Assert.Equal(string.Empty, RiskScenarioSummary.DuplicateLines(null));
     }
 
+    /// <summary>
+    /// M58, T279 — each severity has its own key and null is "not assessed", offered first; every severity once, so the
+    /// editor can set and clear each value the index anchors.
+    /// </summary>
+    [Fact]
+    public void TestSeverityKeysAndChoices()
+    {
+        Assert.Equal("IncidentSeverityNotSet", RiskScenarioSummary.SeverityKey(null));
+        Assert.Equal("IncidentSeverityCritical", RiskScenarioSummary.SeverityKey(IncidentSeverity.Critical));
+        Assert.Equal("IncidentSeverityHigh", RiskScenarioSummary.SeverityKey(IncidentSeverity.High));
+        Assert.Equal("IncidentSeverityMedium", RiskScenarioSummary.SeverityKey(IncidentSeverity.Medium));
+        Assert.Equal("IncidentSeverityLow", RiskScenarioSummary.SeverityKey(IncidentSeverity.Low));
+
+        Assert.Null(RiskScenarioSummary.SeverityChoices[0]);
+        Assert.Equal(Enum.GetValues<IncidentSeverity>().Length + 1, RiskScenarioSummary.SeverityChoices.Count);
+        Assert.Equal(RiskScenarioSummary.SeverityChoices.Count, RiskScenarioSummary.SeverityChoices.Distinct().Count());
+    }
+
     private static IEnumerable<string> ComputedKeys() =>
         RiskScenarioSummary.ConfidenceChoices.Select(RiskScenarioSummary.ConfidenceKey)
             .Concat(Enum.GetValues<PendingRiskOrigin>().Select(RiskScenarioSummary.OriginKey))
             .Concat(Enum.GetValues<IncidentKind>().Select(RiskScenarioSummary.KindKey))
+            .Concat(RiskScenarioSummary.SeverityChoices.Select(RiskScenarioSummary.SeverityKey))
             .Distinct();
 
     /// <summary>U7 — every computed key resolves in all three resource files.</summary>
@@ -128,6 +147,6 @@ public class RiskScenarioSummaryTest
         var missing = ComputedKeys().Where(k => !declared.Contains(k)).ToList();
 
         Assert.True(missing.Count == 0, $"{file} does not declare: {string.Join(", ", missing)}");
-        Assert.Equal(8, ComputedKeys().Count());
+        Assert.Equal(13, ComputedKeys().Count());
     }
 }

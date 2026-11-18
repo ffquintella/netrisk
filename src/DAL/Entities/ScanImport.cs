@@ -67,6 +67,12 @@ public class ScanImport
     /// </summary>
     public string? IdempotencyKey { get; set; }
 
+    /// <summary>
+    /// The repository or project a code-scanner import is for (M58, T282, S39 D-21), as the caller named it. With
+    /// <see cref="EntityId"/> (the target application) it is what keeps two repositories' findings apart.
+    /// </summary>
+    public string? Repository { get; set; }
+
     public virtual User? User { get; set; }
 
     public virtual Entity? Entity { get; set; }

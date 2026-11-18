@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Governance;
+using Model.Risks;
 using ServerServices.Governance;
 using ServerServices.Interfaces;
 using ServerServices.Tests.ServiceTests;
@@ -106,6 +107,10 @@ public class RiskAcceptancesServiceInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(1, review.RiskId);
         Assert.Equal(1, review.Reviewer);
         Assert.Contains("Risk accepted until", review.Comments);
+
+        // T277 (S39 D-06): the outcome is the seeded "Approve Risk" / "Accept until Next Review". It was written as
+        // review 2 and next step 3, which the seed names "Reject Risk and Close" and "Submit as a Production Issue".
+        Assert.Equal((ReviewCodes.ApproveRisk, NextStepCodes.AcceptUntilNextReview), (review.Review, review.NextStep));
     }
 
     [Fact]

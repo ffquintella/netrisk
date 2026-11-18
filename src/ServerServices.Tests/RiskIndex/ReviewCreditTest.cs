@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using Model.RiskIndex;
 using ServerServices.RiskIndex.Signals;
 using Xunit;
+using ServerServices.Governance;
 
 namespace ServerServices.Tests.RiskIndex;
 

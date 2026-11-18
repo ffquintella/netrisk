@@ -7,6 +7,7 @@ using Model.Exceptions;
 using Model.Integrations;
 using Model.Secrets;
 using Serilog;
+using ServerServices.Importers;
 using ServerServices.Integrations.EntityMappings;
 using ServerServices.Interfaces;
 using ServerServices.Services;
@@ -334,6 +335,8 @@ public partial class TrendMicroService(
             combined.PostureRowsWritten += result.PostureRowsWritten;
             combined.HostsAssignedByRule += result.HostsAssignedByRule;
             combined.HostsReassignedByRule += result.HostsReassignedByRule;
+            combined.HostsAssignedByConnection += result.HostsAssignedByConnection;
+            combined.HostsReassignedByConnection += result.HostsReassignedByConnection;
             combined.TagsRecorded += result.TagsRecorded;
             combined.IndicatorsWritten += result.IndicatorsWritten;
             combined.VendorAssetsSynced += result.VendorAssetsSynced;
@@ -392,7 +395,7 @@ public partial class TrendMicroService(
                 // Counted per chunk and only added to the result once the chunk is committed: a batch
                 // that fails is re-applied one device at a time below, and counting it here as well
                 // would report every host in it twice.
-                var applied = new List<(TrendMicroDevice Device, Host Host, bool Created, MappingOutcome? Rule)>();
+                var applied = new List<(TrendMicroDevice Device, Host Host, bool Created, HostAttribution Rule)>();
 
                 foreach (var device in chunk)
                 {
@@ -400,7 +403,7 @@ public partial class TrendMicroService(
                     {
                         var host = index.Match(device);
                         var created = host == null;
-                        MappingOutcome? rule;
+                        HostAttribution rule;
 
                         if (host == null)
                         {
@@ -414,7 +417,7 @@ public partial class TrendMicroService(
                         }
                         else
                         {
-                            rule = ApplyToExistingHost(host, device, rules);
+                            rule = ApplyToExistingHost(connection, host, device, rules);
                         }
 
                         applied.Add((device, host, created, rule));
@@ -491,7 +494,7 @@ public partial class TrendMicroService(
             {
                 var host = await MatchHostAsync(db, connection, device, ct);
                 var created = host == null;
-                MappingOutcome? rule;
+                HostAttribution rule;
 
                 if (host == null)
                 {
@@ -500,7 +503,7 @@ public partial class TrendMicroService(
                 }
                 else
                 {
-                    rule = ApplyToExistingHost(host, device, rules);
+                    rule = ApplyToExistingHost(connection, host, device, rules);
                 }
 
                 await db.SaveChangesAsync(ct);
@@ -560,14 +563,15 @@ public partial class TrendMicroService(
     /// A host for a device NetRisk has never seen, under the winning tag rule's entity, else the connection's default
     /// (S40 §6.6: rule, then default, then Unassigned).
     /// </summary>
-    private static (Host Host, MappingOutcome? Rule) NewHost(TrendMicroConnection connection, TrendMicroDevice device,
+    private static (Host Host, HostAttribution Rule) NewHost(TrendMicroConnection connection, TrendMicroDevice device,
         IReadOnlyList<MappingRule> rules)
     {
         var winner = VendorEntityMappingRules.Winner(rules, device.Tags);
         var host = NewHost(connection, device);
-        if (winner is null) return (host, null);
+        if (winner is null) return (host, default);
         host.EntityId = winner.EntityId;
-        return (host, MappingOutcome.Assign);
+        host.EntitySource = EntitySources.Rule;
+        return (host, new HostAttribution(MappingOutcome.Assign, null));
     }
 
     private static Host NewHost(TrendMicroConnection connection, TrendMicroDevice device) => new()
@@ -582,6 +586,7 @@ public partial class TrendMicroService(
         Status = 1,
         RegistrationDate = DateTime.UtcNow,
         EntityId = connection.EntityId,
+        EntitySource = connection.EntityId == null ? null : EntitySources.VisionOne,
         ExternalId = device.Id,
         ExternalProvider = ProviderName,
         Criticality = device.Criticality,
@@ -589,26 +594,34 @@ public partial class TrendMicroService(
     };
 
     /// <summary>
-    /// <see cref="ApplyToExistingHost(Host, TrendMicroDevice)"/>, then the winning tag rule under its restamp policy: a host
-    /// with no entity is attributed, one elsewhere moves only under <c>FollowMapping</c>. The move is an ordinary write of
-    /// <c>hosts.entity_id</c>, so the Host audit records it under this sync's actor (S40 §6.6).
+    /// <see cref="ApplyToExistingHost(Host, TrendMicroDevice)"/>, then the winning tag rule under its restamp policy, else
+    /// the connection's target entity under the connection's (M58, T282, S39 D-20): a host with no entity is attributed,
+    /// one elsewhere moves only under <c>FollowMapping</c> and never over a writer that outranks this one — a manual
+    /// assignment above all (<see cref="EntitySources"/>). The move is an ordinary write of <c>hosts.entity_id</c>, so
+    /// the Host audit records it under this sync's actor (S40 §6.6).
     /// </summary>
-    private static MappingOutcome? ApplyToExistingHost(Host host, TrendMicroDevice device, IReadOnlyList<MappingRule> rules)
+    private static HostAttribution ApplyToExistingHost(TrendMicroConnection connection, Host host, TrendMicroDevice device,
+        IReadOnlyList<MappingRule> rules)
     {
         ApplyToExistingHost(host, device);
 
         var winner = VendorEntityMappingRules.Winner(rules, device.Tags);
-        if (winner is null) return null;
+        if (winner is not null) return new HostAttribution(VendorEntityMappingRules.ApplyTo(host, winner), null);
 
-        var outcome = VendorEntityMappingRules.Decide(host.EntityId, winner);
-        host.EntityId = VendorEntityMappingRules.Apply(host.EntityId, winner);
-        return outcome;
+        return new HostAttribution(null, HostEntityRestamp.ApplyTo(host, connection.EntityId,
+            connection.EntityRestampPolicy, EntitySources.VisionOne));
     }
 
-    private static void CountRule(PostureSyncResult result, MappingOutcome? outcome)
+    /// <summary>What attributed a matched host: the winning tag rule, else the connection's target entity.</summary>
+    private readonly record struct HostAttribution(MappingOutcome? Rule, MappingOutcome? Connection);
+
+    private static void CountRule(PostureSyncResult result, HostAttribution outcome)
     {
-        if (outcome == MappingOutcome.Assign) result.HostsAssignedByRule++;
-        else if (outcome == MappingOutcome.Reassign) result.HostsReassignedByRule++;
+        if (outcome.Rule == MappingOutcome.Assign) result.HostsAssignedByRule++;
+        else if (outcome.Rule == MappingOutcome.Reassign) result.HostsReassignedByRule++;
+
+        if (outcome.Connection == MappingOutcome.Assign) result.HostsAssignedByConnection++;
+        else if (outcome.Connection == MappingOutcome.Reassign) result.HostsReassignedByConnection++;
     }
 
     private static void ApplyToExistingHost(Host host, TrendMicroDevice device)
@@ -821,7 +834,7 @@ public partial class TrendMicroService(
                 FirstSeen = vulnerability.FirstDetected,
                 LastSeen = vulnerability.LastDetected,
                 RawStatus = vulnerability.VirtualPatchApplied ? "virtually-patched" : "open",
-                Host = device == null
+                Host = Identified(vulnerability.DeviceId, device == null
                     ? new NormalizedHost { HostName = vulnerability.DeviceName }
                     : new NormalizedHost
                     {
@@ -830,7 +843,7 @@ public partial class TrendMicroService(
                         Fqdn = device.Fqdn,
                         MacAddress = device.PrimaryMac,
                         OperatingSystem = device.OperatingSystem
-                    }
+                    })
             };
 
             finding.Cves.Add(vulnerability.CveId);
@@ -886,6 +899,13 @@ public partial class TrendMicroService(
         else
             result.VirtualPatchesApplied = 0;
     }
+
+    /// <summary>
+    /// The CVE's host carrying the device id (M58, T281, S39 D-14): the pipeline then finds the host the inventory synced
+    /// for this device before looking at any address, so a CVE no longer lands on another machine that holds its IP.
+    /// </summary>
+    private static NormalizedHost Identified(string? deviceId, NormalizedHost host) =>
+        string.IsNullOrWhiteSpace(deviceId) || host.IsEmpty ? host : IdentifiedHost.From(host, ProviderName, deviceId);
 
     /// <summary>
     /// Records the EPSS readings this sync carried as <c>VisionOne</c> readings and re-projects the findings
@@ -1314,6 +1334,9 @@ public partial class TrendMicroService(
         target.SyncPosture = source.SyncPosture;
         target.SyncAttackSurfaceObjects = source.SyncAttackSurfaceObjects;
         target.SyncWorkbenchAlerts = source.SyncWorkbenchAlerts;
+        target.EntityRestampPolicy = Enum.IsDefined(source.EntityRestampPolicy)
+            ? source.EntityRestampPolicy
+            : RestampPolicy.OnlyUnassigned;
         return target;
     }
 
@@ -1422,6 +1445,7 @@ public partial class TrendMicroService(
         SyncPosture = connection.SyncPosture,
         SyncAttackSurfaceObjects = connection.SyncAttackSurfaceObjects,
         SyncWorkbenchAlerts = connection.SyncWorkbenchAlerts,
+        EntityRestampPolicy = connection.EntityRestampPolicy,
         NextDueAt = connection.NextDueAt,
         LastSyncAt = connection.LastSyncAt,
         LastSyncStatus = connection.LastSyncStatus,

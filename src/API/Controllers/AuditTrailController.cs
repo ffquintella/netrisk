@@ -120,6 +120,15 @@ public class AuditTrailController(
                     : "/AiModels/{modelId}/History"
             });
 
+        // And for incidents (M58, T279): their read permission is incident_management, which this reader's policy is not.
+        if (entityType == nameof(DAL.Entities.Incident))
+            return BadRequest(new
+            {
+                error = "use_incident_history",
+                message = $"'{entityType}' history is served by /Incidents/{{id}}/History.",
+                route = $"/Incidents/{entityId}/History"
+            });
+
         try
         {
             return Ok(await auditTrail.GetForRecordAsync(entityType, entityId, limit));

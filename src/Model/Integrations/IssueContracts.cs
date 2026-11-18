@@ -217,6 +217,9 @@ public class IssueTrackerConnectionView
 
     public int PollIntervalMinutes { get; set; }
 
+    /// <summary>Whether a Jira Assets import moves a host already in another entity onto <see cref="EntityId"/> (M58, T282).</summary>
+    public DAL.Enums.RestampPolicy EntityRestampPolicy { get; set; } = DAL.Enums.RestampPolicy.OnlyUnassigned;
+
     public List<IssueStatusMappingView> StatusMappings { get; set; } = new();
 
     public IssueTrackerCapabilities? Capabilities { get; set; }

@@ -106,9 +106,25 @@ public class AssetObjectPayload
     public Dictionary<string, List<string>> AttributesByName { get; set; }
         = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Attribute id → the objects a reference attribute points at (M58, T291). Kept beside the display values because a
+    /// relation is resolved by the referenced object's id, which the label alone does not carry.
+    /// </summary>
+    public Dictionary<int, List<AssetObjectReference>> References { get; set; } = new();
+
+    /// <summary>Attribute name → referenced objects; the same fallback as <see cref="AttributesByName"/>.</summary>
+    public Dictionary<string, List<AssetObjectReference>> ReferencesByName { get; set; }
+        = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>The object as Assets sent it, stored on the audit row verbatim.</summary>
     public string? RawJson { get; set; }
 }
+
+/// <summary>
+/// One object a reference attribute points at, or — for a text attribute mapped onto a relation — a bare name with no
+/// id (M58, T291). Resolved by id, then key, then label.
+/// </summary>
+public sealed record AssetObjectReference(string? ObjectId, string? ObjectKey, string Label);
 
 /// <summary>One page of an AQL search.</summary>
 public class AssetSearchPage

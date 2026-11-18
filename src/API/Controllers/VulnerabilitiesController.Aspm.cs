@@ -8,6 +8,7 @@ using Contracts.Importers;
 using DAL.Entities;
 using DAL.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.Exceptions;
 using Model.Findings;
@@ -73,10 +74,13 @@ public partial class VulnerabilitiesController
     [HttpPost]
     [Route("import/{importerName}/{fileId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ImportJobCreationResult))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ImportJobCreationResult>> ImportWithImporter(string importerName, string fileId,
-        [FromQuery] bool ignoreNegligible = true)
+        [FromQuery] bool ignoreNegligible = true, [FromQuery] int? entityId = null,
+        [FromQuery] string? repository = null)
     {
         var user = GetUser();
 
@@ -84,11 +88,14 @@ public partial class VulnerabilitiesController
         {
             if (!StringCleaner.IsSafeFilename(fileId)) return BadRequest("Invalid fileId");
 
+            var target = await ResolveImportTargetAsync(entityId, repository);
+            if (target.Refusal != null) return target.Refusal;
+
             var importFile = Path.Combine(FilesService.GetUploadDirectory(), fileId + ".dat");
             if (!System.IO.File.Exists(importFile)) return NotFound("File not found");
 
             var started = await StartImportJobAsync(importerName, importFile, fileId + ".dat", fileId, user,
-                ignoreNegligible, idempotencyKey: null);
+                ignoreNegligible, idempotencyKey: null, target: target.Target);
 
             Logger.Information("User:{User} started a {Importer} import of file {File}. Job {Job}, import {Import}",
                 user.Value, importerName, fileId, started.JobId, started.ImportId);
@@ -180,9 +187,12 @@ public partial class VulnerabilitiesController
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ImportJobCreationResult))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ImportJobCreationResult>> ImportDirect(string importerName,
         [FromQuery] bool wait = false, [FromQuery] bool ignoreNegligible = true,
-        [FromQuery] string? fileName = null)
+        [FromQuery] string? fileName = null, [FromQuery] int? entityId = null,
+        [FromQuery] string? repository = null)
     {
         var user = GetUser();
 
@@ -191,6 +201,10 @@ public partial class VulnerabilitiesController
 
         try
         {
+            // Before the body is read: a refused target must not cost a 500 MB upload first.
+            var target = await ResolveImportTargetAsync(entityId, repository);
+            if (target.Refusal != null) return target.Refusal;
+
             // Streamed to a temporary file rather than buffered in memory: a 500 MB scan report is
             // an ordinary thing to upload, and holding it in the request pipeline is how a single
             // CI job takes the API down.
@@ -210,7 +224,7 @@ public partial class VulnerabilitiesController
 
             var started = await StartImportJobAsync(importerName, tempPath,
                 fileName ?? $"upload-{DateTime.UtcNow:yyyyMMddHHmmss}", fileId: null, user, ignoreNegligible,
-                idempotencyKey, deleteAfterRead: true);
+                idempotencyKey, deleteAfterRead: true, target: target.Target);
 
             if (started.IsReplay)
             {
@@ -386,15 +400,16 @@ public partial class VulnerabilitiesController
     /// </summary>
     private async Task<ImportJobCreationResult> StartImportJobAsync(string importerName, string path,
         string? fileName, string? fileId, User user, bool ignoreNegligible, string? idempotencyKey,
-        bool deleteAfterRead = false)
+        bool deleteAfterRead = false, ImportTarget? target = null)
     {
         var now = DateTime.UtcNow;
+        var entityId = target?.EntityId ?? CallerEntityId();
 
         var context = new ImportContext
         {
             FileName = fileName,
             IgnoreNegligible = ignoreNegligible,
-            EntityId = CallerEntityId(),
+            EntityId = entityId,
             UserId = user.Value,
             ImportedAt = now
         };
@@ -405,7 +420,8 @@ public partial class VulnerabilitiesController
             FileName = fileName,
             FileId = fileId,
             UserId = user.Value,
-            EntityId = CallerEntityId(),
+            EntityId = entityId,
+            Repository = target?.Repository,
             IdempotencyKey = idempotencyKey,
             ImportedAt = now
         };
@@ -446,6 +462,40 @@ public partial class VulnerabilitiesController
         var ids = scope.ClaimedEntityIds.Distinct().ToList();
         return ids.Count == 1 ? ids[0] : null;
     }
+
+    /// <summary>
+    /// The target application and repository a caller named for an import (M58, T282, S39 §3.4, D-21), validated: the
+    /// application must be an entity the caller's scope covers (403 otherwise, before any existence check, so a scoped
+    /// caller learns nothing about entities outside it) and must exist (400); the repository is trimmed, at most 255
+    /// characters and free of control characters (400). Neither named: the caller's own scope applies, as before.
+    /// </summary>
+    private async Task<(ImportTarget? Target, ActionResult? Refusal)> ResolveImportTargetAsync(int? entityId,
+        string? repository)
+    {
+        repository = string.IsNullOrWhiteSpace(repository) ? null : repository.Trim();
+
+        if (repository != null && (repository.Length > MaxRepositoryLength || repository.Any(char.IsControl)))
+            return (null, BadRequest($"repository must be at most {MaxRepositoryLength} printable characters."));
+
+        if (entityId != null)
+        {
+            if (!DalService.GetCurrentEntityScope().Allows(entityId))
+                return (null, StatusCode(StatusCodes.Status403Forbidden,
+                    "The target application is outside your entity scope."));
+
+            await using var db = DalService.GetContext();
+            if (!await db.Entities.AsNoTracking().AnyAsync(e => e.Id == entityId.Value))
+                return (null, BadRequest($"Entity {entityId} does not exist."));
+        }
+
+        return entityId == null && repository == null ? (null, null) : (new ImportTarget(entityId, repository), null);
+    }
+
+    /// <summary>The <c>scan_imports.repository</c> / <c>vulnerabilities.repository</c> column width.</summary>
+    public const int MaxRepositoryLength = 255;
+
+    /// <summary>A validated import target: the application (null = the caller's scope decides) and the repository.</summary>
+    private sealed record ImportTarget(int? EntityId, string? Repository);
 
     /// <summary>
     /// Opens the report for the job. <paramref name="deleteAfterRead"/> uses

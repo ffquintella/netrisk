@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mapster;
+using Model.Assessments;
 using Model.DTO;
+using Model.Exceptions;
 using ServerServices;
 using ServerServices.Interfaces;
 
@@ -179,6 +181,9 @@ public class AssessmentsController : ApiBaseController
             }
 
             run.AnalystId = user.Value;
+            // The run the route names, which was found in the assessment above — not whichever id the body carries.
+            run.Id = runId;
+            run.AssessmentId = assessmentId;
             
             _assessmentsService.UpdateRun(run);
 
@@ -893,8 +898,17 @@ public class AssessmentsController : ApiBaseController
 
         try
         {
-            var answer = await _assessmentsService.SaveDraftAnswerAsync(runId, request.QuestionId, request.AnswerContentJson);
+            var answer = await _assessmentsService.SaveDraftAnswerAsync(runId, request.QuestionId, request.AnswerContentJson,
+                request.AssessmentAnswerId);
             return Ok(answer);
+        }
+        catch (InvalidParameterException ex)
+        {
+            return BadRequest(new { error = "invalid_parameter", ex.ParameterName, ex.Message });
+        }
+        catch (DataNotFoundException)
+        {
+            return NotFound();
         }
         catch (Exception ex)
         {
@@ -923,6 +937,31 @@ public class AssessmentsController : ApiBaseController
         }
     }
 
+    /// <summary>
+    /// M58, T280 (S39 D-16): the run answers that carry text but name no option — what the version 114 backfill could not
+    /// match, with why (<c>no_match</c>, <c>ambiguous</c>, <c>matchable</c>) — read through the caller's scope.
+    /// </summary>
+    [HttpGet]
+    [Route("runs/answers/unlinked")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AssessmentAnswerLinkGap>))]
+    public async Task<ActionResult<List<AssessmentAnswerLinkGap>>> GetUnlinkedAnswers()
+    {
+        var user = GetUser();
+
+        try
+        {
+            var gaps = await _assessmentsService.GetUnlinkedAnswersAsync();
+            Logger.Information("User:{UserValue} read the {Count} assessment answers not linked to an option", user.Value,
+                gaps.Count);
+            return Ok(gaps);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error reading the assessment answers not linked to an option");
+            return StatusCode(500, "Error reading the unlinked answers");
+        }
+    }
+
     [HttpGet]
     [Route("runs/{runId}/pages/{pageNumber}/questions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AssessmentQuestion>))]
@@ -948,4 +987,7 @@ public class SaveDraftAnswerRequest
 {
     public int QuestionId { get; set; }
     public string AnswerContentJson { get; set; } = null!;
+
+    /// <summary>The option chosen (M58, T280). Optional for older clients: the server then matches the text.</summary>
+    public int? AssessmentAnswerId { get; set; }
 }

@@ -292,9 +292,44 @@ public class JiraAssetsClient(ILogger logger, IOutboundHttpClient http) : IJiraA
 
             if (attributeId != null) payload.Attributes[attributeId.Value] = values;
             if (name != null) payload.AttributesByName[name] = values;
+
+            var references = ReadReferences(attribute);
+
+            if (references.Count == 0) continue;
+
+            if (attributeId != null) payload.References[attributeId.Value] = references;
+            if (name != null) payload.ReferencesByName[name] = references;
         }
 
         return payload;
+    }
+
+    /// <summary>
+    /// The objects a reference attribute points at (M58, T291): <c>referencedObject.id</c> and <c>objectKey</c>, labelled
+    /// by the display value. Values with no <c>referencedObject</c> are not references and are skipped here.
+    /// </summary>
+    private static List<AssetObjectReference> ReadReferences(JsonElement attribute)
+    {
+        var results = new List<AssetObjectReference>();
+
+        if (!attribute.TryGetProperty("objectAttributeValues", out var values)
+            || values.ValueKind != JsonValueKind.Array) return results;
+
+        foreach (var value in values.EnumerateArray())
+        {
+            if (!value.TryGetProperty("referencedObject", out var referenced)
+                || referenced.ValueKind != JsonValueKind.Object) continue;
+
+            var id = JiraHttp.Str(referenced, "id");
+            var key = JiraHttp.Str(referenced, "objectKey");
+            var label = JiraHttp.Str(value, "displayValue") ?? JiraHttp.Str(referenced, "label") ?? key ?? id;
+
+            if (string.IsNullOrWhiteSpace(label) && string.IsNullOrWhiteSpace(id)) continue;
+
+            results.Add(new AssetObjectReference(id, key, (label ?? id!).Trim()));
+        }
+
+        return results;
     }
 
     /// <summary>

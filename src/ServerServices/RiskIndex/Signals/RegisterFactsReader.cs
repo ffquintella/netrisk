@@ -120,29 +120,11 @@ public static partial class RegisterFactsReader
                 ReviewRequestedReason = risk.ReviewRequestedReason,
                 ReviewRequestFromAcceptance = audit.RequestFromAcceptance.Contains(risk.Id) ||
                                               IsAcceptanceRequestReason(risk.ReviewRequestedReason),
-                Reviews = reviews.Where(r => r.RiskId == risk.Id).Select(r =>
-                {
-                    var row = audit.ReviewCreation(r.Id, r.RiskId, r.Reviewer, r.SubmissionDate);
-                    return new ReviewFact
-                    {
-                        Id = r.Id,
-                        ReviewerId = r.Reviewer,
-                        SubmissionDate = r.SubmissionDate,
-                        AuditedAt = row?.OccurredAt,
-                        CorrelationId = row?.CorrelationId,
-                        SavedWithAcceptance = row?.CorrelationId is { } c1 && audit.AcceptanceCreations.Contains(c1),
-                        SavedWithCampaignDecision = row?.CorrelationId is { } c2 && audit.CampaignDecisions.Contains(c2),
-                        RequiresCountersignature = r.RequiresCountersignature,
-                        SecondReviewerId = r.SecondReviewerId
-                    };
-                }).ToList(),
-                Acceptances = acceptances.Where(a => a.RiskId == risk.Id).Select(a => new AcceptanceFact
-                {
-                    Id = a.Id, Status = a.Status, CreatedAt = a.CreatedAt, ExpiresAt = a.ExpiresAt, RevokedAt = a.RevokedAt,
-                    RenewedFromId = a.RenewedFromId, ResidualScoreSnapshot = a.ResidualScoreSnapshot,
-                    CreatedById = a.CreatedById, RequestedById = a.RequestedById,
-                    AuthorizingManagerId = a.AuthorizingManagerId
-                }).ToList(),
+                Reviews = reviews.Where(r => r.RiskId == risk.Id)
+                    .Select(r => ToReviewFact(audit, r.Id, r.RiskId, r.Reviewer, r.SubmissionDate, r.RequiresCountersignature,
+                        r.SecondReviewerId))
+                    .ToList(),
+                Acceptances = acceptances.Where(a => a.RiskId == risk.Id).Select(ToAcceptanceFact).ToList(),
                 CampaignItems = riskItems.Select(i => new CampaignItemFact
                 {
                     Id = i.Id, CampaignId = i.CampaignId, CampaignStatus = i.CampaignStatus,
@@ -164,6 +146,33 @@ public static partial class RegisterFactsReader
 
         return facts;
     }
+
+    /// <summary>A review with its audit correlation, read by the product's rule (<see cref="ReviewHistoryReader"/>).</summary>
+    private static ReviewFact ToReviewFact(AuditFacts audit, int id, int riskId, int reviewer, DateTime submission,
+        bool requiresCountersignature, int? secondReviewerId)
+    {
+        var evidence = audit.Reviews.Evidence(id, riskId, reviewer, submission);
+        return new ReviewFact
+        {
+            Id = id,
+            ReviewerId = reviewer,
+            SubmissionDate = submission,
+            AuditedAt = evidence.AuditedAt,
+            CorrelationId = evidence.CorrelationId,
+            SavedWithAcceptance = evidence.SavedWithAcceptance,
+            SavedWithCampaignDecision = evidence.SavedWithCampaignDecision,
+            RequiresCountersignature = requiresCountersignature,
+            SecondReviewerId = secondReviewerId
+        };
+    }
+
+    private static AcceptanceFact ToAcceptanceFact(RiskAcceptance a) => new()
+    {
+        Id = a.Id, Status = a.Status, CreatedAt = a.CreatedAt, ExpiresAt = a.ExpiresAt, RevokedAt = a.RevokedAt,
+        RenewedFromId = a.RenewedFromId, ResidualScoreSnapshot = a.ResidualScoreSnapshot,
+        CreatedById = a.CreatedById, RequestedById = a.RequestedById,
+        AuthorizingManagerId = a.AuthorizingManagerId
+    };
 
     private sealed record LatestCampaign(int CampaignId, DateTime CompletedAt, int RankedItems);
 
@@ -199,45 +208,16 @@ public static partial class RegisterFactsReader
             .ToDictionary(c => c.EntityId, c => new LatestCampaign(c.Id, c.CompletedAt, ranked.GetValueOrDefault(c.Id)));
     }
 
-    private sealed record AuditRow(int EntityId, string? NewValue, DateTime OccurredAt, string? CorrelationId);
-
     private sealed class AuditFacts
     {
-        public required List<AuditRow> ReviewCreations;
-        public required HashSet<string> AcceptanceCreations;
-        public required HashSet<string> CampaignDecisions;
+        /// <summary>The review correlation, read once by the product's reader so both sides classify a review alike.</summary>
+        public required ReviewHistoryReader.ReviewAudit Reviews;
         public required HashSet<int> RequestFromAcceptance;
-
-        /// <summary>
-        /// The creation row of a review. A created row is keyed by EF's temporary id in production (the interceptor runs
-        /// before the insert), so the row is matched by its id when it is real and otherwise by its recorded RiskId,
-        /// Reviewer and SubmissionDate.
-        /// </summary>
-        public AuditRow? ReviewCreation(int id, int riskId, int reviewer, DateTime submission) =>
-            ReviewCreations.Where(r => r.EntityId == id ||
-                                       r.EntityId <= 0 && Field(r.NewValue, "RiskId") == riskId.ToString(CultureInfo.InvariantCulture) &&
-                                       Field(r.NewValue, "Reviewer") == reviewer.ToString(CultureInfo.InvariantCulture) &&
-                                       DateTime.TryParse(Field(r.NewValue, "SubmissionDate"), CultureInfo.InvariantCulture,
-                                           DateTimeStyles.RoundtripKind, out var at) &&
-                                       Math.Abs((at - submission).TotalSeconds) <= 1)
-                .OrderBy(r => r.OccurredAt).FirstOrDefault();
     }
 
     private static async Task<AuditFacts> AuditAsync(NRDbContext db, List<int> riskIds, CancellationToken ct)
     {
-        var reviewCreations = await db.AuditLogs.AsNoTracking()
-            .Where(a => a.EntityType == nameof(MgmtReview) && a.Action == AuditLogAction.Create)
-            .Select(a => new AuditRow(a.EntityId, a.NewValue, a.OccurredAt, a.CorrelationId))
-            .ToListAsync(ct);
-
-        var acceptanceCreations = await db.AuditLogs.AsNoTracking()
-            .Where(a => a.EntityType == nameof(RiskAcceptance) && a.Action == AuditLogAction.Create && a.CorrelationId != null)
-            .Select(a => a.CorrelationId!).Distinct().ToListAsync(ct);
-
-        var campaignDecisions = await db.AuditLogs.AsNoTracking()
-            .Where(a => a.EntityType == nameof(RiskReviewCampaignItem) && a.Action == AuditLogAction.Update &&
-                        a.Field == nameof(RiskReviewCampaignItem.Decision) && a.CorrelationId != null)
-            .Select(a => a.CorrelationId!).Distinct().ToListAsync(ct);
+        var reviews = await ReviewHistoryReader.ReadAuditAsync(db, ct);
 
         var acceptanceChanges = (await db.AuditLogs.AsNoTracking()
                 .Where(a => a.EntityType == nameof(RiskAcceptance) && a.Action == AuditLogAction.Update &&
@@ -260,20 +240,13 @@ public static partial class RegisterFactsReader
 
         return new AuditFacts
         {
-            ReviewCreations = reviewCreations,
-            AcceptanceCreations = acceptanceCreations.ToHashSet(StringComparer.Ordinal),
-            CampaignDecisions = campaignDecisions.ToHashSet(StringComparer.Ordinal),
+            Reviews = reviews,
             RequestFromAcceptance = fromAcceptance
         };
     }
 
     /// <summary>A field of the interceptor's <c>name=value; …</c> summary of a created row.</summary>
-    internal static string? Field(string? summary, string name)
-    {
-        if (string.IsNullOrEmpty(summary)) return null;
-        var match = Regex.Match(summary, $@"(?:^|; ){Regex.Escape(name)}=([^;]*)(?:;|$)");
-        return match.Success ? match.Groups[1].Value : null;
-    }
+    internal static string? Field(string? summary, string name) => ReviewHistoryReader.Field(summary, name);
 
     /// <summary>
     /// The reasons <c>RiskAcceptancesService.FlagForReview</c> writes on a revocation or an expiry — the fallback when the

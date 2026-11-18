@@ -18,14 +18,19 @@ public static partial class RiskIndexObjectCollector
 
     /// <summary>
     /// AME (S39 §2.1, §3.1, §9.2): one object per target entity — every entity of a target type, assessed (R = 0 when
-    /// quiet) while the intake is active — valued <c>MRA(u_f·m(crit)·MRA(s·d))</c>. A closed incident decays from the
-    /// closure date the first snapshot froze, or <c>LastUpdate</c> read once (D-15 interim).
+    /// quiet) while the intake is active — valued <c>MRA(u_f·m(crit)·MRA(s·d))</c>. A closed incident decays from its
+    /// <c>ResolvedAt</c> (T279); one closed without it, from the closure date the first snapshot froze, or <c>LastUpdate</c>
+    /// read once (D-15 interim). A severity, when set, replaces the category anchor (S39 §3.1).
     /// </summary>
     private static async Task<EventsResult> CollectEventsAsync(NRDbContext db, Run run, CancellationToken ct)
     {
         var p = run.P;
         var incidents = await db.Incidents.AsNoTracking()
-            .Select(i => new { i.Id, i.Status, i.Category, i.Kind, i.ImpactedEntityId, i.EntityId, i.CreationDate, i.LastUpdate })
+            .Select(i => new
+            {
+                i.Id, i.Status, i.Category, i.Kind, i.Severity, i.ImpactedEntityId, i.EntityId, i.CreationDate, i.LastUpdate,
+                i.ResolvedAt
+            })
             .ToListAsync(ct);
 
         var intake = incidents.Any(i => IcrMath.Days(i.CreationDate, run.Now) <= p.IncidentIntakeWindowDays);
@@ -40,15 +45,16 @@ public static partial class RiskIndexObjectCollector
 
             var open = ClosedStatuses.IsOpen(i.Status);
             DateTime? closedAt = open ? null
-                : run.Options.IncidentClosureDates.TryGetValue(i.Id, out var frozen) ? frozen : i.LastUpdate;
+                : i.ResolvedAt ?? (run.Options.IncidentClosureDates.TryGetValue(i.Id, out var frozen) ? frozen : i.LastUpdate);
             if (IcrAnchors.IncidentDecay(p, open, closedAt, run.Now) is not { } d) continue;
-            if (closedAt is { } c) closures[i.Id] = c;
+            // Only an incident without a recorded resolution needs its closure frozen (§9.2).
+            if (closedAt is { } c && i.ResolvedAt is null) closures[i.Id] = c;
 
             var target = i.ImpactedEntityId ?? i.EntityId;
             var key = target is { } t && run.Map.Contains(t) ? t.ToString(CultureInfo.InvariantCulture) : "";
             if (!byTarget.TryGetValue(key, out var list)) byTarget[key] = list = [];
             list.Add(new IncidentSignal(i.Id, nearMiss ? "AME.Q" : RiskIndexFactors.AmeIncidents,
-                IcrAnchors.Incident(p, i.Category, null), d));
+                IcrAnchors.Incident(p, i.Category, IcrAnchors.SeverityKey(i.Severity)), d));
         }
 
         var targets = run.Map.Ids.Where(id => run.Map.DefinitionOf(id) is { } d && RiskIndexEntityTypes.TargetTypes.Contains(d))
@@ -103,9 +109,11 @@ public static partial class RiskIndexObjectCollector
         factor == "AME.Q" ? IcrMath.Clamp01(run.P.NearMissFactor) : run.U(factor);
 
     /// <summary>
-    /// CTL.A (S39 §3.1, §8.3; D-16 experimental): the latest Submitted run per (assessment, target), scored
+    /// CTL.A (S39 §3.1, §8.3): the latest Submitted run per (assessment, target), scored
     /// <c>Σ chosen RiskScore / Σ question maximum</c> over the answered questions; the inventory is the entities of the
-    /// assessable types and the hosts with a run, presumed when never assessed.
+    /// assessable types and the hosts with a run, presumed when never assessed. Since T280 a run carries its submission time
+    /// and the score the server recorded from the answers' option ids; a run submitted before that is still dated by
+    /// <c>RunDate</c> and scored from <c>assessment_runs_answers</c>, labelled experimental (D-16 interim).
     /// </summary>
     private static async Task CollectAssessmentsAsync(NRDbContext db, Run run, CancellationToken ct)
     {
@@ -113,13 +121,13 @@ public static partial class RiskIndexObjectCollector
         var p = run.P;
 
         var runs = await db.AssessmentRuns.AsNoTracking()
-            .Select(r => new { r.Id, r.AssessmentId, r.EntityId, r.HostId, r.RunDate, r.Status })
+            .Select(r => new { r.Id, r.AssessmentId, r.EntityId, r.HostId, ReadAt = r.SubmittedAt ?? r.RunDate, r.Status, r.Score })
             .ToListAsync(ct);
         var submitted = runs.Where(r => r.Status == (int)AssessmentStatus.Submitted).ToList();
         var latest = submitted.GroupBy(r => (r.AssessmentId, Target: r.HostId is { } h ? $"h{h}" : $"e{r.EntityId}"))
-            .Select(g => g.OrderByDescending(r => r.RunDate).ThenByDescending(r => r.Id).First()).ToList();
+            .Select(g => g.OrderByDescending(r => r.ReadAt).ThenByDescending(r => r.Id).First()).ToList();
 
-        var runIds = latest.Select(r => r.Id).ToList();
+        var runIds = latest.Where(r => r.Score is null).Select(r => r.Id).ToList();
         var chosen = await db.AssessmentRunsAnswers.AsNoTracking().Where(a => runIds.Contains(a.RunId))
             .Select(a => new { a.RunId, a.QuestionId, a.AnswerId }).ToListAsync(ct);
         var questionIds = chosen.Select(c => c.QuestionId).Distinct().ToList();
@@ -128,8 +136,11 @@ public static partial class RiskIndexObjectCollector
         var scoreOf = options.ToDictionary(o => o.Id, o => (double)o.RiskScore);
         var maxOf = options.GroupBy(o => o.QuestionId).ToDictionary(g => g.Key, g => g.Max(o => (double)o.RiskScore));
 
+        var serverScore = latest.Where(r => r.Score is not null).ToDictionary(r => r.Id, r => IcrMath.Clamp01(r.Score!.Value));
+
         double? Ratio(int runId)
         {
+            if (serverScore.TryGetValue(runId, out var recorded)) return recorded;
             var answers = chosen.Where(c => c.RunId == runId).GroupBy(c => c.QuestionId).ToList();
             var max = answers.Sum(g => Math.Max(0, maxOf.GetValueOrDefault(g.Key)));
             if (max <= 0) return null;
@@ -172,7 +183,7 @@ public static partial class RiskIndexObjectCollector
         {
             var m = run.M(crit);
             var scored = targetRuns.Select(id => (Run: runById[id], Ratio: Ratio(id))).Where(t => t.Ratio is not null).ToList();
-            var readAt = scored.Select(t => t.Run.RunDate).Max();
+            var readAt = scored.Select(t => t.Run.ReadAt).Max();
             var validity = readAt is { } at ? IcrMath.Validity(IcrMath.Days(at, run.Now), window) : 0;
             var x = IcrMath.Mra(scored.Select(t => t.Ratio!.Value), p.Rho, p.KSignals);
             var f = m * x;
@@ -206,7 +217,8 @@ public static partial class RiskIndexObjectCollector
                     }
                 ],
                 Signals = scored.Select(t => new RiskIndexSignalReading(RiskIndexFactors.CtlAssessments,
-                    $"assessment-run:{t.Run.Id}", t.Ratio!.Value, ["experimental"])).ToList(),
+                    $"assessment-run:{t.Run.Id}", t.Ratio!.Value,
+                    [serverScore.ContainsKey(t.Run.Id) ? "server-scored" : "experimental"])).ToList(),
                 SourceMask = scored.Count == 0 ? 0 : RiskIndexSourceBits.Bit(RiskIndexSources.Assessments),
                 Freshness = validity,
                 RMax = u * m,

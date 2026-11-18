@@ -8,6 +8,7 @@ using DAL.Enums;
 using JetBrains.Annotations;
 using Model.Exceptions;
 using Model.Governance;
+using Model.Risks;
 using ServerServices.Governance;
 using ServerServices.Interfaces;
 using ServerServices.Tests.ServiceTests;
@@ -309,7 +310,8 @@ public class RiskReviewPortalInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(1, acceptance.RiskId);
 
         // One timeline: the acceptance wrote the review, and the campaign did not write a second.
-        Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+        var review = Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+        Assert.Equal((ReviewCodes.ApproveRisk, NextStepCodes.AcceptUntilNextReview), (review.Review, review.NextStep));
     }
 
     [Fact]
@@ -403,7 +405,12 @@ public class RiskReviewPortalInMemoryTest : InMemoryServiceTestBase
         var task = Assert.Single(db.MitigationTasks.Where(t => t.MitigationId == mitigation.Id).ToList());
 
         Assert.Equal("Rebuild the appliance", task.Title);
-        Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+
+        // T277 (S39 D-06): the decision did not settle the risk — "Request Risk review" — and the follow-up is treatment work,
+        // "Consider for Project". It was written as review 2 ("Reject Risk and Close") and next step 1 ("Accept until Next
+        // Review"), the opposite of what the reviewer decided.
+        var review = Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+        Assert.Equal((ReviewCodes.RequestRiskReview, NextStepCodes.ConsiderForProject), (review.Review, review.NextStep));
     }
 
     [Fact]
@@ -444,7 +451,8 @@ public class RiskReviewPortalInMemoryTest : InMemoryServiceTestBase
         Assert.Equal(3, decided.EscalatedToId);
 
         await using var db = OpenContext();
-        Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+        var review = Assert.Single(db.MgmtReviews.Where(r => r.RiskId == 1).ToList());
+        Assert.Equal((ReviewCodes.RequestRiskReview, NextStepCodes.ConsiderForProject), (review.Review, review.NextStep));
     }
 
     [Fact]

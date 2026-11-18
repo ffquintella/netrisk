@@ -143,6 +143,83 @@ public class RiskIndexObjectCollectorTest : RiskIndexSeedTestBase
         Assert.Equal(0.7 * 0.5 * System.Math.Pow(2, -50.0 / 30), Row(set, RiskIndexObjectKind.TargetEntity, UnitX, RiskIndexCategory.Ame).R, 9);
     }
 
+    /// <summary>
+    /// T279 (S39 §9.2, D-15): a recorded resolution date wins over the frozen closure and <c>LastUpdate</c>, and an
+    /// incident that has one needs no closure frozen.
+    /// </summary>
+    [Fact]
+    public async Task TestTheResolutionDateWinsOverTheFrozenClosure()
+    {
+        SeedUnscoped(ctx => ctx.Incidents.Single(i => i.Id == 1).ResolvedAt = Now.AddDays(-40));
+
+        var set = await Collect(new RiskIndexCollectionOptions { IncidentClosureDates = new Dictionary<int, System.DateTime> { [1] = Now.AddDays(-50) } });
+
+        Assert.Equal(0.7 * 0.5 * System.Math.Pow(2, -40.0 / 30), Row(set, RiskIndexObjectKind.TargetEntity, UnitX, RiskIndexCategory.Ame).R, 9);
+        Assert.False(set.IncidentClosureDates.ContainsKey(1));
+    }
+
+    /// <summary>T279 (S39 §3.1): a severity replaces the category anchor — critical 1.0 for a phishing, low 0.2 for an intrusion.</summary>
+    [Fact]
+    public async Task TestASeverityReplacesTheCategoryAnchor()
+    {
+        SeedUnscoped(ctx =>
+        {
+            ctx.Incidents.Single(i => i.Id == 1).Severity = IncidentSeverity.Critical;
+            ctx.Incidents.Single(i => i.Id == 2).Severity = IncidentSeverity.Low;
+        });
+
+        var set = await Collect();
+
+        Assert.Equal(0.7 * 1.0 * System.Math.Pow(2, -20.0 / 30), Row(set, RiskIndexObjectKind.TargetEntity, UnitX, RiskIndexCategory.Ame).R, 9);
+        Assert.Equal(0.2, Row(set, RiskIndexObjectKind.TargetEntity, Portal, RiskIndexCategory.Ame).R, 9);
+    }
+
+    [Theory]
+    [InlineData(IncidentSeverity.Critical, "critical")]
+    [InlineData(IncidentSeverity.High, "high")]
+    [InlineData(IncidentSeverity.Medium, "medium")]
+    [InlineData(IncidentSeverity.Low, "low")]
+    [InlineData(null, null)]
+    public void TestEverySeverityHasAnAnchorKey(IncidentSeverity? severity, string? key)
+    {
+        Assert.Equal(key, IcrAnchors.SeverityKey(severity));
+        if (key is not null) Assert.True(P.IncidentSeverityAnchors.ContainsKey(key));
+    }
+
+    /// <summary>
+    /// T280 (S39 §3.1, D-16): a run the server scored is read by its recorded score and dated by its submission — a run
+    /// date past the window does not make it stale — and is no longer labelled experimental.
+    /// </summary>
+    [Fact]
+    public async Task TestAServerScoredRunIsReadByItsScoreAndSubmissionTime()
+    {
+        SeedUnscoped(ctx =>
+        {
+            var run = ctx.AssessmentRuns.Single(r => r.Id == 1);
+            run.RunDate = Now.AddDays(-400);
+            run.SubmittedAt = Now.AddDays(-5);
+            run.Score = 0.9;
+        });
+
+        var set = await Collect();
+
+        var row = Row(set, RiskIndexObjectKind.TargetEntity, UnitX, RiskIndexCategory.Ctl);
+        Assert.Equal(0.70 * 0.8 * 0.9, row.R, 9);
+        Assert.Equal(Now.AddDays(-5), Assert.Single(row.Factors).ReadAt);
+        Assert.Equal(new[] { "server-scored" }, Assert.Single(row.Signals).Flags);
+    }
+
+    /// <summary>A run submitted before T280 keeps the interim reading: the text-era answers, labelled experimental.</summary>
+    [Fact]
+    public async Task TestALegacyRunKeepsTheExperimentalReading()
+    {
+        var set = await Collect();
+
+        var row = Row(set, RiskIndexObjectKind.TargetEntity, UnitX, RiskIndexCategory.Ctl);
+        Assert.Equal(new[] { "experimental" }, Assert.Single(row.Signals).Flags);
+        Assert.Equal(Now.AddDays(-10), Assert.Single(row.Factors).ReadAt);
+    }
+
     [Fact]
     public async Task TestACriticalityOutsideOneToFiveFallsBackToTheDefault()
     {

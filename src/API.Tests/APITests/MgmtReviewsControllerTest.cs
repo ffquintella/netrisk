@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using API.Controllers;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Governance;
 using NSubstitute;
 using ServerServices.Interfaces;
 using Xunit;
@@ -290,5 +292,53 @@ public class MgmtReviewsControllerTest : BaseControllerTest
 
         var status = Assert.IsType<StatusCodeResult>(result.Result);
         Assert.Equal(500, status.StatusCode);
+    }
+
+    /// <summary>T278 (S39 D-08): the overdue list is served, as of the server's clock — the caller names no date.</summary>
+    [Fact]
+    public async Task TestGetOverdueServesTheListAsOfNow()
+    {
+        _mgmtReviewsService.GetOverdueReviewsAsync(Arg.Any<DateTime>()).Returns(new List<OverdueReview>
+        {
+            new() { RiskId = 4, Subject = "Payment gateway", DueBasis = ReviewDueBasis.AcceptanceEnd, DaysOverdue = 48 }
+        });
+        var before = DateTime.UtcNow;
+
+        var result = await _controller.GetOverdue();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var item = Assert.Single(Assert.IsType<List<OverdueReview>>(ok.Value));
+        Assert.Equal((4, ReviewDueBasis.AcceptanceEnd), (item.RiskId, item.DueBasis));
+        await _mgmtReviewsService.Received(1).GetOverdueReviewsAsync(
+            Arg.Is<DateTime>(d => d.Kind == DateTimeKind.Utc && d >= before && d <= DateTime.UtcNow));
+    }
+
+    [Fact]
+    public async Task TestGetOverdueInternalError()
+    {
+        var failing = Substitute.For<IMgmtReviewsService>();
+        failing.GetOverdueReviewsAsync(Arg.Any<DateTime>())
+            .Returns<Task<List<OverdueReview>>>(_ => throw new InvalidOperationException("boom"));
+        var controller = ResolveController<MgmtReviewsController>(s =>
+        {
+            s.AddSingleton(failing);
+            s.AddSingleton(Substitute.For<IRisksService>());
+        });
+
+        var result = await controller.GetOverdue();
+
+        var status = Assert.IsType<StatusCodeResult>(result.Result);
+        Assert.Equal(500, status.StatusCode);
+    }
+
+    /// <summary>The list names risks, so it carries the controller's review policy explicitly, not only by inheritance.</summary>
+    [Fact]
+    public void TestGetOverdueRequiresTheReviewPolicy()
+    {
+        var attribute = typeof(MgmtReviewsController).GetMethod(nameof(MgmtReviewsController.GetOverdue))!
+            .GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), false)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single();
+
+        Assert.Equal("RequireMgmtReviewAccess", attribute.Policy);
     }
 }

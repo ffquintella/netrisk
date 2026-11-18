@@ -924,4 +924,94 @@ public class JiraMirrorAndImportInMemoryTest : InMemoryServiceTestBase
             Assert.Equal(1, log.CreatedCount);
         });
     }
+
+    // --- M58, T282 (S39 D-20): the connection's target entity and its re-stamp policy ---------------------------------
+
+    private const int Acme = 7, Medicine = 9;
+
+    /// <summary>Gives the connection a target entity and a re-stamp policy, as an administrator would.</summary>
+    private async Task TargetAsync(int id, RestampPolicy policy)
+    {
+        Seed(ctx =>
+        {
+            foreach (var entity in new[] { Acme, Medicine })
+                if (!ctx.Entities.Any(e => e.Id == entity))
+                    ctx.Entities.Add(new Entity { Id = entity, DefinitionName = "organizationUnit", DefinitionVersion = "1", Status = "active" });
+        });
+
+        var connection = await _trackers.GetConnectionAsync(id);
+        var updated = await _trackers.UpdateConnectionAsync(new IssueTrackerConnection
+        {
+            Id = id, Name = connection.Name, Provider = connection.Provider, BaseUrl = connection.BaseUrl,
+            ProjectKey = connection.ProjectKey, AuthUser = connection.AuthUser, Enabled = true, PollIntervalMinutes = 15,
+            EntityId = Acme, EntityRestampPolicy = policy
+        }, null, null, 1);
+
+        Assert.Equal((Acme, policy), (updated.EntityId, updated.EntityRestampPolicy));
+    }
+
+    private void GivenTheScannersHostIs(int? entity, string? source) => Seed(ctx =>
+    {
+        var host = ctx.Hosts.Single(h => h.Id == 1);
+        host.EntityId = entity;
+        host.EntitySource = source;
+    });
+
+    [Fact]
+    public async Task AMatchedHostWithNoEntityTakesTheConnectionsTarget()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+        await TargetAsync(id, RestampPolicy.OnlyUnassigned);
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        Read(ctx =>
+        {
+            var host = ctx.Hosts.Single(h => h.Id == 1);
+            Assert.Equal(((int?)Acme, EntitySources.Cmdb), (host.EntityId, host.EntitySource));
+        });
+    }
+
+    [Theory]
+    [InlineData(RestampPolicy.OnlyUnassigned, null, Medicine)]
+    [InlineData(RestampPolicy.FollowMapping, null, Acme)]
+    [InlineData(RestampPolicy.FollowMapping, EntitySources.VisionOne, Acme)]
+    [InlineData(RestampPolicy.FollowMapping, EntitySources.Manual, Medicine)]
+    public async Task TheConnectionsPolicyDecidesWhetherAnAttributedHostMoves(RestampPolicy policy, string? source,
+        int expected)
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+        await TargetAsync(id, policy);
+        GivenTheScannersHostIs(Medicine, source);
+
+        await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        Read(ctx => Assert.Equal(expected, ctx.Hosts.Single(h => h.Id == 1).EntityId));
+    }
+
+    /// <summary>
+    /// The defect: a created host took <c>mapping.Connection?.EntityId</c>, a navigation the import never loads, so every
+    /// host the CMDB import created was unassigned whatever the connection's entity.
+    /// </summary>
+    [Fact]
+    public async Task AHostTheImportCreatesTakesTheConnectionsTarget()
+    {
+        GivenAnAssetsWorkspace();
+        var id = await ConnectionWithAServerMappingAsync();
+        await TargetAsync(id, RestampPolicy.OnlyUnassigned);
+        Seed(ctx => ctx.Hosts.Remove(ctx.Hosts.Single(h => h.Id == 1)));
+
+        var result = await _svc.ImportAssetsAsync(id, dryRun: false, 1);
+
+        Assert.Equal(1, result.Created);
+        Read(ctx =>
+        {
+            var host = ctx.Hosts.Single();
+            Assert.Equal(((int?)Acme, EntitySources.Cmdb), (host.EntityId, host.EntitySource));
+            // A CMDB import is not a scan (S39 D-18).
+            Assert.Null(host.LastAssessedAt);
+        });
+    }
 }

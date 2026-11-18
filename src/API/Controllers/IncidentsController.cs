@@ -19,11 +19,15 @@ public class IncidentsController(
     IHttpContextAccessor httpContextAccessor,
     IUsersService usersService,
     IIncidentsService incidentsService,
-    IFilesService filesService)
+    IFilesService filesService,
+    IAuditTrailService auditTrail)
     : ApiBaseController(logger, httpContextAccessor, usersService)
 {
     private IIncidentsService IncidentsService { get; } = incidentsService;
     private IFilesService FilesService { get; } = filesService;
+
+    /// <summary>The most rows one history read returns, as for a host's.</summary>
+    public const int MaxHistoryLimit = 5000;
     
     
     [HttpGet]
@@ -100,6 +104,60 @@ public class IncidentsController(
         }
     }
     
+    /// <summary>
+    /// The field-by-field change history of one incident (M58, T279; S39 D-15). Served here, under the incident
+    /// permission, rather than by /AuditTrail, whose risk-management policy is not the incident one. The incident is
+    /// found through the scoped set first, so another entity's incident is a 404; rows go out without the user record.
+    /// </summary>
+    [HttpGet]
+    [Route("{id}/History")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AuditLog>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<List<AuditLog>>> GetHistoryAsync(int id, [FromQuery] int limit = 500)
+    {
+        var user = await GetUserAsync();
+
+        if (limit is < 1 or > MaxHistoryLimit)
+            return BadRequest($"limit must be between 1 and {MaxHistoryLimit}.");
+
+        try
+        {
+            await IncidentsService.GetByIdAsync(id);
+
+            var rows = await auditTrail.GetForRecordAsync(nameof(Incident), id, limit);
+            Logger.Information("User:{User} read the change history of incident {Id}", user.Value, id);
+
+            return Ok(rows.Select(WithoutUser).ToList());
+        }
+        catch (DataNotFoundException)
+        {
+            Logger.Warning("Incident {id} not found", id);
+            return NotFound();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Unknown error while reading incident {Id} history: {Message}", id, ex.Message);
+            return this.StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static AuditLog WithoutUser(AuditLog row) => new()
+    {
+        Id = row.Id,
+        EntityType = row.EntityType,
+        EntityId = row.EntityId,
+        Field = row.Field,
+        OldValue = row.OldValue,
+        NewValue = row.NewValue,
+        Action = row.Action,
+        UserId = row.UserId,
+        Actor = row.Actor,
+        OccurredAt = row.OccurredAt,
+        CorrelationId = row.CorrelationId
+    };
+
     [HttpGet]
     [Route("{id}/Attachments")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<FileListing>))]

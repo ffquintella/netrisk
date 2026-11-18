@@ -359,6 +359,15 @@ public class AssetImportResult
 
     public int Errors { get; set; }
 
+    /// <summary>Host–application links the run created, or would create on a dry run (M58, T291).</summary>
+    public int RelationsLinked { get; set; }
+
+    /// <summary>This connection's links the register no longer names, removed (or that would be).</summary>
+    public int RelationsRemoved { get; set; }
+
+    /// <summary>Related objects named by the register that matched no host or application in NetRisk.</summary>
+    public int RelationsUnresolved { get; set; }
+
     public List<string> Messages { get; set; } = new();
 
     /// <summary>

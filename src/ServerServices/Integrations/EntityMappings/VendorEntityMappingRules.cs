@@ -1,3 +1,4 @@
+using DAL.Entities;
 using DAL.Enums;
 using Model.Integrations;
 
@@ -48,14 +49,62 @@ public static class VendorEntityMappingRules
     public static bool Matches(MappingRule rule, IReadOnlyCollection<string> tags) =>
         Attributes(rule.Kind) && tags.Any(t => VendorTagText.Same(t, rule.Value));
 
-    /// <summary>What the winning rule does to a host whose entity is <paramref name="current"/>.</summary>
-    public static MappingOutcome Decide(int? current, MappingRule winner) =>
+    /// <summary>
+    /// What the winning rule does to a host whose entity is <paramref name="current"/>, written by
+    /// <paramref name="currentSource"/>: a <c>FollowMapping</c> rule moves it only over a writer it outranks (M58, T282,
+    /// S39 D-20), so a manual or CMDB assignment stays.
+    /// </summary>
+    public static MappingOutcome Decide(int? current, MappingRule winner, string? currentSource = null) =>
         current == winner.EntityId ? MappingOutcome.Keep
         : current is null ? MappingOutcome.Assign
-        : winner.Policy == RestampPolicy.FollowMapping ? MappingOutcome.Reassign
+        : winner.Policy == RestampPolicy.FollowMapping && EntitySources.MayOverwrite(currentSource, EntitySources.Rule)
+            ? MappingOutcome.Reassign
         : MappingOutcome.Keep;
 
     /// <summary>The entity a host ends with: the rule's on <see cref="MappingOutcome.Assign"/> or <see cref="MappingOutcome.Reassign"/>.</summary>
-    public static int? Apply(int? current, MappingRule winner) =>
-        Decide(current, winner) == MappingOutcome.Keep ? current : winner.EntityId;
+    public static int? Apply(int? current, MappingRule winner, string? currentSource = null) =>
+        Decide(current, winner, currentSource) == MappingOutcome.Keep ? current : winner.EntityId;
+
+    /// <summary>Applies the winning rule to <paramref name="host"/>, recording the rule as the writer when it moved it.</summary>
+    public static MappingOutcome ApplyTo(Host host, MappingRule winner)
+    {
+        var outcome = Decide(host.EntityId, winner, host.EntitySource);
+        if (outcome == MappingOutcome.Keep) return outcome;
+
+        host.EntityId = winner.EntityId;
+        host.EntitySource = EntitySources.Rule;
+        return outcome;
+    }
+}
+
+/// <summary>
+/// A connection's target entity applied to a host it matched (M58, T282, S39 D-20), for the Vision One inventory and the
+/// Jira Assets import. A host with no entity takes the target; one elsewhere moves only under
+/// <see cref="RestampPolicy.FollowMapping"/> and only over a writer the connection outranks (<see cref="EntitySources"/>),
+/// so a manual assignment is never overwritten. A connection without a target leaves the host alone. Policy:
+/// docs/features/host-entity-assignment.md.
+/// </summary>
+public static class HostEntityRestamp
+{
+    public static MappingOutcome Decide(int? current, string? currentSource, int? target, RestampPolicy policy,
+        string writer)
+    {
+        if (target is null || current == target) return MappingOutcome.Keep;
+        if (current is null) return MappingOutcome.Assign;
+
+        return policy == RestampPolicy.FollowMapping && EntitySources.MayOverwrite(currentSource, writer)
+            ? MappingOutcome.Reassign
+            : MappingOutcome.Keep;
+    }
+
+    /// <summary>Applies <see cref="Decide"/> to <paramref name="host"/>, recording <paramref name="writer"/> when it moved it.</summary>
+    public static MappingOutcome ApplyTo(Host host, int? target, RestampPolicy policy, string writer)
+    {
+        var outcome = Decide(host.EntityId, host.EntitySource, target, policy, writer);
+        if (outcome == MappingOutcome.Keep) return outcome;
+
+        host.EntityId = target;
+        host.EntitySource = writer;
+        return outcome;
+    }
 }

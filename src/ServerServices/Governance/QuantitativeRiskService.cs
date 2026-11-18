@@ -33,7 +33,7 @@ public class QuantitativeRiskService(ILogger logger, IDalService dalService)
     /// <summary>The scoring method id this service owns. 1 is Classic; 2 is CVSS in the seeded table.</summary>
     public const int QuantitativeScoringMethod = 3;
 
-    public const string BandThresholdsSetting = "quantitative_band_thresholds";
+    public const string BandThresholdsSetting = GovernanceSettingKeys.QuantitativeBandThresholds;
     public const string IterationsSetting = "quantitative_iterations";
 
     /// <summary>

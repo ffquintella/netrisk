@@ -138,9 +138,21 @@
                         </AutoCompleteBox.ItemTemplate>
                     </AutoCompleteBox>
                     
+                    <!-- M58, T279 (S39 D-15): the severity the risk index reads in place of the category anchor. -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding StrSeverity}" Classes="form_label" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SeverityOptions}"
+                              Width="180"
+                              SelectedItem="{Binding SelectedSeverity}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
                     <!-- IX-5: the narrative fields are tabbed rather than seven 120px boxes
                          stacked in one scroll, so the form fits the window without scrolling. -->
-                    <TabControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6" Grid.RowSpan="7"
+                    <TabControl Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="6" Grid.RowSpan="6"
                                 MinWidth="700" MinHeight="240" Margin="0 5 0 0">
                         <TabItem Header="{Binding StrDescription}">
                             <TextBox Text="{Binding Incident.Description}" TextWrapping="WrapWithOverflow"

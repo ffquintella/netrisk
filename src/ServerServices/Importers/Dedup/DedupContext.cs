@@ -22,4 +22,10 @@ public class DedupContext
     /// <summary>The tenant the import is scoped to. Part of no key — dedup is scoped by the query,
     /// not by the key — but available to a custom strategy that wants it.</summary>
     public int? EntityId { get; init; }
+
+    /// <summary>
+    /// The repository or project the import named (M58, T282, S39 D-21). Not seen by the strategies: the calculator folds
+    /// it into every key of a host-less finding, so no strategy — built-in or plugin — can forget it.
+    /// </summary>
+    public string? Repository { get; init; }
 }

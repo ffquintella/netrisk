@@ -37,6 +37,21 @@ public class Incident : DAL.Interfaces.IEntityScoped
     /// threat type. Defaults to <c>Incident</c>, so a client that never sends it keeps today's meaning.
     /// </summary>
     public DAL.Enums.IncidentKind Kind { get; set; } = DAL.Enums.IncidentKind.Incident;
+
+    /// <summary>
+    /// How severe the incident is (M58, T279; S39 D-15) — <c>incidents.severity</c>. Null when nobody assessed it: the
+    /// risk index then falls back to the category anchor, which is what "unknown" has always meant.
+    /// </summary>
+    public DAL.Enums.IncidentSeverity? Severity { get; set; }
+
+    /// <summary>
+    /// UTC: when the incident last moved from an open status into a closed one (<c>Model.Status.ClosedStatuses</c>) —
+    /// <c>incidents.resolved_at</c> (M58, T279; S39 §9.2, D-15). The server owns it: <c>IncidentsService</c> stamps it on
+    /// that transition, keeps it while the incident stays closed, clears it on reopening, and ignores whatever a client
+    /// sends. Null for an incident closed before the column existed, whose closure time nobody recorded.
+    /// </summary>
+    public DateTime? ResolvedAt { get; set; }
+
     public DateTime ReportDate { get; set; } = DateTime.Now;
     public User? AssignedTo { get; set; }
     public int? AssignedToId { get; set; }

@@ -5,6 +5,7 @@ using DAL.Enums;
 using Microsoft.EntityFrameworkCore;
 using Model.Exceptions;
 using Model.Integrations;
+using ServerServices.Importers;
 using ServerServices.Interfaces;
 
 namespace ServerServices.Integrations.Tenable;
@@ -249,6 +250,7 @@ public partial class TenableService
         if (open.Count > 0)
         {
             await BindToKnownHostsAsync(open, ct);
+            CarryAssetIdentity(open);
 
             var parsed = new ImportResult
             {
@@ -318,6 +320,18 @@ public partial class TenableService
             record.Finding.Host.HostName = host.Name ?? record.Finding.Host.HostName;
             record.Finding.Host.Fqdn = host.Fqdn ?? record.Finding.Host.Fqdn;
         }
+    }
+
+    /// <summary>
+    /// Hands each record's asset uuid to the pipeline with its host (M58, T281, S39 D-14), which then matches the host the
+    /// asset sync linked in <c>host_external_ids</c> before any address: the IP binding above alone resolves by IP, and
+    /// lands on whichever host holds that address first when two share it.
+    /// </summary>
+    private static void CarryAssetIdentity(List<TenableVulnerability> records)
+    {
+        foreach (var record in records)
+            if (record.Asset.Uuid is { } uuid && !string.IsNullOrWhiteSpace(uuid) && record.Finding.Host is { IsEmpty: false } host)
+                record.Finding.Host = IdentifiedHost.From(host, ProviderName, uuid);
     }
 
     /// <summary>

@@ -88,6 +88,14 @@ public class TrendMicroConnection
     /// </summary>
     public DateTime? NextDueAt { get; set; }
 
+    /// <summary>
+    /// Whether the inventory sync moves a matched host that already has an entity onto <see cref="EntityId"/> (M58, T282,
+    /// S39 D-20). <see cref="RestampPolicy.OnlyUnassigned"/> (default) stamps only hosts with none;
+    /// <see cref="RestampPolicy.FollowMapping"/> also re-stamps the rest, never over a higher-ranked
+    /// <see cref="Host.EntitySource"/> (a manual, CMDB or tag-rule assignment). A winning tag rule is applied instead.
+    /// </summary>
+    public RestampPolicy EntityRestampPolicy { get; set; } = RestampPolicy.OnlyUnassigned;
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }

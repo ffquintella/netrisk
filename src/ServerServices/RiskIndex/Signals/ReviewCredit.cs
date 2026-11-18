@@ -1,26 +1,9 @@
 using Model.RiskIndex;
+using ServerServices.Governance;
 using ServerServices.RiskIndex.Engine;
 using Tools.Risks;
 
 namespace ServerServices.RiskIndex.Signals;
-
-/// <summary>Why a management review does or does not restore treatment credit (S39 §3.3, §6.1).</summary>
-public enum ReviewQualification
-{
-    Qualified = 1,
-
-    /// <summary>Written by an acceptance (same save, or the same risk and user within <c>janela_revisao_derivada</c>).</summary>
-    DerivedFromAcceptance = 2,
-
-    /// <summary>Written by a campaign decision, likewise.</summary>
-    DerivedFromCampaign = 3,
-
-    /// <summary>The reviewer is the risk's submitter, owner or manager (Track 8 segregation, D-07).</summary>
-    SelfReview = 4
-}
-
-/// <summary>One review as the credit reads it: whether it qualifies, and its effective date.</summary>
-public sealed record ClassifiedReview(int Id, ReviewQualification Qualification, DateTime EffectiveDate);
 
 /// <summary>The treatment credit of one scenario and everything the object row stores about it (S39 §6.1, §9.1).</summary>
 public sealed record ReviewCreditResult
@@ -88,58 +71,46 @@ public static class ReviewCredit
     }
 
     /// <summary>
-    /// Which reviews qualify (S39 §3.3): not written by an acceptance or a campaign decision — the same save's
-    /// correlation id, or without an audit row the same risk and user within the window — and not a self-review.
-    /// Effective date <c>min(SubmissionDate, audited creation, now)</c>: a future-dated review does not keep credit.
+    /// Which reviews qualify (S39 §3.3) and their effective dates: the product's rule (<see cref="ReviewDueRule"/>), with
+    /// the profile's <c>janela_revisao_derivada</c>. The index reads the rule; the decision path never reads the index.
     /// </summary>
-    public static IReadOnlyList<ClassifiedReview> Classify(ScenarioFacts facts, RiskIndexParameters p, DateTime now)
+    public static IReadOnlyList<ClassifiedReview> Classify(ScenarioFacts facts, RiskIndexParameters p, DateTime now) =>
+        ReviewDueRule.Classify(History(facts), DerivedReviewWindow(p), now);
+
+    /// <summary><c>janela_revisao_derivada</c> of <paramref name="p"/>.</summary>
+    public static TimeSpan DerivedReviewWindow(RiskIndexParameters p) =>
+        TimeSpan.FromSeconds(Math.Max(0, p.DerivedReviewWindowSeconds));
+
+    /// <summary><c>d_ref</c> and <c>due = min(d_ref + T, fim)</c> of one scenario, by <see cref="ReviewDueRule.ResolveDue"/>.</summary>
+    public static ReviewDue ResolveDue(ScenarioFacts facts, int cadenceDays, TimeSpan derivedWindow, DateTime now) =>
+        ReviewDueRule.ResolveDue(History(facts), cadenceDays, derivedWindow, now);
+
+    /// <summary>The scenario's facts as the review rule reads them.</summary>
+    private static ReviewHistory History(ScenarioFacts facts) => new()
     {
-        var window = TimeSpan.FromSeconds(Math.Max(0, p.DerivedReviewWindowSeconds));
-        var owners = new[] { facts.SubmittedBy, facts.Owner, facts.Manager };
-
-        return facts.Reviews.Select(r =>
+        SubmissionDate = facts.SubmissionDate,
+        SubmittedBy = facts.SubmittedBy,
+        Owner = facts.Owner,
+        Manager = facts.Manager,
+        Reviews = facts.Reviews.Select(r => new ReviewEvidence
         {
-            var effective = Min(Min(r.SubmissionDate, r.AuditedAt ?? r.SubmissionDate), now);
-
-            ReviewQualification qualification;
-            if (r.SavedWithAcceptance)
-                qualification = ReviewQualification.DerivedFromAcceptance;
-            else if (r.SavedWithCampaignDecision)
-                qualification = ReviewQualification.DerivedFromCampaign;
-            else if (r.CorrelationId is null && facts.Acceptances.Any(a =>
-                         Near(r.SubmissionDate, a.CreatedAt, window) &&
-                         (r.ReviewerId == a.CreatedById || r.ReviewerId == a.RequestedById ||
-                          r.ReviewerId == a.AuthorizingManagerId)))
-                qualification = ReviewQualification.DerivedFromAcceptance;
-            else if (r.CorrelationId is null && facts.CampaignItems.Any(c =>
-                         c.DecidedAt is { } decided && Near(r.SubmissionDate, decided, window) &&
-                         r.ReviewerId == c.DecidedById))
-                qualification = ReviewQualification.DerivedFromCampaign;
-            else if (owners.Contains(r.ReviewerId))
-                qualification = ReviewQualification.SelfReview;
-            else
-                qualification = ReviewQualification.Qualified;
-
-            return new ClassifiedReview(r.Id, qualification, effective);
-        }).ToList();
-    }
+            Id = r.Id, ReviewerId = r.ReviewerId, SubmissionDate = r.SubmissionDate, AuditedAt = r.AuditedAt,
+            CorrelationId = r.CorrelationId, SavedWithAcceptance = r.SavedWithAcceptance,
+            SavedWithCampaignDecision = r.SavedWithCampaignDecision
+        }).ToList(),
+        Acceptances = facts.Acceptances.Select(a => new AcceptanceEvidence
+        {
+            CreatedAt = a.CreatedAt, End = a.End, CreatedById = a.CreatedById, RequestedById = a.RequestedById,
+            AuthorizingManagerId = a.AuthorizingManagerId
+        }).ToList(),
+        Decisions = facts.CampaignItems.Where(c => c.DecidedAt != null)
+            .Select(c => new CampaignDecisionEvidence(c.DecidedAt!.Value, c.DecidedById)).ToList()
+    };
 
     public static ReviewCreditResult Compute(ScenarioFacts facts, RiskIndexParameters p, DateTime now)
     {
-        var reviews = Classify(facts, p, now);
-        var qualified = reviews.Where(r => r.Qualification == ReviewQualification.Qualified).ToList();
-
-        var reference = qualified.Count > 0 ? qualified.Max(r => r.EffectiveDate) : facts.SubmissionDate;
         var (cadence, band) = Cadence(CadenceScore(facts, p), p);
-
-        var due = reference.AddDays(cadence);
-        var byAcceptance = false;
-        var ends = facts.Acceptances.Where(a => a.End >= reference).Select(a => a.End).ToList();
-        if (ends.Count > 0 && ends.Min() < due)
-        {
-            due = ends.Min();
-            byAcceptance = true;
-        }
+        var (reference, referenceReview, due, byAcceptance, reviews) = ResolveDue(facts, cadence, DerivedReviewWindow(p), now);
 
         var delay = Math.Max(0, IcrMath.Days(due, now));
         var credit = delay <= 0 ? 1 : Math.Max(p.MinimumCredit, 1 - p.CreditLambda * delay / cadence);
@@ -151,7 +122,7 @@ public static class ReviewCredit
         return new ReviewCreditResult
         {
             ReferenceDate = reference,
-            ReferenceIsSubmission = qualified.Count == 0,
+            ReferenceIsSubmission = referenceReview is null,
             CadenceDays = cadence,
             CadenceBand = band,
             Due = due,
@@ -166,8 +137,4 @@ public static class ReviewCredit
             Reviews = reviews
         };
     }
-
-    private static DateTime Min(DateTime a, DateTime b) => a <= b ? a : b;
-
-    private static bool Near(DateTime a, DateTime b, TimeSpan window) => (a - b).Duration() <= window;
 }

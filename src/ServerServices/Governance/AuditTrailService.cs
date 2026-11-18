@@ -142,7 +142,19 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
 
             // M56, T265 — a Tenable connection is integration configuration (its default entity attributes hosts), and its
             // trail is read with global scope only, like the rules.
-            [nameof(TenableConnection)] = UnrestrictedOnly
+            [nameof(TenableConnection)] = UnrestrictedOnly,
+
+            // M58, T283 — an SLA policy row is read through its own filter (the global default is everyone's, an override
+            // its entity's); the cadence tables are the organization's and carry no scope.
+            [nameof(SlaConfiguration)] = Through<SlaConfiguration>(),
+            [nameof(ReviewLevel)] = OrganizationWide,
+            [nameof(RiskLevel)] = OrganizationWide,
+
+            // M58, T279 — an incident is read through its own scope filter; the API serves it under the incident permission.
+            [nameof(Incident)] = Through<Incident>(),
+
+            // M58, T291 — a host-application relation is read through its own filter, which goes through the host.
+            [nameof(HostApplicationLink)] = Through<HostApplicationLink>()
         };
 
     /// <summary>

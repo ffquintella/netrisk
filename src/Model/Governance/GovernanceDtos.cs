@@ -409,13 +409,35 @@ public class OverdueReview
 
     public double? Score { get; set; }
 
-    /// <summary>Null when the risk has never been reviewed — the group that is easiest to miss,
-    /// because a query written around <c>next_review</c> skips it entirely.</summary>
+    /// <summary>
+    /// The effective date of the latest <em>qualified</em> review (S39 §6.1, T278): not one an acceptance or a campaign
+    /// decision wrote, and not a self-review. Null when there is none — including a risk never reviewed at all, the
+    /// group that is easiest to miss, because a query written around <c>next_review</c> skips it entirely.
+    /// </summary>
     public DateTime? LastReviewedAt { get; set; }
 
     public int CadenceDays { get; set; }
 
+    /// <summary>When the review fell due (UTC): the earliest of cadence, the reviewer's next-review date and an acceptance's end.</summary>
+    public DateTime DueAt { get; set; }
+
+    /// <summary>Which of the three set <see cref="DueAt"/>.</summary>
+    public ReviewDueBasis DueBasis { get; set; }
+
     public int DaysOverdue { get; set; }
+}
+
+/// <summary>What set a review's due date (S39 §6.1, T278). Each one can only bring the date forward.</summary>
+public enum ReviewDueBasis
+{
+    /// <summary>The last qualified review (or the submission) plus the band's cadence.</summary>
+    Cadence = 0,
+
+    /// <summary>The next-review date the last qualified reviewer set, earlier than the cadence.</summary>
+    NextReview = 1,
+
+    /// <summary>The end (revocation, else expiry) of an acceptance that ends after the last qualified review.</summary>
+    AcceptanceEnd = 2
 }
 
 /// <summary>The FAIR-lite inputs a caller supplies for a quantitatively scored risk (8.7.2).</summary>

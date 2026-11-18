@@ -52,8 +52,10 @@ public static class RiskSourceCatalogue
         new(RiskIndexSources.Assessments, "CTL.A", RiskSourceAvailability.Caveat, "D-16", true),
         new(RiskIndexSources.CmdbCriticality, "crit", RiskSourceAvailability.Caveat, "D-10", true),
         new(RiskIndexSources.CmdbEnvironment, "crit · env", RiskSourceAvailability.Available, null, true),
-        new(RiskIndexSources.CmdbInternetFacing, "m_net", RiskSourceAvailability.NotAvailable, "T291", true),
-        new(RiskIndexSources.CmdbRelations, "closure", RiskSourceAvailability.NotAvailable, "T291", true),
+        // M58, T291: the Jira Assets import writes hosts.internet_facing, which m_net reads under CMDB-INET. It also writes
+        // host_application_links, but the full-mode drill-down that consumes them is T284, so CMDB-REL waits for it.
+        new(RiskIndexSources.CmdbInternetFacing, "m_net", RiskSourceAvailability.Available, null, true),
+        new(RiskIndexSources.CmdbRelations, "closure", RiskSourceAvailability.NotAvailable, "T284", true),
         new(RiskIndexSources.EntityCriticality, "crit", RiskSourceAvailability.Available, null, false),
         new(RiskIndexSources.EntityClassification, "crit · Δ", RiskSourceAvailability.Available, null, false),
         new(RiskIndexSources.EntityInternetFacing, "m_net", RiskSourceAvailability.Available, null, false)

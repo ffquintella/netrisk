@@ -942,6 +942,30 @@
     <Content Include="DB\Data\113.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Remove="DB\Structure\114.sql" />
+    <Content Include="DB\Structure\114.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\114.sql" />
+    <Content Include="DB\Data\114.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\115.sql" />
+    <Content Include="DB\Structure\115.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\115.sql" />
+    <Content Include="DB\Data\115.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Structure\116.sql" />
+    <Content Include="DB\Structure\116.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="DB\Data\116.sql" />
+    <Content Include="DB\Data\116.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Remove="DB\Data\24.sql" />

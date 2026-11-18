@@ -160,4 +160,74 @@ public class MgmtReviewSegregationInMemoryTest : DecisionCycleTestBase
         Assert.Equal((RiskId, Uninvolved, "Re-assessed with the unit."),
             (stored.RiskId, stored.Reviewer, stored.Comments));
     }
+
+    /// <summary>
+    /// MR7 — T278 (S39 D-07) regression: the review is dated by the server, in UTC, whatever the payload says. The date
+    /// was kept as sent unless it was empty, so a client could post a review dated a year ahead and keep the risk off the
+    /// overdue list (and keep its treatment credit, S39 §6.1) for a year; the desktop sent its local time.
+    /// </summary>
+    [Theory]
+    [InlineData(365)]
+    [InlineData(-400)]
+    public async Task TestMR7_TheSubmissionDateIsStampedInUtcByTheServer(int clientOffsetDays)
+    {
+        var payload = Payload();
+        payload.SubmissionDate = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(clientOffsetDays), DateTimeKind.Local);
+
+        var before = DateTime.UtcNow;
+        var review = await Reviews.CreateReviewAsync(payload, Uninvolved);
+        var after = DateTime.UtcNow;
+
+        var stored = Read(ctx => ctx.MgmtReviews.Single(r => r.Id == review.Id));
+        Assert.InRange(stored.SubmissionDate, before, after);
+        Assert.Equal(DateTimeKind.Utc, review.SubmissionDate.Kind);
+    }
+
+    /// <summary>
+    /// MR8 — T278 (S39 D-07) regression: the desktop saves the whole risk right after its review, from the copy it held
+    /// before the review — which still says a review is requested. The update copied every field of that copy, so the
+    /// flag <see cref="MgmtReviewsService.CreateReviewAsync"/> had just cleared came straight back and REV-REQ stayed lit.
+    /// The flag is server-owned: a risk save neither sets nor clears it.
+    /// </summary>
+    [Fact]
+    public async Task TestMR8_SavingAStaleRiskDoesNotReopenTheReviewRequestTheReviewAnswered()
+    {
+        SeedUnscoped(ctx =>
+        {
+            var risk = ctx.Risks.Single(r => r.Id == RiskId);
+            risk.ReviewRequestedAt = new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc);
+            risk.ReviewRequestedReason = "A major incident touched this process.";
+        });
+        var staleCopy = RiskRow(RiskId);
+        Assert.True(staleCopy.ReviewRequested);
+
+        await Reviews.CreateReviewAsync(Payload(), Uninvolved);
+        await GetService<IRisksService>().SaveRiskAsync(staleCopy);
+
+        var stored = RiskRow(RiskId);
+        Assert.False(stored.ReviewRequested);
+        Assert.Null(stored.ReviewRequestedReason);
+    }
+
+    /// <summary>MR9 — the same through the legacy synchronous save, which the reopen path still uses.</summary>
+    [Fact]
+    public async Task TestMR9_TheSynchronousSaveLeavesTheReviewRequestAlone()
+    {
+        var staleCopy = RiskRow(RiskId);
+
+        await Reviews.CreateReviewAsync(Payload(), Uninvolved);
+        GetService<IRisksService>().SaveRisk(staleCopy);
+
+        Assert.False(RiskRow(RiskId).ReviewRequested);
+
+        // And the other way round: a payload cannot raise the flag either — that is RequestReviewAsync's job, which
+        // records why.
+        var raising = RiskRow(RiskId);
+        raising.ReviewRequested = true;
+        raising.ReviewRequestedReason = "Set from the form.";
+        GetService<IRisksService>().SaveRisk(raising);
+
+        Assert.False(RiskRow(RiskId).ReviewRequested);
+        Assert.Null(RiskRow(RiskId).ReviewRequestedReason);
+    }
 }

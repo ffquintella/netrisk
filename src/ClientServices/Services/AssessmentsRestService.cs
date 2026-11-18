@@ -671,11 +671,15 @@ public class AssessmentsRestService: RestServiceBase, IAssessmentsService
         }
     }
 
-    public async Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson)
+    public async Task<AssessmentRunAnswer?> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson,
+        int? assessmentAnswerId = null)
     {
         using var client = RestService.GetClient();
         var request = new RestRequest($"/Assessments/runs/{runId}/answers");
-        request.AddJsonBody(new { QuestionId = questionId, AnswerContentJson = answerContentJson });
+        request.AddJsonBody(new
+        {
+            QuestionId = questionId, AnswerContentJson = answerContentJson, AssessmentAnswerId = assessmentAnswerId
+        });
 
         try
         {

@@ -33,6 +33,15 @@ public static class AssetAttributeProjector
         /// </summary>
         public bool? Active { get; set; }
 
+        /// <summary>
+        /// Relation target (<see cref="MappableFields.Applications"/>, <see cref="MappableFields.Hosts"/>) → the objects it
+        /// names (M58, T291). Absent when the attribute was empty: the register said nothing, so no link is removed.
+        /// </summary>
+        public Dictionary<string, List<AssetObjectReference>> References { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public IReadOnlyList<AssetObjectReference> ReferencesOf(string field) =>
+            References.TryGetValue(field, out var list) ? list : [];
+
         public string? Get(string field) =>
             Fields.TryGetValue(field, out var value) && !string.IsNullOrWhiteSpace(value) ? value : null;
 
@@ -49,6 +58,13 @@ public static class AssetAttributeProjector
 
         foreach (var mapping in mappings.OrderBy(m => m.SortOrder))
         {
+            if (MappableFields.IsRelation(mapping.TargetField))
+            {
+                var references = ReadReferences(payload, mapping);
+                if (references.Count > 0) result.References[mapping.TargetField] = references;
+                continue;
+            }
+
             var raw = ReadSource(payload, mapping);
 
             // The constant is a *fallback*, not an override: an attribute that is present wins, and the
@@ -107,6 +123,69 @@ public static class AssetAttributeProjector
         return mapping.Transform == JiraAttributeTransform.FirstOfList
             ? values[0]
             : string.Join(", ", values);
+    }
+
+    /// <summary>
+    /// The objects a relation mapping names (M58, T291): the attribute's references by id, then by name; a text attribute
+    /// gives one bare name per value; the constant, when the attribute is empty, one name. <c>FirstOfList</c> keeps the
+    /// first; duplicates go. Labels are clipped, since they come from a third party and end up in messages.
+    /// </summary>
+    private static List<AssetObjectReference> ReadReferences(AssetObjectPayload payload, JiraObjectAttributeMapping mapping)
+    {
+        List<AssetObjectReference>? references = null;
+
+        if (mapping.SourceAttributeId is { } id && payload.References.TryGetValue(id, out var byId) && byId.Count > 0)
+            references = byId;
+        else if (!string.IsNullOrWhiteSpace(mapping.SourceAttributeName)
+                 && payload.ReferencesByName.TryGetValue(mapping.SourceAttributeName, out var byName) && byName.Count > 0)
+            references = byName;
+
+        if (references == null)
+        {
+            List<string>? names = null;
+            if (mapping.SourceAttributeId is { } textId && payload.Attributes.TryGetValue(textId, out var textById))
+                names = textById;
+            else if (!string.IsNullOrWhiteSpace(mapping.SourceAttributeName)
+                     && payload.AttributesByName.TryGetValue(mapping.SourceAttributeName, out var textByName))
+                names = textByName;
+
+            if ((names == null || names.Count == 0) && !string.IsNullOrWhiteSpace(mapping.ConstantValue))
+                names = [mapping.ConstantValue];
+
+            references = (names ?? []).Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => new AssetObjectReference(null, null, n.Trim())).ToList();
+        }
+
+        var distinct = references
+            .Select(r => r with { Label = r.Label.Length > MaxReferenceLabel ? r.Label[..MaxReferenceLabel] : r.Label })
+            .DistinctBy(r => r.ObjectId ?? "label:" + r.Label.ToLowerInvariant())
+            .ToList();
+
+        return mapping.Transform == JiraAttributeTransform.FirstOfList ? distinct.Take(1).ToList() : distinct;
+    }
+
+    /// <summary>The longest referenced-object label kept: the length of a host name and of an entity's name.</summary>
+    private const int MaxReferenceLabel = 255;
+
+    /// <summary>
+    /// A CMDB's internet-exposure value as yes, no or unrecognised (M58, T291). Unlike <see cref="ApplyTruthy"/>, which
+    /// reads everything outside its yes-list as no, an unrecognised value here is null: reading "Unknown" as "not exposed"
+    /// would switch off <c>m_net</c> on the register's say-so when the register said nothing.
+    /// </summary>
+    internal static bool? ParseInternetFacing(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+
+        var value = raw.Trim().ToLowerInvariant();
+
+        if (value is "true" or "yes" or "y" or "1" or "on" or "sim" or "s" or "public" or "público" or "publico"
+            or "external" or "externo" or "internet" or "internet-facing" or "internet facing" or "exposed" or "exposto"
+            or "dmz") return true;
+
+        if (value is "false" or "no" or "n" or "0" or "off" or "não" or "nao" or "internal" or "interno" or "private"
+            or "privado" or "intranet" or "not exposed" or "none") return false;
+
+        return null;
     }
 
     internal static string? Apply(JiraAttributeTransform transform, string raw)

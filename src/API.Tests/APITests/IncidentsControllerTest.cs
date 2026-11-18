@@ -22,6 +22,7 @@ public class IncidentsControllerTest : BaseControllerTest
 {
     private readonly IIncidentsService _incidentsService = Substitute.For<IIncidentsService>();
     private readonly IFilesService _filesService = Substitute.For<IFilesService>();
+    private readonly IAuditTrailService _auditTrail = Substitute.For<IAuditTrailService>();
     private readonly IncidentsController _controller;
 
     public IncidentsControllerTest()
@@ -30,6 +31,7 @@ public class IncidentsControllerTest : BaseControllerTest
         {
             s.AddSingleton(_incidentsService);
             s.AddSingleton(_filesService);
+            s.AddSingleton(_auditTrail);
         });
     }
 
@@ -477,6 +479,77 @@ public class IncidentsControllerTest : BaseControllerTest
         Assert.Empty(Policies(add));
         Assert.Contains(typeof(IncidentsController).GetCustomAttributes(typeof(API.Security.PermissionAuthorizeAttribute), true)
             .Cast<API.Security.PermissionAuthorizeAttribute>(), a => a.Permission == "incident_management");
+    }
+
+    #endregion
+
+    #region History (M58, T279)
+
+    /// <summary>The incident's field-by-field trail, found through the scoped incident first, without the user record.</summary>
+    [Fact]
+    public async Task TestGetHistoryReturnsTheTrailWithoutTheUserRecord()
+    {
+        _incidentsService.GetByIdAsync(1).Returns(MakeIncident(1, "one"));
+        _auditTrail.GetForRecordAsync(nameof(Incident), 1, 500).Returns(new List<AuditLog>
+        {
+            new()
+            {
+                Id = 9, EntityType = nameof(Incident), EntityId = 1, Field = nameof(Incident.Severity), OldValue = null,
+                NewValue = "High", UserId = 1, User = new User { Value = 1, Name = "Admin" }, Actor = "user"
+            }
+        });
+
+        var ok = Assert.IsType<OkObjectResult>((await _controller.GetHistoryAsync(1)).Result);
+
+        var row = Assert.Single(Assert.IsType<List<AuditLog>>(ok.Value));
+        Assert.Equal((nameof(Incident.Severity), "High", (int?)1), (row.Field, row.NewValue, row.UserId));
+        Assert.Null(row.User);
+    }
+
+    /// <summary>An incident outside the caller's scope (or gone) is a 404, and its trail is never read.</summary>
+    [Fact]
+    public async Task TestGetHistoryOfAnIncidentNotVisibleIsNotFound()
+    {
+        _incidentsService.GetByIdAsync(999).Returns<Task<Incident>>(_ => throw new DataNotFoundException("Incidents", "999"));
+
+        Assert.IsType<NotFoundResult>((await _controller.GetHistoryAsync(999)).Result);
+        await _auditTrail.DidNotReceive().GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(IncidentsController.MaxHistoryLimit + 1)]
+    public async Task TestGetHistoryRefusesALimitOutOfRange(int limit)
+    {
+        Assert.IsType<BadRequestObjectResult>((await _controller.GetHistoryAsync(1, limit)).Result);
+    }
+
+    [Fact]
+    public async Task TestGetHistoryReturns500OnError()
+    {
+        _incidentsService.GetByIdAsync(2).Returns(MakeIncident(2, "two"));
+        _auditTrail.GetForRecordAsync(nameof(Incident), 2, 500).Returns<Task<List<AuditLog>>>(_ => throw new Exception("boom"));
+
+        var status = Assert.IsType<StatusCodeResult>((await _controller.GetHistoryAsync(2)).Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, status.StatusCode);
+    }
+
+    /// <summary>
+    /// The generic trail's risk-management policy is not the incident permission: it refuses incidents and points at
+    /// /Incidents/{id}/History, as it does for hosts, third parties, the catalogue and AI models.
+    /// </summary>
+    [Fact]
+    public async Task TestTheGenericTrailRefusesIncidents()
+    {
+        Assert.Contains(nameof(Incident), ServerServices.Governance.AuditTrailService.AuditedTypes);
+        var trail = ResolveController<AuditTrailController>(s => s.AddSingleton(_auditTrail));
+
+        var bad = Assert.IsType<BadRequestObjectResult>((await trail.GetForRecord(nameof(Incident), 5)).Result);
+
+        var body = System.Text.Json.JsonDocument.Parse(System.Text.Json.JsonSerializer.Serialize(bad.Value)).RootElement;
+        Assert.Equal(("use_incident_history", "/Incidents/5/History"),
+            (body.GetProperty("error").GetString(), body.GetProperty("route").GetString()));
+        await _auditTrail.DidNotReceive().GetForRecordAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<int>());
     }
 
     #endregion

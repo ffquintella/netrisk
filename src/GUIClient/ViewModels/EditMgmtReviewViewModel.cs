@@ -19,6 +19,7 @@ using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using Avalonia.Controls;
 using Model.DTO;
+using Model.Exceptions;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
@@ -187,7 +188,8 @@ public class EditMgmtReviewViewModel
             NextStep = SelectedNextStep!.Value,
             Review = SelectedReviewType!.Value,
             RiskId = _riskId,
-            SubmissionDate = SubmissionDate.DateTime,
+            // T278 (S39 D-07): the server dates the review, in UTC. The field on the form is today, for display only.
+            SubmissionDate = default,
             NextReview = new DateOnly(NextReview.DateTime.Year, NextReview.DateTime.Month, NextReview.DateTime.Day),
             Reviewer = 0
         };
@@ -203,6 +205,13 @@ public class EditMgmtReviewViewModel
                 NextStep = SelectedNextStep.Value,
                 NextStepName = SelectedNextStep.Name
             });
+        }
+        catch (RuleBrokenException ex)
+        {
+            // The server refused the review by name of a rule; the reviewer is told which, in their language.
+            ErrorMsg(ex.RuleName == "segregation_of_duties"
+                ? Localizer["ReviewRefusedSegregationMSG"]
+                : Localizer["ReviewRefusedMSG"]);
         }
         catch (Exception ex)
         {

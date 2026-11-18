@@ -6,6 +6,7 @@ using Model;
 using Model.DTO;
 using Model.Exceptions;
 using Model.File;
+using Model.Status;
 using Serilog;
 using ServerServices.Interfaces;
 
@@ -58,15 +59,19 @@ public class IncidentsService(
     public async Task<Incident> CreateAsync(Incident incident, User user)
     {
         EnsureKindDefined(incident);
+        EnsureSeverityDefined(incident);
 
         await using var dbContext = DalService.GetContext();
         
+        // M58, T279 (S39 D-15): the server's stamps are UTC, like every timestamp the risk index reads.
+        var now = DateTime.UtcNow;
         incident.Id = 0;
         incident.CreatedById = user.Value;
-        incident.CreationDate = DateTime.Now;
+        incident.CreationDate = now;
         incident.UpdatedById = user.Value;
-        incident.LastUpdate = DateTime.Now;
+        incident.LastUpdate = now;
         if(incident.Status == 0) incident.Status = (int)IntStatus.New;
+        incident.ResolvedAt = ResolvedAtAfter(previousStatus: null, previousResolvedAt: null, incident.Status, now);
         
         await dbContext.Incidents.AddAsync(incident);
 
@@ -207,6 +212,7 @@ public class IncidentsService(
     public async Task<Incident> UpdateAsync(Incident incident, User user)
     {
         EnsureKindDefined(incident);
+        EnsureSeverityDefined(incident);
 
         await using var dbContext = DalService.GetContext();
         
@@ -223,7 +229,10 @@ public class IncidentsService(
         // having foreseen the incident.
         incident.CreationDate = existingIncident.CreationDate;
         incident.UpdatedById = user.Value;
-        incident.LastUpdate = DateTime.Now;
+        var now = DateTime.UtcNow;
+        incident.LastUpdate = now;
+        // M58, T279: never the client's value — moved only by the status transition this save makes.
+        incident.ResolvedAt = ResolvedAtAfter(existingIncident.Status, existingIncident.ResolvedAt, incident.Status, now);
 
         incident.Adapt(existingIncident);
 
@@ -282,6 +291,26 @@ public class IncidentsService(
         if (!Enum.IsDefined(incident.Kind))
             throw new InvalidParameterException(nameof(Incident.Kind),
                 $"Incident kind {(int)incident.Kind} is not one of Incident (1) or NearMiss (2).");
+    }
+
+    /// <summary>
+    /// M58, T279 (S39 §9.2, D-15): the resolution date after a save. Entering the closed set (<see cref="ClosedStatuses"/>,
+    /// the predicate the risk index reads) stamps <paramref name="now"/>; moving between closed statuses keeps the
+    /// recorded date — null for an incident closed before the column existed, whose closure nobody recorded; any open
+    /// status clears it, so a reopened incident is stamped anew when it next closes.
+    /// </summary>
+    public static DateTime? ResolvedAtAfter(int? previousStatus, DateTime? previousResolvedAt, int newStatus, DateTime now)
+    {
+        if (ClosedStatuses.IsOpen(newStatus)) return null;
+        return previousStatus is { } before && ClosedStatuses.IsClosed(before) ? previousResolvedAt : now;
+    }
+
+    /// <summary>M58, T279: a severity is one of the four the index anchors, or none; any other number is refused.</summary>
+    private static void EnsureSeverityDefined(Incident incident)
+    {
+        if (incident.Severity is { } severity && !Enum.IsDefined(severity))
+            throw new InvalidParameterException(nameof(Incident.Severity),
+                $"Incident severity {(int)severity} is not one of Low (1), Medium (2), High (3) or Critical (4).");
     }
 
     public async Task DeleteByIdAsync(int id)

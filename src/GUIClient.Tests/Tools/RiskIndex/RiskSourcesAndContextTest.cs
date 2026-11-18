@@ -42,13 +42,28 @@ public class RiskSourcesAndContextTest
     [Fact]
     public void TestANotBuiltSourceCannotBeSwitchedOnButCanBeSwitchedOff()
     {
-        var notBuilt = RiskSourceCatalogue.Find(RiskIndexSources.CmdbInternetFacing)!;
+        var notBuilt = RiskSourceCatalogue.Find(RiskIndexSources.CmdbRelations)!;
         var vision = RiskSourceCatalogue.Find(RiskIndexSources.V1Device)!;
 
         Assert.Equal("RiskSourceRequiresTask", RiskSourceCatalogue.Toggle(notBuilt, false, true).ReasonKey);
         Assert.True(RiskSourceCatalogue.Toggle(notBuilt, true, true).Enabled);
         Assert.True(RiskSourceCatalogue.Toggle(vision, true, true).Enabled);
         Assert.Equal(RiskIndexAdminAccess.RequiresConfigure, RiskSourceCatalogue.Toggle(vision, true, false).ReasonKey);
+    }
+
+    /// <summary>
+    /// M58, T291: the Jira Assets import writes the host's internet exposure, so CMDB-INET may be enabled; the relations it
+    /// imports wait for the full-mode drill-down that reads them (T284), so CMDB-REL still cannot be switched on.
+    /// </summary>
+    [Fact]
+    public void TestCmdbInternetFacingCanBeSwitchedOnAndCmdbRelationsAwaitsT284()
+    {
+        var inet = RiskSourceCatalogue.Find(RiskIndexSources.CmdbInternetFacing)!;
+        var relations = RiskSourceCatalogue.Find(RiskIndexSources.CmdbRelations)!;
+
+        Assert.Equal(RiskSourceAvailability.Available, inet.Availability);
+        Assert.True(RiskSourceCatalogue.Toggle(inet, false, true).Enabled);
+        Assert.Equal((RiskSourceAvailability.NotAvailable, "T284"), (relations.Availability, relations.Qualifier));
     }
 
     /// <summary>M56, T266–T267: the Tenable connector exists, so TEN-VM, TEN-AES and TEN-ACR may be enabled in a draft.</summary>

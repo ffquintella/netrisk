@@ -14,7 +14,7 @@ public class RiskCalculationService(
     IEnumerable<IResidualRiskStrategy> residualStrategies): ServiceBase(logger, dalService), IRiskCalculationService
 {
     /// <summary>Which residual formula is in force. Names an <see cref="IResidualRiskStrategy"/>.</summary>
-    public const string ResidualStrategySetting = "risk_workflow_residual_strategy";
+    public const string ResidualStrategySetting = DAL.Enums.GovernanceSettingKeys.RiskWorkflowResidualStrategy;
 
     
     public event EventHandler<RiskCalculationEventArgs> RiskScoreCalculated = delegate { };

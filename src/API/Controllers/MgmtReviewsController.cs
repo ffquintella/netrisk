@@ -129,6 +129,36 @@ public class MgmtReviewsController: ApiBaseController
     }
     
     
+    /// <summary>
+    /// The open risks whose management review is due now, most overdue first (T278, S39 D-08): the list the daily cadence
+    /// job notifies from, dated by the S39 §6.1 rule (see <see cref="IMgmtReviewsService.GetOverdueReviewsAsync"/>).
+    /// Read under the caller's entity scope, so a scoped reviewer sees only their entities' risks.
+    /// </summary>
+    [HttpGet]
+    [Route("Overdue")]
+    [Authorize(Policy = "RequireMgmtReviewAccess")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Model.Governance.OverdueReview>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<List<Model.Governance.OverdueReview>>> GetOverdue()
+    {
+        var user = GetUser();
+
+        try
+        {
+            var overdue = await _mgmtReviewsService.GetOverdueReviewsAsync(DateTime.UtcNow);
+
+            Logger.Information("User:{UserValue} listed {Count} overdue management review(s)", user.Value, overdue.Count);
+
+            return Ok(overdue);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error listing overdue reviews: {Message}", ex.Message);
+            return StatusCode(500);
+        }
+    }
+
     [HttpGet]
     [Route("{reviewId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MgmtReview))]

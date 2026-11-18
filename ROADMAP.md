@@ -1102,16 +1102,24 @@ indicators are stored, not yet shown).**
 > workaround is corrected at the source, so each workaround can be retired.
 > spec: S39
 
-- [ ] T277 Align the `MgmtReview` review and next-step constants with the seeded lookups (S39)
-- [ ] T278 Stamp management review dates in UTC on the server, route desktop reviews through `CreateReviewAsync`, and expose overdue reviews honouring acceptance expiry (S39)
-- [ ] T279 Add incident severity and a UTC resolved date, and audit incidents field by field (S39)
-- [ ] T280 Link assessment answers by option id, record submission time and score runs on the server (S39)
-- [ ] T281 Record a scan-only `last_assessed_at` on hosts and match finding hosts by external id before IP (S39)
-- [ ] T282 Add a host-to-entity assignment path with an explicit re-stamp policy, and a target application on code-scanner imports (S39)
-- [ ] T283 Audit the product inputs that move the index (`review_levels`, `risk_levels`, settings and SLA configurations) (S39)
-- [ ] T290 Persist the residual ALE mean (`risk_scoring.quant_residual_ale_mean`) so the monetary panel can show residual Σ E[L] (S39)
-  - note: the simulator already computes the residual mean (`QuantitativeRiskService.cs:122`) but only P10/P50/P90 are stored
-- [ ] T291 Import the Jira Assets internet-facing attribute onto hosts and the application-to-server relationship onto host–application links, so `m_net` reads CMDB evidence and the full-mode linkage chain can attribute hosts to applications (S39)
+- [x] T277 Align the `MgmtReview` review and next-step constants with the seeded lookups (S39)
+  - note: the constants live in `Model/Risks/MgmtReviewCodes.cs` and match `Data/1.sql`; escalated campaign decisions also write next step "Consider for Project". Not done: no backfill of historic review rows (acceptance rows keep Review 2 / NextStep 3, campaign rows Review 2 / NextStep 1), so a risk whose latest review is a legacy campaign row is no longer blocked from closing and a legacy acceptance row reads as a different decision; remapping them needs audit-correlation heuristics and is an open decision
+- [x] T278 Stamp management review dates in UTC on the server, route desktop reviews through `CreateReviewAsync`, and expose overdue reviews honouring acceptance expiry (S39)
+  - note: `GET /MgmtReviews/Overdue` follows S39 §6.1, and the rule moved to `ServerServices/Governance/ReviewDueRule.cs` so the index and the list share it (`IcrIsNotADecisionInputTest` forbids the service calling index code). `NextReview` only brings the due date forward. The desktop already used `CreateReviewAsync`; the real defect was a stale-copy risk PUT that re-raised `ReviewRequested`, fixed in `RisksService.SaveRisk`
+- [x] T279 Add incident severity and a UTC resolved date, and audit incidents field by field (S39)
+  - note: schema 114. No backfill of `resolved_at`: old dates are local-time "last touched", so the index keeps its fallback for those rows. An older desktop that sends no severity clears it on save
+- [x] T280 Link assessment answers by option id, record submission time and score runs on the server (S39)
+  - note: schema 114; `submitted_at` and `score` are on `assessment_runs`, not `assessments`. No backfill of submission time or score. Answers are matched by option text only when exactly one option matches; the rest are reported by the unlinked-answers endpoint. Answers on a submitted run are still editable, so the score can drift
+- [x] T281 Record a scan-only `last_assessed_at` on hosts and match finding hosts by external id before IP (S39)
+  - note: schema 115. Not done: the index reader still uses the §8.2 interim rule and does not read `last_assessed_at` yet; a clean scan whose results were all filtered does not stamp the host (needs an assessed-hosts list in the SDK `ImportResult`)
+- [x] T282 Add a host-to-entity assignment path with an explicit re-stamp policy, and a target application on code-scanner imports (S39)
+  - note: schema 115, policy in `docs/features/host-entity-assignment.md`. Not done: no GUI control for the re-stamp policy, no ClientServices call for `/Hosts/Unassigned`, and an import naming a target but no repository does not adopt older unattributed findings
+- [x] T283 Audit the product inputs that move the index (`review_levels`, `risk_levels`, settings and SLA configurations) (S39)
+  - note: `review_levels` and `risk_levels` have no key and no write path, so the interceptor cannot audit them; a real audit needs keys plus an admin endpoint or DB triggers (schema change, open)
+- [x] T290 Persist the residual ALE mean (`risk_scoring.quant_residual_ale_mean`) so the monetary panel can show residual Σ E[L] (S39)
+  - note: the column and its write already existed (schema 95); the real defect was `PUT /Risks/{id}/Scoring` wiping the `Quant*` columns, fixed by `RisksService.KeepSimulatorColumns`. Not done: `GET /RiskIndex/Monetary` does not exist (a T249 gap), so the monetary panel still has no residual read
+- [x] T291 Import the Jira Assets internet-facing attribute onto hosts and the application-to-server relationship onto host–application links, so `m_net` reads CMDB evidence and the full-mode linkage chain can attribute hosts to applications (S39)
+  - note: schema 116, new table `host_application_links` (none existed). CMDB-INET is selectable in the source catalogue; CMDB-REL stays unavailable until T284 reads the links. An older client that omits `InternetFacing` clears it on a host PUT
 
 ### [M59] ICR full mode: consuming Track 9
 > outcome: The index runs in full mode — drill-down along the linkage chain, BIA criticality, KEV/EPSS,

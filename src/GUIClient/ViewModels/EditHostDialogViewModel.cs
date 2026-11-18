@@ -44,6 +44,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         public string StrCriticality => Localizer["Criticality"];
         public string StrEnvironment => Localizer["Environment"];
         public string StrOwner => Localizer["Owner"];
+        public string StrEntity => Localizer["Entity"];
+        public string StrEntityTip => Localizer["HostEntityAssignmentTip"];
 
     #endregion
 
@@ -167,12 +169,41 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
             set => this.RaiseAndSetIfChanged(ref _comments, value);
         }
 
+        /// <summary>"Unassigned", then the entities a host can belong to (M58, T282, S39 D-20).</summary>
+        private ObservableCollection<EntityOption> _entityOptions = new();
+        public ObservableCollection<EntityOption> EntityOptions
+        {
+            get => _entityOptions;
+            set => this.RaiseAndSetIfChanged(ref _entityOptions, value);
+        }
+
+        private EntityOption? _selectedEntity;
+
+        /// <summary>
+        /// The host's entity. As with criticality, "Unassigned" is a real option (Id null), so a null write is the
+        /// ComboBox losing its selection when it re-templates — ignored, or a save would silently unassign the host.
+        /// The server records a choice made here as a manual assignment, which no sync moves.
+        /// </summary>
+        public EntityOption? SelectedEntity
+        {
+            get => _selectedEntity;
+            set
+            {
+                if (value is null) return;
+                this.RaiseAndSetIfChanged(ref _selectedEntity, value);
+            }
+        }
+
+        /// <summary>The edited host's entity, held until the options have loaded.</summary>
+        private int? _hostEntityId;
+
     #endregion
 
     #region SERVICES
 
     private ITeamsService TeamsService { get; } = GetService<ITeamsService>();
     private IHostsService HostsService { get; } = GetService<IHostsService>();
+    private IEntitiesService EntitiesService { get; } = GetService<IEntitiesService>();
 
     #endregion
 
@@ -250,6 +281,36 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
     private async Task InitializeAsync()
     {
         Teams = new ObservableCollection<Team>(await TeamsService.GetAllAsync());
+
+        // The server returns only the entities the caller's scope covers, so the picker cannot offer one the save
+        // would be refused for. A failed load leaves "Unassigned" plus the host's current entity, never an empty list.
+        try
+        {
+            EntityOptions = new ObservableCollection<EntityOption>(
+                EntityOption.Build(await EntitiesService.GetAllAsync(null, true), Localizer["HostEntityUnassigned"]));
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not load the entities for the host dialog: {Message}", ex.Message);
+            EntityOptions = new ObservableCollection<EntityOption>(EntityOption.Build([], Localizer["HostEntityUnassigned"]));
+        }
+
+        SelectHostEntity();
+    }
+
+    /// <summary>Selects the edited host's entity, adding it by id if the list does not carry it.</summary>
+    private void SelectHostEntity()
+    {
+        if (EntityOptions.Count == 0) return;
+
+        var match = EntityOptions.FirstOrDefault(o => o.Id == _hostEntityId);
+        if (match == null && _hostEntityId is { } id)
+        {
+            match = new EntityOption(id, $"#{id}");
+            EntityOptions.Add(match);
+        }
+
+        SelectedEntity = match ?? EntityOptions[0];
     }
 
     private async void ExecuteSave()
@@ -268,6 +329,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
         Host.Criticality = SelectedCriticality?.Level;
         Host.Environment = string.IsNullOrWhiteSpace(Environment) ? null : Environment.Trim();
         Host.Owner = string.IsNullOrWhiteSpace(Owner) ? null : Owner.Trim();
+        // Before the options load, keep what the host had rather than reading "Unassigned" (M58, T282).
+        Host.EntityId = SelectedEntity != null ? SelectedEntity.Id : _hostEntityId;
 
         if (SelectedOsIndex != null)
         {
@@ -376,6 +439,8 @@ public class EditHostDialogViewModel: ParameterizedDialogViewModelBaseAsync<Host
                 o.Level == CriticalityScale.Normalize(parameter.Host?.Criticality));
             Environment = parameter.Host?.Environment ?? string.Empty;
             Owner = parameter.Host?.Owner ?? string.Empty;
+            _hostEntityId = parameter.Host?.EntityId;
+            SelectHostEntity();
             
             if(parameter.Host != null && parameter.Host.Os != null)
                 switch (parameter.Host.Os.ToLower())

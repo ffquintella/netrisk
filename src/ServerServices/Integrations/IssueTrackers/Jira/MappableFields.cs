@@ -22,6 +22,20 @@ public static class MappableFields
     public const string Environment = "Environment";
     public const string Active = "Active";
 
+    /// <summary>Host-only (M58, T291, CMDB-INET): whether the machine faces the internet — the risk index's <c>m_net</c>.</summary>
+    public const string InternetFacing = "InternetFacing";
+
+    /// <summary>Host-only (T291, CMDB-REL): the applications the server runs, as references or names.</summary>
+    public const string Applications = "Applications";
+
+    /// <summary>Application-only (T291, CMDB-REL): the servers the application runs on, as references or names.</summary>
+    public const string Hosts = "Hosts";
+
+    /// <summary>A target that becomes host–application links rather than a field value.</summary>
+    public static bool IsRelation(string? field) =>
+        string.Equals(field, Applications, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(field, Hosts, StringComparison.OrdinalIgnoreCase);
+
     private static readonly MappableFieldView[] Common =
     [
         new() { Name = Name, Label = "Name", Description = "The record's name. Required — a mapping with no name target cannot match or create anything." },
@@ -43,7 +57,20 @@ public static class MappableFields
             Name = "Criticality", Label = "Criticality (1–5)", AppliesTo = [JiraAssetTargetKind.Host],
             Description = "Business criticality. Clamped to 1–5 rather than refused, since every CMDB has its own number of bands."
         },
-        new() { Name = "Comment", Label = "Comment", AppliesTo = [JiraAssetTargetKind.Host] }
+        new() { Name = "Comment", Label = "Comment", AppliesTo = [JiraAssetTargetKind.Host] },
+        new()
+        {
+            Name = InternetFacing, Label = "Internet-facing", AppliesTo = [JiraAssetTargetKind.Host],
+            Description = "Whether the machine is reachable from the internet: yes, true, public, external, DMZ… or no, false, "
+                          + "internal, private…; any other value is reported and leaves the host as it was. Never overwrites a "
+                          + "value set by hand."
+        },
+        new()
+        {
+            Name = Applications, Label = "Applications (relation)", AppliesTo = [JiraAssetTargetKind.Host],
+            Description = "The applications this server runs: a reference attribute pointing at objects this connection imports "
+                          + "as applications, or application names. Becomes host–application links; never removes one set by hand."
+        }
     ];
 
     private static readonly MappableFieldView[] ApplicationOnly =
@@ -58,6 +85,12 @@ public static class MappableFields
             Name = "SecurityClassification", Label = "Security classification",
             AppliesTo = [JiraAssetTargetKind.ApplicationEntity],
             Description = "Matched by name against the security-classification-level entities; unmatched values are reported, not created."
+        },
+        new()
+        {
+            Name = Hosts, Label = "Servers (relation)", AppliesTo = [JiraAssetTargetKind.ApplicationEntity],
+            Description = "The servers this application runs on: a reference attribute pointing at objects this connection imports "
+                          + "as hosts, or host names. Becomes host–application links; never removes one set by hand."
         }
     ];
 

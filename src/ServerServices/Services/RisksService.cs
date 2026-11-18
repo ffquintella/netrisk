@@ -701,12 +701,41 @@ public class RisksService(
         }
     }
 
+    /// <summary>
+    /// The FAIR-lite columns only the simulator writes (<c>QuantitativeRiskService.ComputeAndSaveAsync</c>): its inputs and
+    /// its cached outputs, the residual mean included (M58, T290). <c>Adapt</c> copies the whole payload, so a client that
+    /// does not carry a column — any built before it existed — blanked it (S47 R3, S48 D1); and a client could forge an
+    /// ALE. Copied from the stored row onto the payload, so they change only through the simulation, and the stored outputs
+    /// keep describing the stored inputs.
+    /// </summary>
+    internal static void KeepSimulatorColumns(RiskScoring stored, RiskScoring incoming)
+    {
+        incoming.QuantLefMin = stored.QuantLefMin;
+        incoming.QuantLefMostLikely = stored.QuantLefMostLikely;
+        incoming.QuantLefMax = stored.QuantLefMax;
+        incoming.QuantLossMin = stored.QuantLossMin;
+        incoming.QuantLossMostLikely = stored.QuantLossMostLikely;
+        incoming.QuantLossMax = stored.QuantLossMax;
+        incoming.QuantAleP10 = stored.QuantAleP10;
+        incoming.QuantAleP50 = stored.QuantAleP50;
+        incoming.QuantAleP90 = stored.QuantAleP90;
+        incoming.QuantAleMean = stored.QuantAleMean;
+        incoming.QuantResidualAleP10 = stored.QuantResidualAleP10;
+        incoming.QuantResidualAleP50 = stored.QuantResidualAleP50;
+        incoming.QuantResidualAleP90 = stored.QuantResidualAleP90;
+        incoming.QuantResidualAleMean = stored.QuantResidualAleMean;
+        incoming.QuantLossExceedanceCurve = stored.QuantLossExceedanceCurve;
+        incoming.QuantSeed = stored.QuantSeed;
+        incoming.QuantComputedAt = stored.QuantComputedAt;
+    }
+
     public void SaveRiskScoring(RiskScoring riskScoring)
     {
         using (var context = dalService.GetContext())
         {
             var dbRiskScoring = context.RiskScorings.FirstOrDefault(r => r.Id == riskScoring.Id);
             if (dbRiskScoring == null) throw new Exception($"Unable to find risk scoring with id:{riskScoring.Id}");
+            KeepSimulatorColumns(dbRiskScoring, riskScoring);
             riskScoring.Adapt(dbRiskScoring);
             
             var scoringHistory = new RiskScoringHistory
@@ -745,9 +774,22 @@ public class RisksService(
 
         // Stage 9.9 (S50 §4.4, R11): the registration date is not editable here either.
         risk.SubmissionDate = dbRisk.SubmissionDate;
+        KeepServerOwnedReviewRequest(risk, dbRisk);
 
         risk.Adapt(dbRisk);
         context.SaveChanges();
+    }
+
+    /// <summary>
+    /// T278 (S39 D-07): the review request is server state — raised by an event with its reason, answered by a management
+    /// review. The desktop saves the whole risk right after a review, from the copy it held before it, and copying that
+    /// copy's flag back reopened the request the review had just answered.
+    /// </summary>
+    private static void KeepServerOwnedReviewRequest(Risk payload, Risk stored)
+    {
+        payload.ReviewRequested = stored.ReviewRequested;
+        payload.ReviewRequestedAt = stored.ReviewRequestedAt;
+        payload.ReviewRequestedReason = stored.ReviewRequestedReason;
     }
 
     public void DeleteRisk(int id)
@@ -918,6 +960,7 @@ public class RisksService(
         // Stage 9.9 (S50 §4.4, R11): when the risk was registered is not editable. Backtesting decides "foreseen" by it,
         // and a back-dated submission would turn a scenario written after an incident into one that foresaw it.
         risk.SubmissionDate = dbRisk.SubmissionDate;
+        KeepServerOwnedReviewRequest(risk, dbRisk);
 
         risk.Adapt(dbRisk);
         await context.SaveChangesAsync();

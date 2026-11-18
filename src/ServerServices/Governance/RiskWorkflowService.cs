@@ -42,11 +42,11 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
     public const string StatusClosed = "Closed";
 
     /// <summary>
-    /// The next-step value that means "this review did not settle the risk". Seeded as
-    /// <c>next_step</c> 1, "Request Risk review", and a risk whose latest review says that is not a
-    /// risk anybody agreed to close.
+    /// The review decision that means "this review did not settle the risk": the seeded <c>review</c> row 3, "Request
+    /// Risk review". A risk whose latest review says that is not a risk anybody agreed to close. T277 (S39 D-06): the
+    /// check read <c>next_step</c> 1, which the seed names "Accept until Next Review" — the settled outcome.
     /// </summary>
-    private const int NextStepRequestRiskReview = 1;
+    private const int ReviewRequestRiskReview = Model.Risks.ReviewCodes.RequestRiskReview;
 
     public async Task EnsureTransitionAllowedAsync(int riskId, string fromStatus, string toStatus)
     {
@@ -111,7 +111,7 @@ public class RiskWorkflowService(ILogger logger, IDalService dalService, IRiskFl
                     return "The latest management review is waiting for a counter-signature, so the " +
                            "risk stays in review until a second approver signs it.";
 
-                if (latest.NextStep == NextStepRequestRiskReview)
+                if (latest.Review == ReviewRequestRiskReview)
                     return "The latest management review asked for another review, so the risk is not " +
                            "settled and cannot be closed.";
 

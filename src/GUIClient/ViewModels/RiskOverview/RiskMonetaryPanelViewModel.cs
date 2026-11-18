@@ -3,9 +3,10 @@ using ReactiveUI;
 namespace GUIClient.ViewModels.RiskOverview;
 
 /// <summary>
-/// "Painel monetário — fora do índice" (S40 §5.10; T256), interim mode. The server has no monetary read yet
-/// (<c>GET /RiskIndex/Monetary</c>, T249 note) and the residual mean needs T290, so every line shows the spec's unavailable
-/// state — never a figure the server did not supply, and never a bare total.
+/// "Painel monetário — fora do índice" (S40 §5.10; T256), interim mode. The residual mean is persisted
+/// (<c>risk_scoring.quant_residual_ale_mean</c>, T290), but the server has no monetary read yet (<c>GET /RiskIndex/Monetary</c>,
+/// T249 note), so every line shows the spec's unavailable state — never a figure the server did not supply, and never a bare
+/// total.
 /// </summary>
 public class RiskMonetaryPanelViewModel : ViewModelBase
 {

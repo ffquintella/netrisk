@@ -1,10 +1,12 @@
 ﻿using DAL;
+using DAL.Context;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Model.DTO;
 using Model.Exceptions;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Governance;
 using Tools.Risks;
 
 namespace ServerServices.Services;
@@ -16,7 +18,7 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
     /// (Track 8 milestone 8.2.2). The setting existed in version 1, was deleted in version 29, and
     /// never did anything while it existed; version 80 re-creates it and this is where it now bites.
     /// </summary>
-    public const string CadenceBasisSetting = "next_review_date_uses";
+    public const string CadenceBasisSetting = DAL.Enums.GovernanceSettingKeys.NextReviewDateUses;
 
     /// <summary>The value that selects the residual score. Anything else means inherent.</summary>
     public const string CadenceBasisResidual = "ResidualRisk";
@@ -206,7 +208,9 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
 
         review.Id = 0;
         review.Reviewer = actingUserId;
-        if (review.SubmissionDate == default) review.SubmissionDate = DateTime.UtcNow;
+        // T278 (S39 D-07): when a review happened is evidence, so the server dates it, in UTC. A client date — the
+        // desktop sent its local time — could sit a year ahead and keep the risk off the overdue list that long.
+        review.SubmissionDate = DateTime.UtcNow;
         review.Comments ??= string.Empty;
 
         // Above the threshold the review lands unsigned by the second approver, which is what holds
@@ -338,45 +342,69 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
         await using var dbContext = DalService.GetContext();
 
         var setting = await dbContext.Settings.FirstOrDefaultAsync(s => s.Name == CadenceBasisSetting);
-        var basis = setting?.Value;
 
         var riskLevels = await dbContext.RiskLevels.OrderBy(rl => rl.Value).ToListAsync();
         var reviewLevels = await dbContext.ReviewLevels.ToListAsync();
 
-        var risks = await dbContext.Risks.Where(r => r.Status != "Closed").ToListAsync();
+        var candidates = await ReadOverdueCandidatesAsync(dbContext);
+
+        return ResolveOverdue(candidates, setting?.Value, riskLevels, reviewLevels, asOfUtc);
+    }
+
+    /// <summary>One open risk as the overdue list reads it: the history S39 §6.1 dates its review from, and the
+    /// next-review date each of its reviews set.</summary>
+    public sealed record OverdueCandidate(Risk Risk, RiskScoring Scoring, ReviewHistory History,
+        IReadOnlyDictionary<int, DateOnly> NextReviews);
+
+    /// <summary>
+    /// Every open risk with a scoring, in one pass rather than one query per risk (this runs over the whole open register
+    /// every morning). Read through <paramref name="db"/>, so a caller scoped to some entities reads only their risks.
+    /// </summary>
+    public static async Task<List<OverdueCandidate>> ReadOverdueCandidatesAsync(AuditableContext db)
+    {
+        var risks = await db.Risks.AsNoTracking().Where(r => r.Status != "Closed").ToListAsync();
         var riskIds = risks.Select(r => r.Id).ToList();
 
-        var scorings = await dbContext.RiskScorings.Where(s => riskIds.Contains(s.Id))
+        var scorings = await db.RiskScorings.AsNoTracking().Where(s => riskIds.Contains(s.Id))
             .ToDictionaryAsync(s => s.Id, s => s);
 
-        // The latest review per risk, resolved in one pass rather than one query per risk: this runs
-        // over the whole open register every morning.
-        var latestReviews = (await dbContext.MgmtReviews
-                .Where(mr => riskIds.Contains(mr.RiskId))
+        var histories = await ReviewHistoryReader.ReadAsync(db, riskIds);
+
+        var nextReviews = (await db.MgmtReviews.AsNoTracking().Where(mr => riskIds.Contains(mr.RiskId))
+                .Select(mr => new { mr.Id, mr.RiskId, mr.NextReview })
                 .ToListAsync())
             .GroupBy(mr => mr.RiskId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(mr => mr.SubmissionDate)
-                .ThenByDescending(mr => mr.Id).First());
+            .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<int, DateOnly>)g.ToDictionary(mr => mr.Id, mr => mr.NextReview));
 
+        return risks
+            .Where(r => scorings.ContainsKey(r.Id) && histories.ContainsKey(r.Id))
+            .Select(r => new OverdueCandidate(r, scorings[r.Id], histories[r.Id],
+                nextReviews.GetValueOrDefault(r.Id) ?? new Dictionary<int, DateOnly>()))
+            .ToList();
+    }
+
+    /// <summary>
+    /// The overdue reviews among <paramref name="candidates"/> at <paramref name="asOfUtc"/>, most overdue first. Pure, so
+    /// the rule is unit-testable although <c>risk_levels</c> and <c>review_levels</c> are keyless and cannot be seeded in
+    /// memory. A risk whose bands do not resolve a cadence is skipped (see <see cref="ResolveCadenceDays"/>).
+    /// </summary>
+    public static List<Model.Governance.OverdueReview> ResolveOverdue(IEnumerable<OverdueCandidate> candidates,
+        string? cadenceBasisSetting, List<RiskLevel> riskLevels, List<ReviewLevel> reviewLevels, DateTime asOfUtc)
+    {
         var overdue = new List<Model.Governance.OverdueReview>();
 
-        foreach (var risk in risks)
+        foreach (var candidate in candidates)
         {
-            if (!scorings.TryGetValue(risk.Id, out var scoring)) continue;
-
-            var cadence = ResolveCadenceDays(scoring, basis, riskLevels, reviewLevels);
+            var cadence = ResolveCadenceDays(candidate.Scoring, cadenceBasisSetting, riskLevels, reviewLevels);
             if (cadence is null) continue;
 
-            latestReviews.TryGetValue(risk.Id, out var lastReview);
-
-            // A brand-new risk is not overdue yet: it becomes overdue once its band's interval has
-            // passed since it was submitted. Treating "never reviewed" as instantly overdue would make
-            // the first notification cover the entire register.
-            var reference = lastReview?.SubmissionDate ?? risk.SubmissionDate;
-            var due = reference.AddDays(cadence.Value);
-
+            // A brand-new risk is not overdue yet: it becomes overdue once its band's interval has passed since it was
+            // submitted. Treating "never reviewed" as instantly overdue would make the first notification cover the
+            // entire register.
+            var (due, basis, reference) = ResolveReviewDue(candidate.History, candidate.NextReviews, cadence.Value, asOfUtc);
             if (due > asOfUtc) continue;
 
+            var risk = candidate.Risk;
             overdue.Add(new Model.Governance.OverdueReview
             {
                 RiskId = risk.Id,
@@ -386,9 +414,11 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
                 OwnerId = risk.Owner,
                 ManagerId = risk.Manager,
                 EntityId = risk.EntityId,
-                Score = SelectCadenceScore(scoring, basis),
-                LastReviewedAt = lastReview?.SubmissionDate,
+                Score = SelectCadenceScore(candidate.Scoring, cadenceBasisSetting),
+                LastReviewedAt = reference?.EffectiveDate,
                 CadenceDays = cadence.Value,
+                DueAt = due,
+                DueBasis = basis,
                 DaysOverdue = (int)Math.Floor((asOfUtc - due).TotalDays)
             });
         }
@@ -397,6 +427,37 @@ public class MgmtReviewsService: ServiceBase, IMgmtReviewsService
             .OrderByDescending(o => o.DaysOverdue)
             .ThenByDescending(o => o.Score ?? 0)
             .ToList();
+    }
+
+    /// <summary>
+    /// When one risk's review falls due (T278, S39 D-08): <c>due = min(d_ref + T, fim)</c> by
+    /// <see cref="ReviewDueRule.ResolveDue"/>, the rule the index also reads, then the next-review date the reviewer behind
+    /// <c>d_ref</c> set, honoured to the end of that day when earlier. Every term only brings the date forward, so no
+    /// client value can postpone a review; a next-review date before the review itself is a data error and is ignored.
+    /// </summary>
+    public static (DateTime Due, Model.Governance.ReviewDueBasis Basis, ClassifiedReview? Reference) ResolveReviewDue(
+        ReviewHistory history, IReadOnlyDictionary<int, DateOnly> nextReviews, int cadenceDays, DateTime asOfUtc)
+    {
+        var resolved = ReviewDueRule.ResolveDue(history, cadenceDays, ReviewDueRule.DefaultDerivedWindow, asOfUtc);
+
+        var due = resolved.Due;
+        var basis = resolved.DueByAcceptance
+            ? Model.Governance.ReviewDueBasis.AcceptanceEnd
+            : Model.Governance.ReviewDueBasis.Cadence;
+
+        if (resolved.ReferenceReview is { } reference &&
+            nextReviews.TryGetValue(reference.Id, out var next) &&
+            next >= DateOnly.FromDateTime(reference.EffectiveDate))
+        {
+            var nextDue = next.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(1);
+            if (nextDue < due)
+            {
+                due = nextDue;
+                basis = Model.Governance.ReviewDueBasis.NextReview;
+            }
+        }
+
+        return (due, basis, resolved.ReferenceReview);
     }
 
     /// <summary>

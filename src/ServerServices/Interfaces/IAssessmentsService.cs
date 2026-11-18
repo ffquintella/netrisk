@@ -49,7 +49,9 @@ public interface IAssessmentsService
     
     
     /// <summary>
-    /// Updates an existing run on the database
+    /// Updates an existing run on the database. M58, T280 (S39 D-16): <c>RunDate</c> is kept; a null status keeps the
+    /// run's; moving into Submitted stamps <c>SubmittedAt</c> (UTC) and records the server's <c>Score</c>, a save that
+    /// keeps it Submitted leaves both, and moving out of Submitted clears both.
     /// </summary>
     /// <param name="run"></param>
     void UpdateRun(AssessmentRunDto run);
@@ -200,9 +202,21 @@ public interface IAssessmentsService
     int Delete(Assessment assessment);
 
     /// <summary>
-    /// Saves or updates a draft answer for an assessment run.
+    /// Saves or updates a draft answer for an assessment run. M58, T280 (S39 D-16): the answer is linked to the option
+    /// <paramref name="assessmentAnswerId"/> names — which must be one of the question's — or, when a client sends none,
+    /// to the one option whose text the content carries; it stays unlinked when none or several do.
     /// </summary>
-    Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson);
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The run or the question does not exist.</exception>
+    /// <exception cref="Model.Exceptions.InvalidParameterException">The question is not the run's assessment's, or the
+    /// option is not the question's.</exception>
+    Task<AssessmentRunAnswer> SaveDraftAnswerAsync(int runId, int questionId, string answerContentJson,
+        int? assessmentAnswerId = null);
+
+    /// <summary>
+    /// M58, T280 (S39 D-16): the answers that carry text but name no option — what the version 114 backfill (or a client
+    /// older than the link) could not match — with why, so they can be fixed by hand. Read through the caller's scope.
+    /// </summary>
+    Task<List<Model.Assessments.AssessmentAnswerLinkGap>> GetUnlinkedAnswersAsync();
 
     /// <summary>
     /// Retrieves all draft answers for a specific assessment run.

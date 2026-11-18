@@ -36,13 +36,13 @@ public class RiskAcceptancesService(
     public static readonly int[] WarningThresholds = [30, 7];
 
     /// <summary>
-    /// The <c>next_step</c> value seeded as "Accept until Next Review". An acceptance's review row
-    /// uses it so the existing GUI renders the timeline entry correctly without a new lookup value.
+    /// The outcome an acceptance's review row records: "Approve Risk", "Accept until Next Review" — the seeded rows, so
+    /// the timeline reads what was decided. T277 (S39 D-06): these were 2 and 3, "Reject Risk and Close" and "Submit as a
+    /// Production Issue".
     /// </summary>
-    private const int NextStepAcceptUntilNextReview = 3;
+    private const int ReviewAcceptTheRisk = Model.Risks.ReviewCodes.ApproveRisk;
 
-    /// <summary>The seeded <c>review</c> value for "Consider for Project" is 1; 2 is "Accept the risk".</summary>
-    private const int ReviewAcceptTheRisk = 2;
+    private const int NextStepAcceptUntilNextReview = Model.Risks.NextStepCodes.AcceptUntilNextReview;
 
     public async Task<List<RiskAcceptance>> GetByRiskAsync(int riskId)
     {

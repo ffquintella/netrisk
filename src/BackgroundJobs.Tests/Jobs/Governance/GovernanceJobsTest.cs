@@ -231,7 +231,10 @@ public class GovernanceJobsTest
 
     /// <summary>
     /// A risk never reviewed at all is the group easiest to miss, and the message has to say so
-    /// rather than reporting an overdue count against a review that does not exist.
+    /// rather than reporting an overdue count against a review that does not exist. Since T278 the
+    /// group also holds risks whose only reviews do not qualify (an acceptance's, a self-review), and
+    /// the review can fall due before the cadence, so the message states the due date it was given
+    /// instead of deriving one from the cadence.
     /// </summary>
     [Fact]
     public void ANeverReviewedRiskIsAnnouncedAsSuch()
@@ -243,14 +246,17 @@ public class GovernanceJobsTest
             new()
             {
                 RiskId = 1, Subject = "Never looked at", ReferenceId = "R-1", Status = "New",
-                OwnerId = 4, Score = 5, CadenceDays = 120, DaysOverdue = 5, LastReviewedAt = null
+                OwnerId = 4, Score = 5, CadenceDays = 120, DaysOverdue = 5, LastReviewedAt = null,
+                DueAt = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc), DueBasis = ReviewDueBasis.AcceptanceEnd
             }
         }));
 
         NewCadenceJob(risks, reviews, tasks, notifications, messages).Run();
 
         messages.Received(1).SendMessageAsync(
-            Arg.Is<string>(m => m.Contains("never had a management review")), 4, Arg.Any<int>());
+            Arg.Is<string>(m => m.Contains("never had a qualifying management review") &&
+                                m.Contains("due since 2026-10-01") && m.Contains("5 day(s) overdue")),
+            4, Arg.Any<int>());
     }
 
     [Fact]

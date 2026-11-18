@@ -105,7 +105,11 @@ public partial class TenableService
                     host = NewHost(connection, asset);
                     var winner = VendorEntityMappingRules.Winner(rules, asset.Tags);
                     outcome = winner is null ? null : MappingOutcome.Assign;
-                    if (winner is not null) host.EntityId = winner.EntityId;
+                    if (winner is not null)
+                    {
+                        host.EntityId = winner.EntityId;
+                        host.EntitySource = EntitySources.Rule;
+                    }
                     db.Hosts.Add(host);
                     index.Add(host);
                 }
@@ -113,8 +117,8 @@ public partial class TenableService
                 {
                     Refresh(host, asset);
                     var winner = VendorEntityMappingRules.Winner(rules, asset.Tags);
-                    outcome = winner is null ? null : VendorEntityMappingRules.Decide(host.EntityId, winner);
-                    if (winner is not null) host.EntityId = VendorEntityMappingRules.Apply(host.EntityId, winner);
+                    // Never over a manual or CMDB assignment (M58, T282, S39 D-20).
+                    outcome = winner is null ? null : VendorEntityMappingRules.ApplyTo(host, winner);
                 }
 
                 applied.Add((asset, host, created, outcome));

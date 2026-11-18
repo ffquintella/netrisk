@@ -39,13 +39,15 @@ public class RiskReviewCampaignsService(
 
     public const int DefaultDueDays = 30;
 
-    /// <summary>The seeded <c>review</c> value for "Accept the risk".</summary>
-    private const int ReviewAcceptTheRisk = 2;
+    /// <summary>
+    /// The outcome a non-acceptance decision's review row records (mitigation requested, escalated): the review did not
+    /// settle the risk — "Request Risk review", which also keeps the workflow from closing it — and treatment work
+    /// follows — "Consider for Project". T277 (S39 D-06): these were review 2 and next step 1, which the seed names
+    /// "Reject Risk and Close" and "Accept until Next Review".
+    /// </summary>
+    private const int ReviewUnsettled = Model.Risks.ReviewCodes.RequestRiskReview;
 
-    /// <summary>The seeded <c>next_step</c> values: 1 request another review, 3 accept until next review.</summary>
-    private const int NextStepRequestRiskReview = 1;
-
-    private const int NextStepAcceptUntilNextReview = 3;
+    private const int NextStepTreatmentWork = Model.Risks.NextStepCodes.ConsiderForProject;
 
     public async Task<List<RiskReviewCampaign>> GenerateDueCampaignsAsync(DateTime asOfUtc)
     {
@@ -362,9 +364,9 @@ public class RiskReviewCampaignsService(
             {
                 RiskId = riskId,
                 SubmissionDate = DateTime.UtcNow,
-                Review = ReviewAcceptTheRisk,
+                Review = ReviewUnsettled,
                 Reviewer = actingUserId,
-                NextStep = NextStepRequestRiskReview,
+                NextStep = NextStepTreatmentWork,
                 Comments = DescribeDecision(request),
                 NextReview = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(DefaultCadenceMonths))
             });

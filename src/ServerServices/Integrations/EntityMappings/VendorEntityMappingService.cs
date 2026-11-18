@@ -241,7 +241,7 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
                 where x.Provider == hostProvider && x.ConnectionId == request.ConnectionId &&
                       x.Tags != null
                 join h in db.Hosts.AsNoTracking() on x.HostId equals h.Id
-                select new { h.Id, h.HostName, h.EntityId, x.Tags })
+                select new { h.Id, h.HostName, h.EntityId, h.EntitySource, x.Tags })
             .ToListAsync(ct);
 
         int matched = 0, assign = 0, reassign = 0, conflicts = 0, already = 0;
@@ -262,7 +262,7 @@ public sealed class VendorEntityMappingService(IDalService dalService, ILogger l
             }
             else
             {
-                switch (VendorEntityMappingRules.Decide(host.EntityId, candidate))
+                switch (VendorEntityMappingRules.Decide(host.EntityId, candidate, host.EntitySource))
                 {
                     case MappingOutcome.Assign:
                         assign++;

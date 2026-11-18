@@ -264,10 +264,9 @@ public class DeduplicationService : ServiceBase, IDeduplicationService
 /// <summary>One strategy's verdict on a finding.</summary>
 /// <param name="Strategy">Which strategy produced <paramref name="Key"/>.</param>
 /// <param name="Key">The 64-character stored key, or the legacy SHA-1 for the compatibility strategy.</param>
-/// <param name="MatchesLegacyImportHash">
-/// True when the key should be looked up against <c>import_hash</c> as well as <c>dedup_key</c>.
-/// </param>
-public record DedupCandidate(string Strategy, string Key, bool MatchesLegacyImportHash);
+/// <param name="MatchesLegacyImportHash">True when the key is also looked up against <c>import_hash</c>.</param>
+/// <param name="OnlyUnattributed">True when the key may only adopt a finding with no repository (T282, D-21).</param>
+public record DedupCandidate(string Strategy, string Key, bool MatchesLegacyImportHash, bool OnlyUnattributed = false);
 
 /// <summary>
 /// Every key the chain produced for one finding, in chain order.

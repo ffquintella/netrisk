@@ -76,6 +76,7 @@ public class FindingIngestionService(
             EntityId = request.EntityId,
             JobId = request.JobId,
             IdempotencyKey = request.IdempotencyKey,
+            Repository = RepositoryOf(request),
             StartedAt = request.ImportedAt,
             Status = (int)ScanImportStatus.Running
         };
@@ -309,7 +310,8 @@ public class FindingIngestionService(
                     Finding = finding,
                     HostId = hostId,
                     HostServiceId = serviceId,
-                    EntityId = request.EntityId
+                    EntityId = request.EntityId,
+                    Repository = RepositoryOf(request)
                 })));
             }
             catch (Exception ex)
@@ -501,6 +503,7 @@ public class FindingIngestionService(
             EntityId = request.EntityId,
             JobId = request.JobId,
             IdempotencyKey = request.IdempotencyKey,
+            Repository = RepositoryOf(request),
             StartedAt = request.ImportedAt,
             Status = (int)ScanImportStatus.Running
         };
@@ -524,13 +527,16 @@ public class FindingIngestionService(
         var normalized = finding.Host;
         if (normalized == null || normalized.IsEmpty) return null;
 
-        var key = normalized.Ip ?? normalized.Fqdn ?? normalized.HostName!;
+        var identity = normalized as IdentifiedHost;
+        var addressKey = normalized.Ip ?? normalized.Fqdn ?? normalized.HostName!;
+
+        // An identified host is cached by its identity, never by its address: two devices sharing an IP must not
+        // share a cache entry, which is the very confusion the identity exists to prevent.
+        var key = identity == null ? addressKey : $"\u001f{identity.Provider}\u001f{identity.ExternalId}";
 
         if (cache.TryGetValue(key, out var cached)) return cached;
 
-        var existing = normalized.Ip != null
-            ? await db.Hosts.FirstOrDefaultAsync(h => h.Ip == normalized.Ip, ct)
-            : await db.Hosts.FirstOrDefaultAsync(h => h.HostName == key || h.Fqdn == key, ct);
+        var existing = await MatchHostAsync(db, normalized, identity, addressKey, ct);
 
         if (existing != null)
         {
@@ -538,6 +544,7 @@ public class FindingIngestionService(
             // the inventory's "last seen" honest.
             existing.LastVerificationDate = request.ImportedAt;
             existing.Status = (short)IntStatus.Active;
+            StampAssessed(existing, request);
 
             // Filled in only where empty: a scanner that reports no FQDN this time must not erase
             // the one a previous scan found.
@@ -555,7 +562,7 @@ public class FindingIngestionService(
         var host = new Host
         {
             Ip = normalized.Ip,
-            HostName = normalized.HostName ?? key,
+            HostName = normalized.HostName ?? addressKey,
             Fqdn = normalized.Fqdn,
             MacAddress = ImporterHelpers.Clip(normalized.MacAddress, 254),
             Os = normalized.OperatingSystem,
@@ -566,14 +573,81 @@ public class FindingIngestionService(
             Status = (short)IntStatus.Active,
             TeamId = DefaultHostTeamId,
             EntityId = request.EntityId,
+            // The importer's scope, which any connection or person may later replace (T282, D-20).
+            EntitySource = request.EntityId == null ? null : EntitySources.Import,
             Comment = $"Created by the {request.Importer} importer"
         };
+
+        StampAssessed(host, request);
 
         db.Hosts.Add(host);
         await SaveAndForgetAsync(db, ct);
 
         cache[key] = host.Id;
         return host.Id;
+    }
+
+    /// <summary>
+    /// The host a finding sits on (M58, T281, S39 D-14): by the provider's own asset id when the connector supplied
+    /// one — the inventory's identity row first, then the host's own external id — and only then by address. An IP
+    /// is the weakest identity there is: matching on it first put a device's CVE on whichever machine last held the
+    /// address. A finding without an identity (every file importer) is matched by IP, then by name, as before.
+    ///
+    /// An identity the inventory does not know yet still falls back to the address, but never onto a host the same
+    /// provider knows as another device (on <c>hosts.external_id</c> or in <c>host_external_ids</c>): that is a new device
+    /// on a recycled address, and it gets a host of its own. A host with no identity from this provider still matches.
+    /// </summary>
+    private static async Task<Host?> MatchHostAsync(NRDbContext db, NormalizedHost normalized,
+        IdentifiedHost? identity, string addressKey, CancellationToken ct)
+    {
+        if (identity != null)
+        {
+            var linked = await db.HostExternalIds.AsNoTracking()
+                .Where(x => x.Provider == identity.Provider && x.ExternalId == identity.ExternalId)
+                .OrderBy(x => x.Id)
+                .Select(x => (int?)x.HostId)
+                .FirstOrDefaultAsync(ct);
+
+            var byIdentity = linked is { } hostId
+                ? await db.Hosts.FirstOrDefaultAsync(h => h.Id == hostId, ct)
+                : null;
+
+            byIdentity ??= await db.Hosts
+                .Where(h => h.ExternalProvider == identity.Provider && h.ExternalId == identity.ExternalId)
+                .OrderBy(h => h.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (byIdentity != null) return byIdentity;
+        }
+
+        var byAddress = normalized.Ip != null
+            ? db.Hosts.Where(h => h.Ip == normalized.Ip)
+            : db.Hosts.Where(h => h.HostName == addressKey || h.Fqdn == addressKey);
+
+        if (identity != null)
+        {
+            var provider = identity.Provider;
+            var externalId = identity.ExternalId;
+
+            byAddress = byAddress.Where(h =>
+                !(h.ExternalProvider == provider && h.ExternalId != null && h.ExternalId != externalId) &&
+                !db.HostExternalIds.Any(x => x.HostId == h.Id && x.Provider == provider && x.ExternalId != externalId));
+        }
+
+        return await byAddress.OrderBy(h => h.Id).FirstOrDefaultAsync(ct);
+    }
+
+    /// <summary>
+    /// Stamps the scan's assessment date (M58, T281, S39 §8.2, D-18) when the importer is a scanner (see
+    /// <see cref="HostAssessmentPolicy"/>). Never moved backwards: a late re-import of an old report does not make the
+    /// host look less recently assessed than it was.
+    /// </summary>
+    private static void StampAssessed(Host host, ImportIngestionRequest request)
+    {
+        if (!HostAssessmentPolicy.StampsLastAssessed(request.Importer)) return;
+
+        if (host.LastAssessedAt == null || host.LastAssessedAt < request.ImportedAt)
+            host.LastAssessedAt = request.ImportedAt;
     }
 
     private async Task<int?> ResolveServiceIdAsync(NRDbContext db, int hostId,
@@ -643,6 +717,7 @@ public class FindingIngestionService(
     {
         var unresolved = new HashSet<string>(StringComparer.Ordinal);
         var legacy = new HashSet<string>(StringComparer.Ordinal);
+        var unattributed = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var (_, _, _, keys) in resolved)
         {
@@ -651,6 +726,14 @@ public class FindingIngestionService(
             foreach (var candidate in keys.Candidates)
             {
                 if (knownIdsByKey.ContainsKey(candidate.Key)) continue;
+
+                // A repository-less key of a repository-scoped import (T282, D-21) may only adopt a finding no
+                // repository owns yet; looked up apart so it can never land on another repository's finding.
+                if (candidate.OnlyUnattributed)
+                {
+                    unattributed.Add(candidate.Key);
+                    continue;
+                }
 
                 unresolved.Add(candidate.Key);
 
@@ -661,7 +744,7 @@ public class FindingIngestionService(
         }
 
         if (unresolved.Count > 0)
-            await MapKeysAsync(db, unresolved, legacy: false, entityId, knownIdsByKey, ct);
+            await MapKeysAsync(db, unresolved, KeyLookup.DedupKey, entityId, knownIdsByKey, ct);
 
         if (legacy.Count > 0)
         {
@@ -670,8 +753,13 @@ public class FindingIngestionService(
             var stillUnresolved = legacy.Where(k => !knownIdsByKey.ContainsKey(k)).ToHashSet(StringComparer.Ordinal);
 
             if (stillUnresolved.Count > 0)
-                await MapKeysAsync(db, stillUnresolved, legacy: true, entityId, knownIdsByKey, ct);
+                await MapKeysAsync(db, stillUnresolved, KeyLookup.ImportHash, entityId, knownIdsByKey, ct);
         }
+
+        // Last, and only for keys nothing above placed: adoption is the fallback of a fallback.
+        var adoptable = unattributed.Where(k => !knownIdsByKey.ContainsKey(k)).ToHashSet(StringComparer.Ordinal);
+        if (adoptable.Count > 0)
+            await MapKeysAsync(db, adoptable, KeyLookup.UnattributedDedupKey, entityId, knownIdsByKey, ct);
 
         var wanted = new HashSet<int>();
 
@@ -691,34 +779,57 @@ public class FindingIngestionService(
         return loaded;
     }
 
+    /// <summary>Which column, under which condition, a candidate key is looked up in.</summary>
+    private enum KeyLookup
+    {
+        DedupKey,
+        ImportHash,
+
+        /// <summary>
+        /// <c>dedup_key</c> of a finding no repository owns, in the import's entity or in none (T282, D-21): the
+        /// findings a code scanner imported before repositories and target applications could be named.
+        /// </summary>
+        UnattributedDedupKey
+    }
+
     /// <summary>
     /// Records which finding each of <paramref name="candidateKeys"/> belongs to, if any.
+    ///
+    /// An import with a target entity matches that entity's findings and the ones no entity owns (M58, T282, D-21): an
+    /// unrestricted import stored its findings without one, and looking only in the entity made the first import that
+    /// named it duplicate every one of them. <see cref="UpdateExisting"/> then files the adopted finding under the entity.
+    /// The entity's own finding wins a key it shares with an unowned one; within each, the lowest id.
     /// </summary>
     private static async Task MapKeysAsync(NRDbContext db, IReadOnlyCollection<string> candidateKeys,
-        bool legacy, int? entityId, Dictionary<string, int> knownIdsByKey, CancellationToken ct)
+        KeyLookup lookup, int? entityId, Dictionary<string, int> knownIdsByKey, CancellationToken ct)
     {
         foreach (var slice in Slice(candidateKeys, LookupBatchSize))
         {
-            var matches = legacy
-                ? await db.Vulnerabilities.AsNoTracking()
-                    .Where(v => v.ImportHash != null && slice.Contains(v.ImportHash)
-                                && (entityId == null || v.EntityId == entityId))
-                    .Select(v => new { v.Id, Key = v.ImportHash! })
-                    .ToListAsync(ct)
-                : await db.Vulnerabilities.AsNoTracking()
-                    .Where(v => v.DedupKey != null && slice.Contains(v.DedupKey)
-                                && (entityId == null || v.EntityId == entityId))
-                    .Select(v => new { v.Id, Key = v.DedupKey! })
-                    .ToListAsync(ct);
-
-            foreach (var match in matches)
+            var matches = lookup switch
             {
-                // Lowest id wins a key two findings somehow share, so a re-import is deterministic
-                // rather than dependent on the order the database happened to return rows in.
-                if (knownIdsByKey.TryGetValue(match.Key, out var already) && already <= match.Id) continue;
+                KeyLookup.ImportHash => await db.Vulnerabilities.AsNoTracking()
+                    .Where(v => v.ImportHash != null && slice.Contains(v.ImportHash)
+                                && (entityId == null || v.EntityId == entityId || v.EntityId == null))
+                    .Select(v => new { v.Id, Key = v.ImportHash!, v.EntityId })
+                    .ToListAsync(ct),
+                KeyLookup.UnattributedDedupKey => await db.Vulnerabilities.AsNoTracking()
+                    .Where(v => v.DedupKey != null && slice.Contains(v.DedupKey) && v.Repository == null
+                                && (entityId == null || v.EntityId == entityId || v.EntityId == null))
+                    .Select(v => new { v.Id, Key = v.DedupKey!, v.EntityId })
+                    .ToListAsync(ct),
+                _ => await db.Vulnerabilities.AsNoTracking()
+                    .Where(v => v.DedupKey != null && slice.Contains(v.DedupKey)
+                                && (entityId == null || v.EntityId == entityId || v.EntityId == null))
+                    .Select(v => new { v.Id, Key = v.DedupKey!, v.EntityId })
+                    .ToListAsync(ct)
+            };
 
-                knownIdsByKey[match.Key] = match.Id;
-            }
+            // Deterministic rather than dependent on the order the database returned rows in: the entity's own finding
+            // first (an unrestricted import has no entity, so every row ranks alike), then the lowest id.
+            foreach (var match in matches
+                         .OrderBy(m => entityId != null && m.EntityId != entityId ? 1 : 0)
+                         .ThenBy(m => m.Id))
+                knownIdsByKey.TryAdd(match.Key, match.Id);
         }
     }
 
@@ -774,6 +885,13 @@ public class FindingIngestionService(
         // dedup_key directly rather than through the legacy hash.
         existing.DedupKey ??= keys.PrimaryKey;
         existing.DedupStrategy ??= keys.PrimaryStrategy;
+
+        AdoptIntoRepository(existing, request, keys);
+
+        // A finding an unrestricted import stored without an entity, matched now by an import that names one, is filed
+        // under it (M58, T282, D-21) — so the entity's next import and its full-scan auto-close find it directly. A finding
+        // that already has an entity keeps it: the lookup never matches another entity's.
+        existing.EntityId ??= request.EntityId;
 
         var previousSeverity = existing.Severity;
         var severityChanged = !string.Equals(previousSeverity, SeverityString(finding), StringComparison.Ordinal);
@@ -841,6 +959,28 @@ public class FindingIngestionService(
     }
 
     /// <summary>
+    /// A host-less finding imported before any repository was named, matched now by a repository-scoped import, moves into
+    /// that repository (M58, T282, S39 D-21): it takes the repository's key so the next import matches it directly, and
+    /// the import's target application if it had no entity. Only the first repository to report it adopts it; a second
+    /// repository reporting the same rule and path no longer matches the adopted finding and gets one of its own.
+    /// </summary>
+    private static void AdoptIntoRepository(Vulnerability existing, ImportIngestionRequest request, DedupKeyResult keys)
+    {
+        var repository = RepositoryOf(request);
+        if (repository == null || existing.HostId != null || existing.Repository != null) return;
+        if (keys.PrimaryKey == null || keys.Candidates[0].OnlyUnattributed) return;
+
+        existing.Repository = repository;
+        existing.DedupKey = keys.PrimaryKey;
+        existing.DedupStrategy = keys.PrimaryStrategy;
+        existing.EntityId ??= request.EntityId;
+    }
+
+    /// <summary>The import's repository, trimmed and clipped to its column; null when it named none.</summary>
+    private static string? RepositoryOf(ImportIngestionRequest request) =>
+        string.IsNullOrWhiteSpace(request.Repository) ? null : ImporterHelpers.Clip(request.Repository.Trim(), 255);
+
+    /// <summary>
     /// Builds a new finding and its first history event, without saving either.
     ///
     /// The history is handed back rather than added, because its foreign key needs an id the insert
@@ -881,6 +1021,8 @@ public class FindingIngestionService(
             ImportHash = keys.Candidates.FirstOrDefault(c => c.MatchesLegacyImportHash)?.Key ?? keys.PrimaryKey,
             DedupKey = keys.PrimaryKey,
             DedupStrategy = keys.PrimaryStrategy,
+            // Only where it is part of the key: a host finding is keyed by its host (T282, D-21).
+            Repository = hostId == null ? RepositoryOf(request) : null,
             LastImportId = importId
         };
 
@@ -914,10 +1056,21 @@ public class FindingIngestionService(
         // "Not seen" is applied in memory, not in the query. As a predicate it becomes an IN list
         // holding every finding the import touched, which for a large scan is a statement the server
         // rejects rather than a filter.
+        // A full scan is exhaustive for its own repository only (T282, D-21): a Dependabot export of repository A says
+        // nothing about repository B's alerts, so it closes A's findings, and an import naming none closes none of them.
+        var repository = RepositoryOf(request);
+
+        // Naming an entity also covers the unowned findings that are demonstrably its own (D-21): its repository's, and
+        // those on a host filed under it. The rest of the unowned register is not its slice to close.
+        var entityId = request.EntityId;
+
         var candidates = await db.Vulnerabilities
             .Where(v => v.ImportSource == request.Importer
                         && (v.LifecycleStatus == FindingStatus.Active || v.LifecycleStatus == FindingStatus.Verified)
-                        && (request.EntityId == null || v.EntityId == request.EntityId))
+                        && (entityId == null || v.EntityId == entityId
+                            || (v.EntityId == null
+                                && (repository != null || (v.HostId != null && v.Host!.EntityId == entityId))))
+                        && v.Repository == repository)
             .ToListAsync(ct);
 
         var stale = candidates.Where(v => !seenFindingIds.Contains(v.Id)).ToList();
