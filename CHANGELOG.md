@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.47.0] - 2026-11-18
+
 ### Added
 
 - Add Tenable Vulnerability Management connections under `/Tenable` with write-only, vault-capable access and secret keys read through the secret resolver, the fixed `https://cloud.tenable.com` URL, a probe of authentication and export privileges, and a manual sync that is queued (202) and run by the job host every 15 minutes on an anchored cadence, stored in `tenable_connections` (schema 112) (T265, S40)
