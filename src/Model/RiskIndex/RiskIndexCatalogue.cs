@@ -70,6 +70,15 @@ public static class RiskIndexSources
     public const string EntityClassification = "ENT-CLASS";
     public const string EntityInternetFacing = "ENT-INET";
 
+    /// <summary>Every source of the S39 §3.2 catalogue, in catalogue order (what <c>GET /RiskIndex/Sources</c> lists, T263).</summary>
+    public static readonly IReadOnlyList<string> All =
+    [
+        RegResidual, RegImpact, RegRank, V1Device, V1Cve, V1InternetFacing, V1Accounts, V1Cloud, V1LocalApps,
+        V1SecurityConfiguration, SscTotal, TenableNessus, TenableVm, TenableAes, TenableAcr, Importers, Incidents, NearMisses,
+        IncidentResponsePlans, Assessments, CmdbCriticality, CmdbEnvironment, CmdbInternetFacing, CmdbRelations,
+        EntityCriticality, EntityClassification, EntityInternetFacing
+    ];
+
     /// <summary>
     /// The default of <c>fontes_habilitadas</c>, "every [H] source" (S39 §12.2) read against the installed version (S40
     /// §6.5): the sources that feed a factor, a weight or the criticality and need no new integration. The [N] ones

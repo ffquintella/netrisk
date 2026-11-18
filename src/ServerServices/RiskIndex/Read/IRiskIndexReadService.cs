@@ -79,4 +79,18 @@ public interface IRiskIndexReadService
     /// the Unassigned and default-criticality fractions by weight, stale sources and the counts, over the visible objects.
     /// </summary>
     Task<RiskIndexQualityDto> GetQualityAsync(string? node, DateOnly? date, RiskIndexCaller caller, CancellationToken ct = default);
+
+    /// <summary>
+    /// The Sources tab's operational columns (S40 §6.5, §8.2; T263): every catalogue source with its connections and last sync
+    /// or import, for every reader; the organization's object count and stale share on the latest snapshot for global scope
+    /// only. Not an index value, so the shadow rule does not apply.
+    /// </summary>
+    Task<IReadOnlyList<RiskIndexSourceDto>> GetSourcesAsync(RiskIndexCaller caller, CancellationToken ct = default);
+
+    /// <summary>
+    /// The latest runs of one kind (S40 §6.5, §8.2; T263), newest first: global scope only (<c>runs_require_global_scope</c>),
+    /// since a run carries the organization's row counts. The retention pass records no runs yet (<c>run_kind_not_recorded</c>).
+    /// </summary>
+    Task<IReadOnlyList<DAL.Entities.IntegrationSyncLog>> GetRunsAsync(RiskIndexRunKind kind, int limit, RiskIndexCaller caller,
+        CancellationToken ct = default);
 }

@@ -39,6 +39,9 @@ public class TrendMicroConnectionView
 
     public bool PushExemptions { get; set; }
 
+    /// <summary>Collect the devices' custom tags and apply the tag → entity rules (T263, S40 §6.9, §8.8).</summary>
+    public bool SyncCustomTags { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }
@@ -102,6 +105,12 @@ public class TrendMicroDevice
     public string? RiskLevel { get; set; }
 
     public DateTime? LastSeen { get; set; }
+
+    /// <summary>
+    /// The device's custom asset tags (<c>assetCustomTags</c>) in canonical <c>key: value</c> form (T263, S40 §6.6): what
+    /// the tag → entity rules match.
+    /// </summary>
+    public List<string> Tags { get; set; } = new();
 
     /// <summary>The primary address: the first IPv4, or the first address of any kind.</summary>
     public string? PrimaryIp =>
@@ -187,4 +196,13 @@ public class PostureSyncResult
 
     /// <summary>The scan-import row the ingested findings were recorded under, when there was one.</summary>
     public int? ImportId { get; set; }
+
+    /// <summary>Hosts with no entity that a tag → entity rule attributed (T263, S40 §6.6).</summary>
+    public int HostsAssignedByRule { get; set; }
+
+    /// <summary>Hosts a <c>FollowMapping</c> rule moved from another entity (T263, S40 §6.6).</summary>
+    public int HostsReassignedByRule { get; set; }
+
+    /// <summary>Devices whose tags were recorded in <c>host_external_ids</c> (T263).</summary>
+    public int TagsRecorded { get; set; }
 }

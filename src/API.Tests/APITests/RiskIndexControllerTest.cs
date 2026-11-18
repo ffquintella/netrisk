@@ -167,4 +167,26 @@ public class RiskIndexControllerTest : BaseControllerTest
         Assert.Equal("invalid_state", Error((await _controller.SetPublication(null)).Result));
         Assert.IsType<OkObjectResult>((await _controller.SetPublication(new RiskIndexPublicationRequest(RiskIndexPublicationState.Shadow))).Result);
     }
+
+    // --- T263 (S40 §6.5, §8.2): the Sources tab's reads ---------------------------------------------------------------
+
+    [Fact]
+    public async Task TestTheSourcesAnswer200()
+    {
+        var sources = Assert.IsAssignableFrom<IReadOnlyList<RiskIndexSourceDto>>(
+            Assert.IsType<OkObjectResult>((await _controller.GetSources()).Result).Value);
+
+        Assert.Equal((RiskIndexSources.V1Cve, 9004), (Assert.Single(sources).SourceId, sources[0].ObjectCount));
+    }
+
+    [Fact]
+    public async Task TestTheRunsAnswer200AndAScopedRefusalIs403()
+    {
+        Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<DAL.Entities.IntegrationSyncLog>>(
+            Assert.IsType<OkObjectResult>((await _controller.GetRuns(RiskIndexRunKind.Snapshot, 10)).Result).Value));
+
+        var refused = Assert.IsType<ObjectResult>((await _controller.GetRuns(RiskIndexRunKind.Snapshot, 1)).Result);
+        Assert.Equal(StatusCodes.Status403Forbidden, refused.StatusCode);
+        Assert.Equal("runs_require_global_scope", Error(refused));
+    }
 }

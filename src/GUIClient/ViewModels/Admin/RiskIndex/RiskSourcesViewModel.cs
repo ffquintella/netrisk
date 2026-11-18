@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using ClientServices.Interfaces;
 using GUIClient.Tools;
 using GUIClient.Tools.RiskIndex;
+using Model.Exceptions;
 using Model.RiskIndex;
 using ReactiveUI;
 
@@ -73,6 +78,15 @@ public sealed class RiskSourceLineViewModel : ReactiveObject
 
     public bool IsWindowEnabled => HasWindow && CanEditDraft;
 
+    private RiskSourceStatusCells _status = RiskSourceStatusFormatter.Cells(null, RiskAdminText.Optional, CultureInfo.CurrentCulture);
+
+    /// <summary>The operational columns from <c>GET /RiskIndex/Sources</c> (S40 §6.5; T263).</summary>
+    public RiskSourceStatusCells Status
+    {
+        get => _status;
+        set => this.RaiseAndSetIfChanged(ref _status, value);
+    }
+
     public void Load(RiskSourceLine line)
     {
         _loading = true;
@@ -114,14 +128,28 @@ public class RiskSourcesViewModel : RiskAdminViewModelBase
     public string StrSaveDraft { get; } = Localizer["RiskAdminSaveDraft"];
     public string StrReset { get; } = Localizer["RiskAdminDiscardChanges"];
     public string StrRunsNote { get; } = Localizer["RiskSourcesRunsNoteMSG"];
+    public string StrConnections { get; } = Localizer["RiskSourcesConnections"];
+    public string StrLastSync { get; } = Localizer["RiskSourcesLastSync"];
+    public string StrStatus { get; } = Localizer["RiskSourcesStatus"];
+    public string StrObjects { get; } = Localizer["RiskSourcesObjects"];
+    public string StrStale { get; } = Localizer["RiskSourcesStale"];
+    public string StrRuns { get; } = Localizer["RiskSourcesRuns"];
+    public string StrSourcesSubTab { get; } = Localizer["RiskSourcesSubTabSources"];
+    public string StrMappingsSubTab { get; } = Localizer["RiskSourcesSubTabMappings"];
+    public string StrRefreshStatus { get; } = Localizer["Reload"];
 
     #endregion
 
     private readonly RiskProfileDraftSession _session;
+    private readonly IRiskIndexConfigService? _configService;
+    private IReadOnlyDictionary<string, RiskIndexSourceDto> _status = new Dictionary<string, RiskIndexSourceDto>();
 
-    public RiskSourcesViewModel(RiskProfileDraftSession session)
+    public RiskSourcesViewModel(RiskProfileDraftSession session, IRiskIndexConfigService? configService = null,
+        EntityMappingsViewModel? mappings = null)
     {
         _session = session;
+        _configService = configService;
+        Mappings = mappings;
         _session.SessionChanged += reloaded =>
         {
             if (reloaded || Lines.Count == 0) Reload();
@@ -129,7 +157,66 @@ public class RiskSourcesViewModel : RiskAdminViewModelBase
         };
     }
 
+    /// <summary>The vendor → entity rules panel (S40 §6.6; T263), hosted in this tab.</summary>
+    public EntityMappingsViewModel? Mappings { get; }
+
     public ObservableCollection<RiskSourceLineViewModel> Lines { get; } = [];
+
+    /// <summary>The "Execuções do índice" block: the latest snapshot runs, or why they are not shown.</summary>
+    public ObservableCollection<string> Runs { get; } = [];
+
+    private string _runsMessage = "";
+
+    public string RunsMessage
+    {
+        get => _runsMessage;
+        private set => this.RaiseAndSetIfChanged(ref _runsMessage, value);
+    }
+
+    /// <summary>
+    /// Reads the operational columns and the latest snapshot runs (S40 §6.5; T263). The server decides what this user sees:
+    /// a scoped reader gets the counts withheld and the runs refused with <c>runs_require_global_scope</c>, shown as such.
+    /// </summary>
+    public async Task LoadStatusAsync()
+    {
+        if (_configService is null) return;
+        try
+        {
+            _status = RiskSourceStatusFormatter.ById(await _configService.GetSourcesAsync());
+            ApplyStatus();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not read the sources' status: {Message}", ex.Message);
+            Toasts.Error(RiskAdminText.Explain(ex));
+        }
+
+        Runs.Clear();
+        try
+        {
+            foreach (var run in await _configService.GetRunsAsync(RiskIndexRunKind.Snapshot))
+                Runs.Add(RiskSourceStatusFormatter.RunLine(run, RiskAdminText.Optional, CultureInfo.CurrentCulture));
+            RunsMessage = Runs.Count == 0 ? RiskAdminText.Text("RiskSourcesNoRunsMSG") : "";
+        }
+        catch (InvalidHttpRequestException ex) when (ex is { StatusCode: HttpStatusCode.Forbidden })
+        {
+            RunsMessage = RiskAdminText.Text(RiskSourceStatusFormatter.RequiresGlobalScope);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning("Could not read the index runs: {Message}", ex.Message);
+            RunsMessage = RiskAdminText.Explain(ex);
+        }
+    }
+
+    public Task BtRefreshStatusClicked() => LoadStatusAsync();
+
+    private void ApplyStatus()
+    {
+        foreach (var line in Lines)
+            line.Status = RiskSourceStatusFormatter.Cells(_status.GetValueOrDefault(line.Id), RiskAdminText.Optional,
+                CultureInfo.CurrentCulture);
+    }
 
     /// <summary>The issues of the freshness group (W, the inventory window against the slowest source), live.</summary>
     public ObservableCollection<string> Issues { get; } = [];
@@ -173,6 +260,7 @@ public class RiskSourcesViewModel : RiskAdminViewModelBase
         Lines.Clear();
         foreach (var line in RiskSourceCatalogue.Lines(_session.Active?.Parameters, _session.Edited))
             Lines.Add(new RiskSourceLineViewModel(line, _session));
+        ApplyStatus();
         Refresh();
     }
 

@@ -26,7 +26,7 @@ namespace API.Tests.Security;
 public class RiskIndexEndpointPermissionMapTest
 {
     private const string View = RiskIndexPermissions.View, Configure = RiskIndexPermissions.Configure,
-        Approve = RiskIndexPermissions.Approve;
+        Approve = RiskIndexPermissions.Approve, Integrations = "configuration";
 
     private static readonly Dictionary<string, string[]> Expected = new()
     {
@@ -47,6 +47,8 @@ public class RiskIndexEndpointPermissionMapTest
         ["RiskIndexController.GetGovernanceIndicators"] = [View],
         ["RiskIndexController.GetQuality"] = [View],
         ["RiskIndexController.GetPublication"] = [View],
+        ["RiskIndexController.GetSources"] = [View],
+        ["RiskIndexController.GetRuns"] = [View],
         ["RiskIndexController.SetPublication"] = [View, Approve],
 
         ["RiskIndexProfilesController.List"] = [View],
@@ -69,10 +71,19 @@ public class RiskIndexEndpointPermissionMapTest
         ["RiskIndexProfilesController.Attach"] = [Approve],
         ["RiskIndexProfilesController.Attachments"] = [View],
         ["RiskIndexProfilesController.Bridge"] = [View],
-        ["RiskIndexProfilesController.History"] = [View]
+        ["RiskIndexProfilesController.History"] = [View],
+
+        // T263 (S40 §8.6, §11.2): the vendor -> entity rules are integration configuration, never RequireValidUser.
+        ["EntityMappingsController.List"] = [Integrations],
+        ["EntityMappingsController.Candidates"] = [Integrations],
+        ["EntityMappingsController.Create"] = [Integrations],
+        ["EntityMappingsController.Update"] = [Integrations],
+        ["EntityMappingsController.Delete"] = [Integrations],
+        ["EntityMappingsController.Preview"] = [Integrations]
     };
 
-    private static readonly Type[] Controllers = [typeof(RiskIndexController), typeof(RiskIndexProfilesController)];
+    private static readonly Type[] Controllers =
+        [typeof(RiskIndexController), typeof(RiskIndexProfilesController), typeof(EntityMappingsController)];
 
     private static IEnumerable<(Type Controller, MethodInfo Action)> Actions() => Controllers
         .SelectMany(c => c.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)

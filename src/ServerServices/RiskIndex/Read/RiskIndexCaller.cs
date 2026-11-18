@@ -115,4 +115,9 @@ public static class RiskIndexErrors
     public const string ReasonRequired = "reason_required";
     public const string BridgeNotFound = "bridge_not_found";
     public const string InvalidLimit = "invalid_limit";
+
+    // The Sources tab (S40 §6.5, §8.2; T263).
+    public const string RunsRequireGlobalScope = "runs_require_global_scope";
+    public const string RunKindNotRecorded = "run_kind_not_recorded";
+    public const string InvalidRunKind = "invalid_run_kind";
 }

@@ -7,6 +7,7 @@ using Model.Exceptions;
 using Model.Integrations;
 using Model.Secrets;
 using Serilog;
+using ServerServices.Integrations.EntityMappings;
 using ServerServices.Interfaces;
 using ServerServices.Services;
 
@@ -115,6 +116,11 @@ public class TrendMicroService(
 
         var stored = await LoadAsync(db, id);
 
+        // The connection's tag rules go with it (T263): connection_id is not a foreign key, the table differs per provider,
+        // and a rule left behind would silently apply to whichever connection reuses the id.
+        db.VendorEntityMappings.RemoveRange(db.VendorEntityMappings.Where(m =>
+            m.Provider == IntegrationKind.TrendMicroVisionOne && m.ConnectionId == id));
+
         db.TrendMicroConnections.Remove(stored);
         await db.SaveChangesAsync();
 
@@ -183,10 +189,23 @@ public class TrendMicroService(
 
             await run.StepAsync("inventory", "Device inventory received.", devices.Count, ct);
 
-            var hostsByExternalId = await SyncInventoryAsync(connection, devices, result, ct);
+            // T263 (S40 §6.6): the tag rules are applied inside the inventory pass, so a new host is created under the
+            // rule's entity rather than the default one — which an "only unassigned" rule could never correct afterwards.
+            var rules = await LoadRulesAsync(connection, run, ct);
+
+            var hostsByExternalId = await SyncInventoryAsync(connection, devices, rules, result, ct);
 
             await run.StepAsync("inventory",
                 $"{result.HostsCreated} host(s) created, {result.HostsUpdated} updated.", ct: ct);
+
+            if (connection.SyncCustomTags)
+            {
+                await RecordTagsAsync(connection, devices, hostsByExternalId, result, ct);
+
+                await run.StepAsync("entity-mapping",
+                    $"Tags recorded for {result.TagsRecorded} device(s); {result.HostsAssignedByRule} host(s) attributed "
+                    + $"and {result.HostsReassignedByRule} reattributed by rule.", ct: ct);
+            }
 
             // 4.4.4 — risk scores. They ride on the inventory rows as latestRiskScore, so the second
             // crawl this used to make (/v3.0/asrm/highRiskDevices) is gone. That endpoint does exist,
@@ -312,6 +331,9 @@ public class TrendMicroService(
             combined.FindingsUpdated += result.FindingsUpdated;
             combined.VirtualPatchesApplied += result.VirtualPatchesApplied;
             combined.PostureRowsWritten += result.PostureRowsWritten;
+            combined.HostsAssignedByRule += result.HostsAssignedByRule;
+            combined.HostsReassignedByRule += result.HostsReassignedByRule;
+            combined.TagsRecorded += result.TagsRecorded;
             combined.Errors += result.Errors;
             combined.Messages.AddRange(result.Messages);
             combined.CyberRiskIndex ??= result.CyberRiskIndex;
@@ -348,7 +370,7 @@ public class TrendMicroService(
     /// questions in constant time.
     /// </summary>
     private async Task<Dictionary<string, int>> SyncInventoryAsync(TrendMicroConnection connection,
-        List<TrendMicroDevice> devices, PostureSyncResult result, CancellationToken ct)
+        List<TrendMicroDevice> devices, IReadOnlyList<MappingRule> rules, PostureSyncResult result, CancellationToken ct)
     {
         var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
@@ -366,7 +388,7 @@ public class TrendMicroService(
                 // Counted per chunk and only added to the result once the chunk is committed: a batch
                 // that fails is re-applied one device at a time below, and counting it here as well
                 // would report every host in it twice.
-                var applied = new List<(TrendMicroDevice Device, Host Host, bool Created)>();
+                var applied = new List<(TrendMicroDevice Device, Host Host, bool Created, MappingOutcome? Rule)>();
 
                 foreach (var device in chunk)
                 {
@@ -374,10 +396,11 @@ public class TrendMicroService(
                     {
                         var host = index.Match(device);
                         var created = host == null;
+                        MappingOutcome? rule;
 
                         if (host == null)
                         {
-                            host = NewHost(connection, device);
+                            (host, rule) = NewHost(connection, device, rules);
                             db.Hosts.Add(host);
 
                             // Into the index before the chunk is saved, so a second device carrying the
@@ -387,10 +410,10 @@ public class TrendMicroService(
                         }
                         else
                         {
-                            ApplyToExistingHost(host, device);
+                            rule = ApplyToExistingHost(host, device, rules);
                         }
 
-                        applied.Add((device, host, created));
+                        applied.Add((device, host, created, rule));
                     }
                     catch (Exception ex)
                     {
@@ -420,17 +443,19 @@ public class TrendMicroService(
                     db = null!;
 
                     await SyncInventoryDeviceByDeviceAsync(connection,
-                        devices.Skip(remaining).ToList(), map, result, ct);
+                        devices.Skip(remaining).ToList(), rules, map, result, ct);
 
                     return map;
                 }
 
-                foreach (var (device, host, created) in applied)
+                foreach (var (device, host, created, rule) in applied)
                 {
                     map[device.Id] = host.Id;
 
                     if (created) result.HostsCreated++;
                     else result.HostsUpdated++;
+
+                    CountRule(result, rule);
                 }
 
                 remaining += chunk.Length;
@@ -450,8 +475,8 @@ public class TrendMicroService(
     /// makes it able to report the single device that is at fault and carry on.
     /// </summary>
     private async Task SyncInventoryDeviceByDeviceAsync(TrendMicroConnection connection,
-        List<TrendMicroDevice> devices, Dictionary<string, int> map, PostureSyncResult result,
-        CancellationToken ct)
+        List<TrendMicroDevice> devices, IReadOnlyList<MappingRule> rules, Dictionary<string, int> map,
+        PostureSyncResult result, CancellationToken ct)
     {
         await using var db = DalService.GetContext();
         db.AuditActor = ImportAuditActor;
@@ -461,20 +486,26 @@ public class TrendMicroService(
             try
             {
                 var host = await MatchHostAsync(db, connection, device, ct);
+                var created = host == null;
+                MappingOutcome? rule;
 
                 if (host == null)
                 {
-                    host = NewHost(connection, device);
+                    (host, rule) = NewHost(connection, device, rules);
                     db.Hosts.Add(host);
-                    result.HostsCreated++;
                 }
                 else
                 {
-                    ApplyToExistingHost(host, device);
-                    result.HostsUpdated++;
+                    rule = ApplyToExistingHost(host, device, rules);
                 }
 
                 await db.SaveChangesAsync(ct);
+
+                // Counted after the save, as the batched path counts after its chunk commits: a device whose save
+                // failed was neither created nor attributed.
+                if (created) result.HostsCreated++;
+                else result.HostsUpdated++;
+                CountRule(result, rule);
 
                 map[device.Id] = host.Id;
             }
@@ -521,6 +552,20 @@ public class TrendMicroService(
         return host;
     }
 
+    /// <summary>
+    /// A host for a device NetRisk has never seen, under the winning tag rule's entity, else the connection's default
+    /// (S40 §6.6: rule, then default, then Unassigned).
+    /// </summary>
+    private static (Host Host, MappingOutcome? Rule) NewHost(TrendMicroConnection connection, TrendMicroDevice device,
+        IReadOnlyList<MappingRule> rules)
+    {
+        var winner = VendorEntityMappingRules.Winner(rules, device.Tags);
+        var host = NewHost(connection, device);
+        if (winner is null) return (host, null);
+        host.EntityId = winner.EntityId;
+        return (host, MappingOutcome.Assign);
+    }
+
     private static Host NewHost(TrendMicroConnection connection, TrendMicroDevice device) => new()
     {
         HostName = device.Name ?? device.Fqdn ?? device.PrimaryIp ?? device.Id,
@@ -537,6 +582,29 @@ public class TrendMicroService(
         ExternalProvider = ProviderName,
         Criticality = device.Criticality
     };
+
+    /// <summary>
+    /// <see cref="ApplyToExistingHost(Host, TrendMicroDevice)"/>, then the winning tag rule under its restamp policy: a host
+    /// with no entity is attributed, one elsewhere moves only under <c>FollowMapping</c>. The move is an ordinary write of
+    /// <c>hosts.entity_id</c>, so the Host audit records it under this sync's actor (S40 §6.6).
+    /// </summary>
+    private static MappingOutcome? ApplyToExistingHost(Host host, TrendMicroDevice device, IReadOnlyList<MappingRule> rules)
+    {
+        ApplyToExistingHost(host, device);
+
+        var winner = VendorEntityMappingRules.Winner(rules, device.Tags);
+        if (winner is null) return null;
+
+        var outcome = VendorEntityMappingRules.Decide(host.EntityId, winner);
+        host.EntityId = VendorEntityMappingRules.Apply(host.EntityId, winner);
+        return outcome;
+    }
+
+    private static void CountRule(PostureSyncResult result, MappingOutcome? outcome)
+    {
+        if (outcome == MappingOutcome.Assign) result.HostsAssignedByRule++;
+        else if (outcome == MappingOutcome.Reassign) result.HostsReassignedByRule++;
+    }
 
     private static void ApplyToExistingHost(Host host, TrendMicroDevice device)
     {
@@ -979,6 +1047,100 @@ public class TrendMicroService(
     /// <summary>Keys per <c>IN (…)</c> list, so one batch cannot overrun the packet.</summary>
     private const int PatchLookupBatchSize = 500;
 
+    // --- T263: tag → entity rules ---------------------------------------------------------------
+
+    /// <summary>
+    /// The connection's enabled attributing rules in the order they are tried, or none when the connection does not sync
+    /// custom tags — without fresh tags a rule would act on what a device said weeks ago (S40 §6.9). A connection with rules
+    /// and tags off says so in its trail, so an inert rule is never silent.
+    /// </summary>
+    private async Task<IReadOnlyList<MappingRule>> LoadRulesAsync(TrendMicroConnection connection, IntegrationSyncRun run,
+        CancellationToken ct)
+    {
+        await using var db = DalService.GetContext();
+
+        var rules = await db.VendorEntityMappings.AsNoTracking()
+            .Where(m => m.Provider == IntegrationKind.TrendMicroVisionOne && m.ConnectionId == connection.Id && m.Enabled)
+            .Select(m => new MappingRule(m.Id, m.MatchKind, m.MatchValue, m.EntityId, m.Priority, m.RestampPolicy))
+            .ToListAsync(ct);
+
+        var ordered = VendorEntityMappingRules.Order(rules);
+
+        if (!connection.SyncCustomTags)
+        {
+            if (ordered.Count > 0)
+                await run.StepAsync("entity-mapping",
+                    $"Skipped: {ordered.Count} tag rule(s) are not applied while the connection does not sync custom tags.",
+                    ct: ct);
+            return [];
+        }
+
+        await run.StepAsync("entity-mapping", $"{ordered.Count} tag rule(s) will be applied.", ct: ct);
+        return ordered;
+    }
+
+    /// <summary>How many tag rows are written before the context is flushed; the inventory's batch size, for its reason.</summary>
+    private const int TagChunkSize = 500;
+
+    /// <summary>
+    /// Records each synced device's identity and custom tags in <c>host_external_ids</c> (S40 §7.2), which the candidates and
+    /// the preview of the rules read. A failure is counted and reported but does not fail the sync: the hosts are already
+    /// written, and the rules were applied from the tags in memory.
+    /// </summary>
+    private async Task RecordTagsAsync(TrendMicroConnection connection, List<TrendMicroDevice> devices,
+        Dictionary<string, int> hostsByExternalId, PostureSyncResult result, CancellationToken ct)
+    {
+        try
+        {
+            await using var db = DalService.GetContext();
+
+            var known = new Dictionary<string, HostExternalId>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in await db.HostExternalIds.Where(x => x.Provider == ProviderName).ToListAsync(ct))
+                known.TryAdd(row.ExternalId, row);
+
+            var now = DateTime.UtcNow;
+
+            foreach (var chunk in devices.Where(d => hostsByExternalId.ContainsKey(d.Id)).Chunk(TagChunkSize))
+            {
+                foreach (var device in chunk)
+                {
+                    var tags = device.Tags.Count == 0
+                        ? null
+                        : System.Text.Json.JsonSerializer.Serialize(
+                            device.Tags.Order(StringComparer.OrdinalIgnoreCase).ToList());
+
+                    if (known.TryGetValue(device.Id, out var row))
+                    {
+                        row.HostId = hostsByExternalId[device.Id];
+                        row.ConnectionId = connection.Id;
+                        row.Tags = tags;
+                        row.LastSeenAt = now;
+                        row.UpdatedAt = now;
+                    }
+                    else
+                    {
+                        row = new HostExternalId
+                        {
+                            HostId = hostsByExternalId[device.Id], Provider = ProviderName, ConnectionId = connection.Id,
+                            ExternalId = device.Id, Tags = tags, FirstSeenAt = now, LastSeenAt = now, CreatedAt = now
+                        };
+                        db.HostExternalIds.Add(row);
+                        known[device.Id] = row;
+                    }
+                }
+
+                await db.SaveChangesAsync(ct);
+                result.TagsRecorded += chunk.Length;
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            result.Errors++;
+            result.Messages.Add($"Recording the device tags failed: {ex.Message}");
+            Logger.Error(ex, "Recording the Vision One device tags for connection {Connection} failed", connection.Name);
+        }
+    }
+
     public async Task<bool> PushExemptionAsync(int findingId, string reason, CancellationToken ct = default)
     {
         await using var db = DalService.GetContext();
@@ -1097,6 +1259,7 @@ public class TrendMicroService(
         target.SyncRiskScores = source.SyncRiskScores;
         target.VirtualPatchClosesFinding = source.VirtualPatchClosesFinding;
         target.PushExemptions = source.PushExemptions;
+        target.SyncCustomTags = source.SyncCustomTags;
         return target;
     }
 
@@ -1134,6 +1297,9 @@ public class TrendMicroService(
                 $"{result.HostsCreated} host(s) created, {result.HostsUpdated} updated, "
                 + $"{result.FindingsCreated} finding(s) created, {result.FindingsUpdated} updated, "
                 + $"{result.VirtualPatchesApplied} closed by virtual patch"
+                + (result.HostsAssignedByRule + result.HostsReassignedByRule == 0
+                    ? ""
+                    : $", {result.HostsAssignedByRule} host(s) attributed and {result.HostsReassignedByRule} reattributed by rule")
                 + (result.CyberRiskIndex == null ? "" : $", index {result.CyberRiskIndex}") + ".", 2000);
             stored.ErrorMessage = Truncate(error, 2000);
 
@@ -1196,6 +1362,7 @@ public class TrendMicroService(
         SyncRiskScores = connection.SyncRiskScores,
         VirtualPatchClosesFinding = connection.VirtualPatchClosesFinding,
         PushExemptions = connection.PushExemptions,
+        SyncCustomTags = connection.SyncCustomTags,
         LastSyncAt = connection.LastSyncAt,
         LastSyncStatus = connection.LastSyncStatus,
         LastSyncError = connection.LastSyncError

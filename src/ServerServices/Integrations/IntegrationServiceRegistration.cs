@@ -140,6 +140,8 @@ public static class IntegrationServiceRegistration
         // 4.4 / 4.5 — posture providers.
         services.AddTransient<ITrendMicroClient, TrendMicroClient>();
         services.AddTransient<ITrendMicroService, TrendMicroService>();
+        // T263 (S40 §6.6, §8.6): the vendor → entity rules the Vision One sync applies.
+        services.AddTransient<EntityMappings.IVendorEntityMappingService, EntityMappings.VendorEntityMappingService>();
         services.AddTransient<ISecurityScorecardClient, SecurityScorecardClient>();
         services.AddTransient<ISecurityScorecardService, SecurityScorecardService>();
 

@@ -253,6 +253,46 @@ public record RiskIndexQualityDto(double Coverage, double Freshness, double Qual
 /// <summary>An enabled source none of whose readings in the node is current (<c>v &lt; 1</c>), with its freshest reading.</summary>
 public record RiskIndexStaleSourceDto(string SourceKey, DateTime? LastReadingUtc);
 
+/// <summary>
+/// The operational columns of one catalogue source (S40 §6.5, §8.2 <c>GET /RiskIndex/Sources</c>; T263): its connections,
+/// its last sync or import and, for a caller with global scope only, the organization's object count and stale share on
+/// the latest snapshot (<see cref="CountsWithheld"/> says the two were withheld, not absent). Narrower than the S40 §8.3
+/// record: the catalogue, enablement and window columns are the client's catalogue and the profile it already holds.
+/// <see cref="LastSyncStatusKey"/> is one of <see cref="RiskIndexSourceStatusKeys"/>; null fields have no such notion.
+/// </summary>
+public record RiskIndexSourceDto(string SourceId, int? Connections, DateTime? LastSyncUtc, string? LastSyncStatusKey,
+    string? LastSyncKindKey, int? ObjectCount, double? StaleFraction, bool CountsWithheld);
+
+/// <summary>The stable status and kind keys of <see cref="RiskIndexSourceDto"/>; the desktop translates each.</summary>
+public static class RiskIndexSourceStatusKeys
+{
+    public const string Ok = "ok";
+    public const string Partial = "partial";
+    public const string Failed = "failed";
+    public const string Running = "running";
+    public const string Queued = "queued";
+    public const string Cancelled = "cancelled";
+
+    /// <summary>The source is read by a connection's sync.</summary>
+    public const string KindSync = "sync";
+
+    /// <summary>The source is read from uploaded scan files.</summary>
+    public const string KindImport = "import";
+}
+
+/// <summary>Which runs <c>GET /RiskIndex/Runs</c> lists (S40 §6.5, §8.2).</summary>
+public enum RiskIndexRunKind
+{
+    /// <summary>The daily snapshot (S40 §9.3), logged in <c>integration_sync_logs</c> as kind 8.</summary>
+    Snapshot = 1,
+
+    /// <summary>The retention pass (S40 §9.6); it does not record its runs yet, so it is refused.</summary>
+    Retention = 2,
+
+    /// <summary>The sensitivity previews (S40 §9.6), read from <c>risk_index_preview_requests</c>.</summary>
+    Preview = 3
+}
+
 // ---------- profiles (§8.4) ----------
 
 public record RiskIndexProfileSummaryDto(int Id, int Version, string Name, string? Preset, RiskIndexProfileStatus Status,

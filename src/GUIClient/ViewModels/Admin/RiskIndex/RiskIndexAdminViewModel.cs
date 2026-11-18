@@ -51,7 +51,10 @@ public class RiskIndexAdminViewModel : ViewModelBase
             if (PreviewAccess.Enabled) PreviewVM = new RiskProfilePreviewViewModel(Session, configService);
             if (ApprovalAccess.Enabled)
                 ApprovalVM = new RiskProfileApprovalViewModel(Session, readService, configService, GetService<IFilesService>());
-            if (SourcesAccess.Enabled) SourcesVM = new RiskSourcesViewModel(Session);
+            if (SourcesAccess.Enabled)
+                SourcesVM = new RiskSourcesViewModel(Session, configService,
+                    new EntityMappingsViewModel(rights, configService, GetService<IIntegrationsService>(),
+                        GetService<IEntitiesService>()));
         }
 
         if (RiskContextAccess.Enabled) RiskContextVM = new EntityRiskContextViewModel(rights, GetService<IEntitiesService>());
@@ -97,6 +100,12 @@ public class RiskIndexAdminViewModel : ViewModelBase
         if (_initialized) return;
         _initialized = true;
         if (Session is not null) await Session.LoadAsync();
+        if (SourcesVM is not null)
+        {
+            await SourcesVM.LoadStatusAsync();
+            if (SourcesVM.Mappings is not null) await SourcesVM.Mappings.LoadAsync();
+        }
+
         if (RiskContextVM is not null) await RiskContextVM.LoadAsync();
     }
 

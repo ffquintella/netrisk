@@ -161,6 +161,20 @@ public static class MockedRiskIndexReadService
                     [new RiskIndexDimensionValueDto("k:5", "RiskExploreCriticalityFMT", 3, "present")],
                     [new RiskIndexDimensionValueDto("a:prod", "RiskEnvironment_prod", 10, "present")]);
             });
+        // T263 (S40 §6.5): limit 1 stands for a scoped reader's refusal of the runs.
+        service.GetSourcesAsync(Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(new List<RiskIndexSourceDto>
+            {
+                new(RiskIndexSources.V1Cve, 1, new DateTime(2026, 10, 5, 3, 12, 0, DateTimeKind.Utc), RiskIndexSourceStatusKeys.Ok,
+                    RiskIndexSourceStatusKeys.KindSync, 9004, 0.09, false)
+            });
+        service.GetRunsAsync(Arg.Any<RiskIndexRunKind>(), Arg.Any<int>(), Arg.Any<RiskIndexCaller>(), Arg.Any<CancellationToken>())
+            .Returns(call => call.ArgAt<int>(1) == 1
+                ? throw RiskIndexException.Forbidden(RiskIndexErrors.RunsRequireGlobalScope, "global scope")
+                : new List<IntegrationSyncLog>
+                {
+                    new() { Id = 3, Integration = IntegrationKind.RiskIndex, Status = IntegrationSyncStatus.Succeeded }
+                });
         return service;
     }
 }

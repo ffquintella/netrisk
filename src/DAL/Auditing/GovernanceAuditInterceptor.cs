@@ -165,7 +165,11 @@ public class GovernanceAuditInterceptor : SaveChangesInterceptor
         // M53, T243 (S39 §12.5, §13.1; S40 §7.5): every transition and every field of an index profile — the weights the
         // committee approved, by whom, under which reference and grant. Not the snapshot or object rows: insert-only,
         // tens of thousands a day, they would bury the trail.
-        nameof(RiskIndexProfile)
+        nameof(RiskIndexProfile),
+
+        // M55, T263 (S40 §7.5): a vendor → entity rule moves attribution and, with it, who sees a host; every host it
+        // restamps is recorded through Host above.
+        nameof(VendorEntityMapping)
     };
 
     /// <summary>

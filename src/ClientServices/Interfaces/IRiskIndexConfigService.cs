@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DAL.Entities;
 using Model.DTO;
+using Model.Integrations;
 using Model.RiskIndex;
 
 namespace ClientServices.Interfaces;
@@ -72,4 +73,27 @@ public interface IRiskIndexConfigService
 
     /// <summary><c>PUT /RiskIndex/Publication</c> (<c>risk_index_approve</c>).</summary>
     Task<RiskIndexPublicationDto> SetPublicationAsync(RiskIndexPublicationState state, CancellationToken ct = default);
+
+    // --- the Sources tab (S40 §6.5, §6.6, §8.2, §8.6; T263) ---------------------------------
+
+    /// <summary><c>GET /RiskIndex/Sources</c>: connections, last sync and, with global scope, the organization's counts.</summary>
+    Task<IReadOnlyList<RiskIndexSourceDto>> GetSourcesAsync(CancellationToken ct = default);
+
+    /// <summary><c>GET /RiskIndex/Runs</c>; refused with <c>runs_require_global_scope</c> for a scoped user.</summary>
+    Task<IReadOnlyList<IntegrationSyncLog>> GetRunsAsync(RiskIndexRunKind kind, int limit = 5, CancellationToken ct = default);
+
+    Task<IReadOnlyList<VendorEntityMappingDto>> GetMappingsAsync(int provider, int connectionId, CancellationToken ct = default);
+
+    Task<IReadOnlyList<VendorMappingCandidateDto>> GetMappingCandidatesAsync(int provider, int connectionId,
+        CancellationToken ct = default);
+
+    Task<VendorEntityMappingDto> CreateMappingAsync(VendorEntityMappingUpsert request, CancellationToken ct = default);
+
+    Task<VendorEntityMappingDto> UpdateMappingAsync(int id, VendorEntityMappingUpsert request, CancellationToken ct = default);
+
+    Task DeleteMappingAsync(int id, CancellationToken ct = default);
+
+    /// <summary>What an unsaved rule would do; <paramref name="mappingId"/> names the rule being edited, if any.</summary>
+    Task<VendorEntityMappingPreviewDto> PreviewMappingAsync(VendorEntityMappingUpsert request, int? mappingId,
+        CancellationToken ct = default);
 }

@@ -10,6 +10,7 @@ using ClientServices.Interfaces;
 using DAL.Entities;
 using Model.DTO;
 using Model.Exceptions;
+using Model.Integrations;
 using Model.RiskIndex;
 using RestSharp;
 
@@ -102,6 +103,44 @@ public class RiskIndexConfigRestService(IRestService restService, IAuthenticatio
         Read<RiskIndexPublicationDto>(await SendAsync(Method.Put, "/RiskIndex/Publication", ct,
             new RiskIndexPublicationRequest(state)));
 
+    // --- the Sources tab (S40 §6.5, §6.6, §8.2, §8.6; T263) ---------------------------------
+
+    private const string Mappings = "/Integrations/EntityMappings";
+
+    public async Task<IReadOnlyList<RiskIndexSourceDto>> GetSourcesAsync(CancellationToken ct = default) =>
+        Read<List<RiskIndexSourceDto>>(await SendAsync(Method.Get, "/RiskIndex/Sources", ct));
+
+    public async Task<IReadOnlyList<IntegrationSyncLog>> GetRunsAsync(RiskIndexRunKind kind, int limit = 5,
+        CancellationToken ct = default) =>
+        Read<List<IntegrationSyncLog>>(await SendAsync(Method.Get, "/RiskIndex/Runs", ct,
+            queries: [("kind", Number((int)kind)), ("limit", Number(limit))]));
+
+    public async Task<IReadOnlyList<VendorEntityMappingDto>> GetMappingsAsync(int provider, int connectionId,
+        CancellationToken ct = default) =>
+        Read<List<VendorEntityMappingDto>>(await SendAsync(Method.Get, Mappings, ct,
+            queries: [("provider", Number(provider)), ("connectionId", Number(connectionId))]));
+
+    public async Task<IReadOnlyList<VendorMappingCandidateDto>> GetMappingCandidatesAsync(int provider, int connectionId,
+        CancellationToken ct = default) =>
+        Read<List<VendorMappingCandidateDto>>(await SendAsync(Method.Get, $"{Mappings}/Candidates", ct,
+            queries: [("provider", Number(provider)), ("connectionId", Number(connectionId))]));
+
+    public async Task<VendorEntityMappingDto> CreateMappingAsync(VendorEntityMappingUpsert request,
+        CancellationToken ct = default) =>
+        Read<VendorEntityMappingDto>(await SendAsync(Method.Post, Mappings, ct, request));
+
+    public async Task<VendorEntityMappingDto> UpdateMappingAsync(int id, VendorEntityMappingUpsert request,
+        CancellationToken ct = default) =>
+        Read<VendorEntityMappingDto>(await SendAsync(Method.Put, $"{Mappings}/{Number(id)}", ct, request));
+
+    public async Task DeleteMappingAsync(int id, CancellationToken ct = default) =>
+        await SendAsync(Method.Delete, $"{Mappings}/{Number(id)}", ct);
+
+    public async Task<VendorEntityMappingPreviewDto> PreviewMappingAsync(VendorEntityMappingUpsert request, int? mappingId,
+        CancellationToken ct = default) =>
+        Read<VendorEntityMappingPreviewDto>(await SendAsync(Method.Post, $"{Mappings}/Preview", ct, request,
+            queries: mappingId is { } id ? [("mappingId", Number(id))] : null));
+
     // --- transport --------------------------------------------------------------------------
 
     private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
@@ -129,13 +168,15 @@ public class RiskIndexConfigRestService(IRestService restService, IAuthenticatio
 
     /// <summary>One call: an optional JSON body (serialized as the API reads it), extra headers and query parameters.</summary>
     private async Task<RestResponse> SendAsync(Method method, string route, CancellationToken ct, object? body = null,
-        (string Name, string Value)? header = null, (string Name, string Value)? query = null)
+        (string Name, string Value)? header = null, (string Name, string Value)? query = null,
+        (string Name, string Value)[]? queries = null)
     {
         using var client = RestService.GetClient(reportErrorResponses: true);
         var request = new RestRequest(route) { Method = method };
         if (body is not null) request.AddStringBody(JsonSerializer.Serialize(body, body.GetType(), JsonOptions), ContentType.Json);
         if (header is { } h) request.AddHeader(h.Name, h.Value);
         if (query is { } q) request.AddQueryParameter(q.Name, q.Value);
+        foreach (var (name, value) in queries ?? []) request.AddQueryParameter(name, value);
 
         RestResponse response;
         try

@@ -1,0 +1,135 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:integrations="clr-namespace:Model.Integrations;assembly=Model"
+             xmlns:entities="clr-namespace:DAL.Entities;assembly=DAL"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="760"
+             x:DataType="vm:EntityMappingsViewModel"
+             x:Class="GUIClient.Views.Admin.RiskIndex.EntityMappingsView">
+
+    <!-- S40 §6.6 (T263): Vision One custom tag -> entity rules, applied by the connection's next sync. -->
+    <ScrollViewer>
+        <StackPanel Margin="10" Spacing="8">
+            <TextBlock Classes="hint" Text="{Binding StrIntro}" TextWrapping="Wrap"/>
+            <TextBlock Classes="notice" Text="{Binding ReadOnlyMessage}" IsVisible="{Binding HasReadOnlyMessage}"
+                       TextWrapping="Wrap"/>
+
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Classes="fieldLabel" Text="{Binding StrProvider}" VerticalAlignment="Center"
+                           Margin="0 0 6 0"/>
+                <TextBlock Grid.Column="1" Text="{Binding StrProviderVisionOne}" VerticalAlignment="Center" Margin="0 0 16 0"/>
+                <TextBlock Grid.Column="2" Classes="fieldLabel" Text="{Binding StrConnection}" VerticalAlignment="Center"
+                           Margin="0 0 6 0"/>
+                <ComboBox Grid.Column="3" ItemsSource="{Binding Connections}" SelectedItem="{Binding SelectedConnection}"
+                          MinWidth="240" IsEnabled="{Binding CanWrite}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="integrations:TrendMicroConnectionView">
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="5">
+                    <Border Classes="tooltip" ToolTip.Tip="{Binding StrNewReason}">
+                        <Button Classes="operation" Command="{Binding BtNewMappingClicked}" IsEnabled="{Binding IsNewEnabled}"
+                                ToolTip.Tip="{Binding StrNew}">
+                            <material:MaterialIcon Kind="Plus"/>
+                        </Button>
+                    </Border>
+                    <Button Classes="operation" Command="{Binding BtRefreshMappingsClicked}"
+                            IsEnabled="{Binding IsRefreshEnabled}" ToolTip.Tip="{Binding StrRefresh}">
+                        <material:MaterialIcon Kind="Reload"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" IsReadOnly="True"
+                      CanUserSortColumns="False" Height="200">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding StrPriority, Mode=OneTime}" Binding="{Binding Priority}"/>
+                    <DataGridTextColumn Header="{Binding StrKind, Mode=OneTime}" Binding="{Binding Kind}"/>
+                    <DataGridTextColumn Header="{Binding StrValue, Mode=OneTime}" Binding="{Binding Value}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrEntity, Mode=OneTime}" Binding="{Binding EntityName}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding StrPolicy, Mode=OneTime}" Binding="{Binding Policy}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding StrEnabled, Mode=OneTime}" Binding="{Binding Enabled}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid ColumnDefinitions="*,*" IsVisible="{Binding IsEditing}">
+                <Border Grid.Column="0" Classes="formCard" Margin="0 0 4 0">
+                    <StackPanel>
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrMatchCard}"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrKind}"/>
+                        <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding SelectedKind}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrValue}" Margin="0 8 0 0"/>
+                        <AutoCompleteBox Text="{Binding Value}" ItemsSource="{Binding Candidates}" FilterMode="ContainsOrdinal"
+                                         MinimumPrefixLength="0" MaxLength="255" HorizontalAlignment="Stretch"/>
+                        <TextBlock Classes="hint" Text="{Binding StrValueHint}" TextWrapping="Wrap"/>
+                        <TextBlock Classes="warning" Text="{Binding StrAssetGroupHint}" IsVisible="{Binding IsAssetGroup}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Classes="formCard" Margin="4 0 0 0">
+                    <StackPanel>
+                        <TextBlock Classes="sectionCaption" Text="{Binding StrTargetCard}"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrEntity}"/>
+                        <ComboBox ItemsSource="{Binding Entities}" SelectedItem="{Binding SelectedEntity}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="entities:Entity">
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrPolicy}" Margin="0 8 0 0"/>
+                        <ComboBox ItemsSource="{Binding Policies}" SelectedItem="{Binding SelectedPolicy}"
+                                  HorizontalAlignment="Stretch"/>
+                        <TextBlock Classes="fieldLabel" Text="{Binding StrPriority}" Margin="0 8 0 0"/>
+                        <NumericUpDown Value="{Binding Priority}" Minimum="1" Maximum="{Binding MaxPriority}" Increment="1"
+                                       FormatString="0" MinWidth="120" HorizontalAlignment="Left"/>
+                        <CheckBox IsChecked="{Binding Enabled}" Margin="0 8 0 0">
+                            <TextBlock Text="{Binding StrEnabled}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Classes="formCard" IsVisible="{Binding IsEditing}">
+                <StackPanel>
+                    <TextBlock Classes="sectionCaption" Text="{Binding StrPreviewCard}"/>
+                    <TextBlock Text="{Binding PreviewSummary}" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding PreviewSample}" Margin="0 4 0 0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <TextBlock Classes="hint" Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Classes="hint" Text="{Binding StrPreviewNote}" TextWrapping="Wrap" Margin="0 4 0 0"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrSaveReason}">
+                    <Button Classes="dialog1" Command="{Binding BtSaveMappingClicked}" IsEnabled="{Binding IsSaveEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="ContentSave"/>
+                            <TextBlock Text="{Binding StrSave}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+                <Border Classes="tooltip" ToolTip.Tip="{Binding StrDeleteReason}">
+                    <Button Classes="dialog2" Command="{Binding BtDeleteMappingClicked}" IsEnabled="{Binding IsDeleteEnabled}">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <material:MaterialIcon Kind="Delete"/>
+                            <TextBlock Text="{Binding StrDelete}"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

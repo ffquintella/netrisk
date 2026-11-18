@@ -56,6 +56,13 @@ public class TrendMicroConnection
     /// </summary>
     public bool PushExemptions { get; set; }
 
+    /// <summary>
+    /// Read each device's <c>assetCustomTags</c>, keep them in <c>host_external_ids.tags</c> and apply the connection's
+    /// tag → entity rules (<c>vendor_entity_mappings</c>; S40 §6.6, §6.9, §8.8 <c>SyncCustomTags</c>; T263). Off by default:
+    /// a rule moves a host to another entity, and with it who sees the host, so the operator opts in.
+    /// </summary>
+    public bool SyncCustomTags { get; set; }
+
     public DateTime? LastSyncAt { get; set; }
 
     public IntegrationSyncStatus? LastSyncStatus { get; set; }

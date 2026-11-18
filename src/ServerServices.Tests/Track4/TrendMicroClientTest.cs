@@ -1009,4 +1009,36 @@ public class TrendMicroClientTest
     {
         Assert.Equal(expected, TrendMicroRegions.BaseUrlFor(region));
     }
+
+    // --- T263 (S40 §6.6, §9.5): the device's custom tags, in the canonical form the rules compare ---------------------
+
+    [Fact]
+    public void TestCustomTagsAreReadAsKeyValueStrings()
+    {
+        var device = TrendMicroClient.ParseDevice(Element("""
+            {"id":"agent-1","assetCustomTags":[{"id":"t1","key":"BU","value":"Escola de Direito"},
+              {"tagKey":"Site","tagValue":"Botafogo"},"Production",{"key":"bu","value":"escola de direito"}]}
+            """))!;
+
+        // The case-insensitive duplicate is dropped; the first spelling is kept.
+        Assert.Equal(["BU: Escola de Direito", "Site: Botafogo", "Production"], device.Tags);
+    }
+
+    [Fact]
+    public void TestADeviceWithoutCustomTagsHasNone()
+    {
+        Assert.Empty(TrendMicroClient.ParseDevice(Element("""{"id":"agent-1","assetCustomTags":null}"""))!.Tags);
+        Assert.Empty(TrendMicroClient.ParseDevice(Element("""{"id":"agent-1"}"""))!.Tags);
+    }
+
+    [Fact]
+    public void TestAnOverLongTagIsDroppedNotTruncatedAndTheCountIsBounded()
+    {
+        var tags = string.Join(",", Enumerable.Range(0, TrendMicroClient.MaxTagsPerDevice + 20).Select(i => $"\"tag-{i}\""));
+        var device = TrendMicroClient.ParseDevice(Element(
+            $"{{\"id\":\"agent-1\",\"customTags\":[\"{new string('x', 300)}\",{tags}]}}"))!;
+
+        Assert.Equal(TrendMicroClient.MaxTagsPerDevice, device.Tags.Count);
+        Assert.Equal("tag-0", device.Tags[0]);
+    }
 }

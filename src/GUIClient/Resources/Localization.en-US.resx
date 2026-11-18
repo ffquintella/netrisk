@@ -7786,7 +7786,7 @@ Switch agent co-work on?</value>
         <value>W draft (days)</value>
     </data>
     <data name="RiskSourcesRunsNoteMSG" xml:space="preserve">
-        <value>Connections, last synchronisation, object counts and the index runs are not shown yet: the GET /RiskIndex/Sources and /Runs reads are not built.</value>
+        <value>Connections and last sync come from each source's connections and imports; object counts and the stale share are the latest snapshot's, shown with global scope only.</value>
     </data>
     <data name="RiskSourcesDraftFMT" xml:space="preserve">
         <value>Draft v{0} · {1}</value>
@@ -8729,5 +8729,203 @@ Switch agent co-work on?</value>
     </data>
     <data name="ConnectionClearDefaultEntity" xml:space="preserve">
         <value>Clear the default entity</value>
+    </data>
+    <data name="SyncCustomTags" xml:space="preserve">
+        <value>Collect the devices' custom tags and apply the tag → entity rules (Administration › Risk index › Sources)</value>
+    </data>
+    <data name="RiskSourcesConnections" xml:space="preserve">
+        <value>Connections</value>
+    </data>
+    <data name="RiskSourcesLastSync" xml:space="preserve">
+        <value>Last sync</value>
+    </data>
+    <data name="RiskSourcesStatus" xml:space="preserve">
+        <value>Status</value>
+    </data>
+    <data name="RiskSourcesObjects" xml:space="preserve">
+        <value>Objects</value>
+    </data>
+    <data name="RiskSourcesStale" xml:space="preserve">
+        <value>Stale</value>
+    </data>
+    <data name="RiskSourcesRuns" xml:space="preserve">
+        <value>Index runs</value>
+    </data>
+    <data name="RiskSourcesSubTabSources" xml:space="preserve">
+        <value>Sources and freshness</value>
+    </data>
+    <data name="RiskSourcesSubTabMappings" xml:space="preserve">
+        <value>Entity mapping</value>
+    </data>
+    <data name="RiskSourcesRequiresGlobalScope" xml:space="preserve">
+        <value>Requires global scope: these are the whole organization's counts.</value>
+    </data>
+    <data name="RiskSourcesNoRunsMSG" xml:space="preserve">
+        <value>No snapshot has run yet.</value>
+    </data>
+    <data name="RiskSourcesImportFMT" xml:space="preserve">
+        <value>import {0}</value>
+    </data>
+    <data name="RiskSourceStatus_ok" xml:space="preserve">
+        <value>ok</value>
+    </data>
+    <data name="RiskSourceStatus_partial" xml:space="preserve">
+        <value>partial</value>
+    </data>
+    <data name="RiskSourceStatus_failed" xml:space="preserve">
+        <value>failed</value>
+    </data>
+    <data name="RiskSourceStatus_running" xml:space="preserve">
+        <value>running</value>
+    </data>
+    <data name="RiskSourceStatus_queued" xml:space="preserve">
+        <value>queued</value>
+    </data>
+    <data name="RiskSourceStatus_cancelled" xml:space="preserve">
+        <value>cancelled</value>
+    </data>
+    <data name="EntityMappingIntroMSG" xml:space="preserve">
+        <value>Hosts a Vision One connection reports with a custom tag are filed under the rule's entity on the connection's next sync: the enabled rule of lowest priority that matches wins, then the connection's default entity. Requires "Collect the devices' custom tags" on the connection.</value>
+    </data>
+    <data name="EntityMappingProvider" xml:space="preserve">
+        <value>Provider</value>
+    </data>
+    <data name="EntityMappingProviderVisionOne" xml:space="preserve">
+        <value>Vision One</value>
+    </data>
+    <data name="EntityMappingConnection" xml:space="preserve">
+        <value>Connection</value>
+    </data>
+    <data name="EntityMappingNew" xml:space="preserve">
+        <value>New rule</value>
+    </data>
+    <data name="EntityMappingPriority" xml:space="preserve">
+        <value>Priority</value>
+    </data>
+    <data name="EntityMappingKind" xml:space="preserve">
+        <value>Kind</value>
+    </data>
+    <data name="EntityMappingValue" xml:space="preserve">
+        <value>Value</value>
+    </data>
+    <data name="EntityMappingValueHint" xml:space="preserve">
+        <value>From the last tag sync; a tag not seen yet can be typed as key: value.</value>
+    </data>
+    <data name="EntityMappingPolicy" xml:space="preserve">
+        <value>Restamp</value>
+    </data>
+    <data name="EntityMappingEnabled" xml:space="preserve">
+        <value>Enabled</value>
+    </data>
+    <data name="EntityMappingMatchCard" xml:space="preserve">
+        <value>MATCH</value>
+    </data>
+    <data name="EntityMappingTargetCard" xml:space="preserve">
+        <value>TARGET</value>
+    </data>
+    <data name="EntityMappingPreviewCard" xml:space="preserve">
+        <value>PREVIEW</value>
+    </data>
+    <data name="EntityMappingPreviewNoteMSG" xml:space="preserve">
+        <value>Applied on the connection's next sync. Reassigning a host changes who sees it; deleting a rule leaves the hosts where they are.</value>
+    </data>
+    <data name="EntityMappingKind_V1CustomTag" xml:space="preserve">
+        <value>Vision One custom tag</value>
+    </data>
+    <data name="EntityMappingKind_V1AssetGroup" xml:space="preserve">
+        <value>Vision One asset group</value>
+    </data>
+    <data name="EntityMappingPolicy_OnlyUnassigned" xml:space="preserve">
+        <value>Only unassigned hosts</value>
+    </data>
+    <data name="EntityMappingPolicy_FollowMapping" xml:space="preserve">
+        <value>Follow the mapping</value>
+    </data>
+    <data name="EntityMappingAssetGroupHintMSG" xml:space="preserve">
+        <value>An asset group rule attributes no device (Vision One does not return group membership per device): it ties the group's sub-index to the entity as a reference indicator once asset groups are synced (T271).</value>
+    </data>
+    <data name="EntityMappingPreviewFMT" xml:space="preserve">
+        <value>{0} host(s) match · {1} would be attributed (no entity today) · {2} would be reattributed (another entity) · {3} in conflict with another rule (the lowest priority wins) · {4} already attributed</value>
+    </data>
+    <data name="EntityMappingSampleFMT" xml:space="preserve">
+        <value>{0}: {1} → {2} ({3})</value>
+    </data>
+    <data name="EntityMappingOutcome_assign" xml:space="preserve">
+        <value>attributed</value>
+    </data>
+    <data name="EntityMappingOutcome_reassign" xml:space="preserve">
+        <value>reattributed</value>
+    </data>
+    <data name="EntityMappingOutcome_conflict" xml:space="preserve">
+        <value>another rule wins</value>
+    </data>
+    <data name="EntityMappingOutcome_already_assigned" xml:space="preserve">
+        <value>kept</value>
+    </data>
+    <data name="EntityMappingSavedMSG" xml:space="preserve">
+        <value>Rule saved; applied on the connection's next sync.</value>
+    </data>
+    <data name="EntityMappingDeletedMSG" xml:space="preserve">
+        <value>Rule deleted; the hosts keep their current entity.</value>
+    </data>
+    <data name="EntityMappingDeleteConfirmMSG" xml:space="preserve">
+        <value>Delete the rule for "{0}"? The hosts it attributed keep their current entity.</value>
+    </data>
+    <data name="EntityMappingRequiresConfiguration" xml:space="preserve">
+        <value>Requires the integration configuration permission (configuration).</value>
+    </data>
+    <data name="EntityMappingChooseConnection" xml:space="preserve">
+        <value>Choose a connection</value>
+    </data>
+    <data name="EntityMappingIncomplete" xml:space="preserve">
+        <value>Complete kind, value and entity to see the preview</value>
+    </data>
+    <data name="EntityMappingDuplicate" xml:space="preserve">
+        <value>There is already a rule for this value on this connection</value>
+    </data>
+    <data name="EntityMappingSelectRule" xml:space="preserve">
+        <value>Select a rule</value>
+    </data>
+    <data name="RiskApi_mapping_requires_global_scopeMSG" xml:space="preserve">
+        <value>A vendor mapping moves hosts between entities: writing or previewing one requires global scope.</value>
+    </data>
+    <data name="RiskApi_invalid_providerMSG" xml:space="preserve">
+        <value>Only Vision One mappings are accepted for now.</value>
+    </data>
+    <data name="RiskApi_invalid_kind_for_providerMSG" xml:space="preserve">
+        <value>A Vision One mapping matches a custom tag or an asset group.</value>
+    </data>
+    <data name="RiskApi_connection_not_foundMSG" xml:space="preserve">
+        <value>The connection no longer exists.</value>
+    </data>
+    <data name="RiskApi_value_requiredMSG" xml:space="preserve">
+        <value>The value is required.</value>
+    </data>
+    <data name="RiskApi_value_too_longMSG" xml:space="preserve">
+        <value>The value and the label hold at most 255 characters.</value>
+    </data>
+    <data name="RiskApi_mapping_entity_not_foundMSG" xml:space="preserve">
+        <value>The rule's entity no longer exists.</value>
+    </data>
+    <data name="RiskApi_invalid_priorityMSG" xml:space="preserve">
+        <value>The priority is between 1 and 9999.</value>
+    </data>
+    <data name="RiskApi_invalid_policyMSG" xml:space="preserve">
+        <value>Choose a restamp policy.</value>
+    </data>
+    <data name="RiskApi_duplicate_mappingMSG" xml:space="preserve">
+        <value>There is already a rule for this value on this connection.</value>
+    </data>
+    <data name="RiskApi_mapping_not_foundMSG" xml:space="preserve">
+        <value>The rule no longer exists; reload the list.</value>
+    </data>
+    <data name="RiskApi_runs_require_global_scopeMSG" xml:space="preserve">
+        <value>The index runs require global scope.</value>
+    </data>
+    <data name="RiskApi_run_kind_not_recordedMSG" xml:space="preserve">
+        <value>The retention pass does not record its runs yet.</value>
+    </data>
+    <data name="RiskApi_invalid_run_kindMSG" xml:space="preserve">
+        <value>Unknown run kind.</value>
     </data>
 </root>

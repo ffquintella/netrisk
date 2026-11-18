@@ -94,6 +94,7 @@ public class SettingsFormVocabularyTest
     [InlineData("Views/Admin/JiraIntegrationView.axaml")]
     [InlineData("Views/ConfigurationView.axaml")]
     [InlineData("Views/SecretVaultPickerDialog.axaml")]
+    [InlineData("Views/Admin/RiskIndex/EntityMappingsView.axaml")]
     public void EverySettingsView_UsesFieldLabels(string relativePath)
     {
         var text = File.ReadAllText(Path.Combine(GuiClientRoot(), relativePath));
@@ -109,6 +110,7 @@ public class SettingsFormVocabularyTest
     [Theory]
     [InlineData("Views/Admin/IntegrationsView.axaml")]
     [InlineData("Views/ConfigurationView.axaml")]
+    [InlineData("Views/Admin/RiskIndex/EntityMappingsView.axaml")]
     public void NoFormCardPutsAnInputInAHorizontalStackPanel(string relativePath)
     {
         var text = File.ReadAllText(Path.Combine(GuiClientRoot(), relativePath));

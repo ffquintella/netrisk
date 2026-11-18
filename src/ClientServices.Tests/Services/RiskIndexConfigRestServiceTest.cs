@@ -12,6 +12,7 @@ using DAL.Enums;
 using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using Model.Exceptions;
+using Model.Integrations;
 using Model.RiskIndex;
 using NSubstitute;
 using RestSharp;
@@ -270,5 +271,98 @@ public class RiskIndexConfigRestServiceTest : BaseServiceTest
         await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.ValidateAsync(4));
         _authentication.Received(1).DiscardAuthenticationToken();
         await Assert.ThrowsAsync<DataNotFoundException>(() => _service.DeleteDraftAsync(99));
+    }
+
+    // --- T263 (S40 §6.5, §6.6, §8.2, §8.6): the Sources tab -----------------------------------------------------------
+
+    private static VendorEntityMappingDto Mapping(int id = 3) =>
+        new(id, 2, 1, VendorMatchKind.V1CustomTag, "BU: Law", null, 8, "Law School", 1, RestampPolicy.FollowMapping, true);
+
+    private static VendorEntityMappingUpsert Upsert() =>
+        new(2, 1, VendorMatchKind.V1CustomTag, "BU: Law", null, 8, 1, RestampPolicy.FollowMapping, true);
+
+    [Fact]
+    public async Task TestTheSourcesAndRunsAreReadWithTheirQuery()
+    {
+        Answer(Method.Get, "/RiskIndex/Sources", new[]
+        {
+            new RiskIndexSourceDto("V1-CVE", 1, new DateTime(2026, 10, 5, 3, 12, 0, DateTimeKind.Utc), "ok", "sync", null, null, true)
+        });
+        Answer(Method.Get, "/RiskIndex/Runs", new[]
+        {
+            new DAL.Entities.IntegrationSyncLog { Id = 9, Integration = IntegrationKind.RiskIndex, Summary = "35210 object rows" }
+        });
+
+        var source = Assert.Single(await _service.GetSourcesAsync());
+        Assert.Equal(("V1-CVE", 1, true, (int?)null), (source.SourceId, source.Connections, source.CountsWithheld, source.ObjectCount));
+
+        var run = Assert.Single(await _service.GetRunsAsync(RiskIndexRunKind.Preview, 7));
+        Assert.Equal((9, IntegrationKind.RiskIndex), (run.Id, run.Integration));
+        Assert.Contains("kind=3", _backend.LastRequest.Query);
+        Assert.Contains("limit=7", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestAScopedReadersRunsRefusalKeepsItsCode()
+    {
+        Refuse(Method.Get, "/RiskIndex/Runs", HttpStatusCode.Forbidden, "runs_require_global_scope", "Global scope.");
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.GetRunsAsync(RiskIndexRunKind.Snapshot));
+
+        Assert.Equal((HttpStatusCode.Forbidden, "runs_require_global_scope"), (ex.StatusCode, ex.ErrorCode));
+    }
+
+    [Fact]
+    public async Task TestTheMappingsAreListedWithTheirCandidatesForTheConnection()
+    {
+        Answer(Method.Get, "/Integrations/EntityMappings", new[] { Mapping() });
+        Answer(Method.Get, "/Integrations/EntityMappings/Candidates",
+            new[] { new VendorMappingCandidateDto(VendorMatchKind.V1CustomTag, "BU: Law", null, 412) });
+
+        var rule = Assert.Single(await _service.GetMappingsAsync(2, 1));
+        Assert.Equal((RestampPolicy.FollowMapping, "Law School"), (rule.Policy, rule.EntityName));
+        Assert.Contains("provider=2", _backend.LastRequest.Query);
+        Assert.Contains("connectionId=1", _backend.LastRequest.Query);
+
+        Assert.Equal(412, Assert.Single(await _service.GetMappingCandidatesAsync(2, 1)).ObjectsSeen);
+        Assert.Contains("connectionId=1", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestTheMappingWritesUseTheirVerbsAndBodies()
+    {
+        Answer(Method.Post, "/Integrations/EntityMappings", Mapping(), HttpStatusCode.Created);
+        Answer(Method.Put, "/Integrations/EntityMappings/3", Mapping());
+        _backend.OnStatus(Method.Delete, "/Integrations/EntityMappings/3", HttpStatusCode.NoContent);
+        Answer(Method.Post, "/Integrations/EntityMappings/Preview",
+            new VendorEntityMappingPreviewDto(412, 37, 12, 3, 360,
+                [new VendorMappingPreviewSampleDto("srv-01", null, "Law School", VendorMappingOutcomes.Assign)]));
+
+        Assert.Equal(3, (await _service.CreateMappingAsync(Upsert())).Id);
+        var body = BodyOf(_backend.LastRequest);
+        Assert.Equal((1, 2, "BU: Law"), (body.GetProperty("kind").GetInt32(), body.GetProperty("policy").GetInt32(),
+            body.GetProperty("value").GetString()));
+
+        Assert.Equal(3, (await _service.UpdateMappingAsync(3, Upsert())).Id);
+        await _service.DeleteMappingAsync(3);
+        Assert.Equal(("DELETE", "/Integrations/EntityMappings/3"), (_backend.LastRequest.Method.ToUpperInvariant(), _backend.LastRequest.Path));
+
+        var preview = await _service.PreviewMappingAsync(Upsert(), 3);
+        Assert.Equal((412, 37, 12, 3, 360), (preview.Matched, preview.WouldAssign, preview.WouldReassign, preview.Conflicts,
+            preview.AlreadyAssigned));
+        Assert.Contains("mappingId=3", _backend.LastRequest.Query);
+
+        await _service.PreviewMappingAsync(Upsert(), null);
+        Assert.DoesNotContain("mappingId", _backend.LastRequest.Query);
+    }
+
+    [Fact]
+    public async Task TestADuplicateMappingKeepsItsCode()
+    {
+        Refuse(Method.Post, "/Integrations/EntityMappings", HttpStatusCode.Conflict, "duplicate_mapping", "Already there.");
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() => _service.CreateMappingAsync(Upsert()));
+
+        Assert.Equal((HttpStatusCode.Conflict, "duplicate_mapping", "Already there."), (ex.StatusCode, ex.ErrorCode, ex.Message));
     }
 }

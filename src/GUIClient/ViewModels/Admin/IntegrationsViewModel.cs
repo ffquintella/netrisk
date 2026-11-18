@@ -113,6 +113,7 @@ public class IntegrationsViewModel : ViewModelBase
     public string StrPushExemptions { get; } = Localizer["PushExemptions"];
     public string StrSyncVulnerabilities { get; } = Localizer["SyncVulnerabilities"];
     public string StrSyncRiskScores { get; } = Localizer["SyncRiskScores"];
+    public string StrSyncCustomTags { get; } = Localizer["SyncCustomTags"];
     public string StrSyncIssues { get; } = Localizer["SyncIssues"];
     public string StrSyncInterval { get; } = Localizer["SyncIntervalHours"];
     public string StrDomain { get; } = Localizer["Domain"];
@@ -2060,7 +2061,8 @@ public class IntegrationsViewModel : ViewModelBase
             SyncVulnerabilities = connection.SyncVulnerabilities,
             SyncRiskScores = connection.SyncRiskScores,
             VirtualPatchClosesFinding = connection.VirtualPatchClosesFinding,
-            PushExemptions = connection.PushExemptions
+            PushExemptions = connection.PushExemptions,
+            SyncCustomTags = connection.SyncCustomTags
         };
 
         TrendMicroApiKey = "";

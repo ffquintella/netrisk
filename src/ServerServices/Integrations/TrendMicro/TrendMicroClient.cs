@@ -362,7 +362,40 @@ public class TrendMicroClient(ILogger logger, IOutboundHttpClient http) : ITrend
         var lastSeen = FirstString(item, "lastSeenDateTime", "lastUsedIp", "lastActivity");
         if (DateTime.TryParse(lastSeen, out var parsed)) device.LastSeen = parsed.ToUniversalTime();
 
+        device.Tags.AddRange(ParseCustomTags(item));
+
         return device;
+    }
+
+    /// <summary>The most tags kept per device, so one misconfigured asset cannot fill <c>host_external_ids.tags</c>.</summary>
+    internal const int MaxTagsPerDevice = 100;
+
+    /// <summary>
+    /// The device's custom asset tags in canonical <c>key: value</c> form (T263, S40 §6.6, §9.5). Vision One reports them in
+    /// <c>assetCustomTags</c> as objects with a key and a value; a plain string and a <c>name</c>/<c>tagKey</c> spelling are
+    /// accepted for the same reason every other attribute here is read from a candidate list. Over-long tags are dropped
+    /// rather than truncated: a truncated tag would match a rule written for a different one.
+    /// </summary>
+    internal static List<string> ParseCustomTags(JsonElement item)
+    {
+        var tags = new List<string>();
+        if (FirstArray(item, "assetCustomTags", "customTags") is not { } array) return tags;
+
+        foreach (var entry in array.EnumerateArray())
+        {
+            var tag = entry.ValueKind switch
+            {
+                JsonValueKind.String => VendorTagText.Canonical(entry.GetString()),
+                JsonValueKind.Object => VendorTagText.FromKeyValue(FirstString(entry, "key", "tagKey", "name"),
+                    FirstString(entry, "value", "tagValue")),
+                _ => null
+            };
+            if (tag is null || tag.Length > VendorTagText.MaxLength) continue;
+            if (!tags.Contains(tag, StringComparer.OrdinalIgnoreCase)) tags.Add(tag);
+            if (tags.Count == MaxTagsPerDevice) break;
+        }
+
+        return tags;
     }
 
     /// <summary>

@@ -51,6 +51,7 @@ internal sealed class ScopedRecordCatalogue(DbContext context)
         [typeof(MitigationTask)] = [("MitigationId", typeof(Mitigation))],
         [typeof(RiskChainLink)] = [("RiskId", typeof(Risk))],
         [typeof(DAL.Entities.HostsService)] = [("HostId", typeof(Host))],
+        [typeof(HostExternalId)] = [("HostId", typeof(Host))],
         [typeof(AssessmentRun)] = [("AssessmentId", typeof(Assessment))],
         [typeof(AssessmentQuestion)] = [("AssessmentId", typeof(Assessment))],
         [typeof(AssessmentAnswer)] = [("AssessmentId", typeof(Assessment))],

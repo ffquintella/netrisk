@@ -4,75 +4,127 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:vm="clr-namespace:GUIClient.ViewModels.Admin.RiskIndex"
+             xmlns:views="clr-namespace:GUIClient.Views.Admin.RiskIndex"
              xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
              x:DataType="vm:RiskSourcesViewModel"
              x:Class="GUIClient.Views.Admin.RiskIndex.RiskSourcesView">
 
-    <!-- S40 §6.5 (T263): enabled sources and freshness windows are profile parameters, edited in the one draft session. -->
-    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10">
-        <Border Grid.Row="0" Classes="formCard caution">
-            <TextBlock Text="{Binding StrCaution}" TextWrapping="Wrap"/>
-        </Border>
-        <TextBlock Grid.Row="1" Classes="header3" Text="{Binding DraftStatus}" Margin="0 8 0 0"/>
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding Issues}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="sys:String">
-                    <TextBlock Classes="warning" Text="{Binding}" TextWrapping="Wrap"/>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <DataGrid Grid.Row="3" ItemsSource="{Binding Lines}" CanUserSortColumns="False" Margin="0 8 0 0">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="{Binding StrSource, Mode=OneTime}" Binding="{Binding Id}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="{Binding StrFeeds, Mode=OneTime}" Binding="{Binding Feeds}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="{Binding StrAvailability, Mode=OneTime}" Binding="{Binding Availability}"
-                                    IsReadOnly="True" Width="*"/>
-                <DataGridTextColumn Header="{Binding StrEnabledActive, Mode=OneTime}" Binding="{Binding EnabledActive}"
-                                    IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="{Binding StrEnabledDraft, Mode=OneTime}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
-                            <Border Classes="tooltip" ToolTip.Tip="{Binding ToggleReason}">
-                                <CheckBox IsChecked="{Binding EnabledDraft}" IsEnabled="{Binding IsToggleEnabled}"
-                                          HorizontalAlignment="Center"/>
-                            </Border>
+    <!-- S40 §6.5, §6.6 (T263): the sources and freshness of the draft, with each source's connections, last sync and
+         counts; and the Vision One tag -> entity rules in a second sub-tab. -->
+    <TabControl>
+        <TabItem Header="{Binding StrSourcesSubTab}">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto" Margin="10">
+                <Border Grid.Row="0" Classes="formCard caution">
+                    <TextBlock Text="{Binding StrCaution}" TextWrapping="Wrap"/>
+                </Border>
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 8 0 0">
+                    <TextBlock Grid.Column="0" Classes="header3" Text="{Binding DraftStatus}"/>
+                    <Button Grid.Column="1" Classes="operation" Command="{Binding BtRefreshStatusClicked}"
+                            ToolTip.Tip="{Binding StrRefreshStatus}">
+                        <material:MaterialIcon Kind="Reload"/>
+                    </Button>
+                </Grid>
+                <ItemsControl Grid.Row="2" ItemsSource="{Binding Issues}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="sys:String">
+                            <TextBlock Classes="warning" Text="{Binding}" TextWrapping="Wrap"/>
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="{Binding StrWindowActive, Mode=OneTime}" Binding="{Binding WindowActive}"
-                                    IsReadOnly="True"/>
-                <DataGridTemplateColumn Header="{Binding StrWindowDraft, Mode=OneTime}" Width="150">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
-                            <NumericUpDown Value="{Binding WindowDraft}" Minimum="1" Maximum="730" Increment="1" FormatString="0"
-                                           IsVisible="{Binding HasWindow}" IsEnabled="{Binding IsWindowEnabled}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-        <TextBlock Grid.Row="4" Classes="hint" Text="{Binding StrRunsNote}" TextWrapping="Wrap" Margin="0 6 0 0"/>
+                <DataGrid Grid.Row="3" ItemsSource="{Binding Lines}" CanUserSortColumns="False" Margin="0 8 0 0">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="{Binding StrSource, Mode=OneTime}" Binding="{Binding Id}" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="{Binding StrFeeds, Mode=OneTime}" Binding="{Binding Feeds}" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="{Binding StrAvailability, Mode=OneTime}" Binding="{Binding Availability}"
+                                            IsReadOnly="True" Width="*"/>
+                        <DataGridTextColumn Header="{Binding StrEnabledActive, Mode=OneTime}" Binding="{Binding EnabledActive}"
+                                            IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="{Binding StrEnabledDraft, Mode=OneTime}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
+                                    <Border Classes="tooltip" ToolTip.Tip="{Binding ToggleReason}">
+                                        <CheckBox IsChecked="{Binding EnabledDraft}" IsEnabled="{Binding IsToggleEnabled}"
+                                                  HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="{Binding StrWindowActive, Mode=OneTime}" Binding="{Binding WindowActive}"
+                                            IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="{Binding StrWindowDraft, Mode=OneTime}" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
+                                    <NumericUpDown Value="{Binding WindowDraft}" Minimum="1" Maximum="730" Increment="1"
+                                                   FormatString="0" IsVisible="{Binding HasWindow}"
+                                                   IsEnabled="{Binding IsWindowEnabled}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="{Binding StrConnections, Mode=OneTime}"
+                                            Binding="{Binding Status.Connections}" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="{Binding StrLastSync, Mode=OneTime}" Binding="{Binding Status.LastSync}"
+                                            IsReadOnly="True"/>
+                        <DataGridTextColumn Header="{Binding StrStatus, Mode=OneTime}" Binding="{Binding Status.Status}"
+                                            IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="{Binding StrObjects, Mode=OneTime}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
+                                    <Border Classes="tooltip" ToolTip.Tip="{Binding Status.CountsHint}">
+                                        <TextBlock Text="{Binding Status.Objects}" VerticalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{Binding StrStale, Mode=OneTime}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="vm:RiskSourceLineViewModel">
+                                    <Border Classes="tooltip" ToolTip.Tip="{Binding Status.CountsHint}">
+                                        <TextBlock Text="{Binding Status.Stale}" VerticalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
 
-        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="8" Margin="0 10 0 0">
-            <Border Classes="tooltip" ToolTip.Tip="{Binding StrSaveReason}">
-                <Button Classes="dialog1" Command="{Binding BtSaveDraftClicked}" IsEnabled="{Binding IsSaveEnabled}">
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-                        <material:MaterialIcon Kind="ContentSave"/>
-                        <TextBlock Text="{Binding StrSaveDraft}"/>
-                    </StackPanel>
-                </Button>
-            </Border>
-            <Border Classes="tooltip" ToolTip.Tip="{Binding StrResetReason}">
-                <Button Classes="dialog2" Command="{Binding BtResetClicked}" IsEnabled="{Binding IsResetEnabled}">
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-                        <material:MaterialIcon Kind="Restore"/>
-                        <TextBlock Text="{Binding StrReset}"/>
-                    </StackPanel>
-                </Button>
-            </Border>
-        </StackPanel>
-    </Grid>
+                <TextBlock Grid.Row="4" Classes="hint" Text="{Binding StrRunsNote}" TextWrapping="Wrap" Margin="0 6 0 0"/>
+
+                <TextBlock Grid.Row="5" Classes="sectionCaption" Text="{Binding StrRuns}" Margin="0 8 0 0"/>
+                <StackPanel Grid.Row="6">
+                    <TextBlock Classes="hint" Text="{Binding RunsMessage}" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding Runs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="sys:String">
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <StackPanel Grid.Row="7" Orientation="Horizontal" Spacing="8" Margin="0 10 0 0">
+                    <Border Classes="tooltip" ToolTip.Tip="{Binding StrSaveReason}">
+                        <Button Classes="dialog1" Command="{Binding BtSaveDraftClicked}" IsEnabled="{Binding IsSaveEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <material:MaterialIcon Kind="ContentSave"/>
+                                <TextBlock Text="{Binding StrSaveDraft}"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                    <Border Classes="tooltip" ToolTip.Tip="{Binding StrResetReason}">
+                        <Button Classes="dialog2" Command="{Binding BtResetClicked}" IsEnabled="{Binding IsResetEnabled}">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <material:MaterialIcon Kind="Restore"/>
+                                <TextBlock Text="{Binding StrReset}"/>
+                            </StackPanel>
+                        </Button>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        <TabItem Header="{Binding StrMappingsSubTab}">
+            <views:EntityMappingsView DataContext="{Binding Mappings}"/>
+        </TabItem>
+    </TabControl>
 </UserControl>

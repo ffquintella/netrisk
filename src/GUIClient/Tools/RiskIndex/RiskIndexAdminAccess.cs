@@ -26,8 +26,11 @@ public sealed record RiskIndexTabAccess(bool Enabled, bool ReadOnly, string? Dis
 /// grants on the server (§11.4), which is why the Approve button follows the server's checks and not this record.
 /// </summary>
 public sealed record RiskIndexAdminRights(bool IsAdmin, bool View, bool Configure, bool Approve, bool RiskContext,
-    bool EntitiesManage)
+    bool EntitiesManage, bool Integrations = false)
 {
+    /// <summary>The API's integration permission, which <c>/Integrations/EntityMappings</c> requires (S40 §8.6; T263).</summary>
+    public const string IntegrationsPermission = "configuration";
+
     public static RiskIndexAdminRights From(AuthenticatedUserInfo? user)
     {
         if (user is null) return new RiskIndexAdminRights(false, false, false, false, false, false);
@@ -35,7 +38,8 @@ public sealed record RiskIndexAdminRights(bool IsAdmin, bool View, bool Configur
         bool Holds(string permission) =>
             admin || (user.UserPermissions?.Any(p => string.Equals(p, permission, StringComparison.Ordinal)) ?? false);
         return new RiskIndexAdminRights(admin, Holds(RiskIndexPermissions.View), Holds(RiskIndexPermissions.Configure),
-            Holds(RiskIndexPermissions.Approve), Holds(EntityPermissions.RiskContext), Holds(EntityPermissions.Manage));
+            Holds(RiskIndexPermissions.Approve), Holds(EntityPermissions.RiskContext), Holds(EntityPermissions.Manage),
+            Holds(IntegrationsPermission));
     }
 
     /// <summary>The Administration button and the Risk index entry: any of the four (S40 §6.0).</summary>

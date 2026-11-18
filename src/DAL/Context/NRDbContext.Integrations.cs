@@ -581,6 +581,8 @@ public partial class NRDbContext
             entity.Property(e => e.VirtualPatchClosesFinding).HasColumnName("virtual_patch_closes_finding")
                 .HasColumnType("tinyint(1)");
             entity.Property(e => e.PushExemptions).HasColumnName("push_exemptions").HasColumnType("tinyint(1)");
+            // T263 (S40 §6.9, §8.8): off by default, like every option that widens what a sync collects.
+            entity.Property(e => e.SyncCustomTags).HasColumnName("sync_custom_tags").HasColumnType("tinyint(1)");
             entity.Property(e => e.LastSyncAt).HasColumnName("last_sync_at").HasColumnType("datetime");
             entity.Property(e => e.LastSyncStatus).HasColumnName("last_sync_status").HasColumnType("int(11)")
                 .HasConversion<int?>();

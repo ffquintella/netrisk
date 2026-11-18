@@ -153,6 +153,10 @@ public partial class NRDbContext
         // and the batch is written with global scope only; the notes follow the map.
         ConfigureEntityRiskContext(modelBuilder);
 
+        // M55, T263 (S40 §6.6, §7.4) — the vendor → entity rules are global configuration (no filter, writes need global
+        // scope); a host's vendor identities follow their host, filtered below.
+        ConfigureVendorMappings(modelBuilder);
+
         // The predicate is written inline rather than factored into a helper method: EF must be
         // able to translate the whole expression to SQL, and a method call is not translatable.
         modelBuilder.Entity<Risk>().HasQueryFilter(e =>
@@ -200,6 +204,11 @@ public partial class NRDbContext
             || (Risks.Any(r => r.Id == e.RiskId) && (e.HostId == null || Hosts.Any(h => h.Id == e.HostId))));
 
         modelBuilder.Entity<HostsService>().HasQueryFilter(e =>
+            ScopeIsUnrestricted || Hosts.Any(h => h.Id == e.HostId));
+
+        // T263 (S40 §7.4): a host's vendor identities and tags are read through the host, so the candidates of a tag rule
+        // never name a tag seen only on hosts outside the caller's scope.
+        modelBuilder.Entity<HostExternalId>().HasQueryFilter(e =>
             ScopeIsUnrestricted || Hosts.Any(h => h.Id == e.HostId));
 
         modelBuilder.Entity<AssessmentRun>().HasQueryFilter(e =>

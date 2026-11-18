@@ -245,6 +245,27 @@ public class RiskIndexController(
         CancellationToken ct = default) =>
         Run("reading the data quality", caller => readService.GetQualityAsync(node, date, caller, ct));
 
+    /// <summary>
+    /// The Sources tab's operational columns (S40 §6.5, §8.2; M55, T263): connections and last sync for every reader, the
+    /// organization's object count and stale share for global scope only. Not an index value, so open during the shadow pilot.
+    /// </summary>
+    [HttpGet]
+    [Route("Sources")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<RiskIndexSourceDto>))]
+    public Task<ActionResult<IReadOnlyList<RiskIndexSourceDto>>> GetSources(CancellationToken ct = default) =>
+        Run("reading the sources", caller => readService.GetSourcesAsync(caller, ct));
+
+    /// <summary>The latest index runs of one kind (S40 §6.5, §8.2; T263): global scope only, the organization's row counts.</summary>
+    [HttpGet]
+    [Route("Runs")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DAL.Entities.IntegrationSyncLog>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public Task<ActionResult<IReadOnlyList<DAL.Entities.IntegrationSyncLog>>> GetRuns(
+        [FromQuery] RiskIndexRunKind kind = RiskIndexRunKind.Snapshot, [FromQuery] int limit = 10,
+        CancellationToken ct = default) =>
+        Run("listing the index runs", caller => readService.GetRunsAsync(kind, limit, caller, ct));
+
     [HttpGet]
     [Route("Publication")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RiskIndexPublicationDto))]

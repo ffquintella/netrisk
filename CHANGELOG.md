@@ -12,6 +12,13 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Map Vision One custom tags to entities with prioritised rules, each restamping only unassigned hosts or following the mapping, offered from the tags the last sync saw and previewed before saving, in a new Entity mapping sub-tab of Administration › Risk index › Sources (T263, S40)
+- Add `/Integrations/EntityMappings` with list, candidates, create, update, delete and preview under `configuration`, every write and preview requiring global scope, stored in `vendor_entity_mappings` (schema 111) (T263, S40)
+- Add a "custom tags" option to Vision One connections that records each device's tags in `host_external_ids` and applies the connection's tag rules during the sync, counting the hosts attributed and reattributed in the sync log (T263, S40)
+- Add `GET /RiskIndex/Sources` and `GET /RiskIndex/Runs` and show each source's connections, last sync or import, status, object count and stale share, and the latest snapshot runs, in the Sources tab, with the organization's counts and runs shown to global scope only (T263, S40)
+
 ## [2.45.0] - 2026-11-18
 
 ### Added

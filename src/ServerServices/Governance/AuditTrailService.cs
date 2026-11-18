@@ -134,7 +134,11 @@ public class AuditTrailService(ILogger logger, IDalService dalService)
                 .Where(p => p.Id == id).Select(p => (int?)p.Entity).FirstOrDefaultAsync()),
 
             // M53, T243 — an index profile is the organization's configuration, but its trail only for global scope.
-            [nameof(RiskIndexProfile)] = UnrestrictedOnly
+            [nameof(RiskIndexProfile)] = UnrestrictedOnly,
+
+            // M55, T263 — a vendor -> entity rule is the organization's configuration, written with global scope only (it
+            // moves hosts between entities), and so is its trail.
+            [nameof(VendorEntityMapping)] = UnrestrictedOnly
         };
 
     /// <summary>

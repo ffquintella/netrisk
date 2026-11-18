@@ -212,11 +212,14 @@ public class BackgroundScopeContainmentTest
         // retention; its report is read only by GetPreviewAsync, which requires global scope and the shadow rule
         // (ServerServices.Tests RiskIndexProfilesServiceTest.TestAScopedReaderReadsNoPreviewBridgeOrHistory and
         // TestInShadowOnlyTheAuthorEditorsCommitteeAndAdminsReadThePreview).
+        // T263 (S40 §6.5, §8.2): GET /RiskIndex/Runs?kind=Preview lists when each preview ran and how it ended — never its
+        // report — under global scope only (RiskIndexSourcesReadTest.TestThePreviewRunsCarryNoReportAndNeedGlobalScope).
         new(@"\bRiskIndexPreviewRequests?\b", "the queue of draft previews",
             Path.Combine("DAL", "Context", "NRDbContext.RiskIndex.cs"),
             Path.Combine("DAL", "Entities", "RiskIndexPreviewRequest.cs"),
             Path.Combine("ServerServices", "RiskIndex", "Profiles", "RiskIndexPreviewService.cs"),
             Path.Combine("ServerServices", "RiskIndex", "Profiles", "RiskIndexProfilesService.cs"),
+            Path.Combine("ServerServices", "RiskIndex", "Read", "RiskIndexReadService.Sources.cs"),
             Path.Combine("ServerServices", "RiskIndex", "Snapshots", "RiskIndexRetentionService.cs")),
 
         // ...and the copy of that report the submission attaches to the profile: the same reader, the same rule.
