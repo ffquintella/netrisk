@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.46.0] - 2026-11-18
+
 ### Added
 
 - Map Vision One custom tags to entities with prioritised rules, each restamping only unassigned hosts or following the mapping, offered from the tags the last sync saw and previewed before saving, in a new Entity mapping sub-tab of Administration › Risk index › Sources (T263, S40)
