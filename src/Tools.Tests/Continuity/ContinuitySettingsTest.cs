@@ -140,7 +140,7 @@ public class ContinuitySettingsTest
     [InlineData(365, 0.5)]
     public void TestCS5_AWriteAtTheBoundsIsAccepted(int days, double weight)
     {
-        ContinuitySettings.ValidateForWrite(days, (decimal)weight);
+        ContinuitySettings.ValidateForWrite(days, Tools.Math.DecimalConversion.FromDouble(weight));
     }
 
     /// <summary>CS6 — no damaged row can turn into 0 days (every test stale) or weight 0 (unverified

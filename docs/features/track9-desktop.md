@@ -52,7 +52,7 @@ Run from the repository root:
 ```sh
 dotnet build src/GUIClient/GUIClient.csproj --no-restore --disable-build-servers -m:1
 dotnet build src/GUIClient.Tests/GUIClient.Tests.csproj --no-restore --disable-build-servers -m:1
-dotnet src/GUIClient.Tests/bin/Debug/net10.0/GUIClient.Tests.dll
+dotnet src/GUIClient.Tests/bin/Debug/net11.0/GUIClient.Tests.dll
 ./build.sh LintUi
 ```
 

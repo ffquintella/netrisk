@@ -1254,20 +1254,27 @@ installers at once, so it is scheduled as its own track and does not ride along 
 > spec: S56
 > depends-on: M64
 
-- [ ] T380 Raise `global.json` to the .NET 11 SDK and every project's `TargetFramework` from `net10.0` to `net11.0` (32 projects under `src/` and `build/`) (S56)
+- [x] T380 Raise `global.json` to the .NET 11 SDK and every project's `TargetFramework` from `net10.0` to `net11.0` (32 projects under `src/` and `build/`) (S56)
   - note: `src/Directory.Build.props` holds only the product version, so each csproj names the framework; centralising it there makes the next upgrade one line (S56 decision 2). Confirm the SDK is a stable release and drop `allowPrerelease` if it is; .NET 11 is an STS release, so check its support window against Microsoft's policy before fixing the release it ships in
-- [ ] T381 Upgrade the packages tied to the runtime (`Microsoft.*`, EF Core 11, the MariaDB provider, Hangfire, Avalonia, ReactiveUI, Mapster, Sieve, Testcontainers) to versions that support .NET 11, and record any that block the upgrade (S56)
+  - note: done with `net11.0` declared once in `src/Directory.Build.props` and removed from the `src` projects (`build/` names it itself; the `libs/` submodules stay on `net10.0` and are referenced as they are); SDK `11.0.100`, `allowPrerelease` kept; .NET 11 is an STS release and the support window was not checked against Microsoft's policy; `build/build.csproj` needed `UseAppHost=false` because .NET 11's `dotnet run` starts the apphost and Nuke 10.1.0 then refuses to start, and `Microsoft.Build` moved to 18.12.2
+- [x] T381 Upgrade the packages tied to the runtime (`Microsoft.*`, EF Core 11, the MariaDB provider, Hangfire, Avalonia, ReactiveUI, Mapster, Sieve, Testcontainers) to versions that support .NET 11, and record any that block the upgrade (S56)
   - note: the EF Core provider is the likely blocker — verify the MariaDB provider targets EF Core 11 before starting, and re-check the `char(n)` string-column trap and `StringColumnTypeGuardTest` against the new model-building conventions
-- [ ] T382 Prove the schema path is unchanged: regenerate the model snapshot with `migrationAdd.sh` and expect an empty migration, then run `SchemaUpgradeRetryTests` and `SchemaUpgradeIdempotenceTest` (S56)
-- [ ] T383 Update the packaging targets for the new runtime: self-contained publish, the MSI, MSIX, Flatpak and Snap runtime or base references, the `netrisk-mcp-bridge` runtime requirement, and `src/Packaging.Tests` (S56)
+  - note: the MariaDB provider has a .NET 11 build (`Microting.EntityFrameworkCore.MySql` 11.0.0), which needs `MySqlConnector` 3.0.0; four `*.Abstractions` references were dropped because the framework now provides them (NU1510); EF Core 11's design package resolves a prerelease `Microsoft.CodeAnalysis.Analyzers`, so a stable 5.9.0 is referenced build-only in `DAL` and `ConsoleClient` to keep `NoPrereleaseDependenciesTest` green; `(decimal)double` is exact on .NET 11, found by `ContinuitySettingsTest`, and five GUI conversions now go through `DecimalConversion`; Avalonia, ReactiveUI, Hangfire, Mapster, Testcontainers and xUnit were left on their versions and ran unchanged; `scan-dependencies.sh` reports no vulnerable package
+- [x] T382 Prove the schema path is unchanged: regenerate the model snapshot with `migrationAdd.sh` and expect an empty migration, then run `SchemaUpgradeRetryTests` and `SchemaUpgradeIdempotenceTest` (S56)
+  - note: the probe migration (`dotnet-ef` 11.0.0) came out empty, so the model did not move; the snapshot is NOT regenerated, because the EF 11 generator re-indents all 28,000 lines and bumps `ProductVersion` to 11.0.0, so the next real migration will carry that diff on its own; `SchemaUpgradeIdempotenceTest` and `SchemaUpgradeTableReferencesTest` pass inside `ConsoleClient.Tests`; all 196 `DAL.IntegrationTests` pass on .NET 11 against a real MariaDB container, including `SchemaUpgradeRetryTests` and `StringColumnTypeGuardTest`
+- [x] T383 Update the packaging targets for the new runtime: self-contained publish, the MSI, MSIX, Flatpak and Snap runtime or base references, the `netrisk-mcp-bridge` runtime requirement, and `src/Packaging.Tests` (S56)
   - note: Flatpak and Snap runtimes pin their own .NET and may lag the SDK; the Windows and Linux installers cannot be built on a Mac, so the upgrade is verified statically here and on a packaging runner
-- [ ] T384 Rewrite every `net10.0` path and statement in the build and tooling: `build/Build.UiTests.cs`, `scripts/agents/observe-mcp.sh`, `src/GUIClient.Tests/Agents/AgentObservedRunTest.cs`, the `bin/Debug/net10.0` recipes in `CLAUDE.md` and `docs/`, and the GitHub workflows (S56)
+  - note: the Snap (`core24`) and Flatpak (`24.08`) recipes pin no .NET version, so nothing changed there; the MSI and MSIX floor (Windows 10 1809) was NOT re-verified against the .NET 11 supported-OS list and the comments now say so; `PackageMacA64GUI --skip-dmg` produced the Apple Silicon `.pkg` with the .NET 11 runtime on this host, `Packaging.Tests` pass, and the Windows and Linux formats remain unbuilt here
+- [x] T384 Rewrite every `net10.0` path and statement in the build and tooling: `build/Build.UiTests.cs`, `scripts/agents/observe-mcp.sh`, `src/GUIClient.Tests/Agents/AgentObservedRunTest.cs`, the `bin/Debug/net10.0` recipes in `CLAUDE.md` and `docs/`, and the GitHub workflows (S56)
+  - note: `build/Build.UiTests.cs` and `AgentObservedRunTest` derive the folder from the running runtime instead of repeating `net10.0`; the `docs/roadmap/track9/*` acceptance lists, `docs/features/bastionvault-integration-sdk-migration.md` (the SDK is still `net10.0`) and the submodule-bump comments keep `net10.0` as historical record; the workflows read `global.json`, so they needed no edit
 - [ ] T385 Check the plugin contract on .NET 11: rebuild `libs/netrisk-plugin-sdk` and every in-tree plugin against it, and state whether plugins built for .NET 10 still load (S56)
   - note: the SDK is a submodule, so its own target framework and version bump follow the submodule-bump gate (`check-submodule-bump.sh`)
+  - note: partly done: the in-tree `FixtureVaultPlugin` now builds for `net11.0` and `libs/netrisk-plugin-sdk` stays `net10.0`, so a net11 host loads a plugin against a net10 contract assembly, proved by the plugin-loading tests in `ServerServices.Tests`; a plugin compiled for `net10.0` was NOT built and loaded, which is what the task asks for
 - [ ] T386 Run the whole suite on .NET 11 as the release gate: every unit project, `DAL.IntegrationTests` against MariaDB, `./build.sh LintUi`, and `./build.sh TestUi` once (S54), then compare startup and a representative report's time with the .NET 10 build (S56)
 
 ## Backlog
 
+  - note: partly done: all 11 unit projects pass on .NET 11 with no assertion edited (the one failure, `ContinuitySettingsTest`, was the decimal conversion in its setup); `LintUi` passes; `TestUi` ran once and 70 of 71 pass, the failure being T387; `DAL.IntegrationTests` pass (196 of 196); the start-up and report timing comparison against .NET 10 was NOT done
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
 - [ ] T217 Add Real-Time Collaboration: synchronized editing for IRPs and joint risk assessments
 - [ ] T218 Add AI-Assisted Risk Scoring (LLM-based vulnerability analysis and mitigation proposals)
@@ -1310,6 +1317,8 @@ installers at once, so it is scheduled as its own track and does not ride along 
 - [ ] T390 Register the bridge in the Codex `config.toml` the ChatGPT desktop app and Codex CLI share, as a new client row with a merge-only TOML writer (S55)
   - note: found by M65 (T365): ChatGPT's desktop app now runs local stdio servers from `~/.codex/config.toml`; until then the row is guided
 
+- [ ] T387 Register `AgentCoworkService` in the headless UI test container so `ViewSmokeTest.TestMainWindowShellLoadsAndNavigates` stops failing with "No service for type AgentCoworkService" (S54, S55)
+  - note: found by the M66 `TestUi` run; the test project was last changed before M61 added the service to `MainWindowViewModel`, so it is not a .NET 11 effect
 ## Specs
 
 | ID | Title | Path |

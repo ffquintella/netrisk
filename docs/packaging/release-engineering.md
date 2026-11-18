@@ -435,7 +435,7 @@ Suggested mapping: tagged release → `stable`, release candidate → `candidate
 
 | Job | Runner | Must have |
 |---|---|---|
-| Windows installers | `windows-latest` | .NET 10 SDK, Windows SDK (signtool + makeappx), `dotnet tool install --global wix --version 5.0.2`, Docker not required |
+| Windows installers | `windows-latest` | .NET 11 SDK, Windows SDK (signtool + makeappx), `dotnet tool install --global wix --version 5.0.2`, Docker not required |
 | Windows signing (Trusted Signing) | same | `dotnet tool install --global sign` |
 | macOS bundle/DMG | `macos-14` or newer | Xcode command line tools (`codesign`, `notarytool`, `stapler`, `spctl`, `pkgbuild`, `productsign`, `ditto`), optionally `create-dmg` |
 | Linux Flatpak | `ubuntu-latest` | `flatpak`, `flatpak-builder`, the `org.freedesktop.Platform//24.08` + `Sdk//24.08` runtimes, `appstream` |

@@ -4,7 +4,7 @@ This directory contains the Nuke build automation scripts for the NetRisk projec
 
 ## Prerequisites
 
-- .NET SDK (currently targeting .NET 10.0)
+- .NET SDK (currently targeting .NET 11.0)
 - Docker (for creating Docker images)
 - InnoSetup (for Windows installers)
 - Platform-specific packaging tools, only for the target you are building:

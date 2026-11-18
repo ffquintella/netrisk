@@ -31,7 +31,7 @@
   </Properties>
 
   <Dependencies>
-    <!-- Windows 10 1809 (17763) is the floor for the bundled .NET 10 runtime. -->
+    <!-- Windows 10 1809 (17763) is the floor for the bundled .NET runtime; re-verify it against the .NET 11 supported-OS list on the Windows runner (S56). -->
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 

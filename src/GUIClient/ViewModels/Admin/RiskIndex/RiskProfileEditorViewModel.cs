@@ -54,9 +54,9 @@ public sealed class RiskParameterRowViewModel : ReactiveObject
     public bool IsBoolean => Spec.Kind == ProfileParameterKind.Boolean;
     public bool IsChoice => Spec.Kind == ProfileParameterKind.Choice;
     public bool IsList => Spec.Kind is ProfileParameterKind.TextList or ProfileParameterKind.IntegerList or ProfileParameterKind.CidrList;
-    public decimal Minimum => (decimal)Spec.Minimum;
-    public decimal Maximum => (decimal)Spec.Maximum;
-    public decimal Increment => (decimal)Spec.Increment;
+    public decimal Minimum => global::Tools.Math.DecimalConversion.FromDouble(Spec.Minimum);
+    public decimal Maximum => global::Tools.Math.DecimalConversion.FromDouble(Spec.Maximum);
+    public decimal Increment => global::Tools.Math.DecimalConversion.FromDouble(Spec.Increment);
     public string FormatString => Spec.Kind == ProfileParameterKind.Integer ? "0" : "0.00";
     public IReadOnlyList<string> Choices => Spec.Choices;
     public bool IsEditable => _session.IsEditable && !Spec.Locked;
@@ -172,7 +172,7 @@ public sealed class RiskParameterRowViewModel : ReactiveObject
             {
                 case ProfileParameterKind.Decimal:
                 case ProfileParameterKind.Integer:
-                    Number = ProfileParameterRows.ReadNumber(parameters, Spec.Path) is { } n ? (decimal)n : null;
+                    Number = ProfileParameterRows.ReadNumber(parameters, Spec.Path) is { } n ? global::Tools.Math.DecimalConversion.FromDouble(n) : null;
                     break;
                 case ProfileParameterKind.Boolean:
                     Flag = ProfileParameterRows.ReadBoolean(parameters, Spec.Path);

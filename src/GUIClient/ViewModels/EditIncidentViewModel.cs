@@ -260,7 +260,7 @@ public class EditIncidentViewModel
             {
                 Incident.Duration = new TimeSpan(1,0,0);
             }
-            return Convert.ToDecimal(Incident.Duration.Value.TotalHours);
+            return global::Tools.Math.DecimalConversion.FromDouble(Incident.Duration.Value.TotalHours);
         }
         set => Incident.Duration = TimeSpan.FromHours(Convert.ToDouble(value));
     }
@@ -999,7 +999,7 @@ public class EditIncidentViewModel
             this.RaisePropertyChanged(nameof(SelectedSeverity));
             
             ReportDate = new DateTimeOffset(Incident.ReportDate);
-            Duration = Convert.ToDecimal(Incident.Duration!.Value.TotalHours);
+            Duration = global::Tools.Math.DecimalConversion.FromDouble(Incident.Duration!.Value.TotalHours);
         }
 
     }

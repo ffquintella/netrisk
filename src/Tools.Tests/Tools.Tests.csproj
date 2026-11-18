@@ -4,7 +4,6 @@
     <IsPackable>false</IsPackable>
     <!-- xunit v3 test projects are self-executing and must be built as executables. -->
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>13</LangVersion>
   </PropertyGroup>

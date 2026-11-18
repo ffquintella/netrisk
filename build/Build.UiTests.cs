@@ -44,7 +44,7 @@ partial class Build
         .DependsOn(CompileUiTests)
         .Executes(() =>
         {
-            var assembly = SourceDirectory / "GUIClient.UiTests" / "bin" / Configuration.ToString() / "net10.0" /
+            var assembly = SourceDirectory / "GUIClient.UiTests" / "bin" / Configuration.ToString() / ("net" + System.Environment.Version.Major + ".0") /
                            "GUIClient.UiTests.dll";
             Assert.FileExists(assembly);
 

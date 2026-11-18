@@ -4,7 +4,6 @@
     <IsPackable>false</IsPackable>
     <!-- xunit v3 test projects are self-executing and must be built as executables. -->
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
     <!-- `annotations`, not `enable`: the sources here already write `string?` deliberately, which is
          what CS8632 was complaining about, and turning on the annotation context is exactly what they
          assumed. Full `enable` additionally turns on flow analysis, which reports 166 findings across

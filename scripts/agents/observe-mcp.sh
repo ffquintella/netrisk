@@ -8,5 +8,5 @@ out="${1:-$(mktemp -d)/observed-run.md}"
 dotnet build src/McpBridge/McpBridge.csproj -nologo -v q
 dotnet build src/GUIClient.Tests/GUIClient.Tests.csproj -nologo -v q
 NETRISK_OBSERVE_MCP=1 NETRISK_OBSERVE_OUT="$out" \
-  src/GUIClient.Tests/bin/Debug/net10.0/GUIClient.Tests -class "GUIClient.Tests.Agents.AgentObservedRunTest"
+  src/GUIClient.Tests/bin/Debug/net11.0/GUIClient.Tests -class "GUIClient.Tests.Agents.AgentObservedRunTest"
 echo "Transcript: $out"

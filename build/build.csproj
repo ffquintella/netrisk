@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169;CA1050;CA1822;CA2211;IDE1006</NoWarn>
     <NukeRootDirectory>..</NukeRootDirectory>
@@ -10,6 +10,10 @@
     <NukeTelemetryVersion>1</NukeTelemetryVersion>
     <IsPackable>false</IsPackable>
     <LangVersion>14</LangVersion>
+    <!-- .NET 11's `dotnet run` starts the apphost, so Nuke 10.1.0 sees an invoked location without the .dll and
+         refuses to start ("assemblyLocation == invokedLocation"). Without an apphost `dotnet run` goes through
+         the dll as before, which keeps the build.sh/build.ps1 bootstrappers unchanged (S56). -->
+    <UseAppHost>false</UseAppHost>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,12 +28,10 @@
     <PackageReference Include="Glob" Version="1.1.9" />
     <PackageReference Include="InnoSetup.ScriptBuilder" Version="6.3.0" />
     <!-- Explicit package references to fix security vulnerabilities (CVE-2025-55247) -->
-    <!-- MSBuild packages pinned to 18.9.6, the newest release that ships net10.0 assets. From 18.10
-         on, the line targets .NET 11 (net11.0 + net472 only): on this net10.0 project it restores the
-         .NETFramework asset (NU1701) and its buildTransitive targets warn "doesn't support net10.0".
-         Move these only to a release that still ships net10.0, or together with a net11.0 retarget.
+    <!-- MSBuild packages: from 18.10 on the line targets .NET 11 (net11.0 + net472 only), which is why
+         this project moved to net11.0 together with them (S56). Keep the three on one version.
          Runtime assets are excluded: the MSBuild Nuke loads is the SDK's, via Microsoft.Build.Locator. -->
-    <PackageReference Include="Microsoft.Build" Version="18.9.6" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="18.12.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.12.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.12.2" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />

@@ -30,6 +30,8 @@ follow [SemVer](http://semver.org/).
 
 ### Changed
 
+- Move every project, the build and the installer templates to .NET 11, with the framework named once in `src/Directory.Build.props` and EF Core, the MariaDB provider and `MySqlConnector` 3 on their .NET 11 releases (T380, T381, T382, T383, T384, S56)
+- Convert a double to a decimal at 15 significant digits through `Tools.Math.DecimalConversion` wherever a short decimal reaches a numeric box or a two-decimal check, because .NET 11's `(decimal)double` is exact and turned `0.01` into `0.0100000000000000002081668171` (T381, S56)
 - Match a finding's host by the connector's external id before its IP or name (T281, S39)
 - Count overdue management reviews by the review rule of the risk index: acceptance expiry and revocation bring the due date forward and only a qualified review restarts the cadence (T278, S39)
 - Keep a repository in the dedup key of findings that have no host, so two repositories no longer collapse into one finding (T282, S39)

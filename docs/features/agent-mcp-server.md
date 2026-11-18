@@ -550,7 +550,7 @@ Use a test database and test data only: Claude Code sends what it reads to Anthr
    confirmation appears (first time only), answer **No** and check the box returns to off; tick again, answer **Yes**,
    and check the status line shows `127.0.0.1:<port>` and that `<client data folder>/agents/mcp-discovery.json` exists
    with mode `0600`.
-3. Note the bridge path (`src/McpBridge/bin/Debug/net10.0/netrisk-mcp-bridge` in a dev build) and run
+3. Note the bridge path (`src/McpBridge/bin/Debug/net11.0/netrisk-mcp-bridge` in a dev build) and run
    `claude mcp add netrisk -e DOTNET_ROOT="$DOTNET_ROOT" -- <bridge path>`; `claude mcp list` must show `netrisk`
    connected. Record `claude --version`. Configure the profile-folder deny rules and the sandboxed Bash from the user
    guide ("Run the agent sandboxed") and check that asking Claude Code to list that folder fails; record the result.

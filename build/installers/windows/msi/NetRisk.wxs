@@ -46,7 +46,7 @@
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!--
-      The real floor is Windows 10 1809 (the .NET 10 runtime the app bundles goes no lower),
+      The real floor is Windows 10 1809 (the bundled .NET runtime goes no lower; re-verify against the .NET 11 supported-OS list on the Windows runner (S56)),
       but VersionNT cannot express it: Windows reports 603 to an MSI that is not manifested for
       a newer OS, so 603 is the highest value this check can meaningfully compare against.
       Treat it as a guard against genuinely ancient systems; the MSIX manifest, which can

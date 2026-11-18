@@ -542,7 +542,7 @@ public class IncidentResponsePlanTaskViewModel
         Name = IncidentResponsePlanTask.Name;
         Description = IncidentResponsePlanTask.Description;
         Notes = IncidentResponsePlanTask.Notes;
-        if(IncidentResponsePlanTask.EstimatedDuration != null) EstimatedDuration = (decimal)IncidentResponsePlanTask.EstimatedDuration!.Value.TotalMinutes;
+        if(IncidentResponsePlanTask.EstimatedDuration != null) EstimatedDuration = global::Tools.Math.DecimalConversion.FromDouble(IncidentResponsePlanTask.EstimatedDuration!.Value.TotalMinutes);
         Priority = IncidentResponsePlanTask.Priority;
         IsParallel = IncidentResponsePlanTask.IsParallel.HasValue && IncidentResponsePlanTask.IsParallel.Value;
         IsSequential = IncidentResponsePlanTask.IsSequential.HasValue && IncidentResponsePlanTask.IsSequential.Value;

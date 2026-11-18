@@ -237,8 +237,8 @@ public class AgentClientDetectionTest : IDisposable
     [Fact]
     public void TestTheBridgeIsLookedForBesideNetRiskAndInTheBuildTreeOnly()
     {
-        var app = Path.Combine(_machine.Root, "src", "GUIClient", "bin", "Debug", "net10.0");
-        var bridge = Path.Combine(_machine.Root, "src", "McpBridge", "bin", "Debug", "net10.0",
+        var app = Path.Combine(_machine.Root, "src", "GUIClient", "bin", "Debug", "net11.0");
+        var bridge = Path.Combine(_machine.Root, "src", "McpBridge", "bin", "Debug", "net11.0",
             AgentBridgeLocator.ExecutableName(FakeAgentMachine.Platform));
 
         var candidates = AgentBridgeLocator.Candidates(app, FakeAgentMachine.Platform);

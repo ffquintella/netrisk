@@ -5,7 +5,6 @@
     <!-- xunit v3 test projects are self-executing and must be built as executables. -->
     <OutputType>Exe</OutputType>
     <LangVersion>13</LangVersion>
-    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>

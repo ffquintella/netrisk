@@ -31,7 +31,7 @@ public class AgentObservedRunTest
             "Observation harness (T360): set NETRISK_OBSERVE_MCP=1, or run scripts/agents/observe-mcp.sh.");
 
         var root = RepoRoot();
-        var bridge = Path.Combine(root, "src", "McpBridge", "bin", "Debug", "net10.0",
+        var bridge = Path.Combine(root, "src", "McpBridge", "bin", "Debug", "net" + Environment.Version.Major + ".0",
             OperatingSystem.IsWindows() ? "netrisk-mcp-bridge.exe" : "netrisk-mcp-bridge");
         Assert.True(File.Exists(bridge), "Build the solution first: " + bridge + " is missing.");
         var script = Path.Combine(root, "scripts", "agents", "observe_mcp_client.py");

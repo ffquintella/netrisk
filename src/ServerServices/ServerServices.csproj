@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>13</LangVersion>
@@ -45,7 +44,6 @@
     <PackageReference Include="RazorLight" />
     <PackageReference Include="FluentEmail.Smtp" />
     <PackageReference Include="McMaster.NETCore.Plugins" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <!-- Track 4.3.1: OIDC discovery-document retrieval and JWKS-backed id_token validation. -->
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />

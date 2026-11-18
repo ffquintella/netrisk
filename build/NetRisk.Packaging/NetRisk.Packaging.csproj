@@ -8,7 +8,7 @@
     unit-testable without a Windows/Linux packaging toolchain.
   -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
