@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.48.1] - 2026-11-23
+
+### Changed
+
+- Update Avalonia to 12.2.0, RestSharp and its Newtonsoft serializer to 114.1.0 and Polly to 8.9.1 in `libs/reliable-rest-client-wrapper`; SkiaSharp stays on 3.119.4 and the UI test project on xunit.v3 3.2.2 because Avalonia 12.2.0 still requires them
+
 ## [2.48.0] - 2026-11-23
 
 ### Added
