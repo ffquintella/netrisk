@@ -35,7 +35,7 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="18.12.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.12.2" ExcludeAssets="runtime" />
     <PackageReference Include="Nuke.Common" Version="10.1.0" />
-    <PackageReference Include="Tools.InnoSetup" Version="7.1.0" />
+    <PackageReference Include="Tools.InnoSetup" Version="7.1.1" />
     <!-- Explicit overrides for vulnerable transitive packages.
          System.Security.Cryptography.Xml 9.0.0 (GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf,
          GHSA-8q5v-6pqq-x66h / CVE-2026-50525 — fixed in 10.0.10; GHSA-r955-8q5j-3h83,
