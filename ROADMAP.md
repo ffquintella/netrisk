@@ -1271,12 +1271,12 @@ installers at once, so it is scheduled as its own track and does not ride along 
   - note: the SDK is a submodule, so its own target framework and version bump follow the submodule-bump gate (`check-submodule-bump.sh`)
   - note: partly done: the in-tree `FixtureVaultPlugin` now builds for `net11.0` and `libs/netrisk-plugin-sdk` stays `net10.0`, so a net11 host loads a plugin against a net10 contract assembly, proved by the plugin-loading tests in `ServerServices.Tests`; a plugin compiled for `net10.0` was NOT built and loaded, which is what the task asks for
 - [ ] T386 Run the whole suite on .NET 11 as the release gate: every unit project, `DAL.IntegrationTests` against MariaDB, `./build.sh LintUi`, and `./build.sh TestUi` once (S54), then compare startup and a representative report's time with the .NET 10 build (S56)
+  - note: partly done: all 11 unit projects pass on .NET 11 with no assertion edited (the one failure, `ContinuitySettingsTest`, was the decimal conversion in its setup); `LintUi` passes; `TestUi` ran once and 70 of 71 pass, the failure being T387; `DAL.IntegrationTests` pass (196 of 196); the start-up and report timing comparison against .NET 10 was NOT done
 
 ## Backlog
 
 - [x] T391 Remove `umapx`, `OpenFaceONNX` and `Microsoft.ML.OnnxRuntime` from the API project, which does not use them
   - note: no API code references them (`FaceIDService` does biometric storage and delegates to plugins; only `GUIClient` uses `FaceONNX`); the API built with 0 errors without them; the FaceID plugin was NOT loaded at runtime to confirm; `umapx` stays a central version and a transitive dependency of `OpenFaceONNX` in `GUIClient`
-  - note: partly done: all 11 unit projects pass on .NET 11 with no assertion edited (the one failure, `ContinuitySettingsTest`, was the decimal conversion in its setup); `LintUi` passes; `TestUi` ran once and 70 of 71 pass, the failure being T387; `DAL.IntegrationTests` pass (196 of 196); the start-up and report timing comparison against .NET 10 was NOT done
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
 - [ ] T217 Add Real-Time Collaboration: synchronized editing for IRPs and joint risk assessments
 - [ ] T218 Add AI-Assisted Risk Scoring (LLM-based vulnerability analysis and mitigation proposals)
