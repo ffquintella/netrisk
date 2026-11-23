@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.48.2] - 2026-11-23
+
+### Fixed
+
+- Make the headless UI tests pass on Avalonia 12.2.0: the harness now recognises its reworded data-context error, and the shell smoke test registers the agent co-work service the status bar needs.
+
 ## [2.48.1] - 2026-11-23
 
 ### Changed
