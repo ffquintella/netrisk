@@ -31,16 +31,16 @@
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
-    <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="CsvHelper" Version="34.1.0" />
     <PackageVersion Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
     <PackageVersion Include="DeviceId" Version="6.12.0" />
     <PackageVersion Include="DnsClient" Version="1.8.0" />
     <PackageVersion Include="DynamicData" Version="9.5.0" />
     <PackageVersion Include="Fido2" Version="4.3.3" />
-    <!-- FlashCap* is source-mapped to the uox-netrisk feed (see nuget.config), which carries
-         only 1.11.37. Upgrading needs 1.12.0 published there first; nuget.org is not consulted. -->
-    <PackageVersion Include="FlashCap" Version="1.11.37" />
-    <PackageVersion Include="FlashCap.Core" Version="1.100.0" />
+    <!-- FlashCap* comes from nuget.org (it was on the private uox-netrisk feed, which only carried
+         1.11.37 / FlashCap.Core 1.100.0). -->
+    <PackageVersion Include="FlashCap" Version="1.13.0" />
+    <PackageVersion Include="FlashCap.Core" Version="1.13.0" />
     <PackageVersion Include="FluentEmail.Razor" Version="3.0.2" />
     <PackageVersion Include="FluentEmail.Smtp" Version="3.0.2" />
     <PackageVersion Include="Gridify" Version="2.20.0" />

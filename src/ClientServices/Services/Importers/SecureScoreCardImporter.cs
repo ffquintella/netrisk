@@ -4,7 +4,6 @@ using ClientServices.Events;
 using ClientServices.Interfaces;
 using ClientServices.Interfaces.Importers;
 using CsvHelper;
-using CsvHelper.Configuration;
 using DAL.Entities;
 using Model;
 using Model.DTO;
@@ -20,6 +19,29 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
     private IHostsService HostsService { get; } = GetService<IHostsService>();
     
     
+    /// <summary>
+    /// Reads a SecureScoreCard export. Headers are matched ignoring case and any non-alphanumeric
+    /// character ("Issue Type Severity" -> IssueTypeSeverity); the separator is a comma, not detected.
+    /// </summary>
+    public static List<SSCVulnerability> ReadRecords(TextReader input)
+    {
+        var options = new CsvReaderOptions
+        {
+            // CsvHelper 34 detects the separator by default; SecureScoreCard exports are comma separated.
+            Separator = ',',
+            NormalizeHeaderName = header => Regex.Replace(header.Trim().ToLowerInvariant(), "[^a-z0-9]", String.Empty),
+        };
+
+        using var csv = CsvReader.Create(input, options, leaveOpen: true);
+        return csv.GetRecords<SSCVulnerability>().ToList();
+    }
+
+    public static List<SSCVulnerability> ReadRecords(string filePath)
+    {
+        using var reader = new StreamReader(filePath);
+        return ReadRecords(reader);
+    }
+
     public async Task<int> Import(string filePath, bool ignoreNegligible = true)
     {
         int importedVulnerabilities = 0;
@@ -30,23 +52,8 @@ public class SecureScoreCardImporter: BaseImporter, IVulnerabilityImporter
         await  Task.Run( async () =>
         {
             
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            var records = ReadRecords(filePath);
             {
-                PrepareHeaderForMatch = args =>
-                {
-                    var result = args.Header!.ToLower();
-                    result = result.Trim();
-                    result = Regex.Replace(result, "[^a-z0-9]", String.Empty);
-                    //result = Regex.Replace(result, @"[^\u0000-\u007F]+", string.Empty);
-                    return result;
-                },
-            };
-            
-            using (var reader = new StreamReader(filePath))
-            using (var csv = new CsvReader(reader, config))
-            {
-                //csv.Context.RegisterClassMap<FooMap>();
-                var records = csv.GetRecords<SSCVulnerability>().ToList();
                 var recordNumber = records.Count();
 
                 var tic = DivisionHelper.RoundedDivision(recordNumber, 100);

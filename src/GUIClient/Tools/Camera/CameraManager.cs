@@ -24,7 +24,7 @@ public class CameraManager : IDisposable
     private IFaceIDService FaceIDService { get; }
     private IStringLocalizer Localizer { get; }
 
-    private PixelFormats _pixelFormat = PixelFormats.BGRA32;
+    private PixelFormats _pixelFormat = PixelFormats.ARGB32;
 
     private List<CaptureDeviceDescriptor> DeviceList { get; set; } = new List<CaptureDeviceDescriptor>();
     private List<VideoCharacteristics> CharacteristicsList { get; set; } = new List<VideoCharacteristics>();
@@ -143,8 +143,8 @@ public class CameraManager : IDisposable
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 CharacteristicsList = new List<VideoCharacteristics>(
-                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
-                _pixelFormat = PixelFormats.BGRA32;
+                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32));
+                _pixelFormat = PixelFormats.ARGB32;
             }
 
             if (!CharacteristicsList.Any())
@@ -224,7 +224,7 @@ public class CameraManager : IDisposable
                 return SKImage.FromBitmap(bitmap);
             }
             
-            if (_pixelFormat == PixelFormats.BGRA32)
+            if (_pixelFormat == PixelFormats.ARGB32)
             {
                 byte[] bgraBytesCorrected = new byte[0];
 

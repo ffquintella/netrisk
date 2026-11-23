@@ -44,8 +44,8 @@ somebody's profile is not a build anyone should trust.
 
 ### Package source mapping — why it matters here
 
-`nuget.config` maps `netrisk*`, `Pomelo.EntityFrameworkCore.MySql*`, `OpenFaceONNX`, `umapx` and
-`FlashCap*` to the private Cloudsmith feed and everything else to nuget.org. That mapping is not
+`nuget.config` maps `netrisk*`, `Pomelo.EntityFrameworkCore.MySql*`, `OpenFaceONNX` and
+`umapx` to the private Cloudsmith feed and everything else to nuget.org. That mapping is not
 housekeeping: without it, a **dependency-confusion** attack is available to anyone who can publish
 a package named `netrisk.something` to nuget.org, because NuGet would happily resolve it from
 whichever feed answered first. With the mapping, a `netrisk*` package is only ever accepted from the

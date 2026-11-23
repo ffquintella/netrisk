@@ -143,7 +143,7 @@ public class AddFaceImageViewModel
     private int frameCount = 0;
     private FaceDetectionResult? _faceDetectionResult;
     private SKBitmap? _detectedFaceImage;
-    private PixelFormats _pixelFormat = PixelFormats.BGRA32;
+    private PixelFormats _pixelFormat = PixelFormats.ARGB32;
     #endregion
     
     #region BUTTONS
@@ -252,8 +252,8 @@ public class AddFaceImageViewModel
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 CharacteristicsList = new ObservableCollection<VideoCharacteristics>(
-                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.BGRA32));
-                _pixelFormat = PixelFormats.BGRA32;
+                    Device.Characteristics.Where(c => c.PixelFormat == PixelFormats.ARGB32));
+                _pixelFormat = PixelFormats.ARGB32;
             }
             
 
@@ -402,7 +402,7 @@ public class AddFaceImageViewModel
             return SKImage.FromBitmap(bitmap);
         }
 
-        if (_pixelFormat == PixelFormats.BGRA32)
+        if (_pixelFormat == PixelFormats.ARGB32)
         {
              byte[] bgraBytesCorrected = new byte[0];
             
