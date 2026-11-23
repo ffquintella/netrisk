@@ -1274,6 +1274,8 @@ installers at once, so it is scheduled as its own track and does not ride along 
 
 ## Backlog
 
+- [x] T391 Remove `umapx`, `OpenFaceONNX` and `Microsoft.ML.OnnxRuntime` from the API project, which does not use them
+  - note: no API code references them (`FaceIDService` does biometric storage and delegates to plugins; only `GUIClient` uses `FaceONNX`); the API built with 0 errors without them; the FaceID plugin was NOT loaded at runtime to confirm; `umapx` stays a central version and a transitive dependency of `OpenFaceONNX` in `GUIClient`
   - note: partly done: all 11 unit projects pass on .NET 11 with no assertion edited (the one failure, `ContinuitySettingsTest`, was the decimal conversion in its setup); `LintUi` passes; `TestUi` ran once and 70 of 71 pass, the failure being T387; `DAL.IntegrationTests` pass (196 of 196); the start-up and report timing comparison against .NET 10 was NOT done
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
 - [ ] T217 Add Real-Time Collaboration: synchronized editing for IRPs and joint risk assessments

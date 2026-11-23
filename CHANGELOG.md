@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.48.0] - 2026-11-23
+
 ### Added
 
 - Record an incident's severity and its UTC resolution time (`incidents.severity`, `incidents.resolved_at`), set by the server when the status enters or leaves a closed status, and keep incident edits in the per-field audit trail under `GET /Incidents/{id}/History` (T279, S39)
@@ -30,6 +32,8 @@ follow [SemVer](http://semver.org/).
 
 ### Changed
 
+- Update the NuGet dependencies: ReactiveUI 28 (whose `WhenAnyValue` now comes from `ReactiveUI.Binding`), Serilog 11, LiveCharts 2.2.0, CsvHelper 34 (the SecureScoreCard importer moves to its new reader API), Avalonia 12.1.6 and other patch releases, and take `FlashCap` 1.13 and `umapx` 8.0.2.1 from nuget.org instead of the private feed; SkiaSharp stays on 3.119.4, the version Avalonia 12 requires
+- Stop the API from referencing `umapx`, `OpenFaceONNX` and `Microsoft.ML.OnnxRuntime`, which no API code uses: face detection runs in the desktop client and the FaceID plugin, and the client keeps `OpenFaceONNX` (T391)
 - Move every project, the build and the installer templates to .NET 11, with the framework named once in `src/Directory.Build.props` and EF Core, the MariaDB provider and `MySqlConnector` 3 on their .NET 11 releases (T380, T381, T382, T383, T384, S56)
 - Convert a double to a decimal at 15 significant digits through `Tools.Math.DecimalConversion` wherever a short decimal reaches a numeric box or a two-decimal check, because .NET 11's `(decimal)double` is exact and turned `0.01` into `0.0100000000000000002081668171` (T381, S56)
 - Match a finding's host by the connector's external id before its IP or name (T281, S39)
