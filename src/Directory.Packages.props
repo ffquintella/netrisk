@@ -51,9 +51,9 @@
     <PackageVersion Include="InProcess.DevTools" Version="12.1.1" />
     <PackageVersion Include="JetBrains.Annotations" Version="2026.2.0" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
-    <PackageVersion Include="LiveChartsCore" Version="2.1.0-dev-798" />
-    <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
-    <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
+    <PackageVersion Include="LiveChartsCore" Version="2.2.0" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.2.0" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.2.0" />
     <PackageVersion Include="Mapster" Version="10.0.14" />
     <!-- The Avalonia-free enum package Material.Icons.Avalonia is built on, pinned to the same
          release. GUIClient.Tests references it directly to prove the host service icon map
@@ -98,9 +98,9 @@
     <PackageVersion Include="ReactiveUI.Avalonia" Version="12.1.9" />
     <PackageVersion Include="RestSharp" Version="114.1.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="11.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="11.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="11.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Serilog.Sinks.Spectre" Version="0.6.0" />
