@@ -122,7 +122,7 @@
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="11.0.0" />
     <PackageVersion Include="Testcontainers.MariaDb" Version="4.17.0" />
     <PackageVersion Include="Tmds.DBus.Protocol" Version="0.95.2" />
-    <PackageVersion Include="umapx" Version="8.0.0.4" />
+    <PackageVersion Include="umapx" Version="8.0.2.1" />
     <PackageVersion Include="UOX.Saml2.Authentication" Version="4.2.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
