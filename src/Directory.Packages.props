@@ -12,31 +12,31 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia" Version="12.1.6" />
     <PackageVersion Include="Avalonia.Controls.DataGrid" Version="12.1.2" />
     <PackageVersion Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.6" />
     <!-- Test-only (GUIClient.UiTests, S54). Must equal Avalonia above, never Semi's pin: a headless
          platform from another Avalonia release compiles and then fails at runtime. -->
-    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Skia" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
-    <PackageVersion Include="Avalonia.Themes.Simple" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Markup.Xaml.Loader" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageVersion Include="Avalonia.Themes.Simple" Version="12.1.6" />
     <!-- Semi.Avalonia tracks Avalonia release-for-release; 12.1.0.1 is the build for the 12.1
          line. It pins Avalonia 12.1.0 exactly, so it is a ceiling on how far ahead of a Semi
          release this repository can take Avalonia — see docs/ui-standard.md §1.1. -->
-    <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1" />
-    <PackageVersion Include="Semi.Avalonia.DataGrid" Version="12.1.0.1" />
+    <PackageVersion Include="Semi.Avalonia" Version="12.1.0.2" />
+    <PackageVersion Include="Semi.Avalonia.DataGrid" Version="12.1.0.2" />
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.1" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="Deadpikle.AvaloniaProgressRing" Version="0.11.0" />
-    <PackageVersion Include="DeviceId" Version="6.11.0" />
+    <PackageVersion Include="DeviceId" Version="6.12.0" />
     <PackageVersion Include="DnsClient" Version="1.8.0" />
     <PackageVersion Include="DynamicData" Version="9.5.0" />
-    <PackageVersion Include="Fido2" Version="4.3.0" />
+    <PackageVersion Include="Fido2" Version="4.3.3" />
     <!-- FlashCap* is source-mapped to the uox-netrisk feed (see nuget.config), which carries
          only 1.11.37. Upgrading needs 1.12.0 published there first; nuget.org is not consulted. -->
     <PackageVersion Include="FlashCap" Version="1.11.37" />
@@ -54,17 +54,17 @@
     <PackageVersion Include="LiveChartsCore" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.1.0-dev-798" />
     <PackageVersion Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
-    <PackageVersion Include="Mapster" Version="10.0.13" />
+    <PackageVersion Include="Mapster" Version="10.0.14" />
     <!-- The Avalonia-free enum package Material.Icons.Avalonia is built on, pinned to the same
          release. GUIClient.Tests references it directly to prove the host service icon map
          (GUIClient/Tools/Hosts/ServiceIconMap.cs) returns kinds that exist. -->
     <PackageVersion Include="Material.Icons" Version="3.0.2" />
     <PackageVersion Include="Material.Icons.Avalonia" Version="3.0.2" />
     <PackageVersion Include="McMaster.NETCore.Plugins" Version="2.0.0" />
-    <PackageVersion Include="MessageBox.Avalonia" Version="12.0.0" />
+    <PackageVersion Include="MessageBox.Avalonia" Version="12.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Localization" Version="2.3.13" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Localization" Version="2.3.14" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.12.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
@@ -80,7 +80,7 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="11.0.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
-    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime" Version="1.32.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="Microting.EntityFrameworkCore.MySql" Version="11.0.0" />
     <PackageVersion Include="MySqlBackup.NET.MySqlConnector" Version="2.7.1" />
@@ -93,10 +93,10 @@
     <PackageVersion Include="PdfPig" Version="0.1.16" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="RazorLight" Version="2.3.1" />
-    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
-    <PackageVersion Include="ReactiveUI" Version="26.0.1" />
-    <PackageVersion Include="ReactiveUI.Avalonia" Version="12.1.6" />
-    <PackageVersion Include="RestSharp" Version="114.0.0" />
+    <PackageVersion Include="QuestPDF" Version="2026.9.2" />
+    <PackageVersion Include="ReactiveUI" Version="28.0.0" />
+    <PackageVersion Include="ReactiveUI.Avalonia" Version="12.1.9" />
+    <PackageVersion Include="RestSharp" Version="114.1.0" />
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
@@ -111,8 +111,8 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
     <PackageVersion Include="Spectre.Console.Cli" Version="0.57.2" />
-    <PackageVersion Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.30.0" />
-    <PackageVersion Include="Splat" Version="21.0.0" />
+    <PackageVersion Include="Spectre.Console.Cli.Extensions.DependencyInjection" Version="0.34.0" />
+    <PackageVersion Include="Splat" Version="22.0.1" />
     <PackageVersion Include="System.Drawing.Common" Version="11.0.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <PackageVersion Include="System.Formats.Cbor" Version="11.0.0" />
@@ -120,11 +120,11 @@
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="11.0.0" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="11.0.0" />
-    <PackageVersion Include="Testcontainers.MariaDb" Version="4.16.0" />
-    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.95.1" />
+    <PackageVersion Include="Testcontainers.MariaDb" Version="4.17.0" />
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.95.2" />
     <PackageVersion Include="umapx" Version="8.0.0.4" />
     <PackageVersion Include="UOX.Saml2.Authentication" Version="4.2.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 </Project>

@@ -14,6 +14,7 @@ using GUIClient.Tools.Navigation;
 using GUIClient.Views;
 using Model.Entities;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Threading.Tasks;

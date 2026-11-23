@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using GUIClient.ViewModels.RiskOverview;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.Views.RiskOverview;
 

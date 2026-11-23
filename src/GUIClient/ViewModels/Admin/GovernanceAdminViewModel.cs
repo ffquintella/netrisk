@@ -11,6 +11,7 @@ using GUIClient.Tools.Track9;
 using Model.DTO;
 using Model.Governance;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Admin;

@@ -12,6 +12,7 @@ using GUIClient.ViewModels.Dialogs.Results;
 using Model.Exceptions;
 using Model.RiskIndex;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.RiskOverview;

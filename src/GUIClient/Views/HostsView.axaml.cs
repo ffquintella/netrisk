@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using GUIClient.ViewModels;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.Views;
 

@@ -16,6 +16,7 @@ using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using Serilog;
 

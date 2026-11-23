@@ -12,6 +12,7 @@ using Model.DTO;
 using Model.File;
 using Model.RiskIndex;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.ViewModels.Admin.RiskIndex;
 

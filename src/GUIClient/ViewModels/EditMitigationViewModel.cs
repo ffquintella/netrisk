@@ -26,6 +26,7 @@ using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 using Serilog;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GUIClient.Models;
 using GUIClient.Tools;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using System.Reactive.Linq;

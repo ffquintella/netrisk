@@ -15,6 +15,7 @@ using DAL.Entities;
 using GUIClient.Models;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 using System.Reactive;
 using Avalonia.Controls;

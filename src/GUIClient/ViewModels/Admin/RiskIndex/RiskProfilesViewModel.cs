@@ -10,6 +10,7 @@ using GUIClient.Tools.RiskIndex;
 using Model.DTO;
 using Model.RiskIndex;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.ViewModels.Admin.RiskIndex;
 

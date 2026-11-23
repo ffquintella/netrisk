@@ -12,6 +12,7 @@ using GUIClient.Tools;
 using GUIClient.Tools.RiskIndex;
 using Model.Integrations;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.ViewModels.Admin.RiskIndex;
 

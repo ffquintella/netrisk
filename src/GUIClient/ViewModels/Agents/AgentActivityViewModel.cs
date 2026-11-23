@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia.Threading;
 using GUIClient.Agents;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels.Agents;

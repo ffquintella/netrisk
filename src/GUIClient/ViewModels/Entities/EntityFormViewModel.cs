@@ -11,6 +11,7 @@ using GUIClient.Tools;
 using Model.DTO;
 using Model.Entities;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using Tools.String;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 

@@ -14,6 +14,7 @@ using GUIClient.ViewModels.Dialogs.Parameters;
 using GUIClient.ViewModels.Dialogs.Results;
 using Model.Reports;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using Serilog;
 
 namespace GUIClient.ViewModels.Reports;

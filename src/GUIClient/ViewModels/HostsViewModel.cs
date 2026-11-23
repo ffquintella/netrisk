@@ -21,6 +21,7 @@ using Model;
 using Model.DTO;
 using Model.Exceptions;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using RxVoid = ReactiveUI.Primitives.RxVoid;
 
 namespace GUIClient.ViewModels;

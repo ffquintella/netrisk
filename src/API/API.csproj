@@ -29,8 +29,6 @@
     <PackageReference Include="FluentEmail.Razor" />
     <PackageReference Include="FluentEmail.Smtp" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" />
-    <PackageReference Include="OpenFaceONNX" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Extensions.Logging" />
     <PackageReference Include="Serilog.Sinks.Console" />
@@ -40,7 +38,6 @@
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
-    <PackageReference Include="umapx" />
     <PackageReference Include="UOX.Saml2.Authentication" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>

@@ -2,6 +2,7 @@ using System;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
 using ReactiveUI;
+using ReactiveUI.Binding;
 
 namespace GUIClient.Validation;
 

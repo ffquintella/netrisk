@@ -4,6 +4,7 @@ using System.Windows.Input;
 using GUIClient.ViewModels.Dialogs;
 using GUIClient.ViewModels.Dialogs.Results;
 using ReactiveUI;
+using ReactiveUI.Binding;
 using System;
 using Tools.Security;
 
