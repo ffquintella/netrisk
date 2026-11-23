@@ -45,8 +45,21 @@ public static class UiDiagnostics
     private static readonly ConcurrentQueue<string> FrameworkErrors = new();
     private static readonly ConcurrentQueue<Exception> CommandErrors = new();
 
+    // Avalonia words this two ways: "Unable to cast object of type 'A' to type 'B'" up to 12.1 and
+    // "Could not convert DataContext of type 'A' to 'B'" from 12.2.0. A pattern that knows only one
+    // makes every transient error look permanent, so both are matched and the test below pins them.
     private static readonly Regex InvalidCast = new(
-        @"Unable to cast object of type '(?<from>[^']+)' to type '(?<to>[^']+)'", RegexOptions.Compiled);
+        @"(?:Unable to cast object of type|Could not convert DataContext of type) '(?<from>[^']+)' to (?:type )?'(?<to>[^']+)'",
+        RegexOptions.Compiled);
+
+    /// <summary>Reads the two view-model types out of a data-context cast error; false for any other message.</summary>
+    public static bool TryParseCastError(string message, out string from, out string to)
+    {
+        var match = InvalidCast.Match(message);
+        from = match.Success ? match.Groups["from"].Value : string.Empty;
+        to = match.Success ? match.Groups["to"].Value : string.Empty;
+        return match.Success;
+    }
 
     private const string NullLink = "Value is null.";
 

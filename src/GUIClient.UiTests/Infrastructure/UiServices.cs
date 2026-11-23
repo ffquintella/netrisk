@@ -71,6 +71,16 @@ public sealed class UiServices : IServiceProvider
             Double<IFaceIDService>(),
             Double<IMemoryCacheService>()));
 
+        // Track 11 (S55): MainWindow hosts AgentStatusBar, whose view-model resolves AgentCoworkService. It is
+        // built for real, over doubles and no tools: the server stays off, so nothing listens on a port.
+        services.AddSingleton(_ => new GUIClient.Agents.AgentCoworkService(
+            Double<IMutableConfigurationService>(),
+            Double<IEnvironmentService>(),
+            Double<IAuthenticationService>(),
+            Double<GUIClient.Agents.IAgentApprovalPrompter>(),
+            Array.Empty<GUIClient.Agents.IAgentTool>(),
+            Double<GUIClient.Agents.IAgentClassificationSource>()));
+
         _real = services.BuildServiceProvider();
     }
 
