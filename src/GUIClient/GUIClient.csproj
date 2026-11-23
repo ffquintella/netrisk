@@ -72,6 +72,9 @@
     <!-- The optional netrisk.ini administrator overlay that the installers write. -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" />
     <PackageReference Include="OpenFaceONNX" />
+    <!-- AddFaceImageViewModel uses SkiaDrawing.Bitmap directly. It used to arrive transitively
+         through UMapx 8.0.0.4 (private feed only); the nuget.org UMapx no longer carries it. -->
+    <PackageReference Include="SkiaDrawing" />
     <PackageReference Include="ReactiveUI" />
     <PackageReference Include="ReactiveUI.Avalonia" />
     <PackageReference Include="Splat" />
