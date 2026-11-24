@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.48.3] - 2026-11-24
+
+### Fixed
+
+- Show the desktop upgrade prompt only when the server is running a newer version than the client, instead of on any difference (a client ahead of the server no longer offers a downgrade).
+
 ## [2.48.2] - 2026-11-23
 
 ### Fixed

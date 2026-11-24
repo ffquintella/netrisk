@@ -34,6 +34,23 @@ public class SystemRestService: RestServiceBase, ISystemService
         return version;
     }
 
+    /// <summary>
+    /// True only when the server is running a newer version than the client. A client that is the
+    /// same as, or ahead of, the server has nothing to download (the installer the server offers
+    /// would be a downgrade). A version that cannot be parsed falls back to "different means upgrade".
+    /// </summary>
+    public static bool IsServerVersionNewer(string? serverVersion, string clientVersion)
+    {
+        if (!Version.TryParse(serverVersion?.Trim(), out var server) ||
+            !Version.TryParse(clientVersion?.Trim(), out var client))
+            return serverVersion != clientVersion;
+
+        // Version treats 2.48.2 and 2.48.2.0 as different (a missing part is -1); normalise to 4 parts.
+        static Version Normalize(Version v) => new(v.Major, v.Minor, Math.Max(v.Build, 0), Math.Max(v.Revision, 0));
+
+        return Normalize(server) > Normalize(client);
+    }
+
     public bool NeedsUpgrade()
     {
 #if DEBUG
@@ -53,7 +70,7 @@ public class SystemRestService: RestServiceBase, ISystemService
                 throw new Exception("Error getting client version");
             }
             
-            return response != GetClientAssemblyVersion();
+            return IsServerVersionNewer(response, GetClientAssemblyVersion());
             
         }
         catch (HttpRequestException ex)
@@ -83,7 +100,7 @@ public class SystemRestService: RestServiceBase, ISystemService
                 throw new Exception("Error getting client version");
             }
             
-            return response != GetClientAssemblyVersion();
+            return IsServerVersionNewer(response, GetClientAssemblyVersion());
             
         }
         catch (HttpRequestException ex)

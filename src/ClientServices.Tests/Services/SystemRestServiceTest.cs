@@ -180,6 +180,19 @@ public class SystemRestServiceTest : BaseServiceTest
         Assert.False(await _service.NeedsUpgradeAsync());
     }
 
+    [Theory]
+    [InlineData("2.49.0.0", "2.48.2.0", true)]   // server newer: upgrade
+    [InlineData("2.47.0.0", "2.48.2.0", false)]  // client ahead of the server: no downgrade prompt
+    [InlineData("2.48.2.0", "2.48.2.0", false)]
+    [InlineData("2.48.2", "2.48.2.0", false)]    // missing part is the same as 0
+    [InlineData("2.48.10.0", "2.48.9.0", true)]  // numeric, not lexical, comparison
+    [InlineData("garbage", "2.48.2.0", true)]    // unparsable: keep the old "different" behaviour
+    [InlineData("2.48.2.0", "2.48.2.0 ", false)]
+    public void TestIsServerVersionNewerOnlyWhenTheServerIsAhead(string server, string client, bool expected)
+    {
+        Assert.Equal(expected, SystemRestService.IsServerVersionNewer(server, client));
+    }
+
     // ---------- DownloadUpgradeScript ----------
 
     [Fact]
