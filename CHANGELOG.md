@@ -12,6 +12,8 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.49.0] - 2026-11-26
+
 ### Added
 
 - Install the FerroGate MIA client in the API and BackgroundJobs container images, start it from the entrypoint, and expose its `/etc/ferrogate` configuration (mount `mia.toml` or pass `FERROGATE_*` variables) and `/var/lib/ferrogate` identity as volumes (T392)
