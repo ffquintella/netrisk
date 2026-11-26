@@ -2,6 +2,9 @@
 
 set -eo pipefail
 
+# FerroGate MIA: the machine identity agent (see mia-container.sh)
+. /opt/scripts/mia-container.sh
+
 set_config(){
 	# If the config.php hasn't already been configured
 	if [ ! -f /configurations/netrisk-config-configured ]; then
@@ -71,6 +74,7 @@ start_netrisk_api(){
 _main() {
 	set_config
 	configure_netrisk
+	start_mia
 	start_netrisk_api
 }
 

@@ -970,6 +970,7 @@ partial class Build : NukeBuild
             //CopyFile(entrypointFile, BuildWorkDirectory / "entrypoint-api.sh");
 
             entrypointFile.Copy(BuildWorkDirectory / "entrypoint-api.sh", ExistsPolicy.FileOverwrite);
+            (RootDirectory / "build" / "Docker" / "mia-container.sh").Copy(BuildWorkDirectory / "mia-container.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)
@@ -1014,6 +1015,7 @@ partial class Build : NukeBuild
             (PuppetDirectory / "modules").Copy(BuildWorkDirectory / "puppet-modules");
             
             entrypointFile.Copy(BuildWorkDirectory / "entrypoint-backgroundjobs.sh", ExistsPolicy.FileOverwrite);
+            (RootDirectory / "build" / "Docker" / "mia-container.sh").Copy(BuildWorkDirectory / "mia-container.sh", ExistsPolicy.FileOverwrite);
             
             DockerTasks.DockerBuild(s => s
                 .SetFile(buildDockerFile)

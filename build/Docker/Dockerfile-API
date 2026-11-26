@@ -19,6 +19,30 @@ RUN rpm -q openvox-agent \
       echo "puppet-agent is installed; this image expects openvox-agent only" >&2; exit 1; \
     fi
 
+# FERROGATE MIA (Machine Identity Agent) -- the client NetRisk uses to consume data protected by
+# FerroGate. Installed from the project's GitHub release RPM, built for x86_64 Linux.
+#   MIA_VERSION     release to install (tag v<version>)
+#   MIA_RPM_URL     override the download location (mirror / air-gapped build)
+#   MIA_RPM_SHA256  when set, the download must match it or the build fails
+ARG MIA_VERSION=0.30.40
+ARG MIA_RPM_URL=
+ARG MIA_RPM_SHA256=
+RUN set -e; \
+    url="${MIA_RPM_URL:-https://github.com/ffquintella/FerroGate/releases/download/v${MIA_VERSION}/ferrogate-mia-${MIA_VERSION}-1.x86_64.rpm}"; \
+    if [ -z "${MIA_RPM_URL}" ] && [ "$(uname -m)" != "x86_64" ]; then \
+      echo "the FerroGate MIA release RPM is x86_64 only; pass --build-arg MIA_RPM_URL=<rpm for $(uname -m)>" >&2; exit 1; \
+    fi; \
+    curl -fsSL --retry 3 -o /tmp/ferrogate-mia.rpm "$url"; \
+    if [ -n "${MIA_RPM_SHA256}" ]; then echo "${MIA_RPM_SHA256}  /tmp/ferrogate-mia.rpm" | sha256sum -c -; fi; \
+    dnf install -y /tmp/ferrogate-mia.rpm; \
+    rpm -q ferrogate-mia; \
+    dnf clean all; rm -rf /tmp/ferrogate-mia.rpm /var/cache/dnf
+# The packaged configuration is kept aside: a bind mount over /etc/ferrogate hides it, and
+# mia-container.sh seeds any file the operator did not provide.
+RUN mkdir -p /usr/share/ferrogate-defaults && cp /etc/ferrogate/* /usr/share/ferrogate-defaults/
+COPY mia-container.sh /opt/scripts/mia-container.sh
+RUN sed -i 's/\r$//' /opt/scripts/mia-container.sh && chmod 755 /opt/scripts/mia-container.sh
+
 # Make necessary directories
 RUN mkdir -p /netrisk
 RUN mkdir -p /var/log/netrisk
@@ -55,6 +79,10 @@ COPY puppet-modules /etc/puppet/modules
 RUN /usr/bin/puppet apply --modulepath=/etc/puppet/modules /etc/puppet/manifests/install.pp ; \
     rm -rf /tmp/* ; rm -rf /var/cache/* ; rm -rf /var/tmp/* ; rm -rf /var/opt/staging
 
+# Let the application account reach the MIA helper socket: the daemon group-owns it by gid.
+RUN groupadd --system ferrogate-clients && usermod -aG ferrogate-clients netrisk
+ENV FERROGATE_HELPER_SOCKET_GID=ferrogate-clients
+
 EXPOSE 5443
 
 # Create the start script and set permissions
@@ -69,6 +97,11 @@ VOLUME /netrisk/Scripts
 
 # VAIRABLES
 ENV FACTER_SERVER_HTTPS_PORT=5443
+
+# MIA: configuration (mount mia.toml here, or use FERROGATE_* variables) and the host identity.
+# The identity must persist: CMIS pins it, and a regenerated key locks the host out.
+VOLUME /etc/ferrogate
+VOLUME /var/lib/ferrogate
 
 # Setting up entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]

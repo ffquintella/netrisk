@@ -1275,6 +1275,8 @@ installers at once, so it is scheduled as its own track and does not ride along 
 
 ## Backlog
 
+- [x] T392 Ship the FerroGate MIA client in the API and BackgroundJobs containers with a mountable or parameter-driven configuration
+  - note: the image build and a live attestation against a CMIS were NOT run here; MIA callers must be on the host's signed allowlist and a container is outside MIA's mount namespace, so path-constrained allowlist entries never match (docs/mia.md in FerroGate); ConsoleClient and WebSite images do not carry it
 - [x] T391 Remove `umapx`, `OpenFaceONNX` and `Microsoft.ML.OnnxRuntime` from the API project, which does not use them
   - note: no API code references them (`FaceIDService` does biometric storage and delegates to plugins; only `GUIClient` uses `FaceONNX`); the API built with 0 errors without them; the FaceID plugin was NOT loaded at runtime to confirm; `umapx` stays a central version and a transitive dependency of `OpenFaceONNX` in `GUIClient`
 - [ ] T216 Ship a Mobile Companion App: lightweight iOS/Android viewer for executive incident tracking and risk sign-off
