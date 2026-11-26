@@ -69,6 +69,26 @@ public class FaceIDControllerTest : BaseControllerTest
     }
 
     [Fact]
+    public async Task TestAdministratorCanReadAnotherUsersFaceEnrollmentState()
+    {
+        var (controller, faceId) = Build(services =>
+        {
+            var accessor = Substitute.For<IHttpContextAccessor>();
+            accessor.HttpContext.Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    [new Claim(ClaimTypes.Name, "testUser"), new Claim(ClaimTypes.Role, "Administrator")], "Basic"))
+            });
+            services.AddSingleton(accessor);
+        });
+
+        var result = await controller.CheckUserHasFaceSet(OtherUserId);
+
+        Assert.True(result.Value);
+        await faceId.Received(1).UserHasFaceSetAsync(OtherUserId);
+    }
+
+    [Fact]
     public async Task TestCallerCanReadTheirOwnFaceEnrollmentState()
     {
         var (controller, faceId) = Build();

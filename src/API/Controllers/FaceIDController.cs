@@ -72,7 +72,12 @@ public class FaceIDController: ApiBaseController
         try
         {
             var caller = await GetUserAsync();
-            if (caller.Value != userId)
+            // An administrator may read another user's enrollment state: the Users screen needs it, and
+            // the same caller can already read enabled/{userId} (RequireAdminOnly). Same claims as that policy.
+            var isAdmin = _httpContextAccessor.HttpContext?.User.HasClaim(c =>
+                c.Type == System.Security.Claims.ClaimTypes.Role &&
+                (c.Value == "Administrator" || c.Value == "Admin")) == true;
+            if (caller.Value != userId && !isAdmin)
             {
                 Logger.Warning("User {CallerId} refused reading FaceID enrollment for user {UserId}",
                     caller.Value, userId);
