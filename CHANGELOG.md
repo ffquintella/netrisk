@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.50.1] - 2026-11-27
+
+### Changed
+
+- Re-release 2.50.0 under a new version so it is the latest tag; contains no code changes.
+
 ## [2.50.0] - 2026-11-27
 
 ### Added
