@@ -84,7 +84,14 @@ public interface IUsersService
     /// </summary>
     /// <param name="user"></param>
     public void SaveUser(User user);
-    
+
+    /// <summary>
+    /// Saves the user as <see cref="SaveUser"/> does and sets their own permissions to <paramref name="permissionIds"/>
+    /// (unknown ids are ignored), in one save — one transaction. Only the permissions that change are written.
+    /// </summary>
+    /// <exception cref="Model.Exceptions.DataNotFoundException">The user does not exist.</exception>
+    public Task SaveUserWithPermissionsAsync(User user, List<int> permissionIds);
+
     /// <summary>
     /// Registers a login for a user
     /// </summary>

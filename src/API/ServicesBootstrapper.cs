@@ -93,6 +93,11 @@ public static class ServicesBootstrapper
         
         // T292: one entity-tree cache per process, so a re-parent saved through any context invalidates it for all.
         services.AddSingleton<ServerServices.Security.IEntityHierarchy, ServerServices.Security.EntityHierarchy>();
+        // One principal cache per process for the authentication handlers; DalService hands its Invalidate to every
+        // context, so any save that changes a user, role, permission or assignment drops it (Security:PrincipalCacheSeconds).
+        services.AddSingleton<ServerServices.Security.IPrincipalCache>(_ =>
+            ServerServices.Security.PrincipalCache.FromConfiguration(config));
+        services.AddSingleton<ServerServices.Security.IPrincipalResolver, ServerServices.Security.PrincipalResolver>();
         services.AddSingleton<IDalService, DalService>();
         
         //services.AddTransient<DALService>();

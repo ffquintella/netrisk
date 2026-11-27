@@ -70,13 +70,10 @@ public class RolesService(Serilog.ILogger logger, IDalService dalService)
         if(role == null) throw new DataNotFoundException("netrisk", "role",new Exception($"Role with id {roleId} not found"));
         
         var permissionsToAdd = await dbContext.Permissions.Where(p => permissions.Contains(p.Key)).ToListAsync();
-        
-        role.Permissions.Clear();
-        foreach (var permission in permissionsToAdd)
-        {
-            role.Permissions.Add(permission);
-        }
-        
+
+        // A diff, not Clear() and re-add: an unchanged permission writes nothing, so the grant record sees real changes only.
+        PermissionsService.ApplyPermissionDiff(role.Permissions, permissionsToAdd);
+
         await dbContext.SaveChangesAsync();
     }
 

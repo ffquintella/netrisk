@@ -72,6 +72,8 @@
     <Compile Include="..\GUIClient\Tools\EntityFieldValues.cs" LinkBase="Tools" />
     <!-- The Users screen reads a user's FaceID state only while the FaceID plugin is active. Pure. -->
     <Compile Include="..\GUIClient\Tools\FaceIdEnrollmentLoader.cs" LinkBase="Tools" />
+    <!-- The requests a save on the Users screen makes: one for an existing user and their permissions. Pure. -->
+    <Compile Include="..\GUIClient\Tools\UserSaveSequence.cs" LinkBase="Tools" />
     <!-- The status → icon table behind IntStatusToMaterialIconkindConverter, and which target types it answers
          (T325). Pure: MaterialIconKind is the Avalonia-free Material.Icons enum referenced above. -->
     <Compile Include="..\GUIClient\Tools\StatusIconMap.cs" LinkBase="Tools" />

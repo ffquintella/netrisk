@@ -299,6 +299,67 @@ public class UsersController: ApiBaseController
     }
 
     /// <summary>
+    /// Saves a user and the permissions granted to them directly, in one transaction: the desktop's save in one request
+    /// instead of two. The guards are those of <see cref="SaveUser"/> and <see cref="SaveUserPermissions"/> together — a
+    /// body naming another user is a 400; an administrator may neither grant the third-line marker to their own account
+    /// nor move it into a role that holds it (422, S50 R10); the login is lowercased; password and salt are kept.
+    /// </summary>
+    [HttpPut]
+    [Authorize(Policy = "RequireAdminOnly")]
+    [Route("{id}/with-permissions")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> SaveUserWithPermissions(int id, [FromBody] UserWithPermissionsDto request)
+    {
+        try
+        {
+            var user = request?.User;
+            if (user == null || request!.PermissionIds == null || id != user.Id)
+                return StatusCode(StatusCodes.Status400BadRequest);
+
+            var userEntity = UsersService.GetUserById(id);
+            if (userEntity == null) return NotFound($"The user with the id:{id} was not found");
+
+            // S50 R10, both ways onto the caller's own account: the marker itself, or a role that holds it. Checked
+            // before anything is written, so a refusal leaves the user and their grants as they were.
+            if (id == (await GetUserAsync()).Value)
+            {
+                var marker = _permissionsService.GetAllPermissions()
+                    .FirstOrDefault(p => p.Key == ThirdLineAssurance.PermissionKey);
+                if (marker is not null && request.PermissionIds.Contains(marker.Id))
+                    return RefuseSelfAppointment(id, "a grant of the third-line marker");
+
+                if (user.RoleId > 0 &&
+                    _rolesService.GetRolePermissions(user.RoleId)?.Contains(ThirdLineAssurance.PermissionKey) == true)
+                    return RefuseSelfAppointment(id, $"a move into role {user.RoleId}, which holds the third-line marker");
+            }
+
+            // make sure the username is lowercase
+            user.UserName = user.UserName.ToLower();
+
+            var finalUser = user.Adapt<User>();
+            finalUser.Password = userEntity.Password;
+            finalUser.Salt = userEntity.Salt;
+
+            await UsersService.SaveUserWithPermissionsAsync(finalUser, request.PermissionIds);
+            return Ok();
+        }
+        catch (DataNotFoundException ex)
+        {
+            Logger.Warning("The user with Id:{Id} was not found Message:{Message}", id, ex.Message);
+            return NotFound($"The user with the id:{ex.Identification} was not found");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Internal error while saving user {Id} with permissions: {Message}", id, ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, $"Internal error while saving user:{id}");
+        }
+    }
+
+    /// <summary>
     /// Creates a new user
     /// </summary>
     /// <param name="user">The user object</param>

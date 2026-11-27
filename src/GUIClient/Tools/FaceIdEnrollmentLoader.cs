@@ -24,4 +24,11 @@ public static class FaceIdEnrollmentLoader
         var faceSet = await faceIdService.UserHasFaceSetAsync(userId);
         return new FaceIdEnrollment(enabled, faceSet);
     }
+
+    /// <summary>
+    /// Writes the user's FaceID flag on save, under the same signal as <see cref="LoadAsync"/>: with the plugin off the
+    /// flag was never read, so there is nothing to write back, and the request was a round trip on every save.
+    /// </summary>
+    public static Task SaveEnabledAsync(IFaceIDService faceIdService, bool pluginActive, int userId, bool enabled) =>
+        pluginActive ? faceIdService.SetUserEnabledStatusAsync(userId, enabled) : Task.CompletedTask;
 }

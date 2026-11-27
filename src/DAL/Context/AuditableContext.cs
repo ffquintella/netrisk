@@ -35,6 +35,18 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
     /// </summary>
     public Action? EntityTreeChanged { get; set; }
 
+    /// <summary>
+    /// Raised by every save that touches what an authentication handler puts in a principal: a user (other than the
+    /// login timestamp alone), a role, a permission, a user's or a role's permission link, an entity assignment, or an
+    /// entity removed (the database drops its assignments with it). The DAL service points it at the host's principal
+    /// cache. Raised even when the save throws (dropping the cache is always safe), and again when the context is
+    /// disposed if the save ran in an explicit transaction, so a principal read before the commit is not kept.
+    /// <c>PrincipalCacheInvalidationTest</c> covers each kind; <c>PrincipalCacheIntegrationTests</c> the transaction.
+    /// </summary>
+    public Action? PrincipalInputsChanged { get; set; }
+
+    private bool _principalChangeInTransaction;
+
     public override int SaveChanges()
     {
         // Ahead of BeforeSaveChanges, whose try/catch logs and swallows anything thrown inside it
@@ -43,11 +55,19 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
         EnforceEntityScopeOnWrites();
         PermissionGrantRecorder.Record(this);
         var treeChanges = TouchesEntityTree();
+        var principalChanges = TouchesPrincipalInputs();
 
-        BeforeSaveChanges().ConfigureAwait(false).GetAwaiter().GetResult();
-        var result = base.SaveChanges();
-        if (treeChanges) EntityTreeChanged?.Invoke();
-        return result;
+        try
+        {
+            BeforeSaveChanges().ConfigureAwait(false).GetAwaiter().GetResult();
+            var result = base.SaveChanges();
+            if (treeChanges) EntityTreeChanged?.Invoke();
+            return result;
+        }
+        finally
+        {
+            if (principalChanges) RaisePrincipalInputsChanged();
+        }
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -59,12 +79,66 @@ public class AuditableContext(DbContextOptions<NRDbContext> options) : NRDbConte
         // sod_self_granted_approver reads it, and a grant that commits without its author would pass that check.
         PermissionGrantRecorder.Record(this);
         var treeChanges = TouchesEntityTree();
+        var principalChanges = TouchesPrincipalInputs();
 
-        await BeforeSaveChanges();
-        var result = await base.SaveChangesAsync(cancellationToken);
-        if (treeChanges) EntityTreeChanged?.Invoke();
-        return result;
+        try
+        {
+            await BeforeSaveChanges();
+            var result = await base.SaveChangesAsync(cancellationToken);
+            if (treeChanges) EntityTreeChanged?.Invoke();
+            return result;
+        }
+        finally
+        {
+            if (principalChanges) RaisePrincipalInputsChanged();
+        }
     }
+
+    private void RaisePrincipalInputsChanged()
+    {
+        if (Database.CurrentTransaction != null) _principalChangeInTransaction = true;
+        PrincipalInputsChanged?.Invoke();
+    }
+
+    public override void Dispose()
+    {
+        if (_principalChangeInTransaction)
+        {
+            _principalChangeInTransaction = false;
+            PrincipalInputsChanged?.Invoke();
+        }
+
+        base.Dispose();
+    }
+
+    public override ValueTask DisposeAsync()
+    {
+        if (_principalChangeInTransaction)
+        {
+            _principalChangeInTransaction = false;
+            PrincipalInputsChanged?.Invoke();
+        }
+
+        return base.DisposeAsync();
+    }
+
+    /// <summary>The login timestamp is written on every basic sign-in and feeds no claim, so it alone does not count.</summary>
+    private static readonly HashSet<string> PrincipalNeutralUserProperties = new(StringComparer.Ordinal)
+    {
+        nameof(User.LastLogin)
+    };
+
+    /// <summary>Whether this save changes anything a principal is built from (see <see cref="PrincipalInputsChanged"/>).</summary>
+    private bool TouchesPrincipalInputs() =>
+        ChangeTracker.Entries().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
+            e.Entity switch
+            {
+                User => e.State != EntityState.Modified ||
+                        e.Properties.Any(p => p.IsModified && !PrincipalNeutralUserProperties.Contains(p.Metadata.Name)),
+                Role or Permission or UserEntityRole => true,
+                Entity => e.State == EntityState.Deleted,
+                _ => e.Metadata.Name is PermissionGrantRecorder.RoleJoin or PermissionGrantRecorder.UserJoin
+            });
 
     /// <summary>Whether this save adds or removes an entity, or changes one's parent.</summary>
     private bool TouchesEntityTree() =>

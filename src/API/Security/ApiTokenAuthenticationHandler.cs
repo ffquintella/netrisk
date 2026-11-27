@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Model.Findings;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
@@ -36,8 +37,7 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
 
     private readonly IApiTokensService _tokensService;
     private readonly IUsersService _usersService;
-    private readonly IRolesService _rolesService;
-    private readonly IDalService _dalService;
+    private readonly IPrincipalResolver _principals;
     private readonly ILogger _log;
 
     public ApiTokenAuthenticationHandler(
@@ -46,14 +46,12 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
         UrlEncoder encoder,
         IApiTokensService tokensService,
         IUsersService usersService,
-        IRolesService rolesService,
-        IDalService dalService,
+        IPrincipalResolver principals,
         ILogger serilogLogger) : base(options, logger, encoder)
     {
         _tokensService = tokensService;
         _usersService = usersService;
-        _rolesService = rolesService;
-        _dalService = dalService;
+        _principals = principals;
         _log = serilogLogger;
     }
 
@@ -129,16 +127,13 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
 
         // The token inherits the permissions of the user it acts as, so a token can never do more
         // than that person could. Its scopes then narrow that down further — the two are an AND,
-        // not an OR.
-        var permissions = await _usersService.GetUserPermissionsAsync(user.Value);
-        foreach (var permission in permissions.Where(p => !string.IsNullOrEmpty(p)))
+        // not an OR. Read for the live row above, through the principal cache.
+        var principal = await _principals.ResolveAsync(user);
+        foreach (var permission in principal.PermissionKeys.Where(p => !string.IsNullOrEmpty(p)))
             claims.Add(new Claim("Permission", permission));
 
-        if (user.RoleId != 0)
-        {
-            var role = await _rolesService.GetRoleAsync(user.RoleId);
-            if (role != null) claims.Add(new Claim(ClaimTypes.Role, role.Name));
-        }
+        if (user.RoleId != 0 && principal.RoleName != null)
+            claims.Add(new Claim(ClaimTypes.Role, principal.RoleName));
 
         // Admin is deliberately NOT granted through a token, even when the user it acts as is one.
         // A CI runner holding a credential that bypasses every permission check is the outcome
@@ -155,13 +150,7 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
         }
         else
         {
-            await using var db = _dalService.GetContext();
-            var entityRoles = await db.UserEntityRoles
-                .Where(uer => uer.UserId == user.Value && uer.RevokedAt == null)
-                .Select(uer => uer.EntityId)
-                .ToListAsync();
-
-            foreach (var entityId in entityRoles)
+            foreach (var entityId in principal.EntityIds)
                 claims.Add(new Claim("entity_id", entityId.ToString()));
 
             if (user.Admin) claims.Add(new Claim("scope", "global"));

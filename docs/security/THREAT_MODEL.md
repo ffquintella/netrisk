@@ -129,6 +129,7 @@ not assumed.
 | I | Read another user's attachment by naming it | `IFileAccessAuthorizer` resolves the file's parent and applies that record's permission rules on both read routes, and `nr_files.entity_id` is under the tenancy filter. The 256-bit unguessable name is retained as defence in depth **[NR-2026-017 — closed in Track 8]** |
 | I | Keep access after being disabled | Basic auth ignored the `enabled` flag **[NR-2026-007]** |
 | I | Keep access after a password change | JWTs issued before `last_password_change` are refused **[NR-2026-012]** |
+| E | Keep a revoked permission, role or entity assignment through the principal cache | Every save through the DAL that touches a user, role, permission, permission link or assignment drops the cache synchronously; the user row (enabled, lockout, existence, password change, role id) is read live on every request. Cross-process staleness is bounded by `Security:PrincipalCacheSeconds` — see TM-A6 |
 | **D**enial of service | Exhaust bcrypt capacity | Rate limiter on the credential endpoints |
 | **E**levation of privilege | Reach an unannotated endpoint | Fallback deny policy + inventory test **[NR-2026-009]** |
 
@@ -195,6 +196,7 @@ not assumed.
 | Password storage | bcrypt, work factor 15 | `UsersServiceInMemoryTest` |
 | Brute-force throttling | `LoginAttemptTracker` + `AuthRateLimiting` | `LoginAttemptTrackerTest` |
 | Session revocation | `last_password_change` vs token `iat` | `JwtAuthenticationHandler` |
+| Principal cache cannot outlive a change made through this process | `AuditableContext.PrincipalInputsChanged` → `PrincipalCache.Invalidate`, wired by `DalService.GetContext` for every context; the JWT, Basic and API-token handlers read the user row live and key the entry to its user id and live role id | `PrincipalCacheInvalidationTest` (each writer: users, roles, user and role permissions, the third-line marker, entity assignments, permission keys, SCIM; a login timestamp alone does not drop it), `AuthenticationHandlerPrincipalCacheTest` (claims identical to the pre-cache computation; disabled, deleted and revoked-token sessions refused while the cache holds the user; the API container wires the cache into the DAL), `PrincipalCacheTest` (time to live, key, bypass at 0, a load that races an invalidation is not kept) |
 | Credential encryption at rest | `SecretProtector` → AES-256-GCM | `SecretProtectorTest`, `AesGcm256Test` |
 | Token hashing | SHA-256 + `FixedTimeEquals` | `ApiTokensAndGateTest`, `ScimServiceInMemoryTest` |
 | XXE prevention | `DtdProcessing.Prohibit`, `XmlResolver = null` | `ImporterXxeTest` |
@@ -218,6 +220,7 @@ decision with a stated reason and a review date, not an oversight.
 | **TM-A3** | ~~Brute-force counters are per process and in memory~~ **Retired.** | Track 8 persisted the counter to `login_attempts`, keyed on `(identity, source)`, so a multi-instance deployment shares one budget. The write the acceptance was avoiding is fronted by the per-source rate limiter, which refuses before the write. | NR-2026-008b, closed |
 | **TM-A4** | A database administrator can read everything | Application-level encryption of the whole dataset would make the product unusable (no filtering, no sorting, no reporting). Credentials and secrets *are* encrypted; the register is not. | Permanent, documented in DATA_PROTECTION.md |
 | **TM-A5** | ~~No per-file access control on attachments~~ **Retired.** | Track 8 gave `nr_files` an `entity_id` under the tenancy filter and added `IFileAccessAuthorizer`, which resolves whichever parent FK is set and applies that parent's rules. Residual, stated: a file whose parent carries no entity keeps a NULL and stays visible rather than being assigned to a tenant by guesswork. | NR-2026-017, closed |
+| **TM-A6** | **Proposed, pending the owner's review.** A permission, role name or entity assignment changed by *another process* — a second API instance, the console client, hand-written SQL — can still be honoured by this one for up to `Security:PrincipalCacheSeconds` (default 30 s, capped at 300 s; `0` turns the cache off) | The authentication handlers made six to nine database round trips per request to rebuild the same principal. Changes made through this process drop the cache before the save returns (`PrincipalCacheInvalidationTest`). Not affected by the window, because read live on every request: disabling, locking or deleting a user, a password change, a move to another role, token revocation (`AuthenticationHandlerPrincipalCacheTest`). A deployment that cannot accept the window sets the key to `0`. Also open: a save run inside an explicit transaction drops the cache before its commit and again when its context is disposed; no server code does this today | 2027-02 |
 
 ---
 

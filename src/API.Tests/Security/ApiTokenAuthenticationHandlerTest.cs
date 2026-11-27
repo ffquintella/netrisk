@@ -47,12 +47,22 @@ public class ApiTokenAuthenticationHandlerTest
     private readonly IUsersService _usersService;
     private readonly IApiTokensService _tokensService = Substitute.For<IApiTokensService>();
 
+    /// <summary>The handler reads the owner's permissions from the store, through the principal cache.</summary>
+    private const int RiskManagementId = 1;
+
+    private readonly PrincipalCache _principalCache = new(TimeSpan.FromSeconds(30));
+
     public ApiTokenAuthenticationHandlerTest()
     {
         var permissions = Substitute.For<IPermissionsService>();
         permissions.GetUserPermissionsAsync(Arg.Any<User>()).Returns(new List<string> { "riskmanagement" });
 
         _usersService = new UsersService(_dal, NullLoggerFactory.Instance, Substitute.For<IRolesService>(), permissions);
+
+        using var db = _dal.GetContext();
+        db.Permissions.Add(new Permission
+            { Id = RiskManagementId, Key = "riskmanagement", Name = "Risks", Description = "Risks", Order = 1 });
+        db.SaveChanges();
 
         _tokensService.AuthenticateAsync(PresentedToken).Returns(new ApiToken
         {
@@ -64,6 +74,8 @@ public class ApiTokenAuthenticationHandlerTest
     private void Seed(params User[] users)
     {
         using var db = _dal.GetContext();
+        var riskManagement = db.Permissions.Single(p => p.Id == RiskManagementId);
+        foreach (var user in users) user.Permissions.Add(riskManagement);
         db.Users.AddRange(users);
         db.SaveChanges();
     }
@@ -80,7 +92,7 @@ public class ApiTokenAuthenticationHandlerTest
         options.Get(Arg.Any<string>()).Returns(new AuthenticationSchemeOptions());
 
         var handler = new ApiTokenAuthenticationHandler(options, NullLoggerFactory.Instance, UrlEncoder.Default,
-            _tokensService, _usersService, Substitute.For<IRolesService>(), _dal, Serilog.Core.Logger.None);
+            _tokensService, _usersService, new PrincipalResolver(_dal, _principalCache), Serilog.Core.Logger.None);
 
         var context = new DefaultHttpContext();
         context.Request.Headers.Authorization = "Bearer " + PresentedToken;
@@ -126,6 +138,28 @@ public class ApiTokenAuthenticationHandlerTest
         Assert.False(result.Succeeded);
         Assert.Equal("Invalid API token", result.Failure?.Message);
         await _tokensService.DidNotReceiveWithAnyArgs().TouchAsync(default, default);
+    }
+
+    /// <summary>
+    /// The owner's permissions come from the principal cache, the owner row never does: a token whose owner is disabled
+    /// after the first request is refused on the next one, with no invalidation reaching the cache.
+    /// </summary>
+    [Fact]
+    public async Task TestTokenOwnedByAUserDisabledAfterTheFirstRequestIsRejected()
+    {
+        Seed(NewUser(OwnerId, "analyst", "An Analyst"));
+        await AuthenticateAsync();
+
+        await using (var db = _dal.GetContext())
+        {
+            db.Users.Single(u => u.Value == OwnerId).Enabled = false;
+            await db.SaveChangesAsync();
+        }
+
+        Assert.True(_principalCache.TryGet(OwnerId, 0, out _));
+        var result = await AuthenticateResultAsync();
+        Assert.False(result.Succeeded);
+        Assert.Equal("Invalid API token", result.Failure?.Message);
     }
 
     /// <summary>The user <see cref="ApiBaseController.GetUserAsync"/> resolves for this principal — what controllers act as.</summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ClientServices.Events;
@@ -341,6 +342,79 @@ public class UsersRestServiceTest : BaseServiceTest
         backend.OnStatus(Method.Put, "/Users/7", HttpStatusCode.InternalServerError);
 
         Assert.Throws<RestComunicationException>(() => service.SaveUser(new UserDto { Id = 7, Name = "Ana" }));
+    }
+
+    // ---------------------------------------------------------------- SaveUserWithPermissionsAsync
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncRejectsAUserWithoutAnId()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.SaveUserWithPermissionsAsync(new UserDto { Id = 0, Name = "Ana" }, new List<Permission?>()));
+        Assert.Empty(_backend.Requests);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncPutsTheUserAndTheIdsInOneRequest()
+    {
+        _backend.OnPut("/Users/7/with-permissions", "");
+        var permissions = TwoPermissions();
+
+        await _service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana", Lang = null },
+            new List<Permission?> { permissions[0], null, permissions[1] });
+
+        Assert.Single(_backend.Requests);
+        Assert.Equal("PUT /Users/7/with-permissions", _backend.LastRequest.ToString());
+        using var body = System.Text.Json.JsonDocument.Parse(_backend.LastRequest.Body);
+        Assert.Equal(new[] { 1, 2 },
+            body.RootElement.GetProperty("permissionIds").EnumerateArray().Select(e => e.GetInt32()).ToArray());
+        Assert.Equal(7, body.RootElement.GetProperty("user").GetProperty("id").GetInt32());
+        Assert.Equal("en", body.RootElement.GetProperty("user").GetProperty("lang").GetString());
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncKeepsTheStatusOfAForbiddenSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Users/7/with-permissions", HttpStatusCode.Forbidden);
+
+        var ex = await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" }, new List<Permission?>()));
+
+        Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
+        Assert.Equal("/Users/7/with-permissions", ex.Url);
+        Assert.Equal("PUT", ex.Method);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncRaisesTheRuleOfARefusedSave()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnPut("/Users/7/with-permissions", SelfAppointmentRefusal(), HttpStatusCode.UnprocessableEntity);
+
+        var ex = await Assert.ThrowsAsync<RuleBrokenException>(() =>
+            service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" }, new List<Permission?>()));
+
+        Assert.Equal(Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, ex.RuleName);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncThrowsWhenTheServerAnswersNotFound()
+    {
+        _backend.OnStatus(Method.Put, "/Users/7/with-permissions", HttpStatusCode.NotFound);
+
+        await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
+            _service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" }, new List<Permission?>()));
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsAsyncWrapsAServerError()
+    {
+        var service = ProductionLikeService(out var backend);
+        backend.OnStatus(Method.Put, "/Users/7/with-permissions", HttpStatusCode.InternalServerError);
+
+        await Assert.ThrowsAsync<RestComunicationException>(() =>
+            service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" }, new List<Permission?>()));
     }
 
     // ---------------------------------------------------------------- GetUser

@@ -96,7 +96,14 @@ public interface IUsersService
     /// <param name="userId"></param>
     /// <param name="permissions"></param>
     public void SaveUserPermissions(int userId, List<Permission?> permissions);
-    
+
+    /// <summary>
+    /// Saves an existing user and the permissions granted to them directly in one request and one server transaction
+    /// (<c>PUT /Users/{id}/with-permissions</c>). A refusal raises what <see cref="SaveUser"/> raises: the 403 of the
+    /// third line keeps its status, the 422 of the self-appointment rule becomes a <c>RuleBrokenException</c>.
+    /// </summary>
+    public Task SaveUserWithPermissionsAsync(UserDto user, List<Permission?> permissions);
+
     /// <summary>
     /// Changes the password for a user
     /// </summary>

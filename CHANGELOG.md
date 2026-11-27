@@ -12,6 +12,17 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add `PUT /Users/{id}/with-permissions`, which saves a user and the permissions granted to them directly in one transaction, with the guards of `PUT /Users/{id}` and `PUT /Users/{id}/permissions` together.
+
+### Changed
+
+- Save a user, its FaceID state and its permissions off the UI thread, with a progress bar on the Users screen, so the window no longer freezes while saving.
+- Save an existing user and their permissions in one request from the Users screen, and send the FaceID request only while the FaceID plugin is active.
+- Build each API request's principal from one live read of the user plus a short-lived principal cache (`Security:PrincipalCacheSeconds`, default 30, 0 turns it off) that every write to users, roles, permissions or entity assignments drops at once.
+- Save user and role permissions as an explicit diff, so an unchanged grant writes nothing and the permission-grant record lists real changes only.
+
 ## [2.50.2] - 2026-11-27
 
 ### Fixed

@@ -54,11 +54,34 @@ public class PermissionsService(
 
         var up = await dbContext.Permissions.Where(p => permissions.Contains(p.Id)).ToListAsync();
 
-        user.Permissions.Clear();
-       
-        user.Permissions = up;
-        
+        // A diff, not Clear() and re-add: an unchanged permission writes nothing, so the grant record sees real changes only.
+        ApplyPermissionDiff(user.Permissions, up);
+
         await dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Makes <paramref name="current"/> — a loaded, tracked permission collection — hold exactly <paramref name="desired"/>
+    /// (tracked entities of the same context) by removing only what was dropped and adding only what is missing.
+    /// </summary>
+    /// <returns>Whether anything changed.</returns>
+    public static bool ApplyPermissionDiff(ICollection<Permission> current, IReadOnlyCollection<Permission> desired)
+    {
+        var desiredIds = desired.Select(p => p.Id).ToHashSet();
+        var currentIds = current.Select(p => p.Id).ToHashSet();
+
+        var dropped = current.Where(p => !desiredIds.Contains(p.Id)).ToList();
+        foreach (var permission in dropped) current.Remove(permission);
+
+        var added = 0;
+        foreach (var permission in desired)
+        {
+            if (!currentIds.Add(permission.Id)) continue;
+            current.Add(permission);
+            added++;
+        }
+
+        return dropped.Count > 0 || added > 0;
     }
     
     public List<string> GetUserPermissions(User user)
@@ -83,16 +106,12 @@ public class PermissionsService(
         if(dbuser == null) throw new DataNotFoundException("user", user.Value.ToString());
         
         var userPermissions = dbuser.Permissions.Select(p=>p.Key).ToList();
-        
+
         // Sequential on purpose: this is a handful of strings, so Parallel.ForEach gained nothing, and
         // adding to a List<T> from several threads drops entries (an authorization check then wrongly
         // denies) or throws. The set keeps the old "role first, then the user's extras, no duplicates"
-        // order without the quadratic Contains.
-        var seen = new HashSet<string>(permissions);
-        foreach (var up in userPermissions)
-            if (seen.Add(up)) permissions.Add(up);
-        
-        return permissions;
+        // order without the quadratic Contains. One rule, shared with the authentication handlers' snapshot.
+        return Security.PrincipalSnapshot.MergePermissions(permissions, userPermissions);
     }
 
     public List<Permission> GetAllPermissions()

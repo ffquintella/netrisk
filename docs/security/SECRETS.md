@@ -209,6 +209,8 @@ Before an installation is considered production-ready:
 - [ ] `Security:Headers:HstsMaxAgeSeconds` is non-zero once a real certificate is installed
 - [ ] `AllowedHosts` set to the actual host names rather than `*` (finding NR-2026-029)
 - [ ] `JWT:Timeout` left at 60 minutes, or shortened — not lengthened
+- [ ] `Security:PrincipalCacheSeconds` left at 30, shortened, or `0` on a multi-instance deployment that cannot accept
+      a revoked permission being honoured by another instance for that long (THREAT_MODEL TM-A6)
 - [ ] `<AppData>/NRServer/` is mode `0700`, owned by the service account
 - [ ] The upload staging directory exists and is owned by the service account, so the service does
       not fall back to a world-writable temporary directory (finding NR-2026-020)

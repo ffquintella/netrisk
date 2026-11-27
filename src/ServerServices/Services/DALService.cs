@@ -65,18 +65,25 @@ public class DalService : IDalService
     private readonly string _connectionString;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IEntityHierarchy _entityHierarchy;
+    private readonly IPrincipalCache? _principalCache;
     private bool _enableSQLLogging = false;
-    
+
     /// <param name="entityHierarchy">
     /// The host's shared tree cache (T292). Optional so a host or a test that composes the DAL by hand still gets
     /// hierarchical scope, over a cache of its own.
     /// </param>
+    /// <param name="principalCache">
+    /// The host's principal cache, which every save that changes a user, role, permission or assignment drops. Only the
+    /// API registers one; a host without it caches no principal, so has nothing to drop.
+    /// </param>
     public DalService(IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
-        IEntityHierarchy? entityHierarchy = null)
+        IEntityHierarchy? entityHierarchy = null,
+        IPrincipalCache? principalCache = null)
     {
         _httpContextAccessor = httpContextAccessor;
         _entityHierarchy = entityHierarchy ?? new EntityHierarchy();
+        _principalCache = principalCache;
         _connectionString = configuration["Database:ConnectionString"]!;
         
         if (configuration["Database:EnableSQLLogging"] != null)
@@ -186,6 +193,10 @@ public class DalService : IDalService
         // T292: a save that creates, deletes or re-parents an entity changes what every claim grants, so the
         // cached tree goes with it — whoever saved, scoped or not.
         dbContext.EntityTreeChanged = _entityHierarchy.Invalidate;
+
+        // Whoever saved, through whichever service: a changed user, role, permission or assignment must not be answered
+        // from the authentication handlers' cache on the next request (PrincipalCacheInvalidationTest).
+        if (_principalCache != null) dbContext.PrincipalInputsChanged = _principalCache.Invalidate;
 
         // Track 8 milestone 8.4.1 — who the field-level trail attributes this save to. A context
         // opened without an HTTP principal is a job, the console or a migration, and says so rather

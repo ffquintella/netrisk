@@ -19,8 +19,10 @@ public sealed class PrincipalDalService : DalService
 {
     private readonly string _databaseName;
 
-    public PrincipalDalService(string databaseName, FixedHttpContextAccessor accessor)
-        : base(Configuration(), accessor)
+    /// <param name="principalCache">The cache every save is wired to drop, as in the API host.</param>
+    public PrincipalDalService(string databaseName, FixedHttpContextAccessor accessor,
+        ServerServices.Security.IPrincipalCache? principalCache = null)
+        : base(Configuration(), accessor, null, principalCache)
     {
         _databaseName = databaseName;
         Accessor = accessor;

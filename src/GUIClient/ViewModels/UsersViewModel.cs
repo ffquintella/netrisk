@@ -949,6 +949,9 @@ public class UsersViewModel: ViewModelBase
     
     private async Task ExecuteSaveAsync(Window baseWindow)
     {
+        // A second click while the first save is still in flight would create the user twice.
+        if (IsBusy) return;
+
         // IX-4: the rules are enforced here, not just reflected in the button state.
         // Without this, SelectedRole!/SelectedAuthenticationMethod! below can throw.
         if (!SaveEnabled)
@@ -1029,25 +1032,23 @@ public class UsersViewModel: ViewModelBase
         {
             // Inside the try: a refusal of the user itself (the 403 of the third line, the 422 of a move into a
             // third-line role) used to escape to the app-wide handler, which showed only "Error saving users".
-            if (User.Id == 0)
+            // The REST calls run on the thread pool so the window keeps painting, with IsBusy driving the progress bar.
+            // An existing user and their permissions go in one request (UserSaveSequence); the FaceID flag only while
+            // the plugin is active. A refusal still surfaces here as the same exception.
+            var toSave = User;
+            var permissionsToSave = Track9ThirdLineMarker.Compose(
+                _permissionSelection.Source != null ? _permissionSelection.SelectedItems : new List<Permission?>(),
+                _thirdLineMarker, UserGrantsThirdLine);
+            var enableFaceId = SelectedUserHasFaceId;
+            var faceIdActive = FaceIDAvailable;
+
+            await WithBusyAsync(async () =>
             {
-                User = _usersService.CreateUser(User);
-            }
-            else
-            {
-                _usersService.SaveUser(User);
-            }
+                var saved = await Task.Run(() => UserSaveSequence.RunAsync(_usersService, FaceIDService, faceIdActive,
+                    toSave, permissionsToSave, enableFaceId));
+                User = saved;
+            });
 
-            await FaceIDService.SetUserEnabledStatusAsync(User.Id, SelectedUserHasFaceId);
-
-            if(_permissionSelection.Source != null )
-                _usersService.SaveUserPermissions(User.Id,
-                    Track9ThirdLineMarker.Compose(_permissionSelection.SelectedItems, _thirdLineMarker, UserGrantsThirdLine));
-            else
-                _usersService.SaveUserPermissions(User.Id,
-                    Track9ThirdLineMarker.Compose(new List<Permission?>(), _thirdLineMarker, UserGrantsThirdLine));
-
-        
             // A freshly created user is not in the list yet: swap the placeholder for its real listing.
             if (Users != null && Users.All(u => u.Id != User.Id))
             {

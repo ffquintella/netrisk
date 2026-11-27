@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using API.Controllers;
@@ -453,6 +454,154 @@ public class UsersControllerTest : BaseControllerTest
 
         Assert.IsType<OkResult>(result);
         _usersService.Received(1).SaveUser(Arg.Is<User>(u => u.RoleId == 7));
+    }
+
+    #endregion
+
+    #region SaveUserWithPermissions
+
+    private static readonly byte[] StoredPassword = "secret"u8.ToArray();
+
+    private static UserWithPermissionsDto WithPermissions(int id, int roleId = 0, params int[] permissionIds) => new()
+    {
+        User = new UserDto { Id = id, UserName = "OTHER", Name = "Other", Email = "other@teste.com", Lang = "en", RoleId = roleId },
+        PermissionIds = permissionIds.ToList()
+    };
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsSavesBothInOneCall()
+    {
+        _usersService.GetUserById(2).Returns(MakeUser(2, "other", false));
+
+        var request = WithPermissions(2, 0, 1, 2);
+
+        var result = await _controller.SaveUserWithPermissions(2, request);
+
+        Assert.IsType<OkResult>(result);
+        // The login is lowercased on the way in; the stored password and salt replace whatever the body carried.
+        Assert.Equal("other", request.User.UserName);
+        await _usersService.Received(1).SaveUserWithPermissionsAsync(
+            Arg.Is<User>(u => u.Name == "Other" && u.Salt == "salt" && u.Password.SequenceEqual(StoredPassword)),
+            Arg.Is<List<int>>(ids => ids.SequenceEqual(new[] { 1, 2 })));
+        _usersService.DidNotReceive().SaveUser(Arg.Any<User>());
+        await _permissionsService.DidNotReceive().SaveUserPermissionsByIdAsync(Arg.Any<int>(), Arg.Any<List<int>>());
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsWithMismatchedIdIsBadRequest()
+    {
+        var result = await _controller.SaveUserWithPermissions(2, WithPermissions(3));
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, status.StatusCode);
+        await _usersService.DidNotReceiveWithAnyArgs().SaveUserWithPermissionsAsync(default!, default!);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsWithoutAUserIsBadRequest()
+    {
+        var result = await _controller.SaveUserWithPermissions(2, new UserWithPermissionsDto { User = null!, PermissionIds = [1] });
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, status.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsWithoutPermissionIdsIsBadRequest()
+    {
+        var request = WithPermissions(2);
+        request.PermissionIds = null!;
+
+        var result = await _controller.SaveUserWithPermissions(2, request);
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, status.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsForAnUnknownUserIsNotFound()
+    {
+        var result = await _controller.SaveUserWithPermissions(60, WithPermissions(60));
+
+        Assert.IsType<NotFoundObjectResult>(result);
+        await _usersService.DidNotReceiveWithAnyArgs().SaveUserWithPermissionsAsync(default!, default!);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsNotFoundFromTheServiceIsNotFound()
+    {
+        _usersService.GetUserById(4).Returns(MakeUser(4, "other", false));
+        _usersService.SaveUserWithPermissionsAsync(Arg.Any<User>(), Arg.Any<List<int>>())
+            .Returns(_ => throw new DataNotFoundException("users", "4"));
+
+        var result = await _controller.SaveUserWithPermissions(4, WithPermissions(4));
+
+        Assert.IsType<NotFoundObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsUnexpectedErrorIsInternalError()
+    {
+        _usersService.GetUserById(4).Returns(MakeUser(4, "other", false));
+        _usersService.SaveUserWithPermissionsAsync(Arg.Any<User>(), Arg.Any<List<int>>())
+            .Returns(_ => throw new Exception("boom"));
+
+        var result = await _controller.SaveUserWithPermissions(4, WithPermissions(4));
+
+        var obj = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, obj.StatusCode);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsRefusesToGrantTheMarkerToTheCallersOwnAccount()
+    {
+        SeedPermissionsWithTheMarker();
+        _usersService.GetUserById(1).Returns(MakeUser(1, "testUser", true));
+
+        var result = await _controller.SaveUserWithPermissions(1, WithPermissions(1, 0, 1, MarkerId));
+
+        Assert.Equal(ThirdLineAssurance.SelfAppointmentRule, RuleOf(result));
+        await _usersService.DidNotReceiveWithAnyArgs().SaveUserWithPermissionsAsync(default!, default!);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsRefusesToMoveTheCallerIntoARoleThatHoldsTheMarker()
+    {
+        SeedPermissionsWithTheMarker();
+        _usersService.GetUserById(1).Returns(MakeUser(1, "testUser", true));
+        _rolesService.GetRolePermissions(7).Returns(new List<string> { "riskmanagement", ThirdLineAssurance.PermissionKey });
+
+        var result = await _controller.SaveUserWithPermissions(1, WithPermissions(1, 7, 1));
+
+        Assert.Equal(ThirdLineAssurance.SelfAppointmentRule, RuleOf(result));
+        await _usersService.DidNotReceiveWithAnyArgs().SaveUserWithPermissionsAsync(default!, default!);
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsSavesTheCallerWithoutTheMarker()
+    {
+        SeedPermissionsWithTheMarker();
+        _usersService.GetUserById(1).Returns(MakeUser(1, "testUser", true));
+        _rolesService.GetRolePermissions(3).Returns(new List<string> { "riskmanagement" });
+
+        var result = await _controller.SaveUserWithPermissions(1, WithPermissions(1, 3, 1));
+
+        Assert.IsType<OkResult>(result);
+        await _usersService.Received(1).SaveUserWithPermissionsAsync(Arg.Is<User>(u => u.RoleId == 3), Arg.Any<List<int>>());
+    }
+
+    [Fact]
+    public async Task TestSaveUserWithPermissionsStillAppointsAnotherUserToTheThirdLine()
+    {
+        SeedPermissionsWithTheMarker();
+        _usersService.GetUserById(2).Returns(MakeUser(2, "auditor", false));
+        _rolesService.GetRolePermissions(7).Returns(new List<string> { ThirdLineAssurance.PermissionKey });
+
+        var result = await _controller.SaveUserWithPermissions(2, WithPermissions(2, 7, MarkerId));
+
+        Assert.IsType<OkResult>(result);
+        await _usersService.Received(1).SaveUserWithPermissionsAsync(Arg.Is<User>(u => u.RoleId == 7),
+            Arg.Is<List<int>>(ids => ids.Contains(MarkerId)));
     }
 
     #endregion

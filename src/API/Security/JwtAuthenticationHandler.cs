@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
@@ -22,11 +23,9 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
     private IEnvironmentService _environmentService;
     private readonly ILogger _log;
     private readonly IUsersService _usersService;
-    private readonly IRolesService _rolesService;
     private readonly IClientRegistrationService _clientRegistrationService;
-    private readonly IPluginsService _pluginsService;
     private readonly IFaceIDService _faceIdService;
-    private readonly IDalService _dalService;
+    private readonly IPrincipalResolver _principals;
     private readonly ITokenRevocationService _revocation;
 
     public JwtAuthenticationHandler(
@@ -36,21 +35,17 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         IClientRegistrationService clientRegistrationService,
         IEnvironmentService environmentService,
         IUsersService usersService,
-        IRolesService rolesService,
-        IPluginsService pluginsService,
         IFaceIDService faceIdService,
-        IDalService dalService,
+        IPrincipalResolver principals,
         ITokenRevocationService revocation) : base(options, logger, encoder)
     {
         _revocation = revocation;
         _environmentService = environmentService;
         _usersService = usersService;
-        _rolesService = rolesService;
         _log = Log.Logger;
         _clientRegistrationService = clientRegistrationService;
-        _pluginsService = pluginsService;
         _faceIdService = faceIdService;
-        _dalService = dalService;
+        _principals = principals;
     }
     
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -80,12 +75,12 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                     }
                 }
                 
-                string? username;
                 var token = authHeader.Substring("Bearer ".Length).Trim();
-                
-                if (ValidateToken(token, out username))
+                var (valid, username, userObj) = await ValidateTokenAsync(token);
+
+                if (valid)
                 {
-                    
+
                     var client = await _clientRegistrationService.FindApprovedRegistrationAsync(clientId);
 
                     if (client == null) // We should not allow an unauthorized client to login
@@ -93,30 +88,29 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                         _log.Error("Unauthorized client {clientId}", clientId);
                         Response.StatusCode = 401;
                         Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                        return AuthenticateResult.Fail("Invalid Client");                    
+                        return AuthenticateResult.Fail("Invalid Client");
                     }
 
-                    if (username == null) throw new Exception("Invalid username");
-                    string usu = "";
-                    if (username!.Contains('@')) usu = username.Split('@')[0];
-                    else usu = username;
-                    
-                    var userObj = await _usersService.GetUserAsync(usu);
-                    
-                    var permissions = await _usersService.GetUserPermissionsAsync(userObj!.Value);
-                    
-                    // based on username to get more information from database 
+                    if (username == null || userObj == null) throw new Exception("Invalid username");
+
+                    // The user row is the one the token validation just read and checked (enabled, not locked out, no
+                    // password change since the token) — the same login match the second read used to repeat. Role
+                    // name, permissions and entity assignments come from the principal cache, one load on a miss.
+                    var principal = await _principals.ResolveAsync(userObj);
+
+                    // based on username to get more information from database
                     // in order to build local identity
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, username!)
                         // Add more claims if needed: Roles, ...
                     };
-                    
+
                     string? faceIdAuthHeader = null;
-            
-                    // Check for the faceId header only if the plugin is enabled
-                    if (await _faceIdService.IsFaceIDPluginEnabled() && Request.Headers.ContainsKey("FaceId"))
+
+                    // Check for the faceId header only if the plugin is enabled. The header first: the plugin check
+                    // reads settings, and a request without the header has no use for the answer.
+                    if (Request.Headers.ContainsKey("FaceId") && await _faceIdService.IsFaceIDPluginEnabled())
                     {
                         faceIdAuthHeader = Request.Headers["FaceId"].ToString();
                         if (!string.IsNullOrEmpty(faceIdAuthHeader))
@@ -139,39 +133,31 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
                     
                     if (userObj.RoleId == 0)
                     {
-                        claims.Add( new Claim(ClaimTypes.Role, "user"));    
+                        claims.Add( new Claim(ClaimTypes.Role, "user"));
                     }
                     else
                     {
-                        var role = await _rolesService.GetRoleAsync(userObj.RoleId);
-                        claims.Add( new Claim(ClaimTypes.Role, role!.Name));
+                        claims.Add( new Claim(ClaimTypes.Role, principal.RoleName!));
                     }
 
-                    foreach (var permission in permissions)
+                    foreach (var permission in principal.PermissionKeys)
                     {
                         if(permission != null)
                             claims.Add( new Claim("Permission", permission));
                     }
-                    
+
                     claims.Add(new Claim(ClaimTypes.Sid, userObj.Value.ToString()));
 
-                    // Load Scoped Multi-Entity / Multi-Tenant Roles
-                    using (var dbContext = _dalService.GetContext())
+                    // Scoped Multi-Entity / Multi-Tenant Roles
+                    foreach (var entityId in principal.EntityIds)
                     {
-                        var activeEntityRoles = await dbContext.UserEntityRoles
-                            .Where(uer => uer.UserId == userObj.Value && uer.RevokedAt == null)
-                            .ToListAsync();
+                        claims.Add(new System.Security.Claims.Claim("entity_id", entityId.ToString()));
+                    }
 
-                        foreach (var entityRole in activeEntityRoles)
-                        {
-                            claims.Add(new System.Security.Claims.Claim("entity_id", entityRole.EntityId.ToString()));
-                        }
-
-                        // Check if the user is a Global Administrator
-                        if (userObj.Admin)
-                        {
-                            claims.Add(new System.Security.Claims.Claim("scope", "global"));
-                        }
+                    // Check if the user is a Global Administrator
+                    if (userObj.Admin)
+                    {
+                        claims.Add(new System.Security.Claims.Claim("scope", "global"));
                     }
 
                     var identity = new ClaimsIdentity(claims, "Bearer");
@@ -241,13 +227,15 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         }
     }
     
-    private bool ValidateToken(string token, out string? username)
+    /// <summary>
+    /// Validates the token and reads its user — live, never from a cache: enabled, not locked out, and no password
+    /// change since the token was issued. The user row it returns is the one the claims are then built for.
+    /// </summary>
+    private async Task<(bool Valid, string? Username, DAL.Entities.User? User)> ValidateTokenAsync(string token)
     {
-        username = null;
-        
         if (IsTokenExpired(token))
         {
-            return false;
+            return (false, null, null);
         }
 
         // Security finding NR-2026-028. Checked before anything expensive: a revoked token must not
@@ -255,41 +243,41 @@ public class JwtAuthenticationHandler: AuthenticationHandler<JwtBearerOptions>
         if (IsRevoked(token))
         {
             _log.Information("Refused a session token that has been revoked");
-            return false;
+            return (false, null, null);
         }
 
         var simplePrinciple = GetPrincipalFromJwt(token);
-        if (simplePrinciple == null) return false;
-        
+        if (simplePrinciple == null) return (false, null, null);
+
         var identity = simplePrinciple.Identity as ClaimsIdentity;
 
         if (identity == null || !identity.IsAuthenticated)
-            return false;
+            return (false, null, null);
 
         var usernameClaim = identity.FindFirst(ClaimTypes.Name);
-        username = usernameClaim?.Value;
+        var username = usernameClaim?.Value;
 
         if (string.IsNullOrEmpty(username))
-            return false;
+            return (false, username, null);
 
         string usu;
         if (username.Contains('@'))
         {
             usu = username.Split('@')[0];
         } else usu = username;
-        
-        var user = _usersService.FindEnabledActiveUserAsync(usu).Result;
 
-        if (user == null) return false;
+        var user = await _usersService.FindEnabledActiveUserAsync(usu);
+
+        if (user == null) return (false, username, null);
 
         if (WasIssuedBeforeLastPasswordChange(token, user))
         {
             _log.Information(
                 "Refused a session token for {User} issued before their last password change", usu);
-            return false;
+            return (false, username, null);
         }
 
-        return true;
+        return (true, username, user);
     }
 
     /// <summary>

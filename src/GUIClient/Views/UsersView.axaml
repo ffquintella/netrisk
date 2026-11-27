@@ -18,6 +18,10 @@
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Foreground="CornflowerBlue" ZIndex="1000"/>
 
+        <!-- Busy indication for a save or a load: the window stays responsive while it runs. -->
+        <ProgressBar IsIndeterminate="True" Height="4" VerticalAlignment="Top" ZIndex="1000"
+                     IsVisible="{Binding IsBusy}"/>
+
         <TabControl>
             <!-- USERS TAB -->
             <TabItem Header="{Binding StrUsers}"  VerticalContentAlignment="Center" Margin="0 2">

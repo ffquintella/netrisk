@@ -205,6 +205,27 @@ public class UsersService(
 
     }
 
+    public async Task SaveUserWithPermissionsAsync(User user, List<int> permissionIds)
+    {
+        await using var dbContext = _dalService!.GetContext();
+
+        var dbUser = await dbContext.Users.FindAsync(user.Value);
+        if (dbUser == null) throw new DataNotFoundException("user", user.Value.ToString());
+
+        // Exactly what SaveUser does to the row, collections included: they are not loaded yet, so the empty ones the
+        // mapping writes change nothing.
+        user.Adapt(dbUser);
+
+        // Then the grants, loaded into the collection the mapping left and diffed in place: an unchanged permission writes
+        // nothing, so the grant record (PermissionGrantRecorder) sees real changes only.
+        await dbContext.Entry(dbUser).Collection(u => u.Permissions).LoadAsync();
+        var desired = await dbContext.Permissions.Where(p => permissionIds.Contains(p.Id)).ToListAsync();
+        PermissionsService.ApplyPermissionDiff(dbUser.Permissions, desired);
+
+        // One save, so one transaction: the user and its grants commit together or not at all.
+        await dbContext.SaveChangesAsync();
+    }
+
     public String GetUserName(int id)
     {
         var user = GetUserById(id);

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using ServerServices.Interfaces;
+using ServerServices.Security;
 using ServerServices.Services;
 using ILogger = Serilog.ILogger;
 
@@ -22,27 +23,28 @@ namespace API.Security;
 
 public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private NRDbContext? _dbContext = null;
+    private readonly IDalService _dalService;
     private IEnvironmentService _environmentService;
     private IUsersService _usersService;
-    private IRolesService _rolesService;
+    private readonly IPrincipalResolver _principals;
     private readonly ILoginAttemptTracker _loginAttempts;
     private ILogger _log;
-    
+
     public BasicAuthenticationHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options, 
-        ILoggerFactory logger, 
-        UrlEncoder encoder, 
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
         IEnvironmentService environmentService,
         IUsersService usersService,
-        IRolesService rolesService,
+        IPrincipalResolver principals,
         ILoginAttemptTracker loginAttempts,
         IDalService dalService) : base(options, logger, encoder)
     {
-        _dbContext = dalService.GetContext();
+        // A context per use, disposed with it. The handler used to open one here, per request, and never dispose it.
+        _dalService = dalService;
         _environmentService = environmentService;
         _usersService = usersService;
-        _rolesService = rolesService;
+        _principals = principals;
         _loginAttempts = loginAttempts;
         _log = Log.Logger;
     }
@@ -101,74 +103,72 @@ public class BasicAuthenticationHandler: AuthenticationHandler<AuthenticationSch
                         return AuthenticateResult.Fail("User is not enabled");
                     }
                     
-                    // Check the password
-                    var valid = _usersService.VerifyPassword(user.Value, password);
-                    
+                    // Check the password against the row just read, rather than reading it again by id.
+                    var valid = _usersService.VerifyPassword(user, password);
+
                     if (valid)
                     {
                         _loginAttempts.RegisterSuccess(login, remoteIp);
                         var clientId = Request.Headers["ClientId"].ToString();
-                        // Let´s check if we have the client registred... 
-                        var client = await _dbContext!.ClientRegistrations!
-                            .FirstOrDefaultAsync(cl => cl.ExternalId == clientId && cl.Status == "approved");
+                        // Let´s check if we have the client registred...
+                        DAL.Entities.ClientRegistration? client;
+                        await using (var dbContext = _dalService.GetContext())
+                        {
+                            client = await dbContext.ClientRegistrations!
+                                .FirstOrDefaultAsync(cl => cl.ExternalId == clientId && cl.Status == "approved");
+                        }
 
                         if (client == null) // We should not allow an unauthorized client to login
                         {
                             _log.Error("Unauthorized client {clientId}", clientId);
                             Response.StatusCode = 401;
                             Response.Headers.Append("WWW-Authenticate", "Basic realm=\"netrisk.app\"");
-                            return AuthenticateResult.Fail("Invalid Client");                    
+                            return AuthenticateResult.Fail("Invalid Client");
                         }
-                        
-                        var userPermissions = await _usersService.GetUserPermissionsAsync(user.Value);
-                        
+
+                        // Role name, permissions and entity assignments for the row above: from the principal cache,
+                        // one load on a miss, where this used to be five reads.
+                        var principal = await _principals.ResolveAsync(user);
+
                         var claims = new[] { new Claim(ClaimTypes.Name, login) };
-                        
+
                         if (user.Admin)
                         {
                             claims = claims.Concat(new[] {new Claim(ClaimTypes.Role, "Admin")}).ToArray();
                         }
-                        
+
                         if (user.RoleId == 0)
                         {
-                            claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, "user")}).ToArray();    
+                            claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, "user")}).ToArray();
                         }
                         else
                         {
-                            var role = await _rolesService.GetRoleAsync(user.RoleId);
-                            claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, role!.Name)}).ToArray(); 
+                            claims = claims.Concat(new[] { new Claim(ClaimTypes.Role, principal.RoleName!)}).ToArray();
                         }
-                        
-                        foreach (var permission in userPermissions)
+
+                        foreach (var permission in principal.PermissionKeys)
                         {
                             if(!string.IsNullOrEmpty(permission)) claims = claims.Concat(new[] {new Claim("Permission", permission)}).ToArray();
                         }
-                        
+
                         claims = claims.Concat(new[] {new Claim(ClaimTypes.Sid, user.Value.ToString())}).ToArray();
-                        
+
                         _log.Information("User {0} authenticated using basic from client {1}", user.Name, client.Name);
-                        
+
                         _= _usersService.RegisterLoginAsync(user.Value, Request.HttpContext.Connection.RemoteIpAddress!.ToString());
-                        
+
                         var finalClaims = claims.ToList();
-                        
-                        // Load Scoped Multi-Entity / Multi-Tenant Roles
-                        if (_dbContext != null)
+
+                        // Scoped Multi-Entity / Multi-Tenant Roles
+                        foreach (var entityId in principal.EntityIds)
                         {
-                            var activeEntityRoles = await _dbContext.UserEntityRoles
-                                .Where(uer => uer.UserId == user.Value && uer.RevokedAt == null)
-                                .ToListAsync();
+                            finalClaims.Add(new Claim("entity_id", entityId.ToString()));
+                        }
 
-                            foreach (var entityRole in activeEntityRoles)
-                            {
-                                finalClaims.Add(new Claim("entity_id", entityRole.EntityId.ToString()));
-                            }
-
-                            // Check if the user is a Global Administrator
-                            if (user.Admin)
-                            {
-                                finalClaims.Add(new Claim("scope", "global"));
-                            }
+                        // Check if the user is a Global Administrator
+                        if (user.Admin)
+                        {
+                            finalClaims.Add(new Claim("scope", "global"));
                         }
 
                         var identity = new ClaimsIdentity(finalClaims, "Basic");

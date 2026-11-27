@@ -41,4 +41,29 @@ public class FaceIdEnrollmentLoaderTest
 
         Assert.Equal(new FaceIdEnrollment(enabled, faceSet), result);
     }
+
+    /// <summary>A save with the plugin off sent <c>GET /FaceID/enable|disable/{id}</c> anyway: one round trip for nothing.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SaveWithPluginInactive_WritesNothing(bool enabled)
+    {
+        var service = Substitute.For<IFaceIDService>();
+
+        await FaceIdEnrollmentLoader.SaveEnabledAsync(service, pluginActive: false, userId: 7, enabled);
+
+        await service.DidNotReceiveWithAnyArgs().SetUserEnabledStatusAsync(default, default);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SaveWithPluginActive_WritesTheFlagForTheUser(bool enabled)
+    {
+        var service = Substitute.For<IFaceIDService>();
+
+        await FaceIdEnrollmentLoader.SaveEnabledAsync(service, pluginActive: true, userId: 7, enabled);
+
+        await service.Received(1).SetUserEnabledStatusAsync(7, enabled);
+    }
 }

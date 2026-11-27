@@ -406,6 +406,37 @@ public class UsersRestService: RestServiceBase, IUsersService
         } 
     }
     
+    public async Task SaveUserWithPermissionsAsync(UserDto user, List<Permission?> permissions)
+    {
+        if(user.Id == 0)
+            throw new ArgumentException("User cannot be 0");
+
+        if(string.IsNullOrEmpty(user.Lang)) user.Lang = "en";
+
+        // reportErrorResponses, as SaveUser: a refusal keeps its status and rule (ThrowIfRefused).
+        using var client = RestService.GetClient(reportErrorResponses: true);
+
+        var route = $"/Users/{user.Id}/with-permissions";
+        var request = new RestRequest(route, Method.Put);
+        request.AddJsonBody(new UserWithPermissionsDto
+        {
+            User = user,
+            PermissionIds = permissions.Where(p => p != null).Select(p => p!.Id).ToList()
+        });
+
+        try
+        {
+            var response = await client.ExecuteAsync(request);
+
+            ThrowIfRefused(response, route, "PUT", "Error saving user");
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error("Error saving user with permissions message:{Message}", ex.Message);
+            throw new RestComunicationException("Error saving users", ex);
+        }
+    }
+
     private void NotifyUserAdded(UserAddedEventArgs ua)
     {
         EventHandler<UserAddedEventArgs> handler = UserAdded;
