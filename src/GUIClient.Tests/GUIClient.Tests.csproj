@@ -70,6 +70,8 @@
     <!-- What an entity form's Integer and Boolean fields load and save (T241/T242 review): a nullable field with
          nothing stored stays not set and saves nothing, so a rename never declares criticality 0. Pure. -->
     <Compile Include="..\GUIClient\Tools\EntityFieldValues.cs" LinkBase="Tools" />
+    <!-- The Users screen reads a user's FaceID state only while the FaceID plugin is active. Pure. -->
+    <Compile Include="..\GUIClient\Tools\FaceIdEnrollmentLoader.cs" LinkBase="Tools" />
     <!-- The status → icon table behind IntStatusToMaterialIconkindConverter, and which target types it answers
          (T325). Pure: MaterialIconKind is the Avalonia-free Material.Icons enum referenced above. -->
     <Compile Include="..\GUIClient\Tools\StatusIconMap.cs" LinkBase="Tools" />

@@ -623,8 +623,9 @@ public class UsersViewModel: ViewModelBase
     }
     private async Task GetSelectedUserFaceIdStatusAsync(int id)
     {
-        SelectedUserHasFaceId = await FaceIDService.IsUserEnabledAsync(id);
-        FaceIdSetForSelectedUser = await FaceIDService.UserHasFaceSetAsync(id);
+        var enrollment = await FaceIdEnrollmentLoader.LoadAsync(FaceIDService, FaceIDAvailable, id);
+        SelectedUserHasFaceId = enrollment.Enabled;
+        FaceIdSetForSelectedUser = enrollment.FaceSet;
     }
 
     private async Task ExecuteChangePassword()

@@ -12,6 +12,10 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Stop the Users screen from reading a user's FaceID state while the FaceID plugin is not active.
+
 ## [2.50.1] - 2026-11-27
 
 ### Changed
