@@ -12,9 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.50.2] - 2026-11-27
+
 ### Fixed
 
 - Stop the Users screen from reading a user's FaceID state while the FaceID plugin is not active.
+- Show the new-user form on the first click of "+" in the Users screen instead of a blank pane that needed a second click.
 
 ## [2.50.1] - 2026-11-27
 

@@ -201,7 +201,12 @@ public class UsersViewModel: ViewModelBase
         get => _selectedUser;
         set
         {
+            var previous = _selectedUser;
             this.RaiseAndSetIfChanged(ref _selectedUser, value);
+
+            // A "new user" placeholder (Id 0) lives in the list only while it is selected; leaving it unsaved drops it.
+            if (previous is { Id: 0 } && !ReferenceEquals(previous, value))
+                Users?.Remove(previous);
 
             if (value != null)
                 _= GetUserDataAsync(value.Id);
@@ -1043,6 +1048,12 @@ public class UsersViewModel: ViewModelBase
                     Track9ThirdLineMarker.Compose(new List<Permission?>(), _thirdLineMarker, UserGrantsThirdLine));
 
         
+            // A freshly created user is not in the list yet: swap the placeholder for its real listing.
+            if (Users != null && Users.All(u => u.Id != User.Id))
+            {
+                foreach (var stale in Users.Where(u => u.Id == 0).ToList()) Users.Remove(stale);
+                Users.Add(new UserListing { Id = User.Id, Name = User.Name, Username = User.UserName });
+            }
             SelectedUser = Users?.ToList().FirstOrDefault(u => u.Id == User.Id);
         
             Toasts.Success(Localizer["UserCreatedSuccessfully"]);
@@ -1069,12 +1080,18 @@ public class UsersViewModel: ViewModelBase
     
     private void ExecuteAddUser()
     {
-        SelectedUser = new UserListing()
+        // The placeholder must be an item of the list: a ListBox resets a SelectedItem that is not in its ItemsSource
+        // to null, which hid the details pane and made the user click "+" twice.
+        var placeholder = new UserListing()
         {
             Id = 0,
             Name = "",
             Username = "",
         };
+        foreach (var stale in Users?.Where(u => u.Id == 0).ToList() ?? new List<UserListing>())
+            Users!.Remove(stale);
+        Users?.Add(placeholder);
+        SelectedUser = placeholder;
     }
     
     public Task Initialize() => WithBusyAsync(async () =>
