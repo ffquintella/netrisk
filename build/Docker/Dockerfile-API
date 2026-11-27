@@ -98,10 +98,12 @@ VOLUME /netrisk/Scripts
 # VAIRABLES
 ENV FACTER_SERVER_HTTPS_PORT=5443
 
-# MIA: configuration (mount mia.toml here, or use FERROGATE_* variables) and the host identity.
-# The identity must persist: CMIS pins it, and a regenerated key locks the host out.
+# MIA: the configuration (mount mia.toml here, or use FERROGATE_* variables).
 VOLUME /etc/ferrogate
-VOLUME /var/lib/ferrogate
+# /var/lib/ferrogate (the machine identity) is deliberately NOT a VOLUME: that would create a new
+# anonymous volume per container and lose the identity on every `docker rm`. The entrypoint refuses
+# to start the embedded agent unless it is mounted explicitly (see mia-container.sh). Alternatively
+# set MIA_MODE=host and mount the host's /run/ferrogate to use the host agent and its identity.
 
 # Setting up entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]

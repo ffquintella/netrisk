@@ -67,7 +67,7 @@ start_netrisk(){
   export ASPNETCORE_ENVIRONMENT=production
   export DOTNET_USER_SECRETS_FALLBACK_DIR=/tmp
 	cd /netrisk/
-	sudo -u netrisk bash -c "$(declare -f load_netrisk_env); load_netrisk_env; cd /netrisk; exec /netrisk/BackgroundJobs"
+	sudo --preserve-env=$MIA_PRESERVED_ENV -u netrisk bash -c "$(declare -f load_netrisk_env); load_netrisk_env; cd /netrisk; exec /netrisk/BackgroundJobs"
 }
 
 

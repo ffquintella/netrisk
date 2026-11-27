@@ -12,6 +12,16 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.50.0] - 2026-11-27
+
+### Added
+
+- Let the API and BackgroundJobs containers use the host's MIA through its socket (`MIA_MODE=host`), so the application identifies as the host (T392)
+
+### Changed
+
+- Refuse to start the embedded MIA unless `/var/lib/ferrogate` is mounted from the host or a named volume, so the machine identity CMIS pins survives container restarts (T392)
+
 ## [2.49.0] - 2026-11-26
 
 ### Added

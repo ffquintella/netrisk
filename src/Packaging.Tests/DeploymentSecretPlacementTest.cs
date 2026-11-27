@@ -140,7 +140,7 @@ public class DeploymentSecretPlacementTest
         if (dropsPrivileges)
             Assert.All(invocations, line =>
             {
-                Assert.Contains("sudo -u netrisk", line, StringComparison.Ordinal);
+                Assert.Matches(@"sudo (--preserve-env=\S+ )?-u netrisk", line);
 
                 // `declare -f` is what carries the function across the privilege drop; without it
                 // the sudo shell calls a function it has never seen.

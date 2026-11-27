@@ -23,9 +23,40 @@ seeded into `/etc/ferrogate` only for files you did not provide.
 
 | Container switch | Default | Meaning |
 |---|---|---|
-| `MIA_ENABLE` | `auto` | `auto` starts the agent only when a CMIS endpoint/SRV is configured; `1`/`0` force it |
-| `MIA_REQUIRED` | `0` | `1` aborts the container if the agent does not come up |
+| `MIA_MODE` | `auto` | `embedded` runs an agent in the container; `host` uses the host's agent; `off` disables; `auto` picks `host` when the host socket is mounted, else `embedded` when a CMIS endpoint/SRV is configured, else `off` |
+| `MIA_REQUIRED` | `0` | `1` aborts the container if the agent (or the host socket) is not available |
 | `MIA_WAIT_SECS` | `15` | wait for the helper socket |
+| `MIA_ALLOW_EPHEMERAL_IDENTITY` | `0` | `1` lets the identity live in the container's writable layer (throw-away containers only) |
+| `MIA_HOST_SOCKET_DIR` | `/run/ferrogate-host` | where the host's `/run/ferrogate` is mounted in host mode |
+
+## Identity that survives restarts (embedded mode)
+
+The host key in `/var/lib/ferrogate` is what CMIS pins; a container that loses it is rejected
+(`host_rejected`) until a CMIS operator clears the pin. `/var/lib/ferrogate` is therefore **not** a
+Dockerfile `VOLUME` (that would create a new anonymous volume per container) and the entrypoint
+**refuses to start** unless it is mounted explicitly:
+
+```bash
+-v netrisk-mia-state:/var/lib/ferrogate        # named volume
+-v /srv/netrisk/mia-state:/var/lib/ferrogate   # or a host directory (chowned to the agent account on start)
+```
+
+The log says whether an existing identity was reused or a first one is being created, and warns
+about an anonymous volume. Do not share one state directory between two running containers.
+
+## Using the host's agent (`MIA_MODE=host`)
+
+The application identifies as the **host**: no agent is started in the container.
+
+```bash
+docker run -e MIA_MODE=host -v /run/ferrogate:/run/ferrogate-host:ro ffquintella/netrisk-api:<v>
+```
+
+- Mount the **directory**, not the socket file: the host agent recreates the socket when it restarts.
+- The container's `netrisk` account joins a group with the socket's gid, so the `0660` socket is reachable
+  without widening its mode; `FERROGATE_HELPER_SOCKET` is exported and passed across the privilege drop.
+- The host's allowlist must admit the application by **binary hash**. A container is outside the agent's
+  mount namespace, so path-constrained entries never match.
 
 ## Build arguments
 
@@ -33,7 +64,6 @@ seeded into `/etc/ferrogate` only for files you did not provide.
 
 ## Operational notes
 
-- **Persist `/var/lib/ferrogate`.** The host key is the identity: CMIS pins it, and a regenerated one is rejected.
-- A container has no TPM; MIA uses its `host-key` backend. Callers must be on the signed allowlist
-  (`allowlist.key`), and since a container is outside MIA's mount namespace, path-constrained allowlist entries never match.
-- Not run end to end: image build and attestation against a real CMIS are unverified.
+- A container has no TPM; the embedded agent uses its `host-key` backend. Callers must be on the signed
+  allowlist (`allowlist.key`).
+- Not run end to end: image build, a real attestation and the host-socket path are unverified.
