@@ -12,9 +12,11 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.51.0] - 2026-11-27
+
 ### Added
 
-- Add `PUT /Users/{id}/with-permissions`, which saves a user and the permissions granted to them directly in one transaction, with the guards of `PUT /Users/{id}` and `PUT /Users/{id}/permissions` together.
+- Add `PUT /Users/{id}/with-permissions`, which saves a user and the permissions granted to them directly in one transaction, with the guards of `PUT /Users/{id}` and `PUT /Users/{id}/permissions` together. A client that meets a server without the route (404/405) saves with the two legacy calls instead.
 
 ### Changed
 

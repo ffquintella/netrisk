@@ -398,10 +398,28 @@ public class UsersRestServiceTest : BaseServiceTest
         Assert.Equal(Model.DecisionCycle.ThirdLineAssurance.SelfAppointmentRule, ex.RuleName);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.MethodNotAllowed)]
+    public async Task TestSaveUserWithPermissionsAsyncFallsBackToTheLegacyCallsOnAServerWithoutTheRoute(HttpStatusCode status)
+    {
+        _backend.OnStatus(Method.Put, "/Users/7/with-permissions", status);
+        _backend.OnPut("/Users/7", "");
+        _backend.OnPut("/Users/7/Permissions", "");
+        var permissions = TwoPermissions();
+
+        await _service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" },
+            new List<Permission?> { permissions[0], permissions[1] });
+
+        Assert.Equal(new[] { "PUT /Users/7/with-permissions", "PUT /Users/7", "PUT /Users/7/Permissions" },
+            _backend.Requests.Select(r => r.ToString()).ToArray());
+    }
+
     [Fact]
     public async Task TestSaveUserWithPermissionsAsyncThrowsWhenTheServerAnswersNotFound()
     {
         _backend.OnStatus(Method.Put, "/Users/7/with-permissions", HttpStatusCode.NotFound);
+        _backend.OnStatus(Method.Put, "/Users/7", HttpStatusCode.NotFound);
 
         await Assert.ThrowsAsync<InvalidHttpRequestException>(() =>
             _service.SaveUserWithPermissionsAsync(new UserDto { Id = 7, Name = "Ana" }, new List<Permission?>()));

@@ -428,6 +428,17 @@ public class UsersRestService: RestServiceBase, IUsersService
         {
             var response = await client.ExecuteAsync(request);
 
+            // A server older than this client has no such route and answers 404/405: save with the two legacy calls
+            // instead (not atomic, but that is all such a server offers). A real "user not found" 404 fails again in SaveUser.
+            if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed)
+            {
+                Logger.Warning("PUT {Route} answered {Status}: server predates it, saving with the legacy calls",
+                    route, response.StatusCode);
+                SaveUser(user);
+                SaveUserPermissions(user.Id, permissions);
+                return;
+            }
+
             ThrowIfRefused(response, route, "PUT", "Error saving user");
         }
         catch (HttpRequestException ex)
