@@ -20,5 +20,6 @@ public class MainWindowProvider: IMainWindowProvider
     }
 
     private static IClassicDesktopStyleApplicationLifetime Lifetime =>
-        (IClassicDesktopStyleApplicationLifetime) Application.Current?.ApplicationLifetime!;
+        Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime
+        ?? throw new System.InvalidOperationException("The application has no classic desktop lifetime.");
 }

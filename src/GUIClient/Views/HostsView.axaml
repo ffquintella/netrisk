@@ -58,7 +58,7 @@
 
             <TextBox Grid.Row="1" Margin="4 6 4 2"
                      Text="{Binding SearchText}"
-                     Watermark="{Binding StrSearchHosts}"
+                     PlaceholderText="{Binding StrSearchHosts}"
                      behaviors:FocusOnSignal.Signal="{Binding SearchFocusSignal}"/>
 
             <Grid Grid.Row="2" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0 0 4 4">
@@ -545,7 +545,7 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0 6 0 0">
-                            <TextBox Grid.Column="0" Text="{Binding NewComment}" Watermark="{Binding StrComments}"
+                            <TextBox Grid.Column="0" Text="{Binding NewComment}" PlaceholderText="{Binding StrComments}"
                                      AcceptsReturn="False">
                                 <TextBox.KeyBindings>
                                     <KeyBinding Gesture="Enter" Command="{Binding BtSendCommentClicked}"/>

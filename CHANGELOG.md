@@ -12,6 +12,12 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.51.1] - 2026-11-27
+
+### Fixed
+
+- Clear the desktop client's build warnings: remove the duplicate `Application` and `team` localization resources, mark the intentional `StrSave` override in the entity mappings view model, fail with a clear message when the application has no classic desktop lifetime, and use `PlaceholderText` instead of the obsolete `Watermark`.
+
 ## [2.51.0] - 2026-11-27
 
 ### Added

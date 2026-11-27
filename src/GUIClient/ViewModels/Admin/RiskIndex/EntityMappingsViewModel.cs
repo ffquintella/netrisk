@@ -58,7 +58,7 @@ public class EntityMappingsViewModel : RiskAdminViewModelBase
     public string StrTargetCard { get; } = Localizer["EntityMappingTargetCard"];
     public string StrPreviewCard { get; } = Localizer["EntityMappingPreviewCard"];
     public string StrPreviewNote { get; } = Localizer["EntityMappingPreviewNoteMSG"];
-    public string StrSave { get; } = Localizer["Save"];
+    public new string StrSave { get; } = Localizer["Save"];
     public string StrDelete { get; } = Localizer["Delete"];
 
     #endregion

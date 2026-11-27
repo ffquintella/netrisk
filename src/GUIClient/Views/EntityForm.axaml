@@ -32,7 +32,7 @@
                             <!-- T241/T242: a nullable number with nothing stored is blank ("not set") and saves nothing. -->
                             <NumericUpDown Value="{Binding IntegerValue}" Margin="0 2 0 0"
                                            HorizontalAlignment="Left" MinWidth="160"
-                                           Watermark="{Binding StrNotSet}"
+                                           PlaceholderText="{Binding StrNotSet}"
                                            IsVisible="{Binding IsInteger}" IsEnabled="{Binding !IsReadOnly}"/>
 
                             <!-- Null shows indeterminate; a click sets true or false, which is then saved. -->

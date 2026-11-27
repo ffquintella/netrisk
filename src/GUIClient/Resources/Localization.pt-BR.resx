@@ -3381,12 +3381,6 @@
     <data name="Data Handled" xml:space="preserve">
         <value>Dados Tratados</value>
     </data>
-    <data name="Application" xml:space="preserve">
-        <value>Aplicação</value>
-    </data>
-    <data name="team" xml:space="preserve">
-        <value>equipe</value>
-    </data>
     <data name="LinkageChain" xml:space="preserve">
         <value>Cadeia de ligação</value>
     </data>
