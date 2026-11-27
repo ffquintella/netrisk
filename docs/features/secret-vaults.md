@@ -90,7 +90,16 @@ decides it that way from v1.4.0 (`BastionVaultConnection.Open`):
 | App ID | The API key is | What the plugin does with it |
 |---|---|---|
 | blank | a client token | sends it in the vault's token header as-is |
-| set | an AppRole `secret_id` | `POST auth/approle/login` with `role_id` = the app ID, then uses the `client_token` that comes back |
+| set | an AppRole `secret_id` | `POST auth/<Auth mount>/login` (default `auth/appid/login`) with `role_id` = the app ID, then uses the `client_token` that comes back |
+
+**The login's mount is a connection setting** (T393). The vault decides where the App ID login is
+mounted, so the plugin declares an optional **Auth mount** control on the connection editor (key
+`auth_mount`, rendered under the plugin's own settings and stored in `extra_settings` like any declared
+control — no host column). Blank means `appid`; up to plugin v1.9.0 the mount was hard-coded to
+`approle`, which a vault mounting the login at `auth/appid` answers with 400 "Request client token is
+missing." — reported then as a rejected token. The value becomes a URL segment, so the host refuses a
+path at save time (`Identifier` format) and the plugin refuses anything but one mount name before any
+request; a login that fails that way now names the Auth mount field instead of the API key.
 
 This exists because **a BastionVault app credential is not a token**. Pasting a freshly minted app
 secret into the API key box of a token-mode connection sends it in the token header, and the vault
@@ -429,7 +438,7 @@ BastionVault is **HashiCorp-Vault-compatible**. What the plugin depends on:
 
 | Purpose | Request | Response |
 |---|---|---|
-| Mint a token (app-id mode only) | `POST /v1/auth/approle/login` `{"role_id":…,"secret_id":…}` | `{"auth":{"client_token":…,"lease_duration":n,…}}` |
+| Mint a token (app-id mode only) | `POST /v1/auth/{mount}/login` (default mount `appid`) `{"role_id":…,"secret_id":…}` | `{"auth":{"client_token":…,"lease_duration":n,…}}` |
 | Validate the token | `GET /v1/auth/token/lookup-self` | `{"data":{"policies":[…],"meta":{…}}}` |
 | Machine-identity policy | `GET /v1/auth/ferrogate/requirement` (unauthenticated) | `{"data":{"require_machine_identity":bool,…}}` |
 | Mount table | `GET /v1/sys/mounts` | `{"data":{"secret/":{"type":"kv"},…}}` |

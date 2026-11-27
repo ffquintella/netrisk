@@ -1275,6 +1275,8 @@ installers at once, so it is scheduled as its own track and does not ride along 
 
 ## Backlog
 
+- [x] T393 Let a BastionVault connection name the auth mount its App ID login posts to, defaulting to `appid` (S36)
+  - note: delivered as a control the plugin declares on the connection editor (ADR 0001), not as an SDK property, a `secret_vault_connections` column and a host form field: no SDK bump, no schema version and no NetRisk code change; the work is in the plugin repository and ships with its next release; the host side of the round trip is the existing `RoundTripsTheConnectionsDeclaredValuesAndHandsThemToThePlugin`; not run against a live vault
 - [x] T392 Ship the FerroGate MIA client in the API and BackgroundJobs containers with a mountable or parameter-driven configuration
   - note: the image build and a live attestation against a CMIS were NOT run here; MIA callers must be on the host's signed allowlist and a container is outside MIA's mount namespace, so path-constrained allowlist entries never match (docs/mia.md in FerroGate); ConsoleClient and WebSite images do not carry it
 - [x] T391 Remove `umapx`, `OpenFaceONNX` and `Microsoft.ML.OnnxRuntime` from the API project, which does not use them

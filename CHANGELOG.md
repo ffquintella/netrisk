@@ -12,6 +12,14 @@ follow [SemVer](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add an optional Auth mount setting to BastionVault connections, so an App ID login posts to `auth/<mount>/login` on a vault that mounts it under another name, and refuse any value that is not a single mount name before a request is sent (T393, S36)
+
+### Fixed
+
+- Log a BastionVault App ID connection in at `auth/appid/login` instead of `auth/approle/login`, and report a login at an unmounted path as a wrong Auth mount instead of a rejected token (T393, S36)
+
 ## [2.51.1] - 2026-11-27
 
 ### Fixed
